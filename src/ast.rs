@@ -5,10 +5,45 @@
 //! separate decisions and why the span is never allowed to become the second copy of the data.
 //!
 //! The tree grows one grammar slice at a time, so what is here is what the parser can build
-//! today: `PrimaryExpression`'s simplest forms, and the prefix and binary operators built
-//! on them.
+//! today: a `Script` of statements, and expressions down to `PrimaryExpression`.
 
 use crate::span::Span;
+
+/// A whole `Script` (§16.1) — what a source text parses to.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Script {
+    /// The statements it contains, in order. Empty for an empty source.
+    pub body: Box<[Stmt]>,
+    /// The whole source text, so a diagnostic about the script itself has somewhere to point.
+    pub span: Span,
+}
+
+/// A statement, with where it was written.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Stmt {
+    /// Which statement this is, and its contents.
+    pub kind: StmtKind,
+    /// The source it covers, including the semicolon when one was written — and not including
+    /// one that was not, since an inserted semicolon has no source to point at.
+    pub span: Span,
+}
+
+/// What a statement is.
+#[derive(Debug, Clone, PartialEq)]
+pub enum StmtKind {
+    /// `{ … }` (§14.2) — a block, which is a scope as well as a grouping.
+    Block(Box<[Stmt]>),
+    /// `;` (§14.4). Not the same thing as an omitted semicolon: this one was written.
+    Empty,
+    /// An expression evaluated for its effect (§14.5).
+    ///
+    /// Boxed for the same reason [`ExprKind::RegExp`] is: an `Expr` inline would make `StmtKind`
+    /// twice the size of any other variant, and statements nest — so every level of `{ { { … } } }`
+    /// would carry it on the parser's stack.
+    Expression(Box<Expr>),
+    /// `debugger;` (§14.16).
+    Debugger,
+}
 
 /// An expression, with where it was written.
 #[derive(Debug, Clone, PartialEq)]
@@ -464,6 +499,18 @@ mod tests {
             size_of::<Expr>() <= 48,
             "Expr is {} bytes",
             size_of::<Expr>()
+        );
+        // Statements nest too — `{ { { … } } }` recurses once per brace — so the same rule
+        // applies to them, with more room to spare because there are fewer of them.
+        assert!(
+            size_of::<StmtKind>() <= 24,
+            "StmtKind grew to {} bytes — box the variant that did it",
+            size_of::<StmtKind>()
+        );
+        assert!(
+            size_of::<Stmt>() <= 32,
+            "Stmt is {} bytes",
+            size_of::<Stmt>()
         );
     }
 

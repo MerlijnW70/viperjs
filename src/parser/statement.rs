@@ -1,0 +1,337 @@
+//! Statements (ECMAScript §14), and automatic semicolon insertion (§12.10).
+//!
+//! # Where the semicolons come from
+//!
+//! §12.10 gives three rules, and this file implements the first two directly; the third is the
+//! restricted productions, which each enforce themselves where they are parsed — the `++` of
+//! [`super::expression`] was the first.
+//!
+//! 1. A token that no production allows gets a semicolon inserted before it if it is on a new
+//!    line, or is a `}`, or would close a `do`-`while`.
+//! 2. At the end of input, if the script is not yet complete, a semicolon is inserted.
+//! 3. A restricted token on a new line gets one before it.
+//!
+//! There is an overriding condition that no semicolon is ever inserted where it would become an
+//! empty statement, or one of the two in a `for` header. Neither can arise here, because
+//! [`Parser::consume_semicolon`] is only ever called where a semicolon *terminates* something —
+//! but both matter the moment `while (a)` and `for (;;)` exist, so the rule is named rather than
+//! merely unimplemented.
+//!
+//! # What ASI does not do
+//!
+//! It does not join lines, and it does not break them. `a = b` followed by a line starting with
+//! `(` or `[` is one expression, because the `(` *is* allowed by a production and rule 1 never
+//! fires. The same is true of a line starting with `/`, which divides — and that case is decided
+//! by the goal symbol rather than here: a token that ends an operand is followed by one read
+//! under [`Goal::Div`], so the slash is division before ASI is ever consulted.
+
+use super::{ParseError, ParseErrorKind, Parser};
+use crate::ast::{Script, Stmt, StmtKind};
+use crate::lexer::{Goal, ReservedWord, TokenKind};
+use crate::span::Span;
+
+/// Parse `source` as a `Script` (§16.1).
+///
+/// ```
+/// use praxis::ast::StmtKind;
+/// use praxis::parser::parse_script;
+///
+/// let script = parse_script("a = 1\nb = 2").expect("this parses");
+/// assert_eq!(script.body.len(), 2, "a line break ends a statement");
+/// assert!(matches!(script.body[0].kind, StmtKind::Expression(_)));
+/// ```
+pub fn parse_script(source: &str) -> Result<Script, ParseError> {
+    let mut parser = Parser::new(source)?;
+    let body = parser.parse_statement_list(TokenKind::Eof)?;
+    parser.expect_eof()?;
+    Ok(Script {
+        body,
+        span: Span::new(0, source.len() as u32),
+    })
+}
+
+impl Parser<'_> {
+    /// `StatementList` (§14.2), stopping at `terminator` without consuming it.
+    pub(super) fn parse_statement_list(
+        &mut self,
+        terminator: TokenKind,
+    ) -> Result<Box<[Stmt]>, ParseError> {
+        let mut body = Vec::new();
+        while self.current.kind != terminator && self.current.kind != TokenKind::Eof {
+            body.push(self.parse_statement()?);
+        }
+        Ok(body.into_boxed_slice())
+    }
+
+    /// `Statement` (§14.1), for the forms the parser reaches today.
+    ///
+    /// The order is the lookahead restriction of §14.5 doing its work: an `ExpressionStatement`
+    /// may not begin with `{`, `function`, `async function`, `class`, or `let [`, each because
+    /// it would be ambiguous with a statement or declaration form. Taking `{` as a block before
+    /// an expression is ever considered is that restriction, spelled as control flow. The
+    /// others arrive with the constructs they are ambiguous with; until then they are not
+    /// expressions either, so nothing is silently misread except `let [`, which is pinned by a
+    /// test.
+    fn parse_statement(&mut self) -> Result<Stmt, ParseError> {
+        match self.current.kind {
+            TokenKind::LBrace => self.parse_block(),
+            TokenKind::Semicolon => {
+                let token = self.advance(Goal::RegExp)?;
+                Ok(Stmt {
+                    kind: StmtKind::Empty,
+                    span: token.span,
+                })
+            }
+            TokenKind::Keyword(ReservedWord::Debugger) => {
+                let token = self.advance(Goal::RegExp)?;
+                let end = self.consume_semicolon(token.span)?;
+                Ok(Stmt {
+                    kind: StmtKind::Debugger,
+                    span: token.span.to(end),
+                })
+            }
+            _ => self.parse_expression_statement(),
+        }
+    }
+
+    /// `Block : { StatementList_opt }` (§14.2).
+    fn parse_block(&mut self) -> Result<Stmt, ParseError> {
+        let open = self.advance(Goal::RegExp)?;
+        self.enter()?;
+        let body = self.parse_statement_list(TokenKind::RBrace);
+        self.leave();
+        let body = body?;
+        let close = self.eat(TokenKind::RBrace, Goal::RegExp, "`}`")?;
+        Ok(Stmt {
+            kind: StmtKind::Block(body),
+            span: open.span.to(close.span),
+        })
+    }
+
+    /// `ExpressionStatement : Expression ;` (§14.5).
+    fn parse_expression_statement(&mut self) -> Result<Stmt, ParseError> {
+        let expr = self.parse_expression()?;
+        let end = self.consume_semicolon(expr.span)?;
+        Ok(Stmt {
+            span: expr.span.to(end),
+            kind: StmtKind::Expression(Box::new(expr)),
+        })
+    }
+
+    /// Consume the semicolon that terminates a statement, or find that one was inserted.
+    ///
+    /// `previous` is the span of what the semicolon terminates, and is what comes back when
+    /// there was no semicolon to consume — an inserted one has no source text, so the statement
+    /// ends where its content did rather than at some invented position.
+    ///
+    /// The three conditions below are §12.10's rules 1 and 2, in the one place a statement can
+    /// need them. Rule 1's third condition — the previous token being `)` of a `do`-`while` —
+    /// is absent because there is no `do`-`while` yet to close.
+    fn consume_semicolon(&mut self, previous: Span) -> Result<Span, ParseError> {
+        if self.current.kind == TokenKind::Semicolon {
+            return Ok(self.advance(Goal::RegExp)?.span);
+        }
+        // Rule 1: the offending token is on a new line, or is a `}`. Rule 2: it is the end of
+        // input. In all three the statement simply ends, and nothing is consumed — the token
+        // belongs to whatever comes next.
+        if self.current.newline_before
+            || self.current.kind == TokenKind::RBrace
+            || self.current.kind == TokenKind::Eof
+        {
+            return Ok(previous);
+        }
+        Err(ParseError {
+            kind: ParseErrorKind::Unexpected {
+                expected: "`;`",
+                found: self.current.kind,
+            },
+            span: self.current.span,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::test_support::*;
+
+    /// The statement kinds of `source`, rendered compactly.
+    fn statements(source: &str) -> Vec<String> {
+        let script = parse_script(source)
+            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // a test about a tree cannot proceed without one
+        script.body.iter().map(render_statement).collect()
+    }
+
+    /// The error `source` fails with.
+    fn script_error(source: &str) -> ParseError {
+        match parse_script(source) {
+            Err(err) => err,
+            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // a test about an error cannot proceed without one
+        }
+    }
+
+    #[test]
+    fn a_script_is_a_list_of_statements_and_an_empty_source_is_an_empty_one() {
+        assert_eq!(statements(""), Vec::<String>::new());
+        assert_eq!(statements("   \n  "), Vec::<String>::new());
+        assert_eq!(statements("// just a comment"), Vec::<String>::new());
+        assert_eq!(statements("a;"), ["a"]);
+        assert_eq!(statements("a; b; c;"), ["a", "b", "c"]);
+        // `;` on its own is an EmptyStatement, which is a statement — not the same thing as an
+        // omitted semicolon, and it is why `if (a);` has a body at all.
+        assert_eq!(statements(";"), ["<empty>"]);
+        assert_eq!(statements(";;;"), ["<empty>", "<empty>", "<empty>"]);
+        assert_eq!(statements("a;;"), ["a", "<empty>"]);
+        assert_eq!(statements("debugger;"), ["debugger"]);
+        assert_eq!(statements("debugger"), ["debugger"]);
+        // The span of a statement covers its semicolon when one was written.
+        let script = parse_script("ab;").unwrap_or_else(|err| panic!("{}", err.kind)); // the assertion needs the tree
+        assert_eq!(script.body[0].span, Span::new(0, 3));
+        let script = parse_script("ab").unwrap_or_else(|err| panic!("{}", err.kind)); // same
+        assert_eq!(
+            script.body[0].span,
+            Span::new(0, 2),
+            "an inserted semicolon has no source to include"
+        );
+    }
+
+    #[test]
+    fn a_block_is_a_statement_and_nests() {
+        assert_eq!(statements("{}"), ["{}"]);
+        assert_eq!(statements("{ a; }"), ["{a}"]);
+        assert_eq!(statements("{ a; b; }"), ["{a b}"]);
+        assert_eq!(statements("{{}}"), ["{{}}"]);
+        assert_eq!(statements("{ a } { b }"), ["{a}", "{b}"]);
+        // §14.5's lookahead restriction, as control flow: a `{` at the start of a statement is a
+        // block, never an object literal. Without it the two would be ambiguous, which is the
+        // reason the restriction exists.
+        assert_eq!(statements("{}"), ["{}"], "a block, not an empty object");
+        assert_eq!(
+            script_error("{").kind,
+            ParseErrorKind::Unexpected {
+                expected: "`}`",
+                found: TokenKind::Eof,
+            }
+        );
+    }
+
+    #[test]
+    fn a_semicolon_is_inserted_at_a_line_break_a_closing_brace_and_the_end_of_input() {
+        // §12.10 rule 1, first condition: the offending token is on a new line.
+        assert_eq!(statements("a\nb"), ["a", "b"]);
+        assert_eq!(statements("a\r\nb"), ["a", "b"]);
+        assert_eq!(statements("a\u{2028}b"), ["a", "b"]);
+        assert_eq!(
+            statements("a /* \n */ b"),
+            ["a", "b"],
+            "§12.4: the comment is a line break"
+        );
+        // Rule 1, second condition: the offending token is `}`.
+        assert_eq!(statements("{ a }"), ["{a}"]);
+        assert_eq!(statements("{ a; b }"), ["{a b}"]);
+        // Rule 2: the end of input.
+        assert_eq!(statements("a"), ["a"]);
+        assert_eq!(statements("a; b"), ["a", "b"]);
+        // …and nowhere else. Two expressions on one line are not two statements, which is the
+        // whole reason ASI is a set of conditions rather than "insert one wherever it helps".
+        assert_eq!(
+            script_error("a b").kind,
+            ParseErrorKind::Unexpected {
+                expected: "`;`",
+                found: TokenKind::Identifier {
+                    contains_escape: false
+                },
+            }
+        );
+        assert_eq!(script_error("a b").span, Span::new(2, 3));
+        assert_eq!(statements("a /* no break */ ; b"), ["a", "b"]);
+    }
+
+    #[test]
+    fn a_line_break_does_not_end_a_statement_that_can_continue() {
+        // The hazard ASI is famous for, and the half of it people forget: a semicolon is only
+        // inserted before a token that *no production allows*. A line starting with `(` or `[`
+        // continues the expression above it, silently.
+        assert_eq!(statements("a = b\n(c)"), ["(= a (call b [c]))"]);
+        assert_eq!(statements("a = b\n[c]"), ["(= a ([] b c))"]);
+        assert_eq!(statements("a\n.b"), ["(. a b)"]);
+        assert_eq!(statements("a\n+ b"), ["(+ a b)"]);
+        // A line starting with `/` divides, and that is decided before ASI is consulted: the
+        // token after an operand is read under `Goal::Div`, so it is a slash and not a literal.
+        assert_eq!(statements("a\n/b/g"), ["(/ (/ a b) g)"]);
+        // …while a restricted production does break the line, because §12.10's rule 3 says so
+        // even though `++` would otherwise be allowed right there.
+        assert_eq!(statements("a\n++b"), ["a", "(pre++ b)"]);
+        assert_eq!(statements("a\n--b"), ["a", "(pre-- b)"]);
+        assert_eq!(statements("a++\nb"), ["(post++ a)", "b"]);
+        // …and on one line there is no break, so nothing is inserted and `a++ b` is the error
+        // it looks like. The two cases differ only in the newline, which is the whole point.
+        assert_eq!(
+            script_error("a ++ b").kind,
+            ParseErrorKind::Unexpected {
+                expected: "`;`",
+                found: TokenKind::Identifier {
+                    contains_escape: false
+                },
+            }
+        );
+    }
+
+    #[test]
+    fn the_statement_forms_not_yet_built_fail_where_they_will_one_day_parse() {
+        // §14.5 forbids an ExpressionStatement from beginning with `function`, `async function`
+        // or `class` as well as `{`, each because it would be ambiguous with a declaration. None
+        // of those is an expression here either, so each fails rather than being misread — and
+        // will start parsing the day its declaration form lands.
+        for source in [
+            "function f() {}",
+            "class C {}",
+            "var a = 1",
+            "if (a) b;",
+            "return 1;",
+        ] {
+            assert!(parse_script(source).is_err(), "{source:?}");
+        }
+        // `let [` is the exception, and the one place this parser currently reads something as
+        // the wrong tree rather than refusing it: §14.5 says an ExpressionStatement may not
+        // begin with `let [`, because that is a lexical declaration. Until declarations exist
+        // there is nothing to parse it as, and `let` is an ordinary identifier — so this reads
+        // as a computed member assignment. The day `let` arrives, this test changes.
+        assert_eq!(statements("let [a] = b"), ["(= ([] let a) b)"]);
+        // The ordinary form is narrower trouble than it looks: `let a = b` is already an error,
+        // because `let` and `a` are two expressions on one line and nothing inserts a semicolon
+        // between them. Only the bracketed form reads as something else.
+        assert!(parse_script("let a = b").is_err());
+        assert!(parse_script("const a = b").is_err());
+    }
+
+    #[test]
+    fn no_source_however_odd_can_make_the_statement_parser_panic() {
+        // DR-0002, at the level above expressions.
+        let cases = [
+            String::new(),
+            "{".repeat(10_000),
+            "}".repeat(10_000),
+            ";".repeat(10_000),
+            "a\n".repeat(10_000),
+            "{".repeat(100) + &"}".repeat(100),
+            "a b c".to_string(),
+            "debugger debugger".to_string(),
+        ];
+        for source in &cases {
+            let _ = parse_script(source);
+        }
+        // A long flat list of statements is a loop, so it is bounded by memory rather than by
+        // MAX_NESTING_DEPTH — unlike a deeply nested block, which is not.
+        assert_eq!(
+            parse_script(&"a;".repeat(10_000))
+                .map(|s| s.body.len())
+                .ok(),
+            Some(10_000)
+        );
+        assert_eq!(
+            script_error(&"{".repeat(10_000)).kind,
+            ParseErrorKind::TooDeeplyNested
+        );
+    }
+}

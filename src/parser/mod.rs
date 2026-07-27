@@ -29,16 +29,19 @@
 //! - `error` — [`ParseError`] and its kinds.
 //! - `operator` — precedence, associativity, and the pairs §13 keeps apart.
 //! - `expression` — the grammar of §13, from `Expression` down to `PrimaryExpression`.
+//! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
 mod error;
 mod expression;
 mod operator;
+mod statement;
 #[cfg(test)]
 mod test_support;
 
 pub use self::error::{ParseError, ParseErrorKind};
+pub use self::statement::parse_script;
 
 use crate::ast::Expr;
 use crate::lexer::{Goal, Lexer, Token, TokenKind};
@@ -84,7 +87,8 @@ pub const MAX_NESTING_DEPTH: u32 = 48;
 
 /// Parse `source` as a single expression, which must be all of it.
 ///
-/// A placeholder entry point: the real one is `parse_script`, and it arrives with statements.
+/// A convenience beside [`parse_script`], which is the entry point a program goes through.
+/// Useful where an expression is all there is — and, more often, in tests about one.
 ///
 /// ```
 /// use praxis::ast::ExprKind;

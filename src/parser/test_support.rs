@@ -1,7 +1,7 @@
 //! Helpers shared by the parser's test modules.
 
 use super::{ParseError, parse_expression};
-use crate::ast::{Expr, ExprKind, RegExpLiteral};
+use crate::ast::{Expr, ExprKind, RegExpLiteral, Stmt, StmtKind};
 
 /// The parsed expression of `source`.
 pub(super) fn parse(source: &str) -> Expr {
@@ -103,5 +103,21 @@ pub(super) fn error(source: &str) -> ParseError {
     match parse_expression(source) {
         Err(err) => err,
         Ok(expr) => panic!("{source:?} should not parse, got {expr:?}"), // a test about an error cannot proceed without one
+    }
+}
+
+/// A statement rendered compactly, for tests about statement structure.
+///
+/// Blocks print as `{a b}` and expression statements as their expression, so a script reads as
+/// the list of shapes it is — which is what a test about semicolon insertion wants to assert.
+pub(super) fn render_statement(stmt: &Stmt) -> String {
+    match &stmt.kind {
+        StmtKind::Empty => "<empty>".to_string(),
+        StmtKind::Debugger => "debugger".to_string(),
+        StmtKind::Expression(expr) => render(expr),
+        StmtKind::Block(body) => {
+            let rendered: Vec<String> = body.iter().map(render_statement).collect();
+            format!("{{{}}}", rendered.join(" "))
+        }
     }
 }
