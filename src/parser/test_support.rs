@@ -115,6 +115,17 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
         StmtKind::Empty => "<empty>".to_string(),
         StmtKind::Debugger => "debugger".to_string(),
         StmtKind::Expression(expr) => render(expr),
+        StmtKind::Declaration(declaration) => {
+            let names: Vec<String> = declaration
+                .declarators
+                .iter()
+                .map(|d| match &d.initializer {
+                    Some(value) => format!("{}={}", d.name, render(value)),
+                    None => d.name.to_string(),
+                })
+                .collect();
+            format!("({} {})", declaration.kind.as_str(), names.join(" "))
+        }
         StmtKind::Block(body) => {
             let rendered: Vec<String> = body.iter().map(render_statement).collect();
             format!("{{{}}}", rendered.join(" "))

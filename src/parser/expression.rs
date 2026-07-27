@@ -476,7 +476,7 @@ impl<'a> Parser<'a> {
     /// Unreachable in principle — the value functions accept every span the lexer hands out — but
     /// the types do not say so, and the alternative to an error here is an `unwrap` that DR-0002
     /// forbids. It reports the token as unexpected, which is what it has become.
-    fn value_missing(&self, token: Token) -> ParseError {
+    pub(super) fn value_missing(&self, token: Token) -> ParseError {
         ParseError {
             kind: ParseErrorKind::Unexpected {
                 expected: "a literal this parser can read",

@@ -43,6 +43,67 @@ pub enum StmtKind {
     Expression(Box<Expr>),
     /// `debugger;` (§14.16).
     Debugger,
+    /// `var`, `let` or `const` (§14.3).
+    ///
+    /// Boxed for the reason the others are: a declaration is a keyword and a list, and inline
+    /// that is wider than every other statement — which every level of `{ { { … } } }` would
+    /// carry on the parser's stack.
+    Declaration(Box<Declaration>),
+}
+
+/// A `var`, `let` or `const` declaration (§14.3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Declaration {
+    /// Which of the three keywords introduced it.
+    pub kind: DeclarationKind,
+    /// The names it binds, in order. Never empty — the grammar needs at least one.
+    pub declarators: Box<[Declarator]>,
+}
+
+/// Which keyword a declaration was written with.
+///
+/// The three differ in scope and in when their bindings become usable, none of which the parser
+/// decides — but the early errors of §14.3.1.1 apply to two of them and not the third, which is
+/// why the distinction is in the tree rather than left to the compiler to rediscover.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DeclarationKind {
+    /// `var` — function-scoped, and not a lexical declaration.
+    Var,
+    /// `let` — block-scoped.
+    Let,
+    /// `const` — block-scoped, and its bindings must be initialised where they are declared.
+    Const,
+}
+
+impl DeclarationKind {
+    /// How it is written.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Var => "var",
+            Self::Let => "let",
+            Self::Const => "const",
+        }
+    }
+
+    /// Whether this is a `LexicalDeclaration` (§14.3.1) rather than a `VariableStatement`.
+    ///
+    /// The two early errors about `let` as a name and about duplicate names apply to the lexical
+    /// forms only: `var a, a;` is perfectly legal and `let a, a;` is not.
+    pub fn is_lexical(&self) -> bool {
+        matches!(self, Self::Let | Self::Const)
+    }
+}
+
+/// One name bound by a declaration, with what it is initialised to.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Declarator {
+    /// The bound name, with any `\u` escapes resolved.
+    pub name: Box<str>,
+    /// What it is initialised to, if anything. Absent is legal for `var` and `let`, and a
+    /// Syntax Error for `const` (§14.3.1.1).
+    pub initializer: Option<Box<Expr>>,
+    /// The name and the initialiser together.
+    pub span: Span,
 }
 
 /// An expression, with where it was written.

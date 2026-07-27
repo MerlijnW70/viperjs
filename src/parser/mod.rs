@@ -30,9 +30,11 @@
 //! - `operator` — precedence, associativity, and the pairs §13 keeps apart.
 //! - `expression` — the grammar of §13, from `Expression` down to `PrimaryExpression`.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
+//! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
+mod declaration;
 mod error;
 mod expression;
 mod operator;
@@ -140,6 +142,21 @@ impl<'a> Parser<'a> {
         let consumed = self.current;
         self.current = self.lexer.next_token(goal)?;
         Ok(consumed)
+    }
+
+    /// The token after the current one, read under `goal`.
+    ///
+    /// A copy of the lexer reads it, so nothing is buffered and nothing is invalidated: the
+    /// lexer is two string slices, and lexing from a copy leaves the real one exactly where it
+    /// was. The goal is a parameter for the same reason it is everywhere else — the caller is
+    /// the one who knows what could legally stand there.
+    ///
+    /// Used sparingly, and only where the grammar genuinely needs two tokens to decide: `let`
+    /// is a declaration or an identifier depending on what follows it, and nothing shorter than
+    /// looking answers that.
+    pub(super) fn peek(&self, goal: Goal) -> Result<Token, ParseError> {
+        let mut lookahead = self.lexer;
+        Ok(lookahead.next_token(goal)?)
     }
 
     /// Open one level of nesting, refusing rather than recursing past [`MAX_NESTING_DEPTH`].

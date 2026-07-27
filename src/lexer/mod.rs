@@ -83,6 +83,7 @@ use crate::unicode_id::is_id_start;
 /// The point of the type is that it has no panicking path and no unreachable branch: the
 /// remaining text is held as a slice rather than an index, so "advance" is
 /// [`std::str::Chars::as_str`] and never a range expression that could land mid-character.
+#[derive(Clone, Copy)]
 struct Cursor<'a> {
     source: &'a str,
     /// The not-yet-consumed tail of `source`. Always a suffix, always on a character boundary.
@@ -197,6 +198,13 @@ impl Goal {
 /// let kinds: Vec<_> = tokens.iter().map(|t| t.kind).collect();
 /// assert_eq!(kinds, [TokenKind::LBrace, TokenKind::RBrace, TokenKind::Eof]);
 /// ```
+///
+/// `Copy`, and deliberately so: a lexer is two string slices and nothing else, so a caller that
+/// needs to see the token *after* the one it is holding can copy the lexer and read from the
+/// copy. That is a snapshot rather than a buffer — there is no state to invalidate, and no
+/// question of which goal symbol a buffered token was read under, because the copy is read under
+/// whichever goal the caller asks for.
+#[derive(Clone, Copy)]
 pub struct Lexer<'a> {
     cursor: Cursor<'a>,
 }

@@ -45,6 +45,20 @@ pub enum ParseErrorKind {
     /// can build so far the answer is "an identifier, however many parentheses are around it".
     /// `1 = 2` and `(a, b) = 3` are the shapes this rejects.
     InvalidAssignmentTarget,
+    /// §14.3.1.1: a `const` binding with no initialiser.
+    ///
+    /// `const a;` has nothing to be constant, and no later statement may supply it — which is
+    /// why this is a Syntax Error rather than a value of `undefined`.
+    ConstWithoutInitializer,
+    /// §14.3.1.1: the `BoundNames` of a lexical declaration may not contain `let`.
+    ///
+    /// `let let = 1` and `const let = 1` are both refused. `var let = 1` is not: the rule is on
+    /// the lexical forms only.
+    LetAsLexicalBindingName,
+    /// §14.3.1.1: the `BoundNames` of a lexical declaration may not repeat.
+    ///
+    /// `let a, a;` is refused where `var a, a;` is not, for the same reason.
+    DuplicateLexicalBinding,
     /// §13.13: `??` may not be mixed with `&&` or `||` without parentheses.
     ///
     /// `CoalesceExpressionHead` admits a `CoalesceExpression` or a `BitwiseORExpression` and
@@ -79,6 +93,15 @@ impl fmt::Display for ParseErrorKind {
                 }
             }
             Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            Self::ConstWithoutInitializer => {
+                write!(f, "a `const` binding must have an initializer")
+            }
+            Self::LetAsLexicalBindingName => {
+                write!(f, "`let` may not be the name of a `let` or `const` binding")
+            }
+            Self::DuplicateLexicalBinding => {
+                write!(f, "this name is bound twice in the same declaration")
+            }
             Self::InvalidAssignmentTarget => {
                 write!(f, "this expression cannot be assigned to")
             }

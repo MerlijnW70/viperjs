@@ -26,7 +26,7 @@
 //! under [`Goal::Div`], so the slash is division before ASI is ever consulted.
 
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{Script, Stmt, StmtKind};
+use crate::ast::{DeclarationKind, Script, Stmt, StmtKind};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
 use crate::span::Span;
 
@@ -74,24 +74,37 @@ impl Parser<'_> {
     /// test.
     fn parse_statement(&mut self) -> Result<Stmt, ParseError> {
         match self.current.kind {
-            TokenKind::LBrace => self.parse_block(),
+            TokenKind::LBrace => return self.parse_block(),
             TokenKind::Semicolon => {
                 let token = self.advance(Goal::RegExp)?;
-                Ok(Stmt {
+                return Ok(Stmt {
                     kind: StmtKind::Empty,
                     span: token.span,
-                })
+                });
             }
             TokenKind::Keyword(ReservedWord::Debugger) => {
                 let token = self.advance(Goal::RegExp)?;
                 let end = self.consume_semicolon(token.span)?;
-                Ok(Stmt {
+                return Ok(Stmt {
                     kind: StmtKind::Debugger,
                     span: token.span.to(end),
-                })
+                });
             }
-            _ => self.parse_expression_statement(),
+            TokenKind::Keyword(ReservedWord::Var) => {
+                return self.parse_declaration(DeclarationKind::Var);
+            }
+            TokenKind::Keyword(ReservedWord::Const) => {
+                return self.parse_declaration(DeclarationKind::Const);
+            }
+            _ => {}
         }
+        // `let` is the only one that needs looking at what follows it — see
+        // [`Parser::at_lexical_let`]. It is also §14.5's restriction on `let [`, from the side
+        // that knows what the brackets are for.
+        if self.at_lexical_let()? {
+            return self.parse_declaration(DeclarationKind::Let);
+        }
+        self.parse_expression_statement()
     }
 
     /// `Block : { StatementList_opt }` (§14.2).
@@ -127,7 +140,7 @@ impl Parser<'_> {
     /// The three conditions below are §12.10's rules 1 and 2, in the one place a statement can
     /// need them. Rule 1's third condition — the previous token being `)` of a `do`-`while` —
     /// is absent because there is no `do`-`while` yet to close.
-    fn consume_semicolon(&mut self, previous: Span) -> Result<Span, ParseError> {
+    pub(super) fn consume_semicolon(&mut self, previous: Span) -> Result<Span, ParseError> {
         if self.current.kind == TokenKind::Semicolon {
             return Ok(self.advance(Goal::RegExp)?.span);
         }
@@ -286,23 +299,19 @@ mod tests {
         for source in [
             "function f() {}",
             "class C {}",
-            "var a = 1",
             "if (a) b;",
             "return 1;",
+            "throw a;",
+            "try {} catch {}",
         ] {
             assert!(parse_script(source).is_err(), "{source:?}");
         }
-        // `let [` is the exception, and the one place this parser currently reads something as
-        // the wrong tree rather than refusing it: §14.5 says an ExpressionStatement may not
-        // begin with `let [`, because that is a lexical declaration. Until declarations exist
-        // there is nothing to parse it as, and `let` is an ordinary identifier — so this reads
-        // as a computed member assignment. The day `let` arrives, this test changes.
-        assert_eq!(statements("let [a] = b"), ["(= ([] let a) b)"]);
-        // The ordinary form is narrower trouble than it looks: `let a = b` is already an error,
-        // because `let` and `a` are two expressions on one line and nothing inserts a semicolon
-        // between them. Only the bracketed form reads as something else.
-        assert!(parse_script("let a = b").is_err());
-        assert!(parse_script("const a = b").is_err());
+        // The `let [` pin that stood here has moved to the declaration slice, where it now
+        // parses far enough to reach a real complaint about the pattern rather than reading as
+        // a member access. Nothing in this parser reads a construct as the wrong tree any more.
+        assert!(parse_script("let [a] = b").is_err());
+        assert_eq!(statements("var a = 1"), ["(var a=1)"]);
+        assert_eq!(statements("let a = 1"), ["(let a=1)"]);
     }
 
     #[test]
