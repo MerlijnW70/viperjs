@@ -146,6 +146,12 @@ pub enum ParseErrorKind {
     /// remaining elements of an iterator can be spread into a pattern, and there is no way to
     /// spread the remaining properties of an object into one.
     RestTargetMayNotBePattern,
+    /// §15.4: a getter with parameters, or a setter without exactly one.
+    ///
+    /// `get a()` is written with empty parentheses in the grammar and `set a(v)` with a single
+    /// `FormalParameter` — singular, and a `FormalParameter` rather than a `FormalParameters`, so
+    /// a setter may take a pattern or a default and may not take a rest.
+    AccessorParameterCount,
     /// §13.2.5.1: two `__proto__` properties written as `PropertyName : AssignmentExpression`.
     ///
     /// Only that production counts: a computed key and a shorthand are invisible to the rule,
@@ -319,6 +325,10 @@ impl fmt::Display for ParseErrorKind {
             Self::RestTargetMayNotBePattern => write!(
                 f,
                 "a `...` property must name somewhere to put an object, not a pattern"
+            ),
+            Self::AccessorParameterCount => write!(
+                f,
+                "a getter takes no parameters and a setter takes exactly one"
             ),
             Self::DuplicateProto => {
                 write!(f, "an object literal may set `__proto__` only once")

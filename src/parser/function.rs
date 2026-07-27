@@ -102,7 +102,7 @@ impl Parser<'_> {
     }
 
     /// `( FormalParameters )` (§15.1).
-    fn parse_formal_parameters(&mut self) -> Result<FormalParameters, ParseError> {
+    pub(super) fn parse_formal_parameters(&mut self) -> Result<FormalParameters, ParseError> {
         let open = self.eat(TokenKind::LParen, Goal::RegExp, "`(`")?;
         let mut items: Vec<BindingElement> = Vec::new();
         let mut rest: Option<Box<Binding>> = None;
@@ -138,7 +138,7 @@ impl Parser<'_> {
     }
 
     /// `{ FunctionBody }` (§15.2), and everything that being a boundary implies.
-    fn parse_function_body(&mut self) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
+    pub(super) fn parse_function_body(&mut self) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         // `[+Return]`, which only this production sets — and which is restored on the way out
         // even when the body fails, so that a `return` after the function is still refused. The

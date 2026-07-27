@@ -3,7 +3,7 @@
 use super::{ParseError, parse_expression};
 use crate::ast::{
     ArrayElement, AssignmentTarget, Binding, BindingElement, BindingPattern, Declaration, Expr,
-    ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, Pattern, PatternElement,
+    ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, MethodKind, Pattern, PatternElement,
     PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
 };
 
@@ -105,6 +105,21 @@ pub(super) fn render(expr: &Expr) -> String {
                     PropertyDefinition::ShorthandWithDefault { name, default, .. } => {
                         format!("(= {} {})", name, render(default))
                     }
+                    PropertyDefinition::Method {
+                        key,
+                        kind,
+                        function,
+                    } => match kind {
+                        MethodKind::Normal => {
+                            format!("({} {})", render_key(key), render_function(function))
+                        }
+                        MethodKind::Get => {
+                            format!("(get {} {})", render_key(key), render_function(function))
+                        }
+                        MethodKind::Set => {
+                            format!("(set {} {})", render_key(key), render_function(function))
+                        }
+                    },
                     PropertyDefinition::Spread(value) => format!("(... {})", render(value)),
                 })
                 .collect();

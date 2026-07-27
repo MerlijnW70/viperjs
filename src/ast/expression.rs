@@ -59,8 +59,28 @@ pub enum PropertyDefinition {
         /// Where the name was written.
         span: Span,
     },
+    /// `a() {}`, `get a() {}`, `set a(v) {}` — a `MethodDefinition` (§15.4).
+    Method {
+        /// What names the property.
+        key: PropertyKey,
+        /// Which of the three it is.
+        kind: MethodKind,
+        /// The function, which is never named: a method's name is the property's.
+        function: Box<super::Function>,
+    },
     /// `...a`, which stands wherever any other property may.
     Spread(Expr),
+}
+
+/// Which kind of `MethodDefinition` (§15.4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MethodKind {
+    /// `a() {}` — an ordinary method.
+    Normal,
+    /// `get a() {}`, which takes no parameters.
+    Get,
+    /// `set a(v) {}`, which takes exactly one.
+    Set,
 }
 
 /// What names a property (§13.2.5).

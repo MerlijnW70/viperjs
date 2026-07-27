@@ -181,6 +181,18 @@ impl Parser<'_> {
                         default: Some(default),
                     },
                 }),
+                // A `MethodDefinition` has no `AssignmentProperty` to be refined into: there is
+                // nowhere to put a value that is written as a function.
+                PropertyDefinition::Method {
+                    key: _,
+                    kind: _,
+                    function,
+                } => {
+                    return Err(ParseError {
+                        kind: ParseErrorKind::InvalidDestructuringTarget,
+                        span: function.span,
+                    });
+                }
                 PropertyDefinition::Spread(target) => {
                     // §13.15.5.1: an `AssignmentRestProperty` target may not be an array or object
                     // literal. An array's rest may — `[...[a]] = b` is legal — and the asymmetry

@@ -30,7 +30,7 @@ pub use self::binding::{
     ObjectBindingPattern,
 };
 pub use self::expression::{
-    ArrayElement, Expr, ExprKind, PropertyDefinition, PropertyKey, RegExpLiteral,
+    ArrayElement, Expr, ExprKind, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral,
 };
 pub use self::function::{FormalParameters, Function};
 pub use self::operator::{

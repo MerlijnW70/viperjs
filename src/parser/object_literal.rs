@@ -85,7 +85,22 @@ impl Parser<'_> {
     /// One `PropertyDefinition` that is not a spread (§13.2.5).
     fn parse_property_definition(&mut self) -> Result<PropertyDefinition, ParseError> {
         let token = self.current;
+        let escaped = matches!(
+            token.kind,
+            TokenKind::Identifier {
+                contains_escape: true
+            }
+        );
         let key = self.parse_property_key()?;
+        // `MethodDefinition`, whose two forms are told apart by the token after the word — see
+        // [`super::method`]. A `(` means the word was the name.
+        if let Some(kind) = self.at_accessor(&key, escaped) {
+            let name = self.parse_property_key()?;
+            return self.parse_method(name, kind);
+        }
+        if self.current.kind == TokenKind::LParen {
+            return self.parse_method(key, crate::ast::MethodKind::Normal);
+        }
         if self.current.kind == TokenKind::Colon {
             self.advance(Goal::RegExp)?;
             let value = self.parse_assignment(AllowIn::Yes)?;
@@ -299,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn an_object_is_a_value_here_and_a_home_for_no_methods() {
+    fn an_object_is_a_value_here_and_a_home_for_methods_but_not_patterns() {
         // `CoverInitializedName` is always a Syntax Error in an object literal (§13.2.5.1). It
         // exists so the cover grammar can reach `({a = 1} = b)` — which is a pattern, and is
         // refused here for want of the refinement rather than for want of this rule.
@@ -317,16 +332,13 @@ mod tests {
         for source in ["({a} = b);", "({a: b} = c);", "({} = b);", "({a = 1} = b);"] {
             assert!(parse_script(source).is_ok(), "{source:?}");
         }
-        // `MethodDefinition` is the remaining `PropertyDefinition` alternative and needs
-        // functions.
-        for source in [
-            "({a() {}})",
-            "({get a() {}})",
-            "({set a(v) {}})",
-            "({*a() {}})",
-        ] {
-            assert!(parse_expression(source).is_err(), "{source:?}");
+        // `MethodDefinition` was the remaining `PropertyDefinition` alternative and needed
+        // functions — and is here now, in [`super::super::method`]. Only the generator and async
+        // forms are left, and they arrive with the constructs that vary `[Yield]` and `[Await]`.
+        for source in ["({a() {}})", "({get a() {}})", "({set a(v) {}})"] {
+            assert!(parse_expression(source).is_ok(), "{source:?}");
         }
+        assert!(parse_expression("({*a() {}})").is_err());
         // …while an object as a value is unaffected, which is what this slice adds.
         assert!(parse_script("a = {b: 1};").is_ok());
         assert!(parse_script("f({a: 1}, {b: 2});").is_ok());

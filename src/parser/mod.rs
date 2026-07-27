@@ -37,6 +37,7 @@
 //! - `binding` — binding patterns (§14.3.3), which need no cover grammar and say so.
 //! - `function` — function definitions (§15.2), and the `return` they make legal (§14.10).
 //! - `strict` — where strict mode starts (§11.2.1) and what it takes away (§13.1.1).
+//! - `method` — method definitions (§15.4), the last `PropertyDefinition` alternative.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -60,6 +61,7 @@ mod for_statement;
 mod function;
 mod labelled;
 mod member;
+mod method;
 mod object_literal;
 mod operator;
 mod pattern;
