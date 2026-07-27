@@ -23,8 +23,10 @@
 
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{DoWhileStatement, IfStatement, Stmt, StmtKind, WhileStatement};
-use crate::lexer::{Goal, ReservedWord, TokenKind};
+use crate::ast::{
+    DoWhileStatement, IfStatement, Label, Stmt, StmtKind, WhileStatement, WithStatement,
+};
+use crate::lexer::{Goal, ReservedWord, TokenKind, identifier_value};
 
 impl Parser<'_> {
     /// `IfStatement` (§14.6).
@@ -67,7 +69,7 @@ impl Parser<'_> {
         let keyword = self.advance(Goal::RegExp)?;
         let test = self.parse_parenthesized_test()?;
         self.enter()?;
-        let body = self.parse_loop_body();
+        let body = self.parse_statement();
         self.leave();
         let body = body?;
         Ok(Stmt {
@@ -80,7 +82,7 @@ impl Parser<'_> {
     pub(super) fn parse_do_while(&mut self) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
         self.enter()?;
-        let body = self.parse_loop_body();
+        let body = self.parse_statement();
         self.leave();
         let body = body?;
         self.eat(
@@ -101,18 +103,6 @@ impl Parser<'_> {
             span: keyword.span.to(end),
             kind: StmtKind::DoWhile(Box::new(DoWhileStatement { body, test })),
         })
-    }
-
-    /// A loop body, with the surrounding statement counted as an enclosing iteration.
-    ///
-    /// That count is what §14.8.1 and §14.9.1 ask about: a `continue` must be inside an
-    /// `IterationStatement`, and a `break` inside one or a `switch`. Kept as a depth rather than
-    /// a flag because loops nest, and restored on the way out even when the body fails to parse.
-    pub(super) fn parse_loop_body(&mut self) -> Result<Stmt, ParseError> {
-        self.iteration_depth += 1;
-        let body = self.parse_statement();
-        self.iteration_depth -= 1;
-        body
     }
 
     /// `( Expression )`, the head shared by `if`, `while` and `do`-`while`.
@@ -151,41 +141,61 @@ impl Parser<'_> {
         })
     }
 
-    /// `BreakStatement` and `ContinueStatement` (§14.9, §14.8), without their label forms.
+    /// `BreakStatement` and `ContinueStatement` (§14.9, §14.8).
     ///
-    /// The labelled forms are restricted productions — `break [no LineTerminator here]
-    /// LabelIdentifier` — and arrive with labelled statements, which is what would give a label
-    /// something to name. Until then the restriction needs no code: with no label to take, a
-    /// name on the next line is simply the next statement, which is what the restriction says it
-    /// should be.
+    /// Both are restricted productions — `break [no LineTerminator here] LabelIdentifier` — and
+    /// this is the third and last of §12.10's rule 3. Unlike `throw`, both have a shorter form to
+    /// fall back on, so a name on the next line does not fail: it becomes the next statement, and
+    /// the jump becomes an unlabelled one.
+    ///
+    /// Nothing here decides whether the jump is *allowed*. Whether a label exists, whether it
+    /// names a loop, whether an unlabelled jump has anything to leave — all of that is §8.3 and
+    /// §14.8.1, and all of it is asked of the finished tree by
+    /// [`crate::static_semantics::first_label_problem`].
     pub(super) fn parse_break_or_continue(&mut self, is_break: bool) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
-        // §14.8.1 and §14.9.1, which differ in exactly one word: a `break` may be inside "an
-        // IterationStatement or a SwitchStatement", a `continue` only inside the first. Two
-        // counts rather than one, because that difference is the whole rule.
-        let enclosing = if is_break {
-            self.iteration_depth + self.switch_depth
-        } else {
-            self.iteration_depth
-        };
-        if enclosing == 0 {
-            return Err(ParseError {
-                kind: if is_break {
-                    ParseErrorKind::BreakOutsideLoop
-                } else {
-                    ParseErrorKind::ContinueOutsideLoop
-                },
-                span: keyword.span,
-            });
-        }
-        let end = self.consume_semicolon(keyword.span)?;
+        let label = self.parse_jump_label()?;
+        let end = self.consume_semicolon(label.as_ref().map_or(keyword.span, |l| l.span))?;
         Ok(Stmt {
             span: keyword.span.to(end),
             kind: if is_break {
-                StmtKind::Break
+                StmtKind::Break(label)
             } else {
-                StmtKind::Continue
+                StmtKind::Continue(label)
             },
+        })
+    }
+
+    /// The optional `LabelIdentifier` of a `break` or `continue`, if one is on this line.
+    fn parse_jump_label(&mut self) -> Result<Option<Box<Label>>, ParseError> {
+        if self.current.newline_before || !matches!(self.current.kind, TokenKind::Identifier { .. })
+        {
+            return Ok(None);
+        }
+        let token = self.advance(Goal::Div)?;
+        let name =
+            identifier_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
+        Ok(Some(Box::new(Label {
+            name: name.into_owned().into_boxed_str(),
+            span: token.span,
+        })))
+    }
+
+    /// `WithStatement : with ( Expression ) Statement` (§14.11).
+    ///
+    /// §14.11.1 makes this a Syntax Error in strict code, and there is no strict mode yet to make
+    /// it one — so `with` parses everywhere, which is right for the sloppy code that is all this
+    /// parser can currently be given.
+    pub(super) fn parse_with(&mut self) -> Result<Stmt, ParseError> {
+        let keyword = self.advance(Goal::RegExp)?;
+        let object = self.parse_parenthesized_test()?;
+        self.enter()?;
+        let body = self.parse_statement();
+        self.leave();
+        let body = body?;
+        Ok(Stmt {
+            span: keyword.span.to(body.span),
+            kind: StmtKind::With(Box::new(WithStatement { object, body })),
         })
     }
 }
@@ -333,7 +343,9 @@ mod tests {
             script_error("if (a) continue;").kind,
             ParseErrorKind::ContinueOutsideLoop
         );
-        assert_eq!(script_error("break;").span, Span::new(0, 5));
+        // The caret covers the whole statement rather than the keyword: the complaint is
+        // that this `break` has nothing to leave, which is about the statement.
+        assert_eq!(script_error("break;").span, Span::new(0, 6));
         // The count is restored even when the body fails, so a later legal `break` is not
         // wrongly accepted and a later illegal one is not wrongly allowed.
         assert!(parse_script("while (a) { @ }").is_err());

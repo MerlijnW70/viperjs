@@ -34,6 +34,7 @@
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
 //! - `for_statement` — the three-part `for` (§14.7.4), the one header read under `[~In]`.
 //! - `for_in_of` — `for`-`in` and `for`-`of` (§14.7.5), which share that header.
+//! - `labelled` — labelled statements (§14.13), the second and last place two tokens decide.
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
 //! - `switch` — `switch` (§14.12), whose CaseBlock is one scope across all its clauses.
@@ -46,6 +47,7 @@ mod error;
 mod expression;
 mod for_in_of;
 mod for_statement;
+mod labelled;
 mod operator;
 mod scope;
 mod statement;
@@ -56,6 +58,8 @@ mod try_catch;
 
 pub use self::error::{ParseError, ParseErrorKind};
 pub use self::statement::parse_script;
+#[cfg(test)]
+pub(crate) use self::statement::parse_script_with_label_rules_unchecked;
 
 use crate::ast::Expr;
 use crate::lexer::{Goal, Lexer, Token, TokenKind};
@@ -82,6 +86,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | `switch` | 114 | 48 |
 /// | the `[In]` parameter, and `for` | 113 | 48 |
 /// | `for`-`in` and `for`-`of` | 113 | 48 |
+/// | labelled statements, and `with` | 113 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -101,7 +106,8 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// shared by every kind of nesting, so what bounds it is whichever kind spends the most stack per
 /// level. Statements are cheap next to expressions — a level of `if` is three frames where a
 /// level of `(` is the whole precedence ladder — and measured alone they afford 339 levels,
-/// `while` 504, a block 392, a `for` 254, a `try` 221, a `for`-`in` 202, a `switch` 185. So the
+/// `with` 508, `while` 504, a label 476, a block 392, a `for` 254, a `try` 221, a `for`-`in`
+/// 202, a `switch` 185. So the
 /// expression path
 /// still sets the number, and will keep setting it until a statement form recurses through an
 /// expression-sized descent.
@@ -156,13 +162,6 @@ struct Parser<'a> {
     pub(super) current: Token,
     /// How many recursive entries are open. See [`Parser::enter`].
     depth: u32,
-    /// How many enclosing iteration statements there are, which is what §14.8.1 asks about
-    /// when it refuses a `continue` that has nothing to go round.
-    pub(super) iteration_depth: u32,
-    /// How many enclosing `switch` statements there are. Counted apart from the loops because
-    /// §14.9.1 admits "an IterationStatement or a SwitchStatement" and §14.8.1 admits only the
-    /// first — so a `switch` is somewhere to `break` out of and never somewhere to `continue`.
-    pub(super) switch_depth: u32,
 }
 
 impl<'a> Parser<'a> {
@@ -178,8 +177,6 @@ impl<'a> Parser<'a> {
             lexer,
             current,
             depth: 0,
-            iteration_depth: 0,
-            switch_depth: 0,
         })
     }
 
@@ -341,6 +338,12 @@ mod tests {
             format!("{}a;", "if (a) b; else ".repeat(deep)),
             format!("{}a;", "while (a) ".repeat(deep)),
             format!("{}a;", "for (;;) ".repeat(deep)),
+            // Distinct labels, since §8.3.1 refuses a repeat before the stack ever gets a say.
+            format!(
+                "{};",
+                (0..deep).map(|i| format!("l{i}: ")).collect::<String>()
+            ),
+            format!("{};", "with (a) ".repeat(deep - 1)),
             // One shallower: a level holds one of the count for the loop itself, and the
             // innermost header still needs one more to read the target before the `in`.
             format!("{}a;", "for (a in b) ".repeat(deep - 1)),

@@ -42,11 +42,7 @@ impl Parser<'_> {
         let discriminant = discriminant?;
         self.eat(TokenKind::RParen, Goal::RegExp, "`)`")?;
         self.enter()?;
-        // A `switch` is somewhere a `break` may leave from, and never somewhere a `continue` may
-        // go — §14.9.1 against §14.8.1. Restored on the way out even when the block fails.
-        self.switch_depth += 1;
         let cases = self.parse_case_block();
-        self.switch_depth -= 1;
         self.leave();
         let (cases, end) = cases?;
         Ok(Stmt {

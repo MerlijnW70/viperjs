@@ -106,9 +106,27 @@ pub enum ParseErrorKind {
     /// becomes two statements, `throw\na` becomes a `throw` with nothing to throw, and there is
     /// no such statement — so this is an error rather than a quietly different program.
     NewlineAfterThrow,
+    /// §8.3.1: a label repeats one that already encloses it.
+    ///
+    /// `a: a: ;` and `a: { a: ; }` alike — the label set of §8.3.1 passes through every
+    /// construct, so no amount of nesting between the two makes them different labels.
+    DuplicateLabel,
+    /// §8.3.2: `break a;` with no enclosing `a:`.
+    UndefinedBreakTarget,
+    /// §8.3.3: `continue a;` where `a:` labels something that is not a loop.
+    ///
+    /// Not the same as no such label: `a: { while (1) continue a; }` has one, and it names the
+    /// block. Only a label written directly on a loop can be continued.
+    UndefinedContinueTarget,
     /// §14.9.1: a `break` that is not inside a loop or a `switch`.
+    ///
+    /// Stated about `break ;` alone, so a labelled `break` needs no such thing — it needs only a
+    /// label that exists.
     BreakOutsideLoop,
     /// §14.8.1: a `continue` that is not inside a loop.
+    ///
+    /// Stated about both forms, unlike §14.9.1 — a `continue` is inside a loop whatever it
+    /// names, or it is an error.
     ContinueOutsideLoop,
     /// §13.13: `??` may not be mixed with `&&` or `||` without parentheses.
     ///
@@ -185,6 +203,16 @@ impl fmt::Display for ParseErrorKind {
             ),
             Self::NewlineAfterThrow => {
                 write!(f, "the value thrown must be on the same line as `throw`")
+            }
+            Self::DuplicateLabel => {
+                write!(f, "this label already encloses this statement")
+            }
+            Self::UndefinedBreakTarget => write!(f, "no enclosing statement has this label"),
+            Self::UndefinedContinueTarget => {
+                write!(
+                    f,
+                    "this label is not on a loop, so `continue` cannot name it"
+                )
             }
             Self::BreakOutsideLoop => write!(f, "`break` is not inside a loop or a `switch`"),
             Self::ContinueOutsideLoop => write!(f, "`continue` is not inside a loop"),

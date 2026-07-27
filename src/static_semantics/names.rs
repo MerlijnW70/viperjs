@@ -7,43 +7,11 @@
 //! `{ let a; { var a; } }` declares `a` twice in *one* scope and is not.
 //!
 //! That asymmetry is the whole content of these functions, and it is why they are a pair rather
-//! than one function with a flag.
-//!
-//! # Why this is a pass over the tree and not a scope stack in the parser
-//!
-//! DR-0007. The specification defines these as operations over the parse tree, and writing them
-//! that way means each one can be read against its section and checked. A parser that tracked
-//! scopes as it went would compute the same answer by different means, and the day the two
-//! disagreed there would be nothing to compare against.
-//!
-//! # The walk adds no stack of its own
-//!
-//! [`var_declared_names`] descends through every statement that contains statements, so the
-//! obvious implementation recurses once per level of nesting. It walks an explicit stack instead,
-//! and the reason is worth stating precisely rather than as a reflex about recursion.
-//!
-//! A `Stmt` already has one recursive path over it that no walk can avoid: its own destructor.
-//! `Block(Box<[Stmt]>)` drops its children, which drop theirs, and measured in a debug build
-//! against a mebibyte that runs out at about 3,500 levels. So a tree deeper than that cannot
-//! safely exist at all, whoever built it — which puts a ceiling on what any argument about walks
-//! can be worth, and is comfortably above the parser's cap of 48.
-//!
-//! What an iterative walk buys, then, is not a bigger number. It is that `Drop` stays the *only*
-//! recursive path over the tree, so there is one limit to know rather than one per operation —
-//! and these are public functions over a public tree, so each new one would otherwise add its own.
+//! than one function with a flag. See the module documentation for why they are a pass over the
+//! tree, and why the walk is iterative.
 
+use super::DeclaredName;
 use crate::ast::{Stmt, StmtKind};
-use crate::span::Span;
-
-/// A name some construct declares, and where it was written.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct DeclaredName<'a> {
-    /// The bound name, with any `\u` escapes already resolved — `BoundNames` is a `StringValue`,
-    /// so two spellings of one name are one name.
-    pub name: &'a str,
-    /// The name alone, not the initialiser with it. Early errors about these names point here.
-    pub span: Span,
-}
 
 /// `LexicallyDeclaredNames` of a `StatementList` (§8.2.6).
 ///
@@ -122,6 +90,8 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
                 }
                 pending.push(&statement.consequent);
             }
+            StmtKind::Labelled(statement) => pending.push(&statement.body),
+            StmtKind::With(statement) => pending.push(&statement.body),
             StmtKind::While(statement) => pending.push(&statement.body),
             StmtKind::DoWhile(statement) => pending.push(&statement.body),
             StmtKind::For(statement) => {
@@ -176,8 +146,8 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
             | StmtKind::Expression(_)
             | StmtKind::Debugger
             | StmtKind::Throw(_)
-            | StmtKind::Break
-            | StmtKind::Continue => {}
+            | StmtKind::Break(_)
+            | StmtKind::Continue(_) => {}
         }
     }
     names
@@ -203,6 +173,7 @@ fn push_bound_names<'a>(
 mod tests {
     use super::*;
     use crate::parser::parse_script;
+    use crate::span::Span;
 
     /// The lexically declared names of `source`, as a list of names.
     fn lexical(source: &str) -> Vec<String> {

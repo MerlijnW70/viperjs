@@ -218,7 +218,23 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             }
             format!("{})", parts.join(" "))
         }
-        StmtKind::Break => "break".to_string(),
-        StmtKind::Continue => "continue".to_string(),
+        StmtKind::Labelled(statement) => format!(
+            "(label {} {})",
+            statement.label.name,
+            render_statement(&statement.body)
+        ),
+        StmtKind::With(statement) => format!(
+            "(with {} {})",
+            render(&statement.object),
+            render_statement(&statement.body)
+        ),
+        StmtKind::Break(label) => match label {
+            Some(label) => format!("(break {})", label.name),
+            None => "break".to_string(),
+        },
+        StmtKind::Continue(label) => match label {
+            Some(label) => format!("(continue {})", label.name),
+            None => "continue".to_string(),
+        },
     }
 }

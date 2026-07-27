@@ -24,7 +24,10 @@
 use super::{ParseError, ParseErrorKind};
 use crate::ast::{Declaration, Stmt, SwitchCase};
 use crate::span::Span;
-use crate::static_semantics::{DeclaredName, lexically_declared_names, var_declared_names};
+use crate::static_semantics::{
+    DeclaredName, LabelProblemKind, first_label_problem, lexically_declared_names,
+    var_declared_names,
+};
 use std::collections::HashMap;
 
 /// Apply both rules to a completed statement list, whether a `Block`'s or a `Script`'s.
@@ -54,6 +57,26 @@ pub(super) fn check_case_block_declared_names(cases: &[SwitchCase]) -> Result<()
             .flat_map(|case| var_declared_names(&case.body))
             .collect(),
     )
+}
+
+/// §16.1.1: the five rules of §8.3, §14.8.1 and §14.9.1, asked of a finished `Script`.
+///
+/// The walk answers all five and this only names them, which is the seam DR-0007 asks for: the
+/// operations return what they found and the parser decides what to call it.
+pub(super) fn check_labels(body: &[Stmt]) -> Result<(), ParseError> {
+    let Some(problem) = first_label_problem(body) else {
+        return Ok(());
+    };
+    Err(ParseError {
+        kind: match problem.kind {
+            LabelProblemKind::DuplicateLabel => ParseErrorKind::DuplicateLabel,
+            LabelProblemKind::UndefinedBreakTarget => ParseErrorKind::UndefinedBreakTarget,
+            LabelProblemKind::UndefinedContinueTarget => ParseErrorKind::UndefinedContinueTarget,
+            LabelProblemKind::BreakOutsideLoopOrSwitch => ParseErrorKind::BreakOutsideLoop,
+            LabelProblemKind::ContinueOutsideLoop => ParseErrorKind::ContinueOutsideLoop,
+        },
+        span: problem.span,
+    })
 }
 
 /// §14.7.4.1: a `for` header's lexical names may not be `var`-declared in its body.

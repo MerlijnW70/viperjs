@@ -43,6 +43,16 @@ use crate::span::Span;
 /// assert!(matches!(script.body[0].kind, StmtKind::Expression(_)));
 /// ```
 pub fn parse_script(source: &str) -> Result<Script, ParseError> {
+    let script = parse_script_before_label_rules(source)?;
+    // §16.1.1's other five rules, about labels and the jumps that name them. Apart from the rest
+    // because the walk that answers them has its own tests, and those need a tree that broke the
+    // rules — which is the one thing this function will not hand back.
+    super::scope::check_labels(&script.body)?;
+    Ok(script)
+}
+
+/// [`parse_script`] up to but not including §16.1.1's label rules.
+fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
     let body = parser.parse_statement_list(TokenKind::Eof)?;
     parser.expect_eof()?;
@@ -52,6 +62,12 @@ pub fn parse_script(source: &str) -> Result<Script, ParseError> {
         body,
         span: Span::new(0, source.len() as u32),
     })
+}
+
+/// A `Script` that may break §16.1.1's label rules, for the tests of the walk that finds them.
+#[cfg(test)]
+pub(crate) fn parse_script_with_label_rules_unchecked(source: &str) -> Result<Script, ParseError> {
+    parse_script_before_label_rules(source)
 }
 
 impl Parser<'_> {
@@ -123,8 +139,13 @@ impl Parser<'_> {
             TokenKind::Keyword(ReservedWord::Throw) => self.parse_throw(),
             TokenKind::Keyword(ReservedWord::Try) => self.parse_try(),
             TokenKind::Keyword(ReservedWord::Switch) => self.parse_switch(),
+            TokenKind::Keyword(ReservedWord::With) => self.parse_with(),
             TokenKind::Keyword(ReservedWord::Break) => self.parse_break_or_continue(true),
             TokenKind::Keyword(ReservedWord::Continue) => self.parse_break_or_continue(false),
+            // An identifier and a `:` is a `LabelledStatement`, which is the second and last
+            // place this parser needs two tokens — and, like `let`, a case where one token
+            // begins two productions.
+            _ if self.at_labelled_statement()? => self.parse_labelled_statement(),
             _ => self.parse_expression_statement(),
         }
     }
@@ -334,13 +355,7 @@ mod tests {
         // or `class` as well as `{`, each because it would be ambiguous with a declaration. None
         // of those is an expression here either, so each fails rather than being misread — and
         // will start parsing the day its declaration form lands.
-        for source in [
-            "function f() {}",
-            "class C {}",
-            "return 1;",
-            "with (a) {}",
-            "label: a;",
-        ] {
+        for source in ["function f() {}", "class C {}", "return 1;"] {
             assert!(parse_script(source).is_err(), "{source:?}");
         }
         // The `let [` pin that stood here has moved to the declaration slice, where it now

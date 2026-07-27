@@ -71,7 +71,7 @@ impl Parser<'_> {
         self.leave();
         let right = right?;
         self.eat(TokenKind::RParen, Goal::RegExp, "`)`")?;
-        let body = self.parse_loop_body()?;
+        let body = self.parse_statement()?;
         if let ForInOfTarget::Declaration(declaration) = &left
             && declaration.kind.is_lexical()
         {

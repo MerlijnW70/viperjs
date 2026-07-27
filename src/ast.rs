@@ -65,10 +65,49 @@ pub enum StmtKind {
     Switch(Box<SwitchStatement>),
     /// `try { … } catch { … } finally { … }` (§14.15).
     Try(Box<TryStatement>),
-    /// `break;` (§14.9), without a label.
-    Break,
-    /// `continue;` (§14.8), without a label.
-    Continue,
+    /// `a: …` (§14.13).
+    Labelled(Box<LabelledStatement>),
+    /// `with (…) …` (§14.11).
+    With(Box<WithStatement>),
+    /// `break;` or `break a;` (§14.9).
+    Break(Option<Box<Label>>),
+    /// `continue;` or `continue a;` (§14.8).
+    Continue(Option<Box<Label>>),
+}
+
+/// `LabelIdentifier : LabelledItem` (§14.13).
+#[derive(Debug, Clone, PartialEq)]
+pub struct LabelledStatement {
+    /// The name given to the statement.
+    pub label: Label,
+    /// What was labelled. A `Statement`, so never a lexical declaration.
+    pub body: Stmt,
+}
+
+/// A label, where it is declared or where a jump names it (§14.13, §14.8, §14.9).
+///
+/// Boxed into [`StmtKind::Break`] and [`StmtKind::Continue`] rather than inlined, because a name
+/// and a span inline would make those two the widest variants of a statement — and a jump without
+/// a label is much the commoner one.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Label {
+    /// The name, with any `\u` escapes resolved. Nothing here is a terminal, so an escaped
+    /// spelling names the same label.
+    pub name: Box<str>,
+    /// The name alone.
+    pub span: Span,
+}
+
+/// `with ( Expression ) Statement` (§14.11).
+///
+/// A Syntax Error in strict code (§14.11.1), which this parser cannot yet tell apart — so it
+/// parses everywhere for now, and the day strict mode exists that rule has somewhere to live.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WithStatement {
+    /// The object whose properties become bindings for the body.
+    pub object: Expr,
+    /// What runs with them in scope.
+    pub body: Stmt,
 }
 
 /// `for ( … ; … ; … ) Statement` (§14.7.4) — the three-part loop.
