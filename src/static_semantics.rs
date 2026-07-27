@@ -124,6 +124,18 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
             }
             StmtKind::While(statement) => pending.push(&statement.body),
             StmtKind::DoWhile(statement) => pending.push(&statement.body),
+            StmtKind::Switch(statement) => {
+                // §8.2.8 defines this over the CaseBlock, which is the concatenation across every
+                // clause — a `var` in any of them belongs to the enclosing function just as much.
+                // The discriminant is an expression and declares nothing.
+                pending.extend(
+                    statement
+                        .cases
+                        .iter()
+                        .rev()
+                        .flat_map(|case| case.body.iter().rev()),
+                );
+            }
             StmtKind::Try(statement) => {
                 // All three Blocks, because a `var` in any of them belongs to the enclosing
                 // function just as much. The catch *parameter* is not among them — it is bound

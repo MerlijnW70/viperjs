@@ -22,9 +22,9 @@
 //! point a `Script` stops being able to share this function with a `Block`.
 
 use super::{ParseError, ParseErrorKind};
-use crate::ast::Stmt;
+use crate::ast::{Stmt, SwitchCase};
 use crate::span::Span;
-use crate::static_semantics::{lexically_declared_names, var_declared_names};
+use crate::static_semantics::{DeclaredName, lexically_declared_names, var_declared_names};
 use std::collections::HashMap;
 
 /// Apply both rules to a completed statement list, whether a `Block`'s or a `Script`'s.
@@ -34,8 +34,35 @@ use std::collections::HashMap;
 /// on the parser because it needs nothing the parser knows: the tree is the whole input, which is
 /// the point of computing early errors this way.
 pub(super) fn check_declared_names(body: &[Stmt]) -> Result<(), ParseError> {
+    check(lexically_declared_names(body), var_declared_names(body))
+}
+
+/// The same two rules over a `CaseBlock` (§14.12.1).
+///
+/// The clauses are not scopes — the `CaseBlock` is the scope — so §8.2.6 and §8.2.8 both define
+/// their lists over it as the concatenation across every clause. Doing exactly that is what makes
+/// `case 1: let a; case 2: let a;` a redeclaration, and it is why this is a second caller of the
+/// same rules rather than a second rule.
+pub(super) fn check_case_block_declared_names(cases: &[SwitchCase]) -> Result<(), ParseError> {
+    check(
+        cases
+            .iter()
+            .flat_map(|case| lexically_declared_names(&case.body))
+            .collect(),
+        cases
+            .iter()
+            .flat_map(|case| var_declared_names(&case.body))
+            .collect(),
+    )
+}
+
+/// §14.2.1, §16.1.1 and §14.12.1, which state the same two rules about different lists.
+fn check(
+    lexical_names: Vec<DeclaredName<'_>>,
+    var_names: Vec<DeclaredName<'_>>,
+) -> Result<(), ParseError> {
     let mut lexical: HashMap<&str, Span> = HashMap::new();
-    for declared in lexically_declared_names(body) {
+    for declared in lexical_names {
         // The list is in source order, so the one that collides is always the later of the
         // two and there is nothing to compare — the caret goes on the redeclaration because
         // that is where it was found, not because a rule picked it.
@@ -49,7 +76,7 @@ pub(super) fn check_declared_names(body: &[Stmt]) -> Result<(), ParseError> {
     // No short-circuit when there are no lexical names, though the loop below can then do
     // nothing: a branch no input can tell from its absence is one mutation testing
     // call untested, and it is not the parser's business to guess where the time goes.
-    for declared in var_declared_names(body) {
+    for declared in var_names {
         if let Some(&lexical_span) = lexical.get(declared.name) {
             return Err(ParseError {
                 kind: ParseErrorKind::ConflictingVarAndLexicalDeclaration,

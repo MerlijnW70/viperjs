@@ -66,6 +66,11 @@ pub enum ParseErrorKind {
     /// bindings of `a` in one scope even though nothing at either level looks like a
     /// redeclaration.
     ConflictingVarAndLexicalDeclaration,
+    /// §14.12: a `switch` with more than one `default` clause.
+    ///
+    /// `CaseBlock : { CaseClauses_opt DefaultClause CaseClauses_opt }` admits exactly one, so a
+    /// second is a missing production rather than an early error.
+    MultipleDefaultClauses,
     /// §14.15: a `try` with neither a `catch` nor a `finally`.
     ///
     /// There is no `TryStatement : try Block`, so this is a missing production rather than an
@@ -133,6 +138,9 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "this name is declared by `var` and by `let` or `const` in the same scope"
             ),
+            Self::MultipleDefaultClauses => {
+                write!(f, "a `switch` may have only one `default` clause")
+            }
             Self::TryWithoutHandler => {
                 write!(f, "a `try` needs a `catch` or a `finally`")
             }
@@ -143,7 +151,7 @@ impl fmt::Display for ParseErrorKind {
             Self::NewlineAfterThrow => {
                 write!(f, "the value thrown must be on the same line as `throw`")
             }
-            Self::BreakOutsideLoop => write!(f, "`break` is not inside a loop"),
+            Self::BreakOutsideLoop => write!(f, "`break` is not inside a loop or a `switch`"),
             Self::ContinueOutsideLoop => write!(f, "`continue` is not inside a loop"),
             Self::InvalidAssignmentTarget => {
                 write!(f, "this expression cannot be assigned to")

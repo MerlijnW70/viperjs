@@ -159,9 +159,15 @@ impl Parser<'_> {
     /// should be.
     pub(super) fn parse_break_or_continue(&mut self, is_break: bool) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
-        // §14.8.1 and §14.9.1. `break` is also legal inside a `switch`, which does not exist
-        // yet; when it does, it raises this count and nothing else here changes.
-        if self.iteration_depth == 0 {
+        // §14.8.1 and §14.9.1, which differ in exactly one word: a `break` may be inside "an
+        // IterationStatement or a SwitchStatement", a `continue` only inside the first. Two
+        // counts rather than one, because that difference is the whole rule.
+        let enclosing = if is_break {
+            self.iteration_depth + self.switch_depth
+        } else {
+            self.iteration_depth
+        };
+        if enclosing == 0 {
             return Err(ParseError {
                 kind: if is_break {
                     ParseErrorKind::BreakOutsideLoop

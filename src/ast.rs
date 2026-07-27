@@ -57,12 +57,44 @@ pub enum StmtKind {
     DoWhile(Box<DoWhileStatement>),
     /// `throw …;` (§14.14). Always has a value — there is no argument-less form.
     Throw(Box<Expr>),
+    /// `switch (…) { case …: … }` (§14.12).
+    Switch(Box<SwitchStatement>),
     /// `try { … } catch { … } finally { … }` (§14.15).
     Try(Box<TryStatement>),
     /// `break;` (§14.9), without a label.
     Break,
     /// `continue;` (§14.8), without a label.
     Continue,
+}
+
+/// `switch ( Expression ) CaseBlock` (§14.12).
+#[derive(Debug, Clone, PartialEq)]
+pub struct SwitchStatement {
+    /// The value each `case` is compared against, with `===`.
+    pub discriminant: Expr,
+    /// The clauses, in source order, `default` among them wherever it was written.
+    ///
+    /// One flat list rather than the grammar's `CaseClauses_opt DefaultClause CaseClauses_opt`,
+    /// because that shape exists to say "at most one `default`" and nothing else — the clauses
+    /// run in source order regardless of which side of it they fall. What the flat list gives up
+    /// is that guarantee, so the parser states it instead.
+    pub cases: Box<[SwitchCase]>,
+}
+
+/// One `CaseClause` or the `DefaultClause` of a `switch` (§14.12).
+///
+/// A clause is **not** a scope. The whole `CaseBlock` is one, which is why
+/// `case 1: let a; case 2: let a;` is a redeclaration and `case 1: { let a; } case 2: { let a; }`
+/// is not — the braces in the second are doing the work.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SwitchCase {
+    /// What this clause matches. `None` for `default`, which matches nothing and is jumped to
+    /// only when no `case` matched.
+    pub test: Option<Expr>,
+    /// The clause's `StatementList`, which may be empty — a clause that falls straight through.
+    pub body: Box<[Stmt]>,
+    /// `case` or `default` through the last statement of the clause.
+    pub span: Span,
 }
 
 /// `try Block Catch`, `try Block Finally`, or all three (§14.15).

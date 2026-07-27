@@ -157,6 +157,16 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             render(&statement.test)
         ),
         StmtKind::Throw(value) => format!("(throw {})", render(value)),
+        StmtKind::Switch(statement) => {
+            let mut parts = vec![format!("(switch {}", render(&statement.discriminant))];
+            for case in &statement.cases {
+                parts.push(match &case.test {
+                    Some(test) => format!("(case {} {})", render(test), render_block(&case.body)),
+                    None => format!("(default {})", render_block(&case.body)),
+                });
+            }
+            format!("{})", parts.join(" "))
+        }
         StmtKind::Try(statement) => {
             let mut parts = vec![format!("(try {}", render_block(&statement.block))];
             if let Some(handler) = &statement.handler {

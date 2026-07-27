@@ -34,6 +34,7 @@
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
+//! - `switch` — `switch` (§14.12), whose CaseBlock is one scope across all its clauses.
 //! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
@@ -44,6 +45,7 @@ mod expression;
 mod operator;
 mod scope;
 mod statement;
+mod switch;
 #[cfg(test)]
 mod test_support;
 mod try_catch;
@@ -73,6 +75,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | member access, calls, `new`, update | 112 | 48 |
 /// | conditionals and loops | 114 | 48 |
 /// | `try`, `catch` and `finally` | 114 | 48 |
+/// | `switch` | 114 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -81,17 +84,20 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// through — the trick works because a debug build reuses no stack slots between match arms, so
 /// an arm that cannot recurse is still paid for by every level that does.
 ///
-/// The last two rows cost nothing, and the reason is worth keeping: the count is one budget
+/// The last three rows cost nothing, and the reason is worth keeping: the count is one budget
 /// shared by every kind of nesting, so what bounds it is whichever kind spends the most stack per
 /// level. Statements are cheap next to expressions — a level of `if` is three frames where a
 /// level of `(` is the whole precedence ladder — and measured alone they afford 339 levels,
-/// `while` 504, a block 392, a `try` 221. So the expression path still sets the number, and will
-/// keep setting it until a statement form recurses through an expression-sized descent.
+/// `while` 504, a block 392, a `try` 221, a `switch` 185. So the expression path still sets the
+/// number, and will keep setting it until a statement form recurses through an expression-sized
+/// descent.
 ///
-/// A `try` is the cheapest-looking and the most expensive to nest, because stack is not the only
-/// thing a level spends: it takes *two* of the count, one for the statement and one for its
-/// guarded `Block`. So `try {` nests 24 deep against the cap where `{` nests 48, which is the
-/// count doing exactly what it should — the two really are two scopes.
+/// Stack is not the only thing a level spends, though, and the two newest forms show it. A `try`
+/// takes *two* of the count on each level, one for the statement and one for its guarded `Block`,
+/// so `try {` nests 24 deep against a cap of 48 where `{` nests 48. A `switch` takes one for its
+/// CaseBlock and borrows a second while it reads the expression after `case`, so it nests 47. In
+/// both the count is doing exactly what it should: those really are separate scopes and separate
+/// descents, and the cap is about what the machine can afford rather than about tidy numbers.
 ///
 /// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse of each
 /// recursive path in a thread with exactly one mebibyte, and this cap leaves a factor of about
@@ -136,9 +142,13 @@ struct Parser<'a> {
     pub(super) current: Token,
     /// How many recursive entries are open. See [`Parser::enter`].
     depth: u32,
-    /// How many enclosing iteration statements there are, which is what §14.8.1 and §14.9.1 ask
-    /// about when they refuse a `break` or `continue` that has nothing to leave.
+    /// How many enclosing iteration statements there are, which is what §14.8.1 asks about
+    /// when it refuses a `continue` that has nothing to go round.
     pub(super) iteration_depth: u32,
+    /// How many enclosing `switch` statements there are. Counted apart from the loops because
+    /// §14.9.1 admits "an IterationStatement or a SwitchStatement" and §14.8.1 admits only the
+    /// first — so a `switch` is somewhere to `break` out of and never somewhere to `continue`.
+    pub(super) switch_depth: u32,
 }
 
 impl<'a> Parser<'a> {
@@ -155,6 +165,7 @@ impl<'a> Parser<'a> {
             current,
             depth: 0,
             iteration_depth: 0,
+            switch_depth: 0,
         })
     }
 
@@ -307,6 +318,13 @@ mod tests {
                 "{}{}",
                 "try { ".repeat(deep / 2),
                 "} catch (e) {}".repeat(deep / 2)
+            ),
+            // One shallower again: each level holds one of the count for its CaseBlock, and the
+            // innermost `case` still needs one more to parse the expression after it.
+            format!(
+                "{}{}",
+                "switch (x) { case 1: ".repeat(deep - 1),
+                "}".repeat(deep - 1)
             ),
             // One shallower, because `throw` counts the frame it holds while its value is
             // parsed — so `throw` plus a full-depth expression is one level past the cap, and

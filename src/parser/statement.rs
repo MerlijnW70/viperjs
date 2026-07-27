@@ -73,7 +73,7 @@ impl Parser<'_> {
     /// has no `Declaration` alternative, so `if (a) let b = 1;` has no derivation while
     /// `if (a) var b = 1;` does. That asymmetry is in the grammar rather than in any early error
     /// about it, and this is where it lives.
-    fn parse_statement_list_item(&mut self) -> Result<Stmt, ParseError> {
+    pub(super) fn parse_statement_list_item(&mut self) -> Result<Stmt, ParseError> {
         if self.current.kind == TokenKind::Keyword(ReservedWord::Const) {
             return self.parse_declaration(DeclarationKind::Const);
         }
@@ -120,6 +120,7 @@ impl Parser<'_> {
             TokenKind::Keyword(ReservedWord::Do) => self.parse_do_while(),
             TokenKind::Keyword(ReservedWord::Throw) => self.parse_throw(),
             TokenKind::Keyword(ReservedWord::Try) => self.parse_try(),
+            TokenKind::Keyword(ReservedWord::Switch) => self.parse_switch(),
             TokenKind::Keyword(ReservedWord::Break) => self.parse_break_or_continue(true),
             TokenKind::Keyword(ReservedWord::Continue) => self.parse_break_or_continue(false),
             _ => self.parse_expression_statement(),
@@ -336,7 +337,6 @@ mod tests {
             "class C {}",
             "return 1;",
             "for (;;) {}",
-            "switch (a) {}",
             "with (a) {}",
             "label: a;",
         ] {
