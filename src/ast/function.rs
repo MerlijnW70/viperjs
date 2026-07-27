@@ -208,6 +208,7 @@ pub(crate) fn key_is(key: &super::PropertyKey, name: &str) -> bool {
         // A private name is not a property name at all, so it is never either of the two
         // names this asks about — `#constructor` has its own rule, on the name itself.
         super::PropertyKey::Number(_)
+        | super::PropertyKey::BigInt(_)
         | super::PropertyKey::Computed(_)
         | super::PropertyKey::Private(_) => false,
     }

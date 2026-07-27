@@ -14,10 +14,11 @@
 //! - **Annex B.1.1 HTML-like comments.** `<!--` lexes as `<` `!` `--` today; `-->` would
 //!   additionally need "nothing but trivia before it on this line" state and a Script-vs-Module
 //!   goal flag.
-//! - **`BigInt` values.** The `n` suffix produces a [`TokenKind::BigInt`], because lexing
-//!   `123n` as `123` and the name `n` would be silently valid nonsense — but the value waits for
-//!   the BigInt type at M7, and [`numeric_value`] answers `None` for such a span rather than
-//!   handing back the nearest `f64`.
+//! - **`BigInt` values.** The `n` suffix produces a [`TokenKind::BigInt`], and the parser has a
+//!   production for it — but the *value* waits for the BigInt type at M7. [`numeric_value`]
+//!   answers `None` for such a span rather than handing back the nearest `f64`;
+//!   [`bigint_digits`] answers with the digits, which is everything that can be known without
+//!   arbitrary-precision arithmetic.
 //!
 //! # Names, and what the lexer refuses to decide
 //!
@@ -43,7 +44,8 @@
 //! - `trivia` — white space, comments, and the hashbang (§12.2 – §12.5).
 //! - `name` — identifiers, `\u` escapes, and the keyword decision (§12.7).
 //! - `number` — how far a numeric literal reaches (§12.9.3), Annex B's legacy forms included.
-//! - `number_value` — what one denotes, correctly rounded (§12.9.3.3).
+//! - `number_value` — what one denotes, correctly rounded (§12.9.3.3), and what a
+//!   `BigIntLiteral` is made of.
 //! - `string` — string literals and the code units they denote (§12.9.4).
 //! - `regexp` — where a regular expression literal ends (§12.9.5).
 //! - `template` — template components and their two values (§12.9.6).
@@ -67,7 +69,7 @@ mod trivia;
 
 pub use self::error::{LexError, LexErrorKind};
 pub use self::name::identifier_value;
-pub use self::number_value::numeric_value;
+pub use self::number_value::{bigint_digits, numeric_value};
 pub use self::regexp::{RegExpParts, regexp_parts};
 pub use self::reserved::ReservedWord;
 pub use self::string::string_value;

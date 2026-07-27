@@ -129,8 +129,8 @@ pub enum MethodKind {
 
 /// What names a property (§13.2.5).
 ///
-/// The four source forms are kept apart rather than reduced to one string, because reducing them
-/// needs `PropName`, and `PropName` of a `NumericLiteral` is `ToString` of its value — an abstract
+/// The source forms are kept apart rather than reduced to one string, because reducing them needs
+/// `PropName`, and `PropName` of a `NumericLiteral` is `ToString` of its value — an abstract
 /// operation this engine does not have yet. Inventing an approximation would be a bug that only
 /// ever showed up in a property name.
 #[derive(Debug, Clone, PartialEq)]
@@ -142,6 +142,9 @@ pub enum PropertyKey {
     String(Box<[u16]>),
     /// A `NumericLiteral`, as its value.
     Number(f64),
+    /// A `BigIntLiteral`, which §12.9.3 makes one of the `NumericLiteral` alternatives — so
+    /// `({1n: 2})` is an ordinary property and `class C { 1n() {} }` an ordinary method.
+    BigInt(Box<BigIntLiteral>),
     /// `[ AssignmentExpression ]`, whose name is not known until it runs.
     Computed(Box<Expr>),
     /// `#a` — a `PrivateIdentifier`, without its `#`.
@@ -157,15 +160,39 @@ impl PropertyKey {
     /// Whether this names `__proto__`, for §13.2.5.1.
     ///
     /// A computed key is not asked, the rule being about the other productions; and a numeric key
-    /// cannot spell it, `PropName` of a number being the number written out.
+    /// of either kind cannot spell it, `PropName` of a number being the number written out.
     pub fn is_proto(&self) -> bool {
         match self {
             Self::Identifier(name) => &**name == "__proto__",
             Self::String(units) => units.iter().copied().eq("__proto__".encode_utf16()),
             // §13.2.5.1 is about an `ObjectLiteral`, which has no private keys at all.
-            Self::Number(_) | Self::Computed(_) | Self::Private(_) => false,
+            Self::Number(_) | Self::BigInt(_) | Self::Computed(_) | Self::Private(_) => false,
         }
     }
+}
+
+/// A `BigIntLiteral` (§12.9.3), as the digits it is made of.
+///
+/// Not as a value, because the value is a BigInt — a mathematical integer of no fixed width — and
+/// this engine has no such type until M7. Approximating one with an `f64` would be a bug that
+/// showed up only in the numbers BigInt exists for: `9007199254740993n` is the first integer an
+/// `f64` cannot hold, and webpack's test suite writes it down precisely because of that.
+///
+/// So the parser does the part it can do without arithmetic — strip the separators, the prefix
+/// and the suffix, and record which radix the prefix asked for — and leaves `StringToBigInt`
+/// (§7.1.14) to whoever owns the value representation. Nothing has to be lexed twice.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BigIntLiteral {
+    /// 2, 8, 10 or 16 — what the `0b` / `0o` / `0x` prefix asked for, or ten when there was none.
+    ///
+    /// Never eight from Annex B: a `LegacyOctalIntegerLiteral` has no `BigIntLiteralSuffix`
+    /// alternative at all, so `0123n` has no derivation and never reaches here.
+    pub radix: u32,
+    /// The digits, with every `NumericLiteralSeparator`, the radix prefix and the `n` removed.
+    ///
+    /// Never empty, and never signed: `-1n` is a unary minus applied to `1n`, exactly as it is for
+    /// every other numeric literal.
+    pub digits: Box<str>,
 }
 
 /// The two halves of a regular expression literal, as written.

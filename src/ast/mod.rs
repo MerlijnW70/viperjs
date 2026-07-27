@@ -40,8 +40,8 @@ pub use self::function::{
     FormalParameters, Function,
 };
 pub use self::literal::{
-    ArrayElement, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral, TemplateElement,
-    TemplateLiteral,
+    ArrayElement, BigIntLiteral, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral,
+    TemplateElement, TemplateLiteral,
 };
 pub use self::module::{
     ImportAttribute, ImportClause, ImportDeclaration, ImportSpecifier, Module, ModuleExportName,

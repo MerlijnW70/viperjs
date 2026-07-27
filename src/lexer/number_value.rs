@@ -66,6 +66,51 @@ pub fn numeric_value(source: &str, span: Span) -> Option<f64> {
     }
 }
 
+/// The radix a `BigIntLiteral` asked for and the digits it is made of, or `None` if `span` does
+/// not cover one.
+///
+/// This is the counterpart of [`numeric_value`] for the literals that one refuses: a BigInt
+/// denotes a mathematical integer of no fixed width, and there is no such type here until M7.
+/// What can be done without arithmetic is done — the `0b`/`0o`/`0x` prefix becomes a radix, and
+/// the `NumericLiteralSeparator`s and the `n` come out, §12.9.3's MV rules giving separators no
+/// value — so that `StringToBigInt` (§7.1.14) has nothing left to undo and the source never has
+/// to be lexed twice.
+///
+/// The digits are returned as written otherwise: neither zero-stripped nor case-folded, because
+/// `0x00Fn` and `0xfn` are the same number and only one of them is what the program said. That
+/// is the same position [`numeric_value`] takes by keeping the span.
+///
+/// Ten is returned for a literal with no prefix. Eight never is: Annex B's
+/// `LegacyOctalIntegerLiteral` has no `BigIntLiteralSuffix` alternative, so `0123n` has no
+/// derivation, the scanner refuses it, and no span reaching here can hold one.
+///
+/// ```
+/// use praxis::lexer::{Goal, Lexer, TokenKind, bigint_digits};
+///
+/// let source = "0x1_Fn";
+/// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");
+/// assert_eq!(token.kind, TokenKind::BigInt);
+/// assert_eq!(bigint_digits(source, token.span), Some((16, "1F".to_string())));
+/// ```
+pub fn bigint_digits(source: &str, span: Span) -> Option<(u32, String)> {
+    // The suffix is what makes it a BigInt, so its absence means the span holds something else —
+    // a `DecimalLiteral`, or nothing at all.
+    let text = span.slice(source)?.strip_suffix('n')?;
+    let (radix, digits) = match text.as_bytes() {
+        [b'0', b'b' | b'B', ..] => (2, text.get(2..)?),
+        [b'0', b'o' | b'O', ..] => (8, text.get(2..)?),
+        [b'0', b'x' | b'X', ..] => (16, text.get(2..)?),
+        _ => (10, text),
+    };
+    let digits: String = digits.chars().filter(|&ch| ch != '_').collect();
+    // An empty run means the span was `0bn` or just `n` — neither is a literal, and a
+    // `BigIntLiteral` always has at least one digit.
+    if digits.is_empty() || !digits.chars().all(|ch| ch.is_digit(radix)) {
+        return None;
+    }
+    Some((radix, digits))
+}
+
 /// `𝔽(MV)` for a digit string in a radix that is a power of two, with `bits` bits per digit.
 ///
 /// The digits of a base-2, base-8 or base-16 literal are exactly the bits of its value, so no
@@ -279,5 +324,63 @@ mod tests {
         assert_eq!(numeric_value("0x0", Span::new(0, 3)), Some(0.0));
         // A valid span still works when it does not start at zero.
         assert_eq!(numeric_value("x = 0x10", Span::new(4, 8)), Some(16.0));
+    }
+    #[test]
+    fn a_bigint_keeps_its_digits_and_the_radix_its_prefix_asked_for() {
+        // §12.9.3: every `BigIntLiteral` alternative, and the radix each one denotes.
+        assert_eq!(digits("1n"), (10, "1".to_string()));
+        assert_eq!(digits("0n"), (10, "0".to_string()));
+        assert_eq!(digits("0b1101n"), (2, "1101".to_string()));
+        assert_eq!(digits("0o17n"), (8, "17".to_string()));
+        assert_eq!(digits("0x1Fn"), (16, "1F".to_string()));
+        // The prefix may be written either way and means the same thing.
+        assert_eq!(digits("0B1n"), (2, "1".to_string()));
+        assert_eq!(digits("0O1n"), (8, "1".to_string()));
+        assert_eq!(digits("0X1n"), (16, "1".to_string()));
+        // Separators contribute nothing to the MV, so they contribute nothing here either.
+        assert_eq!(digits("1_2_3n"), (10, "123".to_string()));
+        assert_eq!(digits("0x1_Fn"), (16, "1F".to_string()));
+        // Neither zero-stripped nor case-folded: `0x00Fn` and `0xfn` are the same number, and
+        // which one the program wrote is not this function's to discard.
+        assert_eq!(digits("0x00Fn"), (16, "00F".to_string()));
+        assert_eq!(digits("0xfn"), (16, "f".to_string()));
+        // Longer than any `f64` — which is the entire reason the digits are kept as digits.
+        assert_eq!(
+            digits("123456789012345678901234567890n"),
+            (10, "123456789012345678901234567890".to_string())
+        );
+    }
+    #[test]
+    fn the_two_numeric_readers_each_refuse_what_the_other_takes() {
+        // The `n` is what tells them apart, and each answers `None` rather than guessing at a
+        // value of the type it does not have.
+        assert_eq!(numeric_value("1n", Span::new(0, 2)), None);
+        assert_eq!(bigint_digits("1", Span::new(0, 1)), None);
+        assert_eq!(bigint_digits("0x10", Span::new(0, 4)), None);
+    }
+    #[test]
+    fn bigint_digits_answers_rather_than_panicking_on_a_span_it_was_not_given() {
+        // Spans the lexer never produced: past the end, off a character boundary, empty, and
+        // over text that is not a literal at all.
+        assert_eq!(bigint_digits("123n", Span::new(0, 99)), None);
+        assert_eq!(bigint_digits("én", Span::new(0, 1)), None);
+        assert_eq!(bigint_digits("123n", Span::empty_at(1)), None);
+        assert_eq!(bigint_digits("abcn", Span::new(0, 4)), None);
+        assert_eq!(bigint_digits("", Span::empty_at(0)), None);
+        // A radix prefix with no digits behind it has none — and specifically not `"0"`, which
+        // is what a reader that forgot to look would return.
+        assert_eq!(bigint_digits("0xn", Span::new(0, 3)), None);
+        assert_eq!(bigint_digits("0b_n", Span::new(0, 4)), None);
+        assert_eq!(bigint_digits("n", Span::new(0, 1)), None);
+        // A digit outside the radix its prefix asked for. The scanner never produces one, so
+        // this is about answering `None` rather than reading it in the wrong base.
+        assert_eq!(bigint_digits("0b2n", Span::new(0, 4)), None);
+        assert_eq!(bigint_digits("0o8n", Span::new(0, 4)), None);
+        assert_eq!(bigint_digits("0xgn", Span::new(0, 4)), None);
+        // A valid span still works when it does not start at zero.
+        assert_eq!(
+            bigint_digits("x = 0x10n", Span::new(4, 9)),
+            Some((16, "10".to_string()))
+        );
     }
 }

@@ -3,7 +3,7 @@
 //! Only what more than one child module needs — the round-trip oracle stays beside the scanning
 //! it checks, in `mod.rs`.
 
-use super::{Goal, Lexer, Token, TokenKind, numeric_value};
+use super::{Goal, Lexer, Token, TokenKind, bigint_digits, numeric_value};
 
 /// The kinds of a source that lexes cleanly, EOF included.
 pub(super) fn kinds(source: &str) -> Vec<TokenKind> {
@@ -54,4 +54,10 @@ pub(super) fn value(source: &str) -> f64 {
     let token = first(source);
     numeric_value(source, token.span)
         .unwrap_or_else(|| panic!("{source:?} should have a numeric value")) // a test about the value cannot proceed without one
+}
+
+/// The radix and digits of the one `BigIntLiteral` in `source`.
+pub(super) fn digits(source: &str) -> (u32, String) {
+    let token = first(source);
+    bigint_digits(source, token.span).unwrap_or_else(|| panic!("{source:?} should have digits")) // a test about the digits cannot proceed without any
 }

@@ -322,6 +322,35 @@ mod tests {
     }
 
     #[test]
+    fn a_bigint_names_a_class_element_and_is_never_one_of_the_reserved_names() {
+        // `ClassElementName : PropertyName`, so a `BigIntLiteral` names a method or a field.
+        assert_eq!(
+            shape("class C { 1n(){} }"),
+            "(class C - [(1n (fn <anon> [] {}))])"
+        );
+        assert_eq!(
+            shape("class C { get 1n(){} }"),
+            "(class C - [(get 1n (fn <anon> [] {}))])"
+        );
+        assert_eq!(
+            shape("class C { async 1n(){} }"),
+            "(class C - [(1n (async-fn <anon> [] {}))])"
+        );
+        assert_eq!(shape("class C { 1n = 2 }"), "(class C - [(field 1n 2)])");
+        // §15.7.1's two name rules are about `PropName`, which for a BigInt is a number written
+        // out — so it is neither `constructor` nor `prototype`, and both of these parse. A
+        // `key_is` that said otherwise would refuse the first as a duplicate constructor and the
+        // second as a static `prototype`.
+        assert_eq!(
+            shape("class C { constructor(){} 1n(){} }"),
+            "(class C - [(constructor (fn <anon> [] {})) (1n (fn <anon> [] {}))])"
+        );
+        assert_eq!(
+            shape("class C { static 1n(){} }"),
+            "(class C - [(static 1n (fn <anon> [] {}))])"
+        );
+    }
+    #[test]
     fn static_is_a_method_name_until_something_a_method_may_begin_with_follows_it() {
         assert_eq!(
             statements("class C { static() {} }"),

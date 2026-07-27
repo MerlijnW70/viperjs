@@ -4,7 +4,7 @@
 //! parentheses. That is not decoration — several rules turn on it, and they are named on
 //! [`Expr::new`], which is the one place that decides what "not parenthesized" means.
 
-use super::{ArrayElement, PropertyDefinition, RegExpLiteral, TemplateLiteral};
+use super::{ArrayElement, BigIntLiteral, PropertyDefinition, RegExpLiteral, TemplateLiteral};
 use super::{
     AssignmentOperator, AssignmentTarget, BinaryOperator, LogicalOperator, UnaryOperator,
     UpdateOperator,
@@ -156,6 +156,7 @@ fn unlink(kind: ExprKind) -> Option<ExprKind> {
         // nesting count, so the depth through it is bounded before this runs.
         | ExprKind::Identifier(_)
         | ExprKind::Number(_)
+        | ExprKind::BigInt(_)
         | ExprKind::String(_)
         | ExprKind::Boolean(_)
         | ExprKind::Null
@@ -232,6 +233,9 @@ pub enum ExprKind {
     /// Two literals that denote the same Number are indistinguishable here, which is right:
     /// `1e3` and `1000` are the same value written twice, and only the span remembers which.
     Number(f64),
+    /// A `BigIntLiteral` (§12.9.3), as its digits — see [`BigIntLiteral`] for why it is not a
+    /// value.
+    BigInt(Box<BigIntLiteral>),
     /// A `StringLiteral`, as the UTF-16 code units of its `SV` (§12.9.4.2) — possibly including
     /// unpaired surrogates, which is why this is not a `String` (DR-0004).
     String(Vec<u16>),

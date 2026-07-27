@@ -6,8 +6,8 @@
 
 use super::{render_binding, render_binding_element, render_block, render_target};
 use crate::ast::{
-    Argument, ArrayElement, ArrowBody, Class, ClassElement, Expr, ExprKind, Function, MethodKind,
-    PropertyDefinition, PropertyKey, TemplateLiteral,
+    Argument, ArrayElement, ArrowBody, BigIntLiteral, Class, ClassElement, Expr, ExprKind,
+    Function, MethodKind, PropertyDefinition, PropertyKey, TemplateLiteral,
 };
 
 /// An expression rendered as a parenthesized prefix form.
@@ -21,6 +21,7 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::Null => "null".to_string(),
         ExprKind::Boolean(value) => value.to_string(),
         ExprKind::Number(value) => value.to_string(),
+        ExprKind::BigInt(literal) => render_bigint(literal),
         ExprKind::Identifier(name) => name.clone(),
         ExprKind::String(units) => format!("{units:?}"),
         ExprKind::RegExp(literal) => format!("/{}/{}", literal.body, literal.flags),
@@ -307,11 +308,27 @@ fn wrap(is_static: bool, head: &str, body: &str) -> String {
 }
 
 /// A property key, rendered so the four forms stay apart.
+/// A `BigIntLiteral` as its radix and digits, which is exactly what the node holds.
+///
+/// Written back in source form rather than as a number, because the node deliberately does not
+/// know the number — rendering one would mean computing it here, and a test helper that does
+/// arithmetic the engine cannot do is a test helper that can be wrong on its own.
+fn render_bigint(literal: &BigIntLiteral) -> String {
+    let prefix = match literal.radix {
+        2 => "0b",
+        8 => "0o",
+        16 => "0x",
+        _ => "",
+    };
+    format!("{prefix}{}n", literal.digits)
+}
+
 pub(in crate::parser) fn render_key(key: &PropertyKey) -> String {
     match key {
         PropertyKey::Identifier(name) => name.to_string(),
         PropertyKey::String(units) => format!("s{:?}", String::from_utf16_lossy(units)),
         PropertyKey::Number(value) => format!("n{value}"),
+        PropertyKey::BigInt(literal) => render_bigint(literal),
         PropertyKey::Computed(expr) => format!("[{}]", render(expr)),
         PropertyKey::Private(name) => format!("#{name}"),
     }

@@ -11,10 +11,10 @@
 
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{Expr, ExprKind, RegExpLiteral};
+use crate::ast::{BigIntLiteral, Expr, ExprKind, RegExpLiteral};
 use crate::lexer::{
-    Goal, ReservedWord, Token, TokenKind, identifier_value, numeric_value, regexp_parts,
-    string_value,
+    Goal, ReservedWord, Token, TokenKind, bigint_digits, identifier_value, numeric_value,
+    regexp_parts, string_value,
 };
 use crate::span::Span;
 
@@ -128,6 +128,10 @@ impl Parser<'_> {
                     .ok_or_else(|| self.value_missing(token))?;
                 literal(ExprKind::Number(value))
             }
+            TokenKind::BigInt => {
+                self.advance(Goal::Div)?;
+                literal(ExprKind::BigInt(Box::new(self.bigint_literal(token)?)))
+            }
             TokenKind::String { .. } => {
                 self.advance(Goal::Div)?;
                 let value = string_value(self.source, token.span)
@@ -153,6 +157,20 @@ impl Parser<'_> {
     /// Unreachable in principle — the value functions accept every span the lexer hands out — but
     /// the types do not say so, and the alternative to an error here is an `unwrap` that DR-0002
     /// forbids. It reports the token as unexpected, which is what it has become.
+    /// The [`BigIntLiteral`] a `TokenKind::BigInt` token holds.
+    ///
+    /// Shared by the two places §12.9.3's `BigIntLiteral` can appear — as a `PrimaryExpression`
+    /// and as a `PropertyName` — because they build the same node from the same token and only
+    /// the surrounding production differs.
+    pub(super) fn bigint_literal(&self, token: Token) -> Result<BigIntLiteral, ParseError> {
+        let (radix, digits) =
+            bigint_digits(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
+        Ok(BigIntLiteral {
+            radix,
+            digits: digits.into_boxed_str(),
+        })
+    }
+
     pub(super) fn value_missing(&self, token: Token) -> ParseError {
         ParseError {
             kind: ParseErrorKind::Unexpected {
@@ -307,6 +325,31 @@ mod tests {
         // Spans cover exactly the construct.
         assert_eq!(parse("  1  ").span, Span::new(2, 3));
         assert_eq!(parse("this").span, Span::new(0, 4));
+    }
+    #[test]
+    fn a_bigint_literal_keeps_its_digits_rather_than_becoming_a_number() {
+        // §12.9.3: `BigIntLiteral :: NumericLiteralBase BigIntLiteralSuffix`. The node holds what
+        // was written, radix and all, because the value it denotes has no type here until M7.
+        assert_eq!(shape("1n"), "1n");
+        assert_eq!(shape("0n"), "0n");
+        assert_eq!(shape("0b101n"), "0b101n");
+        assert_eq!(shape("0o17n"), "0o17n");
+        assert_eq!(shape("0x1Fn"), "0x1Fn");
+        assert_eq!(shape("1_000n"), "1000n");
+        // The one that says why this is not an `f64`: 2^53+1, which a Number cannot hold and
+        // would silently become 9007199254740992.
+        assert_eq!(shape("9007199254740993n"), "9007199254740993n");
+        assert_eq!(parse("  1n  ").span, Span::new(2, 4));
+        // An operand like any other, and specifically not an assignment target — §13.4.2.1's
+        // early error, which is about `AssignmentTargetType` and does not care that the operand
+        // is a literal of a new kind.
+        assert_eq!(shape("-1n"), "(- 1n)");
+        assert_eq!(shape("1n + 2n"), "(+ 1n 2n)");
+        assert_eq!(shape("1n.toString()"), "(call (. 1n toString) [])");
+        assert!(matches!(
+            error("1n++").kind,
+            ParseErrorKind::InvalidAssignmentTarget
+        ));
     }
     #[test]
     fn a_slash_at_the_start_of_an_expression_opens_a_literal() {

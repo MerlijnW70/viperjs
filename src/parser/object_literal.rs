@@ -207,6 +207,13 @@ impl Parser<'_> {
                     .ok_or_else(|| self.value_missing(token))?;
                 Ok(PropertyKey::Number(value))
             }
+            // §12.9.3 makes `BigIntLiteral` one of the `NumericLiteral` alternatives, and
+            // `LiteralPropertyName` names `NumericLiteral` — so `({1n: 2})` is a property and
+            // `class C { 1n() {} }` a method, both without ceremony.
+            TokenKind::BigInt => {
+                self.advance(Goal::Div)?;
+                Ok(PropertyKey::BigInt(Box::new(self.bigint_literal(token)?)))
+            }
             // `LiteralPropertyName : IdentifierName`, which is every name including the reserved
             // words: `{if: 1}` and `{class: 1}` are ordinary properties.
             TokenKind::Identifier { .. } | TokenKind::Keyword(_) => {
@@ -258,6 +265,37 @@ mod tests {
         }
     }
 
+    #[test]
+    fn a_bigint_names_a_property_the_way_any_other_numeric_literal_does() {
+        // §12.9.3 makes `BigIntLiteral` a `NumericLiteral`, and `LiteralPropertyName` names that.
+        assert_eq!(shape("({1n: 2})"), "{(1n 2)}");
+        assert_eq!(shape("({0x1Fn: 2})"), "{(0x1Fn 2)}");
+        // `get`, `set` and `async` are the name when nothing that can start one follows them, and
+        // the marker when something does — a numeric literal of either kind being such a thing.
+        assert_eq!(shape("({get 1n(){}})"), "{(get 1n (fn <anon> [] {}))}");
+        assert_eq!(shape("({set 1n(v){}})"), "{(set 1n (fn <anon> [v] {}))}");
+        assert_eq!(shape("({async 1n(){}})"), "{(1n (async-fn <anon> [] {}))}");
+        assert_eq!(
+            shape("({async *1n(){}})"),
+            "{(1n (async-fn* <anon> [] {}))}"
+        );
+        assert_eq!(shape("({*1n(){}})"), "{(1n (fn* <anon> [] {}))}");
+        // …and still the name when nothing follows, which is what keeps the lookahead honest.
+        assert_eq!(shape("({get: 1n})"), "{(get 1n)}");
+        // `PropName` of a BigInt is a number written out, so it spells neither of the two names
+        // the object literal's early errors are about. Both of these would be refused if it did.
+        assert_eq!(shape("({1n: 1, 1n: 2})"), "{(1n 1) (1n 2)}");
+        assert_eq!(shape("({1n: 1, __proto__: 2})"), "{(1n 1) (__proto__ 2)}");
+        // Shorthand is `IdentifierReference`, which a literal is not — so this has no derivation
+        // where `{1n: 2}` does.
+        assert_eq!(
+            error_kind("({1n})"),
+            ParseErrorKind::Unexpected {
+                expected: "`:`",
+                found: crate::lexer::TokenKind::RBrace,
+            }
+        );
+    }
     #[test]
     fn a_property_list_takes_a_trailing_comma_and_never_an_empty_slot() {
         assert_eq!(shape("({})"), "{}");

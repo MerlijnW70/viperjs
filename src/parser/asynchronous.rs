@@ -285,6 +285,7 @@ impl Parser<'_> {
                 | TokenKind::LBracket
                 | TokenKind::String { .. }
                 | TokenKind::Number { .. }
+                | TokenKind::BigInt
                 | TokenKind::Keyword(_)
                 | TokenKind::Identifier { .. }
                 | TokenKind::PrivateIdentifier { .. }
