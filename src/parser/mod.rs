@@ -198,11 +198,17 @@ use crate::span::Span;
 /// and a release one is several times cheaper, so an embedder's real margin is far larger; the
 /// thin number is a warning about *this repository's* CI, not about shipped code.
 ///
-/// The array literal is the outlier and is where the next increase has to come from: it costs
-/// more than twice a parenthesis and nearly five times a block, for a production that is not five
-/// times more complicated. Splitting the element loop out of the recursion — the trick
-/// [`Parser::parse_member`] documents — is already applied there, so what is left is the operand
-/// ladder each element descends. That is a measurement for `lab/` before it is a change here.
+/// The array literal looked like the outlier and is not, which `lab/`'s `nesting-cost` experiment
+/// settled: `a[0][0]…` costs the same 14.6 KiB and never touches `parse_array_literal`. What both
+/// pay for is the descent `parse_assignment -> parse_binary -> parse_unary -> parse_member ->
+/// parse_primary`, about six frames at the 2.5 KiB one frame costs — and `(` is cheap for the
+/// complementary reason, being intercepted at the assignment level before the ladder starts.
+///
+/// So there is nothing here to make cheaper: no frame is fat, and shaving two of them off the
+/// path measured *worse* than leaving them. The same experiment found that release is 5.5× cheaper
+/// than debug, which is where the headroom actually is — the cap could be around 260 at a
+/// comfortable margin if it were allowed to depend on the build, and DR-0006 says it may not. The
+/// lab notebook has the numbers and the argument.
 ///
 /// # Why a count and not a stack measurement
 ///
