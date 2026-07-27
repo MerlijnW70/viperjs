@@ -14,7 +14,9 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+pub mod ast;
 pub mod lexer;
+pub mod parser;
 pub mod span;
 mod unicode_id;
 mod unicode_id_table;
