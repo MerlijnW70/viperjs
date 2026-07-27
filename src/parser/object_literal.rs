@@ -33,21 +33,12 @@
 //! always throw a Syntax Error if it is matched. Refused here too, then — but for a thinner
 //! reason, since what it needs is the refinement rather than the rule.
 
-use super::class::SuperAllowed;
+use super::body::SuperAllowed;
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Expr, ExprKind, PropertyDefinition, PropertyKey};
 use crate::lexer::{Goal, TokenKind, identifier_value, numeric_value, string_value};
 use crate::span::Span;
-
-/// What `super` means in an object literal's method (§13.3.7).
-///
-/// `({ m() { super.a; } })` is legal — every method has a home object, and an object literal's is
-/// the object. `super(…)` is not: there is no parent constructor anywhere in sight.
-const SUPER_PROPERTY_ONLY: SuperAllowed = SuperAllowed {
-    property: true,
-    call: false,
-};
 
 impl Parser<'_> {
     /// `ObjectLiteral` (§13.2.5), with the cursor on the `{`.
@@ -102,7 +93,7 @@ impl Parser<'_> {
             self.advance(Goal::RegExp)?;
             let key = self.parse_property_key()?;
             let kind = crate::ast::MethodKind::Normal;
-            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY, true)?;
+            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, true)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -121,7 +112,7 @@ impl Parser<'_> {
         // [`super::method`]. A `(` means the word was the name.
         if let Some(kind) = self.at_accessor(&key, escaped) {
             let key = self.parse_property_key()?;
-            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY, false)?;
+            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -130,7 +121,7 @@ impl Parser<'_> {
         }
         if self.current.kind == TokenKind::LParen {
             let kind = crate::ast::MethodKind::Normal;
-            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY, false)?;
+            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,

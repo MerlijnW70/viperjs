@@ -6,8 +6,8 @@
 
 use super::{render_binding, render_binding_element, render_block, render_target};
 use crate::ast::{
-    ArrayElement, ArrowBody, Class, Expr, ExprKind, Function, MethodKind, PropertyDefinition,
-    PropertyKey, TemplateLiteral,
+    Argument, ArrayElement, ArrowBody, Class, Expr, ExprKind, Function, MethodKind,
+    PropertyDefinition, PropertyKey, TemplateLiteral,
 };
 
 /// An expression rendered as a parenthesized prefix form.
@@ -57,17 +57,33 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
             render_target(target),
             render(value)
         ),
-        ExprKind::Member { object, property } => format!("(. {} {})", render(object), property),
-        ExprKind::ComputedMember { object, property } => {
-            format!("([] {} {})", render(object), render(property))
-        }
-        ExprKind::Call { callee, arguments } => {
-            let rendered: Vec<String> = arguments.iter().map(render).collect();
-            format!("(call {} [{}])", render(callee), rendered.join(" "))
-        }
+        ExprKind::Member {
+            optional,
+            object,
+            property,
+        } => format!("({} {} {})", dot(*optional), render(object), property),
+        ExprKind::ComputedMember {
+            optional,
+            object,
+            property,
+        } => format!(
+            "({}[] {} {})",
+            if *optional { "?" } else { "" },
+            render(object),
+            render(property)
+        ),
+        ExprKind::Call {
+            optional,
+            callee,
+            arguments,
+        } => format!(
+            "({}call {} [{}])",
+            if *optional { "?" } else { "" },
+            render(callee),
+            render_arguments(arguments)
+        ),
         ExprKind::New { callee, arguments } => {
-            let rendered: Vec<String> = arguments.iter().map(render).collect();
-            format!("(new {} [{}])", render(callee), rendered.join(" "))
+            format!("(new {} [{}])", render(callee), render_arguments(arguments))
         }
         ExprKind::Update {
             operator,
@@ -82,6 +98,8 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::Function(function) => render_function(function),
         ExprKind::Class(class) => render_class(class),
         ExprKind::Super => "super".to_string(),
+        ExprKind::NewTarget => "new.target".to_string(),
+        ExprKind::OptionalChain(chain) => format!("(?chain {})", render(chain)),
         ExprKind::Yield(yielded) => {
             let star = if yielded.delegate { "*" } else { "" };
             match &yielded.argument {
@@ -193,6 +211,23 @@ pub(in crate::parser) fn render_function(function: &Function) -> String {
         parameters.join(" "),
         render_block(&function.body)
     )
+}
+
+/// `.` or `?.`, for a member access.
+fn dot(optional: bool) -> &'static str {
+    if optional { "?." } else { "." }
+}
+
+/// An argument list, `...` marking a spread.
+fn render_arguments(arguments: &[Argument]) -> String {
+    let rendered: Vec<String> = arguments
+        .iter()
+        .map(|argument| match argument {
+            Argument::Value(value) => render(value),
+            Argument::Spread(value) => format!("(... {})", render(value)),
+        })
+        .collect();
+    rendered.join(" ")
 }
 
 /// A class as `(class <name> <heritage> [element …])`, `-` standing for an absent heritage.

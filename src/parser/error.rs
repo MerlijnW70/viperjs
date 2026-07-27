@@ -169,6 +169,23 @@ pub enum ParseErrorKind {
     /// `FormalParameter` — singular, and a `FormalParameter` rather than a `FormalParameters`, so
     /// a setter may take a pattern or a default and may not take a rest.
     AccessorParameterCount,
+    /// §13.3.1: a tagged template anywhere in an optional chain.
+    ///
+    /// ``a?.b`x` `` and ``a.b?.c`x` `` alike. A tag function is *called*, and a chain that
+    /// short-circuits has nothing to call — so the rule poisons the whole chain rather than the
+    /// one link with the `?.` on it. ``(a?.b)`x` `` closes the chain and is allowed.
+    TaggedTemplateOnOptionalChain,
+    /// §13.3: `new` applied to an optional chain.
+    ///
+    /// `new a?.b` — `new` takes a `MemberExpression`, and an `OptionalExpression` is not one.
+    /// There is nothing to construct when the chain gives up.
+    NewOnOptionalChain,
+    /// §16.1.1: `new.target` outside any function.
+    ///
+    /// A `ScriptBody` may not contain one — there is no function being constructed at the top of
+    /// a script, so there is nothing for it to mean. An arrow is transparent: `() => new.target`
+    /// is legal exactly when the arrow is written inside a function.
+    NewTargetOutsideFunction,
     /// §15.5.1: a `YieldExpression` in a generator's parameter list.
     ///
     /// `function* g(a = yield) {}`. A default is evaluated before the generator is in a resumable
@@ -390,6 +407,16 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "these parentheses are only an expression when `=>` follows them"
             ),
+            Self::TaggedTemplateOnOptionalChain => write!(
+                f,
+                "a template may not be tagged with part of an optional chain"
+            ),
+            Self::NewOnOptionalChain => {
+                write!(f, "`new` may not be applied to an optional chain")
+            }
+            Self::NewTargetOutsideFunction => {
+                write!(f, "`new.target` is only allowed inside a function")
+            }
             Self::YieldInParameters => write!(
                 f,
                 "`yield` may not appear in a generator's own parameter list"

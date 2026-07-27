@@ -29,7 +29,7 @@
 //! lexically declared by the body. `function f(a) { let a; }` is refused and
 //! `function f(a) { var a; }` is not, the second being the same binding twice rather than two.
 
-use super::class::SuperAllowed;
+use super::body::BodyContext;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Binding, BindingElement, ExprKind, FormalParameters, Function, Stmt, StmtKind};
 use crate::lexer::{Goal, TokenKind};
@@ -122,7 +122,7 @@ impl Parser<'_> {
         // §15.2.1 makes a `FunctionBody` containing either form a Syntax Error outright.
         let enclosing_yield = self.yield_allowed;
         self.yield_allowed = is_generator;
-        let parts = self.parse_function_body(SuperAllowed::NEITHER);
+        let parts = self.parse_function_body(BodyContext::FUNCTION);
         self.yield_allowed = enclosing_yield;
         let (body, end, declares_strict) = parts?;
         check_parameters_against_body(&parameters, &body)?;
@@ -177,12 +177,12 @@ impl Parser<'_> {
     }
 
     /// `{ FunctionBody }` (§15.2), and everything that being a boundary implies.
-    /// What `super` may mean inside is the caller's to say, because that is the one thing a
-    /// function body does not decide for itself: a method's body has `super` and the very same
-    /// production written as a plain function does not.
+    /// What `super` and `new.target` may mean inside is the caller's to say, because that is
+    /// the one thing a function body does not decide for itself: a method's body has `super`
+    /// and the very same production written as a plain function does not. See [`super::body`].
     pub(super) fn parse_function_body(
         &mut self,
-        super_allowed: SuperAllowed,
+        body_context: BodyContext,
     ) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         // `[+Return]`, which only this production sets — and which is restored on the way out
@@ -191,16 +191,16 @@ impl Parser<'_> {
         // `super`, whose two permissions both stop at a function boundary.
         let enclosing = self.inside_function;
         let enclosing_strict = self.strict;
-        let enclosing_super = self.super_allowed;
+        let enclosing_context = self.body_context;
         // `Contains` stops at a function boundary, and this is the boundary — so a `yield`
         // written in here is never a `yield` written in the parameter list that encloses it.
         let enclosing_yield_expression = self.yield_expression.take();
         self.inside_function = true;
-        self.super_allowed = super_allowed;
+        self.body_context = body_context;
         let body = self.parse_body_with_prologue(TokenKind::RBrace);
         self.inside_function = enclosing;
         self.strict = enclosing_strict;
-        self.super_allowed = enclosing_super;
+        self.body_context = enclosing_context;
         self.yield_expression = enclosing_yield_expression;
         let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;

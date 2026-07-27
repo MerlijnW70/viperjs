@@ -30,7 +30,7 @@
 //! `function f(b, b) {}` is fine. §15.1.1 states it on the production, not on strictness — a
 //! method's list may never repeat, sloppy or not.
 
-use super::class::SuperAllowed;
+use super::body::{BodyContext, SuperAllowed};
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{FormalParameters, Function, MethodKind, PropertyKey};
 use crate::lexer::TokenKind;
@@ -83,7 +83,7 @@ impl Parser<'_> {
         let parts = self
             .parse_method_parameters(kind, is_generator)
             .and_then(|parameters| {
-                let body = self.parse_function_body(super_allowed)?;
+                let body = self.parse_function_body(BodyContext::method(super_allowed))?;
                 Ok((parameters, body))
             });
         self.yield_allowed = enclosing_yield;

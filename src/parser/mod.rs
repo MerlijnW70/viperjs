@@ -55,6 +55,7 @@
 mod array_literal;
 mod arrow;
 mod binding;
+mod body;
 mod class;
 mod control;
 mod declaration;
@@ -243,12 +244,12 @@ struct Parser<'a> {
     /// making the compiler ask about. `[Return]` is set by one production and never turned off
     /// within it, so it is not a decision anywhere: it is where you are.
     pub(super) inside_function: bool,
-    /// What `super` may mean here (§13.3.7, §13.3.5).
+    /// What the enclosing function grants — `super` and `new.target` (§13.3).
     ///
     /// A field for the same reason as `inside_function`, and saved and restored at the same
-    /// place: a function body is where both of `super`'s permissions stop, so a function
-    /// nested inside a method has neither.
-    pub(super) super_allowed: self::class::SuperAllowed,
+    /// place. See [`self::body`] for why an arrow passes it through and a function replaces
+    /// it.
+    pub(super) body_context: self::body::BodyContext,
     /// The `[Yield]` grammar parameter (§15.5) — whether `yield` is an operator here.
     ///
     /// A field for the reason `inside_function` is one, and unlike it in that a nested ordinary
@@ -288,7 +289,7 @@ impl<'a> Parser<'a> {
             rest_followed_by_comma: None,
             literal_depth: 0,
             inside_function: false,
-            super_allowed: self::class::SuperAllowed::NEITHER,
+            body_context: self::body::BodyContext::SCRIPT,
             yield_allowed: false,
             yield_expression: None,
             strict: false,

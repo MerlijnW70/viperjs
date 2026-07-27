@@ -26,29 +26,10 @@
 //! that has nothing to be derived from. §15.2.1 has said so since the function slice — "It is a
 //! Syntax Error if FunctionBody Contains SuperProperty" — and this is the slice that can tell.
 
+use super::body::SuperAllowed;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Class, ClassElement, Expr, ExprKind, MethodKind, Stmt, StmtKind, key_is};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
-
-/// What `super` may mean where the parser currently is.
-///
-/// Saved and restored around every function body, because a function is where both rules stop: a
-/// method's `super` is not visible to a function nested inside it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct SuperAllowed {
-    /// Whether `super.a` may stand here — true inside any method.
-    pub property: bool,
-    /// Whether `super(…)` may stand here — true only in a derived constructor.
-    pub call: bool,
-}
-
-impl SuperAllowed {
-    /// Neither, which is where a script and a plain function both start.
-    pub(super) const NEITHER: Self = Self {
-        property: false,
-        call: false,
-    };
-}
 
 impl Parser<'_> {
     /// `ClassDeclaration` (§15.7), with the cursor on `class`.
@@ -226,7 +207,7 @@ impl Parser<'_> {
         let keyword = self.advance(Goal::RegExp)?;
         match self.current.kind {
             TokenKind::Dot | TokenKind::LBracket => {
-                if !self.super_allowed.property {
+                if !self.super_property_allowed() {
                     return Err(ParseError {
                         kind: ParseErrorKind::SuperPropertyOutsideMethod,
                         span: keyword.span,
@@ -235,7 +216,7 @@ impl Parser<'_> {
                 Ok(Expr::new(ExprKind::Super, keyword.span))
             }
             TokenKind::LParen => {
-                if !self.super_allowed.call {
+                if !self.super_call_allowed() {
                     return Err(ParseError {
                         kind: ParseErrorKind::SuperCallOutsideDerivedConstructor,
                         span: keyword.span,
