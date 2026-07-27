@@ -98,6 +98,11 @@ impl Parser<'_> {
         if self.current.kind == TokenKind::Keyword(ReservedWord::Function) {
             return self.parse_function_declaration();
         }
+        // A `ClassDeclaration` is a `Declaration` too, so `if (a) class C {}` has no
+        // derivation any more than `if (a) let b;` does.
+        if self.current.kind == TokenKind::Keyword(ReservedWord::Class) {
+            return self.parse_class_declaration();
+        }
         if self.current.kind == TokenKind::Keyword(ReservedWord::Const) {
             return self.parse_declaration(DeclarationKind::Const);
         }
@@ -153,12 +158,13 @@ impl Parser<'_> {
             // An identifier and a `:` is a `LabelledStatement`, which is the second and last
             // place this parser needs two tokens — and, like `let`, a case where one token
             // begins two productions.
-            // §14.5: an `ExpressionStatement` may not begin with `function`, because that is a
-            // declaration — and a `Statement` has no `Declaration` alternative, so there is
-            // nowhere here for one to go. `if (x) function f() {}` and `a: function f() {}` are
-            // both refused, and Annex B.3.2 and §14.13.1 are what would let a web host take them.
-            TokenKind::Keyword(ReservedWord::Function) => Err(ParseError {
-                kind: ParseErrorKind::FunctionInStatementPosition,
+            // §14.5: an `ExpressionStatement` may not begin with `function` or with `class`,
+            // because both are declarations — and a `Statement` has no `Declaration`
+            // alternative, so there is nowhere here for one to go. `if (x) function f() {}` and
+            // `a: class C {}` are the shapes. Without this the expression path would take them,
+            // since both words also begin an expression.
+            TokenKind::Keyword(ReservedWord::Function | ReservedWord::Class) => Err(ParseError {
+                kind: ParseErrorKind::DeclarationInStatementPosition,
                 span: self.current.span,
             }),
             _ if self.at_labelled_statement()? => self.parse_labelled_statement(),
@@ -242,21 +248,6 @@ impl Parser<'_> {
 mod tests {
     use super::*;
     use crate::parser::test_support::*;
-
-    /// The statement kinds of `source`, rendered compactly.
-    fn statements(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // a test about a tree cannot proceed without one
-        script.body.iter().map(render_statement).collect()
-    }
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // a test about an error cannot proceed without one
-        }
-    }
 
     #[test]
     fn a_script_is_a_list_of_statements_and_an_empty_source_is_an_empty_one() {
@@ -371,14 +362,13 @@ mod tests {
         // or `class` as well as `{`, each because it would be ambiguous with a declaration. None
         // of those is an expression here either, so each fails rather than being misread — and
         // will start parsing the day its declaration form lands.
-        for source in ["class C {}", "class C extends D {}"] {
-            assert!(parse_script(source).is_err(), "{source:?}");
-        }
-        // `function` and `return` used to be on that list. The first is a `Declaration` now, and
-        // the second is a `Statement` — but only under `[+Return]`, so at the top of a script it
-        // is still refused, for a reason the grammar states rather than for want of an
-        // implementation.
+        assert!(parse_script("async function f() {}").is_err());
+        // `function`, `class` and `return` used to be on that list. The first two are
+        // `Declaration`s now; the third is a `Statement` — but only under `[+Return]`, so at the
+        // top of a script it is still refused, for a reason the grammar states rather than for
+        // want of an implementation.
         assert_eq!(statements("function f() {}"), ["(fn f [] {})"]);
+        assert_eq!(statements("class C {}"), ["(class C - [])"]);
         assert_eq!(
             script_error("return 1;").kind,
             ParseErrorKind::ReturnOutsideFunction

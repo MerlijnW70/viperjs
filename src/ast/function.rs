@@ -71,6 +71,74 @@ pub enum ArrowBody {
     Block(Box<[Stmt]>),
 }
 
+/// A `ClassDeclaration` or `ClassExpression` (§15.7).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Class {
+    /// The name. Required of a declaration, and optional of an expression.
+    pub name: Option<BindingName>,
+    /// `extends …`, whose presence is what decides whether `super(…)` may be called.
+    pub heritage: Option<Box<Expr>>,
+    /// The body, `;` elements dropped — they declare nothing and mean nothing.
+    pub elements: Box<[ClassElement]>,
+    /// `class` through the closing brace.
+    pub span: Span,
+}
+
+/// One method of a class body (§15.7).
+///
+/// Fields, static blocks and private names are the other `ClassElement` alternatives and are not
+/// here yet; they are ES2022 where the rest of this is ES2015.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClassElement {
+    /// What names it.
+    pub key: super::PropertyKey,
+    /// Whether it is a method, a getter or a setter.
+    pub kind: super::MethodKind,
+    /// The function itself, which is never named — a method's name is the key's.
+    pub function: Box<Function>,
+    /// Whether it was written with `static`.
+    pub is_static: bool,
+    /// Where the name was written, for the early errors about which name it is.
+    pub key_span: Span,
+}
+
+impl ClassElement {
+    /// Whether this is the class's constructor (§15.7.3).
+    pub fn is_constructor(&self) -> bool {
+        Self::names_the_constructor(&self.key, self.kind, self.is_static)
+    }
+
+    /// The same question, asked of the parts before there is an element to ask it of.
+    ///
+    /// The parser needs the answer while it is still reading the body — `super(…)` is legal in
+    /// there exactly when this is true of a derived class — and one definition of the rule is
+    /// worth the slightly awkward signature.
+    ///
+    /// A static method is never the constructor, however it is named, and neither is an accessor:
+    /// §15.7.1 refuses that outright rather than treating it as an ordinary method.
+    pub fn names_the_constructor(
+        key: &super::PropertyKey,
+        kind: super::MethodKind,
+        is_static: bool,
+    ) -> bool {
+        !is_static && kind == super::MethodKind::Normal && key_is(key, "constructor")
+    }
+}
+
+/// Whether `key`'s `PropName` (§15.7.3) is the literal `name`.
+///
+/// The rule is about `PropName`, not about how the name was written — so `"constructor"() {}` is
+/// the constructor exactly as `constructor() {}` is. A computed key is not: `PropName` of one is
+/// not known until it runs, which is how a class gets a method called `constructor` at all. A
+/// numeric key has a `PropName` too, and it is never either of the two names this asks about.
+pub(crate) fn key_is(key: &super::PropertyKey, name: &str) -> bool {
+    match key {
+        super::PropertyKey::Identifier(text) => &**text == name,
+        super::PropertyKey::String(units) => units.iter().copied().eq(name.encode_utf16()),
+        super::PropertyKey::Number(_) | super::PropertyKey::Computed(_) => false,
+    }
+}
+
 /// `FormalParameters` (§15.1).
 #[derive(Debug, Clone, PartialEq)]
 pub struct FormalParameters {

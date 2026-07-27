@@ -33,7 +33,10 @@ pub use self::expression::{
     ArrayElement, Expr, ExprKind, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral,
     TemplateElement, TemplateLiteral,
 };
-pub use self::function::{ArrowBody, ArrowFunction, FormalParameters, Function};
+pub(crate) use self::function::key_is;
+pub use self::function::{
+    ArrowBody, ArrowFunction, Class, ClassElement, FormalParameters, Function,
+};
 pub use self::operator::{
     AssignmentOperator, BinaryOperator, LogicalOperator, UnaryOperator, UpdateOperator,
 };

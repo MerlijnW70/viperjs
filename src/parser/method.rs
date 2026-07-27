@@ -30,8 +30,9 @@
 //! `function f(b, b) {}` is fine. §15.1.1 states it on the production, not on strictness — a
 //! method's list may never repeat, sloppy or not.
 
+use super::class::SuperAllowed;
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{FormalParameters, Function, MethodKind, PropertyDefinition, PropertyKey};
+use crate::ast::{FormalParameters, Function, MethodKind, PropertyKey};
 use crate::lexer::TokenKind;
 use crate::static_semantics::bound_names;
 use std::collections::HashSet;
@@ -61,25 +62,29 @@ impl Parser<'_> {
         starts_a_name.then_some(kind)
     }
 
-    /// A `MethodDefinition` whose name has been read, with the cursor on the `(`.
+    /// The parameters and body of a `MethodDefinition` whose name has been read, with the
+    /// cursor on the `(`.
+    ///
+    /// The function alone, rather than a finished node: an object literal's methods and a
+    /// class's are the same production and land in different trees, so the node is the
+    /// caller's to build. `super_allowed` is the caller's for the same reason — every method
+    /// may read `super.a`, and only a derived class's constructor may call `super(…)`.
     pub(super) fn parse_method(
         &mut self,
-        key: PropertyKey,
         kind: MethodKind,
-    ) -> Result<PropertyDefinition, ParseError> {
+        super_allowed: SuperAllowed,
+    ) -> Result<Box<Function>, ParseError> {
         let parameters = self.parse_method_parameters(kind)?;
-        let (body, end, declares_strict) = self.parse_function_body()?;
+        let (body, end, declares_strict) = self.parse_function_body(super_allowed)?;
         self.check_method_body(&parameters, &body, declares_strict)?;
-        Ok(PropertyDefinition::Method {
-            key,
-            kind,
-            function: Box::new(Function {
-                name: None,
-                parameters,
-                body,
-                span: end,
-            }),
-        })
+        Ok(Box::new(Function {
+            // A method's name is its key's, and the key is not a binding — nothing inside the
+            // body can see it, where a named function expression's name is visible within.
+            name: None,
+            parameters,
+            body,
+            span: end,
+        }))
     }
 
     /// The parameter list a method of this kind may have (§15.4).

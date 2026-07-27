@@ -107,6 +107,14 @@ fn parsing_at_the_cap_fits_in_the_stack_it_claims_to_need() {
         // parsed — so `throw` plus a full-depth expression is one level past the cap, and
         // the deepest that parses has one bracket fewer.
         format!("throw {}1{};", "(".repeat(deep - 1), ")".repeat(deep - 1)),
+        // A class heritage is an expression and a class is one, so each level costs a level.
+        format!(
+            "{}D{};",
+            "class C extends ".repeat(deep),
+            " {}".repeat(deep)
+        ),
+        // Through the method bodies instead, which is the deeper path per level.
+        format!("{}{}", "class C { m() { ".repeat(deep), "} }".repeat(deep)),
     ];
     let worker = std::thread::Builder::new()
         .stack_size(1024 * 1024)

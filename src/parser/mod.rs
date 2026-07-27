@@ -55,6 +55,7 @@
 mod array_literal;
 mod arrow;
 mod binding;
+mod class;
 mod control;
 mod declaration;
 mod error;
@@ -156,6 +157,11 @@ use crate::span::Span;
 /// CaseBlock and borrows a second while it reads the expression after `case`, so it nests 47. In
 /// both the count is doing exactly what it should: those really are separate scopes and separate
 /// descents, and the cap is about what the machine can afford rather than about tidy numbers.
+///
+/// A class costs one level for the whole definition, which bounds both of its recursions at
+/// once: `class C extends class … {}` through the heritage, and `class C { m() { class D …`
+/// through the method bodies. Nothing else was counting the second — a class body is not a
+/// `Block` and a function body does not count either — so it was unbounded until this slice.
 ///
 /// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse of each
 /// recursive path in a thread with exactly one mebibyte. That test is the real specification of
@@ -271,6 +277,12 @@ struct Parser<'a> {
     /// making the compiler ask about. `[Return]` is set by one production and never turned off
     /// within it, so it is not a decision anywhere: it is where you are.
     pub(super) inside_function: bool,
+    /// What `super` may mean here (§13.3.7, §13.3.5).
+    ///
+    /// A field for the same reason as `inside_function`, and saved and restored at the same
+    /// place: a function body is where both of `super`'s permissions stop, so a function
+    /// nested inside a method has neither.
+    pub(super) super_allowed: self::class::SuperAllowed,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -296,6 +308,7 @@ impl<'a> Parser<'a> {
             rest_followed_by_comma: None,
             literal_depth: 0,
             inside_function: false,
+            super_allowed: self::class::SuperAllowed::NEITHER,
             strict: false,
         })
     }

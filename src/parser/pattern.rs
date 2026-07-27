@@ -304,13 +304,6 @@ mod tests {
         }
     }
 
-    /// The rendered statements of `source`.
-    fn statements(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // needs the tree
-        script.body.iter().map(render_statement).collect()
-    }
-
     #[test]
     fn an_array_literal_before_an_equals_is_a_pattern() {
         assert_eq!(shape("[a] = b"), "(= [a] b)");

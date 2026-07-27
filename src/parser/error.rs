@@ -73,14 +73,15 @@ pub enum ParseErrorKind {
     /// The parameters of a non-simple list are initialised by running code, and that code would
     /// have to be told a strictness the directive has not announced yet.
     UseStrictWithNonSimpleParameters,
-    /// §14.5: a `function` where only a `Statement` may stand.
+    /// §14.5: a `function` or a `class` where only a `Statement` may stand.
     ///
-    /// A `FunctionDeclaration` is a `Declaration`, so it belongs to a `StatementList` — and
-    /// §14.5 keeps an `ExpressionStatement` from beginning with the word, so it cannot be a
-    /// function *expression* either. `if (x) function f() {}` and `a: function f() {}` are the
-    /// shapes; Annex B.3.2 and §14.13.1 are the exemptions a web host takes, and both turn on
-    /// strictness, which this parser cannot yet tell.
-    FunctionInStatementPosition,
+    /// Both are `Declaration`s, so both belong to a `StatementList` — and §14.5's
+    /// `[lookahead ∉ { {, function, async function, class, let [ }]` keeps an
+    /// `ExpressionStatement` from beginning with either word, so neither can slip through as an
+    /// *expression* either. `if (x) function f() {}`, `a: class C {}` and `for (;;) class C {}`
+    /// are the shapes. Annex B.3.2 and §14.13.1 exempt some of the `function` ones for a web
+    /// host, and both exemptions turn on strictness; neither ever covers a class.
+    DeclarationInStatementPosition,
     /// §14.10: a `return` outside any function body.
     ///
     /// `ReturnStatement` is an alternative of `Statement[Return]`, and only a `FunctionBody` sets
@@ -168,6 +169,31 @@ pub enum ParseErrorKind {
     /// `FormalParameter` — singular, and a `FormalParameter` rather than a `FormalParameters`, so
     /// a setter may take a pattern or a default and may not take a rest.
     AccessorParameterCount,
+    /// §15.7.1: two methods named `constructor` in one class body.
+    ///
+    /// Prototype methods only, and never an accessor or a static one — a class may have a static
+    /// `constructor` and a `get constructor` is refused for a different reason below.
+    DuplicateConstructor,
+    /// §15.7.1: `get constructor() {}` or `set constructor(a) {}`.
+    ///
+    /// A class's constructor is the function the class *is*, so there is nothing for an accessor
+    /// to be. A static one is fine — that names an ordinary property of the constructor object.
+    ConstructorMayNotBeAnAccessor,
+    /// §15.7.1: a static method named `prototype`.
+    ///
+    /// `prototype` is the one property a class definition already puts on its constructor, and it
+    /// is not writable — so a static method by that name could never take effect.
+    StaticPrototype,
+    /// §15.2.1 and §16.1.1: `super.a` outside any method.
+    ///
+    /// Legal in every `MethodDefinition`, including an object literal's, because every method has
+    /// a home object. A plain function has none, and neither does the top level.
+    SuperPropertyOutsideMethod,
+    /// §15.7.1: `super(…)` outside the constructor of a derived class.
+    ///
+    /// It calls the parent constructor, so it needs a parent: `class C { constructor() { super(); } }`
+    /// is refused where the same with `extends D` is not.
+    SuperCallOutsideDerivedConstructor,
     /// §13.2.5.1: two `__proto__` properties written as `PropertyName : AssignmentExpression`.
     ///
     /// Only that production counts: a computed key and a shorthand are invisible to the rule,
@@ -296,10 +322,9 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "a function with defaults, patterns or a rest may not declare `\"use strict\"`"
             ),
-            Self::FunctionInStatementPosition => write!(
-                f,
-                "a function declaration may not stand where only a statement may"
-            ),
+            Self::DeclarationInStatementPosition => {
+                write!(f, "a declaration may not stand where only a statement may")
+            }
             Self::ReturnOutsideFunction => {
                 write!(f, "`return` is only allowed inside a function")
             }
@@ -352,6 +377,22 @@ impl fmt::Display for ParseErrorKind {
             Self::CoverGroupIsNotAnExpression => write!(
                 f,
                 "these parentheses are only an expression when `=>` follows them"
+            ),
+            Self::DuplicateConstructor => {
+                write!(f, "a class may have only one `constructor`")
+            }
+            Self::ConstructorMayNotBeAnAccessor => {
+                write!(f, "`constructor` may not be a getter or a setter")
+            }
+            Self::StaticPrototype => {
+                write!(f, "a static method may not be named `prototype`")
+            }
+            Self::SuperPropertyOutsideMethod => {
+                write!(f, "`super` is only allowed inside a method")
+            }
+            Self::SuperCallOutsideDerivedConstructor => write!(
+                f,
+                "`super()` is only allowed in the constructor of a class with `extends`"
             ),
             Self::AccessorParameterCount => write!(
                 f,

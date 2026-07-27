@@ -249,7 +249,9 @@ impl Parser<'_> {
         parameters: &FormalParameters,
     ) -> Result<(ArrowBody, Span, bool), ParseError> {
         if self.current.kind == TokenKind::LBrace {
-            let (body, end, declares_strict) = self.parse_function_body()?;
+            // An arrow has no `this` and no home object of its own, so it does not stop
+            // `super` either — which is what makes `constructor() { () => super(); }` legal.
+            let (body, end, declares_strict) = self.parse_function_body(self.super_allowed)?;
             // §15.3.1 borrows §15.2.1's: the parameters were read before the body could say it
             // was strict, so this is the one rule that has to wait for the body.
             if declares_strict && !parameters.is_simple() {

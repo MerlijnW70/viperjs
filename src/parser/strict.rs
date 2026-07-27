@@ -137,15 +137,8 @@ impl Parser<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::{ParseError, ParseErrorKind, parse_script};
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // needs the error
-        }
-    }
+    use crate::parser::test_support::*;
+    use crate::parser::{ParseErrorKind, parse_script};
 
     /// The kind of error `source` fails with.
     fn kind(source: &str) -> ParseErrorKind {

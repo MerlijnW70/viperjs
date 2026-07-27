@@ -311,6 +311,10 @@ pub enum ExprKind {
     Sequence(Box<[Expr]>),
     /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
     Array(Box<[ArrayElement]>),
+    /// `class … { … }` (§15.7) — an expression, so its name is optional and its own.
+    Class(Box<super::Class>),
+    /// `super`, which is only ever the head of a `SuperProperty` or a `SuperCall` (§13.3).
+    Super,
     /// `` `a${b}c` `` (§13.2.8).
     Template(Box<TemplateLiteral>),
     /// `` f`a` `` (§13.3) — a tagged template, which is a call written without parentheses.

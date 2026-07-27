@@ -2,7 +2,7 @@
 
 use super::{ParseError, parse_expression};
 use crate::ast::{
-    ArrayElement, ArrowBody, AssignmentTarget, Binding, BindingElement, BindingPattern,
+    ArrayElement, ArrowBody, AssignmentTarget, Binding, BindingElement, BindingPattern, Class,
     Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, MethodKind,
     Pattern, PatternElement, PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
     TemplateLiteral,
@@ -84,6 +84,8 @@ pub(super) fn render(expr: &Expr) -> String {
             render(argument)
         ),
         ExprKind::Function(function) => render_function(function),
+        ExprKind::Class(class) => render_class(class),
+        ExprKind::Super => "super".to_string(),
         ExprKind::Template(quasi) => render_template(quasi),
         ExprKind::TaggedTemplate { tag, quasi } => {
             format!("(tag {} {})", render(tag), render_template(quasi))
@@ -186,6 +188,57 @@ pub(super) fn render_function(function: &Function) -> String {
         function.name.as_ref().map_or("<anon>", |name| &name.name),
         parameters.join(" "),
         render_block(&function.body)
+    )
+}
+
+/// The statements of `source`, rendered compactly.
+///
+/// Panics if `source` does not parse: a test about a tree cannot proceed without one, and the
+/// message names the source so the failure reads without a debugger.
+pub(super) fn statements(source: &str) -> Vec<String> {
+    let script = crate::parser::parse_script(source)
+        .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // needs the tree
+    script.body.iter().map(render_statement).collect()
+}
+
+/// The error `source` fails with as a script.
+///
+/// Panics if it parses, for the mirror of the reason above.
+pub(super) fn script_error(source: &str) -> ParseError {
+    match crate::parser::parse_script(source) {
+        Err(err) => err,
+        Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // needs the error
+    }
+}
+
+/// A class as `(class <name> <heritage> [element …])`, `-` standing for an absent heritage.
+pub(super) fn render_class(class: &Class) -> String {
+    let elements: Vec<String> = class
+        .elements
+        .iter()
+        .map(|element| {
+            let name = render_key(&element.key);
+            let body = render_function(&element.function);
+            let head = match element.kind {
+                MethodKind::Normal => name,
+                MethodKind::Get => format!("get {name}"),
+                MethodKind::Set => format!("set {name}"),
+            };
+            if element.is_static {
+                format!("(static {head} {body})")
+            } else {
+                format!("({head} {body})")
+            }
+        })
+        .collect();
+    format!(
+        "(class {} {} [{}])",
+        class.name.as_ref().map_or("<anon>", |name| &name.name),
+        class
+            .heritage
+            .as_ref()
+            .map_or_else(|| "-".to_string(), |parent| render(parent)),
+        elements.join(" ")
     )
 }
 
@@ -448,6 +501,7 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             render_statement(&statement.body)
         ),
         StmtKind::Function(function) => render_function(function),
+        StmtKind::Class(class) => render_class(class),
         StmtKind::Return(value) => match value {
             Some(value) => format!("(return {})", render(value)),
             None => "return".to_string(),

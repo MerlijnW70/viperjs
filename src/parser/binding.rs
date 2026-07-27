@@ -199,22 +199,7 @@ impl Parser<'_> {
 #[cfg(test)]
 mod tests {
     use crate::parser::test_support::*;
-    use crate::parser::{ParseError, ParseErrorKind, parse_script};
-
-    /// The statements of `source`, rendered compactly.
-    fn statements(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // needs the tree
-        script.body.iter().map(render_statement).collect()
-    }
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // needs the error
-        }
-    }
+    use crate::parser::{ParseErrorKind, parse_script};
 
     #[test]
     fn all_three_keywords_take_a_pattern_where_they_take_a_name() {

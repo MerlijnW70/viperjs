@@ -213,21 +213,6 @@ mod tests {
     use crate::parser::test_support::*;
     use crate::span::Span;
 
-    /// The statements of `source`, rendered compactly.
-    fn statements(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // a test about a tree cannot proceed without one
-        script.body.iter().map(render_statement).collect()
-    }
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // a test about an error cannot proceed without one
-        }
-    }
-
     #[test]
     fn an_else_belongs_to_the_nearest_if_that_has_none() {
         assert_eq!(statements("if (a) b;"), ["(if a b)"]);

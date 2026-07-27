@@ -167,14 +167,7 @@ fn check(
 mod tests {
     use super::*;
     use crate::parser::parse_script;
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // a test about an error cannot proceed without one
-        }
-    }
+    use crate::parser::test_support::*;
 
     #[test]
     fn a_name_may_not_be_declared_lexically_twice_in_one_scope() {

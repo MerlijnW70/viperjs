@@ -226,24 +226,9 @@ impl Parser<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parser::ParseErrorKind;
     use crate::parser::parse_script;
     use crate::parser::test_support::*;
-    use crate::parser::{ParseError, ParseErrorKind};
-
-    /// The statements of `source`, rendered compactly.
-    fn statements(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // a test about a tree cannot proceed without one
-        script.body.iter().map(render_statement).collect()
-    }
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // a test about an error cannot proceed without one
-        }
-    }
 
     #[test]
     fn every_one_of_the_three_header_clauses_is_optional() {

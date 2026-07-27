@@ -72,6 +72,10 @@ pub enum StmtKind {
     /// `function f(…) { … }` (§15.2) — a `Declaration`, so it belongs to a `StatementList` and
     /// never to a `Statement`.
     Function(Box<super::Function>),
+    /// `class C { … }` (§15.7) — a `Declaration`, and a lexically scoped one unlike a
+    /// function: `class C {} class C {}` is a redeclaration where the same with `function`
+    /// is not.
+    Class(Box<super::Class>),
     /// `return;` or `return …;` (§14.10), which only a function body admits.
     Return(Option<Box<Expr>>),
     /// `break;` or `break a;` (§14.9).

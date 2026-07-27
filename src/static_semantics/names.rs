@@ -65,6 +65,19 @@ fn collect_lexical(body: &[Stmt], top_level: bool) -> Vec<DeclaredName<'_>> {
                     });
                 }
             }
+            // A class is lexically declared at *both* levels, where a function is only at
+            // the inner one: §8.2.9 excludes a `HoistableDeclaration` from
+            // `TopLevelLexicallyDeclaredNames` and a class is not one. Which is the whole of
+            // why `function f() {} function f() {}` is fine at the top of a script and
+            // `class C {} class C {}` is not.
+            StmtKind::Class(class) => {
+                if let Some(name) = &class.name {
+                    names.push(DeclaredName {
+                        name: &name.name,
+                        span: name.span,
+                    });
+                }
+            }
             _ => {}
         }
     }
@@ -204,13 +217,16 @@ fn collect_var(body: &[Stmt], top_level: bool) -> Vec<DeclaredName<'_>> {
             // §8.2.8 lists these explicitly as contributing nothing, and they contain no
             // statement to look inside: empty, expression, `continue`, `break`, `throw`,
             // `debugger`, `return`.
+            // A `ClassDeclaration` is lexical wherever it stands, so it is never a var name
+            // — the one asymmetry with a function, which is var-scoped at a top level.
             StmtKind::Empty
             | StmtKind::Expression(_)
             | StmtKind::Debugger
             | StmtKind::Throw(_)
             | StmtKind::Return(_)
             | StmtKind::Break(_)
-            | StmtKind::Continue(_) => {}
+            | StmtKind::Continue(_)
+            | StmtKind::Class(_) => {}
         }
     }
     names

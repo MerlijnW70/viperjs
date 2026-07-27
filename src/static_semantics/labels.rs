@@ -298,7 +298,7 @@ fn visit<'a>(
         // a `FunctionStatementList` separately, from `« »`), so a `break` inside a function
         // cannot see a loop outside it — `while (1) { function f() { break; } }` is a Syntax
         // Error, and the body is asked all five rules again on its own.
-        StmtKind::Function(_) => {}
+        StmtKind::Function(_) | StmtKind::Class(_) => {}
         // §8.3 gives all of these `false`, and none of them holds a statement to look inside.
         StmtKind::Empty
         | StmtKind::Expression(_)

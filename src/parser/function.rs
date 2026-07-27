@@ -29,6 +29,7 @@
 //! lexically declared by the body. `function f(a) { let a; }` is refused and
 //! `function f(a) { var a; }` is not, the second being the same binding twice rather than two.
 
+use super::class::SuperAllowed;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Binding, BindingElement, ExprKind, FormalParameters, Function, Stmt, StmtKind};
 use crate::lexer::{Goal, TokenKind};
@@ -85,7 +86,9 @@ impl Parser<'_> {
         &mut self,
     ) -> Result<(FormalParameters, Box<[Stmt]>, Span), ParseError> {
         let parameters = self.parse_formal_parameters()?;
-        let (body, end, declares_strict) = self.parse_function_body()?;
+        // A plain function is where `super` stops, however deep inside a method it is written:
+        // §15.2.1 makes a `FunctionBody` containing either form a Syntax Error outright.
+        let (body, end, declares_strict) = self.parse_function_body(SuperAllowed::NEITHER)?;
         check_parameters_against_body(&parameters, &body)?;
         // The two rules that cannot be applied while the parameters are read, because the body
         // has not said whether it is strict yet.
@@ -138,17 +141,27 @@ impl Parser<'_> {
     }
 
     /// `{ FunctionBody }` (§15.2), and everything that being a boundary implies.
-    pub(super) fn parse_function_body(&mut self) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
+    /// What `super` may mean inside is the caller's to say, because that is the one thing a
+    /// function body does not decide for itself: a method's body has `super` and the very same
+    /// production written as a plain function does not.
+    pub(super) fn parse_function_body(
+        &mut self,
+        super_allowed: SuperAllowed,
+    ) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         // `[+Return]`, which only this production sets — and which is restored on the way out
         // even when the body fails, so that a `return` after the function is still refused. The
-        // same for strictness, which a body may switch on for itself and never off.
+        // same for strictness, which a body may switch on for itself and never off, and for
+        // `super`, whose two permissions both stop at a function boundary.
         let enclosing = self.inside_function;
         let enclosing_strict = self.strict;
+        let enclosing_super = self.super_allowed;
         self.inside_function = true;
+        self.super_allowed = super_allowed;
         let body = self.parse_body_with_prologue(TokenKind::RBrace);
         self.inside_function = enclosing;
         self.strict = enclosing_strict;
+        self.super_allowed = enclosing_super;
         let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks
@@ -303,22 +316,7 @@ fn check_parameters_against_body(
 #[cfg(test)]
 mod tests {
     use crate::parser::test_support::*;
-    use crate::parser::{ParseError, ParseErrorKind, parse_script};
-
-    /// The statements of `source`, rendered compactly.
-    fn statements(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // needs the tree
-        script.body.iter().map(render_statement).collect()
-    }
-
-    /// The error `source` fails with.
-    fn script_error(source: &str) -> ParseError {
-        match parse_script(source) {
-            Err(err) => err,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // needs the error
-        }
-    }
+    use crate::parser::{ParseErrorKind, parse_script};
 
     #[test]
     fn a_declaration_must_be_named_and_an_expression_need_not_be() {
@@ -572,7 +570,7 @@ mod tests {
         for source in ["if (x) function f() {}", "a: function f() {}"] {
             assert_eq!(
                 script_error(source).kind,
-                ParseErrorKind::FunctionInStatementPosition,
+                ParseErrorKind::DeclarationInStatementPosition,
                 "{source:?}"
             );
         }
@@ -580,7 +578,7 @@ mod tests {
         // `Statement` in every dialect.
         assert_eq!(
             script_error("while (x) function f() {}").kind,
-            ParseErrorKind::FunctionInStatementPosition
+            ParseErrorKind::DeclarationInStatementPosition
         );
     }
 
