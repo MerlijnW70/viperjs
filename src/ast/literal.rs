@@ -19,8 +19,23 @@ pub enum ArrayElement {
     Hole,
     /// An ordinary element.
     Value(Expr),
-    /// `...a` — a `SpreadElement`, which contributes however many elements it turns out to have.
-    Spread(Expr),
+    /// `...a` — a `SpreadElement`, which contributes however many elements it turns out to
+    /// have.
+    Spread {
+        /// What is spread.
+        value: Expr,
+        /// Whether a comma was written after it.
+        ///
+        /// A trailing comma leaves no element, so `[...a, ]` and `[...a]` become the same list —
+        /// and they are not the same *pattern*, `AssignmentRestElement` and `BindingRestElement`
+        /// both being last with nothing after them. The tree has to say so, because by refinement
+        /// time the comma is the only thing that distinguished them and it is gone.
+        ///
+        /// On the element rather than on the parser, which is where it used to live: a record on
+        /// the parser cannot say *which* literal it belongs to, so `[x = [...a,], [b]] = c` read
+        /// it off the default and blamed the target.
+        followed_by_comma: bool,
+    },
 }
 
 /// One entry of an object literal (§13.2.5).
@@ -65,8 +80,15 @@ pub enum PropertyDefinition {
         /// The function, which is never named: a method's name is the property's.
         function: Box<super::Function>,
     },
-    /// `...a`, which stands wherever any other property may.
-    Spread(Expr),
+    /// `...a` — a spread, whose properties are copied in.
+    Spread {
+        /// What is spread.
+        value: Expr,
+        /// Whether a comma was written after it — see [`ArrayElement::Spread`], which
+        /// carries it for the same reason. `BindingRestProperty` and
+        /// `AssignmentRestProperty` are both last with nothing after them.
+        followed_by_comma: bool,
+    },
 }
 
 /// A `TemplateLiteral` (§13.2.8) — its literal parts, and the expressions between them.

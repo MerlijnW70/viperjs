@@ -152,7 +152,7 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
                 .map(|element| match element {
                     ArrayElement::Hole => "<hole>".to_string(),
                     ArrayElement::Value(value) => render(value),
-                    ArrayElement::Spread(value) => format!("(... {})", render(value)),
+                    ArrayElement::Spread { value, .. } => format!("(... {})", render(value)),
                 })
                 .collect();
             format!("[{}]", rendered.join(" "))
@@ -183,7 +183,7 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
                             format!("(set {} {})", render_key(key), render_function(function))
                         }
                     },
-                    PropertyDefinition::Spread(value) => format!("(... {})", render(value)),
+                    PropertyDefinition::Spread { value, .. } => format!("(... {})", render(value)),
                 })
                 .collect();
             format!("{{{}}}", rendered.join(" "))

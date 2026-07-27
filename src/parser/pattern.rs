@@ -57,14 +57,7 @@ impl Parser<'_> {
         // and a `{a = 1}` inside it has found the `=` that makes it legal.
         self.cover_initialized_name = None;
         let pattern = self.refine_pattern(expr)?;
-        // …while a rest element with something after it was fine as a literal and is not a
-        // pattern, so that record is only now an error.
-        if let Some(span) = self.rest_followed_by_comma.take() {
-            return Err(ParseError {
-                kind: ParseErrorKind::RestElementMustBeLast,
-                span,
-            });
-        }
+
         Ok(pattern)
     }
 
@@ -116,7 +109,19 @@ impl Parser<'_> {
                 ArrayElement::Value(value) => {
                     refined.push(Some(self.refine_element(value)?));
                 }
-                ArrayElement::Spread(target) => {
+                ArrayElement::Spread {
+                    value: target,
+                    followed_by_comma,
+                } => {
+                    // `AssignmentRestElement` is last with nothing after it, and a comma is
+                    // something after it — the one thing about a rest that the finished list
+                    // cannot show, which is why the element was made to carry it.
+                    if followed_by_comma {
+                        return Err(ParseError {
+                            kind: ParseErrorKind::RestElementMustBeLast,
+                            span: target.span,
+                        });
+                    }
                     // `AssignmentRestElement : ... DestructuringAssignmentTarget` — no
                     // `Initializer`, so `[...a = 1] = b` has no derivation. The default would
                     // have been parsed into the target, which is where it is found.
@@ -193,7 +198,18 @@ impl Parser<'_> {
                         span: function.span,
                     });
                 }
-                PropertyDefinition::Spread(target) => {
+                PropertyDefinition::Spread {
+                    value: target,
+                    followed_by_comma,
+                } => {
+                    // `AssignmentRestProperty` is last with nothing after it, exactly as an
+                    // array's rest is.
+                    if followed_by_comma {
+                        return Err(ParseError {
+                            kind: ParseErrorKind::RestElementMustBeLast,
+                            span: target.span,
+                        });
+                    }
                     // §13.15.5.1: an `AssignmentRestProperty` target may not be an array or object
                     // literal. An array's rest may — `[...[a]] = b` is legal — and the asymmetry
                     // is real: there is no way to spread the remaining properties *into* a
@@ -272,13 +288,21 @@ impl Parser<'_> {
 }
 
 impl Parser<'_> {
-    /// Turn an unclaimed `{a = 1}` into the Syntax Error §13.2.5.1 says it is.
+    /// Settle both of the literal parser's records, an expression having stopped being a
+    /// candidate for refinement.
     ///
-    /// Called where an expression has stopped being a candidate for refinement: no `=` followed
-    /// it, or one did and the target was not a literal. A literal still open around it means the
-    /// question is not settled — `[{a = 1}] = b` is legal, and the array is what makes it so.
+    /// Called where no `=` followed, or one did and the target was not a literal. A bracket still
+    /// open around it means the question is not settled — `[{a = 1}] = b` and `({a = 1}) => b`
+    /// are both legal, and the enclosing bracket is what makes them so.
+    ///
+    /// The two records settle in opposite directions, which is why they are cleared here rather
+    /// than where they are made. A `{a = 1}` that never became a pattern or a binding is the
+    /// Syntax Error §13.2.5.1 describes; a `[...a, ]` that never became a pattern is an ordinary
+    /// array literal, so its record is simply dropped. Dropping it is the point: the record lives
+    /// on the parser, so a literal that keeps it would hand it to the next destructuring in the
+    /// file — `[...a,]; [b] = c;` is two unrelated statements and used to be an error.
     pub(super) fn report_unrefined_cover_grammar(&mut self) -> Result<(), ParseError> {
-        if self.literal_depth > 0 {
+        if self.open_covers > 0 {
             return Ok(());
         }
         match self.cover_initialized_name.take() {

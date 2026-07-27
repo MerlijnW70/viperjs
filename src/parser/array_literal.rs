@@ -38,10 +38,10 @@ impl Parser<'_> {
         let open = self.advance(Goal::RegExp)?;
         self.enter()?;
         // Inside a literal nothing is decided: an expression here may still turn out to be part
-        // of a pattern. See [`Parser::literal_depth`].
-        self.literal_depth += 1;
+        // of a pattern. See [`Parser::open_covers`].
+        self.open_covers += 1;
         let elements = self.parse_array_elements();
-        self.literal_depth -= 1;
+        self.open_covers -= 1;
         self.leave();
         let elements = elements?;
         let close = self.eat(TokenKind::RBracket, Goal::Div, "`]`")?;
@@ -77,23 +77,19 @@ impl Parser<'_> {
             // values: `[a, b]` is two and `[(a, b)]` is one. `[+In]` whatever clause encloses the
             // literal, a bracket starting afresh.
             let value = self.parse_assignment(AllowIn::Yes)?;
+            // A comma after a `...` leaves no trace once parsed — it adds no element, so
+            // `[...a, ]` and `[...a]` become the same list. They are not the same *pattern*, so
+            // the element carries the difference while it is still there to see.
             elements.push(if spread {
-                ArrayElement::Spread(value)
+                ArrayElement::Spread {
+                    value,
+                    followed_by_comma: self.current.kind == TokenKind::Comma,
+                }
             } else {
                 ArrayElement::Value(value)
             });
             if self.current.kind != TokenKind::Comma {
                 break;
-            }
-            // A *trailing* comma after a `...` leaves no trace once parsed — it adds no
-            // element, so `[...a, ]` and `[...a]` become the same list. They are not the same
-            // pattern, so the difference is recorded while it is still there to see. A comma with
-            // an element after it needs no record: that element is visible in the list, and
-            // refinement finds it sitting behind a rest.
-            if matches!(elements.last(), Some(ArrayElement::Spread(_)))
-                && self.peek(Goal::RegExp)?.kind == TokenKind::RBracket
-            {
-                self.rest_followed_by_comma.get_or_insert(self.current.span);
             }
             // The separator. If a `]` follows it the literal simply ends — a trailing comma adds
             // nothing, which is what makes `[1, ]` one element and `[1, , ]` two.

@@ -130,9 +130,12 @@ impl Parser<'_> {
         let keyword = self.advance(Goal::Div)?;
         self.enter()?;
         // Read as `Arguments`, which is the covering production. A `yield` or an `await` in there
-        // is recorded and asked about below, exactly as for a parenthesized group.
+        // is recorded and asked about below, exactly as for a parenthesized group — and so is a
+        // `{a = 1}`, these parentheses being able to become parameters like any others.
         let enclosing_forbidden = self.forbidden_in_parameters.take();
+        self.open_covers += 1;
         let list = self.parse_arguments();
+        self.open_covers -= 1;
         let forbidden = self.forbidden_in_parameters.take();
         self.forbidden_in_parameters = enclosing_forbidden;
         self.leave();

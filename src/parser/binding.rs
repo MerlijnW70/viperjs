@@ -31,8 +31,8 @@
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{
-    ArrayBindingPattern, Binding, BindingElement, BindingName, BindingPattern, BindingProperty,
-    Expr, ExprKind, ObjectBindingPattern, PropertyDefinition,
+    ArrayBindingPattern, AssignmentTarget, Binding, BindingElement, BindingName, BindingPattern,
+    BindingProperty, Expr, ExprKind, ObjectBindingPattern, Pattern, PropertyDefinition,
 };
 use crate::lexer::{Goal, TokenKind};
 use crate::span::Span;
@@ -231,17 +231,7 @@ impl Parser<'_> {
                 span: expr.span,
             });
         }
-        let target = match *target {
-            crate::ast::AssignmentTarget::Simple(target) => self.refine_to_binding(target)?,
-            // The literal was already refined into an assignment pattern by the `=`; refining it
-            // again as a binding would mean parsing it a third time, so the shapes are converted.
-            crate::ast::AssignmentTarget::Pattern(pattern) => {
-                return Err(ParseError {
-                    kind: ParseErrorKind::InvalidArrowParameter,
-                    span: pattern.span(),
-                });
-            }
-        };
+        let target = self.target_as_binding(*target)?;
         Ok(BindingElement {
             target,
             default: Some(value),
@@ -250,6 +240,14 @@ impl Parser<'_> {
 
     /// An expression, refined into the name or pattern it covered.
     pub(super) fn refine_to_binding(&mut self, expr: Expr) -> Result<Binding, ParseError> {
+        // The mirror of what [`Parser::refine_to_pattern`] does, and for the same reason: a
+        // `{a = 1}` in here has found the thing that makes it legal. `CoverInitializedName`
+        // refines into `SingleNameBinding : BindingIdentifier Initializer` exactly as it refines
+        // into `AssignmentProperty : IdentifierReference Initializer_opt`, so `({a = 1}) => b` is
+        // as ordinary as `({a = 1} = b)`. Only a literal that reaches the end of an
+        // `AssignmentExpression` unrefined is the Syntax Error §13.2.5.1 describes — which is why
+        // `f({a = 1})` and `async({a = 1})` still are one.
+        self.cover_initialized_name = None;
         let span = expr.span;
         match expr.kind {
             ExprKind::Identifier(name) => Ok(Binding::Identifier(crate::ast::BindingName {
@@ -276,6 +274,107 @@ impl Parser<'_> {
         }
     }
 
+    /// A `DestructuringAssignmentTarget`, as the `Binding` the `=>` says it was.
+    ///
+    /// The one place two refinements meet. `({a} = {}) => b` reads `{a} = {}` as an
+    /// `AssignmentExpression`, so the `=` refines the literal into an *assignment* pattern before
+    /// the `=>` has been seen — and then the `=>` says it was a parameter with a default all
+    /// along, whose target is a *binding* pattern. The literal is gone by then, so the shapes are
+    /// converted rather than the source read a third time.
+    ///
+    /// The two grammars are not the same, which is the whole reason this is a conversion and not
+    /// a cast: `[a.b] = c` is a perfectly good assignment pattern and `([a.b]) => c` has no
+    /// derivation. Every target goes through [`Parser::refine_to_binding`], which is what refuses
+    /// the ones a binding may not have.
+    fn target_as_binding(&mut self, target: AssignmentTarget) -> Result<Binding, ParseError> {
+        match target {
+            AssignmentTarget::Simple(expr) => self.refine_to_binding(expr),
+            AssignmentTarget::Pattern(Pattern::Array(pattern)) => {
+                self.enter()?;
+                let refined = self.array_pattern_as_binding(pattern);
+                self.leave();
+                Ok(Binding::Pattern(BindingPattern::Array(refined?)))
+            }
+            AssignmentTarget::Pattern(Pattern::Object(pattern)) => {
+                self.enter()?;
+                let refined = self.object_pattern_as_binding(pattern);
+                self.leave();
+                Ok(Binding::Pattern(BindingPattern::Object(refined?)))
+            }
+        }
+    }
+
+    /// An `ArrayAssignmentPattern`, as the `ArrayBindingPattern` it turns out to have been.
+    ///
+    /// No rest-element check: the assignment refinement already made one, and a rest that was
+    /// last there is last here — the two grammars agree about that much.
+    fn array_pattern_as_binding(
+        &mut self,
+        pattern: crate::ast::ArrayPattern,
+    ) -> Result<crate::ast::ArrayBindingPattern, ParseError> {
+        let mut elements = Vec::with_capacity(pattern.elements.len());
+        for element in Vec::from(pattern.elements) {
+            elements.push(match element {
+                None => None,
+                Some(element) => Some(self.pattern_element_as_binding(element)?),
+            });
+        }
+        let rest = match pattern.rest {
+            Some(rest) => Some(Box::new(self.target_as_binding(*rest)?)),
+            None => None,
+        };
+        Ok(crate::ast::ArrayBindingPattern {
+            elements: elements.into_boxed_slice(),
+            rest,
+            span: pattern.span,
+        })
+    }
+
+    /// An `ObjectAssignmentPattern`, as the `ObjectBindingPattern` it turns out to have been.
+    fn object_pattern_as_binding(
+        &mut self,
+        pattern: crate::ast::ObjectPattern,
+    ) -> Result<crate::ast::ObjectBindingPattern, ParseError> {
+        let span = pattern.span;
+        let mut properties = Vec::with_capacity(pattern.properties.len());
+        for property in Vec::from(pattern.properties) {
+            properties.push(BindingProperty {
+                key: property.key,
+                value: self.pattern_element_as_binding(property.value)?,
+            });
+        }
+        // `BindingRestProperty : ... BindingIdentifier`, where an `AssignmentRestProperty` takes
+        // any simple target — so `({...a.b} = c)` is legal and `({...a.b}) => c` is not.
+        let rest = match pattern.rest {
+            Some(rest) => {
+                let Binding::Identifier(name) = self.refine_to_binding(*rest)? else {
+                    return Err(ParseError {
+                        kind: ParseErrorKind::RestTargetMayNotBePattern,
+                        span,
+                    });
+                };
+                Some(name)
+            }
+            None => None,
+        };
+        Ok(crate::ast::ObjectBindingPattern {
+            properties: properties.into_boxed_slice(),
+            rest,
+            span,
+        })
+    }
+
+    /// One `AssignmentElement`, as the `BindingElement` it turns out to have been.
+    fn pattern_element_as_binding(
+        &mut self,
+        element: crate::ast::PatternElement,
+    ) -> Result<BindingElement, ParseError> {
+        Ok(BindingElement {
+            target: self.target_as_binding(element.target)?,
+            default: element.default,
+        })
+    }
+
     /// An array literal, refined into an `ArrayBindingPattern`.
     fn refine_array_binding(
         &mut self,
@@ -296,7 +395,19 @@ impl Parser<'_> {
                 crate::ast::ArrayElement::Value(value) => {
                     refined.push(Some(self.refine_to_binding_element(value)?));
                 }
-                crate::ast::ArrayElement::Spread(target) => {
+                crate::ast::ArrayElement::Spread {
+                    value: target,
+                    followed_by_comma,
+                } => {
+                    // `BindingRestElement` is last with nothing after it, exactly as an
+                    // `AssignmentRestElement` is — so `([...a,]) => b` has no derivation any more
+                    // than `[...a,] = b` does.
+                    if followed_by_comma {
+                        return Err(ParseError {
+                            kind: ParseErrorKind::RestElementMustBeLast,
+                            span: target.span,
+                        });
+                    }
                     rest = Some(Box::new(self.refine_to_binding(target)?));
                 }
             }
@@ -347,7 +458,16 @@ impl Parser<'_> {
                     },
                 }),
                 // `BindingRestProperty : ... BindingIdentifier`, as everywhere else.
-                PropertyDefinition::Spread(target) => {
+                PropertyDefinition::Spread {
+                    value: target,
+                    followed_by_comma,
+                } => {
+                    if followed_by_comma {
+                        return Err(ParseError {
+                            kind: ParseErrorKind::RestElementMustBeLast,
+                            span: target.span,
+                        });
+                    }
                     let Binding::Identifier(name) = self.refine_to_binding(target)? else {
                         return Err(ParseError {
                             kind: ParseErrorKind::RestTargetMayNotBePattern,
@@ -376,6 +496,11 @@ impl Parser<'_> {
 mod tests {
     use crate::parser::test_support::*;
     use crate::parser::{ParseErrorKind, parse_script};
+
+    /// The kind of error `source` fails with, as a script.
+    fn kind(source: &str) -> ParseErrorKind {
+        script_error(source).kind
+    }
 
     #[test]
     fn all_three_keywords_take_a_pattern_where_they_take_a_name() {
@@ -567,5 +692,142 @@ mod tests {
             ParseErrorKind::TooDeeplyNested
         );
         assert!(parse_script(&format!("let [{}] = b;", "a, ".repeat(10_000))).is_err());
+    }
+
+    #[test]
+    fn a_literal_refined_into_a_binding_has_found_what_makes_its_shorthand_legal() {
+        // `CoverInitializedName` refines into `SingleNameBinding : BindingIdentifier Initializer`
+        // exactly as it refines into `AssignmentProperty : IdentifierReference Initializer_opt`,
+        // so a `{a = 1}` is as ordinary in arrow parameters as it is on the left of an `=`.
+        assert_eq!(shape("({a = 1}) => b"), "(=> [{(a (= a 1))}] b)");
+        for source in [
+            "({a = 1}) => b;",
+            "({a = 1, b}) => c;",
+            "({a: {b = 1}}) => c;",
+            "({a = 1}, b) => c;",
+            "([{a = 1}]) => b;",
+            "async ({a = 1}) => b;",
+            "({a = 1} = {}) => b;",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source:?}");
+        }
+        // …and a literal that reaches the end of an `AssignmentExpression` unrefined is still the
+        // Syntax Error §13.2.5.1 describes. The parentheses of a call cannot rescue it, and
+        // neither can the ones of a group that turned out not to be parameters.
+        for source in [
+            "({a = 1});",
+            "f({a = 1});",
+            "async({a = 1});",
+            "[{a = 1}];",
+            "({a = 1}) + 1;",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::ShorthandPropertyWithInitializer,
+                "{source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_parameters_default_may_have_a_pattern_for_its_target() {
+        // `({a} = {}) => b` reads `{a} = {}` as an `AssignmentExpression`, so the `=` refines the
+        // literal into an *assignment* pattern before the `=>` has been seen — and then the `=>`
+        // says it was a parameter with a default all along, whose target is a *binding* pattern.
+        // The literal is gone by then, so the shapes are converted.
+        assert_eq!(shape("({a} = {}) => b"), "(=> [(= {(a a)} {})] b)");
+        assert_eq!(shape("([a] = []) => b"), "(=> [(= [a] [])] b)");
+        for source in [
+            "(a, {b} = {}) => c;",
+            "([a = 1] = []) => b;",
+            "({a: {b}} = {}) => c;",
+            "([[a]] = []) => b;",
+            "({...a} = {}) => b;",
+            "([...a] = []) => b;",
+            "({} = {}) => a;",
+            "([] = []) => a;",
+            "({a, ...b} = {}) => c;",
+            "({a} = {}, [b] = []) => c;",
+            "({a: {b} = {}} = {}) => c;",
+            "async ({a} = {}) => b;",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source:?}");
+        }
+        // The two grammars are not the same, which is why this is a conversion and not a cast:
+        // every target still goes through the binding rules, and those refuse what a binding may
+        // not have.
+        for source in [
+            "({a: b.c} = {}) => d;",
+            "([a.b] = []) => c;",
+            "({...a.b}) => c;",
+            "([...a.b]) => c;",
+        ] {
+            assert!(parse_script(source).is_err(), "{source:?}");
+        }
+        // …and the very same shapes are ordinary assignment patterns, which is the comparison
+        // that shows there are two grammars here and not one.
+        assert!(parse_script("({a: b.c} = {});").is_ok());
+        assert!(parse_script("[a.b] = [];").is_ok());
+    }
+
+    #[test]
+    fn a_comma_after_a_rest_is_carried_by_the_element_that_it_followed() {
+        // A trailing comma adds no element, so `[...a, ]` and `[...a]` are the same list and only
+        // the element can say which was written. On the element rather than on the parser,
+        // because a record on the parser cannot say *which* literal it belongs to.
+        for source in [
+            "[...a,] = b;",
+            "[[...a,]] = b;",
+            "({x: [...a,]} = b);",
+            "([...a,]) => b;",
+            "([[...a,]]) => b;",
+            "({p: [...a,]}) => b;",
+            "var [[...a,]] = b;",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::RestElementMustBeLast,
+                "{source:?}"
+            );
+        }
+        // An object's rest is last too, which nothing used to check at all.
+        for source in [
+            "({...a,} = b);",
+            "({...a,}) => b;",
+            "[{...a,}] = b;",
+            "({p: {...a,}} = b);",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::RestElementMustBeLast,
+                "{source:?}"
+            );
+        }
+        // As a *literal* the comma is ordinary, and the literal beside it stays ordinary too —
+        // which is what a parser-wide record could not manage: `[...a,]` here is a value and
+        // `[b]` there is a pattern, and they have nothing to do with each other.
+        for source in [
+            "[...a,];",
+            "({...a,});",
+            "[...a,]; [b] = c;",
+            "[a, ...b,]; [c] = d;",
+            "f([...a,]); [b] = c;",
+            "[[...a,]]; [b] = c;",
+            "x = [...a,]; [b] = c;",
+            "(x = [...a,], [b]) => c;",
+            "([b], x = [...a,]) => c;",
+            "[x = [...a,], [b]] = c;",
+            "function f(x = [...a,], [b]) {}",
+            "var x = [...a,], [b] = c;",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source:?}");
+        }
+        // A rest with an element after it needs no such record: the element is in the list, and
+        // refinement finds it sitting behind the rest.
+        assert!(parse_script("[...a, b];").is_ok());
+        assert_eq!(
+            kind("[...a, b] = c;"),
+            ParseErrorKind::RestElementMustBeLast
+        );
     }
 }

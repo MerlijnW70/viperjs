@@ -234,13 +234,6 @@ struct Parser<'a> {
     /// and an expression that reaches the end of an `AssignmentExpression` still carrying one is
     /// the Syntax Error §13.2.5.1 describes.
     pub(super) cover_initialized_name: Option<Span>,
-    /// Where a `...` element was followed by a comma, if one has been parsed.
-    ///
-    /// The other half, and the opposite way round: `[...a, ]` is a legal *literal* and never a
-    /// legal *pattern*, an `AssignmentRestElement` being last with nothing after it. The two
-    /// look identical once parsed — a trailing comma leaves no element — so the literal parser
-    /// records it and refinement is what turns it into an error.
-    pub(super) rest_followed_by_comma: Option<Span>,
     /// Whether this is strict mode code (§11.2.1).
     ///
     /// Not a grammar parameter — the specification threads strictness through `IsStrict`, which
@@ -305,12 +298,18 @@ struct Parser<'a> {
     /// function however the file was parsed, and §13.1.1 refuses `await` as an identifier in a
     /// module regardless. See [`self::module`] for the five things the goal decides.
     pub(super) module: bool,
-    /// How many array or object literals are open.
+    /// How many brackets are open that could still turn what is inside them into a pattern or a
+    /// binding.
     ///
-    /// What makes the record above a *deferred* error rather than an immediate one: inside a
-    /// literal, an expression may still turn out to be part of a pattern, so nothing is decided.
-    /// At nought, it cannot — which is why `[{a = 1}] = b` parses and `f({a = 1})` does not.
-    pub(super) literal_depth: u32,
+    /// What makes the record above a *deferred* error rather than an immediate one. Three
+    /// constructs count: an array literal and an object literal, either of which may become a
+    /// pattern; and a parenthesized group, which may become arrow parameters. Inside any of them
+    /// nothing is decided, so `[{a = 1}] = b` and `({a = 1}) => b` both parse.
+    ///
+    /// At nought the question is settled, which is why `f({a = 1})` and `({a = 1})` are the
+    /// Syntax Error §13.2.5.1 describes — the outermost `AssignmentExpression` always asks, and
+    /// by then no bracket is left to make it legal.
+    pub(super) open_covers: u32,
 }
 
 impl<'a> Parser<'a> {
@@ -327,8 +326,7 @@ impl<'a> Parser<'a> {
             current,
             depth: 0,
             cover_initialized_name: None,
-            rest_followed_by_comma: None,
-            literal_depth: 0,
+            open_covers: 0,
             inside_function: false,
             body_context: self::body::BodyContext::SCRIPT,
             yield_allowed: false,

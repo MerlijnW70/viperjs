@@ -139,6 +139,10 @@ impl Parser<'_> {
     /// The cover grammar, read as far as its closing parenthesis.
     fn parse_cover_group(&mut self) -> Result<CoverGroup, ParseError> {
         let open = self.advance(Goal::RegExp)?;
+        // These parentheses may still turn what is inside them into arrow parameters, so a
+        // `{a = 1}` in here is not settled either way — see [`Parser::open_covers`]. Without this
+        // the group would report the error before the `=>` had a chance to make it legal.
+        self.open_covers += 1;
         let enclosing_forbidden_in_parameters = self.forbidden_in_parameters.take();
         let mut elements = Vec::new();
         let mut rest = None;
@@ -159,6 +163,7 @@ impl Parser<'_> {
             }
         }
         let close = self.eat(TokenKind::RParen, Goal::Div, "`)`")?;
+        self.open_covers -= 1;
         let forbidden_in_parameters = self.forbidden_in_parameters;
         self.forbidden_in_parameters = enclosing_forbidden_in_parameters;
         Ok(CoverGroup {

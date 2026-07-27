@@ -45,9 +45,9 @@ impl Parser<'_> {
     pub(super) fn parse_object_literal(&mut self) -> Result<Expr, ParseError> {
         let open = self.advance(Goal::RegExp)?;
         self.enter()?;
-        self.literal_depth += 1;
+        self.open_covers += 1;
         let properties = self.parse_property_definitions();
-        self.literal_depth -= 1;
+        self.open_covers -= 1;
         self.leave();
         let properties = properties?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
@@ -66,9 +66,11 @@ impl Parser<'_> {
             // any other property would rather than only at one end.
             if self.current.kind == TokenKind::DotDotDot {
                 self.advance(Goal::RegExp)?;
-                properties.push(PropertyDefinition::Spread(
-                    self.parse_assignment(AllowIn::Yes)?,
-                ));
+                let value = self.parse_assignment(AllowIn::Yes)?;
+                properties.push(PropertyDefinition::Spread {
+                    value,
+                    followed_by_comma: self.current.kind == TokenKind::Comma,
+                });
             } else {
                 properties.push(self.parse_property_definition()?);
             }
