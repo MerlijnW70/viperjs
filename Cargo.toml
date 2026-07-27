@@ -11,9 +11,10 @@ readme = "README.md"
 authors = ["MerlijnW70"]
 keywords = ["javascript", "ecmascript", "interpreter", "engine", "embeddable"]
 categories = ["compilers"]
-# Edition 2024 is what sets this, not a policy of its own. It is stated so that a bump is a
-# deliberate change with a release note, rather than something a contributor discovers in CI.
-rust-version = "1.85"
+# Measured, not assumed: 1.87 fails on the let-chains the parser uses and 1.88 is the first
+# release that takes them. Edition 2024 alone would only ask for 1.85. Stated here so that a
+# bump is a deliberate change with a release note, not something a contributor finds in CI.
+rust-version = "1.88"
 # The lab is a workspace member and never ships; test262 is vendored and never committed.
 exclude = ["/lab", "/conformance", "/decisions", "/.github"]
 

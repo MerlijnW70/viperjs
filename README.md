@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/MerlijnW70/praxis/actions/workflows/ci.yml/badge.svg)](https://github.com/MerlijnW70/praxis/actions/workflows/ci.yml)
 [![Licence: MIT OR Apache-2.0](https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue.svg)](#licence)
-[![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
+[![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange.svg)](https://www.rust-lang.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](Cargo.toml)
 [![unsafe: forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](src/lib.rs)
 
@@ -76,7 +76,7 @@ cargo test --workspace      # the engine and its tests
 cargo doc --no-deps --open  # the API, such as it is
 ```
 
-Requires Rust 1.85 or later (edition 2024).
+Requires Rust 1.88 or later — the first release with the let-chains the parser uses.
 
 ## Contributing
 

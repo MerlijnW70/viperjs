@@ -29,7 +29,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       # Three platforms because two of the engine's guarantees are platform-shaped: the parser
@@ -42,7 +42,7 @@ jobs:
     name: fmt, clippy, docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -58,8 +58,13 @@ jobs:
     name: minimum supported Rust
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: actions/checkout@v7
+      # The toolchain as an *input* rather than as the action's ref. Pinning it as `@1.88.0`
+      # also works, but Dependabot reads that ref as an action version and offers to "upgrade"
+      # it — which would silently move this job off the MSRV it exists to check.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.88.0"
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --workspace --all-targets
 
@@ -67,7 +72,7 @@ jobs:
     name: zero dependencies, no unsafe
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       # Two of the three non-negotiables in GOAL.md, checked mechanically rather than trusted.
       # `#![forbid(unsafe_code)]` makes the compiler enforce the second; this asserts the

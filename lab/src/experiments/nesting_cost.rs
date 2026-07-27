@@ -121,10 +121,7 @@ pub fn run(argument: Option<&str>) -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    println!(
-        "{:<17} {:>7}  {:>10}  {}",
-        "shape", "levels", "per level", "path"
-    );
+    println!("{:<17} {:>7}  {:>10}  path", "shape", "levels", "per level");
     for shape in chosen {
         match cliff(shape.name) {
             Some(levels) => println!(

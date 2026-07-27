@@ -29,7 +29,7 @@ cargo doc --no-deps --workspace          # missing_docs is denied
 ```
 
 CI runs all of these on Linux, Windows and macOS, plus a check against the minimum supported
-Rust version. Two of the charter's guarantees are also checked mechanically there: the
+Rust version (1.88). Two of the charter's guarantees are also checked mechanically there: the
 dependency table is empty, and `#![forbid(unsafe_code)]` is still in `src/lib.rs`.
 
 ## What a review looks for
