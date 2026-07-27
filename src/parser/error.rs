@@ -213,6 +213,11 @@ pub enum ParseErrorKind {
     /// and refused for the same reason: a default is evaluated before the function is
     /// suspendable, so there is nothing for the `await` to suspend into.
     AwaitInParameters,
+    /// §16.2.2: `import {"a"} from "b"` — a string export name with nothing to bind it to.
+    ///
+    /// The shorthand `ImportSpecifier` uses the export's name as the local binding, and a string
+    /// is not an identifier however it is spelled. `import {"a" as b} from "c"` is the way.
+    StringImportWithoutAlias,
     /// §13.3.7: `super.#a`.
     ///
     /// `SuperProperty` takes an `IdentifierName` and has no private form — the name would have to
@@ -511,6 +516,10 @@ impl fmt::Display for ParseErrorKind {
             Self::AwaitInParameters => write!(
                 f,
                 "`await` may not appear in an async function's own parameter list"
+            ),
+            Self::StringImportWithoutAlias => write!(
+                f,
+                "a string import name needs `as` and a local name after it"
             ),
             Self::PrivateNameAfterSuper => {
                 write!(f, "`super` has no private members")

@@ -22,7 +22,10 @@
 //! point a `Script` stops being able to share this function with a `Block`.
 
 use super::{ParseError, ParseErrorKind};
-use crate::ast::{Declaration, Stmt, SwitchCase};
+use crate::ast::{
+    BindingName, Declaration, ImportClause, ImportDeclaration, ImportSpecifier, ModuleItem, Stmt,
+    SwitchCase,
+};
 use crate::span::Span;
 use crate::static_semantics::{
     DeclaredName, LabelProblemKind, bound_names, first_label_problem, lexically_declared_names,
@@ -76,6 +79,64 @@ pub(super) fn check_case_block_declared_names(cases: &[SwitchCase]) -> Result<()
             .flat_map(|case| var_declared_names(&case.body))
             .collect(),
     )
+}
+
+/// §16.2.1.1's two declared-name rules, asked of a finished `ModuleItemList`.
+///
+/// The same two rules §16.1.1 asks of a `Script`, over a list that reads differently in two ways:
+///
+/// - The `LexicallyDeclaredNames` are the *non*-`TopLevel` ones, so a function declared at the top
+///   of a module is lexically scoped. That single difference is why
+///   `function f() {} function f() {}` is a redeclaration in a module and ordinary in a script.
+/// - An `ImportDeclaration` declares names too, and lexically — §8.2.6 gives `ModuleItem :
+///   ImportDeclaration` the `BoundNames` of the declaration. So `import a from "b"; var a;`
+///   collides exactly as `let a; var a;` would.
+pub(super) fn check_module_declared_names(body: &[ModuleItem]) -> Result<(), ParseError> {
+    let statements: Vec<Stmt> = body
+        .iter()
+        .filter_map(|item| match item {
+            ModuleItem::Statement(statement) => Some(statement.clone()),
+            ModuleItem::Import(_) => None,
+        })
+        .collect();
+    let mut lexical = lexically_declared_names(&statements);
+    for item in body {
+        let ModuleItem::Import(declaration) = item else {
+            continue;
+        };
+        for name in imported_names(declaration) {
+            lexical.push(name);
+        }
+    }
+    // Source order, which `check` relies on to put the caret on the redeclaration rather than on
+    // the declaration it collided with. The imports were appended after the statements, so the
+    // list has to be put back in the order the file was written.
+    lexical.sort_by_key(|declared| declared.span.start);
+    check(lexical, var_declared_names(&statements))
+}
+
+/// The `BoundNames` of an `ImportDeclaration` (§8.2.1).
+///
+/// Every shape of `ImportClause` binds its locals and nothing else — a `ModuleExportName` names
+/// something in the *other* module and is not a binding here, which is why
+/// `import {a as b, a as c} from "d"` binds two names and not one.
+fn imported_names(declaration: &ImportDeclaration) -> Vec<DeclaredName<'_>> {
+    let (singles, specifiers): (&[&BindingName], &[ImportSpecifier]) = match &declaration.clause {
+        None => (&[], &[]),
+        Some(ImportClause::Default(name) | ImportClause::Namespace(name)) => (&[name], &[]),
+        Some(ImportClause::Named(specifiers)) => (&[], specifiers),
+        Some(ImportClause::DefaultAndNamespace(default, namespace)) => (&[default, namespace], &[]),
+        Some(ImportClause::DefaultAndNamed(default, specifiers)) => (&[default], specifiers),
+    };
+    singles
+        .iter()
+        .copied()
+        .chain(specifiers.iter().map(|specifier| &specifier.local))
+        .map(|name| DeclaredName {
+            name: &name.name,
+            span: name.span,
+        })
+        .collect()
 }
 
 /// §16.1.1: the five rules of §8.3, §14.8.1 and §14.9.1, asked of a finished `Script`.

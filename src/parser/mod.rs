@@ -70,6 +70,7 @@ mod generator;
 mod labelled;
 mod member;
 mod method;
+mod module;
 mod object_literal;
 mod operator;
 mod pattern;
@@ -84,6 +85,7 @@ mod test_support;
 mod try_catch;
 
 pub use self::error::{ParseError, ParseErrorKind};
+pub use self::module::parse_module;
 pub use self::statement::parse_script;
 #[cfg(test)]
 pub(crate) use self::statement::parse_script_with_label_rules_unchecked;
@@ -296,6 +298,12 @@ struct Parser<'a> {
     /// body closes. Each class body removes the names it declares and leaves the rest for the
     /// class around it; whatever survives to the end of the script was never declared anywhere.
     pub(super) private_references: Vec<(Box<str>, Span)>,
+    /// Whether the goal symbol is `Module` rather than `Script` (§16.2).
+    ///
+    /// Not the same question as `await_allowed`: the parameter is `[~Await]` inside a plain
+    /// function however the file was parsed, and §13.1.1 refuses `await` as an identifier in a
+    /// module regardless. See [`self::module`] for the five things the goal decides.
+    pub(super) module: bool,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -327,6 +335,7 @@ impl<'a> Parser<'a> {
             forbidden_in_parameters: None,
             arguments_reference: None,
             private_references: Vec::new(),
+            module: false,
             strict: false,
         })
     }
@@ -354,7 +363,10 @@ impl<'a> Parser<'a> {
         match kind {
             TokenKind::Identifier { .. } => true,
             TokenKind::Keyword(ReservedWord::Yield) => !self.yield_allowed,
-            TokenKind::Keyword(ReservedWord::Await) => !self.await_allowed,
+            // §13.1.1 refuses `await` as any of the three under the `Module` goal, whatever
+            // the parameter says — so a plain function body inside a module has no `await`
+            // as an operator *and* no `await` as a name.
+            TokenKind::Keyword(ReservedWord::Await) => !self.await_allowed && !self.module,
             _ => false,
         }
     }

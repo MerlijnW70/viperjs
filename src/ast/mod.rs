@@ -22,6 +22,7 @@ mod binding;
 mod expression;
 mod function;
 mod literal;
+mod module;
 mod operator;
 mod pattern;
 mod statement;
@@ -39,6 +40,10 @@ pub use self::function::{
 pub use self::literal::{
     ArrayElement, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral, TemplateElement,
     TemplateLiteral,
+};
+pub use self::module::{
+    ImportAttribute, ImportClause, ImportDeclaration, ImportSpecifier, Module, ModuleExportName,
+    ModuleItem,
 };
 pub use self::operator::{
     AssignmentOperator, BinaryOperator, LogicalOperator, UnaryOperator, UpdateOperator,
