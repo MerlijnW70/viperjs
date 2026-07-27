@@ -2,9 +2,9 @@
 
 use super::{ParseError, parse_expression};
 use crate::ast::{
-    ArrayElement, AssignmentTarget, Binding, BindingElement, BindingPattern, Declaration, Expr,
-    ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, MethodKind, Pattern, PatternElement,
-    PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
+    ArrayElement, ArrowBody, AssignmentTarget, Binding, BindingElement, BindingPattern,
+    Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, MethodKind,
+    Pattern, PatternElement, PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
 };
 
 /// The parsed expression of `source`.
@@ -83,6 +83,22 @@ pub(super) fn render(expr: &Expr) -> String {
             render(argument)
         ),
         ExprKind::Function(function) => render_function(function),
+        ExprKind::Arrow(arrow) => {
+            let mut parameters: Vec<String> = arrow
+                .parameters
+                .items
+                .iter()
+                .map(render_binding_element)
+                .collect();
+            if let Some(rest) = &arrow.parameters.rest {
+                parameters.push(format!("(... {})", render_binding(rest)));
+            }
+            let body = match &arrow.body {
+                ArrowBody::Expression(value) => render(value),
+                ArrowBody::Block(body) => render_block(body),
+            };
+            format!("(=> [{}] {})", parameters.join(" "), body)
+        }
         ExprKind::Array(elements) => {
             let rendered: Vec<String> = elements
                 .iter()

@@ -27,11 +27,20 @@ impl Parser<'_> {
     /// and reuses none between match arms, so three arms written inline would all be paid for on
     /// every bracket — including `((((1))))`, which takes no suffix at all. Measured: the inline
     /// form cost a mebibyte 64 levels of nesting for suffixes it never used.
-    pub(super) fn parse_member(&mut self, allow_call: bool) -> Result<Expr, ParseError> {
-        let mut expr = if self.current.kind == TokenKind::Keyword(ReservedWord::New) {
-            self.parse_new()?
-        } else {
-            self.parse_primary()?
+    pub(super) fn parse_member(
+        &mut self,
+        allow_call: bool,
+        head: Option<Expr>,
+    ) -> Result<Expr, ParseError> {
+        // A head that is already read is a parenthesized group the assignment level had to
+        // open to see whether a `=>` followed it (§15.3). It is a `PrimaryExpression`, so the
+        // suffixes below apply to it exactly as if this had read it.
+        let mut expr = match head {
+            Some(head) => head,
+            None if self.current.kind == TokenKind::Keyword(ReservedWord::New) => {
+                self.parse_new()?
+            }
+            None => self.parse_primary()?,
         };
         loop {
             expr = match self.current.kind {
@@ -97,7 +106,7 @@ impl Parser<'_> {
     fn parse_new(&mut self) -> Result<Expr, ParseError> {
         let token = self.advance(Goal::RegExp)?;
         self.enter()?;
-        let callee = self.parse_member(false);
+        let callee = self.parse_member(false, None);
         self.leave();
         let callee = callee?;
         // `new a()()` is a call on `new a()`, because the first argument list belongs to the

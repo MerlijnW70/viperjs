@@ -73,7 +73,16 @@ impl Parser<'_> {
     /// is what makes `(a ? b : c) = d` say "this expression cannot be assigned to" instead of
     /// the far less helpful "expected end of input".
     pub(super) fn parse_assignment(&mut self, allow_in: AllowIn) -> Result<Expr, ParseError> {
-        let mut left = self.parse_binary(0, allow_in)?;
+        // §15.3: an `ArrowFunction` is an `AssignmentExpression` and nothing tighter, so this
+        // is the only level that may produce one — see [`super::arrow`]. What comes back may
+        // also be a parenthesized expression the attempt had to read to find out, in which case
+        // it becomes the head of the ordinary operand path rather than being read twice.
+        let head = match self.parse_arrow_or_group(allow_in)? {
+            super::arrow::ArrowOrGroup::Arrow(arrow) => return Ok(arrow),
+            super::arrow::ArrowOrGroup::Operand(expr) => Some(expr),
+            super::arrow::ArrowOrGroup::Neither => None,
+        };
+        let mut left = self.parse_binary(0, allow_in, head)?;
         if self.current.kind == TokenKind::Question {
             left = self.parse_conditional_tail(left, allow_in)?;
         }
@@ -173,8 +182,17 @@ impl Parser<'_> {
     /// belongs to the caller. Left-associative operators recurse one level tighter so the next
     /// one of equal precedence is left for the loop, and `**` recurses at its own level so the
     /// next one is taken by the recursion instead — which is the whole of associativity.
-    fn parse_binary(&mut self, minimum: u8, allow_in: AllowIn) -> Result<Expr, ParseError> {
-        let mut left = self.parse_unary()?;
+    fn parse_binary(
+        &mut self,
+        minimum: u8,
+        allow_in: AllowIn,
+        head: Option<Expr>,
+    ) -> Result<Expr, ParseError> {
+        // A head that is already read is the parenthesized group the assignment level had to open
+        // to see whether a `=>` followed it. Passed down rather than kept on the parser, so the
+        // compiler is what makes sure it reaches exactly one place — and measurably free, the
+        // restructuring below being what the depth went on.
+        let mut left = self.parse_unary(head)?;
         while let Some(operator) = binary_operator(self.current.kind) {
             if operator.precedence < minimum {
                 break;
@@ -209,7 +227,7 @@ impl Parser<'_> {
                 operator.precedence + 1
             };
             self.enter()?;
-            let right = self.parse_binary(tighter, allow_in);
+            let right = self.parse_binary(tighter, allow_in, None);
             self.leave();
             let right = right?;
             left = combine(left, operator, right)?;
@@ -221,12 +239,17 @@ impl Parser<'_> {
     ///
     /// Merged for the same reason the conditional lives inside `parse_assignment`: both are on
     /// the path a bracket recurses through, and a frame there costs nesting depth (DR-0006).
-    fn parse_unary(&mut self) -> Result<Expr, ParseError> {
-        if let Some(operator) = unary_operator(self.current.kind) {
+    fn parse_unary(&mut self, head: Option<Expr>) -> Result<Expr, ParseError> {
+        // A head that is already read is a parenthesized group, which is a `PrimaryExpression`.
+        // No prefix operator can apply to it — one would have been read before the `(` — but a
+        // postfix `++` still can, so it joins the path below rather than skipping it.
+        if head.is_none()
+            && let Some(operator) = unary_operator(self.current.kind)
+        {
             let token = self.advance(Goal::RegExp)?;
             self.enter()?;
             // `- UnaryExpression`, so the operators stack: `- - a` is two of them.
-            let argument = self.parse_unary();
+            let argument = self.parse_unary(None);
             self.leave();
             let argument = argument?;
             // §13.5.1: strict code may not `delete` a bare name. `delete a.b` removes a property
@@ -250,20 +273,22 @@ impl Parser<'_> {
                 span,
             ));
         }
-        if let Some(operator) = update_operator(self.current.kind) {
+        if head.is_none()
+            && let Some(operator) = update_operator(self.current.kind)
+        {
             let token = self.advance(Goal::RegExp)?;
             self.enter()?;
             // `++ UnaryExpression` — the operand is a unary expression, not a
             // LeftHandSideExpression, so `++ typeof a` parses and is then rejected below for
             // having nothing to increment.
-            let argument = self.parse_unary();
+            let argument = self.parse_unary(None);
             self.leave();
             let argument = argument?;
             return Self::update(operator, true, token.span, argument);
         }
 
         // `UpdateExpression : LeftHandSideExpression [no LineTerminator here] ++`
-        let operand = self.parse_member(true)?;
+        let operand = self.parse_member(true, head)?;
         let Some(operator) = update_operator(self.current.kind) else {
             return Ok(operand);
         };

@@ -32,7 +32,7 @@ pub use self::binding::{
 pub use self::expression::{
     ArrayElement, Expr, ExprKind, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral,
 };
-pub use self::function::{FormalParameters, Function};
+pub use self::function::{ArrowBody, ArrowFunction, FormalParameters, Function};
 pub use self::operator::{
     AssignmentOperator, BinaryOperator, LogicalOperator, UnaryOperator, UpdateOperator,
 };

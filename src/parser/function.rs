@@ -232,7 +232,7 @@ fn check_parameter_names(parameters: &FormalParameters) -> Result<(), ParseError
 /// Two rules the parameters could not be judged by when they were read, the body not yet having
 /// said whether it is strict: every name must be one strict code may bind, and no name may repeat
 /// — a strict list being unique whether or not it is simple.
-fn check_strict_parameters(parameters: &FormalParameters) -> Result<(), ParseError> {
+pub(super) fn check_strict_parameters(parameters: &FormalParameters) -> Result<(), ParseError> {
     let mut seen: HashSet<String> = HashSet::new();
     let mut names: Vec<crate::static_semantics::DeclaredName<'_>> = Vec::new();
     for element in &parameters.items {
@@ -256,6 +256,19 @@ fn check_strict_parameters(parameters: &FormalParameters) -> Result<(), ParseErr
         }
     }
     Ok(())
+}
+
+/// §15.3.1 borrows §15.2.1's rule for an arrow, whose body is a `ConciseBody`.
+pub(super) fn check_parameters_against_arrow_body(
+    parameters: &FormalParameters,
+    body: &crate::ast::ArrowBody,
+) -> Result<(), ParseError> {
+    match body {
+        // An `ExpressionBody` declares nothing, so there is nothing for a parameter to clash
+        // with — which is most arrows, and why this is not simply the function's check.
+        crate::ast::ArrowBody::Expression(_) => Ok(()),
+        crate::ast::ArrowBody::Block(body) => check_parameters_against_body(parameters, body),
+    }
 }
 
 /// §15.2.1: no parameter name may also be lexically declared by the body.

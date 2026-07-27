@@ -286,6 +286,9 @@ pub enum ExprKind {
     Sequence(Box<[Expr]>),
     /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
     Array(Box<[ArrayElement]>),
+    /// `a => b` (§15.3). An `AssignmentExpression` and nothing tighter, so `x + (a) => b` has
+    /// no derivation.
+    Arrow(Box<super::ArrowFunction>),
     /// `function (…) { … }` (§15.2) — an expression, so its name is optional and its own.
     Function(Box<super::Function>),
     /// `{…}` (§13.2.5), where a `{` could not have begun a statement.

@@ -38,6 +38,7 @@
 //! - `function` — function definitions (§15.2), and the `return` they make legal (§14.10).
 //! - `strict` — where strict mode starts (§11.2.1) and what it takes away (§13.1.1).
 //! - `method` — method definitions (§15.4), the last `PropertyDefinition` alternative.
+//! - `arrow` — arrow functions (§15.3), and the cover grammar that reaches them.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -51,6 +52,7 @@
 //!   that bounds its recursion.
 
 mod array_literal;
+mod arrow;
 mod binding;
 mod control;
 mod declaration;
@@ -110,6 +112,7 @@ use crate::span::Span;
 /// | object literals | 73 | 48 |
 /// | destructuring assignment patterns | 67 | 48 |
 /// | functions, and `return` | 67 | 48 |
+/// | arrow functions | 61 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -138,8 +141,10 @@ use crate::span::Span;
 /// set this number — the narrowest bracket does, and every literal with a bracket in it is a
 /// candidate, which is now most of them.
 ///
-/// As of functions, the standings are: object literal 67, array literal 77, pattern refinement
-/// 76, expressions 113, a function 251. The refinement is not the binding one and was never likely to be — it
+/// As of the arrows, the standings are: object literal 61, array literal 77, an arrow 130, a
+/// parenthesized expression 138, a function 251. The parentheses got *cheaper*: an assignment
+/// level now opens them itself, looking for a `=>`, which is a shallower path than the operand
+/// ladder they used to be read through. The refinement is not the binding one and was never likely to be — it
 /// recurses over a tree the parse has already finished with, so its frames replace the parse's
 /// rather than adding to them.
 ///
@@ -154,7 +159,7 @@ use crate::span::Span;
 /// recursive path in a thread with exactly one mebibyte. That test is the real specification of
 /// this constant: raise the cap, or make a level cost more stack, and it fails.
 ///
-/// The margin over the narrowest path is 1.4×, and was two for the first several slices. It has
+/// The margin over the narrowest path is 1.3×, and was two for the first several slices. It has
 /// not been lowered to restore the ratio, because the ratio is comfort and the test is the
 /// guarantee — buying a rounder number would cost real programs a third of the nesting they are
 /// entitled to, for no failure that has happened. The trend is the thing to watch rather than the

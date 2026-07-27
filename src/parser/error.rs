@@ -146,6 +146,17 @@ pub enum ParseErrorKind {
     /// remaining elements of an iterator can be spread into a pattern, and there is no way to
     /// spread the remaining properties of an object into one.
     RestTargetMayNotBePattern,
+    /// §15.3: something in an arrow's parameter list that cannot be a binding.
+    ///
+    /// `(a.b) => c` has no derivation where `[a.b] = c` does, for the reason `let [a.b] = c` has
+    /// none: an arrow's parameters *create* names, and `a.b` is not a name.
+    InvalidArrowParameter,
+    /// §13.2: a parenthesized group that only arrow parameters could have been.
+    ///
+    /// `()`, `(a,)` and `(...a)` are productions of
+    /// `CoverParenthesizedExpressionAndArrowParameterList` and of nothing else — there is nothing
+    /// for them to evaluate to, so without a `=>` after them they are not anything.
+    CoverGroupIsNotAnExpression,
     /// §15.4: a getter with parameters, or a setter without exactly one.
     ///
     /// `get a()` is written with empty parentheses in the grammar and `set a(v)` with a single
@@ -325,6 +336,13 @@ impl fmt::Display for ParseErrorKind {
             Self::RestTargetMayNotBePattern => write!(
                 f,
                 "a `...` property must name somewhere to put an object, not a pattern"
+            ),
+            Self::InvalidArrowParameter => {
+                write!(f, "this cannot be an arrow function parameter")
+            }
+            Self::CoverGroupIsNotAnExpression => write!(
+                f,
+                "these parentheses are only an expression when `=>` follows them"
             ),
             Self::AccessorParameterCount => write!(
                 f,

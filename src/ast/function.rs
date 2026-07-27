@@ -26,7 +26,7 @@
 //! `break` cannot see the loop it looks like it is in. Every rule those operations serve is
 //! therefore asked again, from scratch, of each function body.
 
-use super::{Binding, BindingElement, BindingName, Stmt};
+use super::{Binding, BindingElement, BindingName, Expr, Stmt};
 use crate::span::Span;
 
 /// A `FunctionDeclaration` or `FunctionExpression` (§15.2).
@@ -42,6 +42,33 @@ pub struct Function {
     pub body: Box<[Stmt]>,
     /// `function` through the closing brace.
     pub span: Span,
+}
+
+/// An `ArrowFunction` (§15.3).
+///
+/// Not a [`Function`]: it has no name, and its body may be a single expression rather than a
+/// statement list. What it shares is the parameters, which are the same `BindingElement`s — but
+/// `UniqueFormalParameters`, so unlike a plain function's they may never repeat.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ArrowFunction {
+    /// What it takes.
+    pub parameters: FormalParameters,
+    /// What it does.
+    pub body: ArrowBody,
+    /// The parameters through the end of the body.
+    pub span: Span,
+}
+
+/// `ConciseBody` (§15.3) — the two shapes an arrow's body may take.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ArrowBody {
+    /// `a => b` — an `ExpressionBody`, whose value is returned.
+    ///
+    /// `ConciseBody : [lookahead ≠ {] ExpressionBody`, which is why `a => ({})` needs its
+    /// parentheses: a `{` opens a block, so an object literal has to be told apart by the author.
+    Expression(Box<Expr>),
+    /// `a => { … }` — an ordinary `FunctionBody`, `return` and all.
+    Block(Box<[Stmt]>),
 }
 
 /// `FormalParameters` (§15.1).

@@ -229,10 +229,18 @@ mod tests {
         assert_eq!(twice.kind, ExprKind::Number(1.0));
         assert_eq!(twice.span, Span::new(0, 5));
         assert_eq!(parse(" ( 1 ) ").span, Span::new(1, 6));
-        // An empty pair is not an expression — `()` is only meaningful as an arrow parameter
-        // list, which is a cover grammar this parser does not reach yet.
+        // An empty pair is not an expression — `()` is a production of the cover grammar and of
+        // nothing else, so it means something only when a `=>` follows it. That is the assignment
+        // level's business now; see [`super::arrow`].
         assert_eq!(
             error("()").kind,
+            ParseErrorKind::CoverGroupIsNotAnExpression
+        );
+        assert_eq!(shape("() => 1"), "(=> [] 1)");
+        // …while a `(` reached from the operand path is the plain parenthesized production, an
+        // arrow being an `AssignmentExpression` and no operand at all.
+        assert_eq!(
+            error("-()").kind,
             ParseErrorKind::Unexpected {
                 expected: "an expression",
                 found: TokenKind::RParen,
