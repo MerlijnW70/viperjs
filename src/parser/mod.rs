@@ -24,7 +24,7 @@
 //! chose rather than one the specification has an opinion about, and it is chosen from a
 //! measurement of what a level of nesting actually costs — see the constant.
 
-use crate::ast::{Expr, ExprKind};
+use crate::ast::{BinaryOperator, Expr, ExprKind, LogicalOperator, RegExpLiteral, UnaryOperator};
 use crate::lexer::{
     Goal, LexError, LexErrorKind, Lexer, ReservedWord, Token, TokenKind, identifier_value,
     numeric_value, regexp_parts, string_value,
@@ -40,17 +40,24 @@ use std::fmt;
 ///
 /// # Where the number comes from
 ///
-/// Measured, not guessed. A debug build spends roughly 1.1 KiB of stack per level of nesting, so
-/// parsing at this cap needs a little over half a megabyte — which is why
-/// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse inside a
-/// thread with exactly one mebibyte and no more. That test is the real specification of this
-/// constant: raise the cap, or make a level of nesting cost more stack, and it fails.
+/// Measured, not guessed, and re-measured every time the grammar grows — which it already has.
+/// The previous slice measured 1.1 KiB of stack per level of nesting and could afford 928 levels
+/// in a mebibyte; adding the operator grammar put three more functions between one bracket and
+/// the next and cut that to 304. Boxing the one oversized AST variant bought part of it back.
+/// That is the pattern to expect: every production costs depth, and the number below is a
+/// consequence rather than a preference.
 ///
-/// It will cost more. Every production the parser gains adds frames between one bracket and the
-/// next, so the per-level cost grows as the grammar fills in and this number has to be re-earned
-/// rather than assumed. A release build is several times cheaper, and the cap is set for the
-/// debug one deliberately: `cargo test` must not be the configuration that crashes.
-pub const MAX_NESTING_DEPTH: u32 = 512;
+/// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse inside a
+/// thread with exactly one mebibyte — the smallest stack in common use — and this cap leaves
+/// roughly a factor of two in hand. That test is the real specification of this constant: raise
+/// the cap, or make a level of nesting cost more stack, and it fails.
+///
+/// A release build is several times cheaper, and the cap is set for the debug one deliberately.
+/// `cargo test` must not be the configuration that crashes, and a program that parses in one
+/// build and not the other would be worse than a conservative number in both. When the embedding
+/// API arrives at M3 this becomes a limit the embedder sets, because they are the one who knows
+/// how much stack they have.
+pub const MAX_NESTING_DEPTH: u32 = 128;
 
 /// Why parsing stopped, and where.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -76,6 +83,20 @@ pub enum ParseErrorKind {
     },
     /// Nesting exceeded [`MAX_NESTING_DEPTH`].
     TooDeeplyNested,
+    /// §13.6: `ExponentiationExpression : UpdateExpression ** ExponentiationExpression`.
+    ///
+    /// The left operand is an `UpdateExpression`, which a prefix unary is not — so `-a ** b` has
+    /// no derivation and `(-a) ** b` does. The rule exists because the alternative reading is
+    /// genuinely ambiguous to a reader: `-a ** b` could plausibly mean either `(-a) ** b` or
+    /// `-(a ** b)`, and those differ.
+    ExponentiationOnUnary,
+    /// §13.13: `??` may not be mixed with `&&` or `||` without parentheses.
+    ///
+    /// `CoalesceExpressionHead` admits a `CoalesceExpression` or a `BitwiseORExpression` and
+    /// nothing else, and `ShortCircuitExpression` keeps the two families apart in the other
+    /// direction — so `a || b ?? c` and `a ?? b || c` are both errors, for the same reason as
+    /// above: no reader would agree on what they meant.
+    MixedCoalesceAndLogical,
 }
 
 impl fmt::Display for ParseErrorKind {
@@ -103,6 +124,14 @@ impl fmt::Display for ParseErrorKind {
                 }
             }
             Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            Self::ExponentiationOnUnary => write!(
+                f,
+                "the left operand of `**` may not be an unparenthesized unary expression"
+            ),
+            Self::MixedCoalesceAndLogical => write!(
+                f,
+                "`??` may not be mixed with `&&` or `||` without parentheses"
+            ),
         }
     }
 }
@@ -133,6 +162,165 @@ pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     let expr = parser.parse_expression()?;
     parser.expect_eof()?;
     Ok(expr)
+}
+
+/// A binary operator, with what it means and how tightly it binds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Operator {
+    /// What the operator does, which decides which node it builds.
+    kind: OperatorKind,
+    /// Binding power. Higher binds tighter; the numbers themselves mean nothing beyond order.
+    precedence: u8,
+    /// Whether `a op b op c` groups to the right. Only `**` does (§13.6), which is why
+    /// `2 ** 3 ** 2` is 512 rather than 64.
+    right_associative: bool,
+}
+
+/// Which kind of node an operator builds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OperatorKind {
+    /// Both operands are always evaluated.
+    Binary(BinaryOperator),
+    /// The right operand may not be evaluated at all.
+    Logical(LogicalOperator),
+}
+
+/// The prefix operators of §13.5, or `None` if this token starts no unary expression.
+///
+/// `await` is absent: it is `UnaryExpression`'s `[+Await]` alternative, and needs the parameter
+/// that arrives with async functions.
+fn unary_operator(kind: TokenKind) -> Option<UnaryOperator> {
+    Some(match kind {
+        TokenKind::Keyword(ReservedWord::Delete) => UnaryOperator::Delete,
+        TokenKind::Keyword(ReservedWord::Void) => UnaryOperator::Void,
+        TokenKind::Keyword(ReservedWord::Typeof) => UnaryOperator::Typeof,
+        TokenKind::Plus => UnaryOperator::Plus,
+        TokenKind::Minus => UnaryOperator::Minus,
+        TokenKind::Tilde => UnaryOperator::BitwiseNot,
+        TokenKind::Bang => UnaryOperator::LogicalNot,
+        _ => return None,
+    })
+}
+
+/// The binary operators of §13.6 through §13.13, or `None` if this token is not one.
+///
+/// The precedences are the grammar's nesting read as numbers: §13.13's `CoalesceExpression`
+/// contains a `BitwiseORExpression`, which contains a `BitwiseXORExpression`, and so on down to
+/// §13.6's `ExponentiationExpression` — each layer binding tighter than the one that contains
+/// it. Written as a table rather than as one function per layer because a function per layer
+/// would put a dozen stack frames between one bracket and the next, and
+/// [`MAX_NESTING_DEPTH`] is measured in exactly those frames.
+fn binary_operator(kind: TokenKind) -> Option<Operator> {
+    use BinaryOperator as B;
+    use LogicalOperator as L;
+    let (kind, precedence) = match kind {
+        TokenKind::QuestionQuestion => (OperatorKind::Logical(L::NullishCoalescing), 1),
+        TokenKind::PipePipe => (OperatorKind::Logical(L::Or), 2),
+        TokenKind::AmpAmp => (OperatorKind::Logical(L::And), 3),
+        TokenKind::Pipe => (OperatorKind::Binary(B::BitwiseOr), 4),
+        TokenKind::Caret => (OperatorKind::Binary(B::BitwiseXor), 5),
+        TokenKind::Amp => (OperatorKind::Binary(B::BitwiseAnd), 6),
+        TokenKind::EqEq => (OperatorKind::Binary(B::Equal), 7),
+        TokenKind::BangEq => (OperatorKind::Binary(B::NotEqual), 7),
+        TokenKind::EqEqEq => (OperatorKind::Binary(B::StrictEqual), 7),
+        TokenKind::BangEqEq => (OperatorKind::Binary(B::StrictNotEqual), 7),
+        TokenKind::Lt => (OperatorKind::Binary(B::LessThan), 8),
+        TokenKind::Gt => (OperatorKind::Binary(B::GreaterThan), 8),
+        TokenKind::LtEq => (OperatorKind::Binary(B::LessThanOrEqual), 8),
+        TokenKind::GtEq => (OperatorKind::Binary(B::GreaterThanOrEqual), 8),
+        TokenKind::Keyword(ReservedWord::Instanceof) => (OperatorKind::Binary(B::Instanceof), 8),
+        // `RelationalExpression` takes `in` only under `[+In]`, which a `for` head turns off.
+        // Nothing turns it off yet, so the parameter arrives with `for` — adding it now would be
+        // a flag no test could set.
+        TokenKind::Keyword(ReservedWord::In) => (OperatorKind::Binary(B::In), 8),
+        TokenKind::LtLt => (OperatorKind::Binary(B::ShiftLeft), 9),
+        TokenKind::GtGt => (OperatorKind::Binary(B::ShiftRight), 9),
+        TokenKind::GtGtGt => (OperatorKind::Binary(B::ShiftRightUnsigned), 9),
+        TokenKind::Plus => (OperatorKind::Binary(B::Add), 10),
+        TokenKind::Minus => (OperatorKind::Binary(B::Subtract), 10),
+        TokenKind::Star => (OperatorKind::Binary(B::Multiply), 11),
+        TokenKind::Slash => (OperatorKind::Binary(B::Divide), 11),
+        TokenKind::Percent => (OperatorKind::Binary(B::Remainder), 11),
+        TokenKind::StarStar => (OperatorKind::Binary(B::Exponent), 12),
+        _ => return None,
+    };
+    Some(Operator {
+        kind,
+        precedence,
+        right_associative: kind == OperatorKind::Binary(B::Exponent),
+    })
+}
+
+/// Whether `expr` is an unparenthesized `&&` or `||`, which §13.13 keeps out of a `??`.
+fn is_bare_and_or(expr: &Expr) -> bool {
+    !expr.parenthesized
+        && matches!(
+            expr.kind,
+            ExprKind::Logical {
+                operator: LogicalOperator::And | LogicalOperator::Or,
+                ..
+            }
+        )
+}
+
+/// Whether `expr` is an unparenthesized `??`, which §13.13 keeps out of a `&&` or `||`.
+fn is_bare_coalesce(expr: &Expr) -> bool {
+    !expr.parenthesized
+        && matches!(
+            expr.kind,
+            ExprKind::Logical {
+                operator: LogicalOperator::NullishCoalescing,
+                ..
+            }
+        )
+}
+
+/// Join two operands with an operator, enforcing §13.13's rule about which may sit together.
+///
+/// A free function rather than a method because it is called from the recursive loop and holds
+/// several temporaries: keeping them out of [`Parser::parse_binary`]'s frame keeps them out of
+/// every level of nesting.
+fn combine(left: Expr, operator: Operator, right: Expr) -> Result<Expr, ParseError> {
+    let span = left.span.to(right.span);
+    let kind = match operator.kind {
+        OperatorKind::Binary(operator) => ExprKind::Binary {
+            operator,
+            left: Box::new(left),
+            right: Box::new(right),
+        },
+        OperatorKind::Logical(operator) => {
+            // §13.13 keeps `??` and the two boolean operators in separate families: a `??` may
+            // not take a bare `&&` or `||` as either operand, and neither may take a bare `??`.
+            // `&&` and `||` mix freely with each other, so this is not symmetric between them.
+            let forbidden = if operator == LogicalOperator::NullishCoalescing {
+                is_bare_and_or
+            } else {
+                is_bare_coalesce
+            };
+            if forbidden(&left) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::MixedCoalesceAndLogical,
+                    span: left.span,
+                });
+            }
+            if forbidden(&right) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::MixedCoalesceAndLogical,
+                    span: right.span,
+                });
+            }
+            ExprKind::Logical {
+                operator,
+                left: Box::new(left),
+                right: Box::new(right),
+            }
+        }
+    };
+    Ok(Expr {
+        kind,
+        span,
+        parenthesized: false,
+    })
 }
 
 /// A recursive-descent parser over one source text.
@@ -228,7 +416,69 @@ impl<'a> Parser<'a> {
 
     /// `Expression`, for as much of it as the grammar reaches today.
     fn parse_expression(&mut self) -> Result<Expr, ParseError> {
-        self.parse_primary()
+        self.parse_binary(0)
+    }
+
+    /// The operator layers of §13.6 – §13.13, by precedence climbing.
+    ///
+    /// `minimum` is the weakest binding power this call will accept; an operator weaker than it
+    /// belongs to the caller. Left-associative operators recurse one level tighter so the next
+    /// one of equal precedence is left for the loop, and `**` recurses at its own level so the
+    /// next one is taken by the recursion instead — which is the whole of associativity.
+    fn parse_binary(&mut self, minimum: u8) -> Result<Expr, ParseError> {
+        let mut left = self.parse_unary()?;
+        while let Some(operator) = binary_operator(self.current.kind) {
+            if operator.precedence < minimum {
+                break;
+            }
+            // §13.6: the left operand of `**` is an `UpdateExpression`, and a prefix unary is
+            // not one. Checked before the operator is consumed so the error can point at the
+            // operand that is wrong rather than at the operator that noticed.
+            if operator.kind == OperatorKind::Binary(BinaryOperator::Exponent)
+                && matches!(left.kind, ExprKind::Unary { .. })
+                && !left.parenthesized
+            {
+                return Err(ParseError {
+                    kind: ParseErrorKind::ExponentiationOnUnary,
+                    span: left.span,
+                });
+            }
+            // An operator is followed by an operand, so the goal is `RegExp`: in `a / /b/`, the
+            // first slash divides and the second opens a literal.
+            self.advance(Goal::RegExp)?;
+            let tighter = if operator.right_associative {
+                operator.precedence
+            } else {
+                operator.precedence + 1
+            };
+            self.enter()?;
+            let right = self.parse_binary(tighter);
+            self.leave();
+            let right = right?;
+            left = combine(left, operator, right)?;
+        }
+        Ok(left)
+    }
+
+    /// `UnaryExpression` (§13.5), or whatever it falls through to.
+    fn parse_unary(&mut self) -> Result<Expr, ParseError> {
+        let Some(operator) = unary_operator(self.current.kind) else {
+            return self.parse_primary();
+        };
+        let token = self.advance(Goal::RegExp)?;
+        self.enter()?;
+        // `- UnaryExpression`, so the operators stack: `- - a` is two of them.
+        let argument = self.parse_unary();
+        self.leave();
+        let argument = argument?;
+        Ok(Expr {
+            span: token.span.to(argument.span),
+            kind: ExprKind::Unary {
+                operator,
+                argument: Box::new(argument),
+            },
+            parenthesized: false,
+        })
     }
 
     /// `PrimaryExpression` (§13.2), for the forms that need no other production.
@@ -310,10 +560,10 @@ impl<'a> Parser<'a> {
                 let parts = regexp_parts(self.source, token.span)
                     .ok_or_else(|| self.value_missing(token))?;
                 let text = |span: Span| span.slice(self.source).unwrap_or_default().to_string();
-                literal(ExprKind::RegExp {
+                literal(ExprKind::RegExp(Box::new(RegExpLiteral {
                     body: text(parts.body),
                     flags: text(parts.flags),
-                })
+                })))
             }
             _ => Err(self.unexpected("an expression")),
         }
@@ -343,6 +593,49 @@ mod tests {
     fn parse(source: &str) -> Expr {
         parse_expression(source)
             .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)) // a test about a tree cannot proceed without one
+    }
+
+    /// An expression rendered as a parenthesized prefix form.
+    ///
+    /// Precedence and associativity are claims about *shape*, and a shape is far easier to read
+    /// as `(+ 1 (* 2 3))` than as three nested constructors — which matters, because a test
+    /// nobody can read is a test nobody checks.
+    fn render(expr: &Expr) -> String {
+        match &expr.kind {
+            ExprKind::This => "this".to_string(),
+            ExprKind::Null => "null".to_string(),
+            ExprKind::Boolean(value) => value.to_string(),
+            ExprKind::Number(value) => value.to_string(),
+            ExprKind::Identifier(name) => name.clone(),
+            ExprKind::String(units) => format!("{units:?}"),
+            ExprKind::RegExp(literal) => format!("/{}/{}", literal.body, literal.flags),
+            ExprKind::Unary { operator, argument } => {
+                format!("({} {})", operator.as_str(), render(argument))
+            }
+            ExprKind::Binary {
+                operator,
+                left,
+                right,
+            } => format!("({} {} {})", operator.as_str(), render(left), render(right)),
+            ExprKind::Logical {
+                operator,
+                left,
+                right,
+            } => format!("({} {} {})", operator.as_str(), render(left), render(right)),
+        }
+    }
+
+    /// The shape of the tree `source` parses to.
+    fn shape(source: &str) -> String {
+        render(&parse(source))
+    }
+
+    /// A regular expression node, spelled the way the tests want to read it.
+    fn regexp(body: &str, flags: &str) -> ExprKind {
+        ExprKind::RegExp(Box::new(RegExpLiteral {
+            body: body.to_string(),
+            flags: flags.to_string(),
+        }))
     }
 
     /// The error `source` fails with.
@@ -393,72 +686,29 @@ mod tests {
         // The goal symbol, from the other side of the handoff. `Parser::new` reads the first
         // token under `Goal::RegExp` because a program begins where an operand may stand — so
         // this is a regular expression and not the start of a division.
-        assert_eq!(
-            parse("/ab+/gi").kind,
-            ExprKind::RegExp {
-                body: "ab+".to_string(),
-                flags: "gi".to_string(),
-            }
-        );
+        assert_eq!(parse("/ab+/gi").kind, regexp("ab+", "gi"));
         // The escaped slash and the character class stay in the body, since the lexer found the
         // real closing slash.
-        assert_eq!(
-            parse(r"/a\/[/]b/").kind,
-            ExprKind::RegExp {
-                body: r"a\/[/]b".to_string(),
-                flags: String::new(),
-            }
-        );
+        assert_eq!(parse(r"/a\/[/]b/").kind, regexp(r"a\/[/]b", ""));
         // Empty flags are an empty string rather than a missing one.
-        assert_eq!(
-            parse("/x/").kind,
-            ExprKind::RegExp {
-                body: "x".to_string(),
-                flags: String::new(),
-            }
-        );
+        assert_eq!(parse("/x/").kind, regexp("x", ""));
         // …and inside parentheses, where an operand may also stand.
-        assert!(matches!(parse("(/x/)").kind, ExprKind::RegExp { .. }));
+        assert!(matches!(parse("(/x/)").kind, ExprKind::RegExp(_)));
     }
 
     #[test]
-    fn a_slash_after_an_operand_is_division_and_so_is_not_an_expression_yet() {
-        // The other half of the invariant: every primary advances under `Goal::Div`, so the
-        // token after one is read as an operator. There is no binary expression to parse it into
-        // yet, which is exactly why this reports a stray `/` rather than an unterminated literal
-        // — the reading is already correct, and only the grammar is incomplete.
-        assert_eq!(
-            error("a / b").kind,
-            ParseErrorKind::Unexpected {
-                expected: "end of input",
-                found: TokenKind::Slash,
-            }
-        );
-        assert_eq!(error("a / b").span, Span::new(2, 3));
-        // Had the goal been wrong here, `/ b /` would have lexed as a literal and this would
-        // have complained about something else entirely — or not at all.
-        assert_eq!(
-            error("a /b/ g").kind,
-            ParseErrorKind::Unexpected {
-                expected: "end of input",
-                found: TokenKind::Slash,
-            }
-        );
-        // `/=` likewise: an operator after an operand, a literal before one.
-        assert_eq!(
-            error("a /= b").kind,
-            ParseErrorKind::Unexpected {
-                expected: "end of input",
-                found: TokenKind::SlashEq,
-            }
-        );
-        assert_eq!(
-            parse("/=x/").kind,
-            ExprKind::RegExp {
-                body: "=x".to_string(),
-                flags: String::new(),
-            }
-        );
+    fn a_slash_after_an_operand_divides_and_the_next_one_may_still_open_a_literal() {
+        // The other half of the goal invariant, now that there is a binary expression to parse
+        // the division into. `a /b/ g` is two divisions, and it is the parser's choice of goal
+        // that makes it so — a lexer guessing from the previous token would have to get this
+        // right by luck.
+        assert_eq!(shape("a / b"), "(/ a b)");
+        assert_eq!(shape("a /b/ g"), "(/ (/ a b) g)");
+        // An operator is followed by an operand, so the goal after one is `RegExp` again: this
+        // really is `a` divided by a regular expression, which is legal and rare.
+        assert_eq!(shape("a / /b/"), "(/ a /b/)");
+        assert_eq!(shape("typeof /b/"), "(typeof /b/)");
+        assert_eq!(shape("1 + /b/g"), "(+ 1 /b/g)");
     }
 
     #[test]
@@ -502,6 +752,172 @@ mod tests {
                 found: TokenKind::Number { legacy: false },
             }
         );
+    }
+
+    #[test]
+    fn every_prefix_operator_the_grammar_has_today() {
+        // §13.5. `await` is absent: it is the `[+Await]` alternative and needs a parameter that
+        // arrives with async functions.
+        assert_eq!(shape("-a"), "(- a)");
+        assert_eq!(shape("+a"), "(+ a)");
+        assert_eq!(shape("!a"), "(! a)");
+        assert_eq!(shape("~a"), "(~ a)");
+        assert_eq!(shape("typeof a"), "(typeof a)");
+        assert_eq!(shape("void a"), "(void a)");
+        assert_eq!(shape("delete a"), "(delete a)");
+        // `- UnaryExpression`, so they stack — and `--` would be one token, which is why the
+        // spaced form is the one that means two negations.
+        assert_eq!(shape("- - a"), "(- (- a))");
+        assert_eq!(shape("!!a"), "(! (! a))");
+        assert_eq!(shape("typeof typeof a"), "(typeof (typeof a))");
+        // A prefix operator binds tighter than any binary one.
+        assert_eq!(shape("-a + b"), "(+ (- a) b)");
+        assert_eq!(shape("-a * b"), "(* (- a) b)");
+        assert_eq!(shape("typeof a === b"), "(=== (typeof a) b)");
+        // The span runs from the operator to the end of its operand.
+        assert_eq!(parse("- a").span, Span::new(0, 3));
+    }
+
+    #[test]
+    fn the_precedence_ladder_is_the_grammars_nesting_read_as_numbers() {
+        // Each pair is two adjacent layers of §13.6 – §13.13, checked in both orders so that a
+        // table entry cannot be right by accident of which side it was written on.
+        // (`??` against `||` is absent on purpose: §13.13 forbids that pair outright, and it
+        // has its own test.)
+        for (source, shaped) in [
+            ("a || b && c", "(|| a (&& b c))"),
+            ("a && b || c", "(|| (&& a b) c)"),
+            ("a && b | c", "(&& a (| b c))"),
+            ("a | b && c", "(&& (| a b) c)"),
+            ("a | b ^ c", "(| a (^ b c))"),
+            ("a ^ b | c", "(| (^ a b) c)"),
+            ("a ^ b & c", "(^ a (& b c))"),
+            ("a & b ^ c", "(^ (& a b) c)"),
+            ("a & b == c", "(& a (== b c))"),
+            ("a == b & c", "(& (== a b) c)"),
+            ("a == b < c", "(== a (< b c))"),
+            ("a < b == c", "(== (< a b) c)"),
+            ("a < b << c", "(< a (<< b c))"),
+            ("a << b < c", "(< (<< a b) c)"),
+            ("a << b + c", "(<< a (+ b c))"),
+            ("a + b << c", "(<< (+ a b) c)"),
+            ("a + b * c", "(+ a (* b c))"),
+            ("a * b + c", "(+ (* a b) c)"),
+            ("a * b ** c", "(* a (** b c))"),
+            ("a ** b * c", "(* (** a b) c)"),
+        ] {
+            assert_eq!(shape(source), shaped, "parsing {source:?}");
+        }
+        // The relational layer holds the two word-shaped operators as well as the symbols.
+        assert_eq!(shape("a instanceof b == c"), "(== (instanceof a b) c)");
+        assert_eq!(shape("a in b == c"), "(== (in a b) c)");
+        assert_eq!(shape("a + b instanceof c"), "(instanceof (+ a b) c)");
+        // Every remaining operator, so no table entry goes unexercised.
+        for (source, shaped) in [
+            ("a - b", "(- a b)"),
+            ("a / b", "(/ a b)"),
+            ("a % b", "(% a b)"),
+            ("a >> b", "(>> a b)"),
+            ("a >>> b", "(>>> a b)"),
+            ("a > b", "(> a b)"),
+            ("a <= b", "(<= a b)"),
+            ("a >= b", "(>= a b)"),
+            ("a != b", "(!= a b)"),
+            ("a === b", "(=== a b)"),
+            ("a !== b", "(!== a b)"),
+        ] {
+            assert_eq!(shape(source), shaped, "parsing {source:?}");
+        }
+        // Parentheses override all of it, which is the only reason precedence is bearable.
+        assert_eq!(shape("(a + b) * c"), "(* (+ a b) c)");
+    }
+
+    #[test]
+    fn everything_groups_to_the_left_except_exponentiation() {
+        // `AdditiveExpression : AdditiveExpression + MultiplicativeExpression` — the recursion is
+        // on the left, so equal precedence groups left.
+        assert_eq!(shape("a - b - c"), "(- (- a b) c)");
+        assert_eq!(shape("a / b / c"), "(/ (/ a b) c)");
+        assert_eq!(shape("a < b < c"), "(< (< a b) c)");
+        assert_eq!(shape("a && b && c"), "(&& (&& a b) c)");
+        assert_eq!(shape("a ?? b ?? c"), "(?? (?? a b) c)");
+        // `ExponentiationExpression : UpdateExpression ** ExponentiationExpression` — the
+        // recursion is on the *right*, so `2 ** 3 ** 2` is 512 and not 64.
+        assert_eq!(shape("a ** b ** c"), "(** a (** b c))");
+        assert_eq!(shape("a ** b ** c ** d"), "(** a (** b (** c d)))");
+        // A left-associative chain is a loop rather than a recursion, so its length is bounded by
+        // memory rather than by MAX_NESTING_DEPTH.
+        let long = vec!["1"; 5000].join(" + ");
+        assert!(parse_expression(&long).is_ok());
+    }
+
+    #[test]
+    fn a_prefix_unary_may_not_be_the_left_operand_of_exponentiation() {
+        // §13.6: `ExponentiationExpression : UpdateExpression ** ExponentiationExpression`. A
+        // prefix unary is not an `UpdateExpression`, so `-a ** b` has no derivation at all — the
+        // rule exists because a reader cannot tell whether it would mean `(-a) ** b` or
+        // `-(a ** b)`, and those differ.
+        for source in [
+            "-a ** b",
+            "+a ** b",
+            "!a ** b",
+            "~a ** b",
+            "typeof a ** b",
+            "void a ** b",
+            "delete a ** b",
+        ] {
+            assert_eq!(
+                error(source).kind,
+                ParseErrorKind::ExponentiationOnUnary,
+                "on {source:?}"
+            );
+        }
+        // The caret goes under the operand that is wrong, not the operator that noticed.
+        assert_eq!(error("-a ** b").span, Span::new(0, 2));
+        // Both ways of saying what you meant are fine.
+        assert_eq!(shape("(-a) ** b"), "(** (- a) b)");
+        assert_eq!(shape("-(a ** b)"), "(- (** a b))");
+        // The restriction is on the *left* operand only: the right is an
+        // `ExponentiationExpression`, which a `UnaryExpression` is.
+        assert_eq!(shape("a ** -b"), "(** a (- b))");
+        assert_eq!(shape("a ** typeof b"), "(** a (typeof b))");
+        // …and only `**` is restricted. Every other operator takes a bare unary on the left.
+        assert_eq!(shape("-a * b"), "(* (- a) b)");
+        assert_eq!(shape("-a + b"), "(+ (- a) b)");
+    }
+
+    #[test]
+    fn coalescing_may_not_be_mixed_with_the_boolean_operators_without_parentheses() {
+        // §13.13: `CoalesceExpressionHead` admits a `CoalesceExpression` or a
+        // `BitwiseORExpression` and nothing else, and `ShortCircuitExpression` keeps the two
+        // families apart in the other direction. Both orders are errors, and for the same reason
+        // as `**`: nobody would agree on what the unbracketed form meant.
+        for source in ["a || b ?? c", "a ?? b || c", "a && b ?? c", "a ?? b && c"] {
+            assert_eq!(
+                error(source).kind,
+                ParseErrorKind::MixedCoalesceAndLogical,
+                "on {source:?}"
+            );
+        }
+        // The caret goes under the operand from the wrong family.
+        assert_eq!(error("a || b ?? c").span, Span::new(0, 6));
+        assert_eq!(error("a ?? b || c").span, Span::new(5, 11));
+        // Parentheses settle it, in either direction.
+        assert_eq!(shape("(a || b) ?? c"), "(?? (|| a b) c)");
+        assert_eq!(shape("a ?? (b || c)"), "(?? a (|| b c))");
+        assert_eq!(shape("(a ?? b) || c"), "(|| (?? a b) c)");
+        assert_eq!(shape("a || (b ?? c)"), "(|| a (?? b c))");
+        // `&&` and `||` mix with each other freely — the rule is not symmetric, and a check that
+        // rejected `a || b && c` would be rejecting ordinary JavaScript.
+        assert_eq!(shape("a || b && c"), "(|| a (&& b c))");
+        assert_eq!(shape("a && b || c"), "(|| (&& a b) c)");
+        // …and `??` chains with itself, since `CoalesceExpressionHead` may be a
+        // `CoalesceExpression`.
+        assert_eq!(shape("a ?? b ?? c"), "(?? (?? a b) c)");
+        // A `??` whose operand is an ordinary binary expression is fine: the boundary is the
+        // boolean operators, not precedence in general.
+        assert_eq!(shape("a ?? b + c"), "(?? a (+ b c))");
+        assert_eq!(shape("a | b ?? c"), "(?? (| a b) c)");
     }
 
     #[test]
@@ -635,9 +1051,8 @@ mod tests {
             "expected end of input, found a bigint literal"
         );
         assert_eq!(
-            error("(/a/ /b/)").kind.to_string(),
-            "expected `)`, found `/`",
-            "after an operand the goal is Div, so this second slash divides rather than opening"
+            error("1 ]").kind.to_string(),
+            "expected end of input, found `]`"
         );
         // A regular expression can only stand where an operand may, and an operand may stand
         // wherever this grammar reaches — so there is no source that puts one somewhere

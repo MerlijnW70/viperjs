@@ -5,7 +5,8 @@
 //! separate decisions and why the span is never allowed to become the second copy of the data.
 //!
 //! The tree grows one grammar slice at a time, so what is here is what the parser can build
-//! today: `PrimaryExpression`'s simplest forms.
+//! today: `PrimaryExpression`'s simplest forms, and the prefix and binary operators built
+//! on them.
 
 use crate::span::Span;
 
@@ -59,17 +60,188 @@ pub enum ExprKind {
     /// A `StringLiteral`, as the UTF-16 code units of its `SV` (§12.9.4.2) — possibly including
     /// unpaired surrogates, which is why this is not a `String` (DR-0004).
     String(Vec<u16>),
-    /// A `RegularExpressionLiteral`, held as the text §12.9.5's `BodyText` and `FlagText` name.
-    ///
-    /// Neither is parsed here: §12.9.5 says both "are subsequently parsed again using the more
-    /// stringent ECMAScript Regular Expression grammar", which is the RegExp engine's work at
-    /// M4. So an unparsable pattern is a perfectly good node, and stops being one later.
-    RegExp {
-        /// `BodyText` — everything between the slashes.
-        body: String,
-        /// `FlagText` — everything after the closing slash. Often empty.
-        flags: String,
+    /// A prefix `UnaryExpression` (§13.5).
+    Unary {
+        /// Which operator.
+        operator: UnaryOperator,
+        /// What it applies to.
+        argument: Box<Expr>,
     },
+    /// A binary operator that evaluates both operands (§13.6 – §13.12).
+    Binary {
+        /// Which operator.
+        operator: BinaryOperator,
+        /// The left operand.
+        left: Box<Expr>,
+        /// The right operand.
+        right: Box<Expr>,
+    },
+    /// `&&`, `||` or `??` (§13.13), kept apart from [`ExprKind::Binary`] because they are apart
+    /// in the grammar and in what they compile to: the right operand may never be evaluated, so
+    /// there is a branch here where an arithmetic operator has none.
+    Logical {
+        /// Which operator.
+        operator: LogicalOperator,
+        /// The left operand, always evaluated.
+        left: Box<Expr>,
+        /// The right operand, evaluated only if the left does not decide the answer.
+        right: Box<Expr>,
+    },
+    /// A `RegularExpressionLiteral` (§12.9.5).
+    ///
+    /// Boxed, and the only variant that is. Two `String`s inline would make it half again as
+    /// large as any other variant, and an enum is as large as its largest — so the rarest node
+    /// in the grammar would set the size of every expression the parser holds on its stack, and
+    /// with it how deeply [`crate::parser::MAX_NESTING_DEPTH`] can afford to let anything nest.
+    RegExp(Box<RegExpLiteral>),
+}
+
+/// The two halves of a regular expression literal, as written.
+///
+/// Neither is parsed here: §12.9.5 says both "are subsequently parsed again using the more
+/// stringent ECMAScript Regular Expression grammar", which is the RegExp engine's work at M4. So
+/// an unparsable pattern is a perfectly good node, and stops being one later.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RegExpLiteral {
+    /// `BodyText` (§12.9.5.1) — everything between the slashes.
+    pub body: String,
+    /// `FlagText` (§12.9.5.2) — everything after the closing slash. Often empty.
+    pub flags: String,
+}
+
+/// The prefix operators of §13.5.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum UnaryOperator {
+    /// `delete`
+    Delete,
+    /// `void`
+    Void,
+    /// `typeof`
+    Typeof,
+    /// Unary `+`
+    Plus,
+    /// Unary `-`
+    Minus,
+    /// `~`
+    BitwiseNot,
+    /// `!`
+    LogicalNot,
+}
+
+impl UnaryOperator {
+    /// How it is written.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Delete => "delete",
+            Self::Void => "void",
+            Self::Typeof => "typeof",
+            Self::Plus => "+",
+            Self::Minus => "-",
+            Self::BitwiseNot => "~",
+            Self::LogicalNot => "!",
+        }
+    }
+}
+
+/// The binary operators that always evaluate both operands (§13.6 – §13.12).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BinaryOperator {
+    /// `**`
+    Exponent,
+    /// `*`
+    Multiply,
+    /// `/`
+    Divide,
+    /// `%`
+    Remainder,
+    /// `+`
+    Add,
+    /// `-`
+    Subtract,
+    /// `<<`
+    ShiftLeft,
+    /// `>>`
+    ShiftRight,
+    /// `>>>`
+    ShiftRightUnsigned,
+    /// `<`
+    LessThan,
+    /// `>`
+    GreaterThan,
+    /// `<=`
+    LessThanOrEqual,
+    /// `>=`
+    GreaterThanOrEqual,
+    /// `instanceof`
+    Instanceof,
+    /// `in`
+    In,
+    /// `==`
+    Equal,
+    /// `!=`
+    NotEqual,
+    /// `===`
+    StrictEqual,
+    /// `!==`
+    StrictNotEqual,
+    /// `&`
+    BitwiseAnd,
+    /// `^`
+    BitwiseXor,
+    /// `|`
+    BitwiseOr,
+}
+
+impl BinaryOperator {
+    /// How it is written.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Exponent => "**",
+            Self::Multiply => "*",
+            Self::Divide => "/",
+            Self::Remainder => "%",
+            Self::Add => "+",
+            Self::Subtract => "-",
+            Self::ShiftLeft => "<<",
+            Self::ShiftRight => ">>",
+            Self::ShiftRightUnsigned => ">>>",
+            Self::LessThan => "<",
+            Self::GreaterThan => ">",
+            Self::LessThanOrEqual => "<=",
+            Self::GreaterThanOrEqual => ">=",
+            Self::Instanceof => "instanceof",
+            Self::In => "in",
+            Self::Equal => "==",
+            Self::NotEqual => "!=",
+            Self::StrictEqual => "===",
+            Self::StrictNotEqual => "!==",
+            Self::BitwiseAnd => "&",
+            Self::BitwiseXor => "^",
+            Self::BitwiseOr => "|",
+        }
+    }
+}
+
+/// The short-circuiting operators of §13.13.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LogicalOperator {
+    /// `&&`
+    And,
+    /// `||`
+    Or,
+    /// `??`
+    NullishCoalescing,
+}
+
+impl LogicalOperator {
+    /// How it is written.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::And => "&&",
+            Self::Or => "||",
+            Self::NullishCoalescing => "??",
+        }
+    }
 }
 
 #[cfg(test)]
@@ -100,6 +272,25 @@ mod tests {
         assert!(twice.parenthesized);
         assert_eq!(twice.span, Span::new(0, 5));
         assert_eq!(twice.kind, inner.kind);
+    }
+
+    #[test]
+    fn no_single_variant_is_allowed_to_set_the_size_of_every_expression() {
+        // An enum is as large as its largest variant, and the parser holds `Expr` values on its
+        // stack once per level of nesting — so a fat variant is paid for by
+        // `MAX_NESTING_DEPTH`, in levels. The regular expression literal is the only one that
+        // needed boxing; this is the assertion that says so, and that would fail if a later
+        // slice added another.
+        assert!(
+            size_of::<ExprKind>() <= 32,
+            "ExprKind grew to {} bytes — box the variant that did it",
+            size_of::<ExprKind>()
+        );
+        assert!(
+            size_of::<Expr>() <= 48,
+            "Expr is {} bytes",
+            size_of::<Expr>()
+        );
     }
 
     #[test]
