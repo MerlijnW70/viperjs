@@ -33,6 +33,7 @@
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
 //! - `for_statement` — the three-part `for` (§14.7.4), the one header read under `[~In]`.
+//! - `for_in_of` — `for`-`in` and `for`-`of` (§14.7.5), which share that header.
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
 //! - `switch` — `switch` (§14.12), whose CaseBlock is one scope across all its clauses.
@@ -43,6 +44,7 @@ mod control;
 mod declaration;
 mod error;
 mod expression;
+mod for_in_of;
 mod for_statement;
 mod operator;
 mod scope;
@@ -79,6 +81,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | `try`, `catch` and `finally` | 114 | 48 |
 /// | `switch` | 114 | 48 |
 /// | the `[In]` parameter, and `for` | 113 | 48 |
+/// | `for`-`in` and `for`-`of` | 113 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -98,7 +101,8 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// shared by every kind of nesting, so what bounds it is whichever kind spends the most stack per
 /// level. Statements are cheap next to expressions — a level of `if` is three frames where a
 /// level of `(` is the whole precedence ladder — and measured alone they afford 339 levels,
-/// `while` 504, a block 392, a `for` 254, a `try` 221, a `switch` 185. So the expression path
+/// `while` 504, a block 392, a `for` 254, a `try` 221, a `for`-`in` 202, a `switch` 185. So the
+/// expression path
 /// still sets the number, and will keep setting it until a statement form recurses through an
 /// expression-sized descent.
 ///
@@ -202,6 +206,21 @@ impl<'a> Parser<'a> {
     pub(super) fn peek(&self, goal: Goal) -> Result<Token, ParseError> {
         let mut lookahead = self.lexer;
         Ok(lookahead.next_token(goal)?)
+    }
+
+    /// Whether the current token is the contextual keyword `word`.
+    ///
+    /// `let`, `of` and `async` are ordinary identifiers to the lexer, and keywords only where a
+    /// production says so — so recognising one means comparing its text. Written without escapes
+    /// is part of the test: §5.1.5.1 makes a terminal match literal source characters, so an
+    /// escaped spelling is a name and never the keyword.
+    pub(super) fn at_contextual(&self, word: &str) -> bool {
+        matches!(
+            self.current.kind,
+            TokenKind::Identifier {
+                contains_escape: false
+            }
+        ) && self.current.span.slice(self.source) == Some(word)
     }
 
     /// Open one level of nesting, refusing rather than recursing past [`MAX_NESTING_DEPTH`].
@@ -322,6 +341,9 @@ mod tests {
             format!("{}a;", "if (a) b; else ".repeat(deep)),
             format!("{}a;", "while (a) ".repeat(deep)),
             format!("{}a;", "for (;;) ".repeat(deep)),
+            // One shallower: a level holds one of the count for the loop itself, and the
+            // innermost header still needs one more to read the target before the `in`.
+            format!("{}a;", "for (a in b) ".repeat(deep - 1)),
             format!("{}a;{}", "do ".repeat(deep), " while (b);".repeat(deep)),
             // Half as many levels, because a `try` spends two of the count on each: one for the
             // statement and one for its guarded Block, which is a nested scope in its own right.

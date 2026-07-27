@@ -29,84 +29,161 @@
 //! past. §14.7.4.1 states exactly that, and it is the one early error here.
 
 use super::expression::AllowIn;
-use super::{ParseError, Parser};
-use crate::ast::{DeclarationKind, ForInit, ForStatement, Stmt, StmtKind};
+use super::{ParseError, ParseErrorKind, Parser};
+use crate::ast::{
+    DeclarationKind, ExprKind, ForInOfKind, ForInOfTarget, ForInit, ForStatement, Stmt, StmtKind,
+};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
+use crate::span::Span;
 
 impl Parser<'_> {
-    /// `ForStatement` (§14.7.4), with the cursor on `for`.
+    /// `ForStatement` or `ForInOfStatement` (§14.7.4, §14.7.5), with the cursor on `for`.
     pub(super) fn parse_for(&mut self) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
         self.eat(TokenKind::LParen, Goal::RegExp, "`(`")?;
         self.enter()?;
         let parts = self.parse_for_parts();
         self.leave();
-        let statement = parts?;
+        let (kind, end) = parts?;
         Ok(Stmt {
-            span: keyword.span.to(statement.body.span),
-            kind: StmtKind::For(Box::new(statement)),
+            span: keyword.span.to(end),
+            kind,
         })
     }
 
     /// The header and body, apart so their locals are not carried by every level of nesting that
     /// passes through [`Parser::parse_for`].
-    fn parse_for_parts(&mut self) -> Result<ForStatement, ParseError> {
-        let init = self.parse_for_init()?;
+    ///
+    /// Three productions begin identically and nothing tells them apart until the token *after*
+    /// the first clause: a `;` makes it a `ForStatement`, and `in` or `of` a `ForInOfStatement`.
+    /// So the clause is parsed once — under `[~In]`, which is what keeps `for (a in b)` available
+    /// to be a loop rather than a comparison — and the answer decides where it goes.
+    fn parse_for_parts(&mut self) -> Result<(StmtKind, Span), ParseError> {
+        if self.current.kind == TokenKind::Semicolon {
+            self.advance(Goal::RegExp)?;
+            return self.parse_three_part_tail(None);
+        }
+        let declared = match self.current.kind {
+            TokenKind::Keyword(ReservedWord::Var) => Some(DeclarationKind::Var),
+            TokenKind::Keyword(ReservedWord::Const) => Some(DeclarationKind::Const),
+            // The `[lookahead ≠ let [ ]` restriction on the expression forms, from the side that
+            // knows what the brackets are for — exactly as in a statement list.
+            _ if self.at_lexical_let()? => Some(DeclarationKind::Let),
+            _ => None,
+        };
+        match declared {
+            Some(kind) => self.parse_declared_head(kind),
+            None => self.parse_expression_head(),
+        }
+    }
+
+    /// A header beginning with `var`, `let` or `const`.
+    fn parse_declared_head(
+        &mut self,
+        kind: DeclarationKind,
+    ) -> Result<(StmtKind, Span), ParseError> {
+        // `[~In]`, which `Initializer[?In]` carries down — `for (var a = b in c;;)` has no
+        // derivation, and that is what leaves the `in` for the `for`-`in` production to take.
+        let (declaration, _) = self.parse_declarator_list(kind, AllowIn::No)?;
+        let Some(operator) = self.for_in_of_operator() else {
+            // Now that it is settled as a `LexicalDeclaration` rather than a `ForDeclaration`,
+            // §14.3.1.1's rule about `const` applies — `for (const a;;)` has nothing to be
+            // constant, where `for (const a of b)` takes its value from the iteration.
+            Self::check_const_initializers(&declaration)?;
+            self.eat(TokenKind::Semicolon, Goal::RegExp, "`;`")?;
+            return self.parse_three_part_tail(Some(ForInit::Declaration(Box::new(declaration))));
+        };
+        // §14.7.5: `ForBinding` is singular and the grammar gives it no `Initializer`. Both are
+        // missing productions rather than early errors, which is why they are checked here rather
+        // than by the declaration itself — where both are perfectly legal.
+        let [binding] = &*declaration.declarators else {
+            return Err(ParseError {
+                kind: ParseErrorKind::ForInOfBindsSeveralNames,
+                span: declaration.declarators[0].name_span,
+            });
+        };
+        if let Some(initializer) = &binding.initializer {
+            return Err(ParseError {
+                kind: ParseErrorKind::ForInOfBindingHasInitializer,
+                span: initializer.span,
+            });
+        }
+        self.parse_for_in_of_tail(ForInOfTarget::Declaration(Box::new(declaration)), operator)
+    }
+
+    /// A header beginning with an expression, which is a `ForStatement` init or a `for`-`in`/`of`
+    /// target depending on what follows it.
+    fn parse_expression_head(&mut self) -> Result<(StmtKind, Span), ParseError> {
+        // Both halves of §14.7.5's `[lookahead ∉ { let, async of }]`, noted before the expression
+        // is read because afterwards the tokens are gone. They restrict the `for`-`of` target
+        // only, so nothing is refused until the operator turns out to be `of`.
+        let begins_with_let = self.at_contextual("let");
+        let begins_with_async = self.at_contextual("async");
+        self.enter()?;
+        let expr = self.parse_expression(AllowIn::No);
+        self.leave();
+        let expr = expr?;
+        let Some(operator) = self.for_in_of_operator() else {
+            // §12.10: `eat`, never `consume_semicolon`. A semicolon that would become one of the
+            // header's two is the one kind automatic insertion may not supply.
+            self.eat(TokenKind::Semicolon, Goal::RegExp, "`;`")?;
+            return self.parse_three_part_tail(Some(ForInit::Expression(Box::new(expr))));
+        };
+        if operator == ForInOfKind::Of {
+            if begins_with_let {
+                return Err(ParseError {
+                    kind: ParseErrorKind::ForOfTargetBeginsWithLet,
+                    span: expr.span,
+                });
+            }
+            // The `async of` half is a *two*-token restriction, and the second of those tokens
+            // is the `of` that got us here — so what remains to check is that the first was the
+            // whole target. An unparenthesized bare identifier beginning with the token `async`
+            // is that and nothing else, which leaves `for (async.x of b)` and `for ((async) of
+            // b)` alone. Asking the parsed expression rather than peeking again is also what
+            // keeps this a condition an input can disagree with: a peek would only ever confirm
+            // what the operator already said.
+            if begins_with_async
+                && !expr.parenthesized
+                && matches!(expr.kind, ExprKind::Identifier(_))
+            {
+                return Err(ParseError {
+                    kind: ParseErrorKind::AsyncAsForOfTarget,
+                    span: expr.span,
+                });
+            }
+        }
+        self.check_for_in_of_target(&expr)?;
+        self.parse_for_in_of_tail(ForInOfTarget::Expression(Box::new(expr)), operator)
+    }
+
+    /// The two remaining clauses and the body of a three-part `for`, with its init already read.
+    fn parse_three_part_tail(
+        &mut self,
+        init: Option<ForInit>,
+    ) -> Result<(StmtKind, Span), ParseError> {
         let test = self.parse_header_clause(TokenKind::Semicolon, "`;`")?;
         let update = self.parse_header_clause(TokenKind::RParen, "`)`")?;
         let body = self.parse_loop_body()?;
-        if let Some(ForInit::Declaration(declaration)) = &init {
+        if let Some(ForInit::Declaration(declaration)) = &init
+            && declaration.kind.is_lexical()
+        {
             // §14.7.4.1: none of the BoundNames of a header `LexicalDeclaration` may occur in the
             // VarDeclaredNames of the body. A `var` there belongs to the enclosing function, so
             // it passes straight through the header's scope on its way out — where a `let` of the
             // same name is already sitting.
-            if declaration.kind.is_lexical() {
-                super::scope::check_header_against_body(declaration, std::slice::from_ref(&body))?;
-            }
+            super::scope::check_header_against_body(declaration, std::slice::from_ref(&body))?;
         }
-        Ok(ForStatement {
-            init,
-            test,
-            update,
-            body,
-        })
-    }
-
-    /// The first clause of the header, and the `;` that ends it.
-    ///
-    /// Three productions meet here and the token decides between them: a `;` for no clause at
-    /// all, `var` or a lexical `let`/`const` for a declaration, and anything else for an
-    /// expression. The `[lookahead ≠ let [ ]` restriction on the expression form is
-    /// [`Parser::at_lexical_let`] from the other side, exactly as it is in a statement list.
-    fn parse_for_init(&mut self) -> Result<Option<ForInit>, ParseError> {
-        if self.current.kind == TokenKind::Semicolon {
-            self.advance(Goal::RegExp)?;
-            return Ok(None);
-        }
-        let kind = match self.current.kind {
-            TokenKind::Keyword(ReservedWord::Var) => Some(DeclarationKind::Var),
-            TokenKind::Keyword(ReservedWord::Const) => Some(DeclarationKind::Const),
-            _ if self.at_lexical_let()? => Some(DeclarationKind::Let),
-            _ => None,
-        };
-        let init = match kind {
-            Some(kind) => {
-                // `[~In]`, which `Initializer[?In]` carries down — `for (var a = b in c;;)` has
-                // no derivation.
-                let (declaration, _) = self.parse_declarator_list(kind, AllowIn::No)?;
-                ForInit::Declaration(Box::new(declaration))
-            }
-            None => {
-                self.enter()?;
-                let expr = self.parse_expression(AllowIn::No);
-                self.leave();
-                ForInit::Expression(Box::new(expr?))
-            }
-        };
-        // §12.10 again: `eat`, never `consume_semicolon`. A semicolon that would become one of
-        // the header's two is the one kind automatic insertion may not supply.
-        self.eat(TokenKind::Semicolon, Goal::RegExp, "`;`")?;
-        Ok(Some(init))
+        let end = body.span;
+        Ok((
+            StmtKind::For(Box::new(ForStatement {
+                init,
+                test,
+                update,
+                body,
+            })),
+            end,
+        ))
     }
 
     /// One of the two optional `Expression[+In]` clauses, and the token that ends it.

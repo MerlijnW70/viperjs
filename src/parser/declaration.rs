@@ -29,15 +29,7 @@ impl Parser<'_> {
     /// patterns. That is also §14.5's lookahead restriction from the other side — an
     /// `ExpressionStatement` may not begin with `let [`, and this is what stops one from trying.
     pub(super) fn at_lexical_let(&self) -> Result<bool, ParseError> {
-        if !matches!(
-            self.current.kind,
-            TokenKind::Identifier {
-                contains_escape: false
-            }
-        ) {
-            return Ok(false);
-        }
-        if self.current.span.slice(self.source) != Some("let") {
+        if !self.at_contextual("let") {
             return Ok(false);
         }
         // Read under `Div`, which is what would follow `let` if it were an identifier. The three
@@ -56,6 +48,7 @@ impl Parser<'_> {
     /// [`Parser::parse_declarator_list`].
     pub(super) fn parse_declaration(&mut self, kind: DeclarationKind) -> Result<Stmt, ParseError> {
         let (declaration, span) = self.parse_declarator_list(kind, AllowIn::Yes)?;
+        Self::check_const_initializers(&declaration)?;
         let end = self.consume_semicolon(span)?;
         Ok(Stmt {
             span: span.to(end),
@@ -128,15 +121,6 @@ impl Parser<'_> {
             });
         }
         if self.current.kind != TokenKind::Eq {
-            // §14.3.1.1: a `const` binding with no initialiser has nothing to be constant, and
-            // no later statement is allowed to supply one — so this is a Syntax Error rather
-            // than a binding that happens to hold `undefined`.
-            if kind == DeclarationKind::Const {
-                return Err(ParseError {
-                    kind: ParseErrorKind::ConstWithoutInitializer,
-                    span: name_span,
-                });
-            }
             return Ok(Declarator {
                 name,
                 initializer: None,
@@ -159,6 +143,28 @@ impl Parser<'_> {
             name_span,
             initializer: Some(Box::new(initializer)),
         })
+    }
+
+    /// §14.3.1.1: every `const` binding of a `LexicalDeclaration` needs an initialiser.
+    ///
+    /// `const a;` has nothing to be constant and no later statement may supply it. Applied by the
+    /// caller rather than while the binding is read, for the reason the `let` rule is: the rule
+    /// belongs to `LexicalDeclaration` and a `ForDeclaration` is not one. `for (const a of b)`
+    /// binds `a` from the iteration and takes no initialiser at all — indeed `ForBinding` has no
+    /// `Initializer` in the grammar — so applying this there would refuse the ordinary form.
+    pub(super) fn check_const_initializers(declaration: &Declaration) -> Result<(), ParseError> {
+        if declaration.kind != DeclarationKind::Const {
+            return Ok(());
+        }
+        for declarator in &declaration.declarators {
+            if declarator.initializer.is_none() {
+                return Err(ParseError {
+                    kind: ParseErrorKind::ConstWithoutInitializer,
+                    span: declarator.name_span,
+                });
+            }
+        }
+        Ok(())
     }
 
     /// `BindingIdentifier` (§13.1), for the names this parser can bind.

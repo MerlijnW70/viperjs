@@ -59,6 +59,8 @@ pub enum StmtKind {
     Throw(Box<Expr>),
     /// `for (…; …; …) …` (§14.7.4).
     For(Box<ForStatement>),
+    /// `for (… in …) …` and `for (… of …) …` (§14.7.5).
+    ForInOf(Box<ForInOfStatement>),
     /// `switch (…) { case …: … }` (§14.12).
     Switch(Box<SwitchStatement>),
     /// `try { … } catch { … } finally { … }` (§14.15).
@@ -97,6 +99,46 @@ pub enum ForInit {
     /// A lexical one is its own scope, which is why `let a; for (let a;;);` is not a
     /// redeclaration — and why §14.7.4.1 has to state separately that the body may not `var` the
     /// same name.
+    Declaration(Box<Declaration>),
+}
+
+/// `for ( … in … ) Statement` or `for ( … of … ) Statement` (§14.7.5).
+///
+/// A different production from [`ForStatement`] rather than a variant of it: this has one head
+/// clause where that has three, and the two share only a keyword.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ForInOfStatement {
+    /// Which of the two loops this is.
+    pub kind: ForInOfKind,
+    /// What each value is assigned to, or the name each value binds.
+    pub left: ForInOfTarget,
+    /// What is iterated. An `Expression` for `in` and an `AssignmentExpression` for `of`, which
+    /// is why `for (a in b, c)` parses and `for (a of b, c)` does not.
+    pub right: Expr,
+    /// What runs for each value.
+    pub body: Stmt,
+}
+
+/// Which of the two `ForInOfStatement` loops (§14.7.5).
+///
+/// They differ at runtime in more than iteration order — one walks enumerable string keys, the
+/// other drives an iterator — so this is in the tree rather than being recovered from the source.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ForInOfKind {
+    /// `for (a in b)`, over enumerable property keys.
+    In,
+    /// `for (a of b)`, over an iterator.
+    Of,
+}
+
+/// The left of a `for`-`in` or `for`-`of` header (§14.7.5).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ForInOfTarget {
+    /// `for (a.b of c)` — an existing target, assigned to on each iteration.
+    Expression(Box<Expr>),
+    /// `for (let a of b)` — a fresh binding, which for a lexical declaration is a fresh one each
+    /// time round. Always exactly one declarator with no initialiser: `ForBinding` is singular
+    /// and the grammar gives it no `Initializer`.
     Declaration(Box<Declaration>),
 }
 

@@ -135,6 +135,16 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
                     push_bound_names(declaration, &mut names);
                 }
             }
+            StmtKind::ForInOf(statement) => {
+                pending.push(&statement.body);
+                // The same split as the three-part form: a `var` header binds a var name and a
+                // lexical one does not. The target-expression form binds nothing at all.
+                if let crate::ast::ForInOfTarget::Declaration(declaration) = &statement.left
+                    && !declaration.kind.is_lexical()
+                {
+                    push_bound_names(declaration, &mut names);
+                }
+            }
             StmtKind::Switch(statement) => {
                 // §8.2.8 defines this over the CaseBlock, which is the concatenation across every
                 // clause — a `var` in any of them belongs to the enclosing function just as much.

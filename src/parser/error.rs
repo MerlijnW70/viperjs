@@ -66,6 +66,25 @@ pub enum ParseErrorKind {
     /// bindings of `a` in one scope even though nothing at either level looks like a
     /// redeclaration.
     ConflictingVarAndLexicalDeclaration,
+    /// §14.7.5: a `for`-`of` whose target begins with the token `let`.
+    ///
+    /// `[lookahead ∉ { let, async of }]`, a one-token restriction — so `for (let.a of b)` is
+    /// refused while `for (let.a in b)` and `for ((let) of b)` are not.
+    ForOfTargetBeginsWithLet,
+    /// §14.7.5: a `for`-`of` whose target is exactly the identifier `async`.
+    ///
+    /// The other half of the same restriction, and a two-token one: it is the sequence
+    /// `async of` that has no derivation, so `for (async.x of b)` is fine.
+    AsyncAsForOfTarget,
+    /// §14.7.5: a `for`-`in` or `for`-`of` header binding more than one name.
+    ///
+    /// `ForBinding` is singular — `for (var a, b in c)` has no derivation.
+    ForInOfBindsSeveralNames,
+    /// §14.7.5: a `for`-`in` or `for`-`of` binding with an initialiser.
+    ///
+    /// `ForBinding` has no `Initializer` in the grammar. Annex B.3.5 restores one to `var` with
+    /// `in` in non-strict code, which this parser refuses until it can tell strict code apart.
+    ForInOfBindingHasInitializer,
     /// §14.12: a `switch` with more than one `default` clause.
     ///
     /// `CaseBlock : { CaseClauses_opt DefaultClause CaseClauses_opt }` admits exactly one, so a
@@ -137,6 +156,22 @@ impl fmt::Display for ParseErrorKind {
             Self::ConflictingVarAndLexicalDeclaration => write!(
                 f,
                 "this name is declared by `var` and by `let` or `const` in the same scope"
+            ),
+            Self::ForOfTargetBeginsWithLet => {
+                write!(f, "the target of a `for`-`of` may not begin with `let`")
+            }
+            Self::AsyncAsForOfTarget => {
+                write!(f, "the target of a `for`-`of` may not be `async`")
+            }
+            Self::ForInOfBindsSeveralNames => {
+                write!(
+                    f,
+                    "a `for`-`in` or `for`-`of` header binds exactly one name"
+                )
+            }
+            Self::ForInOfBindingHasInitializer => write!(
+                f,
+                "a `for`-`in` or `for`-`of` binding may not have an initializer"
             ),
             Self::MultipleDefaultClauses => {
                 write!(f, "a `switch` may have only one `default` clause")

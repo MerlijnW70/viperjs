@@ -1,7 +1,9 @@
 //! Helpers shared by the parser's test modules.
 
 use super::{ParseError, parse_expression};
-use crate::ast::{Declaration, Expr, ExprKind, ForInit, RegExpLiteral, Stmt, StmtKind};
+use crate::ast::{
+    Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, RegExpLiteral, Stmt, StmtKind,
+};
 
 /// The parsed expression of `source`.
 pub(super) fn parse(source: &str) -> Expr {
@@ -178,6 +180,19 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
                 render_statement(&statement.body)
             )
         }
+        StmtKind::ForInOf(statement) => format!(
+            "(for-{} {} {} {})",
+            match statement.kind {
+                ForInOfKind::In => "in",
+                ForInOfKind::Of => "of",
+            },
+            match &statement.left {
+                ForInOfTarget::Expression(expr) => render(expr),
+                ForInOfTarget::Declaration(declaration) => render_declaration(declaration),
+            },
+            render(&statement.right),
+            render_statement(&statement.body)
+        ),
         StmtKind::Switch(statement) => {
             let mut parts = vec![format!("(switch {}", render(&statement.discriminant))];
             for case in &statement.cases {
