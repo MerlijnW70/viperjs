@@ -217,6 +217,9 @@ impl Parser<'_> {
         // `Contains` stops at a function boundary, and this is the boundary — so a `yield`
         // written in here is never a `yield` written in the parameter list that encloses it.
         let enclosing_forbidden_in_parameters = self.forbidden_in_parameters.take();
+        // §15.7.9's `Contains` stops here too, and at nothing smaller — an arrow inside a
+        // field initialiser is still that initialiser's `arguments`.
+        let enclosing_arguments = self.arguments_reference.take();
         self.inside_function = true;
         self.body_context = body_context;
         let body = self.parse_body_with_prologue(TokenKind::RBrace);
@@ -224,6 +227,7 @@ impl Parser<'_> {
         self.strict = enclosing_strict;
         self.body_context = enclosing_context;
         self.forbidden_in_parameters = enclosing_forbidden_in_parameters;
+        self.arguments_reference = enclosing_arguments;
         let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks

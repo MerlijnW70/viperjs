@@ -213,6 +213,23 @@ pub enum ParseErrorKind {
     /// and refused for the same reason: a default is evaluated before the function is
     /// suspendable, so there is nothing for the `await` to suspend into.
     AwaitInParameters,
+    /// §15.7.1: a field named `constructor`.
+    ///
+    /// A field is a property of each instance, and `constructor` is not one — there is already a
+    /// constructor and it is the class. Static or not.
+    ConstructorAsFieldName,
+    /// §15.7.1: `arguments` in a field initialiser or a static block.
+    ///
+    /// Both run as their own synthetic method, so `arguments` there would be that method's and
+    /// never the enclosing function's — which is nobody's idea of what it means. `Contains` stops
+    /// at a function boundary and not at an arrow.
+    ArgumentsInClassInitializer,
+    /// §15.7.1: `await` anywhere in a static block.
+    ///
+    /// `ClassStaticBlockStatementList` is `[+Await]` purely so that the word is a keyword and
+    /// this rule can forbid it: the block runs once while the class is being defined, so there is
+    /// nothing to suspend into either way.
+    AwaitInStaticBlock,
     /// §15.7.1: a `constructor` written as an async method.
     ///
     /// `class C { async constructor() {} }`. A constructor is the function the class is, and
@@ -470,6 +487,16 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`await` may not appear in an async function's own parameter list"
             ),
+            Self::ConstructorAsFieldName => {
+                write!(f, "a class may not have a field named `constructor`")
+            }
+            Self::ArgumentsInClassInitializer => write!(
+                f,
+                "`arguments` is not allowed in a class field initialiser or static block"
+            ),
+            Self::AwaitInStaticBlock => {
+                write!(f, "`await` is not allowed in a class static block")
+            }
             Self::ConstructorMayNotBeAsync => {
                 write!(f, "`constructor` may not be an async method")
             }

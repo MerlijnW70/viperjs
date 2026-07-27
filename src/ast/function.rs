@@ -106,12 +106,38 @@ pub struct Class {
     pub span: Span,
 }
 
-/// One method of a class body (§15.7).
+/// One element of a class body (§15.7), other than the `;` that declares nothing.
 ///
-/// Fields, static blocks and private names are the other `ClassElement` alternatives and are not
-/// here yet; they are ES2022 where the rest of this is ES2015.
+/// Private names are the remaining `ClassElementName` alternative and are not here yet.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ClassElement {
+pub enum ClassElement {
+    /// `m() {}`, `get a() {}`, `static *m() {}` — a `MethodDefinition`.
+    Method(ClassMethod),
+    /// `a;` or `a = 1;` — a `FieldDefinition`, which is a property of each *instance* rather
+    /// than of the prototype, and so is not a method however it is written.
+    Field(ClassField),
+    /// `static { … }` — a `ClassStaticBlock`, which has no name at all.
+    StaticBlock(ClassStaticBlock),
+}
+
+impl ClassElement {
+    /// Whether this is the class's constructor (§15.7.3).
+    ///
+    /// Only a method can be: §15.7.1 refuses a field called `constructor` outright, and a static
+    /// block has no name to be it with.
+    pub fn is_constructor(&self) -> bool {
+        match self {
+            Self::Method(method) => {
+                ClassMethod::names_the_constructor(&method.key, method.kind, method.is_static)
+            }
+            Self::Field(_) | Self::StaticBlock(_) => false,
+        }
+    }
+}
+
+/// One method of a class body (§15.7).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClassMethod {
     /// What names it.
     pub key: super::PropertyKey,
     /// Whether it is a method, a getter or a setter.
@@ -124,13 +150,8 @@ pub struct ClassElement {
     pub key_span: Span,
 }
 
-impl ClassElement {
-    /// Whether this is the class's constructor (§15.7.3).
-    pub fn is_constructor(&self) -> bool {
-        Self::names_the_constructor(&self.key, self.kind, self.is_static)
-    }
-
-    /// The same question, asked of the parts before there is an element to ask it of.
+impl ClassMethod {
+    /// Whether a method with these parts is the class's constructor (§15.7.3).
     ///
     /// The parser needs the answer while it is still reading the body — `super(…)` is legal in
     /// there exactly when this is true of a derived class — and one definition of the rule is
@@ -145,6 +166,33 @@ impl ClassElement {
     ) -> bool {
         !is_static && kind == super::MethodKind::Normal && key_is(key, "constructor")
     }
+}
+
+/// One field of a class body (§15.7).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClassField {
+    /// What names it.
+    pub key: super::PropertyKey,
+    /// `= …`, if one was written. Absent leaves the property `undefined`, which is not the same
+    /// as the field not existing.
+    pub initializer: Option<Box<Expr>>,
+    /// Whether it was written with `static`.
+    pub is_static: bool,
+    /// Where the name was written, for the early errors about which name it is.
+    pub key_span: Span,
+}
+
+/// A `static { … }` block (§15.7).
+///
+/// Its body is a `StatementList[~Yield, +Await, ~Return]` — so no `return`, and `await` is a
+/// keyword there purely so that §15.7.1 can forbid it outright. There is nothing to suspend into:
+/// the block runs once, while the class is being defined.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClassStaticBlock {
+    /// What runs.
+    pub body: Box<[Stmt]>,
+    /// `static` through the closing brace.
+    pub span: Span,
 }
 
 /// Whether `key`'s `PropName` (§15.7.3) is the literal `name`.

@@ -6,7 +6,7 @@
 
 use super::{render_binding, render_binding_element, render_block, render_target};
 use crate::ast::{
-    Argument, ArrayElement, ArrowBody, Class, Expr, ExprKind, Function, MethodKind,
+    Argument, ArrayElement, ArrowBody, Class, ClassElement, Expr, ExprKind, Function, MethodKind,
     PropertyDefinition, PropertyKey, TemplateLiteral,
 };
 
@@ -246,18 +246,30 @@ pub(in crate::parser) fn render_class(class: &Class) -> String {
     let elements: Vec<String> = class
         .elements
         .iter()
-        .map(|element| {
-            let name = render_key(&element.key);
-            let body = render_function(&element.function);
-            let head = match element.kind {
-                MethodKind::Normal => name,
-                MethodKind::Get => format!("get {name}"),
-                MethodKind::Set => format!("set {name}"),
-            };
-            if element.is_static {
-                format!("(static {head} {body})")
-            } else {
-                format!("({head} {body})")
+        .map(|element| match element {
+            ClassElement::Method(method) => {
+                let name = render_key(&method.key);
+                let body = render_function(&method.function);
+                let head = match method.kind {
+                    MethodKind::Normal => name,
+                    MethodKind::Get => format!("get {name}"),
+                    MethodKind::Set => format!("set {name}"),
+                };
+                wrap(method.is_static, &head, &body)
+            }
+            ClassElement::Field(field) => {
+                let value = match &field.initializer {
+                    Some(value) => render(value),
+                    None => "<none>".to_string(),
+                };
+                wrap(
+                    field.is_static,
+                    "field",
+                    &format!("{} {value}", render_key(&field.key)),
+                )
+            }
+            ClassElement::StaticBlock(block) => {
+                format!("(static-block {})", render_block(&block.body))
             }
         })
         .collect();
@@ -270,6 +282,15 @@ pub(in crate::parser) fn render_class(class: &Class) -> String {
             .map_or_else(|| "-".to_string(), |parent| render(parent)),
         elements.join(" ")
     )
+}
+
+/// One class element, `static` marked where it was written.
+fn wrap(is_static: bool, head: &str, body: &str) -> String {
+    if is_static {
+        format!("(static {head} {body})")
+    } else {
+        format!("({head} {body})")
+    }
 }
 
 /// A property key, rendered so the four forms stay apart.

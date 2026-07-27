@@ -85,6 +85,16 @@ impl BodyContext {
         new_target_allowed: true,
     };
 
+    /// A field initialiser or a static block (§15.7).
+    ///
+    /// Both are evaluated by a synthetic method with the class as its home object, so both have
+    /// `super.a` and `new.target` and neither has `super(…)` — §15.7.1 forbids a `SuperCall` in
+    /// either outright, there being no parent constructor to reach from something that is not one.
+    pub(super) const CLASS_INITIALIZER: Self = Self {
+        super_allowed: SuperAllowed::PROPERTY_ONLY,
+        new_target_allowed: true,
+    };
+
     /// A `MethodDefinition`'s body, whose `super` is the caller's to say.
     pub(super) const fn method(super_allowed: SuperAllowed) -> Self {
         Self {

@@ -58,6 +58,7 @@ mod asynchronous;
 mod binding;
 mod body;
 mod class;
+mod class_element;
 mod control;
 mod declaration;
 mod error;
@@ -274,6 +275,13 @@ struct Parser<'a> {
     /// is the one forbidden there, a generator's parameters being `[~Await]` and an async
     /// function's `[~Yield]`. So it holds the finished error rather than a span and a kind.
     pub(super) forbidden_in_parameters: Option<ParseError>,
+    /// Where the name `arguments` was read, since the last function boundary.
+    ///
+    /// §15.7.9's `ContainsArguments`, asked as a record for the reason the two above are: it
+    /// stops at a function boundary and so does this. It does *not* stop at an arrow, which is
+    /// what makes `class C { a = () => arguments; }` a Syntax Error and
+    /// `class C { a = function () { arguments; }; }` an ordinary field.
+    pub(super) arguments_reference: Option<Span>,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -303,6 +311,7 @@ impl<'a> Parser<'a> {
             yield_allowed: false,
             await_allowed: false,
             forbidden_in_parameters: None,
+            arguments_reference: None,
             strict: false,
         })
     }
@@ -332,6 +341,16 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(ReservedWord::Yield) => !self.yield_allowed,
             TokenKind::Keyword(ReservedWord::Await) => !self.await_allowed,
             _ => false,
+        }
+    }
+
+    /// Record a reading of the name `arguments`, for §15.7.9's `ContainsArguments`.
+    ///
+    /// Called from the two places a name is read as a name — a reference and a binding — and from
+    /// nowhere that reads a *property* name, which is why `a.arguments` is not one.
+    pub(super) fn note_arguments(&mut self, name: &str, span: Span) {
+        if name == "arguments" {
+            self.arguments_reference.get_or_insert(span);
         }
     }
 

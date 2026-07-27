@@ -33,7 +33,8 @@ pub use self::binding::{
 pub use self::expression::{Argument, Expr, ExprKind, YieldExpression};
 pub(crate) use self::function::key_is;
 pub use self::function::{
-    ArrowBody, ArrowFunction, Class, ClassElement, FormalParameters, Function,
+    ArrowBody, ArrowFunction, Class, ClassElement, ClassField, ClassMethod, ClassStaticBlock,
+    FormalParameters, Function,
 };
 pub use self::literal::{
     ArrayElement, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral, TemplateElement,

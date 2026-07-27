@@ -26,9 +26,8 @@
 //! that has nothing to be derived from. §15.2.1 has said so since the function slice — "It is a
 //! Syntax Error if FunctionBody Contains SuperProperty" — and this is the slice that can tell.
 
-use super::body::SuperAllowed;
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{Class, ClassElement, Expr, ExprKind, MethodKind, Stmt, StmtKind, key_is};
+use crate::ast::{Class, ClassElement, Expr, ExprKind, Stmt, StmtKind};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
 
 impl Parser<'_> {
@@ -109,9 +108,13 @@ impl Parser<'_> {
                 constructors += 1;
                 // §15.7.1: at most one `constructor` among the prototype methods.
                 if constructors > 1 {
+                    let ClassElement::Method(method) = &element else {
+                        // `is_constructor` answers true of nothing else.
+                        return Err(self.unexpected("a method"));
+                    };
                     return Err(ParseError {
                         kind: ParseErrorKind::DuplicateConstructor,
-                        span: element.key_span,
+                        span: method.key_span,
                     });
                 }
             }
@@ -123,98 +126,6 @@ impl Parser<'_> {
             heritage,
             elements: elements.into_boxed_slice(),
             span: keyword.to(close.span),
-        })
-    }
-
-    /// One `ClassElement` that is not an empty `;` (§15.7).
-    fn parse_class_element(&mut self, derived: bool) -> Result<ClassElement, ParseError> {
-        // `static` is an ordinary `IdentifierName` until something follows it that a method may
-        // begin with — so `static() {}` is a method named `static` and `static m() {}` is not.
-        let is_static = self.at_contextual("static") && {
-            let next = self.peek(Goal::Div)?;
-            !matches!(next.kind, TokenKind::LParen)
-        };
-        if is_static {
-            self.advance(Goal::Div)?;
-        }
-        // `AsyncMethod : async [no LineTerminator here] ClassElementName …`, and
-        // `AsyncGeneratorMethod` puts the `*` between the two — so the words come in this order
-        // and `static` is outside both, the grammar putting it on the `ClassElement`.
-        let is_async = self.at_async_method()?;
-        if is_async {
-            self.advance(Goal::Div)?;
-        }
-        let is_generator = self.current.kind == TokenKind::Star;
-        if is_generator {
-            self.advance(Goal::RegExp)?;
-        }
-        let first = self.current;
-        let escaped = matches!(
-            first.kind,
-            TokenKind::Identifier {
-                contains_escape: true
-            }
-        );
-        let key = self.parse_property_key()?;
-        // `get`/`set` are ordinary names until a name follows them — see [`super::method`]. When
-        // one does, the *second* word is what the early errors below are about.
-        // …but only when this is an ordinary method: §15.7's `MethodDefinition` gives the
-        // accessor forms no `async` and no `*`, so `async get m() {}` has no derivation and the
-        // word `get` is simply this method's name.
-        let accessor = (!is_async && !is_generator)
-            .then(|| self.at_accessor(&key, escaped))
-            .flatten();
-        let (key, key_span, kind) = match accessor {
-            Some(kind) => {
-                let name = self.current.span;
-                (self.parse_property_key()?, name, kind)
-            }
-            None => (key, first.span, MethodKind::Normal),
-        };
-        let is_constructor = ClassElement::names_the_constructor(&key, kind, is_static);
-        // §15.7.1: a `constructor` may not be an accessor, and a static method may not be called
-        // `prototype` — the one name a class already puts on its constructor object.
-        if !is_static && kind != MethodKind::Normal && key_is(&key, "constructor") {
-            return Err(ParseError {
-                kind: ParseErrorKind::ConstructorMayNotBeAnAccessor,
-                span: key_span,
-            });
-        }
-        if is_static && key_is(&key, "prototype") {
-            return Err(ParseError {
-                kind: ParseErrorKind::StaticPrototype,
-                span: key_span,
-            });
-        }
-        // `super.a` in any method; `super(…)` in the constructor of a derived class and nowhere
-        // else — a base class has no parent constructor for it to reach.
-        // §15.7.1: `SpecialMethod` of the constructor is a Syntax Error — `new` can neither
-        // resume a generator nor await, so there would be nothing for the class to be.
-        if is_constructor && (is_generator || is_async) {
-            return Err(ParseError {
-                kind: if is_generator {
-                    ParseErrorKind::ConstructorMayNotBeAGenerator
-                } else {
-                    ParseErrorKind::ConstructorMayNotBeAsync
-                },
-                span: key_span,
-            });
-        }
-        let function = self.parse_method(
-            kind,
-            SuperAllowed {
-                property: true,
-                call: is_constructor && derived,
-            },
-            is_generator,
-            is_async,
-        )?;
-        Ok(ClassElement {
-            key,
-            kind,
-            function,
-            is_static,
-            key_span,
         })
     }
 
@@ -435,25 +346,6 @@ mod tests {
     }
 
     #[test]
-    fn static_is_a_method_name_until_something_a_method_may_begin_with_follows_it() {
-        assert_eq!(
-            statements("class C { static() {} }"),
-            ["(class C - [(static (fn <anon> [] {}))])"]
-        );
-        assert_eq!(
-            statements("class C { static static() {} }"),
-            ["(class C - [(static static (fn <anon> [] {}))])"]
-        );
-        assert_eq!(
-            statements("class C { static get static() {} }"),
-            ["(class C - [(static get static (fn <anon> [] {}))])"]
-        );
-        // Every other word is an `IdentifierName` here, keyword or not — a method name is a
-        // property name, not a binding.
-        assert!(parse_script("class C { if() {} get() {} get get() {} }").is_ok());
-    }
-
-    #[test]
     fn super_property_is_legal_in_any_method_and_super_call_only_in_a_derived_constructor() {
         for source in [
             "class C { m() { super.a; } }",
@@ -553,6 +445,11 @@ mod tests {
             "class C { m() {".to_string(),
             "class C { static".to_string(),
             "class C { get".to_string(),
+            "class C { a =".to_string(),
+            "class C { a = 1".to_string(),
+            "class C { static {".to_string(),
+            "class C { static { a".to_string(),
+            "class C { static".to_string(),
             "super".to_string(),
             "class C { m() { super".to_string(),
             long_body.clone(),

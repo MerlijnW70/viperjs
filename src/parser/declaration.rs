@@ -200,6 +200,9 @@ impl Parser<'_> {
         // §13.1.1's strict-mode rules are about `BoundNames`, so they belong to every binding and
         // not to any one production that makes one.
         self.check_strict_name(&name, token.span, true)?;
+        // Binding the name counts as much as reading it: `class C { a = (arguments) => 1; }`
+        // is refused, the parameter being a name the initialiser would have to invent.
+        self.note_arguments(&name, token.span);
         Ok((name.into_owned().into_boxed_str(), token.span))
     }
 }

@@ -104,6 +104,10 @@ impl Parser<'_> {
                 // §13.1.1's strict-reserved words, but not its `eval`/`arguments` rule: reading
                 // either is fine in strict code, and only binding or assigning is refused.
                 self.check_strict_name(&name, token.span, false)?;
+                // §15.7.9's `ContainsArguments`, recorded rather than walked — see
+                // [`Parser::arguments_reference`]. A *property* name never reaches here, so
+                // `a.arguments` is not one of these and neither is `({arguments: 1})`.
+                self.note_arguments(&name, token.span);
                 literal(ExprKind::Identifier(name.into_owned()))
             }
             // Annex B.1.1's two legacy forms, which §12.9.3.1 refuses in strict code. The lexer
