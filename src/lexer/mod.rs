@@ -44,7 +44,8 @@
 //! - `error` — [`LexError`] and its kinds.
 //! - `trivia` — white space, comments, and the hashbang (§12.2 – §12.5).
 //! - `name` — identifiers, `\u` escapes, and the keyword decision (§12.7).
-//! - `number` — numeric literals and their values (§12.9.3), Annex B's legacy forms included.
+//! - `number` — how far a numeric literal reaches (§12.9.3), Annex B's legacy forms included.
+//! - `number_value` — what one denotes, correctly rounded (§12.9.3.3).
 //! - `string` — string literals and the code units they denote (§12.9.4).
 //! - `escape` — `UnicodeEscapeSequence` and UTF-16 encoding, shared by `name` and `string`.
 //! - here — the cursor, and [`Lexer::next_token`]: the one place that decides which of the
@@ -54,6 +55,7 @@ mod error;
 mod escape;
 mod name;
 mod number;
+mod number_value;
 mod reserved;
 mod string;
 #[cfg(test)]
@@ -63,7 +65,7 @@ mod trivia;
 
 pub use self::error::{LexError, LexErrorKind};
 pub use self::name::identifier_value;
-pub use self::number::numeric_value;
+pub use self::number_value::numeric_value;
 pub use self::reserved::ReservedWord;
 pub use self::string::string_value;
 pub use self::token::{Token, TokenKind};
