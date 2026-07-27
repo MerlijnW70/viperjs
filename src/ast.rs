@@ -49,6 +49,55 @@ pub enum StmtKind {
     /// that is wider than every other statement — which every level of `{ { { … } } }` would
     /// carry on the parser's stack.
     Declaration(Box<Declaration>),
+    /// `if (…) … else …` (§14.6). The alternate is absent when no `else` was written.
+    If(Box<IfStatement>),
+    /// `while (…) …` (§14.7.3).
+    While(Box<WhileStatement>),
+    /// `do … while (…);` (§14.7.2).
+    DoWhile(Box<DoWhileStatement>),
+    /// `throw …;` (§14.14). Always has a value — there is no argument-less form.
+    Throw(Box<Expr>),
+    /// `break;` (§14.9), without a label.
+    Break,
+    /// `continue;` (§14.8), without a label.
+    Continue,
+}
+
+/// `if ( Expression ) Statement else Statement` (§14.6).
+///
+/// Boxed into [`StmtKind::If`] rather than inlined, as every compound statement here is: three
+/// statement-sized fields inline would make `StmtKind` several times the width of its next
+/// largest variant, and the parser holds one on the stack per level of nesting.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IfStatement {
+    /// What decides which branch runs.
+    pub test: Expr,
+    /// The branch taken when the test is truthy.
+    pub consequent: Stmt,
+    /// The branch taken otherwise. `None` when there is no `else` — which is not the same as an
+    /// empty statement, though the two behave alike, because only one of them was written.
+    pub alternate: Option<Stmt>,
+}
+
+/// `while ( Expression ) Statement` (§14.7.3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct WhileStatement {
+    /// Evaluated before each iteration, including the first.
+    pub test: Expr,
+    /// What runs while it holds.
+    pub body: Stmt,
+}
+
+/// `do Statement while ( Expression ) ;` (§14.7.2).
+///
+/// Distinct from [`WhileStatement`] rather than a flag on it: the body runs before the test is
+/// ever evaluated, so the two differ in what they do and not merely in how they were written.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DoWhileStatement {
+    /// What runs at least once.
+    pub body: Stmt,
+    /// Evaluated after each iteration.
+    pub test: Expr,
 }
 
 /// A `var`, `let` or `const` declaration (§14.3).

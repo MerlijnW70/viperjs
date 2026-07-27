@@ -130,5 +130,31 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             let rendered: Vec<String> = body.iter().map(render_statement).collect();
             format!("{{{}}}", rendered.join(" "))
         }
+        StmtKind::If(statement) => match &statement.alternate {
+            Some(alternate) => format!(
+                "(if {} {} {})",
+                render(&statement.test),
+                render_statement(&statement.consequent),
+                render_statement(alternate)
+            ),
+            None => format!(
+                "(if {} {})",
+                render(&statement.test),
+                render_statement(&statement.consequent)
+            ),
+        },
+        StmtKind::While(statement) => format!(
+            "(while {} {})",
+            render(&statement.test),
+            render_statement(&statement.body)
+        ),
+        StmtKind::DoWhile(statement) => format!(
+            "(do {} {})",
+            render_statement(&statement.body),
+            render(&statement.test)
+        ),
+        StmtKind::Throw(value) => format!("(throw {})", render(value)),
+        StmtKind::Break => "break".to_string(),
+        StmtKind::Continue => "continue".to_string(),
     }
 }

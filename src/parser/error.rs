@@ -59,6 +59,16 @@ pub enum ParseErrorKind {
     ///
     /// `let a, a;` is refused where `var a, a;` is not, for the same reason.
     DuplicateLexicalBinding,
+    /// §14.14: a line terminator between `throw` and its value.
+    ///
+    /// The one restricted production with no shorter form to fall back on. Where `a\n++b` simply
+    /// becomes two statements, `throw\na` becomes a `throw` with nothing to throw, and there is
+    /// no such statement — so this is an error rather than a quietly different program.
+    NewlineAfterThrow,
+    /// §14.9.1: a `break` that is not inside a loop or a `switch`.
+    BreakOutsideLoop,
+    /// §14.8.1: a `continue` that is not inside a loop.
+    ContinueOutsideLoop,
     /// §13.13: `??` may not be mixed with `&&` or `||` without parentheses.
     ///
     /// `CoalesceExpressionHead` admits a `CoalesceExpression` or a `BitwiseORExpression` and
@@ -102,6 +112,11 @@ impl fmt::Display for ParseErrorKind {
             Self::DuplicateLexicalBinding => {
                 write!(f, "this name is bound twice in the same declaration")
             }
+            Self::NewlineAfterThrow => {
+                write!(f, "the value thrown must be on the same line as `throw`")
+            }
+            Self::BreakOutsideLoop => write!(f, "`break` is not inside a loop"),
+            Self::ContinueOutsideLoop => write!(f, "`continue` is not inside a loop"),
             Self::InvalidAssignmentTarget => {
                 write!(f, "this expression cannot be assigned to")
             }

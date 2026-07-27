@@ -13,9 +13,10 @@
 //!
 //! There is an overriding condition that no semicolon is ever inserted where it would become an
 //! empty statement, or one of the two in a `for` header. Neither can arise here, because
-//! [`Parser::consume_semicolon`] is only ever called where a semicolon *terminates* something —
-//! but both matter the moment `while (a)` and `for (;;)` exist, so the rule is named rather than
-//! merely unimplemented.
+//! [`Parser::consume_semicolon`] is only ever called where a semicolon *terminates* something,
+//! never where one would *be* a statement. That is why `while (a)` at the end of input is an
+//! error rather than a loop with an empty body, and why nothing checks for it — see
+//! [`super::control`], which is where the first half of that became load-bearing.
 //!
 //! # What ASI does not do
 //!
@@ -58,9 +59,29 @@ impl Parser<'_> {
     ) -> Result<Box<[Stmt]>, ParseError> {
         let mut body = Vec::new();
         while self.current.kind != terminator && self.current.kind != TokenKind::Eof {
-            body.push(self.parse_statement()?);
+            body.push(self.parse_statement_list_item()?);
         }
         Ok(body.into_boxed_slice())
+    }
+
+    /// `StatementListItem : Statement | Declaration` (§14.2).
+    ///
+    /// The wider of the two, and the reason they are separate functions: only a `StatementList`
+    /// admits a `Declaration`. A body — of an `if`, of a loop — is a `Statement`, and `Statement`
+    /// has no `Declaration` alternative, so `if (a) let b = 1;` has no derivation while
+    /// `if (a) var b = 1;` does. That asymmetry is in the grammar rather than in any early error
+    /// about it, and this is where it lives.
+    fn parse_statement_list_item(&mut self) -> Result<Stmt, ParseError> {
+        if self.current.kind == TokenKind::Keyword(ReservedWord::Const) {
+            return self.parse_declaration(DeclarationKind::Const);
+        }
+        // `let` is the only one that needs looking at what follows it — see
+        // [`Parser::at_lexical_let`]. It is also §14.5's restriction on `let [`, from the side
+        // that knows what the brackets are for.
+        if self.at_lexical_let()? {
+            return self.parse_declaration(DeclarationKind::Let);
+        }
+        self.parse_statement()
     }
 
     /// `Statement` (§14.1), for the forms the parser reaches today.
@@ -70,41 +91,36 @@ impl Parser<'_> {
     /// it would be ambiguous with a statement or declaration form. Taking `{` as a block before
     /// an expression is ever considered is that restriction, spelled as control flow. The
     /// others arrive with the constructs they are ambiguous with; until then they are not
-    /// expressions either, so nothing is silently misread except `let [`, which is pinned by a
-    /// test.
-    fn parse_statement(&mut self) -> Result<Stmt, ParseError> {
+    /// expressions either, so nothing is silently misread.
+    pub(super) fn parse_statement(&mut self) -> Result<Stmt, ParseError> {
         match self.current.kind {
-            TokenKind::LBrace => return self.parse_block(),
+            TokenKind::LBrace => self.parse_block(),
             TokenKind::Semicolon => {
                 let token = self.advance(Goal::RegExp)?;
-                return Ok(Stmt {
+                Ok(Stmt {
                     kind: StmtKind::Empty,
                     span: token.span,
-                });
+                })
             }
             TokenKind::Keyword(ReservedWord::Debugger) => {
                 let token = self.advance(Goal::RegExp)?;
                 let end = self.consume_semicolon(token.span)?;
-                return Ok(Stmt {
+                Ok(Stmt {
                     kind: StmtKind::Debugger,
                     span: token.span.to(end),
-                });
+                })
             }
-            TokenKind::Keyword(ReservedWord::Var) => {
-                return self.parse_declaration(DeclarationKind::Var);
-            }
-            TokenKind::Keyword(ReservedWord::Const) => {
-                return self.parse_declaration(DeclarationKind::Const);
-            }
-            _ => {}
+            // A `VariableStatement` is a `Statement`; a `LexicalDeclaration` is not. That is why
+            // `var` is here and `let` and `const` are one level up.
+            TokenKind::Keyword(ReservedWord::Var) => self.parse_declaration(DeclarationKind::Var),
+            TokenKind::Keyword(ReservedWord::If) => self.parse_if(),
+            TokenKind::Keyword(ReservedWord::While) => self.parse_while(),
+            TokenKind::Keyword(ReservedWord::Do) => self.parse_do_while(),
+            TokenKind::Keyword(ReservedWord::Throw) => self.parse_throw(),
+            TokenKind::Keyword(ReservedWord::Break) => self.parse_break_or_continue(true),
+            TokenKind::Keyword(ReservedWord::Continue) => self.parse_break_or_continue(false),
+            _ => self.parse_expression_statement(),
         }
-        // `let` is the only one that needs looking at what follows it — see
-        // [`Parser::at_lexical_let`]. It is also §14.5's restriction on `let [`, from the side
-        // that knows what the brackets are for.
-        if self.at_lexical_let()? {
-            return self.parse_declaration(DeclarationKind::Let);
-        }
-        self.parse_expression_statement()
     }
 
     /// `Block : { StatementList_opt }` (§14.2).
@@ -138,8 +154,10 @@ impl Parser<'_> {
     /// ends where its content did rather than at some invented position.
     ///
     /// The three conditions below are §12.10's rules 1 and 2, in the one place a statement can
-    /// need them. Rule 1's third condition — the previous token being `)` of a `do`-`while` —
-    /// is absent because there is no `do`-`while` yet to close.
+    /// need them. Rule 1's third condition — the previous token being the `)` of a `do`-`while`
+    /// — is not here but in [`Parser::parse_do_while`], because it is not a condition on the
+    /// *offending* token at all: it makes that one semicolon unconditionally optional, with no
+    /// line break required and nothing to be offended by.
     pub(super) fn consume_semicolon(&mut self, previous: Span) -> Result<Span, ParseError> {
         if self.current.kind == TokenKind::Semicolon {
             return Ok(self.advance(Goal::RegExp)?.span);
@@ -299,10 +317,12 @@ mod tests {
         for source in [
             "function f() {}",
             "class C {}",
-            "if (a) b;",
             "return 1;",
-            "throw a;",
             "try {} catch {}",
+            "for (;;) {}",
+            "switch (a) {}",
+            "with (a) {}",
+            "label: a;",
         ] {
             assert!(parse_script(source).is_err(), "{source:?}");
         }
