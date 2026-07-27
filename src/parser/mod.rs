@@ -28,7 +28,9 @@
 //!
 //! - `error` — [`ParseError`] and its kinds.
 //! - `operator` — precedence, associativity, and the pairs §13 keeps apart.
-//! - `expression` — the grammar of §13, from `Expression` down to `PrimaryExpression`.
+//! - `expression` — the operator ladder of §13.4 – §13.16.
+//! - `member` — `LeftHandSideExpression` (§13.3): member access, calls and `new`.
+//! - `primary` — `PrimaryExpression` (§13.2), the operands everything else is built from.
 //! - `array_literal` — `[…]` (§13.2.4), and the two different things a comma does inside one.
 //! - `object_literal` — `{…}` (§13.2.5), which has no elisions and one rule about `__proto__`.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
@@ -51,8 +53,10 @@ mod expression;
 mod for_in_of;
 mod for_statement;
 mod labelled;
+mod member;
 mod object_literal;
 mod operator;
+mod primary;
 mod scope;
 mod statement;
 mod switch;
