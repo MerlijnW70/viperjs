@@ -34,6 +34,7 @@
 //! - `array_literal` — `[…]` (§13.2.4), and the two different things a comma does inside one.
 //! - `object_literal` — `{…}` (§13.2.5), which has no elisions and one rule about `__proto__`.
 //! - `pattern` — refining either literal into the assignment pattern it covered (§13.15.5).
+//! - `binding` — binding patterns (§14.3.3), which need no cover grammar and say so.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -47,6 +48,7 @@
 //!   that bounds its recursion.
 
 mod array_literal;
+mod binding;
 mod control;
 mod declaration;
 mod error;

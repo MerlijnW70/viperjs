@@ -40,7 +40,8 @@
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{CatchClause, CatchParameter, Stmt, StmtKind, TryStatement};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
-use crate::static_semantics::lexically_declared_names;
+use crate::static_semantics::{bound_names, lexically_declared_names};
+use std::collections::HashSet;
 
 impl Parser<'_> {
     /// `TryStatement` (§14.15), with the cursor on `try`.
@@ -105,19 +106,33 @@ impl Parser<'_> {
         // nothing for the early errors below to be about.
         let parameter = if self.current.kind == TokenKind::LParen {
             self.advance(Goal::RegExp)?;
-            let (name, span) = self.parse_binding_identifier()?;
+            let binding = self.parse_binding()?;
             self.eat(TokenKind::RParen, Goal::RegExp, "`)`")?;
-            Some(CatchParameter { name, span })
+            Some(CatchParameter { binding })
         } else {
             None
         };
         let (body, block_span) = self.parse_block_body()?;
         if let Some(parameter) = &parameter {
-            // §14.15.1, rule 2. `LexicallyDeclaredNames`, so it is the handler's own level and
-            // not what any block inside it declares — `catch (e) { { let e; } }` is two scopes.
-            if let Some(shadow) = lexically_declared_names(&body)
+            let names = bound_names(&parameter.binding);
+            // §14.15.1, rule 1: the BoundNames of a CatchParameter may not repeat. Unreachable
+            // while a parameter was one name, and reachable now — `catch ([a, a])` is the shape
+            // it was always about.
+            let mut seen: HashSet<&str> = HashSet::new();
+            for declared in &names {
+                if !seen.insert(declared.name) {
+                    return Err(ParseError {
+                        kind: ParseErrorKind::DuplicateCatchParameterName,
+                        span: declared.span,
+                    });
+                }
+            }
+            // Rule 2. `LexicallyDeclaredNames`, so it is the handler's own level and not what any
+            // block inside it declares — `catch (e) { { let e; } }` is two scopes.
+            let lexical = lexically_declared_names(&body);
+            if let Some(shadow) = lexical
                 .iter()
-                .find(|declared| declared.name == &*parameter.name)
+                .find(|declared| names.iter().any(|bound| bound.name == declared.name))
             {
                 return Err(ParseError {
                     kind: ParseErrorKind::CatchParameterRedeclared,
@@ -221,11 +236,28 @@ mod tests {
         assert!(parse_script("try {} catch (e, f) {}").is_err());
         assert!(parse_script("try {} catch () {}").is_err());
         assert!(parse_script("try {} catch (e {}").is_err());
-        // A `BindingPattern` is the other CatchParameter alternative and arrives with
-        // destructuring. Until then it is refused rather than misread — and it is what makes
-        // §14.15.1's first early error reachable, since one name cannot repeat.
-        assert!(parse_script("try {} catch ([a, b]) {}").is_err());
-        assert!(parse_script("try {} catch ({a}) {}").is_err());
+        // A `BindingPattern` is the other CatchParameter alternative, and is what makes
+        // §14.15.1's first early error reachable at last — one name cannot repeat, and two can.
+        assert!(parse_script("try {} catch ([a, b]) {}").is_ok());
+        assert!(parse_script("try {} catch ({a}) {}").is_ok());
+        assert_eq!(
+            script_error("try {} catch ([a, a]) {}").kind,
+            ParseErrorKind::DuplicateCatchParameterName
+        );
+        assert_eq!(
+            script_error("try {} catch ({a, b: a}) {}").kind,
+            ParseErrorKind::DuplicateCatchParameterName
+        );
+        // …and rule 2 reads the whole list of them, not one name.
+        assert_eq!(
+            script_error("try {} catch ([a]) { let a; }").kind,
+            ParseErrorKind::CatchParameterRedeclared
+        );
+        assert_eq!(
+            script_error("try {} catch ({a: b}) { let b; }").kind,
+            ParseErrorKind::CatchParameterRedeclared
+        );
+        assert!(parse_script("try {} catch ([a]) { let b; }").is_ok());
         // §14.3.1.1's ban on `let` as a bound name is stated about a lexical declaration and
         // about nothing else, so a catch parameter may be called `let`.
         assert_eq!(

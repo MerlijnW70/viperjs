@@ -86,10 +86,11 @@ impl Parser<'_> {
         // derivation, and that is what leaves the `in` for the `for`-`in` production to take.
         let (declaration, _) = self.parse_declarator_list(kind, AllowIn::No)?;
         let Some(operator) = self.for_in_of_operator() else {
-            // Now that it is settled as a `LexicalDeclaration` rather than a `ForDeclaration`,
-            // §14.3.1.1's rule about `const` applies — `for (const a;;)` has nothing to be
-            // constant, where `for (const a of b)` takes its value from the iteration.
-            Self::check_const_initializers(&declaration)?;
+            // Now that it is settled as a `LexicalDeclaration` or a `VariableDeclaration`
+            // rather than a `ForDeclaration`, the rules about a missing initialiser apply —
+            // `for (const a;;)` has nothing to be constant and `for (let [a];;)` nothing to take
+            // apart, where `for (const [a] of b)` takes its value from the iteration.
+            Self::check_declaration_initializers(&declaration)?;
             self.eat(TokenKind::Semicolon, Goal::RegExp, "`;`")?;
             return self.parse_three_part_tail(Some(ForInit::Declaration(Box::new(declaration))));
         };
@@ -99,7 +100,7 @@ impl Parser<'_> {
         let [binding] = &*declaration.declarators else {
             return Err(ParseError {
                 kind: ParseErrorKind::ForInOfBindsSeveralNames,
-                span: declaration.declarators[0].name_span,
+                span: declaration.declarators[0].binding.span(),
             });
         };
         if let Some(initializer) = &binding.initializer {

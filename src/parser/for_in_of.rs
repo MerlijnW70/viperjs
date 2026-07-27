@@ -331,9 +331,14 @@ mod tests {
         // the iteration rather than from an `=`.
         assert!(parse_script("for (const a of b);").is_ok());
         assert!(parse_script("for (const a in b);").is_ok());
-        // A pattern is the other `ForBinding` alternative and arrives with destructuring.
-        assert!(parse_script("for (let [a] of b);").is_err());
-        assert!(parse_script("for (var {a} in b);").is_err());
+        // A pattern is the other `ForBinding` alternative, and takes no initialiser either —
+        // the value comes from the iteration whatever shape it is taken apart into.
+        assert!(parse_script("for (let [a] of b);").is_ok());
+        assert!(parse_script("for (var {a} in b);").is_ok());
+        assert_eq!(
+            script_error("for (let [a] = 1 of b);").kind,
+            ParseErrorKind::ForInOfBindingHasInitializer
+        );
     }
 
     #[test]

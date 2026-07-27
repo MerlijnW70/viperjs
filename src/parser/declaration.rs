@@ -18,9 +18,11 @@
 
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{Declaration, DeclarationKind, Declarator, Stmt, StmtKind};
+use crate::ast::{Binding, Declaration, DeclarationKind, Declarator, Stmt, StmtKind};
 use crate::lexer::{Goal, TokenKind, identifier_value};
 use crate::span::Span;
+use crate::static_semantics::bound_names;
+use std::collections::HashSet;
 
 impl Parser<'_> {
     /// Whether a `LexicalDeclaration` starting with `let` begins here.
@@ -48,7 +50,7 @@ impl Parser<'_> {
     /// [`Parser::parse_declarator_list`].
     pub(super) fn parse_declaration(&mut self, kind: DeclarationKind) -> Result<Stmt, ParseError> {
         let (declaration, span) = self.parse_declarator_list(kind, AllowIn::Yes)?;
-        Self::check_const_initializers(&declaration)?;
+        Self::check_declaration_initializers(&declaration)?;
         let end = self.consume_semicolon(span)?;
         Ok(Stmt {
             span: span.to(end),
@@ -70,21 +72,30 @@ impl Parser<'_> {
     ) -> Result<(Declaration, Span), ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
         let mut declarators: Vec<Declarator> = Vec::new();
+        let mut bound: HashSet<String> = HashSet::new();
         // The list is never empty, so the loop always sets this before it is read.
         let mut end;
         loop {
-            let declarator = self.parse_declarator(kind, allow_in)?;
-            // §14.3.1.1: the BoundNames of a lexical BindingList may not repeat. `var a, a;` is
-            // legal and `let a, a;` is not, which is the whole difference the flag exists for.
-            if kind.is_lexical()
-                && declarators
-                    .iter()
-                    .any(|earlier| earlier.name == declarator.name)
-            {
-                return Err(ParseError {
-                    kind: ParseErrorKind::DuplicateLexicalBinding,
-                    span: declarator.name_span,
-                });
+            let declarator = self.parse_declarator(allow_in)?;
+            // §14.3.1.1: the BoundNames of a lexical BindingList may not repeat, and may not
+            // contain `let`. Both are about `BoundNames`, which a pattern makes a list of — so
+            // `let [a, a] = b` is a redeclaration and `var [a, a] = b` is not, exactly as
+            // `let a, a;` and `var a, a;` are.
+            if kind.is_lexical() {
+                for declared in bound_names(&declarator.binding) {
+                    if declared.name == "let" {
+                        return Err(ParseError {
+                            kind: ParseErrorKind::LetAsLexicalBindingName,
+                            span: declared.span,
+                        });
+                    }
+                    if !bound.insert(declared.name.to_string()) {
+                        return Err(ParseError {
+                            kind: ParseErrorKind::DuplicateLexicalBinding,
+                            span: declared.span,
+                        });
+                    }
+                }
             }
             end = declarator.span;
             declarators.push(declarator);
@@ -103,29 +114,17 @@ impl Parser<'_> {
     }
 
     /// One `LexicalBinding` or `VariableDeclaration` (§14.3).
-    fn parse_declarator(
-        &mut self,
-        kind: DeclarationKind,
-        allow_in: AllowIn,
-    ) -> Result<Declarator, ParseError> {
-        let (name, name_span) = self.parse_binding_identifier()?;
-        // §14.3.1.1: the BoundNames of a lexical BindingList may not contain "let". BoundNames is
-        // a StringValue, so this reads the *value* — `let` as a name is refused even though
-        // the spelling is not the word. The rule is stated about a `LexicalDeclaration` and about
-        // nothing else, which is why it lives here rather than in `parse_binding_identifier`:
-        // `catch (let) {}` binds the same name and is perfectly legal.
-        if kind.is_lexical() && &*name == "let" {
-            return Err(ParseError {
-                kind: ParseErrorKind::LetAsLexicalBindingName,
-                span: name_span,
-            });
-        }
+    ///
+    /// Takes no `DeclarationKind`, and did until patterns arrived. Both rules that needed one —
+    /// no `let` among the bound names, and no repeats — are about `BoundNames`, which a pattern
+    /// makes a list of; so both moved up to the list, where the list is.
+    fn parse_declarator(&mut self, allow_in: AllowIn) -> Result<Declarator, ParseError> {
+        let binding = self.parse_binding()?;
         if self.current.kind != TokenKind::Eq {
             return Ok(Declarator {
-                name,
+                span: binding.span(),
+                binding,
                 initializer: None,
-                name_span,
-                span: name_span,
             });
         }
         self.advance(Goal::RegExp)?;
@@ -138,31 +137,43 @@ impl Parser<'_> {
         self.leave();
         let initializer = initializer?;
         Ok(Declarator {
-            span: name_span.to(initializer.span),
-            name,
-            name_span,
+            span: binding.span().to(initializer.span),
+            binding,
             initializer: Some(Box::new(initializer)),
         })
     }
 
-    /// §14.3.1.1: every `const` binding of a `LexicalDeclaration` needs an initialiser.
+    /// The two rules about a declarator that must have an initialiser.
     ///
-    /// `const a;` has nothing to be constant and no later statement may supply it. Applied by the
-    /// caller rather than while the binding is read, for the reason the `let` rule is: the rule
-    /// belongs to `LexicalDeclaration` and a `ForDeclaration` is not one. `for (const a of b)`
-    /// binds `a` from the iteration and takes no initialiser at all — indeed `ForBinding` has no
-    /// `Initializer` in the grammar — so applying this there would refuse the ordinary form.
-    pub(super) fn check_const_initializers(declaration: &Declaration) -> Result<(), ParseError> {
-        if declaration.kind != DeclarationKind::Const {
-            return Ok(());
-        }
+    /// - §14.3.1.1: a `const` binding has nothing to be constant without one, and no later
+    ///   statement may supply it.
+    /// - §14.3.3: `BindingPattern Initializer` — the `_opt` is on the `BindingIdentifier`
+    ///   alternative and not on this one, so a pattern has nothing to take apart. Unlike the
+    ///   `const` rule this holds for all three keywords: `var [a];` is refused too.
+    ///
+    /// Applied by the caller rather than while the binding is read, for the reason the `let` rule
+    /// is: both belong to a `LexicalDeclaration` or a `VariableDeclaration`, and a `ForDeclaration`
+    /// is neither. `for (const [a] of b)` takes its value from the iteration, `ForBinding` having
+    /// no `Initializer` in the grammar at all — so applying either there would refuse the
+    /// ordinary form.
+    pub(super) fn check_declaration_initializers(
+        declaration: &Declaration,
+    ) -> Result<(), ParseError> {
         for declarator in &declaration.declarators {
-            if declarator.initializer.is_none() {
-                return Err(ParseError {
-                    kind: ParseErrorKind::ConstWithoutInitializer,
-                    span: declarator.name_span,
-                });
+            if declarator.initializer.is_some() {
+                continue;
             }
+            let kind = match declarator.binding {
+                Binding::Pattern(_) => ParseErrorKind::PatternWithoutInitializer,
+                Binding::Identifier(_) if declaration.kind == DeclarationKind::Const => {
+                    ParseErrorKind::ConstWithoutInitializer
+                }
+                Binding::Identifier(_) => continue,
+            };
+            return Err(ParseError {
+                kind,
+                span: declarator.binding.span(),
+            });
         }
         Ok(())
     }
@@ -334,23 +345,10 @@ mod tests {
         // declaration, and then fails as two expressions on one line always do.
         assert!(parse_script(r"\u006cet x = 1;").is_err());
         assert_eq!(statements(r"\u006cet = 1;"), ["(= let 1)"]);
-        // §14.5's restriction, now that there is something for `let [` to be. The pin from the
-        // statement slice said this test would change the day declarations landed; it has.
-        assert_eq!(
-            script_error("let [a] = b;").kind,
-            ParseErrorKind::Unexpected {
-                expected: "a binding name",
-                found: TokenKind::LBracket,
-            },
-            "a destructuring pattern, which is a later slice — but no longer a member access"
-        );
-        assert_eq!(
-            script_error("let {a} = b;").kind,
-            ParseErrorKind::Unexpected {
-                expected: "a binding name",
-                found: TokenKind::LBrace,
-            }
-        );
+        // §14.5's restriction, with the thing it was always restricting: `let [` may not begin
+        // an ExpressionStatement because it begins a lexical declaration, and now it does.
+        assert_eq!(statements("let [a] = b;"), ["(let [a]=b)"]);
+        assert_eq!(statements("let {a} = b;"), ["(let {(a a)}=b)"]);
     }
 
     #[test]

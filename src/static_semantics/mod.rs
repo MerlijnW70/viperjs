@@ -29,7 +29,7 @@ mod labels;
 mod names;
 
 pub use self::labels::{LabelProblem, LabelProblemKind, first_label_problem};
-pub use self::names::{lexically_declared_names, var_declared_names};
+pub use self::names::{bound_names, lexically_declared_names, var_declared_names};
 
 use crate::span::Span;
 

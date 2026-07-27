@@ -45,6 +45,14 @@ pub enum ParseErrorKind {
     /// can build so far the answer is "an identifier, however many parentheses are around it".
     /// `1 = 2` and `(a, b) = 3` are the shapes this rejects.
     InvalidAssignmentTarget,
+    /// §14.3.3: a binding pattern with no initialiser — `var [a];`.
+    ///
+    /// `VariableDeclaration : BindingIdentifier Initializer_opt | BindingPattern Initializer` —
+    /// the `_opt` is on the first alternative only, so a pattern always needs something to take
+    /// apart. Unlike the `const` rule, this holds for all three keywords.
+    PatternWithoutInitializer,
+    /// §14.15.1: the `BoundNames` of a catch parameter repeat — `catch ([a, a])`.
+    DuplicateCatchParameterName,
     /// §14.3.1.1: a `const` binding with no initialiser.
     ///
     /// `const a;` has nothing to be constant, and no later statement may supply it — which is
@@ -193,6 +201,12 @@ impl fmt::Display for ParseErrorKind {
                 }
             }
             Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            Self::PatternWithoutInitializer => {
+                write!(f, "a destructuring declaration must have an initializer")
+            }
+            Self::DuplicateCatchParameterName => {
+                write!(f, "this name is bound twice by the same catch parameter")
+            }
             Self::ConstWithoutInitializer => {
                 write!(f, "a `const` binding must have an initializer")
             }

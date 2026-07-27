@@ -358,10 +358,10 @@ mod tests {
         for source in ["function f() {}", "class C {}", "return 1;"] {
             assert!(parse_script(source).is_err(), "{source:?}");
         }
-        // The `let [` pin that stood here has moved to the declaration slice, where it now
-        // parses far enough to reach a real complaint about the pattern rather than reading as
-        // a member access. Nothing in this parser reads a construct as the wrong tree any more.
-        assert!(parse_script("let [a] = b").is_err());
+        // The `let [` pin that stood here through three slices has come all the way round:
+        // §14.5 forbids an ExpressionStatement from beginning with `let [` because that is a
+        // lexical declaration, and now it is one.
+        assert_eq!(statements("let [a] = b"), ["(let [a]=b)"]);
         assert_eq!(statements("var a = 1"), ["(var a=1)"]);
         assert_eq!(statements("let a = 1"), ["(let a=1)"]);
     }

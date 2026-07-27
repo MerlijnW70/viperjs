@@ -2,9 +2,9 @@
 
 use super::{ParseError, parse_expression};
 use crate::ast::{
-    ArrayElement, AssignmentTarget, Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget,
-    ForInit, Pattern, PatternElement, PropertyDefinition, PropertyKey, RegExpLiteral, Stmt,
-    StmtKind,
+    ArrayElement, AssignmentTarget, Binding, BindingElement, BindingPattern, Declaration, Expr,
+    ExprKind, ForInOfKind, ForInOfTarget, ForInit, Pattern, PatternElement, PropertyDefinition,
+    PropertyKey, RegExpLiteral, Stmt, StmtKind,
 };
 
 /// The parsed expression of `source`.
@@ -116,6 +116,56 @@ pub(super) fn render(expr: &Expr) -> String {
     }
 }
 
+/// A binding: a name, or the pattern of them a declaration creates.
+pub(super) fn render_binding(binding: &Binding) -> String {
+    match binding {
+        Binding::Identifier(name) => name.name.to_string(),
+        Binding::Pattern(BindingPattern::Array(pattern)) => {
+            let mut parts: Vec<String> = pattern
+                .elements
+                .iter()
+                .map(|element| match element {
+                    Some(element) => render_binding_element(element),
+                    None => "<hole>".to_string(),
+                })
+                .collect();
+            if let Some(rest) = &pattern.rest {
+                parts.push(format!("(... {})", render_binding(rest)));
+            }
+            format!("[{}]", parts.join(" "))
+        }
+        Binding::Pattern(BindingPattern::Object(pattern)) => {
+            let mut parts: Vec<String> = pattern
+                .properties
+                .iter()
+                .map(|property| {
+                    format!(
+                        "({} {})",
+                        render_key(&property.key),
+                        render_binding_element(&property.value)
+                    )
+                })
+                .collect();
+            if let Some(rest) = &pattern.rest {
+                parts.push(format!("(... {})", rest.name));
+            }
+            format!("{{{}}}", parts.join(" "))
+        }
+    }
+}
+
+/// One binding, and its default if it has one.
+fn render_binding_element(element: &BindingElement) -> String {
+    match &element.default {
+        Some(default) => format!(
+            "(= {} {})",
+            render_binding(&element.target),
+            render(default)
+        ),
+        None => render_binding(&element.target),
+    }
+}
+
 /// An assignment target: an expression, or the pattern a literal covered.
 pub(super) fn render_target(target: &AssignmentTarget) -> String {
     match target {
@@ -206,8 +256,8 @@ pub(super) fn render_declaration(declaration: &Declaration) -> String {
         .declarators
         .iter()
         .map(|declarator| match &declarator.initializer {
-            Some(value) => format!("{}={}", declarator.name, render(value)),
-            None => declarator.name.to_string(),
+            Some(value) => format!("{}={}", render_binding(&declarator.binding), render(value)),
+            None => render_binding(&declarator.binding),
         })
         .collect();
     format!("({} {})", declaration.kind.as_str(), names.join(" "))
@@ -300,7 +350,11 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             if let Some(handler) = &statement.handler {
                 parts.push(match &handler.parameter {
                     Some(parameter) => {
-                        format!("(catch {} {})", parameter.name, render_block(&handler.body))
+                        format!(
+                            "(catch {} {})",
+                            render_binding(&parameter.binding),
+                            render_block(&handler.body)
+                        )
                     }
                     None => format!("(catch {})", render_block(&handler.body)),
                 });

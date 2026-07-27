@@ -13,14 +13,20 @@
 //! - `expression` — §13, down to the literals.
 //! - `operator` — the operator enums of §13.4 – §13.15, and how each is written.
 //! - `pattern` — destructuring assignment patterns (§13.15.5), and what a literal covers.
+//! - `binding` — destructuring binding patterns (§14.3.3), which are the other kind.
 //!
 //! Everything is re-exported here, so `crate::ast::Whatever` names it wherever it lives.
 
+mod binding;
 mod expression;
 mod operator;
 mod pattern;
 mod statement;
 
+pub use self::binding::{
+    ArrayBindingPattern, Binding, BindingElement, BindingName, BindingPattern, BindingProperty,
+    ObjectBindingPattern,
+};
 pub use self::expression::{
     ArrayElement, Expr, ExprKind, PropertyDefinition, PropertyKey, RegExpLiteral,
 };

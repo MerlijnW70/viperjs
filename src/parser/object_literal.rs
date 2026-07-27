@@ -128,7 +128,7 @@ impl Parser<'_> {
     }
 
     /// `PropertyName : LiteralPropertyName | ComputedPropertyName` (§13.2.5).
-    fn parse_property_key(&mut self) -> Result<PropertyKey, ParseError> {
+    pub(super) fn parse_property_key(&mut self) -> Result<PropertyKey, ParseError> {
         let token = self.current;
         match token.kind {
             // `[ AssignmentExpression ]`, whose value is not known until it runs — so this is the

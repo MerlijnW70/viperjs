@@ -25,7 +25,7 @@ use super::{ParseError, ParseErrorKind};
 use crate::ast::{Declaration, Stmt, SwitchCase};
 use crate::span::Span;
 use crate::static_semantics::{
-    DeclaredName, LabelProblemKind, first_label_problem, lexically_declared_names,
+    DeclaredName, LabelProblemKind, bound_names, first_label_problem, lexically_declared_names,
     var_declared_names,
 };
 use std::collections::HashMap;
@@ -91,7 +91,11 @@ pub(super) fn check_header_against_body(
 ) -> Result<(), ParseError> {
     let mut header: HashMap<&str, Span> = HashMap::new();
     for declarator in &declaration.declarators {
-        header.insert(&declarator.name, declarator.name_span);
+        // `BoundNames`, which a pattern makes a list of: `for (let [a, b];;) { var a; }` collides
+        // on `a` exactly as `for (let a;;) { var a; }` does.
+        for declared in bound_names(&declarator.binding) {
+            header.insert(declared.name, declared.span);
+        }
     }
     for declared in var_declared_names(body) {
         if let Some(&header_span) = header.get(declared.name) {

@@ -240,17 +240,14 @@ pub struct CatchClause {
     pub span: Span,
 }
 
-/// The name a `catch` binds its thrown value to (§14.15).
+/// What a `catch` binds its thrown value to (§14.15).
 ///
-/// A `BindingIdentifier` only. The `BindingPattern` form — `catch ([a, b])` — arrives with
-/// destructuring, and brings with it the one early error of §14.15.1 that a single name cannot
-/// break: that the bound names may not repeat.
+/// A `BindingIdentifier` or a `BindingPattern`. The second is what makes §14.15.1's first early
+/// error reachable — a single name cannot repeat, and `catch ([a, a])` can.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CatchParameter {
-    /// The bound name, with any `\u` escapes resolved.
-    pub name: Box<str>,
-    /// The name alone.
-    pub span: Span,
+    /// What the thrown value is bound to: a name, or a pattern of them.
+    pub binding: super::Binding,
 }
 
 /// `if ( Expression ) Statement else Statement` (§14.6).
@@ -336,15 +333,14 @@ impl DeclarationKind {
 /// One name bound by a declaration, with what it is initialised to.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Declarator {
-    /// The bound name, with any `\u` escapes resolved.
-    pub name: Box<str>,
-    /// What it is initialised to, if anything. Absent is legal for `var` and `let`, and a
-    /// Syntax Error for `const` (§14.3.1.1).
+    /// What it binds: a name, or a pattern of them.
+    pub binding: super::Binding,
+    /// What it is initialised to, if anything.
+    ///
+    /// Absent is legal for a `var` or `let` **name**, and for nothing else: `const` needs a value
+    /// to be constant (§14.3.1.1), and a pattern needs one to take apart — the grammar puts the
+    /// `_opt` on `BindingIdentifier Initializer_opt` and not on `BindingPattern Initializer`.
     pub initializer: Option<Box<Expr>>,
-    /// The name alone. Kept apart from [`Declarator::span`] because the early errors of §14.2.1
-    /// and §16.1.1 are about `BoundNames`, and a caret under `a` says more than one under
-    /// `a = someLongExpression()`.
-    pub name_span: Span,
-    /// The name and the initialiser together.
+    /// The binding and the initialiser together.
     pub span: Span,
 }

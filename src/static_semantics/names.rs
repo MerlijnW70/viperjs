@@ -11,7 +11,7 @@
 //! tree, and why the walk is iterative.
 
 use super::DeclaredName;
-use crate::ast::{Stmt, StmtKind};
+use crate::ast::{Binding, BindingPattern, Stmt, StmtKind};
 
 /// `LexicallyDeclaredNames` of a `StatementList` (§8.2.6).
 ///
@@ -158,15 +158,58 @@ fn push_bound_names<'a>(
     declaration: &'a crate::ast::Declaration,
     names: &mut Vec<DeclaredName<'a>>,
 ) {
-    names.extend(
-        declaration
-            .declarators
-            .iter()
-            .map(|declarator| DeclaredName {
-                name: &declarator.name,
-                span: declarator.name_span,
+    for declarator in &declaration.declarators {
+        push_binding_names(&declarator.binding, names);
+    }
+}
+
+/// The `BoundNames` of one binding (§8.2.1) — every name a pattern creates, in source order.
+///
+/// Iterative for the reason every walk here is: `Drop` stays the only recursive path over a tree.
+/// A pattern nests, so this one genuinely had somewhere to recurse.
+pub fn push_binding_names<'a>(binding: &'a Binding, names: &mut Vec<DeclaredName<'a>>) {
+    let mut pending = vec![binding];
+    while let Some(binding) = pending.pop() {
+        match binding {
+            Binding::Identifier(name) => names.push(DeclaredName {
+                name: &name.name,
+                span: name.span,
             }),
-    );
+            Binding::Pattern(BindingPattern::Array(pattern)) => {
+                if let Some(rest) = &pattern.rest {
+                    pending.push(rest);
+                }
+                pending.extend(
+                    pattern
+                        .elements
+                        .iter()
+                        .flatten()
+                        .map(|element| &element.target),
+                );
+            }
+            Binding::Pattern(BindingPattern::Object(pattern)) => {
+                if let Some(rest) = &pattern.rest {
+                    names.push(DeclaredName {
+                        name: &rest.name,
+                        span: rest.span,
+                    });
+                }
+                pending.extend(
+                    pattern
+                        .properties
+                        .iter()
+                        .map(|property| &property.value.target),
+                );
+            }
+        }
+    }
+}
+
+/// The `BoundNames` of one binding, as a list.
+pub fn bound_names(binding: &Binding) -> Vec<DeclaredName<'_>> {
+    let mut names = Vec::new();
+    push_binding_names(binding, &mut names);
+    names
 }
 
 #[cfg(test)]
@@ -276,9 +319,11 @@ mod tests {
                     kind: StmtKind::Declaration(Box::new(crate::ast::Declaration {
                         kind: crate::ast::DeclarationKind::Var,
                         declarators: Box::new([crate::ast::Declarator {
-                            name: "deep".into(),
+                            binding: crate::ast::Binding::Identifier(crate::ast::BindingName {
+                                name: "deep".into(),
+                                span: Span::new(0, 4),
+                            }),
                             initializer: None,
-                            name_span: Span::new(0, 4),
                             span: Span::new(0, 4),
                         }]),
                     })),
