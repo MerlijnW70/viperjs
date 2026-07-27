@@ -89,6 +89,14 @@ pub enum TokenKind {
         legacy_escape: bool,
     },
 
+    /// A `RegularExpressionLiteral` (§12.9.5), read only under [`crate::lexer::Goal::RegExp`].
+    ///
+    /// The token is its extent and nothing more: §12.9.5 says the body and flags "are
+    /// subsequently parsed again using the more stringent ECMAScript Regular Expression
+    /// grammar", which is M4's work. [`crate::lexer::regexp_parts`] carves the span into the
+    /// two halves that grammar will want.
+    RegExp,
+
     /// A `NumericLiteral` carrying the `n` of `BigIntLiteralSuffix` (§12.9.3).
     ///
     /// Recognised now although BigInt values arrive at M7, because the alternative is worse than
@@ -150,8 +158,8 @@ pub enum TokenKind {
     Minus,
     /// `*`
     Star,
-    /// `/` — the spec's `DivPunctuator`, split out because the goal symbol decides whether it
-    /// opens a regular expression. That disambiguation arrives with regex literals.
+    /// `/` — the spec's `DivPunctuator`, produced only under [`crate::lexer::Goal::Div`].
+    /// Under `Goal::RegExp` the same character opens a [`TokenKind::RegExp`] instead.
     Slash,
     /// `%`
     Percent,
@@ -194,7 +202,8 @@ pub enum TokenKind {
     MinusEq,
     /// `*=`
     StarEq,
-    /// `/=`
+    /// `/=` — like [`TokenKind::Slash`], only under [`crate::lexer::Goal::Div`]; under
+    /// `Goal::RegExp` this is a literal whose body begins with `=`.
     SlashEq,
     /// `%=`
     PercentEq,
@@ -238,7 +247,8 @@ impl TokenKind {
             | Self::PrivateIdentifier { .. }
             | Self::Number { .. }
             | Self::BigInt
-            | Self::String { .. } => return None,
+            | Self::String { .. }
+            | Self::RegExp => return None,
             Self::Keyword(word) => word.as_str(),
 
             Self::LBrace => "{",

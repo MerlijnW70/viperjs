@@ -30,10 +30,10 @@ use crate::span::Span;
 /// one containing an escape that the lexer would have rejected.
 ///
 /// ```
-/// use praxis::lexer::{string_value, Lexer, TokenKind};
+/// use praxis::lexer::{Goal, Lexer, TokenKind, string_value};
 ///
 /// let source = r#""café""#;
-/// let token = Lexer::new(source).next_token().expect("this lexes");
+/// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");
 /// assert_eq!(token.kind, TokenKind::String { legacy_escape: false });
 /// assert_eq!(string_value(source, token.span), Some(vec![0x63, 0x61, 0x66, 0xe9]));
 /// ```
@@ -262,6 +262,7 @@ impl Lexer<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lexer::Goal;
     use crate::lexer::test_support::*;
 
     /// The code units of the one string literal in `source`.
@@ -279,7 +280,7 @@ mod tests {
 
     /// The error `source` fails with, or a panic naming what it produced instead.
     fn error(source: &str) -> LexError {
-        match Lexer::new(source).tokens() {
+        match Lexer::new(source).tokens(Goal::Div) {
             Err(err) => err,
             Ok(tokens) => panic!("{source:?} should not lex, got {tokens:?}"), // a test about an error cannot proceed without one
         }
@@ -351,7 +352,7 @@ mod tests {
         // …and the newline flag of a token after such a literal is not set by a separator that
         // was inside it.
         let tokens = Lexer::new("\"\u{2028}\";")
-            .tokens()
+            .tokens(Goal::Div)
             .unwrap_or_else(|err| panic!("should lex, got {}", err.kind)); // the assertion needs the tokens
         assert!(!tokens[1].newline_before);
     }
@@ -554,7 +555,7 @@ mod tests {
         ];
         for source in &cases {
             // The verdict does not matter; not unwinding does.
-            if let Ok(tokens) = Lexer::new(source).tokens() {
+            if let Ok(tokens) = Lexer::new(source).tokens(Goal::Div) {
                 assert!(
                     string_value(source, tokens[0].span).is_some(),
                     "{:?} lexed but has no value",

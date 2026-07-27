@@ -47,15 +47,17 @@
 //! - `number` — how far a numeric literal reaches (§12.9.3), Annex B's legacy forms included.
 //! - `number_value` — what one denotes, correctly rounded (§12.9.3.3).
 //! - `string` — string literals and the code units they denote (§12.9.4).
+//! - `regexp` — where a regular expression literal ends (§12.9.5).
 //! - `escape` — `UnicodeEscapeSequence` and UTF-16 encoding, shared by `name` and `string`.
-//! - here — the cursor, and [`Lexer::next_token`]: the one place that decides which of the
-//!   above a character belongs to.
+//! - here — the cursor, the [`Goal`] symbol, and [`Lexer::next_token`]: the one place that
+//!   decides which of the above a character belongs to.
 
 mod error;
 mod escape;
 mod name;
 mod number;
 mod number_value;
+mod regexp;
 mod reserved;
 mod string;
 #[cfg(test)]
@@ -66,6 +68,7 @@ mod trivia;
 pub use self::error::{LexError, LexErrorKind};
 pub use self::name::identifier_value;
 pub use self::number_value::numeric_value;
+pub use self::regexp::{RegExpParts, regexp_parts};
 pub use self::reserved::ReservedWord;
 pub use self::string::string_value;
 pub use self::token::{Token, TokenKind};
@@ -140,12 +143,36 @@ impl<'a> Cursor<'a> {
     }
 }
 
+/// Which of §12.6's goal symbols the next token is read under.
+///
+/// ECMAScript's lexical grammar is not context-free at the token level: the same characters are
+/// different tokens depending on what the parser is expecting. `/` is division under
+/// `InputElementDiv` and opens a regular expression literal under `InputElementRegExp`, so
+/// `a /b/ g` is two divisions and `f(/b/g)` is one literal — from the same seven characters.
+///
+/// The lexer cannot choose. Nothing in the text distinguishes the two readings; only a parser
+/// that knows whether an operand or an operator comes next does. Engines that guess from the
+/// previous token get most programs right and a few famously wrong, so this is a parameter
+/// rather than a heuristic, supplied at every call.
+///
+/// §12.6 lists five goals. `InputElementHashbangOrRegExp` is absent because it differs from
+/// `InputElementRegExp` only in admitting a `HashbangComment`, which §12.5 already confines to
+/// byte 0 of the source — [`super::trivia`] tests the position instead, which is the same rule
+/// with nothing for a caller to get wrong. The two `TemplateTail` goals arrive with templates.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Goal {
+    /// `InputElementDiv`: a `/` here is the division operator.
+    Div,
+    /// `InputElementRegExp`: a `/` here opens a `RegularExpressionLiteral`.
+    RegExp,
+}
+
 /// Turns source text into tokens.
 ///
 /// ```
-/// use praxis::lexer::{Lexer, TokenKind};
+/// use praxis::lexer::{Goal, Lexer, TokenKind};
 ///
-/// let tokens = Lexer::new("{ /* hi */ }").tokens().expect("this source lexes");
+/// let tokens = Lexer::new("{ /* hi */ }").tokens(Goal::Div).expect("this source lexes");
 /// let kinds: Vec<_> = tokens.iter().map(|t| t.kind).collect();
 /// assert_eq!(kinds, [TokenKind::LBrace, TokenKind::RBrace, TokenKind::Eof]);
 /// ```
@@ -171,7 +198,7 @@ impl<'a> Lexer<'a> {
     ///
     /// Once end of input is reached this returns [`TokenKind::Eof`] forever: a parser recovering
     /// from an error will ask again, and it must not matter how many times it does.
-    pub fn next_token(&mut self) -> Result<Token, LexError> {
+    pub fn next_token(&mut self, goal: Goal) -> Result<Token, LexError> {
         let newline_before = self.skip_trivia()?;
         let start = self.cursor.offset();
 
@@ -230,6 +257,19 @@ impl<'a> Lexer<'a> {
             });
         }
 
+        // §12.6, and the one place the goal symbol changes what a character means. Trivia has
+        // already taken `//` and `/*`, so a `/` arriving here starts a literal rather than a
+        // comment — which is exactly why Note 2's "`//` is a comment, not an empty literal" and
+        // `RegularExpressionFirstChar`'s exclusion of `*` need no code of their own.
+        if first == '/' && goal == Goal::RegExp {
+            let kind = self.scan_regexp()?;
+            return Ok(Token {
+                kind,
+                span: Span::new(start, self.cursor.offset()),
+                newline_before,
+            });
+        }
+
         for &(text, kind) in PUNCTUATORS {
             if !self.cursor.starts_with(text) {
                 continue;
@@ -260,10 +300,10 @@ impl<'a> Lexer<'a> {
     }
 
     /// Every token including the final [`TokenKind::Eof`], or the first error.
-    pub fn tokens(mut self) -> Result<Vec<Token>, LexError> {
+    pub fn tokens(mut self, goal: Goal) -> Result<Vec<Token>, LexError> {
         let mut tokens = Vec::new();
         loop {
-            let token = self.next_token()?;
+            let token = self.next_token(goal)?;
             let done = token.kind == TokenKind::Eof;
             tokens.push(token);
             if done {
@@ -288,11 +328,20 @@ mod tests {
     /// Placeholders rather than `unwrap` on a bad span: a panic here would be reported as a
     /// crash in the helper, while a placeholder shows up in the diff of the failing assertion.
     fn retile(source: &str) -> (String, usize) {
+        retile_under(source, Goal::Div)
+    }
+
+    /// The same, reading every `/` as opening a regular expression literal.
+    ///
+    /// A goal is a per-token choice in a real parser, so lexing a whole source under one is
+    /// artificial — but the property is not about which reading is right, it is that whichever
+    /// reading the lexer takes, it accounts for every byte it consumed.
+    fn retile_under(source: &str, goal: Goal) -> (String, usize) {
         let mut lexer = Lexer::new(source);
         let mut out = String::new();
         let mut at = 0usize;
         loop {
-            match lexer.next_token() {
+            match lexer.next_token(goal) {
                 Ok(token) => {
                     let start = token.span.start as usize;
                     out.push_str(source.get(at..start).unwrap_or("<GAP OUT OF ORDER>"));
@@ -376,6 +425,24 @@ mod tests {
             assert_eq!(stopped, source.len(), "stopped early on {source:?}");
         }
 
+        // The same property under the other goal, over sources where the two disagree — a
+        // literal's span must tile just as exactly as a punctuator's, escaped slashes and
+        // character classes included.
+        for source in [
+            "/a/",
+            "/a/gi",
+            "/=/",
+            r"/ab\/[/]c/gi",
+            "/[]/ /(?:)/",
+            "// a comment, even here",
+            "/* and this */ /x/",
+            "x = /a/g;",
+        ] {
+            let (tiled, stopped) = retile_under(source, Goal::RegExp);
+            assert_eq!(tiled, source, "retiling {source:?} as regular expressions");
+            assert_eq!(stopped, source.len(), "stopped early on {source:?}");
+        }
+
         // Inputs that stop partway: the reconstruction must still be an exact prefix — the
         // lexer may refuse to continue, but it may not invent or lose a byte before it does.
         for source in [
@@ -405,13 +472,13 @@ mod tests {
     #[test]
     fn eof_is_a_token_with_an_empty_span_at_the_end_and_repeats_forever() {
         let mut lexer = Lexer::new(" ");
-        let eof = lexer.next_token().expect("whitespace only lexes"); // the assertion under test needs the token
+        let eof = lexer.next_token(Goal::Div).expect("whitespace only lexes"); // the assertion under test needs the token
         assert_eq!(eof.kind, TokenKind::Eof);
         assert_eq!(eof.span, Span::empty_at(1)); // at the END of the trivia, not the start
         // Asking again must not advance, wrap, or produce a different token: a recovering
         // parser will ask an unbounded number of times.
         for _ in 0..3 {
-            assert_eq!(lexer.next_token(), Ok(eof));
+            assert_eq!(lexer.next_token(Goal::Div), Ok(eof));
         }
         // An empty source is the same story with nothing before it.
         assert_eq!(kinds(""), [TokenKind::Eof]);
@@ -493,7 +560,7 @@ mod tests {
             let source = format!("?.{digit}");
             let mut lexer = Lexer::new(&source);
             assert_eq!(
-                lexer.next_token().map(|t| t.kind),
+                lexer.next_token(Goal::Div).map(|t| t.kind),
                 Ok(TokenKind::Question),
                 "?.{digit} must not be optional chaining"
             );
@@ -510,7 +577,7 @@ mod tests {
         );
         // …including a non-ASCII digit, which `DecimalDigit` (§12.9.3) is not.
         assert_eq!(
-            Lexer::new("?.٥").next_token().map(|t| t.kind),
+            Lexer::new("?.٥").next_token(Goal::Div).map(|t| t.kind),
             Ok(TokenKind::QuestionDot),
             "ARABIC-INDIC DIGIT FIVE is not a DecimalDigit"
         );
@@ -560,7 +627,7 @@ mod tests {
         ];
         for (source, len) in cases {
             assert_eq!(
-                Lexer::new(source).tokens(),
+                Lexer::new(source).tokens(Goal::Div),
                 Err(LexError {
                     kind: LexErrorKind::UnexpectedCharacter,
                     span: Span::new(0, len),
@@ -570,7 +637,7 @@ mod tests {
         }
         // The offending character is reported where it is, not where the token stream started.
         assert_eq!(
-            Lexer::new("; @").tokens(),
+            Lexer::new("; @").tokens(Goal::Div),
             Err(LexError {
                 kind: LexErrorKind::UnexpectedCharacter,
                 span: Span::new(2, 3),
@@ -629,7 +696,9 @@ mod tests {
 
     #[test]
     fn tokens_collects_the_whole_stream_and_stops_at_the_first_error() {
-        let tokens = Lexer::new(" ;\n; ").tokens().expect("this source lexes"); // the assertion under test needs the tokens
+        let tokens = Lexer::new(" ;\n; ")
+            .tokens(Goal::Div)
+            .expect("this source lexes"); // the assertion under test needs the tokens
         assert_eq!(tokens.len(), 3, "two semicolons and EOF");
         assert_eq!(tokens[0].span, Span::new(1, 2));
         assert!(!tokens[0].newline_before);
@@ -644,7 +713,7 @@ mod tests {
         // The first error wins, and the tokens before it are discarded — a caller that wants
         // them can drive `next_token` itself.
         assert_eq!(
-            Lexer::new(";@;").tokens().map(|t| t.len()),
+            Lexer::new(";@;").tokens(Goal::Div).map(|t| t.len()),
             Err(LexError {
                 kind: LexErrorKind::UnexpectedCharacter,
                 span: Span::new(1, 2),

@@ -241,11 +241,12 @@ fn radix_prefix(ch: Option<char>) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lexer::Goal;
     use crate::lexer::numeric_value;
     use crate::lexer::test_support::*;
     /// The error `source` fails with, or a panic naming what it produced instead.
     fn error(source: &str) -> LexError {
-        match Lexer::new(source).tokens() {
+        match Lexer::new(source).tokens(Goal::Div) {
             Err(err) => err,
             Ok(tokens) => panic!("{source:?} should not lex, got {tokens:?}"), // a test about an error cannot proceed without one
         }
@@ -423,7 +424,10 @@ mod tests {
         assert_eq!(error("42abc").span, Span::new(2, 3));
         // What is allowed to follow: anything that starts no name and is no digit.
         for source in ["3+4", "3;", "3)", "3,4", "3 in x", "3.5;", "1..x", "3\n"] {
-            assert!(Lexer::new(source).tokens().is_ok(), "{source:?} should lex");
+            assert!(
+                Lexer::new(source).tokens(Goal::Div).is_ok(),
+                "{source:?} should lex"
+            );
         }
     }
     #[test]
@@ -525,7 +529,7 @@ mod tests {
         for source in &cases {
             // The verdict does not matter; not unwinding does. Where it lexes, the value must
             // still be a number we can name.
-            if let Ok(tokens) = Lexer::new(source).tokens() {
+            if let Ok(tokens) = Lexer::new(source).tokens(Goal::Div) {
                 let value = numeric_value(source, tokens[0].span);
                 assert!(
                     value.is_some(),

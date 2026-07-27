@@ -33,10 +33,10 @@ use crate::span::Span;
 /// answering with the `f64` nearby would be worse than answering nothing.
 ///
 /// ```
-/// use praxis::lexer::{numeric_value, Lexer, TokenKind};
+/// use praxis::lexer::{Goal, Lexer, TokenKind, numeric_value};
 ///
 /// let source = "0x1_F";
-/// let token = Lexer::new(source).next_token().expect("this lexes");
+/// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");
 /// assert_eq!(token.kind, TokenKind::Number { legacy: false });
 /// assert_eq!(numeric_value(source, token.span), Some(31.0));
 /// ```

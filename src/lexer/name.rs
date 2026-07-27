@@ -27,12 +27,12 @@ use std::borrow::Cow;
 /// space and all, because that is what is written there. The lexer is where a name is judged.
 ///
 /// ```
-/// use praxis::lexer::{identifier_value, Lexer, TokenKind};
+/// use praxis::lexer::{Goal, Lexer, TokenKind, identifier_value};
 ///
 /// // A raw string, so the source really does contain a backslash: this spells `abc` the
 /// // long way round, and the value comes back as if it had been spelled plainly.
 /// let source = r"\u0061bc";
-/// let token = Lexer::new(source).next_token().expect("this lexes");
+/// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");
 /// assert_eq!(token.kind, TokenKind::Identifier { contains_escape: true });
 /// assert_eq!(identifier_value(source, token.span).as_deref(), Some("abc"));
 /// ```
@@ -151,6 +151,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lexer::Goal;
     use crate::lexer::test_support::*;
     /// The cooked value of the first token of `source`.
     fn name_of(source: &str) -> String {
@@ -181,11 +182,11 @@ mod tests {
         // A digit cannot start one: `1` is a numeric literal, and `1abc` is that literal
         // followed by a name — which §12.9.3 then rejects — rather than one strange identifier.
         assert_eq!(
-            Lexer::new("1").next_token().map(|t| t.kind),
+            Lexer::new("1").next_token(Goal::Div).map(|t| t.kind),
             Ok(TokenKind::Number { legacy: false })
         );
         assert_eq!(
-            Lexer::new("1abc").tokens().map(|t| t.len()),
+            Lexer::new("1abc").tokens(Goal::Div).map(|t| t.len()),
             Err(LexError {
                 kind: LexErrorKind::NumericLiteralFollowedByIdentifierOrDigit,
                 span: Span::new(1, 2),
@@ -225,10 +226,10 @@ mod tests {
         assert_eq!(kinds("x\u{200c}y"), [PLAIN, TokenKind::Eof]);
         // …but the neighbouring ZERO WIDTH SPACE is not a name character or white space, and
         // must stay an error rather than being invisibly absorbed.
-        assert!(Lexer::new("x\u{200b}y").tokens().is_err());
+        assert!(Lexer::new("x\u{200b}y").tokens(Goal::Div).is_err());
         // Symbols that look like they might qualify and do not.
         for source in ["\u{20ac}", "\u{1f680}", "\u{00a7}"] {
-            assert!(Lexer::new(source).tokens().is_err(), "{source:?}");
+            assert!(Lexer::new(source).tokens(Goal::Div).is_err(), "{source:?}");
         }
     }
 
@@ -287,7 +288,7 @@ mod tests {
         // space inside an identifier and every downstream assumption breaks.
         let not_a_name_char = |source: &str| {
             assert_eq!(
-                Lexer::new(source).tokens().map(|t| t.len()),
+                Lexer::new(source).tokens(Goal::Div).map(|t| t.len()),
                 Err(LexError {
                     kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
                     span: Span::new(0, source.len() as u32),
@@ -304,7 +305,7 @@ mod tests {
         // halves of the early error use different predicates, and this is the pair that proves
         // the `is_start` flag is actually consulted.
         assert_eq!(
-            Lexer::new("\\u0030").tokens(),
+            Lexer::new("\\u0030").tokens(Goal::Div),
             Err(LexError {
                 kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
                 span: Span::new(0, 6),
@@ -317,7 +318,7 @@ mod tests {
         assert_eq!(name_of("a\\u005F"), "a_");
         // A bad escape in the middle reports where the escape is, not where the name began.
         assert_eq!(
-            Lexer::new("ab\\u0020").tokens(),
+            Lexer::new("ab\\u0020").tokens(Goal::Div),
             Err(LexError {
                 kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
                 span: Span::new(2, 8),
@@ -351,7 +352,7 @@ mod tests {
             ("a\\u{}", 1, 4),   //
         ] {
             assert_eq!(
-                Lexer::new(source).tokens().map(|t| t.len()),
+                Lexer::new(source).tokens(Goal::Div).map(|t| t.len()),
                 Err(LexError {
                     kind: LexErrorKind::InvalidUnicodeEscape,
                     span: Span::new(start, end),
@@ -377,7 +378,7 @@ mod tests {
             "\\u{FFFFFFFFFFFFFF}", // and one that would overflow it — saturation, not a panic
         ] {
             assert_eq!(
-                Lexer::new(source).tokens().map(|t| t.len()),
+                Lexer::new(source).tokens(Goal::Div).map(|t| t.len()),
                 Err(LexError {
                     kind: LexErrorKind::CodePointOutOfRange,
                     span: Span::new(0, source.len() as u32),
@@ -387,7 +388,7 @@ mod tests {
         }
         // The boundary itself is in range — it is rejected later, and for a different reason.
         assert_eq!(
-            Lexer::new("\\u{10FFFF}").tokens(),
+            Lexer::new("\\u{10FFFF}").tokens(Goal::Div),
             Err(LexError {
                 kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
                 span: Span::new(0, 10),
@@ -438,7 +439,7 @@ mod tests {
             ("#\u{200b}", Span::new(1, 4)),
         ] {
             assert_eq!(
-                Lexer::new(source).tokens().map(|t| t.len()),
+                Lexer::new(source).tokens(Goal::Div).map(|t| t.len()),
                 Err(LexError {
                     kind: LexErrorKind::UnexpectedCharacter,
                     span,
@@ -459,7 +460,7 @@ mod tests {
             Some(Cow::Borrowed("plain"))
         ));
         let escaped = Lexer::new(source)
-            .tokens()
+            .tokens(Goal::Div)
             .expect("this lexes") // the assertion under test needs the tokens
             [1];
         assert!(matches!(
@@ -479,7 +480,7 @@ mod tests {
             Some("a ")
         );
         assert!(
-            Lexer::new("a\\u{20}").tokens().is_err(),
+            Lexer::new("a\\u{20}").tokens(Goal::Div).is_err(),
             "…and the lexer does refuse it"
         );
         // An empty span is an empty value rather than a failure — `Span::empty_at` is what EOF

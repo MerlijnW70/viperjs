@@ -139,6 +139,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lexer::Goal;
     use crate::lexer::TokenKind;
     use crate::lexer::test_support::*;
     #[test]
@@ -187,7 +188,7 @@ mod tests {
         // U+0085 NEL is not ECMAScript white space; Rust says it is.
         assert!('\u{0085}'.is_whitespace());
         assert_eq!(
-            Lexer::new("\u{0085}").next_token().map(|t| t.kind),
+            Lexer::new("\u{0085}").next_token(Goal::Div).map(|t| t.kind),
             Err(LexError {
                 kind: LexErrorKind::UnexpectedCharacter,
                 span: Span::new(0, 2),
@@ -288,7 +289,7 @@ mod tests {
         for source in ["/*", "/*/", "/* x", "/**", ";/* x\ny"] {
             let start = source.find("/*").unwrap_or(0) as u32; // the literal contains `/*` by construction
             assert_eq!(
-                Lexer::new(source).tokens(),
+                Lexer::new(source).tokens(Goal::Div),
                 Err(LexError {
                     kind: LexErrorKind::UnterminatedComment,
                     span: Span::new(start, source.len() as u32),
@@ -319,7 +320,7 @@ mod tests {
         );
         // A second one on the next line is NOT a comment — it is at byte 4.
         assert_eq!(
-            Lexer::new("#!x\n#!y").tokens(),
+            Lexer::new("#!x\n#!y").tokens(Goal::Div),
             Err(LexError {
                 kind: LexErrorKind::UnexpectedCharacter,
                 span: Span::new(5, 6),
@@ -329,7 +330,7 @@ mod tests {
         // hashbang precedes everything — including white space.
         for source in [" #!x", "\n#!x", ";#!x"] {
             assert_eq!(
-                Lexer::new(source).tokens().map(|t| t.len()),
+                Lexer::new(source).tokens(Goal::Div).map(|t| t.len()),
                 Err(LexError {
                     kind: LexErrorKind::UnexpectedCharacter,
                     span: Span::new(2, 3),

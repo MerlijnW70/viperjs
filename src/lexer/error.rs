@@ -47,6 +47,10 @@ pub enum LexErrorKind {
     UnterminatedStringLiteral,
     /// `\x` not followed by exactly two hex digits (`HexEscapeSequence`, §12.9.4).
     InvalidHexEscape,
+    /// A `RegularExpressionLiteral` whose closing `/` never arrived — because a line terminator
+    /// intervened (every part of §12.9.5's grammar bottoms out in `RegularExpressionNonTerminator`,
+    /// which excludes them) or because the source ended.
+    UnterminatedRegExp,
     /// §12.9.3: "The SourceCharacter immediately following a NumericLiteral must not be an
     /// IdentifierStart or DecimalDigit." The spec's own example is that `3in` is an error, and
     /// not the two input elements `3` and `in`.
@@ -65,6 +69,7 @@ impl fmt::Display for LexErrorKind {
             }
             Self::UnterminatedStringLiteral => "unterminated string literal",
             Self::InvalidHexEscape => "malformed hexadecimal escape sequence",
+            Self::UnterminatedRegExp => "unterminated regular expression literal",
             Self::MisplacedNumericSeparator => "numeric separator must sit between two digits",
             Self::MissingDigitsAfterRadixPrefix => "missing digits after the radix prefix",
             Self::NumericLiteralFollowedByIdentifierOrDigit => {
@@ -99,6 +104,7 @@ mod tests {
                 "unterminated string",
             ),
             (LexErrorKind::InvalidHexEscape, "hexadecimal"),
+            (LexErrorKind::UnterminatedRegExp, "regular expression"),
             (LexErrorKind::MisplacedNumericSeparator, "separator"),
             (LexErrorKind::MissingDigitsAfterRadixPrefix, "radix"),
             (
@@ -118,7 +124,7 @@ mod tests {
         }
         assert_eq!(
             messages.len(),
-            10,
+            11,
             "one message for each kind, and no kind missed"
         );
     }

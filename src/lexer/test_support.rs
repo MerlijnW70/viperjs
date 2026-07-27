@@ -3,12 +3,12 @@
 //! Only what more than one child module needs — the round-trip oracle stays beside the scanning
 //! it checks, in `mod.rs`.
 
-use super::{Lexer, Token, TokenKind, numeric_value};
+use super::{Goal, Lexer, Token, TokenKind, numeric_value};
 
 /// The kinds of a source that lexes cleanly, EOF included.
 pub(super) fn kinds(source: &str) -> Vec<TokenKind> {
     Lexer::new(source)
-        .tokens()
+        .tokens(Goal::Div)
         .unwrap_or_else(|err| panic!("{source:?} should lex, got {}", err.kind)) // a test asserting clean lexing has nothing to say if lexing failed
         .iter()
         .map(|t| t.kind)
@@ -19,7 +19,7 @@ pub(super) fn kinds(source: &str) -> Vec<TokenKind> {
 pub(super) fn first(source: &str) -> Token {
     let mut lexer = Lexer::new(source);
     lexer
-        .next_token()
+        .next_token(Goal::Div)
         .unwrap_or_else(|err| panic!("{source:?} should lex, got {}", err.kind)) // same
 }
 
