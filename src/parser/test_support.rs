@@ -56,6 +56,28 @@ pub(super) fn render(expr: &Expr) -> String {
             render(target),
             render(value)
         ),
+        ExprKind::Member { object, property } => format!("(. {} {})", render(object), property),
+        ExprKind::ComputedMember { object, property } => {
+            format!("([] {} {})", render(object), render(property))
+        }
+        ExprKind::Call { callee, arguments } => {
+            let rendered: Vec<String> = arguments.iter().map(render).collect();
+            format!("(call {} [{}])", render(callee), rendered.join(" "))
+        }
+        ExprKind::New { callee, arguments } => {
+            let rendered: Vec<String> = arguments.iter().map(render).collect();
+            format!("(new {} [{}])", render(callee), rendered.join(" "))
+        }
+        ExprKind::Update {
+            operator,
+            prefix,
+            argument,
+        } => format!(
+            "({}{} {})",
+            if *prefix { "pre" } else { "post" },
+            operator.as_str(),
+            render(argument)
+        ),
         ExprKind::Sequence(parts) => {
             let rendered: Vec<String> = parts.iter().map(render).collect();
             format!("(, {})", rendered.join(" "))

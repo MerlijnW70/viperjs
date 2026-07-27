@@ -10,6 +10,7 @@
 use super::{ParseError, ParseErrorKind};
 use crate::ast::{
     AssignmentOperator, BinaryOperator, Expr, ExprKind, LogicalOperator, UnaryOperator,
+    UpdateOperator,
 };
 use crate::lexer::{ReservedWord, TokenKind};
 
@@ -127,14 +128,27 @@ pub(super) fn assignment_operator(kind: TokenKind) -> Option<AssignmentOperator>
 /// §13.15.1's `AssignmentTargetType`, for the expressions this parser can build.
 ///
 /// The specification defines it per production, and every one that answers "simple" is either an
-/// `IdentifierReference` or a `MemberExpression` — so for now it is exactly "an identifier".
+/// `IdentifierReference` or a `MemberExpression` — which is exactly the three below. Everything
+/// else, from `1` to `f()` to a conditional, is invalid.
 ///
 /// Parentheses need no mention, and that is not an oversight. Because a bracketed expression is
 /// a flag on the node rather than a node of its own, `(a)` *is* the identifier `a` and answers
 /// for itself, while `(a, b)` is a sequence and does not. The specification says the same thing
 /// the long way round, by giving the parenthesized production the target type of what it covers.
 pub(super) fn is_simple_assignment_target(expr: &Expr) -> bool {
-    matches!(expr.kind, ExprKind::Identifier(_))
+    matches!(
+        expr.kind,
+        ExprKind::Identifier(_) | ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
+    )
+}
+
+/// The update operators of §13.4, or `None` if this token is not one.
+pub(super) fn update_operator(kind: TokenKind) -> Option<UpdateOperator> {
+    Some(match kind {
+        TokenKind::PlusPlus => UpdateOperator::Increment,
+        TokenKind::MinusMinus => UpdateOperator::Decrement,
+        _ => return None,
+    })
 }
 
 /// Whether `expr` is an unparenthesized `&&` or `||`, which §13.13 keeps out of a `??`.

@@ -60,6 +60,58 @@ pub enum ExprKind {
     /// A `StringLiteral`, as the UTF-16 code units of its `SV` (§12.9.4.2) — possibly including
     /// unpaired surrogates, which is why this is not a `String` (DR-0004).
     String(Vec<u16>),
+    /// `object.name` (§13.3).
+    ///
+    /// The name is an `IdentifierName`, not an `Identifier` — so `a.if` and `a.default` are
+    /// ordinary property accesses, and a reserved word is only reserved where a *binding* could
+    /// stand.
+    Member {
+        /// What is being accessed.
+        object: Box<Expr>,
+        /// The property name, with any `\u` escapes already resolved.
+        ///
+        /// `Box<str>` and not `String` because it is never appended to — and because the eight
+        /// bytes are not free: `ExprKind` is as large as its largest variant, and that size is
+        /// paid once per level of nesting on the parser's stack. The test below keeps it honest.
+        property: Box<str>,
+    },
+    /// `object[property]` (§13.3), where the property is computed rather than written.
+    ComputedMember {
+        /// What is being accessed.
+        object: Box<Expr>,
+        /// The expression giving the property key.
+        property: Box<Expr>,
+    },
+    /// `callee(arguments)` (§13.3).
+    Call {
+        /// What is called.
+        callee: Box<Expr>,
+        /// The arguments, in order.
+        arguments: Box<[Expr]>,
+    },
+    /// `new callee(arguments)` (§13.3), including the argument-less `new callee`.
+    ///
+    /// The two spell the same node: §13.3 gives `new MemberExpression Arguments` and
+    /// `new NewExpression`, and the second means the same as the first with none — which is why
+    /// `new a` and `new a()` construct alike, while `new a.b()` gives the arguments to `new`
+    /// rather than to `a.b`.
+    New {
+        /// What is constructed.
+        callee: Box<Expr>,
+        /// The arguments, in order. Empty when none were written.
+        arguments: Box<[Expr]>,
+    },
+    /// `++a` or `a++` (§13.4).
+    Update {
+        /// Which operator.
+        operator: UpdateOperator,
+        /// Whether it was written before the operand rather than after it. The two differ in
+        /// what they evaluate to, not in what they do.
+        prefix: bool,
+        /// What is incremented or decremented. §13.4.1 requires this to be a valid assignment
+        /// target, which the parser has already checked.
+        argument: Box<Expr>,
+    },
     /// A prefix `UnaryExpression` (§13.5).
     Unary {
         /// Which operator.
@@ -105,7 +157,7 @@ pub enum ExprKind {
     /// Held flat rather than as nested pairs. The grammar's recursion is on the left, so pairs
     /// would nest once per comma and a long list would nest deeply for no reason; evaluation is
     /// left to right with the last value as the result either way.
-    Sequence(Vec<Expr>),
+    Sequence(Box<[Expr]>),
     /// `&&`, `||` or `??` (§13.13), kept apart from [`ExprKind::Binary`] because they are apart
     /// in the grammar and in what they compile to: the right operand may never be evaluated, so
     /// there is a branch here where an arithmetic operator has none.
@@ -248,6 +300,25 @@ impl BinaryOperator {
             Self::BitwiseAnd => "&",
             Self::BitwiseXor => "^",
             Self::BitwiseOr => "|",
+        }
+    }
+}
+
+/// The update operators of §13.4.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum UpdateOperator {
+    /// `++`
+    Increment,
+    /// `--`
+    Decrement,
+}
+
+impl UpdateOperator {
+    /// How it is written.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Increment => "++",
+            Self::Decrement => "--",
         }
     }
 }

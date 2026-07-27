@@ -59,15 +59,19 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | primary expressions | 928 | 512 |
 /// | prefix and binary operators | 304 | 128 |
 /// | conditional, assignment, comma | 168 | 64 |
+/// | member access, calls, `new`, update | 112 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
-/// than optimisation: every frame removed is nesting a real program is allowed to have.
+/// than optimisation: every frame removed is nesting a real program is allowed to have. Two
+/// slices have now bought depth back by moving locals out of a frame the recursion passes
+/// through — the trick works because a debug build reuses no stack slots between match arms, so
+/// an arm that cannot recurse is still paid for by every level that does.
 ///
 /// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse in a thread
-/// with exactly one mebibyte, and this cap leaves a factor of about two and a half in hand. That
-/// test is the real specification of this constant: raise the cap, or make a level cost more
-/// stack, and it fails.
+/// with exactly one mebibyte, and this cap leaves a factor of about two in hand. That test is the
+/// real specification of this constant: raise the cap, or make a level cost more stack, and it
+/// fails.
 ///
 /// # Why a count and not a stack measurement
 ///
@@ -76,7 +80,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// DR-0006 has the argument, including what it costs — a release build could afford several
 /// times this and is not allowed to. The limit becomes an embedder-set value at M3, where
 /// somebody knows how much stack there actually is; the default stays conservative.
-pub const MAX_NESTING_DEPTH: u32 = 64;
+pub const MAX_NESTING_DEPTH: u32 = 48;
 
 /// Parse `source` as a single expression, which must be all of it.
 ///
