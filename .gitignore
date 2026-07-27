@@ -1,0 +1,8 @@
+/target
+
+# the lab's throwaway corner — junk .js files, one-off dumps, whatever
+/lab/scratch/
+
+# test262 is VENDORED, never committed: ~50k files maintained by TC39. Pinning it by commit
+# in conformance/README.md is smaller and more honest than a copy that rots.
+/conformance/test262/

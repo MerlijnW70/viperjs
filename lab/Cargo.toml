@@ -1,0 +1,13 @@
+[package]
+name = "praxis-lab"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+# The lab may take dependencies the ENGINE never can — a benchmark harness, a reference
+# implementation to differential-test against, a plotting helper. Nothing here ships, and the
+# engine must never depend on this crate (the dependency arrow points lab -> engine, only).
+[dependencies]
+praxis = { path = ".." }
+
+[dev-dependencies]

@@ -1,0 +1,31 @@
+[package]
+name = "praxis"
+version = "0.1.0"
+edition = "2024"
+description = "An embeddable JavaScript engine in safe Rust, with zero runtime dependencies."
+license = "MIT OR Apache-2.0"
+keywords = ["javascript", "ecmascript", "interpreter", "engine", "embeddable"]
+categories = ["compilers"]
+
+# ZERO runtime dependencies, forever (GOAL.md non-negotiable #2). This table stays empty.
+# If you believe you need a crate, stop and say so — do not add one.
+[dependencies]
+
+[dev-dependencies]
+
+# The lab (see lab/README.md) is a WORKSPACE MEMBER, never a dependency: experiments are
+# built and run on demand, are not probed, not linted, and cannot reach the engine's
+# release artifact. `cargo test` at the root touches the engine only.
+[workspace]
+members = ["lab"]
+
+[profile.release]
+# The engine is embedded in other people's binaries: size and predictability beat the last
+# few percent of throughput. Revisit only with a benchmark that says otherwise.
+opt-level = 3
+lto = "thin"
+
+[profile.test]
+# Mutation testing runs the suite once per mutant, so test-build time dominates a run.
+# Nothing here debugs the test binary — skip the debuginfo and its link cost.
+debug = 0
