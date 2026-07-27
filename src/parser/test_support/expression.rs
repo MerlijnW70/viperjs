@@ -126,7 +126,12 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
                 ArrowBody::Expression(value) => render(value),
                 ArrowBody::Block(body) => render_block(body),
             };
-            format!("(=> [{}] {})", parameters.join(" "), body)
+            format!(
+                "({} [{}] {})",
+                if arrow.is_async { "async=>" } else { "=>" },
+                parameters.join(" "),
+                body
+            )
         }
         ExprKind::Array(elements) => {
             let rendered: Vec<String> = elements

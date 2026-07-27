@@ -94,6 +94,11 @@ impl Parser<'_> {
         &mut self,
         allow_in: AllowIn,
     ) -> Result<ArrowOrGroup, ParseError> {
+        // §15.9's two forms come first, because both begin with a word that is otherwise an
+        // ordinary identifier and the ordinary path would take it.
+        if let Some(found) = self.parse_async_arrow_or_call(allow_in)? {
+            return Ok(found);
+        }
         // `ArrowParameters : BindingIdentifier` — one token of parameters, and one of lookahead
         // to know it. The `=>` must be on the same line, or this is not an arrow at all.
         if self.is_identifier_token(self.current.kind) {
@@ -110,7 +115,7 @@ impl Parser<'_> {
                     span,
                 };
                 return Ok(ArrowOrGroup::Arrow(
-                    self.parse_arrow_tail(parameters, allow_in)?,
+                    self.parse_arrow_tail(parameters, allow_in, false)?,
                 ));
             }
             return Ok(ArrowOrGroup::Neither);
@@ -125,7 +130,7 @@ impl Parser<'_> {
         if self.current.kind == TokenKind::Arrow && !self.current.newline_before {
             let parameters = self.refine_to_parameters(group)?;
             return Ok(ArrowOrGroup::Arrow(
-                self.parse_arrow_tail(parameters, allow_in)?,
+                self.parse_arrow_tail(parameters, allow_in, false)?,
             ));
         }
         Ok(ArrowOrGroup::Operand(self.group_as_expression(group)?))
@@ -221,32 +226,20 @@ impl Parser<'_> {
             rest: group.rest.map(Box::new),
             span: group.span,
         };
-        // `UniqueFormalParameters`, which says the rule in its name: an arrow's parameters may
-        // never repeat, sloppy or not and simple or not — as a method's may not, and a plain
-        // function's simple list may.
-        let mut seen: HashSet<String> = HashSet::new();
-        for element in &parameters.items {
-            for declared in bound_names(&element.target) {
-                if !seen.insert(declared.name.to_string()) {
-                    return Err(ParseError {
-                        kind: ParseErrorKind::DuplicateParameterName,
-                        span: declared.span,
-                    });
-                }
-            }
-        }
+        check_unique_parameters(&parameters)?;
         Ok(parameters)
     }
 
     /// `=> ConciseBody`, with the parameters already refined.
-    fn parse_arrow_tail(
+    pub(super) fn parse_arrow_tail(
         &mut self,
         parameters: FormalParameters,
         allow_in: AllowIn,
+        is_async: bool,
     ) -> Result<Expr, ParseError> {
         self.advance(Goal::RegExp)?;
         self.enter()?;
-        let body = self.parse_concise_body(allow_in, &parameters);
+        let body = self.parse_concise_body(allow_in, &parameters, is_async);
         self.leave();
         let (body, end, declares_strict) = body?;
         super::function::check_parameters_against_arrow_body(&parameters, &body)?;
@@ -260,6 +253,7 @@ impl Parser<'_> {
         let span = parameters.span.to(end);
         Ok(Expr::new(
             ExprKind::Arrow(Box::new(ArrowFunction {
+                is_async,
                 parameters,
                 body,
                 span,
@@ -276,16 +270,21 @@ impl Parser<'_> {
         &mut self,
         allow_in: AllowIn,
         parameters: &FormalParameters,
+        is_async: bool,
     ) -> Result<(ArrowBody, Span, bool), ParseError> {
         // `ConciseBody[In] : ExpressionBody[?In, ~Await] | { FunctionBody[~Yield, ~Await] }` —
-        // both alternatives drop *both* parameters, where `ArrowParameters[?Yield, ?Await]`
-        // keeps both. So
-        // `function* g() { () => yield; }` reads `yield` as a name and
+        // both alternatives drop *both* parameters, where `ArrowParameters[?Yield, ?Await]` keeps
+        // both. So `function* g() { () => yield; }` reads `yield` as a name and
         // `function* g() { (a = yield) => 1; }` is refused, the parameters having been `[+Yield]`.
         // The one place in the grammar where a head and its body disagree about a parameter.
+        //
+        // §15.9's `AsyncConciseBody` is the exception it has to be: `ExpressionBody[?In, +Await]`
+        // and `{ AsyncFunctionBody }`, so an async arrow's body has `await` where its head's
+        // `[+Await]` was refused. `[Yield]` is dropped either way — there is no async *generator*
+        // arrow, an arrow having no `yield` of its own to suspend at.
         let enclosing = (self.yield_allowed, self.await_allowed);
         self.yield_allowed = false;
-        self.await_allowed = false;
+        self.await_allowed = is_async;
         let body = self.parse_concise_body_inner(allow_in, parameters);
         (self.yield_allowed, self.await_allowed) = enclosing;
         body
@@ -319,6 +318,26 @@ impl Parser<'_> {
     }
 }
 
+/// `UniqueFormalParameters` (§15.1), which says the rule in its name.
+///
+/// An arrow's parameters may never repeat, sloppy or not and simple or not — as a method's may
+/// not, and a plain function's simple list may. Shared by both of the ways an arrow's parameters
+/// come to exist, because it is the same production either way.
+pub(super) fn check_unique_parameters(parameters: &FormalParameters) -> Result<(), ParseError> {
+    let mut seen: HashSet<String> = HashSet::new();
+    for element in &parameters.items {
+        for declared in bound_names(&element.target) {
+            if !seen.insert(declared.name.to_string()) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::DuplicateParameterName,
+                    span: declared.span,
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parser::test_support::*;
@@ -326,10 +345,7 @@ mod tests {
 
     /// The kind of error `source` fails with, as a script.
     fn kind(source: &str) -> ParseErrorKind {
-        match parse_script(source) {
-            Err(err) => err.kind,
-            Ok(script) => panic!("{source:?} should not parse, got {script:?}"), // needs the error
-        }
+        script_error(source).kind
     }
 
     #[test]

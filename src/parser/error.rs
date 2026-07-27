@@ -193,6 +193,20 @@ pub enum ParseErrorKind {
     /// having no answer, not about the syntax being ambiguous. `Contains` stops at a function
     /// boundary, so `function* g(a = function*() { yield; }) {}` is fine.
     YieldInParameters,
+    /// §13.1.1: `await` as a parameter of an async arrow.
+    ///
+    /// `async (await) => 1`. `AsyncArrowHead`'s parameters are `[+Await]` whatever encloses them,
+    /// and `await` is not a `BindingIdentifier` under that parameter. The covering `Arguments`
+    /// were read under the *enclosing* `[Await]`, which is why this is a refinement error rather
+    /// than a parse failure — the one place the two readings disagree about a name.
+    AwaitAsAsyncArrowParameter,
+    /// §15.1: a rest parameter that is not the last, or that is followed by a comma.
+    ///
+    /// Only §15.9's cover grammar can produce this: an `ArgumentList` may spread anywhere and may
+    /// end in a comma, so `async(...a, b) => 1` and `async(...a,) => 1` are read before anything
+    /// knows they are parameters. Written directly, a `(...a, b)` never gets this far — reading
+    /// the group stops at the comma and the missing `)` is what is reported.
+    RestParameterMustBeLast,
     /// §15.8.1: an `AwaitExpression` in an async function's parameter list.
     ///
     /// `async function f(a = await b) {}`. The mirror of [`ParseErrorKind::YieldInParameters`],
@@ -247,14 +261,21 @@ pub enum ParseErrorKind {
     ShorthandPropertyWithInitializer,
     /// §14.7.5: a `for`-`of` whose target begins with the token `let`.
     ///
-    /// `[lookahead ∉ { let, async of }]`, a one-token restriction — so `for (let.a of b)` is
-    /// refused while `for (let.a in b)` and `for ((let) of b)` are not.
+    /// `[lookahead ∉ { let, async of }]` — a one-token restriction on this half, so
+    /// `for (let.a of b)` is refused while `for (let.a in b)` and `for ((let) of b)` are not.
+    /// The `async of` half needs no code: §15.9's arrow head commits on `async` followed by an
+    /// identifier, so the sequence fails asking for its `=>`.
     ForOfTargetBeginsWithLet,
-    /// §14.7.5: a `for`-`of` whose target is exactly the identifier `async`.
+    /// §14.7.5: `for await` outside a context with `[+Await]`.
     ///
-    /// The other half of the same restriction, and a two-token one: it is the sequence
-    /// `async of` that has no derivation, so `for (async.x of b)` is fine.
-    AsyncAsForOfTarget,
+    /// Every `for await` alternative is `[+Await]`-gated, so the word has no derivation in a
+    /// plain function or at the top of a script — there is nothing to suspend.
+    ForAwaitOutsideAsync,
+    /// §14.7.5: `for await` on a loop that is not a `for`-`of`.
+    ///
+    /// All three `for await` productions are `for`-`of` ones. There is no asynchronous
+    /// enumeration of property keys, and nothing to await in a three-part loop.
+    ForAwaitMustBeForOf,
     /// §14.7.5: a `for`-`in` or `for`-`of` header binding more than one name.
     ///
     /// `ForBinding` is singular — `for (var a, b in c)` has no derivation.
@@ -433,6 +454,18 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`yield` may not appear in a generator's own parameter list"
             ),
+            Self::AwaitAsAsyncArrowParameter => {
+                write!(
+                    f,
+                    "`await` may not be a parameter of an async arrow function"
+                )
+            }
+            Self::RestParameterMustBeLast => {
+                write!(
+                    f,
+                    "a rest parameter must be the last one, with no comma after it"
+                )
+            }
             Self::AwaitInParameters => write!(
                 f,
                 "`await` may not appear in an async function's own parameter list"
@@ -473,8 +506,11 @@ impl fmt::Display for ParseErrorKind {
             Self::ForOfTargetBeginsWithLet => {
                 write!(f, "the target of a `for`-`of` may not begin with `let`")
             }
-            Self::AsyncAsForOfTarget => {
-                write!(f, "the target of a `for`-`of` may not be `async`")
+            Self::ForAwaitOutsideAsync => {
+                write!(f, "`for await` is only allowed inside an async function")
+            }
+            Self::ForAwaitMustBeForOf => {
+                write!(f, "`for await` must be a `for`-`of` loop")
             }
             Self::ForInOfBindsSeveralNames => {
                 write!(

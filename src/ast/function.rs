@@ -68,6 +68,11 @@ pub struct Function {
 /// `UniqueFormalParameters`, so unlike a plain function's they may never repeat.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ArrowFunction {
+    /// Whether `async` preceded it (§15.9).
+    ///
+    /// Unlike a [`Function`] there is no generator form: `async* () => {}` is not a production,
+    /// an arrow having no `yield` of its own to suspend at.
+    pub is_async: bool,
     /// What it takes.
     pub parameters: FormalParameters,
     /// What it does.

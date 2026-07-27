@@ -158,6 +158,12 @@ pub enum ForInit {
 pub struct ForInOfStatement {
     /// Which of the two loops this is.
     pub kind: ForInOfKind,
+    /// Whether `await` followed the `for` (§14.7.5).
+    ///
+    /// Only ever true of a `for`-`of`: the `for await` productions have no `in` form, an
+    /// asynchronous iterator being the only thing there is to await. And only inside a context
+    /// with `[+Await]`, the alternatives being `[+Await]`-gated.
+    pub is_await: bool,
     /// What each value is assigned to, or the name each value binds.
     pub left: ForInOfTarget,
     /// What is iterated. An `Expression` for `in` and an `AssignmentExpression` for `of`, which

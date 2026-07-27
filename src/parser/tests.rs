@@ -120,6 +120,11 @@ fn parsing_at_the_cap_fits_in_the_stack_it_claims_to_need() {
         format!("function* g() {{ {}1; }}", "yield ".repeat(deep - 1)),
         // An `await` operand is a `UnaryExpression` and nests the same way.
         format!("async function f() {{ {}1; }}", "await ".repeat(deep - 1)),
+        // An async arrow nests through its body like any other arrow…
+        format!("{}1", "async a => ".repeat(deep)),
+        // …one shallower for the covered form, which holds a level while it reads the arguments
+        // it may turn out to have to refine.
+        format!("{}1", "async (a) => ".repeat(deep - 1)),
     ];
     let worker = std::thread::Builder::new()
         .stack_size(1024 * 1024)

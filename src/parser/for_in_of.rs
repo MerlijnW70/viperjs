@@ -83,6 +83,8 @@ impl Parser<'_> {
         Ok((
             StmtKind::ForInOf(Box::new(ForInOfStatement {
                 kind,
+                // Set by [`Parser::parse_for`] once the header has said which production won.
+                is_await: false,
                 left,
                 right,
                 body,
@@ -250,10 +252,24 @@ mod tests {
         // A parenthesis is a different token, so it escapes the restriction entirely.
         assert_eq!(statements("for ((let) of b);"), ["(for-of let b <empty>)"]);
         // The `async` half is a *two*-token restriction: it is the sequence `async of` that has
-        // no derivation, not anything starting with `async`.
+        // no derivation, not anything starting with `async`. It needs no code of its own — §15.9's
+        // arrow head commits on `async` followed by an identifier, so what fails is the `=>` that
+        // an arrow head owes. Which is what the grammar says: with the for-of alternative excluded
+        // by the lookahead, the head has to be an `Expression`, and `async of` begins only one.
         assert_eq!(
             script_error("for (async of b);").kind,
-            ParseErrorKind::AsyncAsForOfTarget
+            ParseErrorKind::Unexpected {
+                expected: "`=>`",
+                found: crate::lexer::TokenKind::Identifier {
+                    contains_escape: false
+                },
+            }
+        );
+        // …and the three-part alternative was never restricted, so this is an ordinary loop whose
+        // initialiser happens to be an async arrow.
+        assert_eq!(
+            statements("for (async of => 1;;);"),
+            ["(for (async=> [of] 1) ; ; <empty>)"]
         );
         assert_eq!(
             statements("for (async.x of b);"),

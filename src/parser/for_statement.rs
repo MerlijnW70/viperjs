@@ -31,7 +31,7 @@
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{
-    DeclarationKind, ExprKind, ForInOfKind, ForInOfTarget, ForInit, ForStatement, Stmt, StmtKind,
+    DeclarationKind, ForInOfKind, ForInOfTarget, ForInit, ForStatement, Stmt, StmtKind,
 };
 use crate::lexer::{Goal, ReservedWord, TokenKind};
 use crate::span::Span;
@@ -40,15 +40,53 @@ impl Parser<'_> {
     /// `ForStatement` or `ForInOfStatement` (§14.7.4, §14.7.5), with the cursor on `for`.
     pub(super) fn parse_for(&mut self) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
+        let is_await = self.parse_for_await()?;
         self.eat(TokenKind::LParen, Goal::RegExp, "`(`")?;
         self.enter()?;
         let parts = self.parse_for_parts();
         self.leave();
-        let (kind, end) = parts?;
+        let (mut kind, end) = parts?;
+        // §14.7.5 gives `for await` three alternatives and every one of them is a `for`-`of`:
+        // there is no asynchronous enumeration of property keys, and nothing to await in a
+        // three-part loop. Asked of the finished header rather than threaded through the four
+        // functions that build one — the question is about which production won, and only the
+        // finished header knows.
+        if is_await {
+            match &mut kind {
+                StmtKind::ForInOf(statement) if statement.kind == ForInOfKind::Of => {
+                    statement.is_await = true;
+                }
+                _ => {
+                    return Err(ParseError {
+                        kind: ParseErrorKind::ForAwaitMustBeForOf,
+                        span: keyword.span,
+                    });
+                }
+            }
+        }
         Ok(Stmt {
             span: keyword.span.to(end),
             kind,
         })
+    }
+
+    /// The `await` of `for await`, if one is written (§14.7.5).
+    ///
+    /// No `[no LineTerminator here]`, so `for` and `await` may be on separate lines. The word is
+    /// a reserved one, so there is nothing else it could be here — which is why an `await` with
+    /// the parameter unset is refused by name rather than by the `(` that was expected.
+    fn parse_for_await(&mut self) -> Result<bool, ParseError> {
+        if self.current.kind != TokenKind::Keyword(ReservedWord::Await) {
+            return Ok(false);
+        }
+        if !self.await_allowed {
+            return Err(ParseError {
+                kind: ParseErrorKind::ForAwaitOutsideAsync,
+                span: self.current.span,
+            });
+        }
+        self.advance(Goal::RegExp)?;
+        Ok(true)
     }
 
     /// The header and body, apart so their locals are not carried by every level of nesting that
@@ -119,7 +157,6 @@ impl Parser<'_> {
         // is read because afterwards the tokens are gone. They restrict the `for`-`of` target
         // only, so nothing is refused until the operator turns out to be `of`.
         let begins_with_let = self.at_contextual("let");
-        let begins_with_async = self.at_contextual("async");
         self.enter()?;
         let expr = self.parse_expression(AllowIn::No);
         self.leave();
@@ -141,29 +178,17 @@ impl Parser<'_> {
                 operator,
             );
         }
-        if operator == ForInOfKind::Of {
-            if begins_with_let {
-                return Err(ParseError {
-                    kind: ParseErrorKind::ForOfTargetBeginsWithLet,
-                    span: expr.span,
-                });
-            }
-            // The `async of` half is a *two*-token restriction, and the second of those tokens
-            // is the `of` that got us here — so what remains to check is that the first was the
-            // whole target. An unparenthesized bare identifier beginning with the token `async`
-            // is that and nothing else, which leaves `for (async.x of b)` and `for ((async) of
-            // b)` alone. Asking the parsed expression rather than peeking again is also what
-            // keeps this a condition an input can disagree with: a peek would only ever confirm
-            // what the operator already said.
-            if begins_with_async
-                && !expr.parenthesized
-                && matches!(expr.kind, ExprKind::Identifier(_))
-            {
-                return Err(ParseError {
-                    kind: ParseErrorKind::AsyncAsForOfTarget,
-                    span: expr.span,
-                });
-            }
+        // §14.7.5's other lookahead half, `[lookahead != let [`, and the only one still worth
+        // code. `async of` used to be checked here too and no longer needs to be: §15.9's arrow
+        // head commits on `async` followed by an identifier, so `for (async of b)` fails asking
+        // for the `=>` that an arrow head owes — which is what the grammar says happens once the
+        // for-of alternative is excluded and the head has to be an `Expression`. It is also why
+        // `for (async of => 1;;)` parses: the three-part alternative was never restricted.
+        if operator == ForInOfKind::Of && begins_with_let {
+            return Err(ParseError {
+                kind: ParseErrorKind::ForOfTargetBeginsWithLet,
+                span: expr.span,
+            });
         }
         self.check_for_in_of_target(&expr)?;
         self.parse_for_in_of_tail(

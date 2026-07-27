@@ -11,6 +11,19 @@ use crate::ast::{Argument, Expr, ExprKind};
 use crate::lexer::{Goal, ReservedWord, TokenKind, identifier_value};
 use crate::span::Span;
 
+/// An `Arguments` as read, before anything has decided whether it was a call's or an arrow's.
+///
+/// Not an AST type: the trailing comma is syntax that leaves nothing behind in either reading, and
+/// is here only because §15.9's cover grammar has to ask about it once the `=>` has arrived.
+pub(super) struct ArgumentList {
+    /// The arguments, in order.
+    pub arguments: Box<[Argument]>,
+    /// Whether a comma came last — `Arguments : ( ArgumentList , )`.
+    pub trailing_comma: bool,
+    /// The closing parenthesis.
+    pub end: Span,
+}
+
 impl Parser<'_> {
     /// `LeftHandSideExpression` (§13.3): a primary expression with member accesses and calls
     /// hung off it, or a `new` expression.
@@ -165,13 +178,13 @@ impl Parser<'_> {
 
     /// `CallExpression Arguments`, with the cursor on the `(`.
     fn call_after(&mut self, callee: Expr, optional: bool) -> Result<Expr, ParseError> {
-        let (arguments, end) = self.parse_arguments()?;
-        let span = callee.span.to(end);
+        let list = self.parse_arguments()?;
+        let span = callee.span.to(list.end);
         Ok(Expr::new(
             ExprKind::Call {
                 optional,
                 callee: Box::new(callee),
-                arguments,
+                arguments: list.arguments,
             },
             span,
         ))
@@ -204,7 +217,8 @@ impl Parser<'_> {
         // `new a()()` is a call on `new a()`, because the first argument list belongs to the
         // `new` and the loop in `parse_member` takes the second.
         let (arguments, end) = if self.current.kind == TokenKind::LParen {
-            self.parse_arguments()?
+            let list = self.parse_arguments()?;
+            (list.arguments, list.end)
         } else {
             (Vec::new().into_boxed_slice(), callee.span)
         };
@@ -246,13 +260,16 @@ impl Parser<'_> {
         Ok(Expr::new(ExprKind::NewTarget, keyword.to(word.span)))
     }
 
-    /// `Arguments` (§13.3), with the cursor on the `(`. Returns them and the closing span.
+    /// `Arguments` (§13.3), with the cursor on the `(`.
     ///
     /// A trailing comma is allowed — `Arguments : ( ArgumentList , )` — but an empty list with
-    /// one is not, since `ArgumentList` needs at least one argument to trail.
-    fn parse_arguments(&mut self) -> Result<(Box<[Argument]>, Span), ParseError> {
+    /// one is not, since `ArgumentList` needs at least one argument to trail. Whether one was
+    /// written is reported because §15.9's cover grammar needs it: an argument list may end in a
+    /// comma after a spread and a parameter list may not, and only the `=>` says which this was.
+    pub(super) fn parse_arguments(&mut self) -> Result<ArgumentList, ParseError> {
         self.advance(Goal::RegExp)?;
         let mut arguments = Vec::new();
+        let mut trailing_comma = false;
         while self.current.kind != TokenKind::RParen {
             // `ArgumentList : ... AssignmentExpression`, and it may stand anywhere in the list
             // rather than only last — unlike a `BindingRestElement`, which is a name being bound
@@ -274,9 +291,14 @@ impl Parser<'_> {
                 break;
             }
             self.advance(Goal::RegExp)?;
+            trailing_comma = self.current.kind == TokenKind::RParen;
         }
         let close = self.eat(TokenKind::RParen, Goal::Div, "`)`")?;
-        Ok((arguments.into_boxed_slice(), close.span))
+        Ok(ArgumentList {
+            arguments: arguments.into_boxed_slice(),
+            trailing_comma,
+            end: close.span,
+        })
     }
 
     /// The `IdentifierName` after a `.`, and the span it covers.

@@ -249,7 +249,7 @@ impl Parser<'_> {
     }
 
     /// An expression, refined into the name or pattern it covered.
-    fn refine_to_binding(&mut self, expr: Expr) -> Result<Binding, ParseError> {
+    pub(super) fn refine_to_binding(&mut self, expr: Expr) -> Result<Binding, ParseError> {
         let span = expr.span;
         match expr.kind {
             ExprKind::Identifier(name) => Ok(Binding::Identifier(crate::ast::BindingName {

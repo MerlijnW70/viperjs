@@ -58,9 +58,10 @@ pub(in crate::parser) fn render_statement(stmt: &Stmt) -> String {
         }
         StmtKind::ForInOf(statement) => format!(
             "(for-{} {} {} {})",
-            match statement.kind {
-                ForInOfKind::In => "in",
-                ForInOfKind::Of => "of",
+            match (statement.kind, statement.is_await) {
+                (ForInOfKind::In, _) => "in",
+                (ForInOfKind::Of, false) => "of",
+                (ForInOfKind::Of, true) => "await-of",
             },
             match &statement.left {
                 ForInOfTarget::Expression(target) => render_target(target),
