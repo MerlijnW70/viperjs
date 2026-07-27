@@ -1,39 +1,59 @@
-//! Parse real files with the engine, one or a whole repository at a time.
+//! Sweep a repository with the engine and triage whatever it will not parse.
 //!
 //! ```text
-//! cargo run --example parse -- <path>...              # parse, and say what happened
-//! cargo run --example parse -- --tree <file>          # …and print the syntax tree
-//! cargo run --example parse -- --module <file>        # force the Module goal
-//! cargo run --example parse -- --script <file>        # force the Script goal
-//! cargo run --example parse -- --quiet <dir>          # only the failures and the summary
+//! git clone --depth 1 https://github.com/some/repo /tmp/repo
+//! cargo run --release --example parse -- /tmp/repo
 //! ```
 //!
-//! A path may be a file or a directory; a directory is walked for `.js`, `.mjs` and `.cjs`. The
-//! exit status is 0 only if every file parsed.
+//! ```text
+//! cargo run --example parse -- [options] <path>...
+//!
+//!   <path>            a file, or a directory walked for .js, .mjs and .cjs
+//!
+//!   --script          parse everything under the Script goal
+//!   --module          parse everything under the Module goal
+//!   --commonjs        also try the wrapper node puts around a .js file
+//!   --exclude <name>  a directory name to skip (repeatable)
+//!   --show <n>        example failures to print per error kind (default 3)
+//!   --list            a line per file instead of the grouped report
+//!   --tree            print the syntax tree of each file that parses
+//! ```
+//!
+//! # Why the report is grouped
+//!
+//! One line per failure is useless past about fifty files: a single missing production shows up
+//! as hundreds of unrelated-looking lines. Grouping by error kind and sorting by count turns the
+//! same output into a ranked list of *suspects*, because a parser bug is almost always one bucket
+//! with a large number in front of it. Three real bugs were found this way within minutes of the
+//! first sweep, and every one of them was the top bucket.
+//!
+//! A large bucket is not proof of a bug — `return` outside a function is a large bucket on any
+//! CommonJS repository and the parser is right every time. That is what `--commonjs` is for: it
+//! removes the noise so the buckets that are left mean something.
 //!
 //! # Which goal symbol
 //!
 //! A `Script` and a `Module` are different languages — see `src/parser/module.rs` — and nothing in
-//! a `.js` file says which it is, so by default this asks the extension: `.mjs` is a module, `.cjs`
-//! is a script, and `.js` is *tried as both*. That last one is the honest answer rather than a
-//! guess: a file that parses under either goal has not told you anything, and one that parses
-//! under exactly one has told you which it is. `--module` and `--script` say so instead.
+//! a `.js` file says which it is. So the default asks the extension, and for `.js` tries every
+//! reading it might be. A file only counts as a failure when *none* of them takes it, which is the
+//! honest bar: the question here is whether the engine can parse real JavaScript, not whether it
+//! guessed the goal.
 //!
-//! # What "the expected tree" means here
+//! # Panics are failures too
 //!
-//! `--tree` prints the parse with `{:#?}`, which is the whole tree including every span. That is
-//! what the engine actually built, so it is what an expectation should be written against; the
-//! compact s-expression rendering the parser's own tests use is `#[cfg(test)]` and deliberately
-//! does not ship.
+//! DR-0002: no input may panic, ever. A sweep is the cheapest fuzzer this project has, so each
+//! file is parsed inside `catch_unwind` and a panic is counted and reported rather than taking the
+//! run with it. A single one is a P0 regardless of how odd the file looked.
 //!
-//! This example takes no dependencies, because the engine has none and neither may anything the
-//! repository builds by default (GOAL.md non-negotiable #2). The argument handling is hand-rolled
-//! for the same reason.
+//! No dependencies, because the engine has none and neither may anything the repository builds by
+//! default (GOAL.md non-negotiable #2). The argument handling and the walk are hand-rolled.
 
+use std::collections::HashMap;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::time::Instant;
 
-use praxis::parser::{ParseError, parse_module, parse_script};
 use praxis::span::line_col;
 
 /// Which goal symbol to parse under.
@@ -43,41 +63,43 @@ enum Goal {
     Script,
     /// `--module`.
     Module,
-    /// The default: ask the extension, and try both when it does not say.
+    /// The default: ask the extension, and try every reading a `.js` might be.
     FromExtension,
+}
+
+/// Everything the command line said.
+struct Options {
+    goal: Goal,
+    commonjs: bool,
+    excluded: Vec<String>,
+    show: usize,
+    list: bool,
+    tree: bool,
 }
 
 /// What happened to one file.
 enum Outcome {
-    /// It parsed, under the goals named.
+    /// It parsed, under the reading named.
     Parsed(&'static str),
-    /// It did not, and this is the first error and the goal that produced it.
-    Failed(&'static str, ParseError),
+    /// It did not, under any reading. The message and where it was.
+    Failed { message: String, at: Option<Where> },
+    /// The parser panicked, which DR-0002 says may never happen.
+    Panicked,
+}
+
+/// A place in a file, for the report.
+struct Where {
+    line: u32,
+    column: u32,
+    /// The line's text and the width to underline, when both are available.
+    context: Option<(String, usize)>,
 }
 
 fn main() -> ExitCode {
-    let mut goal = Goal::FromExtension;
-    let mut tree = false;
-    let mut quiet = false;
-    let mut paths: Vec<PathBuf> = Vec::new();
-    for argument in std::env::args().skip(1) {
-        match argument.as_str() {
-            "--module" => goal = Goal::Module,
-            "--script" => goal = Goal::Script,
-            "--tree" => tree = true,
-            "--quiet" => quiet = true,
-            "-h" | "--help" => {
-                print_usage();
-                return ExitCode::SUCCESS;
-            }
-            other if other.starts_with('-') => {
-                eprintln!("parse: unknown option `{other}`");
-                print_usage();
-                return ExitCode::FAILURE;
-            }
-            other => paths.push(PathBuf::from(other)),
-        }
-    }
+    let (options, paths) = match parse_arguments() {
+        Ok(parsed) => parsed,
+        Err(()) => return ExitCode::FAILURE,
+    };
     if paths.is_empty() {
         print_usage();
         return ExitCode::FAILURE;
@@ -85,7 +107,7 @@ fn main() -> ExitCode {
 
     let mut files = Vec::new();
     for path in &paths {
-        if let Err(error) = collect(path, &mut files) {
+        if let Err(error) = collect(path, &options.excluded, &mut files) {
             eprintln!("parse: {}: {error}", path.display());
             return ExitCode::FAILURE;
         }
@@ -94,124 +116,259 @@ fn main() -> ExitCode {
         eprintln!("parse: no .js, .mjs or .cjs files under the paths given");
         return ExitCode::FAILURE;
     }
+    files.sort();
 
-    let mut parsed = 0usize;
-    let mut failed = 0usize;
+    // A panic is being *reported* rather than printed, so the default hook would only interleave
+    // a backtrace with the report. Restored before returning so nothing else is affected.
+    let hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let started = Instant::now();
+    let mut report = Report::default();
     for file in &files {
-        let source = match std::fs::read_to_string(file) {
-            Ok(source) => source,
-            Err(error) => {
-                // Not a parse failure: a file that is not UTF-8 is not source text this engine
-                // is defined over, and saying so is more useful than a syntax error would be.
-                failed += 1;
-                println!("{}: unreadable: {error}", file.display());
-                continue;
-            }
-        };
-        match parse(&source, file, goal) {
-            Outcome::Parsed(under) => {
-                parsed += 1;
-                if !quiet {
-                    println!("{}: ok ({under})", file.display());
-                }
-                if tree {
-                    print_tree(&source, file, goal);
-                }
-            }
-            Outcome::Failed(under, error) => {
-                failed += 1;
-                report(&source, file, under, error);
-            }
-        }
+        report.record(file, &options);
     }
-    println!("{parsed} parsed, {failed} failed, {} total", files.len());
-    if failed == 0 {
+    let elapsed = started.elapsed();
+    std::panic::set_hook(hook);
+
+    report.print(files.len(), elapsed, &options);
+    if report.failed == 0 && report.panicked == 0 {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE
     }
 }
 
-/// Parse `source` under `goal`, reporting which goal or goals took it.
-///
-/// For a `.js` file both are tried, and the answer names whichever accepted it. A file that only
-/// one goal takes is the interesting case, and it is the common one: anything with an `import` or
-/// `export` is a module and nothing else, and anything with `with` or a legacy octal is a script.
-fn parse(source: &str, path: &Path, goal: Goal) -> Outcome {
-    match goal {
-        Goal::Script => match parse_script(source) {
-            Ok(_) => Outcome::Parsed("script"),
-            Err(error) => Outcome::Failed("script", error),
-        },
-        Goal::Module => match parse_module(source) {
-            Ok(_) => Outcome::Parsed("module"),
-            Err(error) => Outcome::Failed("module", error),
-        },
+/// Everything the sweep found, ready to be printed.
+#[derive(Default)]
+struct Report {
+    parsed: usize,
+    failed: usize,
+    panicked: usize,
+    bytes: u64,
+    /// Failures by their message, which is what makes one bug one bucket.
+    buckets: HashMap<String, Vec<(PathBuf, Option<Where>)>>,
+}
+
+impl Report {
+    /// Parse one file and fold the result in.
+    fn record(&mut self, file: &Path, options: &Options) {
+        let source = match std::fs::read_to_string(file) {
+            Ok(source) => source,
+            Err(error) => {
+                // Not a parse failure: a file that is not UTF-8 is not source text this engine is
+                // defined over, so it is its own bucket rather than a syntax error.
+                self.failed += 1;
+                self.buckets
+                    .entry(format!("unreadable: {error}"))
+                    .or_default()
+                    .push((file.to_path_buf(), None));
+                return;
+            }
+        };
+        self.bytes += source.len() as u64;
+        match parse(&source, file, options) {
+            Outcome::Parsed(under) => {
+                self.parsed += 1;
+                if options.list {
+                    println!("{}: ok ({under})", file.display());
+                }
+                if options.tree {
+                    print_tree(&source, file, options);
+                }
+            }
+            Outcome::Failed { message, at } => {
+                self.failed += 1;
+                if options.list {
+                    println!("{}: {message}", file.display());
+                }
+                self.buckets
+                    .entry(message)
+                    .or_default()
+                    .push((file.to_path_buf(), at));
+            }
+            Outcome::Panicked => {
+                self.panicked += 1;
+                self.buckets
+                    .entry("PANICKED — DR-0002 says no input may do this".to_string())
+                    .or_default()
+                    .push((file.to_path_buf(), None));
+            }
+        }
+    }
+
+    /// The grouped report, biggest bucket first.
+    fn print(&self, total: usize, elapsed: std::time::Duration, options: &Options) {
+        let mut buckets: Vec<_> = self.buckets.iter().collect();
+        // By count, then by message, so two runs over the same corpus print the same thing.
+        buckets.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then_with(|| a.0.cmp(b.0)));
+        for (message, files) in &buckets {
+            println!();
+            println!("{:>5} x  {message}", files.len());
+            for (file, at) in files.iter().take(options.show) {
+                match at {
+                    Some(at) => println!("         {}:{}:{}", file.display(), at.line, at.column),
+                    None => println!("         {}", file.display()),
+                }
+                if let Some(Where {
+                    context: Some((line, width)),
+                    column,
+                    ..
+                }) = at
+                {
+                    let (text, caret) = window(line, *column as usize, *width);
+                    println!("           {text}");
+                    println!("           {}{}", " ".repeat(caret), "^".repeat(*width));
+                }
+            }
+            if files.len() > options.show {
+                println!("         … and {} more", files.len() - options.show);
+            }
+        }
+        println!();
+        println!(
+            "{total} files, {} parsed, {} failed, {} panicked — {:.1} MB in {:.1}s",
+            self.parsed,
+            self.failed,
+            self.panicked,
+            self.bytes as f64 / 1_048_576.0,
+            elapsed.as_secs_f64()
+        );
+    }
+}
+
+/// Parse `source` every way it might legitimately be read, inside a panic guard.
+fn parse(source: &str, path: &Path, options: &Options) -> Outcome {
+    let readings: &[(&'static str, bool)] = match options.goal {
+        Goal::Script => &[("script", false)],
+        Goal::Module => &[("module", true)],
         Goal::FromExtension => match extension(path) {
-            Some("mjs") => parse(source, path, Goal::Module),
-            Some("cjs") => parse(source, path, Goal::Script),
-            _ => match (parse_script(source), parse_module(source)) {
-                (Ok(_), Ok(_)) => Outcome::Parsed("script and module"),
-                (Ok(_), Err(_)) => Outcome::Parsed("script only"),
-                (Err(_), Ok(_)) => Outcome::Parsed("module only"),
-                // Neither took it. The script error is reported because a `.js` file is a script
-                // far more often than not, so it is the one more likely to be about the code
-                // rather than about the goal.
-                (Err(error), Err(_)) => Outcome::Failed("script", error),
-            },
+            Some("mjs") => &[("module", true)],
+            Some("cjs") => &[("script", false)],
+            // Nothing in a `.js` file says which it is, so it is a failure only if neither takes
+            // it. The script error is the one reported: a `.js` file is a script far more often
+            // than not, so it is the more likely to be about the code rather than the goal.
+            _ => &[("script", false), ("module", true)],
         },
+    };
+    let mut first: Option<praxis::parser::ParseError> = None;
+    for (name, as_module) in readings {
+        match guarded(source, *as_module) {
+            Err(()) => return Outcome::Panicked,
+            Ok(Ok(())) => return Outcome::Parsed(name),
+            Ok(Err(error)) => first.get_or_insert(error),
+        };
+    }
+    // What node does to a `.js` file: wrap it, so a top-level `return` is a return from the
+    // module wrapper. An approximation of the real wrapper, and enough to tell a CommonJS file
+    // from one this parser cannot read. The verdict comes from the wrapped source and the
+    // *message* from the unwrapped one, so no offset ever refers to text nobody wrote.
+    if options.commonjs && !matches!(options.goal, Goal::Module) {
+        // A `HashbangComment` (§12.5) is only one at offset zero, so the wrapper goes *after* it
+        // — which is the order node does it in too, the hashbang being stripped before the module
+        // wrapper is applied.
+        let (hashbang, body) = match source.starts_with("#!") {
+            true => source.split_at(source.find('\n').map_or(source.len(), |at| at + 1)),
+            false => ("", source),
+        };
+        let wrapped = format!(
+            "{hashbang}(function (exports, require, module, __filename, __dirname) {{\n{body}\n}});"
+        );
+        match guarded(&wrapped, false) {
+            Err(()) => return Outcome::Panicked,
+            Ok(Ok(())) => return Outcome::Parsed("commonjs"),
+            Ok(Err(_)) => {}
+        }
+    }
+    let Some(error) = first else {
+        // `readings` is never empty, so `first` is always set by the loop above.
+        return Outcome::Failed {
+            message: "no reading attempted".to_string(),
+            at: None,
+        };
+    };
+    Outcome::Failed {
+        message: error.kind.to_string(),
+        at: Some(locate(source, error)),
+    }
+}
+
+/// One parse, with a panic turned into a value.
+///
+/// The engine forbids `unsafe` and every parse is a pure function of a `&str`, so nothing here can
+/// be left half-built by an unwind — the guard is about *reporting* the panic rather than about
+/// surviving it.
+fn guarded(source: &str, as_module: bool) -> Result<Result<(), praxis::parser::ParseError>, ()> {
+    catch_unwind(AssertUnwindSafe(|| {
+        if as_module {
+            praxis::parser::parse_module(source).map(|_| ())
+        } else {
+            praxis::parser::parse_script(source).map(|_| ())
+        }
+    }))
+    .map_err(|_| ())
+}
+
+/// A slice of `line` around `column`, and where the caret goes in it.
+///
+/// Minified and generated files have lines in the hundreds of thousands of characters, and
+/// printing one buries the report it was meant to explain. The window is what a caret needs to
+/// be useful: enough either side to see what was written, and an ellipsis where the rest went.
+fn window(line: &str, column: usize, width: usize) -> (String, usize) {
+    const EITHER_SIDE: usize = 40;
+    let characters: Vec<char> = line.trim_end().chars().collect();
+    if characters.len() <= EITHER_SIDE * 2 + width {
+        return (characters.iter().collect(), column - 1);
+    }
+    let start = column.saturating_sub(EITHER_SIDE + 1);
+    let end = usize::min(characters.len(), column - 1 + width + EITHER_SIDE);
+    let mut text = String::new();
+    if start > 0 {
+        text.push('…');
+    }
+    text.extend(&characters[start..end]);
+    if end < characters.len() {
+        text.push('…');
+    }
+    (text, column - 1 - start + usize::from(start > 0))
+}
+
+/// Where an error was, with the offending line if it can be found.
+fn locate(source: &str, error: praxis::parser::ParseError) -> Where {
+    let at = line_col(source, error.span.start);
+    // `lines` and `line_col` agree about CRLF, but a span can still point at the end of input,
+    // where there is no line to show. The caret is worth having only when there is.
+    let context = source
+        .lines()
+        .nth(at.line as usize - 1)
+        .filter(|line| (at.column as usize) <= line.chars().count() + 1)
+        .map(|line| (line.to_string(), usize::max(error.span.len() as usize, 1)));
+    Where {
+        line: at.line,
+        column: at.column,
+        context,
     }
 }
 
 /// Print the tree, under whichever goal took the file.
-fn print_tree(source: &str, path: &Path, goal: Goal) {
-    let as_module = match goal {
+fn print_tree(source: &str, path: &Path, options: &Options) {
+    let as_module = match options.goal {
         Goal::Module => true,
         Goal::Script => false,
-        Goal::FromExtension => extension(path) == Some("mjs") || parse_script(source).is_err(),
+        Goal::FromExtension => {
+            extension(path) == Some("mjs") || praxis::parser::parse_script(source).is_err()
+        }
     };
     if as_module {
-        match parse_module(source) {
-            Ok(module) => println!("{module:#?}"),
-            Err(error) => report(source, path, "module", error),
+        if let Ok(module) = praxis::parser::parse_module(source) {
+            println!("{module:#?}");
         }
-    } else {
-        match parse_script(source) {
-            Ok(script) => println!("{script:#?}"),
-            Err(error) => report(source, path, "script", error),
-        }
+    } else if let Ok(script) = praxis::parser::parse_script(source) {
+        println!("{script:#?}");
     }
 }
 
-/// A parse failure, with the line, the column and the offending text underlined.
-///
-/// Every `ParseError` carries a span, so a caret is always available — which is the point of
-/// errors being values with spans rather than strings.
-fn report(source: &str, path: &Path, goal: &str, error: ParseError) {
-    let at = line_col(source, error.span.start);
-    println!(
-        "{}:{}:{}: {} (as a {goal})",
-        path.display(),
-        at.line,
-        at.column,
-        error.kind
-    );
-    let Some(line) = source.lines().nth(at.line as usize - 1) else {
-        return;
-    };
-    println!("  {line}");
-    // The column is in characters, and so is the padding — a caret under a tab is going to be
-    // wrong either way, and being wrong by a consistent amount is the lesser evil.
-    let width = usize::max(error.span.len() as usize, 1);
-    println!(
-        "  {}{}",
-        " ".repeat(at.column as usize - 1),
-        "^".repeat(width)
-    );
-}
-
 /// Every JavaScript file under `path`, or `path` itself when it is a file.
-fn collect(path: &Path, into: &mut Vec<PathBuf>) -> std::io::Result<()> {
+fn collect(path: &Path, excluded: &[String], into: &mut Vec<PathBuf>) -> std::io::Result<()> {
     if path.is_file() {
         into.push(path.to_path_buf());
         return Ok(());
@@ -219,12 +376,14 @@ fn collect(path: &Path, into: &mut Vec<PathBuf>) -> std::io::Result<()> {
     for entry in std::fs::read_dir(path)? {
         let entry = entry?.path();
         if entry.is_dir() {
-            // `node_modules` is other people's code and there is a great deal of it; a repository
-            // is being asked about here, not its dependencies.
-            if entry.file_name().is_some_and(|name| name == "node_modules") {
-                continue;
+            // A repository is being asked about, not its dependencies and not its history.
+            let skip = entry
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| excluded.iter().any(|excluded| excluded == name));
+            if !skip {
+                collect(&entry, excluded, into)?;
             }
-            collect(&entry, into)?;
         } else if matches!(extension(&entry), Some("js" | "mjs" | "cjs")) {
             into.push(entry);
         }
@@ -237,19 +396,77 @@ fn extension(path: &Path) -> Option<&str> {
     path.extension().and_then(|extension| extension.to_str())
 }
 
+/// The command line, or a complaint about it.
+fn parse_arguments() -> Result<(Options, Vec<PathBuf>), ()> {
+    let mut options = Options {
+        goal: Goal::FromExtension,
+        commonjs: false,
+        excluded: ["node_modules", ".git"]
+            .iter()
+            .map(|name| (*name).to_string())
+            .collect(),
+        show: 3,
+        list: false,
+        tree: false,
+    };
+    let mut paths = Vec::new();
+    let mut arguments = std::env::args().skip(1);
+    while let Some(argument) = arguments.next() {
+        match argument.as_str() {
+            "--module" => options.goal = Goal::Module,
+            "--script" => options.goal = Goal::Script,
+            "--commonjs" => options.commonjs = true,
+            "--list" => options.list = true,
+            "--tree" => options.tree = true,
+            "--exclude" => match arguments.next() {
+                Some(name) => options.excluded.push(name),
+                None => {
+                    eprintln!("parse: --exclude wants a directory name");
+                    return Err(());
+                }
+            },
+            "--show" => match arguments.next().map(|value| value.parse()) {
+                Some(Ok(show)) => options.show = show,
+                _ => {
+                    eprintln!("parse: --show wants a number");
+                    return Err(());
+                }
+            },
+            "-h" | "--help" => {
+                print_usage();
+                return Err(());
+            }
+            other if other.starts_with('-') => {
+                eprintln!("parse: unknown option `{other}`");
+                print_usage();
+                return Err(());
+            }
+            other => paths.push(PathBuf::from(other)),
+        }
+    }
+    Ok((options, paths))
+}
+
 /// What the arguments are.
 fn print_usage() {
     eprintln!(
         "\
-usage: cargo run --example parse -- [options] <path>...
+usage: cargo run --release --example parse -- [options] <path>...
 
-  <path>      a file, or a directory to walk for .js, .mjs and .cjs
+  <path>            a file, or a directory walked for .js, .mjs and .cjs
 
-  --script    parse under the Script goal
-  --module    parse under the Module goal
-              (the default asks the extension, and tries both for .js)
-  --tree      print the syntax tree of each file that parses
-  --quiet     print only the failures and the summary
+  --script          parse everything under the Script goal
+  --module          parse everything under the Module goal
+                    (the default asks the extension, and tries both for .js)
+  --commonjs        also try the wrapper node puts around a .js file
+  --exclude <name>  a directory name to skip; node_modules and .git always are
+  --show <n>        example failures to print per error kind (default 3)
+  --list            a line per file instead of the grouped report
+  --tree            print the syntax tree of each file that parses
+
+Failures are grouped by error kind and sorted by count, because a parser bug is
+almost always one bucket with a large number in front of it. A panic is counted
+separately and is a P0 whatever the input looked like (DR-0002).
 
 exits 0 only if every file parsed."
     );
