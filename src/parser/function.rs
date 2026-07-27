@@ -54,6 +54,19 @@ impl Parser<'_> {
         })
     }
 
+    /// §16.2.3's `[+Default]` `HoistableDeclaration`, with the cursor on `function` or the
+    /// `async` before it.
+    ///
+    /// The one position where a declaration may be anonymous: `export default function () {}`
+    /// binds `*default*` and needs no name of its own.
+    pub(super) fn parse_default_function(&mut self, is_async: bool) -> Result<Stmt, ParseError> {
+        let function = self.parse_function(false, is_async)?;
+        Ok(Stmt {
+            span: function.span,
+            kind: StmtKind::Function(Box::new(function)),
+        })
+    }
+
     /// `FunctionExpression` (§15.2) or `AsyncFunctionExpression` (§15.8), with the cursor on
     /// `function` or on the `async` before it.
     pub(super) fn parse_function_expression(

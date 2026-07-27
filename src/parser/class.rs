@@ -30,10 +30,25 @@ use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Class, ClassElement, Expr, ExprKind, MethodKind, PropertyKey, Stmt, StmtKind};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
 
+/// Whether a `ClassDeclaration` must be named.
+///
+/// It must everywhere except after `export default`, where §16.2.3's `[+Default]` alternative
+/// takes an anonymous one — the class is bound as `*default*` and needs no name of its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum NameRequired {
+    /// Every position but one.
+    Yes,
+    /// `export default class {}`.
+    No,
+}
+
 impl Parser<'_> {
     /// `ClassDeclaration` (§15.7), with the cursor on `class`.
-    pub(super) fn parse_class_declaration(&mut self) -> Result<Stmt, ParseError> {
-        let class = self.parse_class(true)?;
+    pub(super) fn parse_class_declaration(
+        &mut self,
+        name_required: NameRequired,
+    ) -> Result<Stmt, ParseError> {
+        let class = self.parse_class(name_required == NameRequired::Yes)?;
         Ok(Stmt {
             span: class.span,
             kind: StmtKind::Class(Box::new(class)),

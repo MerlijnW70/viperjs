@@ -19,6 +19,7 @@
 //! Everything is re-exported here, so `crate::ast::Whatever` names it wherever it lives.
 
 mod binding;
+mod export;
 mod expression;
 mod function;
 mod literal;
@@ -31,6 +32,7 @@ pub use self::binding::{
     ArrayBindingPattern, Binding, BindingElement, BindingName, BindingPattern, BindingProperty,
     ObjectBindingPattern,
 };
+pub use self::export::{ExportDeclaration, ExportDefault, ExportKind, ExportSpecifier};
 pub use self::expression::{Argument, Expr, ExprKind, YieldExpression};
 pub(crate) use self::function::key_is;
 pub use self::function::{

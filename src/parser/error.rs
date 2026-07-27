@@ -213,6 +213,17 @@ pub enum ParseErrorKind {
     /// and refused for the same reason: a default is evaluated before the function is
     /// suspendable, so there is nothing for the `await` to suspend into.
     AwaitInParameters,
+    /// §16.2.1.1: two exports with the same name.
+    ///
+    /// Two modules asking for that name would get two different things, so the whole
+    /// `ModuleItemList` may name each export once. `export default` counts as the name `default`,
+    /// which is why two of those collide.
+    DuplicateExportedName,
+    /// §16.2.1.1: an export of a name the module does not declare.
+    ///
+    /// `export {a}` with no `a` anywhere. Only the `from`-less form can be wrong this way —
+    /// `export {a} from "b"` names the *other* module's `a` and needs nothing here.
+    UndeclaredExportedName,
     /// §16.2.2: `import {"a"} from "b"` — a string export name with nothing to bind it to.
     ///
     /// The shorthand `ImportSpecifier` uses the export's name as the local binding, and a string
@@ -517,6 +528,12 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`await` may not appear in an async function's own parameter list"
             ),
+            Self::DuplicateExportedName => {
+                write!(f, "this name is already exported by this module")
+            }
+            Self::UndeclaredExportedName => {
+                write!(f, "this module exports a name it does not declare")
+            }
             Self::StringImportWithoutAlias => write!(
                 f,
                 "a string import name needs `as` and a local name after it"

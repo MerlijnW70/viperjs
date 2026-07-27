@@ -115,7 +115,7 @@ impl Parser<'_> {
         // A `ClassDeclaration` is a `Declaration` too, so `if (a) class C {}` has no
         // derivation any more than `if (a) let b;` does.
         if self.current.kind == TokenKind::Keyword(ReservedWord::Class) {
-            return self.parse_class_declaration();
+            return self.parse_class_declaration(super::class::NameRequired::Yes);
         }
         if self.current.kind == TokenKind::Keyword(ReservedWord::Const) {
             return self.parse_declaration(DeclarationKind::Const);

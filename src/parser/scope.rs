@@ -21,17 +21,18 @@
 //! Both turn on a `HoistableDeclaration`, and there are none until functions land — at which
 //! point a `Script` stops being able to share this function with a `Block`.
 
+use super::export::{exported_bindings, exported_names};
 use super::{ParseError, ParseErrorKind};
 use crate::ast::{
-    BindingName, Declaration, ImportClause, ImportDeclaration, ImportSpecifier, ModuleItem, Stmt,
-    SwitchCase,
+    BindingName, Declaration, ImportClause, ImportDeclaration, ImportSpecifier, ModuleExportName,
+    ModuleItem, Stmt, SwitchCase,
 };
 use crate::span::Span;
 use crate::static_semantics::{
     DeclaredName, LabelProblemKind, bound_names, first_label_problem, lexically_declared_names,
     top_level_lexically_declared_names, top_level_var_declared_names, var_declared_names,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Apply both rules to a completed statement list, whether a `Block`'s or a `Script`'s.
 ///
@@ -94,10 +95,7 @@ pub(super) fn check_case_block_declared_names(cases: &[SwitchCase]) -> Result<()
 pub(super) fn check_module_declared_names(body: &[ModuleItem]) -> Result<(), ParseError> {
     let statements: Vec<Stmt> = body
         .iter()
-        .filter_map(|item| match item {
-            ModuleItem::Statement(statement) => Some(statement.clone()),
-            ModuleItem::Import(_) => None,
-        })
+        .filter_map(super::module::module_statement)
         .collect();
     let mut lexical = lexically_declared_names(&statements);
     for item in body {
@@ -137,6 +135,71 @@ fn imported_names(declaration: &ImportDeclaration) -> Vec<DeclaredName<'_>> {
             span: name.span,
         })
         .collect()
+}
+
+/// §16.2.1.1's two export rules, asked of a finished `ModuleItemList`.
+///
+/// One about each side of an export. The exported names may not repeat — two modules asking for
+/// the same name would get two different things — and every local name an export mentions must be
+/// declared somewhere in the module. Both wait for the whole list, because `export {a}; var a;` is
+/// ordinary code.
+pub(super) fn check_exports(body: &[ModuleItem]) -> Result<(), ParseError> {
+    let mut seen: HashSet<Vec<u16>> = HashSet::new();
+    for item in body {
+        let ModuleItem::Export(declaration) = item else {
+            continue;
+        };
+        for (name, span) in exported_names(declaration) {
+            if !seen.insert(name) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::DuplicateExportedName,
+                    span,
+                });
+            }
+        }
+    }
+    // The declared names, which is every name this module binds by any means — the same two lists
+    // the rules above are stated over, plus the imports.
+    let statements: Vec<Stmt> = body
+        .iter()
+        .filter_map(super::module::module_statement)
+        .collect();
+    let mut declared: HashSet<&str> = HashSet::new();
+    for name in lexically_declared_names(&statements)
+        .iter()
+        .chain(var_declared_names(&statements).iter())
+    {
+        declared.insert(name.name);
+    }
+    for item in body {
+        if let ModuleItem::Import(declaration) = item {
+            for name in imported_names(declaration) {
+                declared.insert(name.name);
+            }
+        }
+    }
+    for item in body {
+        let ModuleItem::Export(declaration) = item else {
+            continue;
+        };
+        for local in exported_bindings(declaration) {
+            // A string is never a local name, whatever it spells: `export {"a"}` has nothing it
+            // could be referring to, where `export {"a"} from "b"` names the other module's.
+            let ModuleExportName::Identifier(name) = local else {
+                return Err(ParseError {
+                    kind: ParseErrorKind::UndeclaredExportedName,
+                    span: declaration.span,
+                });
+            };
+            if !declared.contains(&**name) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::UndeclaredExportedName,
+                    span: declaration.span,
+                });
+            }
+        }
+    }
+    Ok(())
 }
 
 /// §16.1.1: the five rules of §8.3, §14.8.1 and §14.9.1, asked of a finished `Script`.

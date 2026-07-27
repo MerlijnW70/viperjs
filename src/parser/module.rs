@@ -34,8 +34,8 @@
 
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{
-    BindingName, ImportAttribute, ImportClause, ImportDeclaration, ImportSpecifier, Module,
-    ModuleExportName, ModuleItem,
+    BindingName, ExportDefault, ExportKind, ImportAttribute, ImportClause, ImportDeclaration,
+    ImportSpecifier, Module, ModuleExportName, ModuleItem, Stmt,
 };
 use crate::lexer::{Goal, ReservedWord, TokenKind, string_value};
 use crate::span::Span;
@@ -75,13 +75,8 @@ pub fn parse_module(source: &str) -> Result<Module, ParseError> {
         });
     }
     super::scope::check_module_declared_names(&body)?;
-    let statements: Vec<_> = body
-        .iter()
-        .filter_map(|item| match item {
-            ModuleItem::Statement(statement) => Some(statement.clone()),
-            ModuleItem::Import(_) => None,
-        })
-        .collect();
+    super::scope::check_exports(&body)?;
+    let statements: Vec<_> = body.iter().filter_map(module_statement).collect();
     // §16.2.1.1 borrows §16.1.1's label rules unchanged, so a `break` at the top of a module is
     // refused exactly as one at the top of a script is.
     super::scope::check_labels(&statements)?;
@@ -91,18 +86,40 @@ pub fn parse_module(source: &str) -> Result<Module, ParseError> {
     })
 }
 
+/// The statement a `ModuleItem` holds, if it holds one.
+///
+/// An exported declaration is exactly the statement it would have been without the word, so every
+/// walk that reads a module's statements has to see it — the `export` adds an exported name and
+/// changes no scoping at all.
+pub(super) fn module_statement(item: &ModuleItem) -> Option<Stmt> {
+    match item {
+        ModuleItem::Statement(statement) => Some(statement.clone()),
+        ModuleItem::Export(declaration) => match &declaration.kind {
+            ExportKind::Declaration(statement)
+            | ExportKind::Default(ExportDefault::Declaration(statement)) => Some(statement.clone()),
+            ExportKind::All { .. }
+            | ExportKind::NamedFrom { .. }
+            | ExportKind::Named(_)
+            | ExportKind::Default(ExportDefault::Expression(_)) => None,
+        },
+        ModuleItem::Import(_) => None,
+    }
+}
+
 impl Parser<'_> {
     /// `ModuleItemList` (§16.2), read to the end of input.
     fn parse_module_items(&mut self) -> Result<Vec<ModuleItem>, ParseError> {
         let mut body = Vec::new();
         while self.current.kind != TokenKind::Eof {
-            body.push(
-                if self.current.kind == TokenKind::Keyword(ReservedWord::Import) {
+            body.push(match self.current.kind {
+                TokenKind::Keyword(ReservedWord::Import) => {
                     ModuleItem::Import(self.parse_import_declaration()?)
-                } else {
-                    ModuleItem::Statement(self.parse_statement_list_item()?)
-                },
-            );
+                }
+                TokenKind::Keyword(ReservedWord::Export) => {
+                    ModuleItem::Export(self.parse_export_declaration()?)
+                }
+                _ => ModuleItem::Statement(self.parse_statement_list_item()?),
+            });
         }
         Ok(body)
     }
@@ -217,7 +234,7 @@ impl Parser<'_> {
     ///
     /// Neither alternative is a binding, so every reserved word is allowed — the name belongs to
     /// the module being imported from, which spells it however it likes.
-    fn parse_module_export_name(&mut self) -> Result<ModuleExportName, ParseError> {
+    pub(super) fn parse_module_export_name(&mut self) -> Result<ModuleExportName, ParseError> {
         let token = self.current;
         match token.kind {
             TokenKind::String { .. } => {
@@ -248,7 +265,7 @@ impl Parser<'_> {
 
     /// `ModuleSpecifier : StringLiteral` (§16.2.2), and nothing else — not a template, not a
     /// name. Where it points is the host's business.
-    fn parse_module_specifier(&mut self) -> Result<Box<[u16]>, ParseError> {
+    pub(super) fn parse_module_specifier(&mut self) -> Result<Box<[u16]>, ParseError> {
         let token = self.current;
         if !matches!(token.kind, TokenKind::String { .. }) {
             return Err(self.unexpected("a module specifier"));
@@ -264,7 +281,7 @@ impl Parser<'_> {
     /// No `[no LineTerminator here]` before the `with`, so it may start the next line — which is
     /// safe only because a `WithStatement` cannot follow an `ImportDeclaration` without a `;`
     /// that automatic insertion would have had to supply first.
-    fn parse_with_clause(&mut self) -> Result<Box<[ImportAttribute]>, ParseError> {
+    pub(super) fn parse_with_clause(&mut self) -> Result<Box<[ImportAttribute]>, ParseError> {
         if self.current.kind != TokenKind::Keyword(ReservedWord::With) {
             return Ok(Box::new([]));
         }
@@ -298,7 +315,11 @@ impl Parser<'_> {
     ///
     /// `from` and `as` are ordinary identifiers everywhere else, so neither can be `eat`en as a
     /// token — and an escaped spelling is not the terminal the production names.
-    fn eat_contextual(&mut self, word: &str, expected: &'static str) -> Result<(), ParseError> {
+    pub(super) fn eat_contextual(
+        &mut self,
+        word: &str,
+        expected: &'static str,
+    ) -> Result<(), ParseError> {
         if !self.at_contextual(word) {
             return Err(self.unexpected(expected));
         }

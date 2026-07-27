@@ -62,6 +62,7 @@ mod class_element;
 mod control;
 mod declaration;
 mod error;
+mod export;
 mod expression;
 mod for_in_of;
 mod for_statement;

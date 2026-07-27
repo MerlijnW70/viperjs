@@ -29,6 +29,8 @@ pub struct Module {
 pub enum ModuleItem {
     /// `import …;`
     Import(ImportDeclaration),
+    /// `export …`
+    Export(super::ExportDeclaration),
     /// Anything a `Script` could also have held.
     Statement(Stmt),
 }
