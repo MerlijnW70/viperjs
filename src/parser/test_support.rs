@@ -106,6 +106,12 @@ pub(super) fn error(source: &str) -> ParseError {
     }
 }
 
+/// A statement list rendered as `{a b}`.
+pub(super) fn render_block(body: &[Stmt]) -> String {
+    let rendered: Vec<String> = body.iter().map(render_statement).collect();
+    format!("{{{}}}", rendered.join(" "))
+}
+
 /// A statement rendered compactly, for tests about statement structure.
 ///
 /// Blocks print as `{a b}` and expression statements as their expression, so a script reads as
@@ -126,10 +132,7 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
                 .collect();
             format!("({} {})", declaration.kind.as_str(), names.join(" "))
         }
-        StmtKind::Block(body) => {
-            let rendered: Vec<String> = body.iter().map(render_statement).collect();
-            format!("{{{}}}", rendered.join(" "))
-        }
+        StmtKind::Block(body) => render_block(body),
         StmtKind::If(statement) => match &statement.alternate {
             Some(alternate) => format!(
                 "(if {} {} {})",
@@ -154,6 +157,21 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             render(&statement.test)
         ),
         StmtKind::Throw(value) => format!("(throw {})", render(value)),
+        StmtKind::Try(statement) => {
+            let mut parts = vec![format!("(try {}", render_block(&statement.block))];
+            if let Some(handler) = &statement.handler {
+                parts.push(match &handler.parameter {
+                    Some(parameter) => {
+                        format!("(catch {} {})", parameter.name, render_block(&handler.body))
+                    }
+                    None => format!("(catch {})", render_block(&handler.body)),
+                });
+            }
+            if let Some(finalizer) = &statement.finalizer {
+                parts.push(format!("(finally {})", render_block(finalizer)));
+            }
+            format!("{})", parts.join(" "))
+        }
         StmtKind::Break => "break".to_string(),
         StmtKind::Continue => "continue".to_string(),
     }

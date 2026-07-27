@@ -57,10 +57,54 @@ pub enum StmtKind {
     DoWhile(Box<DoWhileStatement>),
     /// `throw …;` (§14.14). Always has a value — there is no argument-less form.
     Throw(Box<Expr>),
+    /// `try { … } catch { … } finally { … }` (§14.15).
+    Try(Box<TryStatement>),
     /// `break;` (§14.9), without a label.
     Break,
     /// `continue;` (§14.8), without a label.
     Continue,
+}
+
+/// `try Block Catch`, `try Block Finally`, or all three (§14.15).
+///
+/// The grammar has no `try Block` alone, so at least one of the two is always present — but which
+/// one is not something the type can say, and a parser that forgot to check would build a
+/// perfectly typed statement that no source could produce.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TryStatement {
+    /// The guarded `Block`, as its statement list. Its own scope, so it is kept as a list rather
+    /// than as a nested [`StmtKind::Block`] that would add a second one.
+    pub block: Box<[Stmt]>,
+    /// The `Catch`, if there is one.
+    pub handler: Option<CatchClause>,
+    /// The `Finally` block, if there is one.
+    pub finalizer: Option<Box<[Stmt]>>,
+}
+
+/// `catch ( CatchParameter ) Block`, or `catch Block` (§14.15).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CatchClause {
+    /// The name the thrown value is bound to. `None` for the binding-less form of ES2019, which
+    /// is what to write when the value is not wanted — not the same as binding an unused name,
+    /// since no binding is created at all.
+    pub parameter: Option<CatchParameter>,
+    /// The handler's `Block`, as its statement list.
+    pub body: Box<[Stmt]>,
+    /// `catch` through the closing brace.
+    pub span: Span,
+}
+
+/// The name a `catch` binds its thrown value to (§14.15).
+///
+/// A `BindingIdentifier` only. The `BindingPattern` form — `catch ([a, b])` — arrives with
+/// destructuring, and brings with it the one early error of §14.15.1 that a single name cannot
+/// break: that the bound names may not repeat.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CatchParameter {
+    /// The bound name, with any `\u` escapes resolved.
+    pub name: Box<str>,
+    /// The name alone.
+    pub span: Span,
 }
 
 /// `if ( Expression ) Statement else Statement` (§14.6).

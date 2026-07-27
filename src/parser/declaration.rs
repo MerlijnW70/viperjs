@@ -87,7 +87,18 @@ impl Parser<'_> {
 
     /// One `LexicalBinding` or `VariableDeclaration` (§14.3).
     fn parse_declarator(&mut self, kind: DeclarationKind) -> Result<Declarator, ParseError> {
-        let (name, name_span) = self.parse_binding_identifier(kind)?;
+        let (name, name_span) = self.parse_binding_identifier()?;
+        // §14.3.1.1: the BoundNames of a lexical BindingList may not contain "let". BoundNames is
+        // a StringValue, so this reads the *value* — `let` as a name is refused even though
+        // the spelling is not the word. The rule is stated about a `LexicalDeclaration` and about
+        // nothing else, which is why it lives here rather than in `parse_binding_identifier`:
+        // `catch (let) {}` binds the same name and is perfectly legal.
+        if kind.is_lexical() && &*name == "let" {
+            return Err(ParseError {
+                kind: ParseErrorKind::LetAsLexicalBindingName,
+                span: name_span,
+            });
+        }
         if self.current.kind != TokenKind::Eq {
             // §14.3.1.1: a `const` binding with no initialiser has nothing to be constant, and
             // no later statement is allowed to supply one — so this is a Syntax Error rather
@@ -125,10 +136,12 @@ impl Parser<'_> {
     /// Only an `Identifier` token will do, which rules out every reserved word: `var if` has no
     /// derivation. The contextual keywords are identifiers to the lexer and so are accepted
     /// here, which is right — `var async = 1` and `var of = 2` are ordinary declarations.
-    fn parse_binding_identifier(
-        &mut self,
-        kind: DeclarationKind,
-    ) -> Result<(Box<str>, Span), ParseError> {
+    ///
+    /// The name comes back as its `StringValue`, escapes resolved. No early error is applied:
+    /// every rule about which names may be bound belongs to a particular production — §14.3.1.1
+    /// forbids `let` to a lexical declaration and to nothing else — so applying one here would
+    /// impose it on every caller, including the ones the specification exempts.
+    pub(super) fn parse_binding_identifier(&mut self) -> Result<(Box<str>, Span), ParseError> {
         let token = self.current;
         if !matches!(token.kind, TokenKind::Identifier { .. }) {
             return Err(self.unexpected("a binding name"));
@@ -136,15 +149,6 @@ impl Parser<'_> {
         self.advance(Goal::Div)?;
         let name =
             identifier_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
-        // §14.3.1.1: the BoundNames of a lexical BindingList may not contain "let". BoundNames
-        // is a StringValue, so this reads the *value* — `let let = 1` is refused even
-        // though the spelling is not the word.
-        if kind.is_lexical() && name == "let" {
-            return Err(ParseError {
-                kind: ParseErrorKind::LetAsLexicalBindingName,
-                span: token.span,
-            });
-        }
         Ok((name.into_owned().into_boxed_str(), token.span))
     }
 }

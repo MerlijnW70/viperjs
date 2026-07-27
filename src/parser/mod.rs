@@ -33,6 +33,7 @@
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
+//! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
 //! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
@@ -45,6 +46,7 @@ mod scope;
 mod statement;
 #[cfg(test)]
 mod test_support;
+mod try_catch;
 
 pub use self::error::{ParseError, ParseErrorKind};
 pub use self::statement::parse_script;
@@ -70,6 +72,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | conditional, assignment, comma | 168 | 64 |
 /// | member access, calls, `new`, update | 112 | 48 |
 /// | conditionals and loops | 114 | 48 |
+/// | `try`, `catch` and `finally` | 114 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -78,12 +81,17 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// through — the trick works because a debug build reuses no stack slots between match arms, so
 /// an arm that cannot recurse is still paid for by every level that does.
 ///
-/// The last row is the first slice not to cost anything, and the reason is worth keeping: the
-/// count is one budget shared by every kind of nesting, so what bounds it is whichever kind
-/// spends the most stack per level. Statements are cheap next to expressions — a level of `if`
-/// is three frames where a level of `(` is the whole precedence ladder — and measured alone they
-/// afford 339 levels, `while` 504, a block 469. So the expression path still sets the number,
-/// and will keep setting it until a statement form recurses through an expression-sized descent.
+/// The last two rows cost nothing, and the reason is worth keeping: the count is one budget
+/// shared by every kind of nesting, so what bounds it is whichever kind spends the most stack per
+/// level. Statements are cheap next to expressions — a level of `if` is three frames where a
+/// level of `(` is the whole precedence ladder — and measured alone they afford 339 levels,
+/// `while` 504, a block 392, a `try` 221. So the expression path still sets the number, and will
+/// keep setting it until a statement form recurses through an expression-sized descent.
+///
+/// A `try` is the cheapest-looking and the most expensive to nest, because stack is not the only
+/// thing a level spends: it takes *two* of the count, one for the statement and one for its
+/// guarded `Block`. So `try {` nests 24 deep against the cap where `{` nests 48, which is the
+/// count doing exactly what it should — the two really are two scopes.
 ///
 /// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse of each
 /// recursive path in a thread with exactly one mebibyte, and this cap leaves a factor of about
@@ -293,6 +301,13 @@ mod tests {
             format!("{}a;", "if (a) b; else ".repeat(deep)),
             format!("{}a;", "while (a) ".repeat(deep)),
             format!("{}a;{}", "do ".repeat(deep), " while (b);".repeat(deep)),
+            // Half as many levels, because a `try` spends two of the count on each: one for the
+            // statement and one for its guarded Block, which is a nested scope in its own right.
+            format!(
+                "{}{}",
+                "try { ".repeat(deep / 2),
+                "} catch (e) {}".repeat(deep / 2)
+            ),
             // One shallower, because `throw` counts the frame it holds while its value is
             // parsed — so `throw` plus a full-depth expression is one level past the cap, and
             // the deepest that parses has one bracket fewer.

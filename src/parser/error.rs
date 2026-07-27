@@ -66,6 +66,16 @@ pub enum ParseErrorKind {
     /// bindings of `a` in one scope even though nothing at either level looks like a
     /// redeclaration.
     ConflictingVarAndLexicalDeclaration,
+    /// §14.15: a `try` with neither a `catch` nor a `finally`.
+    ///
+    /// There is no `TryStatement : try Block`, so this is a missing production rather than an
+    /// early error — the statement was never grammatical, not merely pointless.
+    TryWithoutHandler,
+    /// §14.15.1: the catch parameter is declared again at the handler's own level.
+    ///
+    /// `catch (e) { let e; }`. `LexicallyDeclaredNames`, so a nested block is a different scope
+    /// and `catch (e) { { let e; } }` is fine.
+    CatchParameterRedeclared,
     /// §14.14: a line terminator between `throw` and its value.
     ///
     /// The one restricted production with no shorter form to fall back on. Where `a\n++b` simply
@@ -122,6 +132,13 @@ impl fmt::Display for ParseErrorKind {
             Self::ConflictingVarAndLexicalDeclaration => write!(
                 f,
                 "this name is declared by `var` and by `let` or `const` in the same scope"
+            ),
+            Self::TryWithoutHandler => {
+                write!(f, "a `try` needs a `catch` or a `finally`")
+            }
+            Self::CatchParameterRedeclared => write!(
+                f,
+                "the catch parameter is already declared in the catch block"
             ),
             Self::NewlineAfterThrow => {
                 write!(f, "the value thrown must be on the same line as `throw`")

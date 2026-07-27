@@ -119,15 +119,22 @@ impl Parser<'_> {
             TokenKind::Keyword(ReservedWord::While) => self.parse_while(),
             TokenKind::Keyword(ReservedWord::Do) => self.parse_do_while(),
             TokenKind::Keyword(ReservedWord::Throw) => self.parse_throw(),
+            TokenKind::Keyword(ReservedWord::Try) => self.parse_try(),
             TokenKind::Keyword(ReservedWord::Break) => self.parse_break_or_continue(true),
             TokenKind::Keyword(ReservedWord::Continue) => self.parse_break_or_continue(false),
             _ => self.parse_expression_statement(),
         }
     }
 
-    /// `Block : { StatementList_opt }` (§14.2).
-    fn parse_block(&mut self) -> Result<Stmt, ParseError> {
-        let open = self.advance(Goal::RegExp)?;
+    /// `Block : { StatementList_opt }` (§14.2), as its statement list and its span.
+    ///
+    /// Separate from [`Parser::parse_block`] because three of the four places a `Block` appears
+    /// are not statements: the `try`, `catch` and `finally` of §14.15 each take a `Block`
+    /// directly, and wrapping each in a [`StmtKind::Block`] would invent a scope the grammar does
+    /// not have. Every one of them is a `Block`, though, so every one gets §14.2.1 — which is the
+    /// reason the check lives here and not in the statement form.
+    pub(super) fn parse_block_body(&mut self) -> Result<(Box<[Stmt]>, Span), ParseError> {
+        let open = self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         self.enter()?;
         let body = self.parse_statement_list(TokenKind::RBrace);
         self.leave();
@@ -135,9 +142,15 @@ impl Parser<'_> {
         let close = self.eat(TokenKind::RBrace, Goal::RegExp, "`}`")?;
         // §14.2.1, on the finished list — see `super::scope`.
         super::scope::check_declared_names(&body)?;
+        Ok((body, open.span.to(close.span)))
+    }
+
+    /// `Block` where a `Statement` is wanted (§14.2).
+    fn parse_block(&mut self) -> Result<Stmt, ParseError> {
+        let (body, span) = self.parse_block_body()?;
         Ok(Stmt {
             kind: StmtKind::Block(body),
-            span: open.span.to(close.span),
+            span,
         })
     }
 
@@ -322,7 +335,6 @@ mod tests {
             "function f() {}",
             "class C {}",
             "return 1;",
-            "try {} catch {}",
             "for (;;) {}",
             "switch (a) {}",
             "with (a) {}",

@@ -124,6 +124,18 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
             }
             StmtKind::While(statement) => pending.push(&statement.body),
             StmtKind::DoWhile(statement) => pending.push(&statement.body),
+            StmtKind::Try(statement) => {
+                // All three Blocks, because a `var` in any of them belongs to the enclosing
+                // function just as much. The catch *parameter* is not among them — it is bound
+                // by the handler's own scope and is not a var name at all.
+                if let Some(finalizer) = &statement.finalizer {
+                    pending.extend(finalizer.iter().rev());
+                }
+                if let Some(handler) = &statement.handler {
+                    pending.extend(handler.body.iter().rev());
+                }
+                pending.extend(statement.block.iter().rev());
+            }
             // §8.2.8 lists these explicitly as contributing nothing, and they contain no
             // statement to look inside: empty, expression, `continue`, `break`, `throw`,
             // `debugger`. `return` joins them when functions arrive.
