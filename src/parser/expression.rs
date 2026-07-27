@@ -212,11 +212,13 @@ impl Parser<'_> {
             {
                 break;
             }
-            // §13.6: the left operand of `**` is an `UpdateExpression`, and a prefix unary is
-            // not one. Checked before the operator is consumed so the error can point at the
-            // operand that is wrong rather than at the operator that noticed.
+            // §13.6: the left operand of `**` is an `UpdateExpression`, and neither a prefix
+            // unary nor an `AwaitExpression` is one — §15.8 makes the latter a
+            // `UnaryExpression` alongside the former, so `await a ** b` needs the same
+            // parentheses `-a ** b` does. Checked before the operator is consumed so the error
+            // can point at the operand that is wrong rather than at the operator that noticed.
             if operator.kind == OperatorKind::Binary(BinaryOperator::Exponent)
-                && matches!(left.kind, ExprKind::Unary { .. })
+                && matches!(left.kind, ExprKind::Unary { .. } | ExprKind::Await(_))
                 && !left.parenthesized
             {
                 return Err(ParseError {
@@ -245,7 +247,16 @@ impl Parser<'_> {
     ///
     /// Merged for the same reason the conditional lives inside `parse_assignment`: both are on
     /// the path a bracket recurses through, and a frame there costs nesting depth (DR-0006).
-    fn parse_unary(&mut self, head: Option<Expr>) -> Result<Expr, ParseError> {
+    pub(super) fn parse_unary(&mut self, head: Option<Expr>) -> Result<Expr, ParseError> {
+        // §15.8: an `AwaitExpression` is a `UnaryExpression`, so it belongs at this level and
+        // not at the assignment one a `YieldExpression` is produced at. That is the whole of
+        // why `await a ? b : c` parses and `yield a ? b : c` does not.
+        if head.is_none()
+            && self.await_allowed
+            && self.current.kind == TokenKind::Keyword(ReservedWord::Await)
+        {
+            return self.parse_await();
+        }
         // A head that is already read is a parenthesized group, which is a `PrimaryExpression`.
         // No prefix operator can apply to it — one would have been read before the `(` — but a
         // postfix `++` still can, so it joins the path below rather than skipping it.

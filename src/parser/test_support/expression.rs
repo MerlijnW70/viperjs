@@ -99,6 +99,7 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::Class(class) => render_class(class),
         ExprKind::Super => "super".to_string(),
         ExprKind::NewTarget => "new.target".to_string(),
+        ExprKind::Await(argument) => format!("(await {})", render(argument)),
         ExprKind::OptionalChain(chain) => format!("(?chain {})", render(chain)),
         ExprKind::Yield(yielded) => {
             let star = if yielded.delegate { "*" } else { "" };
@@ -206,7 +207,12 @@ pub(in crate::parser) fn render_function(function: &Function) -> String {
     }
     format!(
         "({} {} [{}] {})",
-        if function.is_generator { "fn*" } else { "fn" },
+        match (function.is_async, function.is_generator) {
+            (false, false) => "fn",
+            (false, true) => "fn*",
+            (true, false) => "async-fn",
+            (true, true) => "async-fn*",
+        },
         function.name.as_ref().map_or("<anon>", |name| &name.name),
         parameters.join(" "),
         render_block(&function.body)

@@ -74,19 +74,21 @@ impl Parser<'_> {
         kind: MethodKind,
         super_allowed: SuperAllowed,
         is_generator: bool,
+        is_async: bool,
     ) -> Result<Box<Function>, ParseError> {
         // `GeneratorMethod : * ClassElementName ( UniqueFormalParameters[+Yield] ) { GeneratorBody }`
         // — so the `*` reaches the parameters as much as the body, exactly as a generator
         // function's does.
-        let enclosing_yield = self.yield_allowed;
+        let enclosing = (self.yield_allowed, self.await_allowed);
         self.yield_allowed = is_generator;
+        self.await_allowed = is_async;
         let parts = self
-            .parse_method_parameters(kind, is_generator)
+            .parse_method_parameters(kind, is_generator, is_async)
             .and_then(|parameters| {
                 let body = self.parse_function_body(BodyContext::method(super_allowed))?;
                 Ok((parameters, body))
             });
-        self.yield_allowed = enclosing_yield;
+        (self.yield_allowed, self.await_allowed) = enclosing;
         let (parameters, (body, end, declares_strict)) = parts?;
         self.check_method_body(&parameters, &body, declares_strict)?;
         Ok(Box::new(Function {
@@ -96,6 +98,7 @@ impl Parser<'_> {
             parameters,
             body,
             is_generator,
+            is_async,
             span: end,
         }))
     }
@@ -105,8 +108,9 @@ impl Parser<'_> {
         &mut self,
         kind: MethodKind,
         is_generator: bool,
+        is_async: bool,
     ) -> Result<FormalParameters, ParseError> {
-        let parameters = self.parse_parameters_of(is_generator)?;
+        let parameters = self.parse_parameters_of(is_generator, is_async)?;
         let count = parameters.items.len();
         match kind {
             // `get ClassElementName ( )` — the parentheses are empty in the grammar, so a getter
@@ -297,10 +301,10 @@ mod tests {
         ] {
             let _ = parse_expression(source);
         }
-        // A `GeneratorMethod` is one now — see [`super::generator`]. An async method is the
-        // last `MethodDefinition` alternative and arrives with the construct that varies
-        // `[Await]`.
-        assert!(parse_expression("({*a() {}})").is_ok());
-        assert!(parse_expression("({async a() {}})").is_err());
+        // All four `MethodDefinition` alternatives now — see [`super::generator`] and
+        // [`super::asynchronous`].
+        for source in ["({*a() {}})", "({async a() {}})", "({async *a() {}})"] {
+            assert!(parse_expression(source).is_ok(), "{source:?}");
+        }
     }
 }

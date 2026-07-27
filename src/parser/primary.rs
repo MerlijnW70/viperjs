@@ -63,7 +63,10 @@ impl Parser<'_> {
             return self.parse_template(super::template::Tagged::No);
         }
         if token.kind == TokenKind::Keyword(ReservedWord::Function) {
-            return self.parse_function_expression();
+            return self.parse_function_expression(false);
+        }
+        if self.at_async_function()? {
+            return self.parse_function_expression(true);
         }
         if token.kind == TokenKind::Keyword(ReservedWord::Class) {
             return self.parse_class_expression();

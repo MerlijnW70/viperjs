@@ -193,6 +193,18 @@ pub enum ParseErrorKind {
     /// having no answer, not about the syntax being ambiguous. `Contains` stops at a function
     /// boundary, so `function* g(a = function*() { yield; }) {}` is fine.
     YieldInParameters,
+    /// §15.8.1: an `AwaitExpression` in an async function's parameter list.
+    ///
+    /// `async function f(a = await b) {}`. The mirror of [`ParseErrorKind::YieldInParameters`],
+    /// and refused for the same reason: a default is evaluated before the function is
+    /// suspendable, so there is nothing for the `await` to suspend into.
+    AwaitInParameters,
+    /// §15.7.1: a `constructor` written as an async method.
+    ///
+    /// `class C { async constructor() {} }`. A constructor is the function the class is, and
+    /// `new` cannot await — so `SpecialMethod` being true of it is a Syntax Error, exactly as for
+    /// a generator.
+    ConstructorMayNotBeAsync,
     /// §15.7.1: a `constructor` written as a generator.
     ///
     /// `class C { *constructor() {} }`. A constructor is the function the class is, and `new`
@@ -421,6 +433,13 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`yield` may not appear in a generator's own parameter list"
             ),
+            Self::AwaitInParameters => write!(
+                f,
+                "`await` may not appear in an async function's own parameter list"
+            ),
+            Self::ConstructorMayNotBeAsync => {
+                write!(f, "`constructor` may not be an async method")
+            }
             Self::ConstructorMayNotBeAGenerator => {
                 write!(f, "`constructor` may not be a generator")
             }

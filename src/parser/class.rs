@@ -137,8 +137,13 @@ impl Parser<'_> {
         if is_static {
             self.advance(Goal::Div)?;
         }
-        // `MethodDefinition : GeneratorMethod`, and a `GeneratorMethod` begins with its `*` —
-        // after `static`, which the grammar puts on the `ClassElement` rather than the method.
+        // `AsyncMethod : async [no LineTerminator here] ClassElementName …`, and
+        // `AsyncGeneratorMethod` puts the `*` between the two — so the words come in this order
+        // and `static` is outside both, the grammar putting it on the `ClassElement`.
+        let is_async = self.at_async_method()?;
+        if is_async {
+            self.advance(Goal::Div)?;
+        }
         let is_generator = self.current.kind == TokenKind::Star;
         if is_generator {
             self.advance(Goal::RegExp)?;
@@ -153,7 +158,13 @@ impl Parser<'_> {
         let key = self.parse_property_key()?;
         // `get`/`set` are ordinary names until a name follows them — see [`super::method`]. When
         // one does, the *second* word is what the early errors below are about.
-        let (key, key_span, kind) = match self.at_accessor(&key, escaped) {
+        // …but only when this is an ordinary method: §15.7's `MethodDefinition` gives the
+        // accessor forms no `async` and no `*`, so `async get m() {}` has no derivation and the
+        // word `get` is simply this method's name.
+        let accessor = (!is_async && !is_generator)
+            .then(|| self.at_accessor(&key, escaped))
+            .flatten();
+        let (key, key_span, kind) = match accessor {
             Some(kind) => {
                 let name = self.current.span;
                 (self.parse_property_key()?, name, kind)
@@ -177,11 +188,15 @@ impl Parser<'_> {
         }
         // `super.a` in any method; `super(…)` in the constructor of a derived class and nowhere
         // else — a base class has no parent constructor for it to reach.
-        // §15.7.1: `SpecialMethod` of the constructor is a Syntax Error — `new` cannot resume
-        // a generator, so there would be nothing for the class to be.
-        if is_constructor && is_generator {
+        // §15.7.1: `SpecialMethod` of the constructor is a Syntax Error — `new` can neither
+        // resume a generator nor await, so there would be nothing for the class to be.
+        if is_constructor && (is_generator || is_async) {
             return Err(ParseError {
-                kind: ParseErrorKind::ConstructorMayNotBeAGenerator,
+                kind: if is_generator {
+                    ParseErrorKind::ConstructorMayNotBeAGenerator
+                } else {
+                    ParseErrorKind::ConstructorMayNotBeAsync
+                },
                 span: key_span,
             });
         }
@@ -192,6 +207,7 @@ impl Parser<'_> {
                 call: is_constructor && derived,
             },
             is_generator,
+            is_async,
         )?;
         Ok(ClassElement {
             key,

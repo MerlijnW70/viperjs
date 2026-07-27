@@ -62,14 +62,15 @@ pub(super) struct CoverGroup {
     rest: Option<Binding>,
     /// Whether a comma came last. Legal in the cover and in no expression.
     trailing_comma: bool,
-    /// Where a `YieldExpression` was read inside the parentheses, if one was.
+    /// The error the parentheses owe if they turn out to be parameters.
     ///
-    /// §15.3.1: "It is a Syntax Error if ArrowParameters Contains YieldExpression is true", the
-    /// same rule and the same reason as §15.5.1's about a generator's own parameters. Which of
-    /// the two things the group is deciding whether it applies — `function* g() { (yield); }` is
-    /// an expression and fine, `function* g() { (a = yield) => 1; }` is a parameter list and is
-    /// not — so it is recorded here and asked once the `=>` has settled the question.
-    yield_expression: Option<Span>,
+    /// §15.3.1: "It is a Syntax Error if ArrowParameters Contains YieldExpression is true", and
+    /// the same for an `AwaitExpression` — the same rules and the same reason as §15.5.1's and
+    /// §15.8.1's about a function's own parameters. Which of the two things the group is
+    /// decides whether they apply: `function* g() { (yield); }` is an expression and fine,
+    /// `function* g() { (a = yield) => 1; }` is a parameter list and is not. So it is recorded
+    /// here and asked once the `=>` has settled the question.
+    forbidden_in_parameters: Option<ParseError>,
     /// The parentheses and everything between them.
     span: Span,
 }
@@ -133,7 +134,7 @@ impl Parser<'_> {
     /// The cover grammar, read as far as its closing parenthesis.
     fn parse_cover_group(&mut self) -> Result<CoverGroup, ParseError> {
         let open = self.advance(Goal::RegExp)?;
-        let enclosing_yield_expression = self.yield_expression.take();
+        let enclosing_forbidden_in_parameters = self.forbidden_in_parameters.take();
         let mut elements = Vec::new();
         let mut rest = None;
         let mut trailing_comma = false;
@@ -153,13 +154,13 @@ impl Parser<'_> {
             }
         }
         let close = self.eat(TokenKind::RParen, Goal::Div, "`)`")?;
-        let yield_expression = self.yield_expression;
-        self.yield_expression = enclosing_yield_expression;
+        let forbidden_in_parameters = self.forbidden_in_parameters;
+        self.forbidden_in_parameters = enclosing_forbidden_in_parameters;
         Ok(CoverGroup {
             elements,
             rest,
             trailing_comma,
-            yield_expression,
+            forbidden_in_parameters,
             span: open.span.to(close.span),
         })
     }
@@ -173,8 +174,8 @@ impl Parser<'_> {
         // enclosing code — and still counts against whatever parameter list encloses *that*.
         // `function* g(a = (yield)) {}` is refused for the same reason `function* g(a = yield) {}`
         // is, the parentheses having changed nothing.
-        if let Some(span) = group.yield_expression {
-            self.yield_expression.get_or_insert(span);
+        if let Some(error) = group.forbidden_in_parameters {
+            self.forbidden_in_parameters.get_or_insert(error);
         }
         if group.rest.is_some() || group.trailing_comma || group.elements.is_empty() {
             return Err(ParseError {
@@ -205,11 +206,8 @@ impl Parser<'_> {
         // so inside a generator a `yield` here parsed as a `YieldExpression` — and a parameter's
         // default is evaluated before there is anything to yield to, exactly as §15.5.1 says of a
         // generator's own list.
-        if let Some(span) = group.yield_expression {
-            return Err(ParseError {
-                kind: ParseErrorKind::YieldInParameters,
-                span,
-            });
+        if let Some(error) = group.forbidden_in_parameters {
+            return Err(error);
         }
         // No check for a comma after the `...`: reading the group stops at one, so `(...a,)`
         // never reaches here — the closing parenthesis it was looking for is missing, and saying
@@ -280,14 +278,16 @@ impl Parser<'_> {
         parameters: &FormalParameters,
     ) -> Result<(ArrowBody, Span, bool), ParseError> {
         // `ConciseBody[In] : ExpressionBody[?In, ~Await] | { FunctionBody[~Yield, ~Await] }` —
-        // both alternatives drop `[Yield]`, where `ArrowParameters[?Yield]` keeps it. So
+        // both alternatives drop *both* parameters, where `ArrowParameters[?Yield, ?Await]`
+        // keeps both. So
         // `function* g() { () => yield; }` reads `yield` as a name and
         // `function* g() { (a = yield) => 1; }` is refused, the parameters having been `[+Yield]`.
         // The one place in the grammar where a head and its body disagree about a parameter.
-        let enclosing_yield = self.yield_allowed;
+        let enclosing = (self.yield_allowed, self.await_allowed);
         self.yield_allowed = false;
+        self.await_allowed = false;
         let body = self.parse_concise_body_inner(allow_in, parameters);
-        self.yield_allowed = enclosing_yield;
+        (self.yield_allowed, self.await_allowed) = enclosing;
         body
     }
 

@@ -85,15 +85,24 @@ impl Parser<'_> {
 
     /// One `PropertyDefinition` that is not a spread (§13.2.5).
     fn parse_property_definition(&mut self) -> Result<PropertyDefinition, ParseError> {
-        // `GeneratorMethod : * ClassElementName ( … ) { GeneratorBody }` — the `*` comes before
-        // the name, so it is read before anything knows what the name will be. Nothing else in a
-        // `PropertyDefinition` may begin with one.
+        // `GeneratorMethod : * ClassElementName …` and
+        // `AsyncMethod : async [no LineTerminator here] ClassElementName …`, with
+        // `AsyncGeneratorMethod` being both — all three put their marker before the name, so it is
+        // read before anything knows what the name will be. Nothing else in a `PropertyDefinition`
+        // may begin with either.
+        let is_async = self.at_async_method()?;
+        if is_async {
+            self.advance(Goal::Div)?;
+        }
         let is_generator = self.current.kind == TokenKind::Star;
         if is_generator {
             self.advance(Goal::RegExp)?;
+        }
+        if is_async || is_generator {
             let key = self.parse_property_key()?;
             let kind = crate::ast::MethodKind::Normal;
-            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, true)?;
+            let function =
+                self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, is_generator, is_async)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -112,7 +121,7 @@ impl Parser<'_> {
         // [`super::method`]. A `(` means the word was the name.
         if let Some(kind) = self.at_accessor(&key, escaped) {
             let key = self.parse_property_key()?;
-            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false)?;
+            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false, false)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -121,7 +130,7 @@ impl Parser<'_> {
         }
         if self.current.kind == TokenKind::LParen {
             let kind = crate::ast::MethodKind::Normal;
-            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false)?;
+            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false, false)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -367,10 +376,11 @@ mod tests {
             "({get a() {}})",
             "({set a(v) {}})",
             "({*a() {}})",
+            "({async a() {}})",
+            "({async *a() {}})",
         ] {
             assert!(parse_expression(source).is_ok(), "{source:?}");
         }
-        assert!(parse_expression("({async a() {}})").is_err());
         // …while an object as a value is unaffected, which is what this slice adds.
         assert!(parse_script("a = {b: 1};").is_ok());
         assert!(parse_script("f({a: 1}, {b: 2});").is_ok());

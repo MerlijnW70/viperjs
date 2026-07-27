@@ -38,21 +38,29 @@ use crate::static_semantics::{bound_names, top_level_lexically_declared_names};
 use std::collections::HashSet;
 
 impl Parser<'_> {
-    /// `FunctionDeclaration` (§15.2), with the cursor on `function`.
+    /// `FunctionDeclaration` (§15.2) or `AsyncFunctionDeclaration` (§15.8), with the cursor on
+    /// `function` or on the `async` before it.
     ///
     /// Named, always: the anonymous alternative is `[+Default]`, which only an `export default`
     /// reaches, and there are no modules yet.
-    pub(super) fn parse_function_declaration(&mut self) -> Result<Stmt, ParseError> {
-        let function = self.parse_function(true)?;
+    pub(super) fn parse_function_declaration(
+        &mut self,
+        is_async: bool,
+    ) -> Result<Stmt, ParseError> {
+        let function = self.parse_function(true, is_async)?;
         Ok(Stmt {
             span: function.span,
             kind: StmtKind::Function(Box::new(function)),
         })
     }
 
-    /// `FunctionExpression` (§15.2), with the cursor on `function`.
-    pub(super) fn parse_function_expression(&mut self) -> Result<crate::ast::Expr, ParseError> {
-        let function = self.parse_function(false)?;
+    /// `FunctionExpression` (§15.2) or `AsyncFunctionExpression` (§15.8), with the cursor on
+    /// `function` or on the `async` before it.
+    pub(super) fn parse_function_expression(
+        &mut self,
+        is_async: bool,
+    ) -> Result<crate::ast::Expr, ParseError> {
+        let function = self.parse_function(false, is_async)?;
         let span = function.span;
         Ok(crate::ast::Expr::new(
             ExprKind::Function(Box::new(function)),
@@ -61,7 +69,16 @@ impl Parser<'_> {
     }
 
     /// Both forms, which differ only in whether the name may be left out.
-    fn parse_function(&mut self, name_required: bool) -> Result<Function, ParseError> {
+    fn parse_function(
+        &mut self,
+        name_required: bool,
+        is_async: bool,
+    ) -> Result<Function, ParseError> {
+        // `async [no LineTerminator here] function` — the caller checked both, and the `async` is
+        // still the current token when it did not.
+        if is_async {
+            self.advance(Goal::RegExp)?;
+        }
         let keyword = self.advance(Goal::RegExp)?;
         // `function *` — the one bit of syntax between §15.2's productions and §15.5's, and
         // nothing about it is restricted — no `[no LineTerminator here]`, so `function*g`,
@@ -70,9 +87,9 @@ impl Parser<'_> {
         if is_generator {
             self.advance(Goal::RegExp)?;
         }
-        let name = self.parse_function_name(name_required, is_generator)?;
+        let name = self.parse_function_name(name_required, is_generator, is_async)?;
         self.enter()?;
-        let parts = self.parse_function_parts(is_generator);
+        let parts = self.parse_function_parts(is_generator, is_async);
         self.leave();
         let (parameters, body, end) = parts?;
         Ok(Function {
@@ -80,6 +97,7 @@ impl Parser<'_> {
             parameters,
             body,
             is_generator,
+            is_async,
             span: keyword.span.to(end),
         })
     }
@@ -95,16 +113,18 @@ impl Parser<'_> {
         &mut self,
         name_required: bool,
         is_generator: bool,
+        is_async: bool,
     ) -> Result<Option<crate::ast::BindingName>, ParseError> {
         if self.current.kind == TokenKind::LParen && !name_required {
             return Ok(None);
         }
-        let enclosing = self.yield_allowed;
+        let enclosing = (self.yield_allowed, self.await_allowed);
         if !name_required {
             self.yield_allowed = is_generator;
+            self.await_allowed = is_async;
         }
         let name = self.parse_binding_name();
-        self.yield_allowed = enclosing;
+        (self.yield_allowed, self.await_allowed) = enclosing;
         Ok(Some(name?))
     }
 
@@ -113,17 +133,19 @@ impl Parser<'_> {
     fn parse_function_parts(
         &mut self,
         is_generator: bool,
+        is_async: bool,
     ) -> Result<(FormalParameters, Box<[Stmt]>, Span), ParseError> {
         // `FormalParameters[+Yield]` for a generator and `[~Yield]` for everything else — which
         // is why a plain function nested in a generator may still take a parameter called
         // `yield`. The refusal of a `YieldExpression` among them lives there too.
-        let parameters = self.parse_parameters_of(is_generator)?;
+        let parameters = self.parse_parameters_of(is_generator, is_async)?;
         // A plain function is where `super` stops, however deep inside a method it is written:
         // §15.2.1 makes a `FunctionBody` containing either form a Syntax Error outright.
-        let enclosing_yield = self.yield_allowed;
+        let enclosing = (self.yield_allowed, self.await_allowed);
         self.yield_allowed = is_generator;
+        self.await_allowed = is_async;
         let parts = self.parse_function_body(BodyContext::FUNCTION);
-        self.yield_allowed = enclosing_yield;
+        (self.yield_allowed, self.await_allowed) = enclosing;
         let (body, end, declares_strict) = parts?;
         check_parameters_against_body(&parameters, &body)?;
         // The two rules that cannot be applied while the parameters are read, because the body
@@ -194,14 +216,14 @@ impl Parser<'_> {
         let enclosing_context = self.body_context;
         // `Contains` stops at a function boundary, and this is the boundary — so a `yield`
         // written in here is never a `yield` written in the parameter list that encloses it.
-        let enclosing_yield_expression = self.yield_expression.take();
+        let enclosing_forbidden_in_parameters = self.forbidden_in_parameters.take();
         self.inside_function = true;
         self.body_context = body_context;
         let body = self.parse_body_with_prologue(TokenKind::RBrace);
         self.inside_function = enclosing;
         self.strict = enclosing_strict;
         self.body_context = enclosing_context;
-        self.yield_expression = enclosing_yield_expression;
+        self.forbidden_in_parameters = enclosing_forbidden_in_parameters;
         let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks

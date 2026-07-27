@@ -245,6 +245,12 @@ pub enum ExprKind {
     Sequence(Box<[Expr]>),
     /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
     Array(Box<[ArrayElement]>),
+    /// `await a` (§15.8) — only inside an async function.
+    ///
+    /// A `UnaryExpression`, where a `YieldExpression` is an `AssignmentExpression`, so this binds
+    /// tighter than nearly everything and that one binds looser than everything. Its operand is
+    /// mandatory: §15.8's Note 2 says you must await something.
+    Await(Box<Expr>),
     /// `yield`, `yield a` or `yield* a` (§15.5) — only inside a generator.
     Yield(Box<YieldExpression>),
     /// `class … { … }` (§15.7) — an expression, so its name is optional and its own.

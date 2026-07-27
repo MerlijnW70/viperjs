@@ -54,6 +54,7 @@
 
 mod array_literal;
 mod arrow;
+mod asynchronous;
 mod binding;
 mod body;
 mod class;
@@ -256,14 +257,23 @@ struct Parser<'a> {
     /// function turns it back off. Every place it changes is a place this parser already saves
     /// state, so it costs one field; [`self::generator`] has the table of where and why.
     pub(super) yield_allowed: bool,
-    /// Where a `YieldExpression` was read, since the last function boundary.
+    /// The `[Await]` grammar parameter (§15.8) — whether `await` is an operator here.
     ///
-    /// `Contains YieldExpression` (§15.5.1) asked as a record rather than as a walk, because
-    /// `Contains` stops at a function boundary and so does this — it is saved and restored by
-    /// [`Parser::parse_function_body`] and by the parameter list. The same deferral as
-    /// `cover_initialized_name`, for the same reason: the question is asked later than the answer
-    /// is known.
-    pub(super) yield_expression: Option<Span>,
+    /// `[Yield]`'s twin in every structural respect; [`self::asynchronous`] has the four places
+    /// they differ.
+    pub(super) await_allowed: bool,
+    /// The error a parameter list owes, if one was read since the last function boundary.
+    ///
+    /// `Contains YieldExpression` (§15.5.1) and `Contains AwaitExpression` (§15.8.1) asked as a
+    /// record rather than as a walk, because `Contains` stops at a function boundary and so does
+    /// this — it is saved and restored by [`Parser::parse_function_body`] and by the parameter
+    /// list. The same deferral as `cover_initialized_name`, for the same reason: the question is
+    /// asked later than the answer is known.
+    ///
+    /// One field and not two: whichever of the two expressions a given parameter list can contain
+    /// is the one forbidden there, a generator's parameters being `[~Await]` and an async
+    /// function's `[~Yield]`. So it holds the finished error rather than a span and a kind.
+    pub(super) forbidden_in_parameters: Option<ParseError>,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -291,7 +301,8 @@ impl<'a> Parser<'a> {
             inside_function: false,
             body_context: self::body::BodyContext::SCRIPT,
             yield_allowed: false,
-            yield_expression: None,
+            await_allowed: false,
+            forbidden_in_parameters: None,
             strict: false,
         })
     }
@@ -313,14 +324,13 @@ impl<'a> Parser<'a> {
     /// the other two rows are gated in the grammar itself. The two routes reach the same place, so
     /// one question is asked here for all three and the answer is [`Parser::yield_allowed`].
     ///
-    /// `await` is still taken unconditionally: `[+Await]` comes from an `AsyncFunctionBody` or the
-    /// `Module` goal, and this parser has no production that reaches either. A parameter with the
-    /// same value on every path is not a parameter — it is a constant with untestable branches on
-    /// it — so it arrives with the construct that varies it, as `[Yield]` just did.
+    /// Both parameters are asked the same way and for the same reason. The `Module` goal is the
+    /// other thing that sets `[+Await]`, and it arrives with modules.
     pub(super) fn is_identifier_token(&self, kind: TokenKind) -> bool {
         match kind {
-            TokenKind::Identifier { .. } | TokenKind::Keyword(ReservedWord::Await) => true,
+            TokenKind::Identifier { .. } => true,
             TokenKind::Keyword(ReservedWord::Yield) => !self.yield_allowed,
+            TokenKind::Keyword(ReservedWord::Await) => !self.await_allowed,
             _ => false,
         }
     }

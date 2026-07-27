@@ -44,6 +44,12 @@ pub struct Function {
     /// The `FunctionStatementList`, which is a scope of its own and a boundary for several of
     /// the static semantics — see the module documentation.
     pub body: Box<[Stmt]>,
+    /// Whether the `function` was preceded by `async` (§15.8).
+    ///
+    /// What it changes is the `[Await]` grammar parameter over the parameters and the body. It is
+    /// independent of `is_generator`: all four combinations are productions of their own, the
+    /// two together being §15.6's async generator.
+    pub is_async: bool,
     /// Whether a `*` followed the `function`, making this a generator (§15.5).
     ///
     /// What it changes is the `[Yield]` grammar parameter over the parameters and the body: with

@@ -44,7 +44,7 @@
 //!
 //! `Contains` stops at every function boundary — `function* g(a = function*() { yield; }) {}` is
 //! fine — which is exactly the shape of a field saved and restored at those boundaries. So the
-//! parser records where it read a `YieldExpression` ([`super::Parser::yield_expression`]) and the
+//! parser records where it read a `YieldExpression` ([`super::Parser::forbidden_in_parameters`]) and the
 //! parameter list asks afterwards, the same deferral as `cover_initialized_name`. Walking the
 //! finished parameter tree would have to re-derive the boundary rule that the save already knows.
 
@@ -62,7 +62,10 @@ impl Parser<'_> {
         let keyword = self.advance(Goal::RegExp)?;
         // §15.5's Note 1: the context after `yield` uses the RegExp goal, so `yield /a/g` yields a
         // regular expression rather than dividing something. `advance` above asked for it.
-        self.yield_expression.get_or_insert(keyword.span);
+        self.forbidden_in_parameters.get_or_insert(ParseError {
+            kind: ParseErrorKind::YieldInParameters,
+            span: keyword.span,
+        });
         // `yield [no LineTerminator here] * AssignmentExpression`. The restriction is before the
         // `*` and not after it, so `yield *\n a` is one expression and `yield \n * a` is not one
         // at all — the first is a bare `yield` and then a `*` that nothing wanted.
@@ -96,8 +99,8 @@ impl Parser<'_> {
         ))
     }
 
-    /// Read `parameters` under `[+Yield]` if `is_generator`, and refuse a `YieldExpression` in
-    /// them (§15.5.1).
+    /// Read `parameters` under the `[Yield]` and `[Await]` the function kind gives them, and
+    /// refuse a `YieldExpression` or an `AwaitExpression` among them (§15.5.1, §15.8.1).
     ///
     /// The saving is what implements `Contains` stopping at a function boundary: whatever the
     /// enclosing code had recorded is put back, so a `yield` written here is attributed here and
@@ -105,24 +108,25 @@ impl Parser<'_> {
     pub(super) fn parse_parameters_of(
         &mut self,
         is_generator: bool,
+        is_async: bool,
     ) -> Result<crate::ast::FormalParameters, ParseError> {
         let enclosing_yield = self.yield_allowed;
-        let enclosing_seen = self.yield_expression.take();
+        let enclosing_await = self.await_allowed;
+        let enclosing_seen = self.forbidden_in_parameters.take();
         self.yield_allowed = is_generator;
+        self.await_allowed = is_async;
         let parameters = self.parse_formal_parameters();
-        let seen = self.yield_expression;
+        let seen = self.forbidden_in_parameters;
         self.yield_allowed = enclosing_yield;
-        self.yield_expression = enclosing_seen;
+        self.await_allowed = enclosing_await;
+        self.forbidden_in_parameters = enclosing_seen;
         let parameters = parameters?;
-        // §15.5.1: "It is a Syntax Error if FormalParameters Contains YieldExpression is true."
-        // A default is evaluated before the generator is resumable, so there is nothing for it to
-        // yield to — the rule is about the runtime having no answer, not about the syntax being
-        // ambiguous.
-        if let Some(span) = seen {
-            return Err(ParseError {
-                kind: ParseErrorKind::YieldInParameters,
-                span,
-            });
+        // §15.5.1 and §15.8.1: a `YieldExpression` in a generator's own parameters, or an
+        // `AwaitExpression` in an async function's. A default is evaluated before the function is
+        // suspendable, so there is nothing for either to suspend into — the rule is about the
+        // runtime having no answer, not about the syntax being ambiguous.
+        if let Some(error) = seen {
+            return Err(error);
         }
         Ok(parameters)
     }
@@ -253,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn a_yield_expression_is_an_assignment_expression_and_nothing_tighter() {
+    fn a_forbidden_in_parameters_is_an_assignment_expression_and_nothing_tighter() {
         // The reason it is produced at the assignment level, as an arrow is: every operator that
         // wants a narrower operand refuses one.
         for source in [

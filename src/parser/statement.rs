@@ -96,7 +96,13 @@ impl Parser<'_> {
         // A `FunctionDeclaration` is a `Declaration`, so it stands here and not among the
         // statements below — `while (x) function f() {}` has no derivation.
         if self.current.kind == TokenKind::Keyword(ReservedWord::Function) {
-            return self.parse_function_declaration();
+            return self.parse_function_declaration(false);
+        }
+        // `AsyncFunctionDeclaration : async [no LineTerminator here] function …`. `async` is not a
+        // reserved word, so this is a lookahead: with a newline after it, or with anything but
+        // `function` following, the word is an ordinary expression statement.
+        if self.at_async_function()? {
+            return self.parse_function_declaration(true);
         }
         // A `ClassDeclaration` is a `Declaration` too, so `if (a) class C {}` has no
         // derivation any more than `if (a) let b;` does.
@@ -124,6 +130,16 @@ impl Parser<'_> {
     /// others arrive with the constructs they are ambiguous with; until then they are not
     /// expressions either, so nothing is silently misread.
     pub(super) fn parse_statement(&mut self) -> Result<Stmt, ParseError> {
+        // `async function` is the third word on §14.5's list, and the only one that needs a
+        // lookahead rather than a token test — `async` is not reserved. Ahead of the match for
+        // that reason, and not inside it: a match guard may not borrow the parser again. A bare
+        // `async` is unaffected and reaches the expression path below.
+        if self.at_async_function()? {
+            return Err(ParseError {
+                kind: ParseErrorKind::DeclarationInStatementPosition,
+                span: self.current.span,
+            });
+        }
         match self.current.kind {
             TokenKind::LBrace => self.parse_block(),
             TokenKind::Semicolon => {
@@ -359,16 +375,15 @@ mod tests {
     #[test]
     fn the_statement_forms_not_yet_built_fail_where_they_will_one_day_parse() {
         // §14.5 forbids an ExpressionStatement from beginning with `function`, `async function`
-        // or `class` as well as `{`, each because it would be ambiguous with a declaration. None
-        // of those is an expression here either, so each fails rather than being misread — and
-        // will start parsing the day its declaration form lands.
-        assert!(parse_script("async function f() {}").is_err());
-        // `function`, `class` and `return` used to be on that list. The first two are
-        // `Declaration`s now; the third is a `Statement` — but only under `[+Return]`, so at the
-        // top of a script it is still refused, for a reason the grammar states rather than for
-        // want of an implementation.
+        // or `class` as well as `{`, each because it would be ambiguous with a declaration. All
+        // three are `Declaration`s here now, so all three parse — this test is what is left of
+        // the list, and what it says is that nothing is.
         assert_eq!(statements("function f() {}"), ["(fn f [] {})"]);
         assert_eq!(statements("class C {}"), ["(class C - [])"]);
+        assert_eq!(statements("async function f() {}"), ["(async-fn f [] {})"]);
+        // `return` was on it for a different reason and still is: it is a `Statement`, but only
+        // under `[+Return]`, so at the top of a script it is refused for a reason the grammar
+        // states rather than for want of an implementation.
         assert_eq!(
             script_error("return 1;").kind,
             ParseErrorKind::ReturnOutsideFunction
