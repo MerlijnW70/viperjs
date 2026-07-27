@@ -7,13 +7,19 @@
 //!
 //! # What is not here yet
 //!
-//! Numeric literals, string literals, templates and regular expressions arrive in the following
-//! slices. Until then a character that can only begin one of those — `1`, `"`, `` ` `` — is a
+//! String literals, templates and regular expressions arrive in the following slices. Until
+//! then a character that can only begin one of those — `"`, `'`, `` ` `` — is a
 //! [`LexErrorKind::UnexpectedCharacter`], which is also the permanent answer for a character
-//! with no token form at all (`@`, `€`, `\0`). One deferral remains, pinned by a test so that
-//! implementing it is a deliberate change and not an accident: **Annex B.1.1 HTML-like
-//! comments**, where `<!--` lexes as `<` `!` `--` today, and `-->` would additionally need
-//! "nothing but trivia before it on this line" state and a Script-vs-Module goal flag.
+//! with no token form at all (`@`, `€`, `\0`). Two deferrals remain, each pinned by a test so
+//! that implementing it is a deliberate change and not an accident:
+//!
+//! - **Annex B.1.1 HTML-like comments.** `<!--` lexes as `<` `!` `--` today; `-->` would
+//!   additionally need "nothing but trivia before it on this line" state and a Script-vs-Module
+//!   goal flag.
+//! - **`BigInt` values.** The `n` suffix produces a [`TokenKind::BigInt`], because lexing
+//!   `123n` as `123` and the name `n` would be silently valid nonsense — but the value waits for
+//!   the BigInt type at M7, and [`numeric_value`] answers `None` for such a span rather than
+//!   handing back the nearest `f64`.
 //!
 //! # Names, and what the lexer refuses to decide
 //!
@@ -30,7 +36,7 @@
 //! reconstruct the source byte for byte. That is the oracle for this slice (see the module's
 //! tests), and it is what keeps every later slice honest: a lexer that quietly loses a byte is
 //! a parser that reports the wrong line for the next three years.
-
+//!
 //! # How this module is laid out
 //!
 //! - `token` — [`Token`], [`TokenKind`], and the punctuator table.
@@ -38,11 +44,13 @@
 //! - `error` — [`LexError`] and its kinds.
 //! - `trivia` — white space, comments, and the hashbang (§12.2 – §12.5).
 //! - `name` — identifiers, `\u` escapes, and the keyword decision (§12.7).
+//! - `number` — numeric literals and their values (§12.9.3), Annex B's legacy forms included.
 //! - here — the cursor, and [`Lexer::next_token`]: the one place that decides which of the
 //!   above a character belongs to.
 
 mod error;
 mod name;
+mod number;
 mod reserved;
 #[cfg(test)]
 mod test_support;
@@ -51,6 +59,7 @@ mod trivia;
 
 pub use self::error::{LexError, LexErrorKind};
 pub use self::name::identifier_value;
+pub use self::number::numeric_value;
 pub use self::reserved::ReservedWord;
 pub use self::token::{Token, TokenKind};
 
@@ -189,6 +198,21 @@ impl<'a> Lexer<'a> {
             });
         }
 
+        // Numbers must be tried before punctuators, and only for these two shapes: a decimal
+        // digit, or a `.` with a digit behind it (§12.9.3's `. DecimalDigits` alternative). The
+        // lookahead is what keeps `.` a punctuator and `...` a spread — neither is followed by a
+        // digit, so neither reaches here.
+        if first.is_ascii_digit()
+            || (first == '.' && self.cursor.peek_byte(1).is_some_and(|b| b.is_ascii_digit()))
+        {
+            let kind = self.scan_number()?;
+            return Ok(Token {
+                kind,
+                span: Span::new(start, self.cursor.offset()),
+                newline_before,
+            });
+        }
+
         for &(text, kind) in PUNCTUATORS {
             if !self.cursor.starts_with(text) {
                 continue;
@@ -313,6 +337,13 @@ mod tests {
             "\\u0061",                     // a name spelled entirely as an escape
             "a\\u{62}c",                   // …and one spelled partly as one
             "\\u{61}\\u{62}",              // two escapes in a row
+            "0",                           // the shortest literal there is
+            "1_000.5e-3",                  // a decimal wearing everything at once
+            ".5",                          // …and one with no integer part
+            "?.5",                         // `? .5`, the conditional §12.8's lookahead protects
+            "0x1F 0b1_0 0o7 0123 08",      // every radix, Annex B's two included
+            "1n 0x2n",                     // BigInt, whose `n` is part of the span
+            "1..toString",                 // `1.` then `.` then a name
         ];
         for source in lexes_completely {
             let (tiled, stopped) = retile(source);
@@ -326,9 +357,10 @@ mod tests {
             "/*",
             "/*/",
             "/* x",
-            "?.5",
             "@",
-            "1",
+            "3in",
+            "0x",
+            "1__0",
             ";\u{200b}",
             "a\\x",
             "#5",
@@ -424,12 +456,10 @@ mod tests {
     #[test]
     fn optional_chaining_yields_to_a_following_decimal_digit() {
         // §12.8: `?. [lookahead ∉ DecimalDigit]`. `a?.5:b` is a conditional expression that has
-        // been legal since ES3; lexing `?.` there breaks code older than optional chaining.
-        // Driven token by token because the `5` is a numeric literal, which this slice cannot
-        // lex yet — what is under test is that the `?` and `.` came out separately.
-        let mut lexer = Lexer::new("?.5");
-        assert_eq!(lexer.next_token().map(|t| t.kind), Ok(TokenKind::Question));
-        assert_eq!(lexer.next_token().map(|t| t.kind), Ok(TokenKind::Dot));
+        // been legal since ES3 — the consequent is the numeric literal `.5` — and lexing `?.`
+        // there breaks code older than optional chaining. Now that numbers exist, the whole
+        // tokenization is visible: a question mark, then a number, and no `?.` anywhere.
+        assert_eq!(kinds("?.5"), [TokenKind::Question, NUMBER, TokenKind::Eof]);
         // Every digit, not just one: a `is_ascii_digit` written as `== b'0'` passes the above.
         for digit in '0'..='9' {
             let source = format!("?.{digit}");
@@ -492,7 +522,6 @@ mod tests {
         // worse, would leave the cursor off a boundary.
         let cases = [
             ("@", 1),        // never a token in any edition
-            ("1", 1),        // a numeric literal: a later slice
             ("\"", 1),       // a string literal: a later slice
             ("`", 1),        // a template: a later slice
             ("\u{0000}", 1), // NUL is legal source text, just not a token start

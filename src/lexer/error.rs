@@ -33,6 +33,19 @@ pub enum LexErrorKind {
     /// An escape that is well-formed but contributes a code point which cannot appear where it
     /// was written (§12.7.1.1): `\u{20}` is a space, and a space is no part of a name.
     EscapedCodePointIsNotAnIdentifierCharacter,
+    /// A `NumericLiteralSeparator` that is not between two digits (§12.9.3): `1__0`, `1_`, `0x_1`.
+    MisplacedNumericSeparator,
+    /// `0b`, `0o` or `0x` with no digit after it.
+    ///
+    /// The grammar arrives at the same verdict by another route — `0x` is not a
+    /// `HexIntegerLiteral`, so it is the literal `0` followed by the identifier `x` — but both
+    /// are a Syntax Error and nothing a script can observe tells them apart, so the lexer
+    /// reports the one that says what to fix.
+    MissingDigitsAfterRadixPrefix,
+    /// §12.9.3: "The SourceCharacter immediately following a NumericLiteral must not be an
+    /// IdentifierStart or DecimalDigit." The spec's own example is that `3in` is an error, and
+    /// not the two input elements `3` and `in`.
+    NumericLiteralFollowedByIdentifierOrDigit,
 }
 
 impl fmt::Display for LexErrorKind {
@@ -44,6 +57,11 @@ impl fmt::Display for LexErrorKind {
             Self::CodePointOutOfRange => "escaped value is not a unicode code point",
             Self::EscapedCodePointIsNotAnIdentifierCharacter => {
                 "escaped code point is not valid in an identifier"
+            }
+            Self::MisplacedNumericSeparator => "numeric separator must sit between two digits",
+            Self::MissingDigitsAfterRadixPrefix => "missing digits after the radix prefix",
+            Self::NumericLiteralFollowedByIdentifierOrDigit => {
+                "numeric literal is immediately followed by an identifier or a digit"
             }
         })
     }
@@ -67,7 +85,13 @@ mod tests {
             (LexErrorKind::CodePointOutOfRange, "code point"),
             (
                 LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
-                "identifier",
+                "escaped code point",
+            ),
+            (LexErrorKind::MisplacedNumericSeparator, "separator"),
+            (LexErrorKind::MissingDigitsAfterRadixPrefix, "radix"),
+            (
+                LexErrorKind::NumericLiteralFollowedByIdentifierOrDigit,
+                "followed by",
             ),
         ];
         let mut messages: Vec<String> = Vec::new();
@@ -82,7 +106,7 @@ mod tests {
         }
         assert_eq!(
             messages.len(),
-            5,
+            8,
             "one message for each kind, and no kind missed"
         );
     }

@@ -32,3 +32,9 @@ pub(super) const PLAIN: TokenKind = TokenKind::Identifier {
 pub(super) const ESCAPED: TokenKind = TokenKind::Identifier {
     contains_escape: true,
 };
+
+/// `Number { legacy: false }`, every literal the main grammar produces.
+pub(super) const NUMBER: TokenKind = TokenKind::Number { legacy: false };
+
+/// `Number { legacy: true }`, Annex B.1.1's two forms — a Syntax Error in strict code.
+pub(super) const LEGACY: TokenKind = TokenKind::Number { legacy: true };

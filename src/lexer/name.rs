@@ -255,13 +255,17 @@ mod tests {
         assert_eq!(kinds("$"), [PLAIN, TokenKind::Eof]);
         assert_eq!(kinds("$_0"), [PLAIN, TokenKind::Eof]);
         assert_eq!(first("a0b$_;").span, Span::new(0, 5));
-        // A digit cannot start one — which is what keeps `1` available for the numeric literal
-        // slice rather than making `1abc` a name.
+        // A digit cannot start one: `1` is a numeric literal, and `1abc` is that literal
+        // followed by a name — which §12.9.3 then rejects — rather than one strange identifier.
         assert_eq!(
             Lexer::new("1").next_token().map(|t| t.kind),
+            Ok(TokenKind::Number { legacy: false })
+        );
+        assert_eq!(
+            Lexer::new("1abc").tokens().map(|t| t.len()),
             Err(LexError {
-                kind: LexErrorKind::UnexpectedCharacter,
-                span: Span::new(0, 1),
+                kind: LexErrorKind::NumericLiteralFollowedByIdentifierOrDigit,
+                span: Span::new(1, 2),
             })
         );
         // A name may sit against a punctuator with no space at all.

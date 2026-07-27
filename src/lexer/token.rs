@@ -67,6 +67,24 @@ pub enum TokenKind {
     /// One of the 38 spellings §12.7.2 reserves unconditionally, written without escapes.
     Keyword(ReservedWord),
 
+    /// A `NumericLiteral` (§12.9.3) denoting a Number. [`crate::lexer::numeric_value`] reads it.
+    Number {
+        /// Whether this is one of Annex B.1.1's two legacy forms — a `LegacyOctalIntegerLiteral`
+        /// like `0123`, or a `NonOctalDecimalIntegerLiteral` like `08`.
+        ///
+        /// §12.9.3.1 makes both a Syntax Error in strict code and legal outside it. The lexer
+        /// cannot know which it is reading, so it records the fact and leaves the verdict to the
+        /// parser — the same division of labour as `contains_escape` on an identifier.
+        legacy: bool,
+    },
+
+    /// A `NumericLiteral` carrying the `n` of `BigIntLiteralSuffix` (§12.9.3).
+    ///
+    /// Recognised now although BigInt values arrive at M7, because the alternative is worse than
+    /// waiting: without the suffix, `123n` lexes as `123` followed by the name `n`, which is
+    /// nonsense that parses.
+    BigInt,
+
     /// `{`
     LBrace,
     /// `}` — the spec's `RightBracePunctuator`, split out because the goal symbol decides
@@ -205,7 +223,10 @@ impl TokenKind {
         Some(match self {
             Self::Eof => "",
 
-            Self::Identifier { .. } | Self::PrivateIdentifier { .. } => return None,
+            Self::Identifier { .. }
+            | Self::PrivateIdentifier { .. }
+            | Self::Number { .. }
+            | Self::BigInt => return None,
             Self::Keyword(word) => word.as_str(),
 
             Self::LBrace => "{",
