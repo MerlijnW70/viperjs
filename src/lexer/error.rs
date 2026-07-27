@@ -51,6 +51,11 @@ pub enum LexErrorKind {
     /// intervened (every part of §12.9.5's grammar bottoms out in `RegularExpressionNonTerminator`,
     /// which excludes them) or because the source ended.
     UnterminatedRegExp,
+    /// A template component with no closing backtick or `${`.
+    ///
+    /// The only way a template can fail: §12.9.6 admits ill-formed escapes as ordinary
+    /// characters, so nothing inside one is a lexical error.
+    UnterminatedTemplate,
     /// §12.9.3: "The SourceCharacter immediately following a NumericLiteral must not be an
     /// IdentifierStart or DecimalDigit." The spec's own example is that `3in` is an error, and
     /// not the two input elements `3` and `in`.
@@ -70,6 +75,7 @@ impl fmt::Display for LexErrorKind {
             Self::UnterminatedStringLiteral => "unterminated string literal",
             Self::InvalidHexEscape => "malformed hexadecimal escape sequence",
             Self::UnterminatedRegExp => "unterminated regular expression literal",
+            Self::UnterminatedTemplate => "unterminated template literal",
             Self::MisplacedNumericSeparator => "numeric separator must sit between two digits",
             Self::MissingDigitsAfterRadixPrefix => "missing digits after the radix prefix",
             Self::NumericLiteralFollowedByIdentifierOrDigit => {
@@ -105,6 +111,7 @@ mod tests {
             ),
             (LexErrorKind::InvalidHexEscape, "hexadecimal"),
             (LexErrorKind::UnterminatedRegExp, "regular expression"),
+            (LexErrorKind::UnterminatedTemplate, "template"),
             (LexErrorKind::MisplacedNumericSeparator, "separator"),
             (LexErrorKind::MissingDigitsAfterRadixPrefix, "radix"),
             (
@@ -124,7 +131,7 @@ mod tests {
         }
         assert_eq!(
             messages.len(),
-            11,
+            12,
             "one message for each kind, and no kind missed"
         );
     }

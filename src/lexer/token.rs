@@ -4,7 +4,7 @@
 //! write every punctuator out a second time by hand. Two independent spellings of the same list
 //! catch a drifting table; one spelling proves nothing.
 
-use super::ReservedWord;
+use super::{ReservedWord, TemplatePart};
 use crate::span::Span;
 
 /// One lexical token: what it is, where it is, and whether a line break preceded it.
@@ -89,6 +89,21 @@ pub enum TokenKind {
         legacy_escape: bool,
     },
 
+    /// One component of a template literal (§12.9.6).
+    ///
+    /// A template is not one token: `` `a${x}b` `` is a `Head`, an expression, and a `Tail`.
+    /// [`crate::lexer::template_value`] gives a component its `TV` and `TRV`.
+    Template {
+        /// Which of the four components this is, and so whether a substitution follows.
+        part: TemplatePart,
+        /// Whether the component contains a `NotEscapeSequence`, making its `TV` undefined.
+        ///
+        /// Not an error: §12.9.6 admits ill-formed escapes as `TemplateCharacter`s so that a
+        /// *tagged* template can carry raw text a cooked string could not represent. Only an
+        /// untagged one is a Syntax Error (§13.2.8.1), and only the parser knows which it has.
+        cooked_undefined: bool,
+    },
+
     /// A `RegularExpressionLiteral` (§12.9.5), read only under [`crate::lexer::Goal::RegExp`].
     ///
     /// The token is its extent and nothing more: §12.9.5 says the body and flags "are
@@ -106,8 +121,8 @@ pub enum TokenKind {
 
     /// `{`
     LBrace,
-    /// `}` — the spec's `RightBracePunctuator`, split out because the goal symbol decides
-    /// whether it closes a block or resumes a template. That distinction arrives with templates.
+    /// `}` — the spec's `RightBracePunctuator`, produced under every goal except the two that
+    /// let a `}` resume a template instead (see [`crate::lexer::Goal`]).
     RBrace,
     /// `(`
     LParen,
@@ -248,7 +263,8 @@ impl TokenKind {
             | Self::Number { .. }
             | Self::BigInt
             | Self::String { .. }
-            | Self::RegExp => return None,
+            | Self::RegExp
+            | Self::Template { .. } => return None,
             Self::Keyword(word) => word.as_str(),
 
             Self::LBrace => "{",

@@ -7,11 +7,9 @@
 //!
 //! # What is not here yet
 //!
-//! Templates and regular expressions arrive in the following slices. Until then a character
-//! that can only begin one of those — `` ` `` — is a [`LexErrorKind::UnexpectedCharacter`],
-//! which is also the permanent answer for a character with no token form at all (`@`, `€`,
-//! `\0`). Two deferrals remain, each pinned by a test so that implementing it is a deliberate
-//! change and not an accident:
+//! Every token form §12 defines is here. A character with no token form at all — `@`, `€`,
+//! `\0` — is a [`LexErrorKind::UnexpectedCharacter`], permanently. Two deferrals remain,
+//! each pinned by a test so that implementing it is a deliberate change and not an accident:
 //!
 //! - **Annex B.1.1 HTML-like comments.** `<!--` lexes as `<` `!` `--` today; `-->` would
 //!   additionally need "nothing but trivia before it on this line" state and a Script-vs-Module
@@ -48,6 +46,7 @@
 //! - `number_value` — what one denotes, correctly rounded (§12.9.3.3).
 //! - `string` — string literals and the code units they denote (§12.9.4).
 //! - `regexp` — where a regular expression literal ends (§12.9.5).
+//! - `template` — template components and their two values (§12.9.6).
 //! - `escape` — `UnicodeEscapeSequence` and UTF-16 encoding, shared by `name` and `string`.
 //! - here — the cursor, the [`Goal`] symbol, and [`Lexer::next_token`]: the one place that
 //!   decides which of the above a character belongs to.
@@ -60,6 +59,7 @@ mod number_value;
 mod regexp;
 mod reserved;
 mod string;
+mod template;
 #[cfg(test)]
 mod test_support;
 mod token;
@@ -71,6 +71,7 @@ pub use self::number_value::numeric_value;
 pub use self::regexp::{RegExpParts, regexp_parts};
 pub use self::reserved::ReservedWord;
 pub use self::string::string_value;
+pub use self::template::{TemplatePart, TemplateValue, template_value};
 pub use self::token::{Token, TokenKind};
 
 use self::token::PUNCTUATORS;
@@ -155,16 +156,36 @@ impl<'a> Cursor<'a> {
 /// previous token get most programs right and a few famously wrong, so this is a parameter
 /// rather than a heuristic, supplied at every call.
 ///
-/// §12.6 lists five goals. `InputElementHashbangOrRegExp` is absent because it differs from
+/// The four are a two-by-two: a goal answers "may a `/` open a literal here?" and "may a `}`
+/// resume a template here?", and every combination of those answers is one of §12.6's names.
+///
+/// §12.6 lists five. `InputElementHashbangOrRegExp` is absent because it differs from
 /// `InputElementRegExp` only in admitting a `HashbangComment`, which §12.5 already confines to
 /// byte 0 of the source — [`super::trivia`] tests the position instead, which is the same rule
-/// with nothing for a caller to get wrong. The two `TemplateTail` goals arrive with templates.
+/// with nothing for a caller to get wrong.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Goal {
-    /// `InputElementDiv`: a `/` here is the division operator.
+    /// `InputElementDiv`: a `/` here is the division operator, a `}` closes a block.
     Div,
     /// `InputElementRegExp`: a `/` here opens a `RegularExpressionLiteral`.
     RegExp,
+    /// `InputElementTemplateTail`: a `}` here resumes a template — the goal a parser uses once
+    /// it has finished the substitution expression inside one.
+    TemplateTail,
+    /// `InputElementRegExpOrTemplateTail`: both at once.
+    RegExpOrTemplateTail,
+}
+
+impl Goal {
+    /// Whether a `/` opens a `RegularExpressionLiteral` rather than being division.
+    fn slash_opens_regexp(self) -> bool {
+        matches!(self, Self::RegExp | Self::RegExpOrTemplateTail)
+    }
+
+    /// Whether a `}` resumes a template rather than being the `RightBracePunctuator`.
+    fn brace_resumes_template(self) -> bool {
+        matches!(self, Self::TemplateTail | Self::RegExpOrTemplateTail)
+    }
 }
 
 /// Turns source text into tokens.
@@ -257,11 +278,24 @@ impl<'a> Lexer<'a> {
             });
         }
 
+        // §12.9.6. A backtick opens a template under every goal — `Template` is a `CommonToken`
+        // — while a `}` resumes one only where the parser says a substitution just ended. The
+        // scanner needs no nesting counter: the goal carries that knowledge in from the
+        // recursion that already has it.
+        if first == '`' || (first == '}' && goal.brace_resumes_template()) {
+            let kind = self.scan_template(first == '`')?;
+            return Ok(Token {
+                kind,
+                span: Span::new(start, self.cursor.offset()),
+                newline_before,
+            });
+        }
+
         // §12.6, and the one place the goal symbol changes what a character means. Trivia has
         // already taken `//` and `/*`, so a `/` arriving here starts a literal rather than a
         // comment — which is exactly why Note 2's "`//` is a comment, not an empty literal" and
         // `RegularExpressionFirstChar`'s exclusion of `*` need no code of their own.
-        if first == '/' && goal == Goal::RegExp {
+        if first == '/' && goal.slash_opens_regexp() {
             let kind = self.scan_regexp()?;
             return Ok(Token {
                 kind,
@@ -421,6 +455,28 @@ mod tests {
         ];
         for source in lexes_completely {
             let (tiled, stopped) = retile(source);
+            assert_eq!(tiled, source, "retiling {source:?}");
+            assert_eq!(stopped, source.len(), "stopped early on {source:?}");
+        }
+
+        // Templates, whose components are delimited at both ends and may span lines. The
+        // `}` forms need the goal that lets a brace resume one.
+        for source in [
+            "`abc`",
+            "``",
+            "`a${",
+            "`a\nb`",
+            "`$`",
+            r"`\u{1f680}`",
+            r"`\unicode`",
+            r"`\\`",
+        ] {
+            let (tiled, stopped) = retile_under(source, Goal::Div);
+            assert_eq!(tiled, source, "retiling {source:?}");
+            assert_eq!(stopped, source.len(), "stopped early on {source:?}");
+        }
+        for source in ["}abc`", "}${", "}`", "}a${"] {
+            let (tiled, stopped) = retile_under(source, Goal::TemplateTail);
             assert_eq!(tiled, source, "retiling {source:?}");
             assert_eq!(stopped, source.len(), "stopped early on {source:?}");
         }
@@ -617,7 +673,6 @@ mod tests {
         // worse, would leave the cursor off a boundary.
         let cases = [
             ("@", 1),        // never a token in any edition
-            ("`", 1),        // a template: a later slice
             ("\u{0000}", 1), // NUL is legal source text, just not a token start
             // Multi-byte code points that are not identifier characters — `é` and `א` would be
             // names now, so these are drawn from categories Unicode leaves out of ID_Start.
