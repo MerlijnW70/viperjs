@@ -26,6 +26,7 @@
 //! by the goal symbol rather than here: a token that ends an operand is followed by one read
 //! under [`Goal::Div`], so the slash is division before ASI is ever consulted.
 
+use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{DeclarationKind, Script, Stmt, StmtKind};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
@@ -118,6 +119,7 @@ impl Parser<'_> {
             TokenKind::Keyword(ReservedWord::If) => self.parse_if(),
             TokenKind::Keyword(ReservedWord::While) => self.parse_while(),
             TokenKind::Keyword(ReservedWord::Do) => self.parse_do_while(),
+            TokenKind::Keyword(ReservedWord::For) => self.parse_for(),
             TokenKind::Keyword(ReservedWord::Throw) => self.parse_throw(),
             TokenKind::Keyword(ReservedWord::Try) => self.parse_try(),
             TokenKind::Keyword(ReservedWord::Switch) => self.parse_switch(),
@@ -157,7 +159,7 @@ impl Parser<'_> {
 
     /// `ExpressionStatement : Expression ;` (§14.5).
     fn parse_expression_statement(&mut self) -> Result<Stmt, ParseError> {
-        let expr = self.parse_expression()?;
+        let expr = self.parse_expression(AllowIn::Yes)?;
         let end = self.consume_semicolon(expr.span)?;
         Ok(Stmt {
             span: expr.span.to(end),
@@ -336,7 +338,6 @@ mod tests {
             "function f() {}",
             "class C {}",
             "return 1;",
-            "for (;;) {}",
             "with (a) {}",
             "label: a;",
         ] {

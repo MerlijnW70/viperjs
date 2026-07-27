@@ -22,7 +22,7 @@
 //! point a `Script` stops being able to share this function with a `Block`.
 
 use super::{ParseError, ParseErrorKind};
-use crate::ast::{Stmt, SwitchCase};
+use crate::ast::{Declaration, Stmt, SwitchCase};
 use crate::span::Span;
 use crate::static_semantics::{DeclaredName, lexically_declared_names, var_declared_names};
 use std::collections::HashMap;
@@ -54,6 +54,31 @@ pub(super) fn check_case_block_declared_names(cases: &[SwitchCase]) -> Result<()
             .flat_map(|case| var_declared_names(&case.body))
             .collect(),
     )
+}
+
+/// §14.7.4.1: a `for` header's lexical names may not be `var`-declared in its body.
+///
+/// The header is a scope of its own, between the enclosing one and the body's, so the body may
+/// shadow it with a `let` — `for (let a;;) { let a; }` is fine. A `var` is not shadowing: it
+/// belongs to the enclosing function and passes through the header's scope on its way out, where
+/// the header's name is already sitting.
+pub(super) fn check_header_against_body(
+    declaration: &Declaration,
+    body: &[Stmt],
+) -> Result<(), ParseError> {
+    let mut header: HashMap<&str, Span> = HashMap::new();
+    for declarator in &declaration.declarators {
+        header.insert(&declarator.name, declarator.name_span);
+    }
+    for declared in var_declared_names(body) {
+        if let Some(&header_span) = header.get(declared.name) {
+            return Err(ParseError {
+                kind: ParseErrorKind::ConflictingVarAndLexicalDeclaration,
+                span: std::cmp::max_by_key(header_span, declared.span, |span| span.start),
+            });
+        }
+    }
+    Ok(())
 }
 
 /// §14.2.1, §16.1.1 and §14.12.1, which state the same two rules about different lists.

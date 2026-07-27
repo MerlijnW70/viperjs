@@ -18,17 +18,38 @@ use crate::lexer::{
 };
 use crate::span::Span;
 
+/// Whether `in` is a relational operator here — the `[In]` grammar parameter of §13.
+///
+/// It exists for one construct. `for (a in b; ; )` and `for (a in b)` begin identically, and the
+/// second is a `for`-`in` loop, so the head of a `for` has to be read with `in` unavailable or
+/// the two could never be told apart. §13.10 gates both `in` alternatives of
+/// `RelationalExpression` on `[+In]`, and every other production either propagates the parameter
+/// or resets it.
+///
+/// Resetting is most of the rule and is the half that is easy to get wrong: `for (a[b in c];;)`,
+/// `for (f(a in b);;)` and `for ((a in b);;)` all parse, because a bracket starts a fresh
+/// `Expression[+In]`. So does the *middle* arm of a conditional — `for (a ? b in c : d;;)` is
+/// legal — while the last arm propagates. Passing this as a parameter rather than keeping it on
+/// the parser is what makes every one of those a decision the compiler insists on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum AllowIn {
+    /// `[+In]` — the ordinary case, everywhere but the head of a `for`.
+    Yes,
+    /// `[~In]`, which only the head of a `for` asks for.
+    No,
+}
+
 impl<'a> Parser<'a> {
     /// `Expression` (§13.16) — one or more `AssignmentExpression`s separated by commas.
-    pub(super) fn parse_expression(&mut self) -> Result<Expr, ParseError> {
-        let first = self.parse_assignment()?;
+    pub(super) fn parse_expression(&mut self, allow_in: AllowIn) -> Result<Expr, ParseError> {
+        let first = self.parse_assignment(allow_in)?;
         if self.current.kind != TokenKind::Comma {
             return Ok(first);
         }
         let mut parts = vec![first];
         while self.current.kind == TokenKind::Comma {
             self.advance(Goal::RegExp)?;
-            parts.push(self.parse_assignment()?);
+            parts.push(self.parse_assignment(allow_in)?);
         }
         let span = match (parts.first(), parts.last()) {
             (Some(first), Some(last)) => first.span.to(last.span),
@@ -53,10 +74,10 @@ impl<'a> Parser<'a> {
     /// Falling through to the assignment check rather than returning early after a conditional
     /// is what makes `(a ? b : c) = d` say "this expression cannot be assigned to" instead of
     /// the far less helpful "expected end of input".
-    pub(super) fn parse_assignment(&mut self) -> Result<Expr, ParseError> {
-        let mut left = self.parse_binary(0)?;
+    pub(super) fn parse_assignment(&mut self, allow_in: AllowIn) -> Result<Expr, ParseError> {
+        let mut left = self.parse_binary(0, allow_in)?;
         if self.current.kind == TokenKind::Question {
-            left = self.parse_conditional_tail(left)?;
+            left = self.parse_conditional_tail(left, allow_in)?;
         }
         let Some(operator) = assignment_operator(self.current.kind) else {
             return Ok(left);
@@ -73,7 +94,7 @@ impl<'a> Parser<'a> {
         self.enter()?;
         // `LeftHandSideExpression = AssignmentExpression` — the recursion is on the right, so
         // `a = b = c` is `a = (b = c)`.
-        let value = self.parse_assignment();
+        let value = self.parse_assignment(allow_in);
         self.leave();
         let value = value?;
         Ok(Expr {
@@ -92,10 +113,14 @@ impl<'a> Parser<'a> {
     /// Both arms are `AssignmentExpression`s, which §13.14's own Note explains: it lets an
     /// assignment be governed by either arm, and keeps a comma expression out of the middle.
     /// So `a ? b = 1 : c = 2` is two assignments, and `a ? b, c : d` is an error.
-    fn parse_conditional_tail(&mut self, test: Expr) -> Result<Expr, ParseError> {
+    fn parse_conditional_tail(
+        &mut self,
+        test: Expr,
+        allow_in: AllowIn,
+    ) -> Result<Expr, ParseError> {
         self.advance(Goal::RegExp)?;
         self.enter()?;
-        let arms = self.parse_conditional_arms();
+        let arms = self.parse_conditional_arms(allow_in);
         self.leave();
         let (consequent, alternate) = arms?;
         Ok(Expr {
@@ -111,10 +136,13 @@ impl<'a> Parser<'a> {
 
     /// The two arms of a conditional, split out so their locals do not sit in a frame that the
     /// bracket recursion also passes through.
-    fn parse_conditional_arms(&mut self) -> Result<(Expr, Expr), ParseError> {
-        let consequent = self.parse_assignment()?;
+    fn parse_conditional_arms(&mut self, allow_in: AllowIn) -> Result<(Expr, Expr), ParseError> {
+        // `? AssignmentExpression[+In] : AssignmentExpression[?In]` — the middle arm resets
+        // the parameter and the last one propagates it, so `for (a ? b in c : d;;)` parses
+        // and an `in` in the last arm still would not.
+        let consequent = self.parse_assignment(AllowIn::Yes)?;
         self.eat(TokenKind::Colon, Goal::RegExp, "`:`")?;
-        let alternate = self.parse_assignment()?;
+        let alternate = self.parse_assignment(allow_in)?;
         Ok((consequent, alternate))
     }
 
@@ -124,10 +152,19 @@ impl<'a> Parser<'a> {
     /// belongs to the caller. Left-associative operators recurse one level tighter so the next
     /// one of equal precedence is left for the loop, and `**` recurses at its own level so the
     /// next one is taken by the recursion instead — which is the whole of associativity.
-    fn parse_binary(&mut self, minimum: u8) -> Result<Expr, ParseError> {
+    fn parse_binary(&mut self, minimum: u8, allow_in: AllowIn) -> Result<Expr, ParseError> {
         let mut left = self.parse_unary()?;
         while let Some(operator) = binary_operator(self.current.kind) {
             if operator.precedence < minimum {
+                break;
+            }
+            // §13.10 gates the `in` alternatives of `RelationalExpression` on `[+In]`. Under
+            // `[~In]` the word is not an operator at all, so the expression simply ends and
+            // whatever wanted `in` next is welcome to it — in a `for` head, the `for`-`in`
+            // production. Nothing below here takes the parameter because nothing below
+            // `RelationalExpression` has one: a `ShiftExpression` cannot contain a bare `in`.
+            if allow_in == AllowIn::No && operator.kind == OperatorKind::Binary(BinaryOperator::In)
+            {
                 break;
             }
             // §13.6: the left operand of `**` is an `UpdateExpression`, and a prefix unary is
@@ -151,7 +188,7 @@ impl<'a> Parser<'a> {
                 operator.precedence + 1
             };
             self.enter()?;
-            let right = self.parse_binary(tighter);
+            let right = self.parse_binary(tighter, allow_in);
             self.leave();
             let right = right?;
             left = combine(left, operator, right)?;
@@ -285,7 +322,9 @@ impl<'a> Parser<'a> {
     fn computed_member_after(&mut self, object: Expr) -> Result<Expr, ParseError> {
         self.advance(Goal::RegExp)?;
         self.enter()?;
-        let property = self.parse_expression();
+        // `[ Expression[+In] ]` — a bracket starts afresh, which is why `for (a[b in c];;)`
+        // parses.
+        let property = self.parse_expression(AllowIn::Yes);
         self.leave();
         let property = property?;
         let close = self.eat(TokenKind::RBracket, Goal::Div, "`]`")?;
@@ -348,7 +387,7 @@ impl<'a> Parser<'a> {
         let mut arguments = Vec::new();
         while self.current.kind != TokenKind::RParen {
             self.enter()?;
-            let argument = self.parse_assignment();
+            let argument = self.parse_assignment(AllowIn::Yes);
             self.leave();
             arguments.push(argument?);
             if self.current.kind != TokenKind::Comma {
@@ -400,7 +439,7 @@ impl<'a> Parser<'a> {
         // follows it, and the `)` under `Goal::Div` because the bracketed expression is one.
         self.advance(Goal::RegExp)?;
         self.enter()?;
-        let inner = self.parse_expression();
+        let inner = self.parse_expression(AllowIn::Yes);
         self.leave();
         // The inner failure is reported before the missing `)` is looked for, and the order
         // matters: whatever went wrong inside the brackets happened first and is what the reader

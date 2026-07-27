@@ -21,6 +21,7 @@
 //! consulted where a semicolon *terminates* something, and a body is parsed by asking for a
 //! statement, which end of input is not.
 
+use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{DoWhileStatement, IfStatement, Stmt, StmtKind, WhileStatement};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
@@ -107,7 +108,7 @@ impl Parser<'_> {
     /// That count is what §14.8.1 and §14.9.1 ask about: a `continue` must be inside an
     /// `IterationStatement`, and a `break` inside one or a `switch`. Kept as a depth rather than
     /// a flag because loops nest, and restored on the way out even when the body fails to parse.
-    fn parse_loop_body(&mut self) -> Result<Stmt, ParseError> {
+    pub(super) fn parse_loop_body(&mut self) -> Result<Stmt, ParseError> {
         self.iteration_depth += 1;
         let body = self.parse_statement();
         self.iteration_depth -= 1;
@@ -118,7 +119,7 @@ impl Parser<'_> {
     fn parse_parenthesized_test(&mut self) -> Result<crate::ast::Expr, ParseError> {
         self.eat(TokenKind::LParen, Goal::RegExp, "`(`")?;
         self.enter()?;
-        let test = self.parse_expression();
+        let test = self.parse_expression(AllowIn::Yes);
         self.leave();
         let test = test?;
         self.eat(TokenKind::RParen, Goal::RegExp, "`)`")?;
@@ -140,7 +141,7 @@ impl Parser<'_> {
             });
         }
         self.enter()?;
-        let value = self.parse_expression();
+        let value = self.parse_expression(AllowIn::Yes);
         self.leave();
         let value = value?;
         let end = self.consume_semicolon(value.span)?;

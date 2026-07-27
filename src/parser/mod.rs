@@ -32,6 +32,7 @@
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
+//! - `for_statement` — the three-part `for` (§14.7.4), the one header read under `[~In]`.
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
 //! - `switch` — `switch` (§14.12), whose CaseBlock is one scope across all its clauses.
@@ -42,6 +43,7 @@ mod control;
 mod declaration;
 mod error;
 mod expression;
+mod for_statement;
 mod operator;
 mod scope;
 mod statement;
@@ -76,6 +78,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | conditionals and loops | 114 | 48 |
 /// | `try`, `catch` and `finally` | 114 | 48 |
 /// | `switch` | 114 | 48 |
+/// | the `[In]` parameter, and `for` | 113 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -84,13 +87,20 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// through — the trick works because a debug build reuses no stack slots between match arms, so
 /// an arm that cannot recurse is still paid for by every level that does.
 ///
-/// The last three rows cost nothing, and the reason is worth keeping: the count is one budget
+/// The last row is the first in four slices to cost anything, and it cost one level: threading
+/// the `[In]` grammar parameter through the five functions between `Expression` and
+/// `RelationalExpression` puts one more local in each of their frames. That is what a grammar
+/// parameter costs, it was paid knowingly, and the alternative — holding the flag on the parser —
+/// would have saved it by making every place that resets `[+In]` a thing to remember rather than
+/// a thing the compiler asks about.
+///
+/// The three before it cost nothing, and the reason is worth keeping: the count is one budget
 /// shared by every kind of nesting, so what bounds it is whichever kind spends the most stack per
 /// level. Statements are cheap next to expressions — a level of `if` is three frames where a
 /// level of `(` is the whole precedence ladder — and measured alone they afford 339 levels,
-/// `while` 504, a block 392, a `try` 221, a `switch` 185. So the expression path still sets the
-/// number, and will keep setting it until a statement form recurses through an expression-sized
-/// descent.
+/// `while` 504, a block 392, a `for` 254, a `try` 221, a `switch` 185. So the expression path
+/// still sets the number, and will keep setting it until a statement form recurses through an
+/// expression-sized descent.
 ///
 /// Stack is not the only thing a level spends, though, and the two newest forms show it. A `try`
 /// takes *two* of the count on each level, one for the statement and one for its guarded `Block`,
@@ -128,7 +138,7 @@ pub const MAX_NESTING_DEPTH: u32 = 48;
 /// ```
 pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     let mut parser = Parser::new(source)?;
-    let expr = parser.parse_expression()?;
+    let expr = parser.parse_expression(self::expression::AllowIn::Yes)?;
     parser.expect_eof()?;
     Ok(expr)
 }
@@ -311,6 +321,7 @@ mod tests {
             format!("{}a;", "if (a) ".repeat(deep)),
             format!("{}a;", "if (a) b; else ".repeat(deep)),
             format!("{}a;", "while (a) ".repeat(deep)),
+            format!("{}a;", "for (;;) ".repeat(deep)),
             format!("{}a;{}", "do ".repeat(deep), " while (b);".repeat(deep)),
             // Half as many levels, because a `try` spends two of the count on each: one for the
             // statement and one for its guarded Block, which is a nested scope in its own right.

@@ -124,6 +124,17 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
             }
             StmtKind::While(statement) => pending.push(&statement.body),
             StmtKind::DoWhile(statement) => pending.push(&statement.body),
+            StmtKind::For(statement) => {
+                pending.push(&statement.body);
+                // §8.2.8 gives the `var` header form the BoundNames of its list and gives the
+                // lexical form nothing — the same split as any other declaration, in the one
+                // place a declaration is not a statement.
+                if let Some(crate::ast::ForInit::Declaration(declaration)) = &statement.init
+                    && !declaration.kind.is_lexical()
+                {
+                    push_bound_names(declaration, &mut names);
+                }
+            }
             StmtKind::Switch(statement) => {
                 // §8.2.8 defines this over the CaseBlock, which is the concatenation across every
                 // clause — a `var` in any of them belongs to the enclosing function just as much.

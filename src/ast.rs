@@ -57,6 +57,8 @@ pub enum StmtKind {
     DoWhile(Box<DoWhileStatement>),
     /// `throw …;` (§14.14). Always has a value — there is no argument-less form.
     Throw(Box<Expr>),
+    /// `for (…; …; …) …` (§14.7.4).
+    For(Box<ForStatement>),
     /// `switch (…) { case …: … }` (§14.12).
     Switch(Box<SwitchStatement>),
     /// `try { … } catch { … } finally { … }` (§14.15).
@@ -65,6 +67,37 @@ pub enum StmtKind {
     Break,
     /// `continue;` (§14.8), without a label.
     Continue,
+}
+
+/// `for ( … ; … ; … ) Statement` (§14.7.4) — the three-part loop.
+///
+/// The `for`-`in` and `for`-`of` forms are a different production (`ForInOfStatement`) and will be
+/// a different variant: they share a keyword and nothing else, having one head clause where this
+/// has three.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ForStatement {
+    /// Run once before the loop. Absent when the header begins with its first `;`.
+    pub init: Option<ForInit>,
+    /// Evaluated before each iteration. Absent means "always true" — `for (;;)` is the endless
+    /// loop, and there is no test to be true rather than a test that is.
+    pub test: Option<Expr>,
+    /// Evaluated after each iteration.
+    pub update: Option<Expr>,
+    /// What runs each time round.
+    pub body: Stmt,
+}
+
+/// The first clause of a three-part `for` header (§14.7.4).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ForInit {
+    /// `for (a = 0; …)` — an expression, evaluated and discarded.
+    Expression(Box<Expr>),
+    /// `for (var a = 0; …)`, `for (let a = 0; …)`, `for (const a = 0; …)`.
+    ///
+    /// A lexical one is its own scope, which is why `let a; for (let a;;);` is not a
+    /// redeclaration — and why §14.7.4.1 has to state separately that the body may not `var` the
+    /// same name.
+    Declaration(Box<Declaration>),
 }
 
 /// `switch ( Expression ) CaseBlock` (§14.12).

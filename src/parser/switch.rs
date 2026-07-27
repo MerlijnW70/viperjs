@@ -26,6 +26,7 @@
 //! stops being structural and becomes a thing to check. It is still a missing production rather
 //! than an early error, and it is named that way.
 
+use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Stmt, StmtKind, SwitchCase, SwitchStatement};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
@@ -36,7 +37,7 @@ impl Parser<'_> {
         let keyword = self.advance(Goal::RegExp)?;
         self.eat(TokenKind::LParen, Goal::RegExp, "`(`")?;
         self.enter()?;
-        let discriminant = self.parse_expression();
+        let discriminant = self.parse_expression(AllowIn::Yes);
         self.leave();
         let discriminant = discriminant?;
         self.eat(TokenKind::RParen, Goal::RegExp, "`)`")?;
@@ -92,7 +93,7 @@ impl Parser<'_> {
                 self.enter()?;
                 // `case Expression :` — a full `Expression`, so `case a, b:` is a sequence and
                 // the comma does not separate two clauses.
-                let test = self.parse_expression();
+                let test = self.parse_expression(AllowIn::Yes);
                 self.leave();
                 (keyword, Some(test?))
             }

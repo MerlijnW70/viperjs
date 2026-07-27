@@ -16,6 +16,7 @@
 //! than in the keyword. The two rules read the same word in opposite ways, and the lexer has
 //! carried the flag needed for both since its identifier slice.
 
+use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Declaration, DeclarationKind, Declarator, Stmt, StmtKind};
 use crate::lexer::{Goal, TokenKind, identifier_value};
@@ -49,13 +50,37 @@ impl Parser<'_> {
     }
 
     /// `VariableStatement` or `LexicalDeclaration` (§14.3), with the cursor on the keyword.
+    ///
+    /// The statement forms, which is to say the ones whose terminating semicolon automatic
+    /// semicolon insertion is allowed to supply. A `for` head takes the list without it — see
+    /// [`Parser::parse_declarator_list`].
     pub(super) fn parse_declaration(&mut self, kind: DeclarationKind) -> Result<Stmt, ParseError> {
+        let (declaration, span) = self.parse_declarator_list(kind, AllowIn::Yes)?;
+        let end = self.consume_semicolon(span)?;
+        Ok(Stmt {
+            span: span.to(end),
+            kind: StmtKind::Declaration(Box::new(declaration)),
+        })
+    }
+
+    /// The keyword and its `BindingList`, stopping before any semicolon.
+    ///
+    /// Two things make this worth having apart. A `for` head takes the same list —
+    /// `for (var a, b; …)`, `for (let a; …)` — but the semicolon after it belongs to the header,
+    /// and §12.10 forbids inserting one there, so the header must ask for a real `;` rather than
+    /// accept whatever `consume_semicolon` would allow. And the list is `[~In]` in a header,
+    /// because `Initializer[?In]` propagates: `for (var a = b in c;;)` has no derivation.
+    pub(super) fn parse_declarator_list(
+        &mut self,
+        kind: DeclarationKind,
+        allow_in: AllowIn,
+    ) -> Result<(Declaration, Span), ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
         let mut declarators: Vec<Declarator> = Vec::new();
         // The list is never empty, so the loop always sets this before it is read.
         let mut end;
         loop {
-            let declarator = self.parse_declarator(kind)?;
+            let declarator = self.parse_declarator(kind, allow_in)?;
             // §14.3.1.1: the BoundNames of a lexical BindingList may not repeat. `var a, a;` is
             // legal and `let a, a;` is not, which is the whole difference the flag exists for.
             if kind.is_lexical()
@@ -75,18 +100,21 @@ impl Parser<'_> {
             }
             self.advance(Goal::RegExp)?;
         }
-        let end = self.consume_semicolon(end)?;
-        Ok(Stmt {
-            span: keyword.span.to(end),
-            kind: StmtKind::Declaration(Box::new(Declaration {
+        Ok((
+            Declaration {
                 kind,
                 declarators: declarators.into_boxed_slice(),
-            })),
-        })
+            },
+            keyword.span.to(end),
+        ))
     }
 
     /// One `LexicalBinding` or `VariableDeclaration` (§14.3).
-    fn parse_declarator(&mut self, kind: DeclarationKind) -> Result<Declarator, ParseError> {
+    fn parse_declarator(
+        &mut self,
+        kind: DeclarationKind,
+        allow_in: AllowIn,
+    ) -> Result<Declarator, ParseError> {
         let (name, name_span) = self.parse_binding_identifier()?;
         // §14.3.1.1: the BoundNames of a lexical BindingList may not contain "let". BoundNames is
         // a StringValue, so this reads the *value* — `let` as a name is refused even though
@@ -120,7 +148,9 @@ impl Parser<'_> {
         self.enter()?;
         // `Initializer : = AssignmentExpression` — an assignment expression and not an
         // `Expression`, so a comma separates declarators rather than sequencing values.
-        let initializer = self.parse_assignment();
+        // `Initializer[?In]` propagates the parameter, which is the whole reason
+        // `for (var a = b in c;;)` has no derivation.
+        let initializer = self.parse_assignment(allow_in);
         self.leave();
         let initializer = initializer?;
         Ok(Declarator {

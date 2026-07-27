@@ -1,7 +1,7 @@
 //! Helpers shared by the parser's test modules.
 
 use super::{ParseError, parse_expression};
-use crate::ast::{Expr, ExprKind, RegExpLiteral, Stmt, StmtKind};
+use crate::ast::{Declaration, Expr, ExprKind, ForInit, RegExpLiteral, Stmt, StmtKind};
 
 /// The parsed expression of `source`.
 pub(super) fn parse(source: &str) -> Expr {
@@ -106,6 +106,19 @@ pub(super) fn error(source: &str) -> ParseError {
     }
 }
 
+/// A declaration rendered as `(let a=1 b)`.
+pub(super) fn render_declaration(declaration: &Declaration) -> String {
+    let names: Vec<String> = declaration
+        .declarators
+        .iter()
+        .map(|declarator| match &declarator.initializer {
+            Some(value) => format!("{}={}", declarator.name, render(value)),
+            None => declarator.name.to_string(),
+        })
+        .collect();
+    format!("({} {})", declaration.kind.as_str(), names.join(" "))
+}
+
 /// A statement list rendered as `{a b}`.
 pub(super) fn render_block(body: &[Stmt]) -> String {
     let rendered: Vec<String> = body.iter().map(render_statement).collect();
@@ -121,17 +134,7 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
         StmtKind::Empty => "<empty>".to_string(),
         StmtKind::Debugger => "debugger".to_string(),
         StmtKind::Expression(expr) => render(expr),
-        StmtKind::Declaration(declaration) => {
-            let names: Vec<String> = declaration
-                .declarators
-                .iter()
-                .map(|d| match &d.initializer {
-                    Some(value) => format!("{}={}", d.name, render(value)),
-                    None => d.name.to_string(),
-                })
-                .collect();
-            format!("({} {})", declaration.kind.as_str(), names.join(" "))
-        }
+        StmtKind::Declaration(declaration) => render_declaration(declaration),
         StmtKind::Block(body) => render_block(body),
         StmtKind::If(statement) => match &statement.alternate {
             Some(alternate) => format!(
@@ -157,6 +160,24 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             render(&statement.test)
         ),
         StmtKind::Throw(value) => format!("(throw {})", render(value)),
+        StmtKind::For(statement) => {
+            let init = match &statement.init {
+                Some(ForInit::Expression(expr)) => render(expr),
+                Some(ForInit::Declaration(declaration)) => render_declaration(declaration),
+                None => ";".to_string(),
+            };
+            let clause = |expr: &Option<Expr>| match expr {
+                Some(expr) => render(expr),
+                None => ";".to_string(),
+            };
+            format!(
+                "(for {} {} {} {})",
+                init,
+                clause(&statement.test),
+                clause(&statement.update),
+                render_statement(&statement.body)
+            )
+        }
         StmtKind::Switch(statement) => {
             let mut parts = vec![format!("(switch {}", render(&statement.discriminant))];
             for case in &statement.cases {
