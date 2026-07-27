@@ -106,6 +106,11 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::Class(class) => render_class(class),
         ExprKind::Super => "super".to_string(),
         ExprKind::NewTarget => "new.target".to_string(),
+        ExprKind::ImportMeta => "import.meta".to_string(),
+        ExprKind::ImportCall { specifier, options } => match options {
+            Some(options) => format!("(import {} {})", render(specifier), render(options)),
+            None => format!("(import {})", render(specifier)),
+        },
         ExprKind::PrivateIn { name, object } => format!("(#in {name} {})", render(object)),
         ExprKind::Await(argument) => format!("(await {})", render(argument)),
         ExprKind::OptionalChain(chain) => format!("(?chain {})", render(chain)),

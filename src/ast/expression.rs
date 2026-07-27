@@ -186,6 +186,19 @@ pub enum ExprKind {
         /// What is being asked about.
         object: Box<Expr>,
     },
+    /// `import(a)` and `import(a, b)` (§13.3) — an `ImportCall`.
+    ///
+    /// A `CallExpression` and not a `MemberExpression`, which is why `new import(a)` has no
+    /// derivation: `new` takes the narrower one, and there is nothing here to construct.
+    ImportCall {
+        /// The `ModuleSpecifier`, which is an expression here rather than a string literal — that
+        /// being the whole point of the form.
+        specifier: Box<Expr>,
+        /// The second argument, if one was written. The grammar allows exactly two.
+        options: Option<Box<Expr>>,
+    },
+    /// `import.meta` (§13.3) — the other `MetaProperty`, and one only a module may write.
+    ImportMeta,
     /// `new.target` (§13.3) — a `MetaProperty`, and not a member access of anything.
     ///
     /// `import.meta` is the other `MetaProperty` and needs the `Module` goal, which arrives with

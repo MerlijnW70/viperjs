@@ -107,6 +107,8 @@ fn parsing_at_the_cap_fits_in_the_stack_it_claims_to_need() {
         // parsed — so `throw` plus a full-depth expression is one level past the cap, and
         // the deepest that parses has one bracket fewer.
         format!("throw {}1{};", "(".repeat(deep - 1), ")".repeat(deep - 1)),
+        // An `ImportCall`'s specifier is an `AssignmentExpression`, so a chain of them nests.
+        format!("{}1{};", "import(".repeat(deep), ")".repeat(deep)),
         // A class heritage is an expression and a class is one, so each level costs a level.
         format!(
             "{}D{};",

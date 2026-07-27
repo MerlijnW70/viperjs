@@ -213,6 +213,16 @@ pub enum ParseErrorKind {
     /// and refused for the same reason: a default is evaluated before the function is
     /// suspendable, so there is nothing for the `await` to suspend into.
     AwaitInParameters,
+    /// §13.3: `new import(a)`.
+    ///
+    /// An `ImportCall` is a `CallExpression` and `new MemberExpression Arguments` takes the
+    /// narrower one — so there is no production, and nothing to construct if there were.
+    NewOnImportCall,
+    /// §13.3.12: `import.meta` outside a module.
+    ///
+    /// "It is a Syntax Error if the syntactic goal symbol is not Module." A script is not a
+    /// module and has nothing for the object to describe.
+    ImportMetaOutsideModule,
     /// §16.2.1.1: two exports with the same name.
     ///
     /// Two modules asking for that name would get two different things, so the whole
@@ -528,6 +538,12 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`await` may not appear in an async function's own parameter list"
             ),
+            Self::NewOnImportCall => {
+                write!(f, "`new` may not be applied to `import()`")
+            }
+            Self::ImportMetaOutsideModule => {
+                write!(f, "`import.meta` is only allowed in a module")
+            }
             Self::DuplicateExportedName => {
                 write!(f, "this name is already exported by this module")
             }

@@ -112,7 +112,16 @@ impl Parser<'_> {
         let mut body = Vec::new();
         while self.current.kind != TokenKind::Eof {
             body.push(match self.current.kind {
-                TokenKind::Keyword(ReservedWord::Import) => {
+                // `ImportDeclaration` takes an `ImportClause` or a `ModuleSpecifier` after the
+                // word, and neither may begin with `(` or `.`. Those two are the `ImportCall` and
+                // `ImportMeta` of §13.3, which are expressions and reach here as statements —
+                // `import("a");` at the top of a module is an ordinary one.
+                TokenKind::Keyword(ReservedWord::Import)
+                    if !matches!(
+                        self.peek(Goal::RegExp)?.kind,
+                        TokenKind::LParen | TokenKind::Dot
+                    ) =>
+                {
                     ModuleItem::Import(self.parse_import_declaration()?)
                 }
                 TokenKind::Keyword(ReservedWord::Export) => {
@@ -606,6 +615,47 @@ mod tests {
         // No `[no LineTerminator here]` before the `with`, which is safe only because nothing
         // else could follow an `ImportDeclaration` with that word.
         assert!(parse_module("import a from \"b\"\nwith { type: \"json\" };").is_ok());
+    }
+
+    #[test]
+    fn import_followed_by_a_paren_or_a_dot_is_an_expression_and_not_a_declaration() {
+        // An `ImportDeclaration` takes an `ImportClause` or a `ModuleSpecifier` after the word,
+        // and neither may begin with `(` or `.`. So §13.3's two forms reach the module body as
+        // ordinary statements, and the lookahead is what lets them.
+        for source in [
+            "import(\"a\");",
+            "import(\"a\", b);",
+            "import(\"a\").then(b);",
+            "import.meta;",
+            "import.meta.url;",
+            "export default import.meta;",
+            "function f() { return import.meta; }",
+        ] {
+            assert!(parse_module(source).is_ok(), "{source:?}");
+        }
+        // …while a declaration is still a declaration, and still only at the top.
+        assert!(parse_module("import a from \"b\";").is_ok());
+        assert!(parse_module("{ import(\"a\"); }").is_ok());
+        assert!(parse_module("{ import a from \"b\"; }").is_err());
+        // `import.meta` needs the goal symbol and `import()` does not — the one asymmetry.
+        assert!(parse_script("import(\"a\");").is_ok());
+        assert!(parse_script("import.meta;").is_err());
+        // It is not an assignment target, `MetaProperty` being nowhere in §13.15.1's list.
+        assert!(parse_module("import.meta = 1;").is_err());
+        assert!(parse_module("import.meta++;").is_err());
+        // `meta` is a terminal of the production, so nothing else after the `.` is one —
+        // and only a module can tell, a script refusing every spelling for its own reason.
+        for source in [
+            "import.a;",
+            "import.Meta;",
+            "import.metaa;",
+            "import.if;",
+            "import.\\u006deta;",
+            "import.\"meta\";",
+        ] {
+            assert!(parse_module(source).is_err(), "{source:?}");
+        }
+        assert!(parse_module("import.meta;").is_ok());
     }
 
     #[test]

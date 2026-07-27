@@ -53,6 +53,12 @@ impl Parser<'_> {
             None if self.current.kind == TokenKind::Keyword(ReservedWord::New) => {
                 self.parse_new()?
             }
+            // `CallExpression : ImportCall` and `MemberExpression : MetaProperty` — two
+            // productions that begin with the same reserved word and share nothing else, so the
+            // token after it is what decides which.
+            None if self.current.kind == TokenKind::Keyword(ReservedWord::Import) => {
+                self.parse_import_head(allow_call)?
+            }
             None => self.parse_primary()?,
         };
         // Whether a `?.` has been seen in *this* chain. Once one has, the whole thing is an
@@ -242,6 +248,95 @@ impl Parser<'_> {
             },
             token.span.to(end),
         ))
+    }
+
+    /// `ImportCall` and `ImportMeta` (§13.3), with the cursor on `import`.
+    ///
+    /// `allow_call` is false under a `new`, and that is exactly the rule: an `ImportCall` is a
+    /// `CallExpression` where `new MemberExpression Arguments` takes the narrower one, so
+    /// `new import(a)` has no derivation. `new import.meta` does — a `MetaProperty` *is* a
+    /// `MemberExpression` — which is why this is one function and not two entry points.
+    fn parse_import_head(&mut self, allow_call: bool) -> Result<Expr, ParseError> {
+        let keyword = self.advance(Goal::RegExp)?;
+        if self.current.kind == TokenKind::Dot {
+            return self.parse_import_meta(keyword.span);
+        }
+        if self.current.kind != TokenKind::LParen {
+            return Err(self.unexpected("`(` or `.`"));
+        }
+        if !allow_call {
+            return Err(ParseError {
+                kind: ParseErrorKind::NewOnImportCall,
+                span: keyword.span,
+            });
+        }
+        self.parse_import_call(keyword.span)
+    }
+
+    /// `ImportCall : import ( AssignmentExpression ,_opt )` and its two-argument form (§13.3).
+    ///
+    /// Not `Arguments`: the grammar spells the list out, so there is no spread and no third
+    /// argument, and the first is required — `import()` has nothing to import.
+    fn parse_import_call(&mut self, keyword: Span) -> Result<Expr, ParseError> {
+        self.advance(Goal::RegExp)?;
+        self.enter()?;
+        let arguments = self.parse_import_arguments();
+        self.leave();
+        let (specifier, options) = arguments?;
+        let close = self.eat(TokenKind::RParen, Goal::Div, "`)`")?;
+        Ok(Expr::new(
+            ExprKind::ImportCall {
+                specifier: Box::new(specifier),
+                options: options.map(Box::new),
+            },
+            keyword.to(close.span),
+        ))
+    }
+
+    /// The one or two `AssignmentExpression`s of an `ImportCall`, and the comma between them.
+    fn parse_import_arguments(&mut self) -> Result<(Expr, Option<Expr>), ParseError> {
+        let specifier = self.parse_assignment(AllowIn::Yes)?;
+        if self.current.kind != TokenKind::Comma {
+            return Ok((specifier, None));
+        }
+        self.advance(Goal::RegExp)?;
+        // `import(a,)` — the trailing comma of the one-argument form, which the grammar gives
+        // both forms and which leaves nothing behind.
+        if self.current.kind == TokenKind::RParen {
+            return Ok((specifier, None));
+        }
+        let options = self.parse_assignment(AllowIn::Yes)?;
+        if self.current.kind == TokenKind::Comma {
+            self.advance(Goal::RegExp)?;
+        }
+        Ok((specifier, Some(options)))
+    }
+
+    /// `ImportMeta : import . meta` (§13.3), with the cursor on the `.`.
+    ///
+    /// Read like `new.target` and refused like it, except that what decides is the goal symbol
+    /// rather than the enclosing function: §13.3.12 makes one a Syntax Error "if the syntactic
+    /// goal symbol is not Module", there being no module to describe in a script.
+    fn parse_import_meta(&mut self, keyword: Span) -> Result<Expr, ParseError> {
+        self.advance(Goal::Div)?;
+        let word = self.current;
+        let is_meta = matches!(
+            word.kind,
+            TokenKind::Identifier {
+                contains_escape: false
+            }
+        ) && word.span.slice(self.source) == Some("meta");
+        if !is_meta {
+            return Err(self.unexpected("`meta`"));
+        }
+        self.advance(Goal::Div)?;
+        if !self.module {
+            return Err(ParseError {
+                kind: ParseErrorKind::ImportMetaOutsideModule,
+                span: keyword.to(word.span),
+            });
+        }
+        Ok(Expr::new(ExprKind::ImportMeta, keyword.to(word.span)))
     }
 
     /// `NewTarget : new . target` (§13.3), with the cursor on the `.`.
@@ -747,13 +842,83 @@ mod tests {
     }
 
     #[test]
-    fn the_left_hand_side_forms_not_yet_built_fail_where_they_will_one_day_parse() {
-        // Pinned so that implementing each is a deliberate change and not an accident. What is
-        // left of this list is `ImportCall` and `ImportMeta`, both of which need the host and the
-        // `Module` goal that modules will bring. Optional chaining, `new.target`, spread
-        // arguments and `super` used to be here and now parse — see the tests above.
-        for source in ["import('x')", "import.meta"] {
+    fn an_import_call_takes_one_or_two_arguments_and_is_not_a_member_expression() {
+        assert_eq!(shape("import(a)"), "(import a)");
+        assert_eq!(shape("import(a, b)"), "(import a b)");
+        // The grammar spells the list out rather than borrowing `Arguments`, so both forms take a
+        // trailing comma, neither takes a spread, and there is no third.
+        assert_eq!(shape("import(a,)"), "(import a)");
+        assert_eq!(shape("import(a, b,)"), "(import a b)");
+        for source in [
+            "import()",
+            "import(...a)",
+            "import(a, b, c)",
+            "import(",
+            "import(a,",
+        ] {
             assert!(parse_expression(source).is_err(), "{source:?}");
         }
+        // A `CallExpression`, so it chains with everything one does\u2026
+        assert_eq!(shape("import(a).b"), "(. (import a) b)");
+        assert_eq!(shape("import(a)(b)"), "(call (import a) [b])");
+        assert!(parse_script("import(a) + 1;").is_ok());
+        assert!(parse_script("typeof import(a);").is_ok());
+        assert!(parse_script("f(import(a));").is_ok());
+        assert!(parse_script("import(import(a));").is_ok());
+        // \u2026and `new MemberExpression Arguments` takes the narrower one, so this has no
+        // derivation and nothing to construct if it had.
+        assert_eq!(
+            script_error("new import(a);").kind,
+            ParseErrorKind::NewOnImportCall
+        );
+        // A script may write one: only `import.meta` needs the goal symbol.
+        assert!(parse_script("import(a);").is_ok());
+        // The word alone is neither production, and the error names both — said as the
+        // kind because everything after this point would refuse it anyway, for reasons
+        // that have nothing to do with there being no `(` or `.`.
+        for source in ["import;", "import a;", "import 1;", "import"] {
+            assert!(
+                matches!(
+                    script_error(source).kind,
+                    ParseErrorKind::Unexpected {
+                        expected: "`(` or `.`",
+                        ..
+                    }
+                ),
+                "{source:?} failed with {:?}",
+                script_error(source).kind
+            );
+        }
+    }
+
+    #[test]
+    fn import_meta_is_the_one_thing_here_that_needs_the_goal_symbol() {
+        // \u00a713.3.12: "It is a Syntax Error if the syntactic goal symbol is not Module." Refused
+        // everywhere in a script, including where nothing else about the position is wrong.
+        for source in [
+            "import.meta;",
+            "import.meta.a;",
+            "function f() { import.meta; }",
+            "class C { m() { import.meta; } }",
+            "[import.meta];",
+        ] {
+            assert_eq!(
+                script_error(source).kind,
+                ParseErrorKind::ImportMetaOutsideModule,
+                "{source:?}"
+            );
+        }
+        // `meta` is a terminal of the production, so only that spelling works \u2014 and no
+        // `[no LineTerminator here]` on either side of the `.`.
+        assert!(parse_script("import.Meta;").is_err());
+        assert!(parse_script("import.a;").is_err());
+        assert_eq!(
+            script_error("import . meta;").kind,
+            ParseErrorKind::ImportMetaOutsideModule
+        );
+        assert_eq!(
+            script_error("import\n.\nmeta;").kind,
+            ParseErrorKind::ImportMetaOutsideModule
+        );
     }
 }
