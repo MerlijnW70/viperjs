@@ -455,6 +455,11 @@ impl<'a> Parser<'a> {
         if token.kind == TokenKind::LBracket {
             return self.parse_array_literal();
         }
+        // Reached only where an expression may begin, so §14.5's restriction has already taken
+        // any `{` that could have been a block — which is what keeps the two apart.
+        if token.kind == TokenKind::LBrace {
+            return self.parse_object_literal();
+        }
         let literal = |kind| Ok(Expr::new(kind, token.span));
         match token.kind {
             TokenKind::Keyword(ReservedWord::This) => {
@@ -870,7 +875,7 @@ mod tests {
         // `super`, `import()`, spread arguments and object literals fail as unrecognised
         // operands. Array literals used to be on this list and now parse — see
         // [`super::array_literal`].
-        for source in ["super.a", "super()", "import('x')", "f(...a)", "({})"] {
+        for source in ["super.a", "super()", "import('x')", "f(...a)"] {
             assert!(parse_expression(source).is_err(), "{source:?}");
         }
     }

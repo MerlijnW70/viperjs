@@ -2,8 +2,8 @@
 
 use super::{ParseError, parse_expression};
 use crate::ast::{
-    ArrayElement, Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, RegExpLiteral,
-    Stmt, StmtKind,
+    ArrayElement, Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit,
+    PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
 };
 
 /// The parsed expression of `source`.
@@ -92,10 +92,33 @@ pub(super) fn render(expr: &Expr) -> String {
                 .collect();
             format!("[{}]", rendered.join(" "))
         }
+        ExprKind::Object(properties) => {
+            let rendered: Vec<String> = properties
+                .iter()
+                .map(|property| match property {
+                    PropertyDefinition::KeyValue { key, value } => {
+                        format!("({} {})", render_key(key), render(value))
+                    }
+                    PropertyDefinition::Shorthand { name, .. } => name.to_string(),
+                    PropertyDefinition::Spread(value) => format!("(... {})", render(value)),
+                })
+                .collect();
+            format!("{{{}}}", rendered.join(" "))
+        }
         ExprKind::Sequence(parts) => {
             let rendered: Vec<String> = parts.iter().map(render).collect();
             format!("(, {})", rendered.join(" "))
         }
+    }
+}
+
+/// A property key, rendered so the four forms stay apart.
+fn render_key(key: &PropertyKey) -> String {
+    match key {
+        PropertyKey::Identifier(name) => name.to_string(),
+        PropertyKey::String(units) => format!("s{:?}", String::from_utf16_lossy(units)),
+        PropertyKey::Number(value) => format!("n{value}"),
+        PropertyKey::Computed(expr) => format!("[{}]", render(expr)),
     }
 }
 

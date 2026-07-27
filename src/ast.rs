@@ -365,6 +365,62 @@ pub enum ArrayElement {
     Spread(Expr),
 }
 
+/// One entry of an object literal (§13.2.5).
+#[derive(Debug, Clone, PartialEq)]
+pub enum PropertyDefinition {
+    /// `a: 1` — `PropertyName : AssignmentExpression`, the only production the `__proto__` rule
+    /// of §13.2.5.1 counts.
+    KeyValue {
+        /// What names the property.
+        key: PropertyKey,
+        /// What it is set to.
+        value: Expr,
+    },
+    /// `{a}` — an `IdentifierReference`, which is narrower than the `IdentifierName` a key may
+    /// be: `{if: 1}` is a property and `{if}` has no derivation.
+    Shorthand {
+        /// The name, which is both the key and the value.
+        name: Box<str>,
+        /// Where it was written.
+        span: Span,
+    },
+    /// `...a`, which stands wherever any other property may.
+    Spread(Expr),
+}
+
+/// What names a property (§13.2.5).
+///
+/// The four source forms are kept apart rather than reduced to one string, because reducing them
+/// needs `PropName`, and `PropName` of a `NumericLiteral` is `ToString` of its value — an abstract
+/// operation this engine does not have yet. Inventing an approximation would be a bug that only
+/// ever showed up in a property name.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PropertyKey {
+    /// An `IdentifierName`, escapes resolved. Includes every reserved word.
+    Identifier(Box<str>),
+    /// A `StringLiteral`, as UTF-16 code units (DR-0004) — which may include a lone surrogate,
+    /// and so is not a `str`.
+    String(Box<[u16]>),
+    /// A `NumericLiteral`, as its value.
+    Number(f64),
+    /// `[ AssignmentExpression ]`, whose name is not known until it runs.
+    Computed(Box<Expr>),
+}
+
+impl PropertyKey {
+    /// Whether this names `__proto__`, for §13.2.5.1.
+    ///
+    /// A computed key is not asked, the rule being about the other productions; and a numeric key
+    /// cannot spell it, `PropName` of a number being the number written out.
+    pub fn is_proto(&self) -> bool {
+        match self {
+            Self::Identifier(name) => &**name == "__proto__",
+            Self::String(units) => units.iter().copied().eq("__proto__".encode_utf16()),
+            Self::Number(_) | Self::Computed(_) => false,
+        }
+    }
+}
+
 /// An expression, with where it was written.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expr {
@@ -535,6 +591,8 @@ pub enum ExprKind {
     Sequence(Box<[Expr]>),
     /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
     Array(Box<[ArrayElement]>),
+    /// `{…}` (§13.2.5), where a `{` could not have begun a statement.
+    Object(Box<[PropertyDefinition]>),
     /// `&&`, `||` or `??` (§13.13), kept apart from [`ExprKind::Binary`] because they are apart
     /// in the grammar and in what they compile to: the right operand may never be evaluated, so
     /// there is a branch here where an arithmetic operator has none.

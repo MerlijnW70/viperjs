@@ -30,6 +30,7 @@
 //! - `operator` — precedence, associativity, and the pairs §13 keeps apart.
 //! - `expression` — the grammar of §13, from `Expression` down to `PrimaryExpression`.
 //! - `array_literal` — `[…]` (§13.2.4), and the two different things a comma does inside one.
+//! - `object_literal` — `{…}` (§13.2.5), which has no elisions and one rule about `__proto__`.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -50,6 +51,7 @@ mod expression;
 mod for_in_of;
 mod for_statement;
 mod labelled;
+mod object_literal;
 mod operator;
 mod scope;
 mod statement;
@@ -90,6 +92,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | `for`-`in` and `for`-`of` | 113 | 48 |
 /// | labelled statements, and `with` | 113 | 48 |
 /// | array literals | 82 | 48 |
+/// | object literals | 73 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -114,8 +117,9 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 ///
 /// The array literal is the first thing that did, and it took the lead: `[[[…]]]` recurses
 /// through the whole precedence ladder *and* two frames of its own, so it affords 82 levels where
-/// `(((…)))` affords 113. Expressions no longer set this number — the narrowest bracket does, and
-/// every future literal with a bracket in it is a candidate.
+/// `(((…)))` affords 113. The object literal then took it from the array, at 73. Expressions no
+/// longer set this number — the narrowest bracket does, and every literal with a bracket in it is
+/// a candidate, which is now most of them.
 ///
 /// Stack is not the only thing a level spends, though, and the two newest forms show it. A `try`
 /// takes *two* of the count on each level, one for the statement and one for its guarded `Block`,
@@ -128,11 +132,12 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// recursive path in a thread with exactly one mebibyte. That test is the real specification of
 /// this constant: raise the cap, or make a level cost more stack, and it fails.
 ///
-/// The margin over the narrowest path is 1.7×, and was two for the first several slices. It was
-/// not lowered to restore the ratio, because the ratio is comfort and the test is the guarantee —
-/// buying a rounder number would cost real programs eight levels of nesting they are entitled to.
-/// The day a slice takes the narrowest path below the cap, that test says so and the number
-/// moves.
+/// The margin over the narrowest path is 1.5×, and was two for the first several slices. It has
+/// not been lowered to restore the ratio, because the ratio is comfort and the test is the
+/// guarantee — buying a rounder number would cost real programs a third of the nesting they are
+/// entitled to. The trend is the thing to watch rather than the number: each bracketed literal has
+/// taken a bite, and the next one may well be what forces the cap down. The day the narrowest path
+/// falls below it, that test says so.
 ///
 /// # Why a count and not a stack measurement
 ///
@@ -345,6 +350,7 @@ mod tests {
             format!("{}1{}", "(".repeat(deep), ")".repeat(deep)),
             format!("{}{}", "{".repeat(deep), "}".repeat(deep)),
             format!("{}{};", "[".repeat(deep), "]".repeat(deep)),
+            format!("{}1{};", "({a: ".repeat(deep / 2), "})".repeat(deep / 2)),
             format!("{}a;", "if (a) ".repeat(deep)),
             format!("{}a;", "if (a) b; else ".repeat(deep)),
             format!("{}a;", "while (a) ".repeat(deep)),

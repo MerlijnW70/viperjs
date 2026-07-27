@@ -66,6 +66,16 @@ pub enum ParseErrorKind {
     /// bindings of `a` in one scope even though nothing at either level looks like a
     /// redeclaration.
     ConflictingVarAndLexicalDeclaration,
+    /// §13.2.5.1: two `__proto__` properties written as `PropertyName : AssignmentExpression`.
+    ///
+    /// Only that production counts: a computed key and a shorthand are invisible to the rule,
+    /// because only that one sets the prototype rather than defining an ordinary property.
+    DuplicateProto,
+    /// §13.2.5.1: `{a = 1}` outside a destructuring pattern.
+    ///
+    /// `CoverInitializedName` exists only so the cover grammar can reach `({a = 1} = b)`, and the
+    /// specification says to always throw a Syntax Error where it is matched as a literal.
+    ShorthandPropertyWithInitializer,
     /// §14.7.5: a `for`-`of` whose target begins with the token `let`.
     ///
     /// `[lookahead ∉ { let, async of }]`, a one-token restriction — so `for (let.a of b)` is
@@ -174,6 +184,13 @@ impl fmt::Display for ParseErrorKind {
             Self::ConflictingVarAndLexicalDeclaration => write!(
                 f,
                 "this name is declared by `var` and by `let` or `const` in the same scope"
+            ),
+            Self::DuplicateProto => {
+                write!(f, "an object literal may set `__proto__` only once")
+            }
+            Self::ShorthandPropertyWithInitializer => write!(
+                f,
+                "a shorthand property may not have an initializer outside a pattern"
             ),
             Self::ForOfTargetBeginsWithLet => {
                 write!(f, "the target of a `for`-`of` may not begin with `let`")
