@@ -14,6 +14,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+pub mod lexer;
 pub mod span;
 
 /// The engine version, as reported to embedders (`praxis::VERSION`).
