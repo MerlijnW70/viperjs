@@ -197,6 +197,9 @@ impl Parser<'_> {
         self.advance(Goal::Div)?;
         let name =
             identifier_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
+        // §13.1.1's strict-mode rules are about `BoundNames`, so they belong to every binding and
+        // not to any one production that makes one.
+        self.check_strict_name(&name, token.span, true)?;
         Ok((name.into_owned().into_boxed_str(), token.span))
     }
 }

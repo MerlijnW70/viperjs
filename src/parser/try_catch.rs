@@ -29,18 +29,17 @@
 //!    (Annex B.3.4). Every `CatchParameter` this parser accepts is a `BindingIdentifier`, so the
 //!    exemption covers all of them and the rule cannot fire yet. `catch (e) { var e; }` parses.
 //!
-//! The third is worth being precise about rather than calling it a deferral, because the choice
-//! is decidable rather than a preference. A host that took the rule literally would refuse
-//! `catch (e) { var e; }`; V8 accepts it and V8 passes test262's main tree, so the main tree
-//! cannot be asserting the refusal — the requirement lives under `annexB/`, which asserts it
-//! parses. Accepting therefore satisfies both, and it is what every engine in use does. When
-//! `catch ([e]) { var e; }` becomes parseable it is a Syntax Error unconditionally, because the
-//! exemption names `BindingIdentifier` and a pattern is not one.
+//! The third is implemented and its exemption is declined. `catch (e) { var e; }` is refused
+//! here and accepted by every browser, and DR-0008 is the argument: Annex B.3's syntactic
+//! extensions are not implemented, praxis being no web browser. This was the other way round for
+//! three slices, on the narrower ground that test262's main tree cannot be asserting the refusal
+//! — which is true, and is not the question. The exemption names a `BindingIdentifier` anyway, so
+//! `catch ([e]) { var e; }` would be refused on every host.
 
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{CatchClause, CatchParameter, Stmt, StmtKind, TryStatement};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
-use crate::static_semantics::{bound_names, lexically_declared_names};
+use crate::static_semantics::{bound_names, lexically_declared_names, var_declared_names};
 use std::collections::HashSet;
 
 impl Parser<'_> {
@@ -131,6 +130,18 @@ impl Parser<'_> {
             // block inside it declares — `catch (e) { { let e; } }` is two scopes.
             let lexical = lexically_declared_names(&body);
             if let Some(shadow) = lexical
+                .iter()
+                .find(|declared| names.iter().any(|bound| bound.name == declared.name))
+            {
+                return Err(ParseError {
+                    kind: ParseErrorKind::CatchParameterRedeclared,
+                    span: shadow.span,
+                });
+            }
+            // Rule 3, which reads `VarDeclaredNames` and so descends. Annex B.3.4 exempts a
+            // `BindingIdentifier` parameter on a web browser, and DR-0008 declines it: praxis is
+            // not one, and B.3's syntactic extensions are not implemented.
+            if let Some(shadow) = var_declared_names(&body)
                 .iter()
                 .find(|declared| names.iter().any(|bound| bound.name == declared.name))
             {
@@ -304,13 +315,25 @@ mod tests {
     }
 
     #[test]
-    fn a_var_may_reuse_the_catch_parameters_name_and_a_lexical_one_outside_may_not() {
-        // §14.15.1's third rule exempts a `BindingIdentifier` parameter under Annex B.3.4, and
-        // every parameter this parser accepts is one — see the module docs for why accepting is
-        // the decidable answer rather than a preference.
-        assert!(parse_script("try {} catch (e) { var e; }").is_ok());
-        assert!(parse_script("try {} catch (e) { var e; var e; }").is_ok());
-        assert!(parse_script("try {} catch (e) { { var e; } }").is_ok());
+    fn a_var_may_not_reuse_the_catch_parameters_name_and_nor_may_a_lexical_one() {
+        // §14.15.1's third rule, whose Annex B.3.4 exemption DR-0008 declines — praxis being no
+        // web browser. Every browser accepts all three of these; this is what that costs.
+        assert_eq!(
+            script_error("try {} catch (e) { var e; }").kind,
+            ParseErrorKind::CatchParameterRedeclared
+        );
+        assert_eq!(
+            script_error("try {} catch (e) { { var e; } }").kind,
+            ParseErrorKind::CatchParameterRedeclared,
+            "the rule reads VarDeclaredNames, so it descends"
+        );
+        assert_eq!(
+            script_error("try {} catch ([e]) { var e; }").kind,
+            ParseErrorKind::CatchParameterRedeclared,
+            "…and the exemption named a BindingIdentifier, so this one no host takes"
+        );
+        // A different name is still fine, which is what keeps this a rule about names.
+        assert!(parse_script("try {} catch (e) { var f; }").is_ok());
         // §14.2.1 still applies to all three blocks, though, since all three are Blocks.
         assert!(parse_script("try { let a; let a; } catch (e) {}").is_err());
         assert!(parse_script("try {} catch (e) { let a; var a; }").is_err());

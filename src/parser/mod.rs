@@ -36,6 +36,7 @@
 //! - `pattern` — refining either literal into the assignment pattern it covered (§13.15.5).
 //! - `binding` — binding patterns (§14.3.3), which need no cover grammar and say so.
 //! - `function` — function definitions (§15.2), and the `return` they make legal (§14.10).
+//! - `strict` — where strict mode starts (§11.2.1) and what it takes away (§13.1.1).
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -65,6 +66,7 @@ mod pattern;
 mod primary;
 mod scope;
 mod statement;
+mod strict;
 mod switch;
 #[cfg(test)]
 mod test_support;
@@ -245,6 +247,14 @@ struct Parser<'a> {
     /// look identical once parsed — a trailing comma leaves no element — so the literal parser
     /// records it and refinement is what turns it into an error.
     pub(super) rest_followed_by_comma: Option<Span>,
+    /// Whether this is strict mode code (§11.2.1).
+    ///
+    /// Not a grammar parameter — the specification threads strictness through `IsStrict`, which
+    /// asks whether a node is *contained in* strict code, and that is a fact about where you are
+    /// rather than a decision at each step. Set by a Directive Prologue, inherited by everything
+    /// within, and never turned off: a function body may make itself strict and may not make
+    /// itself sloppy, so the saving and restoring around one only matters on the way out.
+    pub(super) strict: bool,
     /// Whether a `FunctionBody` encloses this — the `[Return]` grammar parameter of §14.10.
     ///
     /// A field rather than a parameter, where `[In]` is a parameter, and the difference is which
@@ -277,6 +287,7 @@ impl<'a> Parser<'a> {
             rest_followed_by_comma: None,
             literal_depth: 0,
             inside_function: false,
+            strict: false,
         })
     }
 

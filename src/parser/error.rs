@@ -45,6 +45,34 @@ pub enum ParseErrorKind {
     /// can build so far the answer is "an identifier, however many parentheses are around it".
     /// `1 = 2` and `(a, b) = 3` are the shapes this rejects.
     InvalidAssignmentTarget,
+    /// §13.1.1: a name strict code keeps for itself.
+    ///
+    /// `implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`
+    /// and `yield` — the words a future edition wanted room for, left available to the sloppy
+    /// code that was already using them.
+    StrictReservedWord,
+    /// §13.1.1: `eval` or `arguments` bound or assigned to in strict code.
+    ///
+    /// Reading them is fine; it is binding one or assigning to one that is refused, which is why
+    /// `eval("x")` works in strict code and `eval = 1` does not.
+    StrictEvalOrArguments,
+    /// §14.11.1: a `with` statement in strict code.
+    StrictWith,
+    /// §13.5.1: `delete` applied to a bare name in strict code.
+    ///
+    /// `delete a.b` is fine and `delete a` is not — the second asks to remove a binding rather
+    /// than a property, which strict code has no way to express.
+    StrictDeleteOfName,
+    /// Annex B.1.1 in strict code: a legacy octal literal, or a decimal with a leading zero.
+    ///
+    /// The lexer reads both and flags them, being the lexical grammar's business; refusing them
+    /// where §12.9.3.1 says to is this parser's.
+    StrictLegacyOctal,
+    /// §15.2.1: a `"use strict"` directive in a body whose parameter list is not simple.
+    ///
+    /// The parameters of a non-simple list are initialised by running code, and that code would
+    /// have to be told a strictness the directive has not announced yet.
+    UseStrictWithNonSimpleParameters,
     /// §14.5: a `function` where only a `Statement` may stand.
     ///
     /// A `FunctionDeclaration` is a `Declaration`, so it belongs to a `StatementList` — and
@@ -224,6 +252,28 @@ impl fmt::Display for ParseErrorKind {
                 }
             }
             Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            Self::StrictReservedWord => {
+                write!(f, "this name is reserved in strict mode code")
+            }
+            Self::StrictEvalOrArguments => write!(
+                f,
+                "strict mode code may not bind or assign to `eval` or `arguments`"
+            ),
+            Self::StrictWith => {
+                write!(f, "strict mode code may not include a `with` statement")
+            }
+            Self::StrictDeleteOfName => write!(
+                f,
+                "strict mode code may not `delete` a name, only a property"
+            ),
+            Self::StrictLegacyOctal => write!(
+                f,
+                "strict mode code may not use a legacy octal literal or a leading zero"
+            ),
+            Self::UseStrictWithNonSimpleParameters => write!(
+                f,
+                "a function with defaults, patterns or a rest may not declare `\"use strict\"`"
+            ),
             Self::FunctionInStatementPosition => write!(
                 f,
                 "a function declaration may not stand where only a statement may"

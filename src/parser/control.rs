@@ -182,11 +182,18 @@ impl Parser<'_> {
 
     /// `WithStatement : with ( Expression ) Statement` (§14.11).
     ///
-    /// §14.11.1 makes this a Syntax Error in strict code, and there is no strict mode yet to make
-    /// it one — so `with` parses everywhere, which is right for the sloppy code that is all this
-    /// parser can currently be given.
+    /// §14.11.1 makes this a Syntax Error in strict code, which is the whole of what there is to
+    /// say about it here: `with` makes the scope of a name undecidable until run time, and strict
+    /// mode exists so that it is decidable.
     pub(super) fn parse_with(&mut self) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
+        // §14.11.1. The one statement strict mode removes outright.
+        if self.strict {
+            return Err(ParseError {
+                kind: ParseErrorKind::StrictWith,
+                span: keyword.span,
+            });
+        }
         let object = self.parse_parenthesized_test()?;
         self.enter()?;
         let body = self.parse_statement();

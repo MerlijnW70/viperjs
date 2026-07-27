@@ -54,7 +54,9 @@ pub fn parse_script(source: &str) -> Result<Script, ParseError> {
 /// [`parse_script`] up to but not including §16.1.1's label rules.
 fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
-    let body = parser.parse_statement_list(TokenKind::Eof)?;
+    // §11.2.1: a `ScriptBody` may open with a Directive Prologue, and `"use strict"` in it makes
+    // everything after strict — including everything nested, for ever.
+    let (body, _) = parser.parse_body_with_prologue(TokenKind::Eof)?;
     parser.expect_eof()?;
     // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
     super::scope::check_declared_names(&body, super::scope::Level::Top)?;

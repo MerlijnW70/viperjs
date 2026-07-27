@@ -85,8 +85,19 @@ impl Parser<'_> {
         &mut self,
     ) -> Result<(FormalParameters, Box<[Stmt]>, Span), ParseError> {
         let parameters = self.parse_formal_parameters()?;
-        let (body, end) = self.parse_function_body()?;
+        let (body, end, declares_strict) = self.parse_function_body()?;
         check_parameters_against_body(&parameters, &body)?;
+        // The two rules that cannot be applied while the parameters are read, because the body
+        // has not said whether it is strict yet.
+        if declares_strict && !parameters.is_simple() {
+            return Err(ParseError {
+                kind: ParseErrorKind::UseStrictWithNonSimpleParameters,
+                span: parameters.span,
+            });
+        }
+        if declares_strict || self.strict {
+            check_strict_parameters(&parameters)?;
+        }
         Ok((parameters, body, end))
     }
 
@@ -127,21 +138,25 @@ impl Parser<'_> {
     }
 
     /// `{ FunctionBody }` (§15.2), and everything that being a boundary implies.
-    fn parse_function_body(&mut self) -> Result<(Box<[Stmt]>, Span), ParseError> {
+    fn parse_function_body(&mut self) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         // `[+Return]`, which only this production sets — and which is restored on the way out
-        // even when the body fails, so that a `return` after the function is still refused.
+        // even when the body fails, so that a `return` after the function is still refused. The
+        // same for strictness, which a body may switch on for itself and never off.
         let enclosing = self.inside_function;
+        let enclosing_strict = self.strict;
         self.inside_function = true;
-        let body = self.parse_statement_list(TokenKind::RBrace);
+        let body = self.parse_body_with_prologue(TokenKind::RBrace);
         self.inside_function = enclosing;
-        let body = body?;
+        self.strict = enclosing_strict;
+        let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks
         // it again rather than inheriting — this is where those walks stop.
         super::scope::check_declared_names(&body, super::scope::Level::Top)?;
         super::scope::check_labels(&body)?;
-        Ok((body, close.span))
+
+        Ok((body, close.span, declares_strict))
     }
 
     /// `ReturnStatement : return [no LineTerminator here] Expression_opt ;` (§14.10).
@@ -207,6 +222,37 @@ fn check_parameter_names(parameters: &FormalParameters) -> Result<(), ParseError
                     span: declared.span,
                 });
             }
+        }
+    }
+    Ok(())
+}
+
+/// §15.2.1 and §13.1.1, for a strict function's parameters.
+///
+/// Two rules the parameters could not be judged by when they were read, the body not yet having
+/// said whether it is strict: every name must be one strict code may bind, and no name may repeat
+/// — a strict list being unique whether or not it is simple.
+fn check_strict_parameters(parameters: &FormalParameters) -> Result<(), ParseError> {
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut names: Vec<crate::static_semantics::DeclaredName<'_>> = Vec::new();
+    for element in &parameters.items {
+        names.extend(bound_names(&element.target));
+    }
+    if let Some(rest) = &parameters.rest {
+        names.extend(bound_names(rest));
+    }
+    for declared in names {
+        if declared.name == "eval" || declared.name == "arguments" {
+            return Err(ParseError {
+                kind: ParseErrorKind::StrictEvalOrArguments,
+                span: declared.span,
+            });
+        }
+        if !seen.insert(declared.name.to_string()) {
+            return Err(ParseError {
+                kind: ParseErrorKind::DuplicateParameterName,
+                span: declared.span,
+            });
         }
     }
     Ok(())

@@ -86,8 +86,23 @@ impl Parser<'_> {
                 self.advance(Goal::Div)?;
                 let name = identifier_value(self.source, token.span)
                     .ok_or_else(|| self.value_missing(token))?;
+                // §13.1.1's strict-reserved words, but not its `eval`/`arguments` rule: reading
+                // either is fine in strict code, and only binding or assigning is refused.
+                self.check_strict_name(&name, token.span, false)?;
                 literal(ExprKind::Identifier(name.into_owned()))
             }
+            // Annex B.1.1's two legacy forms, which §12.9.3.1 refuses in strict code. The lexer
+            // reads them and flags them, that being the lexical grammar's business.
+            TokenKind::Number { legacy: true } if self.strict => Err(ParseError {
+                kind: ParseErrorKind::StrictLegacyOctal,
+                span: token.span,
+            }),
+            TokenKind::String {
+                legacy_escape: true,
+            } if self.strict => Err(ParseError {
+                kind: ParseErrorKind::StrictLegacyOctal,
+                span: token.span,
+            }),
             TokenKind::Number { .. } => {
                 self.advance(Goal::Div)?;
                 let value = numeric_value(self.source, token.span)

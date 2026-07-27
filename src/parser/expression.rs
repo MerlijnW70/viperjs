@@ -102,6 +102,11 @@ impl Parser<'_> {
                     span: left.span,
                 });
             }
+            // §8.6.4: in strict code the `AssignmentTargetType` of `eval` and `arguments` is
+            // *invalid*, so assigning to either is refused where reading it is not.
+            if let ExprKind::Identifier(name) = &left.kind {
+                self.check_strict_name(name, left.span, true)?;
+            }
             self.report_unrefined_cover_grammar()?;
             crate::ast::AssignmentTarget::Simple(left)
         };
@@ -224,6 +229,18 @@ impl Parser<'_> {
             let argument = self.parse_unary();
             self.leave();
             let argument = argument?;
+            // §13.5.1: strict code may not `delete` a bare name. `delete a.b` removes a property
+            // and `delete a` asks to remove a binding, which strict code has no way to express —
+            // and parentheses do not help, `(a)` being the same identifier.
+            if operator == crate::ast::UnaryOperator::Delete
+                && self.strict
+                && matches!(argument.kind, ExprKind::Identifier(_))
+            {
+                return Err(ParseError {
+                    kind: ParseErrorKind::StrictDeleteOfName,
+                    span: argument.span,
+                });
+            }
             let span = token.span.to(argument.span);
             return Ok(Expr::new(
                 ExprKind::Unary {
