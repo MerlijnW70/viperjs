@@ -79,7 +79,7 @@ impl Parser<'_> {
             }
             // An `Identifier` is an `IdentifierName` that is not a `ReservedWord` — and the lexer
             // has already made that distinction, contextual keywords included.
-            TokenKind::Identifier { .. } => {
+            _ if super::is_identifier_token(token.kind) => {
                 self.advance(Goal::Div)?;
                 let name = identifier_value(self.source, token.span)
                     .ok_or_else(|| self.value_missing(token))?;

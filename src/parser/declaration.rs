@@ -37,10 +37,11 @@ impl Parser<'_> {
         // Read under `Div`, which is what would follow `let` if it were an identifier. The three
         // tokens this looks for mean the same under either goal, so the choice cannot mislead.
         let next = self.peek(Goal::Div)?;
-        Ok(matches!(
-            next.kind,
-            TokenKind::Identifier { .. } | TokenKind::LBracket | TokenKind::LBrace
-        ))
+        // A name or one of the two patterns. `is_identifier_token` rather than a plain
+        // `Identifier`, because §13.1 lets `yield` and `await` be bound here too — so
+        // `let await = 1;` is a declaration and not two expressions.
+        Ok(super::is_identifier_token(next.kind)
+            || matches!(next.kind, TokenKind::LBracket | TokenKind::LBrace))
     }
 
     /// `VariableStatement` or `LexicalDeclaration` (§14.3), with the cursor on the keyword.
@@ -190,7 +191,7 @@ impl Parser<'_> {
     /// impose it on every caller, including the ones the specification exempts.
     pub(super) fn parse_binding_identifier(&mut self) -> Result<(Box<str>, Span), ParseError> {
         let token = self.current;
-        if !matches!(token.kind, TokenKind::Identifier { .. }) {
+        if !super::is_identifier_token(token.kind) {
             return Err(self.unexpected("a binding name"));
         }
         self.advance(Goal::Div)?;

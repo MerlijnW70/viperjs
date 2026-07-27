@@ -98,7 +98,7 @@ impl Parser<'_> {
         let PropertyKey::Identifier(name) = key else {
             return Err(self.unexpected("`:`"));
         };
-        if !matches!(token.kind, TokenKind::Identifier { .. }) {
+        if !super::is_identifier_token(token.kind) {
             return Err(ParseError {
                 kind: ParseErrorKind::Unexpected {
                     expected: "`:`",

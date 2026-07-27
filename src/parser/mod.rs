@@ -74,7 +74,7 @@ pub use self::statement::parse_script;
 pub(crate) use self::statement::parse_script_with_label_rules_unchecked;
 
 use crate::ast::Expr;
-use crate::lexer::{Goal, Lexer, Token, TokenKind};
+use crate::lexer::{Goal, Lexer, ReservedWord, Token, TokenKind};
 use crate::span::Span;
 
 /// How deeply the grammar may nest before the parser gives up.
@@ -181,6 +181,41 @@ pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     let expr = parser.parse_expression(self::expression::AllowIn::Yes)?;
     parser.expect_eof()?;
     Ok(expr)
+}
+
+/// Whether this token can stand where §13.1 wants an `Identifier`.
+///
+/// `Identifier : IdentifierName but not ReservedWord`, and `yield` and `await` are both reserved
+/// words — so on the face of it neither could ever be a name. §13.1 gives all three identifier
+/// productions extra alternatives that say otherwise:
+///
+/// ```text
+/// IdentifierReference[Yield, Await] : Identifier | [~Yield] yield | [~Await] await
+/// BindingIdentifier[Yield, Await]   : Identifier |          yield |          await
+/// LabelIdentifier[Yield, Await]     : Identifier | [~Yield] yield | [~Await] await
+/// ```
+///
+/// The `BindingIdentifier` row takes them unconditionally and leaves the refusing to §13.1.1's
+/// early errors; the other two are gated on the grammar parameters. Either way the question is
+/// the same one — are we inside a generator, an async function, or a module — and the answer here
+/// is always no, because there are none of those to be inside.
+///
+/// # Why the parameters are not threaded, when `[In]` was
+///
+/// Because nothing would ever turn them on. `[+Yield]` comes from a `GeneratorBody`, `[+Await]`
+/// from an `AsyncFunctionBody` or the `Module` goal, and this parser has no production that
+/// reaches any of them. A parameter whose value is the same on every path is not a parameter: it
+/// is a constant with a branch on it, and every one of those branches would be something no input
+/// could tell from its absence — which mutation testing would rightly call untested.
+///
+/// So the alternatives are taken directly and the parameters arrive with the constructs that vary
+/// them. `class yield {}` is the shape that will need them first, a class body being strict code.
+pub(super) fn is_identifier_token(kind: TokenKind) -> bool {
+    matches!(
+        kind,
+        TokenKind::Identifier { .. }
+            | TokenKind::Keyword(ReservedWord::Yield | ReservedWord::Await)
+    )
 }
 
 /// A recursive-descent parser over one source text.

@@ -34,7 +34,7 @@ impl Parser<'_> {
     /// An identifier and then a `:`. The identifier may be written with escapes — unlike `let`,
     /// nothing here is a terminal, so `a: ;` labels `a` exactly as `a: ;` does.
     pub(super) fn at_labelled_statement(&self) -> Result<bool, ParseError> {
-        if !matches!(self.current.kind, TokenKind::Identifier { .. }) {
+        if !super::is_identifier_token(self.current.kind) {
             return Ok(false);
         }
         Ok(self.peek(Goal::Div)?.kind == TokenKind::Colon)
@@ -104,16 +104,12 @@ mod tests {
         assert_eq!(statements("async: ;"), ["(label async <empty>)"]);
         assert!(parse_script("if: ;").is_err());
         assert!(parse_script("this: ;").is_err());
-        // `yield` and `await` belong in the list above and are not there yet. §13.1 gives
+        // `yield` and `await` belong in the list above and are there now. §13.1 gives
         // `LabelIdentifier` the alternatives `[~Yield] yield` and `[~Await] await`, and both
-        // parameters are off in the sloppy script code this parser handles — so `yield: ;` is
-        // legal ECMAScript and is refused here. The cause is that the `[Yield]` and `[Await]`
-        // grammar parameters do not exist, which is a gap wider than labels: `yield;` and
-        // `var yield = 1;` are refused for exactly the same reason. All of them change together
-        // the day those parameters are threaded through, as `[In]` was.
-        assert!(parse_script("yield: ;").is_err());
-        assert!(parse_script("await: ;").is_err());
-        assert!(parse_script("var yield = 1;").is_err());
+        // parameters are off in the sloppy script code this parser handles.
+        assert_eq!(statements("yield: ;"), ["(label yield <empty>)"]);
+        assert_eq!(statements("await: ;"), ["(label await <empty>)"]);
+        assert_eq!(statements("var yield = 1;"), ["(var yield=1)"]);
         // Nothing here is a terminal, so an escaped spelling is the same label — unlike `let`,
         // where §5.1.5.1 makes the escape decide whether it is a keyword at all.
         assert_eq!(statements(r"a: ;"), ["(label a <empty>)"]);
@@ -122,6 +118,58 @@ mod tests {
         assert_eq!(statements("a ? b : c;"), ["(? a b c)"]);
         let script = parse_script("ab: ;").expect("this parses");
         assert_eq!(script.body[0].span, Span::new(0, 5));
+    }
+
+    #[test]
+    fn yield_and_await_are_ordinary_names_where_no_production_reserves_them() {
+        // §13.1's conditional alternatives. `Identifier : IdentifierName but not ReservedWord`
+        // would refuse both — `yield` and `await` are reserved words in §12.7.2 — and all three
+        // identifier productions add them back, two of them gated on grammar parameters that
+        // nothing here can turn on. See [`super::is_identifier_token`].
+        assert_eq!(statements("yield;"), ["yield"]);
+        assert_eq!(statements("await;"), ["await"]);
+        assert_eq!(statements("yield = 1;"), ["(= yield 1)"]);
+        assert_eq!(statements("typeof yield;"), ["(typeof yield)"]);
+        assert_eq!(statements("yield in a;"), ["(in yield a)"]);
+        assert_eq!(statements("f(yield, await);"), ["(call f [yield await])"]);
+        // …as a `BindingIdentifier`, which takes them unconditionally in the grammar and leaves
+        // the refusing to §13.1.1's early errors — none of which can fire here.
+        assert_eq!(statements("var yield = 1;"), ["(var yield=1)"]);
+        assert_eq!(statements("let await = 1;"), ["(let await=1)"]);
+        assert_eq!(statements("const yield = 1;"), ["(const yield=1)"]);
+        assert_eq!(
+            statements("try {} catch (yield) {}"),
+            ["(try {} (catch yield {}))"]
+        );
+        assert_eq!(statements("let [yield] = a;"), ["(let [yield]=a)"]);
+        assert_eq!(
+            statements("for (var await of a);"),
+            ["(for-of (var await) a <empty>)"]
+        );
+        // …as a `LabelIdentifier`.
+        assert_eq!(statements("yield: ;"), ["(label yield <empty>)"]);
+        assert_eq!(
+            statements("await: while (1) continue await;"),
+            ["(label await (while 1 (continue await)))"]
+        );
+        // …and in the two places a name is not an `Identifier` at all, which never needed them:
+        // a property key is an `IdentifierName`, so every reserved word was always allowed.
+        assert_eq!(statements("a.yield;"), ["(. a yield)"]);
+        assert_eq!(statements("a.await;"), ["(. a await)"]);
+        assert_eq!(shape("({yield: 1})"), "{(yield 1)}");
+        assert_eq!(shape("({if: 1})"), "{(if 1)}");
+        // Shorthand is an `IdentifierReference`, so it takes the two and no other reserved word.
+        assert_eq!(shape("({yield})"), "{yield}");
+        assert_eq!(shape("({await})"), "{await}");
+        assert!(parse_script("({if});").is_err());
+        // Every other reserved word is still refused everywhere a name is wanted, which is what
+        // makes this about those two rather than about reserved words in general.
+        for source in ["var if = 1;", "new;", "if: ;", "class: ;", "typeof var;"] {
+            assert!(parse_script(source).is_err(), "{source:?}");
+        }
+        // An escaped spelling was always an ordinary identifier, being no terminal at all — so
+        // these were legal before this slice and are unchanged by it.
+        assert_eq!(statements(r"var \u0079ield = 1;"), ["(var yield=1)"]);
     }
 
     #[test]
