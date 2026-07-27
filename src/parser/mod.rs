@@ -160,8 +160,8 @@ use crate::span::Span;
 ///
 /// Stack is not the only thing a level spends, though, and the two newest forms show it. A `try`
 /// takes *two* of the count on each level, one for the statement and one for its guarded `Block`,
-/// so `try {` nests 24 deep against a cap of 48 where `{` nests 48. A `switch` takes one for its
-/// CaseBlock and borrows a second while it reads the expression after `case`, so it nests 47. In
+/// so `try {` nests 32 deep against a cap of 64 where `{` nests 64. A `switch` takes one for its
+/// CaseBlock and borrows a second while it reads the expression after `case`, so it nests 63. In
 /// both the count is doing exactly what it should: those really are separate scopes and separate
 /// descents, and the cap is about what the machine can afford rather than about tidy numbers.
 ///
@@ -174,12 +174,35 @@ use crate::span::Span;
 /// recursive path in a thread with exactly one mebibyte. That test is the real specification of
 /// this constant: raise the cap, or make a level cost more stack, and it fails.
 ///
-/// The margin over the narrowest path is 1.3×, and was two for the first several slices. It has
-/// not been lowered to restore the ratio, because the ratio is comfort and the test is the
-/// guarantee — buying a rounder number would cost real programs a third of the nesting they are
-/// entitled to, for no failure that has happened. The trend is the thing to watch rather than the
-/// number: each bracketed literal has taken a bite, and the next one may well be what forces the
-/// cap down. The day the narrowest path falls below it, that test says so and the number moves.
+/// # What the measurement says, and why the number is 64
+///
+/// It was 48, and a sweep of real code is what moved it: a generated protobuf file writes fifty
+/// `exports.A = exports.B = … = void 0` assignments in one statement, which right-associate into
+/// fifty levels. Every engine takes it and this one refused it. Nothing about 48 was measured — it
+/// was a first guess that never had a program argue with it.
+///
+/// So each path was bisected against one mebibyte in a *debug* build, one process per candidate,
+/// because a stack overflow aborts and cannot be caught. Per level:
+///
+/// | shape | levels in 1 MiB | per level |
+/// | --- | --- | --- |
+/// | `{` a block | 327 | 3.1 KiB |
+/// | `(` a parenthesized expression | 152 | 6.7 KiB |
+/// | `[` an array literal | 71 | 14.4 KiB |
+/// | `[` refined into a pattern | 70 | 14.6 KiB |
+///
+/// Seventy is the ceiling, so 64 is the cap: it clears the evidence with thirteen levels to
+/// spare and leaves the narrowest path a margin of 1.09×. That margin is thin and is stated
+/// rather than hidden — the ratio is comfort and the test below is the guarantee, which is the
+/// same position this note took when the margin was 1.3×. A debug build is what is being measured
+/// and a release one is several times cheaper, so an embedder's real margin is far larger; the
+/// thin number is a warning about *this repository's* CI, not about shipped code.
+///
+/// The array literal is the outlier and is where the next increase has to come from: it costs
+/// more than twice a parenthesis and nearly five times a block, for a production that is not five
+/// times more complicated. Splitting the element loop out of the recursion — the trick
+/// [`Parser::parse_member`] documents — is already applied there, so what is left is the operand
+/// ladder each element descends. That is a measurement for `lab/` before it is a change here.
 ///
 /// # Why a count and not a stack measurement
 ///
@@ -188,7 +211,7 @@ use crate::span::Span;
 /// DR-0006 has the argument, including what it costs — a release build could afford several
 /// times this and is not allowed to. The limit becomes an embedder-set value at M3, where
 /// somebody knows how much stack there actually is; the default stays conservative.
-pub const MAX_NESTING_DEPTH: u32 = 48;
+pub const MAX_NESTING_DEPTH: u32 = 64;
 
 /// Parse `source` as a single expression, which must be all of it.
 ///
