@@ -59,6 +59,13 @@ pub enum ParseErrorKind {
     ///
     /// `let a, a;` is refused where `var a, a;` is not, for the same reason.
     DuplicateLexicalBinding,
+    /// §14.2.1 and §16.1.1: a name declared by `var` and also by `let` or `const`.
+    ///
+    /// The two rules are the same one seen from either side, because a `var` belongs to the
+    /// enclosing function however deeply it is nested — so `{ let a; { var a; } }` puts two
+    /// bindings of `a` in one scope even though nothing at either level looks like a
+    /// redeclaration.
+    ConflictingVarAndLexicalDeclaration,
     /// §14.14: a line terminator between `throw` and its value.
     ///
     /// The one restricted production with no shorter form to fall back on. Where `a\n++b` simply
@@ -112,6 +119,10 @@ impl fmt::Display for ParseErrorKind {
             Self::DuplicateLexicalBinding => {
                 write!(f, "this name is bound twice in the same declaration")
             }
+            Self::ConflictingVarAndLexicalDeclaration => write!(
+                f,
+                "this name is declared by `var` and by `let` or `const` in the same scope"
+            ),
             Self::NewlineAfterThrow => {
                 write!(f, "the value thrown must be on the same line as `throw`")
             }

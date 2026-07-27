@@ -18,6 +18,7 @@ pub mod ast;
 pub mod lexer;
 pub mod parser;
 pub mod span;
+pub mod static_semantics;
 mod unicode_id;
 mod unicode_id_table;
 

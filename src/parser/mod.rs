@@ -32,6 +32,7 @@
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
+//! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
@@ -40,6 +41,7 @@ mod declaration;
 mod error;
 mod expression;
 mod operator;
+mod scope;
 mod statement;
 #[cfg(test)]
 mod test_support;

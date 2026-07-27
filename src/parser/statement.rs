@@ -45,6 +45,8 @@ pub fn parse_script(source: &str) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
     let body = parser.parse_statement_list(TokenKind::Eof)?;
     parser.expect_eof()?;
+    // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
+    super::scope::check_declared_names(&body)?;
     Ok(Script {
         body,
         span: Span::new(0, source.len() as u32),
@@ -131,6 +133,8 @@ impl Parser<'_> {
         self.leave();
         let body = body?;
         let close = self.eat(TokenKind::RBrace, Goal::RegExp, "`}`")?;
+        // §14.2.1, on the finished list — see `super::scope`.
+        super::scope::check_declared_names(&body)?;
         Ok(Stmt {
             kind: StmtKind::Block(body),
             span: open.span.to(close.span),

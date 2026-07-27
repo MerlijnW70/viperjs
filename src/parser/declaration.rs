@@ -65,7 +65,7 @@ impl Parser<'_> {
             {
                 return Err(ParseError {
                     kind: ParseErrorKind::DuplicateLexicalBinding,
-                    span: declarator.span,
+                    span: declarator.name_span,
                 });
             }
             end = declarator.span;
@@ -101,6 +101,7 @@ impl Parser<'_> {
             return Ok(Declarator {
                 name,
                 initializer: None,
+                name_span,
                 span: name_span,
             });
         }
@@ -114,6 +115,7 @@ impl Parser<'_> {
         Ok(Declarator {
             span: name_span.to(initializer.span),
             name,
+            name_span,
             initializer: Some(Box::new(initializer)),
         })
     }

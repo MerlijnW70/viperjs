@@ -151,6 +151,10 @@ pub struct Declarator {
     /// What it is initialised to, if anything. Absent is legal for `var` and `let`, and a
     /// Syntax Error for `const` (§14.3.1.1).
     pub initializer: Option<Box<Expr>>,
+    /// The name alone. Kept apart from [`Declarator::span`] because the early errors of §14.2.1
+    /// and §16.1.1 are about `BoundNames`, and a caret under `a` says more than one under
+    /// `a = someLongExpression()`.
+    pub name_span: Span,
     /// The name and the initialiser together.
     pub span: Span,
 }
