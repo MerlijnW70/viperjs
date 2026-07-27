@@ -45,6 +45,11 @@
 //! file is parsed inside `catch_unwind` and a panic is counted and reported rather than taking the
 //! run with it. A single one is a P0 regardless of how odd the file looked.
 //!
+//! A *stack overflow* is the one thing this cannot contain: it aborts the process, so the run
+//! stops and the summary never prints. That is not a shortcoming to work around — it is the
+//! loudest possible way of reporting the same P0. `--list` names each file before parsing it,
+//! which is how to find out which one did it.
+//!
 //! No dependencies, because the engine has none and neither may anything the repository builds by
 //! default (GOAL.md non-negotiable #2). The argument handling and the walk are hand-rolled.
 
