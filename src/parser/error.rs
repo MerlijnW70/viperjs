@@ -30,7 +30,7 @@ pub enum ParseErrorKind {
         /// What was actually there, so a message can be built without re-reading the source.
         found: TokenKind,
     },
-    /// Nesting exceeded [`MAX_NESTING_DEPTH`].
+    /// Nesting exceeded [`super::MAX_NESTING_DEPTH`].
     TooDeeplyNested,
     /// §13.6: `ExponentiationExpression : UpdateExpression ** ExponentiationExpression`.
     ///

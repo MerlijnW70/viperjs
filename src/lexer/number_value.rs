@@ -19,7 +19,7 @@ use crate::span::Span;
 ///   mathematical value, rounded to the nearest `f64`. No approximation is licensed at all. All
 ///   three radixes are powers of two, so the digits *are* the binary expansion: the top 64 bits
 ///   are accumulated exactly, everything below is folded into a sticky bit, and the conversion
-///   rounds once. See [`power_of_two_value`].
+///   rounds once. See `power_of_two_value`.
 /// - **A `DecimalLiteral` denotes `RoundMVResult(MV)`**, which returns `𝔽(MV)` when the decimal
 ///   has 20 or fewer significant digits and otherwise permits truncating at the 20th. We always
 ///   compute `𝔽(MV)` — correctly rounding the whole string — which is conformant for the longer

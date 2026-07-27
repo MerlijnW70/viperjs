@@ -1,8 +1,9 @@
 //! The syntax tree.
 //!
-//! Every node is a value that owns what it means and carries a [`Span`] saying where it came
-//! from — see `decisions/DR-0005-ast-owns-its-data-and-carries-spans.md` for why those are two
-//! separate decisions and why the span is never allowed to become the second copy of the data.
+//! Every node is a value that owns what it means and carries a [`crate::span::Span`] saying
+//! where it came from — see `decisions/DR-0005-ast-owns-its-data-and-carries-spans.md` for
+//! why those are two separate decisions, and why the span is never allowed to become the
+//! second copy of the data.
 //!
 //! The tree grows one grammar slice at a time, so what is here is what the parser can build
 //! today: a `Script` of statements, and expressions down to `PrimaryExpression`.

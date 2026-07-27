@@ -37,9 +37,9 @@ pub enum StmtKind {
     Empty,
     /// An expression evaluated for its effect (§14.5).
     ///
-    /// Boxed for the same reason [`ExprKind::RegExp`] is: an `Expr` inline would make `StmtKind`
-    /// twice the size of any other variant, and statements nest — so every level of `{ { { … } } }`
-    /// would carry it on the parser's stack.
+    /// Boxed for the same reason [`super::ExprKind::RegExp`] is: an `Expr` inline would make
+    /// `StmtKind` twice the size of any other variant, and statements nest — so every level
+    /// of `{ { { … } } }` would carry it on the parser's stack.
     Expression(Box<Expr>),
     /// `debugger;` (§14.16).
     Debugger,

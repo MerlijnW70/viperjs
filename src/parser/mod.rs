@@ -4,7 +4,7 @@
 //!
 //! The lexer refuses to guess whether a `/` is division or a regular expression, and hands the
 //! question to whoever knows ([`Goal`]). This is that caller, and the rule it uses is a single
-//! invariant, stated here once because every [`Parser::advance`] call depends on it:
+//! invariant, stated here once because every `Parser::advance` call depends on it:
 //!
 //! > **The goal is chosen when advancing *past* a token, by what may legally follow it.**
 //!
@@ -49,7 +49,7 @@
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
 //! - `switch` — `switch` (§14.12), whose CaseBlock is one scope across all its clauses.
-//! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
+//! - here — the `Parser` itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
 mod array_literal;

@@ -22,8 +22,8 @@
 //! What an iterative walk buys, then, is not a bigger number. It is that `Drop` stays the *only*
 //! recursive path over the tree, so there is one limit to know rather than one per operation —
 //! and these are public functions over a public tree, so each new one would otherwise add its
-//! own. [`labels`] shows what it costs when the walk carries state: a set per node, held as
-//! indices into one arena rather than as a set cloned down every branch.
+//! own. The `labels` module shows what it costs when the walk carries state: a set per node,
+//! held as indices into one arena rather than as a set cloned down every branch.
 
 mod labels;
 mod names;

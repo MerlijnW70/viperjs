@@ -43,8 +43,9 @@ pub enum TokenKind {
 
     /// An `IdentifierName` (§12.7) that is not one of the unconditionally reserved words.
     ///
-    /// The span covers the spelling as written, escapes included; [`identifier_value`] turns it
-    /// into the sequence of code points the spec calls its `IdentifierCodePoints`.
+    /// The span covers the spelling as written, escapes included;
+    /// [`super::identifier_value`] turns it into the sequence of code points the spec calls
+    /// its `IdentifierCodePoints`.
     Identifier {
         /// Whether a `\u` escape contributed a code point to the spelling.
         ///
@@ -249,7 +250,8 @@ impl TokenKind {
     ///
     /// Punctuators and keywords have exactly one spelling; [`TokenKind::Eof`] has the empty one.
     /// Identifiers do not, so they answer `None` rather than a lie — a caller that wants their
-    /// text asks the span, and a caller that wants their *value* asks [`identifier_value`].
+    /// text asks the span, and a caller that wants their *value* asks
+    /// [`super::identifier_value`].
     ///
     /// Written as a match rather than a lookup in `PUNCTUATORS` on purpose: two independent
     /// spellings of the same fact let the tests catch a table row that drifted, which a

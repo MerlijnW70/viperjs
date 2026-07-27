@@ -164,7 +164,7 @@ impl<'a> Cursor<'a> {
 ///
 /// §12.6 lists five. `InputElementHashbangOrRegExp` is absent because it differs from
 /// `InputElementRegExp` only in admitting a `HashbangComment`, which §12.5 already confines to
-/// byte 0 of the source — [`super::trivia`] tests the position instead, which is the same rule
+/// byte 0 of the source — the `trivia` module tests the position instead, which is the same rule
 /// with nothing for a caller to get wrong.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Goal {
