@@ -24,7 +24,10 @@
 //! chose rather than one the specification has an opinion about, and it is chosen from a
 //! measurement of what a level of nesting actually costs — see the constant.
 
-use crate::ast::{BinaryOperator, Expr, ExprKind, LogicalOperator, RegExpLiteral, UnaryOperator};
+use crate::ast::{
+    AssignmentOperator, BinaryOperator, Expr, ExprKind, LogicalOperator, RegExpLiteral,
+    UnaryOperator,
+};
 use crate::lexer::{
     Goal, LexError, LexErrorKind, Lexer, ReservedWord, Token, TokenKind, identifier_value,
     numeric_value, regexp_parts, string_value,
@@ -40,24 +43,32 @@ use std::fmt;
 ///
 /// # Where the number comes from
 ///
-/// Measured, not guessed, and re-measured every time the grammar grows — which it already has.
-/// The previous slice measured 1.1 KiB of stack per level of nesting and could afford 928 levels
-/// in a mebibyte; adding the operator grammar put three more functions between one bracket and
-/// the next and cut that to 304. Boxing the one oversized AST variant bought part of it back.
-/// That is the pattern to expect: every production costs depth, and the number below is a
-/// consequence rather than a preference.
+/// Measured in a debug build against a one-mebibyte stack — the smallest in common use — and
+/// re-measured every time the grammar grows, because it falls every time the grammar grows:
 ///
-/// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse inside a
-/// thread with exactly one mebibyte — the smallest stack in common use — and this cap leaves
-/// roughly a factor of two in hand. That test is the real specification of this constant: raise
-/// the cap, or make a level of nesting cost more stack, and it fails.
+/// | after | levels a mebibyte holds | cap |
+/// | --- | --- | --- |
+/// | primary expressions | 928 | 512 |
+/// | prefix and binary operators | 304 | 128 |
+/// | conditional, assignment, comma | 168 | 64 |
 ///
-/// A release build is several times cheaper, and the cap is set for the debug one deliberately.
-/// `cargo test` must not be the configuration that crashes, and a program that parses in one
-/// build and not the other would be worse than a conservative number in both. When the embedding
-/// API arrives at M3 this becomes a limit the embedder sets, because they are the one who knows
-/// how much stack they have.
-pub const MAX_NESTING_DEPTH: u32 = 128;
+/// Each slice put another function between one bracket and the next. That is the trajectory to
+/// expect, and it is why keeping the recursive path narrow counts as correctness work rather
+/// than optimisation: every frame removed is nesting a real program is allowed to have.
+///
+/// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse in a thread
+/// with exactly one mebibyte, and this cap leaves a factor of about two and a half in hand. That
+/// test is the real specification of this constant: raise the cap, or make a level cost more
+/// stack, and it fails.
+///
+/// # Why a count and not a stack measurement
+///
+/// Because a stack measurement would make which programs parse depend on how the engine was
+/// compiled, and this project's whole premise is a conformance number that does not drift.
+/// DR-0006 has the argument, including what it costs — a release build could afford several
+/// times this and is not allowed to. The limit becomes an embedder-set value at M3, where
+/// somebody knows how much stack there actually is; the default stays conservative.
+pub const MAX_NESTING_DEPTH: u32 = 64;
 
 /// Why parsing stopped, and where.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,6 +101,12 @@ pub enum ParseErrorKind {
     /// genuinely ambiguous to a reader: `-a ** b` could plausibly mean either `(-a) ** b` or
     /// `-(a ** b)`, and those differ.
     ExponentiationOnUnary,
+    /// §13.15.1: the left of an assignment must be something that can be assigned to.
+    ///
+    /// The specification calls the test `AssignmentTargetType`, and for everything this parser
+    /// can build so far the answer is "an identifier, however many parentheses are around it".
+    /// `1 = 2` and `(a, b) = 3` are the shapes this rejects.
+    InvalidAssignmentTarget,
     /// §13.13: `??` may not be mixed with `&&` or `||` without parentheses.
     ///
     /// `CoalesceExpressionHead` admits a `CoalesceExpression` or a `BitwiseORExpression` and
@@ -124,6 +141,9 @@ impl fmt::Display for ParseErrorKind {
                 }
             }
             Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            Self::InvalidAssignmentTarget => {
+                write!(f, "this expression cannot be assigned to")
+            }
             Self::ExponentiationOnUnary => write!(
                 f,
                 "the left operand of `**` may not be an unparenthesized unary expression"
@@ -249,6 +269,43 @@ fn binary_operator(kind: TokenKind) -> Option<Operator> {
         precedence,
         right_associative: kind == OperatorKind::Binary(B::Exponent),
     })
+}
+
+/// The assignment operators of §13.15, or `None` if this token is not one.
+fn assignment_operator(kind: TokenKind) -> Option<AssignmentOperator> {
+    use AssignmentOperator as A;
+    Some(match kind {
+        TokenKind::Eq => A::Assign,
+        TokenKind::PlusEq => A::Add,
+        TokenKind::MinusEq => A::Subtract,
+        TokenKind::StarEq => A::Multiply,
+        TokenKind::SlashEq => A::Divide,
+        TokenKind::PercentEq => A::Remainder,
+        TokenKind::StarStarEq => A::Exponent,
+        TokenKind::LtLtEq => A::ShiftLeft,
+        TokenKind::GtGtEq => A::ShiftRight,
+        TokenKind::GtGtGtEq => A::ShiftRightUnsigned,
+        TokenKind::AmpEq => A::BitwiseAnd,
+        TokenKind::CaretEq => A::BitwiseXor,
+        TokenKind::PipeEq => A::BitwiseOr,
+        TokenKind::AmpAmpEq => A::LogicalAnd,
+        TokenKind::PipePipeEq => A::LogicalOr,
+        TokenKind::QuestionQuestionEq => A::NullishCoalescing,
+        _ => return None,
+    })
+}
+
+/// §13.15.1's `AssignmentTargetType`, for the expressions this parser can build.
+///
+/// The specification defines it per production, and every one that answers "simple" is either an
+/// `IdentifierReference` or a `MemberExpression` — so for now it is exactly "an identifier".
+///
+/// Parentheses need no mention, and that is not an oversight. Because a bracketed expression is
+/// a flag on the node rather than a node of its own, `(a)` *is* the identifier `a` and answers
+/// for itself, while `(a, b)` is a sequence and does not. The specification says the same thing
+/// the long way round, by giving the parenthesized production the target type of what it covers.
+fn is_simple_assignment_target(expr: &Expr) -> bool {
+    matches!(expr.kind, ExprKind::Identifier(_))
 }
 
 /// Whether `expr` is an unparenthesized `&&` or `||`, which §13.13 keeps out of a `??`.
@@ -414,9 +471,103 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    /// `Expression`, for as much of it as the grammar reaches today.
+    /// `Expression` (§13.16) — one or more `AssignmentExpression`s separated by commas.
     fn parse_expression(&mut self) -> Result<Expr, ParseError> {
-        self.parse_binary(0)
+        let first = self.parse_assignment()?;
+        if self.current.kind != TokenKind::Comma {
+            return Ok(first);
+        }
+        let mut parts = vec![first];
+        while self.current.kind == TokenKind::Comma {
+            self.advance(Goal::RegExp)?;
+            parts.push(self.parse_assignment()?);
+        }
+        let span = match (parts.first(), parts.last()) {
+            (Some(first), Some(last)) => first.span.to(last.span),
+            // `parts` was built from one element and only ever grows, so this cannot happen;
+            // an empty span is the answer that costs nothing if it somehow does.
+            _ => Span::empty_at(self.current.span.start),
+        };
+        Ok(Expr {
+            kind: ExprKind::Sequence(parts),
+            span,
+            parenthesized: false,
+        })
+    }
+
+    /// `AssignmentExpression` (§13.15) and `ConditionalExpression` (§13.14), in one frame.
+    ///
+    /// Merged deliberately. They are separate productions, but a `?` and an `=` cannot both
+    /// follow the same operand — a conditional is not a `LeftHandSideExpression`, so it can only
+    /// be assigned to in the sense that saying so is an error — and one function fewer on the
+    /// recursion path is depth that [`MAX_NESTING_DEPTH`] does not have to give up.
+    ///
+    /// Falling through to the assignment check rather than returning early after a conditional
+    /// is what makes `(a ? b : c) = d` say "this expression cannot be assigned to" instead of
+    /// the far less helpful "expected end of input".
+    fn parse_assignment(&mut self) -> Result<Expr, ParseError> {
+        let mut left = self.parse_binary(0)?;
+        if self.current.kind == TokenKind::Question {
+            left = self.parse_conditional_tail(left)?;
+        }
+        let Some(operator) = assignment_operator(self.current.kind) else {
+            return Ok(left);
+        };
+        // §13.15.1. The check is here rather than in the AST because it is a *syntax* error:
+        // `1 = 2` must be refused before anything runs, not when it runs.
+        if !is_simple_assignment_target(&left) {
+            return Err(ParseError {
+                kind: ParseErrorKind::InvalidAssignmentTarget,
+                span: left.span,
+            });
+        }
+        self.advance(Goal::RegExp)?;
+        self.enter()?;
+        // `LeftHandSideExpression = AssignmentExpression` — the recursion is on the right, so
+        // `a = b = c` is `a = (b = c)`.
+        let value = self.parse_assignment();
+        self.leave();
+        let value = value?;
+        Ok(Expr {
+            span: left.span.to(value.span),
+            kind: ExprKind::Assignment {
+                operator,
+                target: Box::new(left),
+                value: Box::new(value),
+            },
+            parenthesized: false,
+        })
+    }
+
+    /// `? AssignmentExpression : AssignmentExpression` (§13.14), with `test` already parsed.
+    ///
+    /// Both arms are `AssignmentExpression`s, which §13.14's own Note explains: it lets an
+    /// assignment be governed by either arm, and keeps a comma expression out of the middle.
+    /// So `a ? b = 1 : c = 2` is two assignments, and `a ? b, c : d` is an error.
+    fn parse_conditional_tail(&mut self, test: Expr) -> Result<Expr, ParseError> {
+        self.advance(Goal::RegExp)?;
+        self.enter()?;
+        let arms = self.parse_conditional_arms();
+        self.leave();
+        let (consequent, alternate) = arms?;
+        Ok(Expr {
+            span: test.span.to(alternate.span),
+            kind: ExprKind::Conditional {
+                test: Box::new(test),
+                consequent: Box::new(consequent),
+                alternate: Box::new(alternate),
+            },
+            parenthesized: false,
+        })
+    }
+
+    /// The two arms of a conditional, split out so their locals do not sit in a frame that the
+    /// bracket recursion also passes through.
+    fn parse_conditional_arms(&mut self) -> Result<(Expr, Expr), ParseError> {
+        let consequent = self.parse_assignment()?;
+        self.eat(TokenKind::Colon, Goal::RegExp, "`:`")?;
+        let alternate = self.parse_assignment()?;
+        Ok((consequent, alternate))
     }
 
     /// The operator layers of §13.6 – §13.13, by precedence climbing.
@@ -622,6 +773,30 @@ mod tests {
                 left,
                 right,
             } => format!("({} {} {})", operator.as_str(), render(left), render(right)),
+            ExprKind::Conditional {
+                test,
+                consequent,
+                alternate,
+            } => format!(
+                "(? {} {} {})",
+                render(test),
+                render(consequent),
+                render(alternate)
+            ),
+            ExprKind::Assignment {
+                operator,
+                target,
+                value,
+            } => format!(
+                "({} {} {})",
+                operator.as_str(),
+                render(target),
+                render(value)
+            ),
+            ExprKind::Sequence(parts) => {
+                let rendered: Vec<String> = parts.iter().map(render).collect();
+                format!("(, {})", rendered.join(" "))
+            }
         }
     }
 
@@ -918,6 +1093,152 @@ mod tests {
         // boolean operators, not precedence in general.
         assert_eq!(shape("a ?? b + c"), "(?? a (+ b c))");
         assert_eq!(shape("a | b ?? c"), "(?? (| a b) c)");
+    }
+
+    #[test]
+    fn a_conditional_takes_an_assignment_in_each_arm_and_a_comma_in_neither() {
+        // §13.14: `ShortCircuitExpression ? AssignmentExpression : AssignmentExpression`. The
+        // Note explains the choice — it lets an assignment be governed by either arm and keeps a
+        // comma expression out of the middle, which C and Java do not.
+        assert_eq!(shape("a ? b : c"), "(? a b c)");
+        assert_eq!(shape("a ? b = 1 : c = 2"), "(? a (= b 1) (= c 2))");
+        // The test is a ShortCircuitExpression, so everything below it binds tighter.
+        assert_eq!(shape("a || b ? c : d"), "(? (|| a b) c d)");
+        assert_eq!(shape("a + b ? c : d"), "(? (+ a b) c d)");
+        // Nesting: the alternate is an AssignmentExpression, so a chain groups to the right —
+        // which is what makes `a ? b : c ? d : e` mean what everyone assumes it means.
+        assert_eq!(shape("a ? b : c ? d : e"), "(? a b (? c d e))");
+        assert_eq!(shape("a ? b ? c : d : e"), "(? a (? b c d) e)");
+        // A comma is not an AssignmentExpression, so it cannot appear in an arm unbracketed.
+        assert_eq!(
+            error("a ? b, c : d").kind,
+            ParseErrorKind::Unexpected {
+                expected: "`:`",
+                found: TokenKind::Comma,
+            }
+        );
+        assert_eq!(shape("a ? (b, c) : d"), "(? a (, b c) d)");
+        assert_eq!(
+            error("a ? b").kind,
+            ParseErrorKind::Unexpected {
+                expected: "`:`",
+                found: TokenKind::Eof,
+            }
+        );
+        assert_eq!(parse("a ? b : c").span, Span::new(0, 9));
+        // The bracketing flag is part of what a node claims about itself, and nothing else
+        // in this slice reads it — so it is asserted here rather than left to a later one
+        // that will (arrow functions cover `(a, b)`, and `delete (x, y)` turns on it).
+        assert!(!parse("a ? b : c").parenthesized);
+        assert!(parse("(a ? b : c)").parenthesized);
+    }
+
+    #[test]
+    fn assignment_groups_to_the_right_and_only_targets_what_can_be_assigned_to() {
+        // §13.15: `LeftHandSideExpression = AssignmentExpression` — the recursion is on the
+        // right, so a chain groups that way and `a = b = c` gives both `a` and `b` the value.
+        assert_eq!(shape("a = b"), "(= a b)");
+        assert_eq!(shape("a = b = c"), "(= a (= b c))");
+        // Every operator §13.15 lists, including the three with their own productions.
+        for (source, shaped) in [
+            ("a += b", "(+= a b)"),
+            ("a -= b", "(-= a b)"),
+            ("a *= b", "(*= a b)"),
+            ("a /= b", "(/= a b)"),
+            ("a %= b", "(%= a b)"),
+            ("a **= b", "(**= a b)"),
+            ("a <<= b", "(<<= a b)"),
+            ("a >>= b", "(>>= a b)"),
+            ("a >>>= b", "(>>>= a b)"),
+            ("a &= b", "(&= a b)"),
+            ("a ^= b", "(^= a b)"),
+            ("a |= b", "(|= a b)"),
+            ("a &&= b", "(&&= a b)"),
+            ("a ||= b", "(||= a b)"),
+            ("a ??= b", "(??= a b)"),
+        ] {
+            assert_eq!(shape(source), shaped, "parsing {source:?}");
+        }
+        // The value is a whole AssignmentExpression, so everything binds tighter than `=`.
+        assert_eq!(shape("a = b + c"), "(= a (+ b c))");
+        assert_eq!(shape("a += b ? c : d"), "(+= a (? b c d))");
+        assert_eq!(shape("a = b || c"), "(= a (|| b c))");
+
+        // §13.15.1: a Syntax Error if the AssignmentTargetType is not simple. Refused here
+        // rather than at run time, which is the difference between a program that never starts
+        // and one that fails halfway through.
+        for source in [
+            "1 = 2",
+            "'a' = 2",
+            "this = 1",
+            "null = 1",
+            "true = 1",
+            "a + b = c",
+            "-a = b",
+            "(a, b) = 1",
+            "(a ? b : c) = d",
+            "a ?? b = c",
+            "/x/ = 1",
+            "1 += 2",
+            "1 &&= 2",
+        ] {
+            assert_eq!(
+                error(source).kind,
+                ParseErrorKind::InvalidAssignmentTarget,
+                "on {source:?}"
+            );
+        }
+        // The caret goes under the thing that cannot be assigned to.
+        assert_eq!(error("a + b = c").span, Span::new(0, 5));
+        // Parentheses do not change the answer, and need no rule of their own: `(a)` *is* the
+        // identifier, because bracketing is a flag rather than a node.
+        assert_eq!(shape("(a) = 1"), "(= a 1)");
+        assert_eq!(shape("((a)) = 1"), "(= a 1)");
+        assert!(matches!(
+            parse("(a) = 1").kind,
+            ExprKind::Assignment { ref target, .. } if target.parenthesized
+        ));
+        assert_eq!(parse("a = b").span, Span::new(0, 5));
+        assert!(!parse("a = b").parenthesized);
+        assert!(parse("(a = b)").parenthesized);
+        // `&&=`, `||=` and `??=` do not always assign — `a ||= b` leaves `a` alone when it is
+        // truthy — which is why the operator says so rather than the compiler guessing.
+        assert!(AssignmentOperator::LogicalOr.short_circuits());
+        assert!(AssignmentOperator::LogicalAnd.short_circuits());
+        assert!(AssignmentOperator::NullishCoalescing.short_circuits());
+        assert!(!AssignmentOperator::Assign.short_circuits());
+        assert!(!AssignmentOperator::Add.short_circuits());
+    }
+
+    #[test]
+    fn the_comma_operator_is_the_loosest_thing_there_is_and_is_held_flat() {
+        // §13.16: `Expression : Expression , AssignmentExpression`.
+        assert_eq!(shape("a, b"), "(, a b)");
+        // Flat rather than nested pairs: the grammar's recursion is on the left, so pairs would
+        // nest once per comma for no gain — evaluation is left to right either way.
+        assert_eq!(shape("a, b, c"), "(, a b c)");
+        assert_eq!(shape("a, b, c, d"), "(, a b c d)");
+        // …but a bracketed sequence is its own node, so flattening cannot cross parentheses.
+        assert_eq!(shape("(a, b), c"), "(, (, a b) c)");
+        assert_eq!(shape("a, (b, c)"), "(, a (, b c))");
+        // Loosest of all: everything else binds tighter.
+        assert_eq!(shape("a = 1, b = 2"), "(, (= a 1) (= b 2))");
+        assert_eq!(shape("a ? b : c, d"), "(, (? a b c) d)");
+        assert_eq!(shape("a + b, c * d"), "(, (+ a b) (* c d))");
+        assert_eq!(parse("a, b").span, Span::new(0, 4));
+        assert!(!parse("a, b").parenthesized);
+        assert!(parse("(a, b)").parenthesized);
+        // A long list is a loop rather than a recursion, so its length is bounded by memory.
+        let long = vec!["a"; 5000].join(", ");
+        assert!(parse_expression(&long).is_ok());
+        // A trailing comma is not part of the operator — that is argument-list syntax.
+        assert_eq!(
+            error("a, b,").kind,
+            ParseErrorKind::Unexpected {
+                expected: "an expression",
+                found: TokenKind::Eof,
+            }
+        );
     }
 
     #[test]

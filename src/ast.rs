@@ -76,6 +76,36 @@ pub enum ExprKind {
         /// The right operand.
         right: Box<Expr>,
     },
+    /// `test ? consequent : alternate` (§13.14).
+    Conditional {
+        /// The condition.
+        test: Box<Expr>,
+        /// Evaluated when the condition is truthy.
+        consequent: Box<Expr>,
+        /// Evaluated when it is not.
+        alternate: Box<Expr>,
+    },
+    /// An assignment (§13.15).
+    ///
+    /// One node for all sixteen operators rather than a second node for the three that
+    /// short-circuit: unlike [`ExprKind::Binary`] against [`ExprKind::Logical`], the shape is
+    /// identical — a target and a value — and the difference lives entirely in the operator,
+    /// which a compiler has to look at anyway. [`AssignmentOperator::short_circuits`] asks it.
+    Assignment {
+        /// Which operator.
+        operator: AssignmentOperator,
+        /// What is assigned to. §13.15.1 requires this to be a valid assignment target, which
+        /// the parser has already checked.
+        target: Box<Expr>,
+        /// What is assigned.
+        value: Box<Expr>,
+    },
+    /// `a, b, c` (§13.16) — the comma operator.
+    ///
+    /// Held flat rather than as nested pairs. The grammar's recursion is on the left, so pairs
+    /// would nest once per comma and a long list would nest deeply for no reason; evaluation is
+    /// left to right with the last value as the result either way.
+    Sequence(Vec<Expr>),
     /// `&&`, `||` or `??` (§13.13), kept apart from [`ExprKind::Binary`] because they are apart
     /// in the grammar and in what they compile to: the right operand may never be evaluated, so
     /// there is a branch here where an arithmetic operator has none.
@@ -219,6 +249,79 @@ impl BinaryOperator {
             Self::BitwiseXor => "^",
             Self::BitwiseOr => "|",
         }
+    }
+}
+
+/// The assignment operators of §13.15.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AssignmentOperator {
+    /// `=`
+    Assign,
+    /// `+=`
+    Add,
+    /// `-=`
+    Subtract,
+    /// `*=`
+    Multiply,
+    /// `/=`
+    Divide,
+    /// `%=`
+    Remainder,
+    /// `**=`
+    Exponent,
+    /// `<<=`
+    ShiftLeft,
+    /// `>>=`
+    ShiftRight,
+    /// `>>>=`
+    ShiftRightUnsigned,
+    /// `&=`
+    BitwiseAnd,
+    /// `^=`
+    BitwiseXor,
+    /// `|=`
+    BitwiseOr,
+    /// `&&=`
+    LogicalAnd,
+    /// `||=`
+    LogicalOr,
+    /// `??=`
+    NullishCoalescing,
+}
+
+impl AssignmentOperator {
+    /// How it is written.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Assign => "=",
+            Self::Add => "+=",
+            Self::Subtract => "-=",
+            Self::Multiply => "*=",
+            Self::Divide => "/=",
+            Self::Remainder => "%=",
+            Self::Exponent => "**=",
+            Self::ShiftLeft => "<<=",
+            Self::ShiftRight => ">>=",
+            Self::ShiftRightUnsigned => ">>>=",
+            Self::BitwiseAnd => "&=",
+            Self::BitwiseXor => "^=",
+            Self::BitwiseOr => "|=",
+            Self::LogicalAnd => "&&=",
+            Self::LogicalOr => "||=",
+            Self::NullishCoalescing => "??=",
+        }
+    }
+
+    /// Whether the value is evaluated only when the target does not already decide the answer.
+    ///
+    /// True for the three §13.15 gives their own productions — `&&=`, `||=` and `??=`. They also
+    /// differ in a way the others do not: `a ||= b` does not assign at all when `a` is truthy,
+    /// so it is not sugar for `a = a || b`.
+    pub fn short_circuits(&self) -> bool {
+        matches!(
+            self,
+            Self::LogicalAnd | Self::LogicalOr | Self::NullishCoalescing
+        )
     }
 }
 
