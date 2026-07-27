@@ -33,6 +33,29 @@ use crate::lexer::{Goal, TokenKind};
 use crate::span::Span;
 
 impl Parser<'_> {
+    /// `ClassElementName : PropertyName | PrivateIdentifier` (§15.7).
+    ///
+    /// The private half is what makes a class body a lexical space rather than a list of property
+    /// names, so it is read here and nowhere an `ObjectLiteral` can reach.
+    fn parse_class_element_name(&mut self) -> Result<PropertyKey, ParseError> {
+        let token = self.current;
+        if !matches!(token.kind, TokenKind::PrivateIdentifier { .. }) {
+            return self.parse_property_key();
+        }
+        self.advance(Goal::Div)?;
+        // A declaring position, so it is not a reference — it is what references resolve against.
+        let name = self.private_name_only(token)?;
+        // §15.7.1: "It is a Syntax Error if the StringValue of PrivateIdentifier is
+        // "#constructor"." The constructor is not a private member and cannot be made one.
+        if &*name == "constructor" {
+            return Err(ParseError {
+                kind: ParseErrorKind::PrivateConstructor,
+                span: token.span,
+            });
+        }
+        Ok(PropertyKey::Private(name))
+    }
+
     /// One `ClassElement` that is not an empty `;` (§15.7).
     pub(super) fn parse_class_element(
         &mut self,
@@ -78,7 +101,7 @@ impl Parser<'_> {
                 contains_escape: true
             }
         );
-        let key = self.parse_property_key()?;
+        let key = self.parse_class_element_name()?;
         // `get`/`set` are ordinary names until a name follows them — see [`super::method`]. When
         // one does, the *second* word is what the early errors below are about.
         // …but only when this is an ordinary method: §15.7's `MethodDefinition` gives the
@@ -90,7 +113,7 @@ impl Parser<'_> {
         let (key, key_span, kind) = match accessor {
             Some(kind) => {
                 let name = self.current.span;
-                (self.parse_property_key()?, name, kind)
+                (self.parse_class_element_name()?, name, kind)
             }
             None => (key, first.span, MethodKind::Normal),
         };
@@ -315,6 +338,195 @@ mod tests {
         // Every other word is an `IdentifierName` here, keyword or not — a method name is a
         // property name, not a binding.
         assert!(parse_script("class C { if() {} get() {} get get() {} }").is_ok());
+    }
+
+    #[test]
+    fn a_private_name_may_name_any_element_a_public_one_may() {
+        assert_eq!(
+            statements("class C { #a; }"),
+            ["(class C - [(field #a <none>)])"]
+        );
+        assert_eq!(
+            statements("class C { #a = 1; }"),
+            ["(class C - [(field #a 1)])"]
+        );
+        assert_eq!(
+            statements("class C { #m() {} }"),
+            ["(class C - [(#m (fn <anon> [] {}))])"]
+        );
+        for source in [
+            "class C { static #a; }",
+            "class C { static #m() {} }",
+            "class C { get #a() {} }",
+            "class C { set #a(v) {} }",
+            "class C { *#m() {} }",
+            "class C { async #m() {} }",
+            "class C { async *#m() {} }",
+            "class C { static async *#m() {} }",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source:?}");
+        }
+        // §15.7.1: the constructor is not a private member and cannot be made one, whichever kind
+        // of element asks for the name.
+        for source in ["class C { #constructor; }", "class C { #constructor() {} }"] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::PrivateConstructor,
+                "{source:?}"
+            );
+        }
+        // …and the `#` is part of the token, so the lexer refuses these before the parser sees
+        // anything.
+        for source in ["class C { # a; }", "class C { #0a; }"] {
+            assert!(parse_script(source).is_err(), "{source:?}");
+        }
+    }
+
+    #[test]
+    fn two_elements_may_share_a_private_name_only_as_a_getter_and_a_setter() {
+        // §15.7.1: no duplicates among `PrivateBoundIdentifiers`, "unless the name is used once
+        // for a getter and once for a setter and in no other entries, and the getter and setter
+        // are either both static or both non-static". One member written as two elements.
+        assert!(parse_script("class C { get #a() {} set #a(v) {} }").is_ok());
+        assert!(parse_script("class C { set #a(v) {} get #a() {} }").is_ok());
+        assert!(parse_script("class C { static get #a() {} static set #a(v) {} }").is_ok());
+        // …and every other pairing is two members with one name.
+        for source in [
+            "class C { #a; #a; }",
+            "class C { get #a() {} get #a() {} }",
+            "class C { get #a() {} set #a(v) {} #a; }",
+            "class C { #a(){} #a; }",
+            "class C { #a; static #a; }",
+            "class C { static get #a() {} set #a(v) {} }",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::DuplicatePrivateName,
+                "{source:?}"
+            );
+        }
+        // Different names never collide, and a private name is not a public one.
+        assert!(parse_script("class C { #a; #b; }").is_ok());
+        assert!(parse_script("class C { #a; a; }").is_ok());
+    }
+
+    #[test]
+    fn a_private_name_is_in_scope_for_the_whole_class_that_declares_it_and_no_other() {
+        assert_eq!(
+            shape("(class { #a; m() { return this.#a; } })"),
+            "(class <anon> - [(field #a <none>) (m (fn <anon> [] {(return (. this #a))}))])"
+        );
+        // A use may come before the element that declares it, which is the whole reason
+        // §15.7.7 is asked of the finished body rather than where the name is read.
+        assert!(parse_script("class C { m() { this.#a; } #a; }").is_ok());
+        // Every enclosing class counts, so an inner class may reach an outer's names…
+        assert!(
+            parse_script("class C { #a; m() { return class { n() { return this.#a; } }; } }")
+                .is_ok()
+        );
+        assert!(parse_script("class C { #a; m() { class D { n() { this.#a; } } } }").is_ok());
+        // …and a class that merely finished does not, however it is related.
+        assert_eq!(
+            kind("class C { #a; } class D { m() { this.#a; } }"),
+            ParseErrorKind::UndeclaredPrivateName
+        );
+        assert_eq!(
+            kind("class C { m() { this.#a; } } class D { #a; }"),
+            ParseErrorKind::UndeclaredPrivateName
+        );
+        assert_eq!(
+            kind("class C { #a; } class D extends C { m() { this.#a; } }"),
+            ParseErrorKind::UndeclaredPrivateName
+        );
+        // …nor does a name that was never declared at all, inside a class or outside one.
+        assert_eq!(kind("this.#a;"), ParseErrorKind::UndeclaredPrivateName);
+        assert_eq!(
+            kind("class C { m() { this.#b; } #a; }"),
+            ParseErrorKind::UndeclaredPrivateName
+        );
+        // A function boundary is not a private-name boundary: only a class body is.
+        assert!(parse_script("class C { #a; m() { function f() { this.#a; } } }").is_ok());
+        assert!(parse_script("class C { #a; m() { ({ n() { this.#a; } }); } }").is_ok());
+        assert!(parse_script("class C { #a; static { this.#a; } }").is_ok());
+        assert!(parse_script("class C { #a; b = this.#a; }").is_ok());
+    }
+
+    #[test]
+    fn a_private_member_is_read_like_any_other_and_deleted_like_none() {
+        assert_eq!(
+            shape("(class { #a; m() { return a.#a; } })"),
+            "(class <anon> - [(field #a <none>) (m (fn <anon> [] {(return (. a #a))}))])"
+        );
+        // It chains exactly as a public one does, including through an optional link.
+        for source in [
+            "a.#a();",
+            "a?.#a;",
+            "a.#a`x`;",
+            "({}).#a;",
+            "new C().#a;",
+            "this.#a = 1;",
+            "this.#a++;",
+            "[this.#a] = b;",
+            "typeof this.#a;",
+        ] {
+            assert!(
+                parse_script(&format!("class C {{ #a; m() {{ {source} }} }}")).is_ok(),
+                "{source:?}"
+            );
+        }
+        // §13.3.7 gives `SuperProperty` an `IdentifierName` and no private form: the name would
+        // have to be looked up in the parent's private space, which is not a thing that exists.
+        assert_eq!(
+            kind("class C { #a; m() { super.#a; } }"),
+            ParseErrorKind::PrivateNameAfterSuper
+        );
+        // §13.5.1: the name is not a property key, so there is no property to remove — and unlike
+        // `delete a`, this holds in sloppy code too.
+        assert_eq!(
+            kind("class C { #a; m() { delete this.#a; } }"),
+            ParseErrorKind::DeleteOfPrivateMember
+        );
+        assert_eq!(
+            kind("class C { #a; m() { delete (this.#a); } }"),
+            ParseErrorKind::DeleteOfPrivateMember
+        );
+        assert_eq!(
+            kind("class C { #a; m() { delete a?.#a; } }"),
+            ParseErrorKind::DeleteOfPrivateMember
+        );
+        assert!(parse_script("class C { #a; m() { delete a.b; } }").is_ok());
+    }
+
+    #[test]
+    fn the_only_place_a_private_name_stands_alone_is_the_left_of_an_in() {
+        assert_eq!(
+            shape("(class { #a; m() { return #a in b; } })"),
+            "(class <anon> - [(field #a <none>) (m (fn <anon> [] {(return (#in a b))}))])"
+        );
+        // `RelationalExpression : PrivateIdentifier in ShiftExpression`, so the right operand
+        // stops where an ordinary `in`'s would and everything looser still applies to the whole.
+        assert_eq!(
+            shape("(class { #a; m() { return #a in b + c; } })"),
+            "(class <anon> - [(field #a <none>) (m (fn <anon> [] {(return (#in a (+ b c)))}))])"
+        );
+        assert_eq!(
+            shape("(class { #a; m() { return #a in b in c; } })"),
+            "(class <anon> - [(field #a <none>) (m (fn <anon> [] {(return (in (#in a b) c))}))])"
+        );
+        assert_eq!(
+            shape("(class { #a; m() { return #a in b == c; } })"),
+            "(class <anon> - [(field #a <none>) (m (fn <anon> [] {(return (== (#in a b) c))}))])"
+        );
+        assert!(parse_script("class C { #a; m() { x = #a in b; } }").is_ok());
+        assert!(parse_script("class C { #a; m() { (#a in b); } }").is_ok());
+        // The `in` is required — a private name alone is not anything…
+        assert!(parse_script("class C { #a; m() { #a; } }").is_err());
+        assert!(parse_script("class C { #a; m() { #a == b; } }").is_err());
+        // …and `[~In]` refuses it as it refuses any other `in`.
+        assert!(parse_script("class C { #a; m() { for (#a in b;;); } }").is_err());
+        // The name still has to be declared, and a `ClassElement` is not an expression.
+        assert_eq!(kind("#a in b;"), ParseErrorKind::UndeclaredPrivateName);
+        assert!(parse_script("class C { #a in b; }").is_err());
     }
 
     #[test]

@@ -58,6 +58,14 @@ fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     // everything after strict — including everything nested, for ever.
     let (body, _) = parser.parse_body_with_prologue(TokenKind::Eof)?;
     parser.expect_eof()?;
+    // §15.7.7: every `#a` had to be declared by *some* enclosing class, and each class body
+    // took its own off the list as it closed. Whatever is left was declared nowhere.
+    if let Some((_, span)) = parser.private_references.first() {
+        return Err(ParseError {
+            kind: ParseErrorKind::UndeclaredPrivateName,
+            span: *span,
+        });
+    }
     // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
     super::scope::check_declared_names(&body, super::scope::Level::Top)?;
     Ok(Script {

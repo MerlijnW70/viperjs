@@ -82,7 +82,7 @@ impl Parser<'_> {
                                 span: self.current.span,
                             });
                         }
-                        _ => self.member_after_dot_without_the_dot(expr)?,
+                        _ => self.member_after_dot_without_the_dot(expr, true)?,
                     }
                 }
                 // `MemberExpression TemplateLiteral` and `CallExpression TemplateLiteral` — a
@@ -123,16 +123,38 @@ impl Parser<'_> {
         Ok(expr)
     }
 
-    /// `?. IdentifierName`, with the `?.` already consumed.
+    /// The name after a `.` or a `?.`, with the punctuation already consumed.
     ///
-    /// The property name is read the same way as after a plain `.`; only the flag differs, and
-    /// there is no `.` left to skip.
-    fn member_after_dot_without_the_dot(&mut self, object: Expr) -> Result<Expr, ParseError> {
-        let (property, end) = self.parse_property_name()?;
+    /// `MemberExpression . IdentifierName` and `MemberExpression . PrivateIdentifier` differ only
+    /// in which token they take, so they are read together and told apart by a flag.
+    fn member_after_dot_without_the_dot(
+        &mut self,
+        object: Expr,
+        optional: bool,
+    ) -> Result<Expr, ParseError> {
+        let token = self.current;
+        let private = matches!(token.kind, TokenKind::PrivateIdentifier { .. });
+        let (property, end) = if private {
+            // §13.3.7 gives `SuperProperty` an `IdentifierName` and no private form: `super.#a`
+            // would have to look the name up in the *parent's* private space, which is not a
+            // thing that exists.
+            if matches!(object.kind, ExprKind::Super) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::PrivateNameAfterSuper,
+                    span: token.span,
+                });
+            }
+            self.advance(Goal::Div)?;
+            let name = self.private_name(token)?;
+            (name, token.span)
+        } else {
+            self.parse_property_name()?
+        };
         let span = object.span.to(end);
         Ok(Expr::new(
             ExprKind::Member {
-                optional: true,
+                private,
+                optional,
                 object: Box::new(object),
                 property,
             },
@@ -143,16 +165,7 @@ impl Parser<'_> {
     /// `MemberExpression . IdentifierName`, with the cursor on the `.`.
     fn member_after_dot(&mut self, object: Expr, optional: bool) -> Result<Expr, ParseError> {
         self.advance(Goal::Div)?;
-        let (property, end) = self.parse_property_name()?;
-        let span = object.span.to(end);
-        Ok(Expr::new(
-            ExprKind::Member {
-                optional,
-                object: Box::new(object),
-                property,
-            },
-            span,
-        ))
+        self.member_after_dot_without_the_dot(object, optional)
     }
 
     /// `MemberExpression [ Expression ]`, with the cursor on the `[`.

@@ -27,7 +27,7 @@
 //! Syntax Error if FunctionBody Contains SuperProperty" — and this is the slice that can tell.
 
 use super::{ParseError, ParseErrorKind, Parser};
-use crate::ast::{Class, ClassElement, Expr, ExprKind, Stmt, StmtKind};
+use crate::ast::{Class, ClassElement, Expr, ExprKind, MethodKind, PropertyKey, Stmt, StmtKind};
 use crate::lexer::{Goal, ReservedWord, TokenKind};
 
 impl Parser<'_> {
@@ -94,6 +94,11 @@ impl Parser<'_> {
             None
         };
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
+        // Only the references read inside *this* body are this class's to answer for, so
+        // the ones already waiting are marked off first: `class C { m() { this.#a; } }`
+        // followed by `class D { #a; }` leaves C's use unresolved, D being a different
+        // private space and not an enclosing one.
+        let mark = self.private_references.len();
         let mut elements = Vec::new();
         let mut constructors = 0;
         while self.current.kind != TokenKind::RBrace {
@@ -121,12 +126,74 @@ impl Parser<'_> {
             elements.push(element);
         }
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
+        self.resolve_private_names(&elements, mark)?;
         Ok(Class {
             name,
             heritage,
             elements: elements.into_boxed_slice(),
             span: keyword.to(close.span),
         })
+    }
+
+    /// §15.7.1's duplicate rule and §15.7.7's scope rule, once the body is closed.
+    ///
+    /// Both wait for the whole body, and for the same reason: a private name may be used before
+    /// the element that declares it, so `class C { m() { this.#a; } #a; }` is ordinary code.
+    /// References are collected as they are read ([`Parser::private_references`]) and this is
+    /// where the ones this class answers for are taken off the list. What is left belongs to the
+    /// class around this one — an inner class may use an outer's private names — and what
+    /// survives to the end of the script was declared nowhere.
+    fn resolve_private_names(
+        &mut self,
+        elements: &[ClassElement],
+        mark: usize,
+    ) -> Result<(), ParseError> {
+        let mut declared: Vec<(&str, bool, MethodKind)> = Vec::new();
+        for element in elements {
+            let (name, is_static, kind, span) = match element {
+                ClassElement::Method(method) => {
+                    (&method.key, method.is_static, method.kind, method.key_span)
+                }
+                ClassElement::Field(field) => (
+                    &field.key,
+                    field.is_static,
+                    MethodKind::Normal,
+                    field.key_span,
+                ),
+                ClassElement::StaticBlock(_) => continue,
+            };
+            let PropertyKey::Private(name) = name else {
+                continue;
+            };
+            // §15.7.1: no duplicates among `PrivateBoundIdentifiers`, "unless the name is used
+            // once for a getter and once for a setter and in no other entries, and the getter and
+            // setter are either both static or both non-static". One private member written as
+            // two elements is the only case, which is why the staticness has to match.
+            let pairs_with = |(other, other_static, other_kind): &(&str, bool, MethodKind)| {
+                *other == &**name
+                    && (*other_static != is_static
+                        || *other_kind == kind
+                        || kind == MethodKind::Normal
+                        || *other_kind == MethodKind::Normal)
+            };
+            if declared.iter().any(pairs_with) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::DuplicatePrivateName,
+                    span,
+                });
+            }
+            declared.push((name, is_static, kind));
+        }
+        let mut index = mark;
+        while index < self.private_references.len() {
+            let (name, _) = &self.private_references[index];
+            if declared.iter().any(|(declared, _, _)| *declared == &**name) {
+                self.private_references.remove(index);
+            } else {
+                index += 1;
+            }
+        }
+        Ok(())
     }
 
     /// `SuperProperty` and `SuperCall` (§13.3), with the cursor on `super`.
@@ -449,7 +516,11 @@ mod tests {
             "class C { a = 1".to_string(),
             "class C { static {".to_string(),
             "class C { static { a".to_string(),
-            "class C { static".to_string(),
+            "class C { #".to_string(),
+            "class C { #a".to_string(),
+            "class C { #a; m() { this.#".to_string(),
+            "class C { #a; m() { #a in".to_string(),
+            "#a".to_string(),
             "super".to_string(),
             "class C { m() { super".to_string(),
             long_body.clone(),

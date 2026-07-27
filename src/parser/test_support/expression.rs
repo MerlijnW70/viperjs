@@ -58,10 +58,17 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
             render(value)
         ),
         ExprKind::Member {
+            private,
             optional,
             object,
             property,
-        } => format!("({} {} {})", dot(*optional), render(object), property),
+        } => format!(
+            "({} {} {}{})",
+            dot(*optional),
+            render(object),
+            if *private { "#" } else { "" },
+            property
+        ),
         ExprKind::ComputedMember {
             optional,
             object,
@@ -99,6 +106,7 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::Class(class) => render_class(class),
         ExprKind::Super => "super".to_string(),
         ExprKind::NewTarget => "new.target".to_string(),
+        ExprKind::PrivateIn { name, object } => format!("(#in {name} {})", render(object)),
         ExprKind::Await(argument) => format!("(await {})", render(argument)),
         ExprKind::OptionalChain(chain) => format!("(?chain {})", render(chain)),
         ExprKind::Yield(yielded) => {
@@ -300,5 +308,6 @@ pub(in crate::parser) fn render_key(key: &PropertyKey) -> String {
         PropertyKey::String(units) => format!("s{:?}", String::from_utf16_lossy(units)),
         PropertyKey::Number(value) => format!("n{value}"),
         PropertyKey::Computed(expr) => format!("[{}]", render(expr)),
+        PropertyKey::Private(name) => format!("#{name}"),
     }
 }

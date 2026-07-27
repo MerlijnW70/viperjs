@@ -213,6 +213,31 @@ pub enum ParseErrorKind {
     /// and refused for the same reason: a default is evaluated before the function is
     /// suspendable, so there is nothing for the `await` to suspend into.
     AwaitInParameters,
+    /// §13.3.7: `super.#a`.
+    ///
+    /// `SuperProperty` takes an `IdentifierName` and has no private form — the name would have to
+    /// be looked up in the *parent's* private space, which is not a thing that exists.
+    PrivateNameAfterSuper,
+    /// §15.7.1: a class element named `#constructor`.
+    ///
+    /// The constructor is not a private member and cannot be made one; the name is reserved
+    /// whichever kind of element asks for it.
+    PrivateConstructor,
+    /// §15.7.1: two class elements with the same private name.
+    ///
+    /// Unless they are one getter and one setter, and both static or both not — the one case
+    /// where two elements name a single private member between them.
+    DuplicatePrivateName,
+    /// §15.7.7: a `#a` with no enclosing class that declares it.
+    ///
+    /// `AllPrivateIdentifiersValid`. A private name is not a property name: it lives in a lexical
+    /// space that only a class body opens, so a use outside every such body names nothing.
+    UndeclaredPrivateName,
+    /// §13.5.1: `delete a.#b`.
+    ///
+    /// A private member cannot be removed — the name is not a property key, so there is no
+    /// property to delete.
+    DeleteOfPrivateMember,
     /// §15.7.1: a field named `constructor`.
     ///
     /// A field is a property of each instance, and `constructor` is not one — there is already a
@@ -487,6 +512,22 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`await` may not appear in an async function's own parameter list"
             ),
+            Self::PrivateNameAfterSuper => {
+                write!(f, "`super` has no private members")
+            }
+            Self::PrivateConstructor => {
+                write!(f, "`#constructor` is not a valid private name")
+            }
+            Self::DuplicatePrivateName => {
+                write!(f, "this private name is already declared in this class")
+            }
+            Self::UndeclaredPrivateName => write!(
+                f,
+                "this private name is not declared by any enclosing class"
+            ),
+            Self::DeleteOfPrivateMember => {
+                write!(f, "a private member may not be deleted")
+            }
             Self::ConstructorAsFieldName => {
                 write!(f, "a class may not have a field named `constructor`")
             }

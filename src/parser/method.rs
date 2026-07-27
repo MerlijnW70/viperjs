@@ -54,11 +54,17 @@ impl Parser<'_> {
             "set" => MethodKind::Set,
             _ => return None,
         };
+        // A `ClassElementName`, so a `PrivateIdentifier` counts — `get #a() {}` is an accessor
+        // for a private member, and `get` is the accessor rather than the name.
         let starts_a_name = matches!(
             self.current.kind,
-            TokenKind::LBracket | TokenKind::String { .. } | TokenKind::Number { .. }
-        ) || matches!(self.current.kind, TokenKind::Keyword(_))
-            || matches!(self.current.kind, TokenKind::Identifier { .. });
+            TokenKind::LBracket
+                | TokenKind::String { .. }
+                | TokenKind::Number { .. }
+                | TokenKind::Keyword(_)
+                | TokenKind::Identifier { .. }
+                | TokenKind::PrivateIdentifier { .. }
+        );
         starts_a_name.then_some(kind)
     }
 

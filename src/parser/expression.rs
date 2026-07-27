@@ -72,11 +72,52 @@ impl Parser<'_> {
     /// Falling through to the assignment check rather than returning early after a conditional
     /// is what makes `(a ? b : c) = d` say "this expression cannot be assigned to" instead of
     /// the far less helpful "expected end of input".
+    /// `RelationalExpression : PrivateIdentifier in ShiftExpression` (§13.10), with the cursor on
+    /// the name.
+    ///
+    /// Produced at the assignment level rather than woven into the operator ladder because the
+    /// left operand is not an expression: no production makes a `PrivateIdentifier` an operand, so
+    /// there is nothing for [`Parser::parse_binary`] to have read. The `in` is required — a
+    /// private name alone is not anything — and `[~In]` refuses it as it refuses any other `in`.
+    pub(super) fn parse_private_in(&mut self, allow_in: AllowIn) -> Result<Expr, ParseError> {
+        let token = self.advance(Goal::Div)?;
+        let name = self.private_name(token)?;
+        if allow_in == AllowIn::No || self.current.kind != TokenKind::Keyword(ReservedWord::In) {
+            return Err(self.unexpected("`in`"));
+        }
+        self.advance(Goal::RegExp)?;
+        self.enter()?;
+        // A `ShiftExpression`, so `#a in b + c` is `#a in (b + c)` and `#a in b == c` is
+        // `(#a in b) == c` — the ordinary precedence of `in`, reached from the other side.
+        let object = self.parse_binary(RELATIONAL_PRECEDENCE, allow_in, None);
+        self.leave();
+        let object = object?;
+        let span = token.span.to(object.span);
+        Ok(Expr::new(
+            ExprKind::PrivateIn {
+                name,
+                object: Box::new(object),
+            },
+            span,
+        ))
+    }
+
     pub(super) fn parse_assignment(&mut self, allow_in: AllowIn) -> Result<Expr, ParseError> {
         // §15.3: an `ArrowFunction` is an `AssignmentExpression` and nothing tighter, so this
         // is the only level that may produce one — see [`super::arrow`]. What comes back may
         // also be a parenthesized expression the attempt had to read to find out, in which case
         // it becomes the head of the ordinary operand path rather than being read twice.
+        // §13.10: `RelationalExpression : PrivateIdentifier in ShiftExpression` — the one place
+        // a private name stands on its own, so that code can ask whether an object carries a
+        // private field without the access throwing. Read here because a `#a` may begin nothing
+        // else: there is no production that makes one an operand.
+        if matches!(self.current.kind, TokenKind::PrivateIdentifier { .. }) {
+            // A `RelationalExpression`, so everything looser than one still applies to it:
+            // `#a in b in c` is `(#a in b) in c` and `#a in b == c` is `(#a in b) == c`.
+            let relational = self.parse_private_in(allow_in)?;
+            let left = self.parse_binary_tail(relational, 0, allow_in)?;
+            return self.parse_conditional_and_assignment(left, allow_in);
+        }
         // §15.5: a `YieldExpression` is an `AssignmentExpression` and nothing tighter, so this
         // level produces it as it does an arrow — and for the same reason. `1 + yield` and
         // `yield ? a : b` have no derivation because both operators want a narrower operand.
@@ -88,7 +129,20 @@ impl Parser<'_> {
             super::arrow::ArrowOrGroup::Operand(expr) => Some(expr),
             super::arrow::ArrowOrGroup::Neither => None,
         };
-        let mut left = self.parse_binary(0, allow_in, head)?;
+        let left = self.parse_binary(0, allow_in, head)?;
+        self.parse_conditional_and_assignment(left, allow_in)
+    }
+
+    /// `? :` and then `=`, with the `ShortCircuitExpression` already read.
+    ///
+    /// Apart from [`Parser::parse_assignment`] for the reason `parse_binary_tail` is apart from
+    /// `parse_binary`: §13.10's private-name form arrives here with its left operand already
+    /// built, and the two tails after it are the same two.
+    fn parse_conditional_and_assignment(
+        &mut self,
+        mut left: Expr,
+        allow_in: AllowIn,
+    ) -> Result<Expr, ParseError> {
         if self.current.kind == TokenKind::Question {
             left = self.parse_conditional_tail(left, allow_in)?;
         }
@@ -198,7 +252,22 @@ impl Parser<'_> {
         // to see whether a `=>` followed it. Passed down rather than kept on the parser, so the
         // compiler is what makes sure it reaches exactly one place — and measurably free, the
         // restructuring below being what the depth went on.
-        let mut left = self.parse_unary(head)?;
+        let left = self.parse_unary(head)?;
+        self.parse_binary_tail(left, minimum, allow_in)
+    }
+
+    /// The operator ladder itself, with its left operand already read.
+    ///
+    /// Apart from [`Parser::parse_binary`] because §13.10's `PrivateIdentifier in
+    /// ShiftExpression` produces a `RelationalExpression` without going through the operand path
+    /// at all — a private name is not an operand, so there is nothing there for `parse_unary` to
+    /// have read, and everything looser than a relational still applies to what comes back.
+    fn parse_binary_tail(
+        &mut self,
+        mut left: Expr,
+        minimum: u8,
+        allow_in: AllowIn,
+    ) -> Result<Expr, ParseError> {
         while let Some(operator) = binary_operator(self.current.kind) {
             if operator.precedence < minimum {
                 break;
@@ -281,6 +350,15 @@ impl Parser<'_> {
                     span: argument.span,
                 });
             }
+            // §13.5.1: a private name is not a property key, so there is no property for
+            // `delete` to remove — and unlike the rule above this one holds in sloppy code too.
+            if operator == crate::ast::UnaryOperator::Delete && deletes_a_private_member(&argument)
+            {
+                return Err(ParseError {
+                    kind: ParseErrorKind::DeleteOfPrivateMember,
+                    span: argument.span,
+                });
+            }
             let span = token.span.to(argument.span);
             return Ok(Expr::new(
                 ExprKind::Unary {
@@ -346,6 +424,23 @@ impl Parser<'_> {
             },
             span,
         ))
+    }
+}
+
+/// The precedence a `ShiftExpression` is parsed at, which is what `#a in b` takes on the
+/// right — one tighter than the `in` in [`super::operator::binary_operator`]'s table, so the
+/// operand stops exactly where an ordinary `in`'s would.
+const RELATIONAL_PRECEDENCE: u8 = 9;
+
+/// Whether `delete`'s operand reaches a private member (§13.5.1).
+///
+/// Only through the chain's own links: `delete (a.#b)` is the same expression parenthesized and is
+/// refused too, while `delete a[b].c` is not one of these however `a` got its properties.
+fn deletes_a_private_member(argument: &Expr) -> bool {
+    match &argument.kind {
+        ExprKind::Member { private, .. } => *private,
+        ExprKind::OptionalChain(chain) => deletes_a_private_member(chain),
+        _ => false,
     }
 }
 

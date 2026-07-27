@@ -284,6 +284,7 @@ impl Parser<'_> {
                 | TokenKind::Number { .. }
                 | TokenKind::Keyword(_)
                 | TokenKind::Identifier { .. }
+                | TokenKind::PrivateIdentifier { .. }
         ))
     }
 }

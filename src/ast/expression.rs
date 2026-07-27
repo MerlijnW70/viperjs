@@ -128,6 +128,11 @@ pub enum ExprKind {
     /// ordinary property accesses, and a reserved word is only reserved where a *binding* could
     /// stand.
     Member {
+        /// Whether the property was a `PrivateIdentifier` (§13.3).
+        ///
+        /// `a.#b`. `property` holds the name without its `#`, as everywhere else — the `#` is
+        /// punctuation of the production and not part of the name.
+        private: bool,
         /// Whether this link was written `?.` rather than `.` (§13.3).
         ///
         /// Only ever true inside an [`ExprKind::OptionalChain`], which is where the
@@ -169,6 +174,18 @@ pub enum ExprKind {
     /// what makes `a?.b = c` and `new a?.b` refusals rather than special cases — an
     /// `OptionalExpression` is neither a `MemberExpression` nor an assignment target.
     OptionalChain(Box<Expr>),
+    /// `#a in b` (§13.10) — the one place a private name stands on its own.
+    ///
+    /// `RelationalExpression : PrivateIdentifier in ShiftExpression`, which exists so that code
+    /// can ask whether an object carries a private field without the access throwing. The name is
+    /// not an expression: there is no production that lets it stand anywhere else, so it is part
+    /// of this node rather than an operand of an ordinary `in`.
+    PrivateIn {
+        /// The name, without its `#`.
+        name: Box<str>,
+        /// What is being asked about.
+        object: Box<Expr>,
+    },
     /// `new.target` (§13.3) — a `MetaProperty`, and not a member access of anything.
     ///
     /// `import.meta` is the other `MetaProperty` and needs the `Module` goal, which arrives with

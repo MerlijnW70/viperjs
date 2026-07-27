@@ -204,6 +204,13 @@ pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     let mut parser = Parser::new(source)?;
     let expr = parser.parse_expression(self::expression::AllowIn::Yes)?;
     parser.expect_eof()?;
+    // The same §15.7.7 sweep [`parse_script`] does, for the same reason.
+    if let Some((_, span)) = parser.private_references.first() {
+        return Err(ParseError {
+            kind: ParseErrorKind::UndeclaredPrivateName,
+            span: *span,
+        });
+    }
     Ok(expr)
 }
 
@@ -282,6 +289,13 @@ struct Parser<'a> {
     /// what makes `class C { a = () => arguments; }` a Syntax Error and
     /// `class C { a = function () { arguments; }; }` an ordinary field.
     pub(super) arguments_reference: Option<Span>,
+    /// Every `#a` read whose declaration has not been found yet.
+    ///
+    /// §15.7.7's `AllPrivateIdentifiersValid`, which cannot be answered where the name is read:
+    /// `class C { m() { this.#a; } #a; }` is legal, so the answer is not known until the class
+    /// body closes. Each class body removes the names it declares and leaves the rest for the
+    /// class around it; whatever survives to the end of the script was never declared anywhere.
+    pub(super) private_references: Vec<(Box<str>, Span)>,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -312,6 +326,7 @@ impl<'a> Parser<'a> {
             await_allowed: false,
             forbidden_in_parameters: None,
             arguments_reference: None,
+            private_references: Vec::new(),
             strict: false,
         })
     }
@@ -342,6 +357,27 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(ReservedWord::Await) => !self.await_allowed,
             _ => false,
         }
+    }
+
+    /// The name of a `PrivateIdentifier` token, without its `#`, recorded as a reference.
+    ///
+    /// §12.7's `StringValue` of one *includes* the `#`; praxis keeps the name alone, the `#`
+    /// being punctuation of the production rather than part of the name. The two spellings are
+    /// never mixed, so nothing has to strip it back off.
+    pub(super) fn private_name(&mut self, token: Token) -> Result<Box<str>, ParseError> {
+        let name = self.private_name_only(token)?;
+        self.private_references.push((name.clone(), token.span));
+        Ok(name)
+    }
+
+    /// The same name, without recording a reference — for the declaring positions, which are what
+    /// the references are resolved *against*.
+    pub(super) fn private_name_only(&mut self, token: Token) -> Result<Box<str>, ParseError> {
+        // The `#` is one byte and ASCII, so the name is the rest of the span.
+        let inner = Span::new(token.span.start + 1, token.span.end);
+        let name = crate::lexer::identifier_value(self.source, inner)
+            .ok_or_else(|| self.value_missing(token))?;
+        Ok(name.into_owned().into_boxed_str())
     }
 
     /// Record a reading of the name `arguments`, for §15.7.9's `ContainsArguments`.

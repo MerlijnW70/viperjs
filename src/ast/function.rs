@@ -205,7 +205,11 @@ pub(crate) fn key_is(key: &super::PropertyKey, name: &str) -> bool {
     match key {
         super::PropertyKey::Identifier(text) => &**text == name,
         super::PropertyKey::String(units) => units.iter().copied().eq(name.encode_utf16()),
-        super::PropertyKey::Number(_) | super::PropertyKey::Computed(_) => false,
+        // A private name is not a property name at all, so it is never either of the two
+        // names this asks about — `#constructor` has its own rule, on the name itself.
+        super::PropertyKey::Number(_)
+        | super::PropertyKey::Computed(_)
+        | super::PropertyKey::Private(_) => false,
     }
 }
 

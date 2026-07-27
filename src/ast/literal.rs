@@ -122,6 +122,13 @@ pub enum PropertyKey {
     Number(f64),
     /// `[ AssignmentExpression ]`, whose name is not known until it runs.
     Computed(Box<Expr>),
+    /// `#a` — a `PrivateIdentifier`, without its `#`.
+    ///
+    /// The second alternative of §15.7's `ClassElementName` and of nothing else, so only a
+    /// class element ever carries one — an object literal's key is a `PropertyName` and has
+    /// no private form. A private name is not a property name at all: it lives in a lexical
+    /// space of its own, which is why §15.7.7 has to check that every use of one is in scope.
+    Private(Box<str>),
 }
 
 impl PropertyKey {
@@ -133,7 +140,8 @@ impl PropertyKey {
         match self {
             Self::Identifier(name) => &**name == "__proto__",
             Self::String(units) => units.iter().copied().eq("__proto__".encode_utf16()),
-            Self::Number(_) | Self::Computed(_) => false,
+            // §13.2.5.1 is about an `ObjectLiteral`, which has no private keys at all.
+            Self::Number(_) | Self::Computed(_) | Self::Private(_) => false,
         }
     }
 }
