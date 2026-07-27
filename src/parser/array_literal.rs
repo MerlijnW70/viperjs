@@ -112,7 +112,7 @@ mod tests {
     fn length(source: &str) -> usize {
         let expr = parse_expression(source)
             .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // a test about elements needs them
-        match expr.kind {
+        match expr.into_kind() {
             ExprKind::Array(elements) => elements.len(),
             other => panic!("{source:?} parsed as {other:?}"), // same
         }

@@ -64,7 +64,7 @@ impl Parser<'_> {
     /// The refinement proper, which recurses once per level of nesting.
     fn refine_pattern(&mut self, expr: Expr) -> Result<Pattern, ParseError> {
         let span = expr.span;
-        match expr.kind {
+        match expr.into_kind() {
             ExprKind::Array(elements) => {
                 self.enter()?;
                 let refined = self.refine_array(elements, span);
@@ -237,16 +237,23 @@ impl Parser<'_> {
     /// The initialiser was parsed as an assignment, `[a = 1]` being a perfectly good literal, so
     /// finding it means taking that assignment apart again.
     fn refine_element(&mut self, expr: Expr) -> Result<PatternElement, ParseError> {
-        let ExprKind::Assignment {
-            operator,
-            target,
-            value,
-        } = expr.kind
-        else {
-            return Ok(PatternElement {
-                target: self.refine_target(expr)?,
-                default: None,
-            });
+        let mut expr = expr;
+        // A `match` and not a `let … else`: [`Expr`] has a `Drop`, so the node cannot be taken
+        // apart field by field — and when this turns out not to be an assignment the node is
+        // still wanted whole, so the kind goes back where it came from.
+        let (operator, target, value) = match expr.take_kind() {
+            ExprKind::Assignment {
+                operator,
+                target,
+                value,
+            } => (operator, target, value),
+            other => {
+                expr.kind = other;
+                return Ok(PatternElement {
+                    target: self.refine_target(expr)?,
+                    default: None,
+                });
+            }
         };
         // Only `=` covers a default. `[a += 1] = b` is an assignment whose target is `a`, and an
         // assignment is not a `DestructuringAssignmentTarget`.

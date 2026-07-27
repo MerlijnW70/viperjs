@@ -214,16 +214,23 @@ impl Parser<'_> {
         &mut self,
         expr: Expr,
     ) -> Result<BindingElement, ParseError> {
-        let ExprKind::Assignment {
-            operator,
-            target,
-            value,
-        } = expr.kind
-        else {
-            return Ok(BindingElement {
-                target: self.refine_to_binding(expr)?,
-                default: None,
-            });
+        let mut expr = expr;
+        // A `match` and not a `let … else`: [`Expr`] has a `Drop`, so the node cannot be taken
+        // apart field by field — and when this turns out not to be an assignment the node is
+        // still wanted whole, so the kind goes back where it came from.
+        let (operator, target, value) = match expr.take_kind() {
+            ExprKind::Assignment {
+                operator,
+                target,
+                value,
+            } => (operator, target, value),
+            other => {
+                expr.kind = other;
+                return Ok(BindingElement {
+                    target: self.refine_to_binding(expr)?,
+                    default: None,
+                });
+            }
         };
         if operator != crate::ast::AssignmentOperator::Assign {
             return Err(ParseError {
@@ -249,7 +256,7 @@ impl Parser<'_> {
         // `f({a = 1})` and `async({a = 1})` still are one.
         self.cover_initialized_name = None;
         let span = expr.span;
-        match expr.kind {
+        match expr.into_kind() {
             ExprKind::Identifier(name) => Ok(Binding::Identifier(crate::ast::BindingName {
                 name: name.into_boxed_str(),
                 span,

@@ -69,6 +69,119 @@ pub struct Expr {
 }
 
 impl Expr {
+    /// This expression's kind, leaving an empty node behind.
+    ///
+    /// The one way to move a `kind` out, [`Expr`] having a `Drop` of its own — a type with one
+    /// cannot be taken apart field by field. Nothing observes what is left: every caller is
+    /// discarding the node it took this from.
+    pub fn into_kind(mut self) -> ExprKind {
+        self.take_kind()
+    }
+
+    /// This expression's kind, leaving the node itself intact and empty.
+    ///
+    /// For the callers that have to look at a kind *and* keep the node when it turns out not to be
+    /// the one they wanted: putting it back is one assignment, where rebuilding the node would
+    /// mean remembering every field it has.
+    pub fn take_kind(&mut self) -> ExprKind {
+        std::mem::replace(&mut self.kind, ExprKind::This)
+    }
+}
+
+/// Take an expression apart without recursing down the spine the parser built with a loop.
+///
+/// # Why this exists at all
+///
+/// [`crate::parser`] bounds how deeply it will *recurse*, and every path that recurses is counted
+/// (DR-0006). Two paths do not: the suffix loop that reads `a[0][0][0]…` and the operator ladder
+/// that reads `1 + 1 + 1…`. Their length is bounded by memory, which the parser says plainly — and
+/// which turns out not to be the same as being safe, because the *tree* they build is a
+/// left-leaning chain and a derived `Drop` walks one a stack frame per link. At around eight
+/// thousand links that overflowed, and a stack overflow is worse than the panic DR-0002 forbids:
+/// it aborts, so no `Result` and no `catch_unwind` sees it coming.
+///
+/// # A walk, not a worklist
+///
+/// Every link a loop can build has exactly *one* child on the spine — a `MemberExpression` has one
+/// object, a `BinaryExpression` one left operand — so taking them apart is a walk down a chain and
+/// needs no container to remember where it was. Whatever hangs off the side of a link is dropped
+/// where it is found, and takes its own turn at this.
+///
+/// # What is left to recurse, and why that is safe
+///
+/// Everything else. A function body, a class, a pattern, an argument list: each is reached through
+/// a production that costs a level of the parser's nesting count, so the depth through it is
+/// capped long before this runs. Each hop into one is a single frame, and the number of hops is
+/// exactly what the cap already bounds.
+///
+/// The match is exhaustive on purpose. A new `ExprKind` that holds an `Expr` has to be a decision
+/// here, and a catch-all would make it a silent one.
+impl Drop for Expr {
+    fn drop(&mut self) {
+        let mut kind = self.take_kind();
+        while let Some(next) = unlink(kind) {
+            kind = next;
+        }
+    }
+}
+
+/// The kind of `kind`'s spine child, taken out and left empty, or `None` at the end of the chain.
+///
+/// An emptied child is still dropped when its `Box` goes; its `Drop` then finds an
+/// `ExprKind::This`, asks this the same question, is told `None`, and stops. That is what keeps
+/// the teardown flat.
+fn unlink(kind: ExprKind) -> Option<ExprKind> {
+    match kind {
+        // The suffix loop of §13.3: `a.b`, `a[b]`, `a(b)`, ``a`b` ``, `a?.b`.
+        ExprKind::Member { mut object, .. } | ExprKind::ComputedMember { mut object, .. } => {
+            Some(object.take_kind())
+        }
+        ExprKind::Call { mut callee, .. } => Some(callee.take_kind()),
+        ExprKind::TaggedTemplate { mut tag, .. } => Some(tag.take_kind()),
+        // The operator ladder of §13.5 to §13.13, which is left-associative and so left-leaning.
+        ExprKind::Binary { mut left, .. } | ExprKind::Logical { mut left, .. } => {
+            Some(left.take_kind())
+        }
+        // A comma list is built by a loop too, but it is *flat*: the elements are siblings, and a
+        // slice drops its elements one after another rather than one inside another.
+        ExprKind::Sequence(_)
+        // `new` and `?.` look like they belong above and do not. A `new` reads its callee by
+        // recursing, so `new new new …` is capped; and an `OptionalChain` wraps a *whole* chain
+        // once rather than each link, so `a?.b?.c` is one of them and not three. Stacking them
+        // needs parentheses, which are capped too. Neither can be a link, so an arm for either
+        // would be one no input could tell from its absence.
+        | ExprKind::New { .. }
+        | ExprKind::OptionalChain(_)
+        // Everything below is reached through a production that costs a level of the parser's
+        // nesting count, so the depth through it is bounded before this runs.
+        | ExprKind::Identifier(_)
+        | ExprKind::Number(_)
+        | ExprKind::String(_)
+        | ExprKind::Boolean(_)
+        | ExprKind::Null
+        | ExprKind::This
+        | ExprKind::Super
+        | ExprKind::NewTarget
+        | ExprKind::ImportMeta
+        | ExprKind::RegExp(_)
+        | ExprKind::Array(_)
+        | ExprKind::Object(_)
+        | ExprKind::Template(_)
+        | ExprKind::Arrow(_)
+        | ExprKind::Function(_)
+        | ExprKind::Class(_)
+        | ExprKind::Yield(_)
+        | ExprKind::Await(_)
+        | ExprKind::ImportCall { .. }
+        | ExprKind::PrivateIn { .. }
+        | ExprKind::Unary { .. }
+        | ExprKind::Update { .. }
+        | ExprKind::Conditional { .. }
+        | ExprKind::Assignment { .. } => None,
+    }
+}
+
+impl Expr {
     /// The same expression, marked as having been written inside parentheses and re-spanned to
     /// include them.
     ///
@@ -94,11 +207,11 @@ impl Expr {
     ///
     /// The span grows to include them, because that is what a reader points at: in `((a + b))`,
     /// the construct a diagnostic should underline is the whole bracketed text.
-    pub fn in_parentheses(self, span: Span) -> Self {
+    pub fn in_parentheses(mut self, span: Span) -> Self {
         Self {
+            kind: self.take_kind(),
             span,
             parenthesized: true,
-            ..self
         }
     }
 }

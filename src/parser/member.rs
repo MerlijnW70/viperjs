@@ -106,7 +106,7 @@ impl Parser<'_> {
                         });
                     }
                     let quasi = self.parse_template(super::template::Tagged::Yes)?;
-                    let ExprKind::Template(quasi) = quasi.kind else {
+                    let ExprKind::Template(quasi) = quasi.into_kind() else {
                         // `parse_template` returns nothing else.
                         return Ok(expr);
                     };

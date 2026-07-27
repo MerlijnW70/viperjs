@@ -151,7 +151,7 @@ fn parsing_at_the_cap_fits_in_the_stack_it_claims_to_need() {
                 assert!(parse_script(source).is_ok(), "{source:.32?} at full depth");
             }
             parse_expression(&format!("{}1{}", "(".repeat(deep), ")".repeat(deep)))
-                .map(|expr| expr.kind)
+                .map(Expr::into_kind)
         })
         .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement
     let parsed = worker
@@ -212,4 +212,51 @@ fn no_source_however_odd_can_make_the_parser_panic() {
             found: TokenKind::Eof,
         }
     );
+}
+
+#[test]
+fn a_chain_the_parser_built_with_a_loop_is_taken_apart_with_one_too() {
+    // The other half of the sentence [`MAX_NESTING_DEPTH`] is about. Two paths do not recurse \u2014
+    // the suffix loop of \u00a713.3 and the operator ladder of \u00a713.5 to \u00a713.13 \u2014 so their length is
+    // bounded by memory rather than by the cap, which this file has said for several slices.
+    //
+    // What it did not say, and what a sweep over real code found, is that the *tree* those loops
+    // build is a left-leaning chain, and a derived `Drop` walks one of those a stack frame per
+    // link. At around eight thousand links that overflowed, which is worse than the panic DR-0002
+    // forbids: a stack overflow aborts, so no `Result` and no `catch_unwind` sees it coming.
+    // [`Expr`]'s `Drop` dismantles the chain with a worklist now, and this is the test that says
+    // the shapes it covers really are every shape a loop can build.
+    //
+    // A hundred thousand links in a mebibyte, which is the smallest thread stack in common use.
+    // The old code managed eight thousand in the *main* thread's stack, so the margin here is
+    // several hundredfold rather than a percentage \u2014 the point of a worklist being that the
+    // number stops mattering.
+    let links = 100_000;
+    let chains = [
+        format!("a{};", ".b".repeat(links)),
+        format!("a{};", "[0]".repeat(links)),
+        format!("f{};", "()".repeat(links)),
+        format!("f{};", "`x`".repeat(links)),
+        format!("a{};", "?.b".repeat(links)),
+        format!("1{};", " + 1".repeat(links)),
+        format!("a{};", " || a".repeat(links)),
+        format!("1{};", ", 1".repeat(links)),
+        format!("a{};", ".b[0]()".repeat(links / 3)),
+    ];
+    let worker = std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(move || {
+            for source in &chains {
+                // The parse and the drop are both being measured: the tree is built and then
+                // discarded inside this frame, which is the whole of what used to overflow.
+                assert!(
+                    parse_script(source).is_ok(),
+                    "a chain of {links} links should parse"
+                );
+            }
+        })
+        .expect("this platform can spawn a thread"); // nothing to test if it cannot
+    worker
+        .join()
+        .expect("a chain built by a loop is taken apart by one"); // the assertion is the join
 }
