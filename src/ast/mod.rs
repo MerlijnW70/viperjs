@@ -31,6 +31,7 @@ pub use self::binding::{
 };
 pub use self::expression::{
     ArrayElement, Expr, ExprKind, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral,
+    TemplateElement, TemplateLiteral,
 };
 pub use self::function::{ArrowBody, ArrowFunction, FormalParameters, Function};
 pub use self::operator::{

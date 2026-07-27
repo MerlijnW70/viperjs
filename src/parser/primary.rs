@@ -59,6 +59,9 @@ impl Parser<'_> {
         if token.kind == TokenKind::LBrace {
             return self.parse_object_literal();
         }
+        if matches!(token.kind, TokenKind::Template { .. }) {
+            return self.parse_template(super::template::Tagged::No);
+        }
         if token.kind == TokenKind::Keyword(ReservedWord::Function) {
             return self.parse_function_expression();
         }

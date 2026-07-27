@@ -47,6 +47,23 @@ impl Parser<'_> {
                 TokenKind::Dot => self.member_after_dot(expr)?,
                 TokenKind::LBracket => self.computed_member_after(expr)?,
                 TokenKind::LParen if allow_call => self.call_after(expr)?,
+                // `MemberExpression TemplateLiteral` and `CallExpression TemplateLiteral` — a
+                // call written without parentheses, so it chains like one.
+                TokenKind::Template { .. } => {
+                    let quasi = self.parse_template(super::template::Tagged::Yes)?;
+                    let ExprKind::Template(quasi) = quasi.kind else {
+                        // `parse_template` returns nothing else.
+                        return Ok(expr);
+                    };
+                    let span = expr.span.to(self.current.span);
+                    Expr::new(
+                        ExprKind::TaggedTemplate {
+                            tag: Box::new(expr),
+                            quasi,
+                        },
+                        span,
+                    )
+                }
                 _ => return Ok(expr),
             };
         }
@@ -396,13 +413,7 @@ mod tests {
             ("a?.b", TokenKind::QuestionDot),   // optional chaining (§13.3)
             ("f?.(x)", TokenKind::QuestionDot), //
             ("new.target", TokenKind::Dot),     // MetaProperty (§13.3)
-            (
-                "a`x`",
-                TokenKind::Template {
-                    part: crate::lexer::TemplatePart::NoSubstitution,
-                    cooked_undefined: false,
-                },
-            ), // tagged template (§13.3)
+                                                // tagged template (§13.3)
         ] {
             let kind = error(source).kind;
             assert!(

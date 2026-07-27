@@ -72,6 +72,31 @@ pub enum PropertyDefinition {
     Spread(Expr),
 }
 
+/// A `TemplateLiteral` (§13.2.8) — its literal parts, and the expressions between them.
+///
+/// `quasis` is always one longer than `expressions`: a template begins and ends with a literal
+/// part, even when that part is empty. `` `${a}` `` has two empty ones.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TemplateLiteral {
+    /// The literal components, in order.
+    pub quasis: Box<[TemplateElement]>,
+    /// The substitutions, in order. One fewer than the components.
+    pub expressions: Box<[Expr]>,
+}
+
+/// One literal component of a template (§12.9.6).
+#[derive(Debug, Clone, PartialEq)]
+pub struct TemplateElement {
+    /// `TV`, the cooked value — `None` when the component holds a `NotEscapeSequence`, which is
+    /// what the specification means by "undefined" there. Only a tagged template may have one,
+    /// and §13.2.8.1 is why.
+    pub cooked: Option<Vec<u16>>,
+    /// `TRV`, the raw value. Always present, escapes left exactly as written.
+    pub raw: Vec<u16>,
+    /// The component including its delimiters.
+    pub span: Span,
+}
+
 /// Which kind of `MethodDefinition` (§15.4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MethodKind {
@@ -286,6 +311,15 @@ pub enum ExprKind {
     Sequence(Box<[Expr]>),
     /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
     Array(Box<[ArrayElement]>),
+    /// `` `a${b}c` `` (§13.2.8).
+    Template(Box<TemplateLiteral>),
+    /// `` f`a` `` (§13.3) — a tagged template, which is a call written without parentheses.
+    TaggedTemplate {
+        /// What is called. A `MemberExpression` or a `CallExpression`, so tags chain.
+        tag: Box<Expr>,
+        /// What it is called with.
+        quasi: Box<TemplateLiteral>,
+    },
     /// `a => b` (§15.3). An `AssignmentExpression` and nothing tighter, so `x + (a) => b` has
     /// no derivation.
     Arrow(Box<super::ArrowFunction>),

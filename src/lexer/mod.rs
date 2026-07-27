@@ -223,6 +223,24 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// A lexer positioned at `offset` bytes into `source`.
+    ///
+    /// For the one construct that has to read a token twice. `` `a${b}c` `` is four tokens, and
+    /// which of them the `}` belongs to is not something the lexer can know — it depends on
+    /// whether the expression before it has finished, which only the parser knows. So the parser
+    /// reads it, discovers it wanted a template component, and asks again from the same place
+    /// under [`Goal::TemplateTail`].
+    ///
+    /// Spans stay absolute, being measured against `source` rather than against the tail. An
+    /// offset that is not a character boundary, or is past the end, gives a lexer positioned at
+    /// the end — the same answer an exhausted one gives, and no panic (DR-0002).
+    pub fn resume_at(source: &'a str, offset: u32) -> Self {
+        let rest = source.get(offset as usize..).unwrap_or("");
+        Self {
+            cursor: Cursor { source, rest },
+        }
+    }
+
     /// The next token, or the error that stopped lexing.
     ///
     /// Once end of input is reached this returns [`TokenKind::Eof`] forever: a parser recovering

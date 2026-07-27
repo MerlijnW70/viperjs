@@ -146,6 +146,11 @@ pub enum ParseErrorKind {
     /// remaining elements of an iterator can be spread into a pattern, and there is no way to
     /// spread the remaining properties of an object into one.
     RestTargetMayNotBePattern,
+    /// §13.2.8.1: an ill-formed escape in a template that is not tagged.
+    ///
+    /// A tag function is handed the raw text as well as the cooked value, so `undefined` for the
+    /// cooked one is something it can be told. An untagged template has no such channel.
+    BadEscapeInUntaggedTemplate,
     /// §15.3: something in an arrow's parameter list that cannot be a binding.
     ///
     /// `(a.b) => c` has no derivation where `[a.b] = c` does, for the reason `let [a.b] = c` has
@@ -337,6 +342,10 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "a `...` property must name somewhere to put an object, not a pattern"
             ),
+            Self::BadEscapeInUntaggedTemplate => write!(
+                f,
+                "this escape is only allowed in a template that is passed to a tag"
+            ),
             Self::InvalidArrowParameter => {
                 write!(f, "this cannot be an arrow function parameter")
             }
@@ -457,9 +466,12 @@ mod tests {
             error("1 'a'").kind.to_string(),
             "expected end of input, found a string"
         );
+        // A template after an operand is a *tag*, `MemberExpression TemplateLiteral` — so
+        // `1 \`a\`` parses and throws at run time rather than failing here. Something that can
+        // never begin one stands in for it.
         assert_eq!(
-            error("1 `a`").kind.to_string(),
-            "expected end of input, found a template"
+            error("1 ]").kind.to_string(),
+            "expected end of input, found `]`"
         );
         assert_eq!(
             error("1 #a").kind.to_string(),

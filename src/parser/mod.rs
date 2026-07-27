@@ -39,6 +39,7 @@
 //! - `strict` — where strict mode starts (§11.2.1) and what it takes away (§13.1.1).
 //! - `method` — method definitions (§15.4), the last `PropertyDefinition` alternative.
 //! - `arrow` — arrow functions (§15.3), and the cover grammar that reaches them.
+//! - `template` — template literals (§13.2.8) and the tags that take them (§13.3).
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -72,6 +73,7 @@ mod scope;
 mod statement;
 mod strict;
 mod switch;
+mod template;
 #[cfg(test)]
 mod test_support;
 mod try_catch;
@@ -306,6 +308,21 @@ impl<'a> Parser<'a> {
         let consumed = self.current;
         self.current = self.lexer.next_token(goal)?;
         Ok(consumed)
+    }
+
+    /// Read the current token again, under a different goal symbol.
+    ///
+    /// The parser's invariant is that a position is never read twice — the goal is chosen when
+    /// advancing *past* a token, by what may legally follow it. A template substitution is the one
+    /// place that cannot work: the `}` that ends it is read by whatever finished the expression,
+    /// which has no way to know a template is waiting. So it is read again from the same offset,
+    /// and the invariant is stated as having exactly this exception rather than quietly not
+    /// holding. See [`super::template`].
+    pub(super) fn reread_current(&mut self, goal: Goal) -> Result<(), ParseError> {
+        let mut lexer = Lexer::resume_at(self.source, self.current.span.start);
+        self.current = lexer.next_token(goal)?;
+        self.lexer = lexer;
+        Ok(())
     }
 
     /// The token after the current one, read under `goal`.

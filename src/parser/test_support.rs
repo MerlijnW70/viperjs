@@ -5,6 +5,7 @@ use crate::ast::{
     ArrayElement, ArrowBody, AssignmentTarget, Binding, BindingElement, BindingPattern,
     Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, MethodKind,
     Pattern, PatternElement, PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
+    TemplateLiteral,
 };
 
 /// The parsed expression of `source`.
@@ -83,6 +84,10 @@ pub(super) fn render(expr: &Expr) -> String {
             render(argument)
         ),
         ExprKind::Function(function) => render_function(function),
+        ExprKind::Template(quasi) => render_template(quasi),
+        ExprKind::TaggedTemplate { tag, quasi } => {
+            format!("(tag {} {})", render(tag), render_template(quasi))
+        }
         ExprKind::Arrow(arrow) => {
             let mut parameters: Vec<String> = arrow
                 .parameters
@@ -146,6 +151,23 @@ pub(super) fn render(expr: &Expr) -> String {
             format!("(, {})", rendered.join(" "))
         }
     }
+}
+
+/// A template, rendered as `(tpl ["a" "c"] [b])`.
+fn render_template(quasi: &TemplateLiteral) -> String {
+    let parts: Vec<String> = quasi
+        .quasis
+        .iter()
+        .map(|element| match &element.cooked {
+            Some(cooked) => format!("{:?}", String::from_utf16_lossy(cooked)),
+            None => "<raw>".to_string(),
+        })
+        .collect();
+    if quasi.expressions.is_empty() {
+        return format!("(tpl [{}])", parts.join(" "));
+    }
+    let expressions: Vec<String> = quasi.expressions.iter().map(render).collect();
+    format!("(tpl [{}] [{}])", parts.join(" "), expressions.join(" "))
 }
 
 /// A function, rendered as `(fn name [params] {body})`.
