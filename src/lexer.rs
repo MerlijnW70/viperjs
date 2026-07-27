@@ -1,23 +1,28 @@
-//! Source text to tokens — the lexer's skeleton: trivia, punctuators, and end of input.
+//! Source text to tokens — trivia, punctuators, names, and end of input.
 //!
-//! This is the first slice of M1 and it deliberately stops short of the interesting literals.
 //! What is here is what every later slice stands on: a cursor that can never split a character
-//! or read past the end, spans that tile the source exactly, and the `newline_before` flag that
-//! automatic semicolon insertion will need long before it is used.
+//! or read past the end, spans that tile the source exactly, the `newline_before` flag that
+//! automatic semicolon insertion will need long before it is used, and identifiers over the
+//! real Unicode `ID_Start`/`ID_Continue` sets rather than an ASCII approximation of them.
 //!
 //! # What is not here yet
 //!
-//! Identifiers, numeric literals, string literals, templates and regular expressions arrive in
-//! the following slices. Until then a character that can only begin one of those — `a`, `1`,
-//! `"`, `` ` `` — is a [`LexErrorKind::UnexpectedCharacter`], which is also the permanent answer
-//! for a character with no token form at all (`@`, `\0`). Two further deferrals, each pinned by
-//! a test so that implementing them is a deliberate change and not an accident:
+//! Numeric literals, string literals, templates and regular expressions arrive in the following
+//! slices. Until then a character that can only begin one of those — `1`, `"`, `` ` `` — is a
+//! [`LexErrorKind::UnexpectedCharacter`], which is also the permanent answer for a character
+//! with no token form at all (`@`, `€`, `\0`). One deferral remains, pinned by a test so that
+//! implementing it is a deliberate change and not an accident: **Annex B.1.1 HTML-like
+//! comments**, where `<!--` lexes as `<` `!` `--` today, and `-->` would additionally need
+//! "nothing but trivia before it on this line" state and a Script-vs-Module goal flag.
 //!
-//! - **Annex B.1.1 HTML-like comments.** `<!--` lexes as `<` `!` `--` today. `-->` additionally
-//!   needs "nothing but trivia before it on this line" state and a Script-vs-Module goal flag,
-//!   neither of which exists yet.
-//! - **§12.5 hashbang comments.** `#!` is only a comment at byte 0 of the source, which is
-//!   position state this slice has no other use for.
+//! # Names, and what the lexer refuses to decide
+//!
+//! An `IdentifierName` becomes a [`TokenKind::Keyword`] only for the 38 spellings §12.7.2
+//! reserves unconditionally, and only when no `\u` escape contributed to it. Everything else —
+//! `let`, `static`, `async`, `of`, `get`, `implements` — stays a [`TokenKind::Identifier`],
+//! because whether those are keywords depends on grammatical context the lexer cannot see. That
+//! line is the spec's, not a convenience: §12.7.2 enumerates `ReservedWord` lexically and then
+//! spends four more clauses on the contextual cases.
 //!
 //! # The one property that matters
 //!
@@ -27,6 +32,8 @@
 //! a parser that reports the wrong line for the next three years.
 
 use crate::span::Span;
+use crate::unicode_id::{is_id_continue, is_id_start};
+use std::borrow::Cow;
 use std::fmt;
 
 /// One lexical token: what it is, where it is, and whether a line break preceded it.
@@ -62,6 +69,32 @@ pub struct Token {
 pub enum TokenKind {
     /// End of input. Empty span at the end of the source; repeats forever once reached.
     Eof,
+
+    /// An `IdentifierName` (§12.7) that is not one of the unconditionally reserved words.
+    ///
+    /// The span covers the spelling as written, escapes included; [`identifier_value`] turns it
+    /// into the sequence of code points the spec calls its `IdentifierCodePoints`.
+    Identifier {
+        /// Whether a `\u` escape contributed a code point to the spelling.
+        ///
+        /// The parser needs this and cannot recover it later without re-lexing. §12.7.2 Note 1:
+        /// a keyword matches a literal sequence of source characters, so `els\u{65}` is an
+        /// `IdentifierName` and **not** the keyword `else` — while the early errors of §13.1.1
+        /// separately forbid using it as a binding. Both rules need to know an escape was used.
+        contains_escape: bool,
+    },
+
+    /// `# IdentifierName` (§12.7) — a private class member name.
+    ///
+    /// The span includes the `#`, as does the value: the spec's `StringValue` of a
+    /// `PrivateIdentifier` is the number sign concatenated with the name's.
+    PrivateIdentifier {
+        /// Whether a `\u` escape contributed a code point to the name.
+        contains_escape: bool,
+    },
+
+    /// One of the 38 spellings §12.7.2 reserves unconditionally, written without escapes.
+    Keyword(ReservedWord),
 
     /// `{`
     LBrace,
@@ -188,14 +221,21 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
-    /// The exact source text of this token, or `""` for [`TokenKind::Eof`].
+    /// The source text every token of this kind has, or `None` when the text varies.
+    ///
+    /// Punctuators and keywords have exactly one spelling; [`TokenKind::Eof`] has the empty one.
+    /// Identifiers do not, so they answer `None` rather than a lie — a caller that wants their
+    /// text asks the span, and a caller that wants their *value* asks [`identifier_value`].
     ///
     /// Written as a match rather than a lookup in `PUNCTUATORS` on purpose: two independent
     /// spellings of the same fact let the tests catch a table row that drifted, which a
     /// self-consistent lookup never could.
-    pub fn as_str(&self) -> &'static str {
-        match self {
+    pub fn as_str(&self) -> Option<&'static str> {
+        Some(match self {
             Self::Eof => "",
+
+            Self::Identifier { .. } | Self::PrivateIdentifier { .. } => return None,
+            Self::Keyword(word) => word.as_str(),
 
             Self::LBrace => "{",
             Self::RBrace => "}",
@@ -260,7 +300,193 @@ impl TokenKind {
             Self::AmpAmpEq => "&&=",
             Self::PipePipeEq => "||=",
             Self::QuestionQuestionEq => "??=",
+        })
+    }
+}
+
+/// The 38 spellings of `ReservedWord` (ECMA-262 §12.7.2).
+///
+/// This is the whole list and nothing more. `await` and `yield` are here because the production
+/// lists them, even though §12.7.2 marks them contextually allowed as identifiers — that
+/// exception is expressed by parameterized productions in §13.1, which is the parser's problem.
+/// The five categories §12.7.2 describes collapse, for a lexer, into exactly one question: is
+/// this spelling in the `ReservedWord` production? Contextual keywords (`let`, `static`,
+/// `async`, `of`, `get`, `set`, `from`, `as`, `target`, `meta`) and the strict-mode future
+/// reserved words (`implements`, `interface`, `package`, `private`, `protected`, `public`) are
+/// deliberately absent: they are ordinary `IdentifierName`s until a grammatical context says
+/// otherwise.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ReservedWord {
+    /// `await`
+    Await,
+    /// `break`
+    Break,
+    /// `case`
+    Case,
+    /// `catch`
+    Catch,
+    /// `class`
+    Class,
+    /// `const`
+    Const,
+    /// `continue`
+    Continue,
+    /// `debugger`
+    Debugger,
+    /// `default`
+    Default,
+    /// `delete`
+    Delete,
+    /// `do`
+    Do,
+    /// `else`
+    Else,
+    /// `enum` — reserved but unused; §12.7.2 Note 2 sets it aside for future extensions.
+    Enum,
+    /// `export`
+    Export,
+    /// `extends`
+    Extends,
+    /// `false`
+    False,
+    /// `finally`
+    Finally,
+    /// `for`
+    For,
+    /// `function`
+    Function,
+    /// `if`
+    If,
+    /// `import`
+    Import,
+    /// `in`
+    In,
+    /// `instanceof`
+    Instanceof,
+    /// `new`
+    New,
+    /// `null`
+    Null,
+    /// `return`
+    Return,
+    /// `super`
+    Super,
+    /// `switch`
+    Switch,
+    /// `this`
+    This,
+    /// `throw`
+    Throw,
+    /// `true`
+    True,
+    /// `try`
+    Try,
+    /// `typeof`
+    Typeof,
+    /// `var`
+    Var,
+    /// `void`
+    Void,
+    /// `while`
+    While,
+    /// `with`
+    With,
+    /// `yield`
+    Yield,
+}
+
+impl ReservedWord {
+    /// The one spelling this word has.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Await => "await",
+            Self::Break => "break",
+            Self::Case => "case",
+            Self::Catch => "catch",
+            Self::Class => "class",
+            Self::Const => "const",
+            Self::Continue => "continue",
+            Self::Debugger => "debugger",
+            Self::Default => "default",
+            Self::Delete => "delete",
+            Self::Do => "do",
+            Self::Else => "else",
+            Self::Enum => "enum",
+            Self::Export => "export",
+            Self::Extends => "extends",
+            Self::False => "false",
+            Self::Finally => "finally",
+            Self::For => "for",
+            Self::Function => "function",
+            Self::If => "if",
+            Self::Import => "import",
+            Self::In => "in",
+            Self::Instanceof => "instanceof",
+            Self::New => "new",
+            Self::Null => "null",
+            Self::Return => "return",
+            Self::Super => "super",
+            Self::Switch => "switch",
+            Self::This => "this",
+            Self::Throw => "throw",
+            Self::True => "true",
+            Self::Try => "try",
+            Self::Typeof => "typeof",
+            Self::Var => "var",
+            Self::Void => "void",
+            Self::While => "while",
+            Self::With => "with",
+            Self::Yield => "yield",
         }
+    }
+
+    /// The reserved word `text` spells exactly, if it spells one.
+    ///
+    /// Only ever called with an escape-free `IdentifierName`, which is what makes a plain string
+    /// comparison correct: §12.7.2 Note 1 says a keyword matches literal source characters, so
+    /// `els\u{65}` must not reach here and be told it is `else`.
+    pub fn from_text(text: &str) -> Option<Self> {
+        Some(match text {
+            "await" => Self::Await,
+            "break" => Self::Break,
+            "case" => Self::Case,
+            "catch" => Self::Catch,
+            "class" => Self::Class,
+            "const" => Self::Const,
+            "continue" => Self::Continue,
+            "debugger" => Self::Debugger,
+            "default" => Self::Default,
+            "delete" => Self::Delete,
+            "do" => Self::Do,
+            "else" => Self::Else,
+            "enum" => Self::Enum,
+            "export" => Self::Export,
+            "extends" => Self::Extends,
+            "false" => Self::False,
+            "finally" => Self::Finally,
+            "for" => Self::For,
+            "function" => Self::Function,
+            "if" => Self::If,
+            "import" => Self::Import,
+            "in" => Self::In,
+            "instanceof" => Self::Instanceof,
+            "new" => Self::New,
+            "null" => Self::Null,
+            "return" => Self::Return,
+            "super" => Self::Super,
+            "switch" => Self::Switch,
+            "this" => Self::This,
+            "throw" => Self::Throw,
+            "true" => Self::True,
+            "try" => Self::Try,
+            "typeof" => Self::Typeof,
+            "var" => Self::Var,
+            "void" => Self::Void,
+            "while" => Self::While,
+            "with" => Self::With,
+            "yield" => Self::Yield,
+            _ => return None,
+        })
     }
 }
 
@@ -283,6 +509,14 @@ pub enum LexErrorKind {
     /// A code point that begins no token form. Note that while this slice is incomplete, this
     /// also covers the literals it has not learned yet — see the module documentation.
     UnexpectedCharacter,
+    /// A `\` that is not followed by a well-formed `UnicodeEscapeSequence` (§12.9.4): not a `u`,
+    /// fewer than four hex digits, or a `\u{…}` with no digits or no closing brace.
+    InvalidUnicodeEscape,
+    /// `\u{…}` whose value exceeds U+10FFFF — the spec's `NotCodePoint`.
+    CodePointOutOfRange,
+    /// An escape that is well-formed but contributes a code point which cannot appear where it
+    /// was written (§12.7.1.1): `\u{20}` is a space, and a space is no part of a name.
+    EscapedCodePointIsNotAnIdentifierCharacter,
 }
 
 impl fmt::Display for LexErrorKind {
@@ -290,8 +524,63 @@ impl fmt::Display for LexErrorKind {
         f.write_str(match self {
             Self::UnterminatedComment => "unterminated block comment",
             Self::UnexpectedCharacter => "unexpected character",
+            Self::InvalidUnicodeEscape => "malformed unicode escape sequence",
+            Self::CodePointOutOfRange => "escaped value is not a unicode code point",
+            Self::EscapedCodePointIsNotAnIdentifierCharacter => {
+                "escaped code point is not valid in an identifier"
+            }
         })
     }
+}
+
+/// The code points an identifier names, with every `\u` escape resolved (§12.7.1.2
+/// `IdentifierCodePoints`).
+///
+/// Borrows when the spelling contained no escape, which is nearly always — `Cow` here is not
+/// premature optimization but the difference between allocating for every name in a program and
+/// allocating for the handful that are written oddly. For a [`TokenKind::PrivateIdentifier`] the
+/// leading `#` is part of the value, matching the spec's `StringValue`.
+///
+/// Returns `None` if `span` does not land on character boundaries of `source`, or covers a
+/// malformed escape — a caller passing a span the lexer did not hand it gets an answer, not a
+/// panic.
+///
+/// It resolves escapes; it does **not** re-run §12.7.1.1. Over a span the lexer produced there
+/// is nothing to re-check, and over any other span the useful answer is "here is what those
+/// escapes denote" rather than a second opinion on validity: `a\u{20}` reads back as `a `, one
+/// space and all, because that is what is written there. The lexer is where a name is judged.
+///
+/// ```
+/// use praxis::lexer::{identifier_value, Lexer, TokenKind};
+///
+/// // A raw string, so the source really does contain a backslash: this spells `abc` the
+/// // long way round, and the value comes back as if it had been spelled plainly.
+/// let source = r"\u0061bc";
+/// let token = Lexer::new(source).next_token().expect("this lexes");
+/// assert_eq!(token.kind, TokenKind::Identifier { contains_escape: true });
+/// assert_eq!(identifier_value(source, token.span).as_deref(), Some("abc"));
+/// ```
+pub fn identifier_value<'a>(source: &'a str, span: Span) -> Option<Cow<'a, str>> {
+    let text = span.slice(source)?;
+    if !text.contains('\\') {
+        return Some(Cow::Borrowed(text));
+    }
+    // Re-read the spelling with the same escape decoder the scan used, so the value can never
+    // disagree with what was validated. Only the escapes need interpreting; every other byte is
+    // already the code point it contributes.
+    let mut lexer = Lexer::new(text);
+    let mut value = String::with_capacity(text.len());
+    while !lexer.cursor.is_eof() {
+        if lexer.cursor.starts_with("\\") {
+            match lexer.read_unicode_escape() {
+                Ok(code_point) => value.push(char::from_u32(code_point)?),
+                Err(_) => return None,
+            }
+        } else {
+            value.push(lexer.cursor.bump()?);
+        }
+    }
+    Some(Cow::Owned(value))
 }
 
 /// Every punctuator, **longest first**.
@@ -402,6 +691,15 @@ fn is_space_separator(ch: char) -> bool {
     )
 }
 
+/// The value of one `HexDigit` (§12.9.3), or `None` if `ch` is not one.
+///
+/// `char::to_digit` is exactly right here and rarely is: it accepts only `0-9`, `a-z` and `A-Z`,
+/// so it agrees with `HexDigit` on the ASCII range and — importantly — rejects the Arabic-Indic
+/// and fullwidth digits that a `is_numeric`-based check would wave through.
+fn hex_value(ch: char) -> Option<u32> {
+    ch.to_digit(16)
+}
+
 /// ECMA-262 §12.3 Line Terminators, Table 32 — all four, the same set [`crate::span::line_col`]
 /// counts lines by. The two agreeing is not optional: a token whose `newline_before` disagrees
 /// with the line number in its own error message is a bug report nobody can act on.
@@ -510,10 +808,32 @@ impl<'a> Lexer<'a> {
         let newline_before = self.skip_trivia()?;
         let start = self.cursor.offset();
 
-        if self.cursor.is_eof() {
+        let Some(first) = self.cursor.peek() else {
             return Ok(Token {
                 kind: TokenKind::Eof,
                 span: Span::empty_at(start),
+                newline_before,
+            });
+        };
+
+        // Names before punctuators: no `IdentifierStart` is a punctuator, so the order is a
+        // readability choice rather than a correctness one — but `#` and `\` would otherwise
+        // fall through to the "no token form" error, which is how they behaved last slice.
+        if first == '#' {
+            let _ = self.cursor.bump();
+            let contains_escape = self.scan_identifier()?;
+            return Ok(Token {
+                kind: TokenKind::PrivateIdentifier { contains_escape },
+                span: Span::new(start, self.cursor.offset()),
+                newline_before,
+            });
+        }
+        if first == '\\' || is_id_start(first as u32) {
+            let contains_escape = self.scan_identifier()?;
+            let span = Span::new(start, self.cursor.offset());
+            return Ok(Token {
+                kind: self.classify_name(span, contains_escape),
+                span,
                 newline_before,
             });
         }
@@ -545,6 +865,158 @@ impl<'a> Lexer<'a> {
             kind: LexErrorKind::UnexpectedCharacter,
             span: Span::new(start, self.cursor.offset()),
         })
+    }
+
+    /// Decide whether a just-scanned `IdentifierName` is a keyword.
+    ///
+    /// §12.7.2 Note 1: keywords match a literal sequence of source characters, so a spelling
+    /// that used an escape is an `IdentifierName` and never a keyword — `els\u{65}` does not
+    /// declare an `else`. It is not thereby a usable binding either, but that is §13.1.1's early
+    /// error and needs the grammatical context only the parser has.
+    fn classify_name(&self, span: Span, contains_escape: bool) -> TokenKind {
+        if contains_escape {
+            return TokenKind::Identifier {
+                contains_escape: true,
+            };
+        }
+        match span
+            .slice(self.cursor.source)
+            .and_then(ReservedWord::from_text)
+        {
+            Some(word) => TokenKind::Keyword(word),
+            None => TokenKind::Identifier {
+                contains_escape: false,
+            },
+        }
+    }
+
+    /// Scan an `IdentifierName` from its first character, reporting whether any `\u` escape
+    /// contributed a code point.
+    ///
+    /// The first character is checked here rather than trusted, because one caller — the `#` of
+    /// a private name — has not looked at it yet. `#5` and a bare `#` must both be errors, not
+    /// an empty name.
+    fn scan_identifier(&mut self) -> Result<bool, LexError> {
+        let at = self.cursor.offset();
+        let mut contains_escape = match self.cursor.peek() {
+            Some('\\') => self.scan_escaped_identifier_char(true)?,
+            Some(ch) if is_id_start(ch as u32) => {
+                let _ = self.cursor.bump();
+                false
+            }
+            _ => {
+                let _ = self.cursor.bump();
+                return Err(LexError {
+                    kind: LexErrorKind::UnexpectedCharacter,
+                    span: Span::new(at, self.cursor.offset()),
+                });
+            }
+        };
+        loop {
+            match self.cursor.peek() {
+                // A `\` inside a name can only be an escape: `IdentifierPart` has no other
+                // alternative that starts with one, so `a\x` is an error rather than the name
+                // `a` followed by something else.
+                Some('\\') => contains_escape |= self.scan_escaped_identifier_char(false)?,
+                Some(ch) if is_id_continue(ch as u32) => {
+                    let _ = self.cursor.bump();
+                }
+                _ => return Ok(contains_escape),
+            }
+        }
+    }
+
+    /// Read one `\ UnicodeEscapeSequence` and check the code point may appear where it was
+    /// written. Always returns `true` — the value exists so the caller can write `|=`.
+    ///
+    /// §12.7.1.1: it is a Syntax Error if the escape's code point is not matched by
+    /// `IdentifierStartChar` (at the start) or `IdentifierPartChar` (later). The rule is what
+    /// stops `\u{20}` from smuggling a space into a name, and it is why these predicates take a
+    /// `u32`: `\uD800` names a lone surrogate, which is a legal thing to *write* and an illegal
+    /// thing to mean.
+    fn scan_escaped_identifier_char(&mut self, is_start: bool) -> Result<bool, LexError> {
+        let at = self.cursor.offset();
+        let code_point = self.read_unicode_escape()?;
+        let allowed = if is_start {
+            is_id_start(code_point)
+        } else {
+            is_id_continue(code_point)
+        };
+        if !allowed {
+            return Err(LexError {
+                kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
+                span: Span::new(at, self.cursor.offset()),
+            });
+        }
+        Ok(true)
+    }
+
+    /// Consume `\ UnicodeEscapeSequence` (§12.9.4) and return the code point it denotes.
+    ///
+    /// Two forms: `\u` followed by exactly four hex digits, or `\u{` HexDigits `}` where the
+    /// value must not exceed U+10FFFF (the spec's `CodePoint`, against `NotCodePoint`). The
+    /// braced form takes `HexDigits[~Sep]` — **no numeric separators**, and any number of
+    /// digits, so `\u{00000000000061}` is a perfectly ordinary `a`.
+    ///
+    /// The returned value is deliberately a `u32` and not a `char`: `\uD800` and `\u{10FFFF}`
+    /// are both well-formed escapes whose acceptability depends on where they appear, and the
+    /// caller is the one that knows.
+    fn read_unicode_escape(&mut self) -> Result<u32, LexError> {
+        let start = self.cursor.offset();
+        // Every ill-formed exit reports the same span: from the backslash to wherever the
+        // sequence stopped making sense.
+        macro_rules! malformed {
+            () => {
+                LexError {
+                    kind: LexErrorKind::InvalidUnicodeEscape,
+                    span: Span::new(start, self.cursor.offset()),
+                }
+            };
+        }
+
+        self.cursor.advance_ascii(1); // the `\`
+        if self.cursor.peek() != Some('u') {
+            return Err(malformed!());
+        }
+        self.cursor.advance_ascii(1);
+
+        if self.cursor.peek() == Some('{') {
+            self.cursor.advance_ascii(1);
+            let mut value: u32 = 0;
+            let mut digits = 0usize;
+            while let Some(digit) = self.cursor.peek().and_then(hex_value) {
+                let _ = self.cursor.bump();
+                digits += 1;
+                // Saturating, not wrapping: the digit count is chosen by whoever wrote the
+                // source, so `\u{FFFFFFFFFFFFFFFF}` is an input, and an input may not overflow
+                // (DR-0002). Saturation lands far above U+10FFFF, which is the answer anyway.
+                value = value.saturating_mul(16).saturating_add(digit);
+            }
+            if digits == 0 || self.cursor.peek() != Some('}') {
+                return Err(malformed!());
+            }
+            self.cursor.advance_ascii(1);
+            if value > 0x10ffff {
+                return Err(LexError {
+                    kind: LexErrorKind::CodePointOutOfRange,
+                    span: Span::new(start, self.cursor.offset()),
+                });
+            }
+            return Ok(value);
+        }
+
+        // `Hex4Digits :: HexDigit HexDigit HexDigit HexDigit` — exactly four. A fifth digit is
+        // simply the next character of the name, which is what makes `a0` the name `a0`.
+        let mut value: u32 = 0;
+        for _ in 0..4 {
+            let Some(digit) = self.cursor.peek().and_then(hex_value) else {
+                return Err(malformed!());
+            };
+            let _ = self.cursor.bump();
+            // Bounded by construction: four hex digits cannot exceed 0xFFFF.
+            value = value * 16 + digit;
+        }
+        Ok(value)
     }
 
     /// Every token including the final [`TokenKind::Eof`], or the first error.
@@ -580,12 +1052,22 @@ impl<'a> Lexer<'a> {
                     Some(b'*') => newline |= self.skip_block_comment()?,
                     _ => return Ok(newline),
                 },
+                // §12.5: a hashbang comment is "location-sensitive" — `#!` is a comment only at
+                // the very first byte of the source. One byte later the same two characters are
+                // a private name that happens to be malformed, and `#!/usr/bin/env node` on
+                // line 2 is a syntax error. Hence a position test, not a lookahead.
+                Some('#')
+                    if self.cursor.offset() == 0 && self.cursor.peek_byte(1) == Some(b'!') =>
+                {
+                    self.skip_line_comment();
+                }
                 _ => return Ok(newline),
             }
         }
     }
 
-    /// Consume `//` and everything up to — but **not including** — the next line terminator.
+    /// Consume a two-character comment opener — `//` or §12.5's `#!` — and everything up to but
+    /// **not including** the next line terminator.
     ///
     /// §12.4 is emphatic about the exclusion: the terminator "is recognized separately by the
     /// lexical grammar", which is why the presence of a line comment cannot change automatic
@@ -656,11 +1138,9 @@ mod tests {
                     let start = token.span.start as usize;
                     out.push_str(source.get(at..start).unwrap_or("<GAP OUT OF ORDER>"));
                     let text = token.span.slice(source).unwrap_or("<SPAN OFF BOUNDARY>");
-                    assert_eq!(
-                        text,
-                        token.kind.as_str(),
-                        "span and kind disagree in {source:?}"
-                    );
+                    if let Some(fixed) = token.kind.as_str() {
+                        assert_eq!(text, fixed, "span and kind disagree in {source:?}");
+                    }
                     out.push_str(text);
                     at = token.span.end as usize;
                     if token.kind == TokenKind::Eof {
@@ -722,6 +1202,17 @@ mod tests {
             "\t\u{000b}\u{000c}\u{00a0};", // <TAB> <VT> <FF> and NO-BREAK SPACE
             "\u{1680}\u{2000}\u{200a};",   // exotic <USP> members
             "\u{202f}\u{205f}\u{3000};",   // …and the rest of them
+            "a",                           // the shortest name there is
+            "a b",                         // …two of them, and the trivia between
+            "_$0",                         // both ECMAScript additions plus a digit
+            "if else",                     // keywords, whose spans must also line up
+            "caf\u{e9} \u{5d0} \u{3042}",  // names that are not ASCII
+            "x\u{1d49c}",                  // …including one outside the BMP
+            "#priv",                       // a private name, `#` included in the span
+            "#!/usr/bin/env node\n;",      // §12.5 hashbang, only at byte 0
+            "\\u0061",                     // a name spelled entirely as an escape
+            "a\\u{62}c",                   // …and one spelled partly as one
+            "\\u{61}\\u{62}",              // two escapes in a row
         ];
         for source in lexes_completely {
             let (tiled, stopped) = retile(source);
@@ -731,7 +1222,17 @@ mod tests {
 
         // Inputs that stop partway: the reconstruction must still be an exact prefix — the
         // lexer may refuse to continue, but it may not invent or lose a byte before it does.
-        for source in ["/*", "/*/", "/* x", "?.5", "@", "a", ";\u{200b}"] {
+        for source in [
+            "/*",
+            "/*/",
+            "/* x",
+            "?.5",
+            "@",
+            "1",
+            ";\u{200b}",
+            "a\\x",
+            "#5",
+        ] {
             let (tiled, stopped) = retile(source);
             assert_eq!(source.get(..stopped), Some(tiled.as_str()), "on {source:?}");
             assert!(
@@ -999,7 +1500,7 @@ mod tests {
         for &(text, kind) in PUNCTUATORS {
             assert_eq!(
                 kind.as_str(),
-                text,
+                Some(text),
                 "table row {text:?} disagrees with as_str"
             );
             assert!(seen.insert(kind), "{text:?} appears twice in the table");
@@ -1010,9 +1511,24 @@ mod tests {
             }
         }
         assert_eq!(seen.len(), 57, "ECMA-262 §12.8 has 57 punctuators");
-        // Eof is the only kind with no source text, which is what makes the span/kind
-        // cross-check in `retile` work uniformly for it.
-        assert_eq!(TokenKind::Eof.as_str(), "");
+        // Eof's fixed text is the empty one, which is what makes the span/kind cross-check in
+        // `retile` work uniformly for it. Identifiers have no fixed text at all — the
+        // difference between `Some("")` and `None` is "always empty" versus "ask the source".
+        assert_eq!(TokenKind::Eof.as_str(), Some(""));
+        assert_eq!(
+            TokenKind::Identifier {
+                contains_escape: false
+            }
+            .as_str(),
+            None
+        );
+        assert_eq!(
+            TokenKind::PrivateIdentifier {
+                contains_escape: false
+            }
+            .as_str(),
+            None
+        );
     }
 
     #[test]
@@ -1086,11 +1602,13 @@ mod tests {
         // worse, would leave the cursor off a boundary.
         let cases = [
             ("@", 1),        // never a token in any edition
-            ("a", 1),        // an identifier: a later slice
             ("1", 1),        // a numeric literal: a later slice
             ("\"", 1),       // a string literal: a later slice
+            ("`", 1),        // a template: a later slice
             ("\u{0000}", 1), // NUL is legal source text, just not a token start
-            ("é", 2),        // two bytes
+            // Multi-byte code points that are not identifier characters — `é` and `א` would be
+            // names now, so these are drawn from categories Unicode leaves out of ID_Start.
+            ("\u{00a7}", 2), // SECTION SIGN, two bytes
             ("€", 3),        // three
             ("🚀", 4),       // four
         ];
@@ -1185,6 +1703,507 @@ mod tests {
                 kind: LexErrorKind::UnexpectedCharacter,
                 span: Span::new(1, 2),
             })
+        );
+    }
+
+    /// The cooked value of the first token of `source`.
+    fn name_of(source: &str) -> String {
+        let token = first(source);
+        identifier_value(source, token.span)
+            .unwrap_or_else(|| panic!("{source:?} should have an identifier value")) // a test about the value cannot proceed without one
+            .into_owned()
+    }
+
+    /// `Identifier { contains_escape: false }`, the overwhelmingly common case.
+    const PLAIN: TokenKind = TokenKind::Identifier {
+        contains_escape: false,
+    };
+    /// `Identifier { contains_escape: true }`.
+    const ESCAPED: TokenKind = TokenKind::Identifier {
+        contains_escape: true,
+    };
+
+    #[test]
+    fn a_name_runs_to_the_first_character_that_cannot_continue_it() {
+        // `IdentifierName :: IdentifierStart | IdentifierName IdentifierPart` (§12.7). The
+        // greediness is the point: a name that stopped early would silently split `abc` into
+        // three bindings, and one that ran too far would swallow the `;`.
+        assert_eq!(kinds("a"), [PLAIN, TokenKind::Eof]);
+        assert_eq!(kinds("abc"), [PLAIN, TokenKind::Eof]);
+        assert_eq!(first("abc;").span, Span::new(0, 3));
+        assert_eq!(kinds("a b"), [PLAIN, PLAIN, TokenKind::Eof]);
+        assert_eq!(
+            kinds("a-b"),
+            [PLAIN, TokenKind::Minus, PLAIN, TokenKind::Eof]
+        );
+        // The two ECMAScript additions start names; digits continue them but cannot start one.
+        assert_eq!(kinds("_"), [PLAIN, TokenKind::Eof]);
+        assert_eq!(kinds("$"), [PLAIN, TokenKind::Eof]);
+        assert_eq!(kinds("$_0"), [PLAIN, TokenKind::Eof]);
+        assert_eq!(first("a0b$_;").span, Span::new(0, 5));
+        // A digit cannot start one — which is what keeps `1` available for the numeric literal
+        // slice rather than making `1abc` a name.
+        assert_eq!(
+            Lexer::new("1").next_token().map(|t| t.kind),
+            Err(LexError {
+                kind: LexErrorKind::UnexpectedCharacter,
+                span: Span::new(0, 1),
+            })
+        );
+        // A name may sit against a punctuator with no space at all.
+        assert_eq!(
+            kinds("a=>b"),
+            [PLAIN, TokenKind::Arrow, PLAIN, TokenKind::Eof]
+        );
+    }
+
+    #[test]
+    fn names_use_the_unicode_id_sets_and_not_an_ascii_approximation_of_them() {
+        // Each of these is a valid JavaScript variable name in every shipping engine, and none
+        // of them survives an `is_ascii_alphabetic` implementation.
+        for source in [
+            "caf\u{e9}",
+            "\u{3a9}mega",
+            "\u{5d0}",
+            "\u{3042}",
+            "\u{4e00}",
+        ] {
+            assert_eq!(kinds(source), [PLAIN, TokenKind::Eof], "lexing {source:?}");
+            assert_eq!(first(source).span, Span::new(0, source.len() as u32));
+        }
+        // Astral: `char`-at-a-time scanning must advance four bytes, not one.
+        assert_eq!(kinds("x\u{1d49c}"), [PLAIN, TokenKind::Eof]);
+        assert_eq!(first("x\u{1d49c}").span, Span::new(0, 5));
+        // Other_ID_Start — in ID_Start only because Unicode grandfathered it (§12.7 Note 3).
+        assert_eq!(kinds("\u{2118}"), [PLAIN, TokenKind::Eof]);
+        // Other_ID_Continue: MIDDLE DOT continues a name, so this is ONE identifier, not three
+        // tokens. An engine that reached for `is_alphanumeric` breaks exactly here.
+        assert_eq!(kinds("x\u{b7}y"), [PLAIN, TokenKind::Eof]);
+        // ZERO WIDTH NON-JOINER is ID_Continue in Unicode 17, which is why §12.7 no longer
+        // lists it separately — the table answers for it.
+        assert_eq!(kinds("x\u{200c}y"), [PLAIN, TokenKind::Eof]);
+        // …but the neighbouring ZERO WIDTH SPACE is not a name character or white space, and
+        // must stay an error rather than being invisibly absorbed.
+        assert!(Lexer::new("x\u{200b}y").tokens().is_err());
+        // Symbols that look like they might qualify and do not.
+        for source in ["\u{20ac}", "\u{1f680}", "\u{00a7}"] {
+            assert!(Lexer::new(source).tokens().is_err(), "{source:?}");
+        }
+    }
+
+    #[test]
+    fn exactly_the_thirty_eight_reserved_words_lex_as_keywords() {
+        use ReservedWord::*;
+        // The §12.7.2 `ReservedWord` production, written out a third time — independently of
+        // `as_str` and of `from_text`, which is what makes this a check rather than an echo.
+        let all: &[(&str, ReservedWord)] = &[
+            ("await", Await),
+            ("break", Break),
+            ("case", Case),
+            ("catch", Catch),
+            ("class", Class),
+            ("const", Const),
+            ("continue", Continue),
+            ("debugger", Debugger),
+            ("default", Default),
+            ("delete", Delete),
+            ("do", Do),
+            ("else", Else),
+            ("enum", Enum),
+            ("export", Export),
+            ("extends", Extends),
+            ("false", False),
+            ("finally", Finally),
+            ("for", For),
+            ("function", Function),
+            ("if", If),
+            ("import", Import),
+            ("in", In),
+            ("instanceof", Instanceof),
+            ("new", New),
+            ("null", Null),
+            ("return", Return),
+            ("super", Super),
+            ("switch", Switch),
+            ("this", This),
+            ("throw", Throw),
+            ("true", True),
+            ("try", Try),
+            ("typeof", Typeof),
+            ("var", Var),
+            ("void", Void),
+            ("while", While),
+            ("with", With),
+            ("yield", Yield),
+        ];
+        assert_eq!(
+            all.len(),
+            38,
+            "the ReservedWord production has 38 alternatives — recount before changing this"
+        );
+        let mut seen = std::collections::HashSet::new();
+        for &(text, word) in all {
+            assert_eq!(word.as_str(), text);
+            assert_eq!(ReservedWord::from_text(text), Some(word));
+            assert!(seen.insert(word), "{text:?} appears twice");
+            assert_eq!(
+                kinds(text),
+                [TokenKind::Keyword(word), TokenKind::Eof],
+                "lexing {text:?}"
+            );
+        }
+
+        // Contextual keywords are NOT reserved words. Lexing them as keywords would make
+        // `var let = 1` a syntax error, which it is not outside strict mode, and would take the
+        // decision away from the parser that actually has the context (§12.7.2's five
+        // categories). The strict-mode future reserved words belong to the parser too.
+        for text in [
+            "let",
+            "static",
+            "async",
+            "of",
+            "get",
+            "set",
+            "from",
+            "as",
+            "target",
+            "meta",
+            "implements",
+            "interface",
+            "package",
+            "private",
+            "protected",
+            "public",
+            "arguments",
+            "eval",
+            "undefined",
+            "NaN",
+        ] {
+            assert_eq!(ReservedWord::from_text(text), None, "{text:?}");
+            assert_eq!(kinds(text), [PLAIN, TokenKind::Eof], "lexing {text:?}");
+        }
+        // Near misses: a prefix, an extension, and a case change are all just names.
+        for text in ["awai", "awaits", "Await", "iff", "i", "IF", "in_"] {
+            assert_eq!(ReservedWord::from_text(text), None, "{text:?}");
+            assert_eq!(kinds(text), [PLAIN, TokenKind::Eof], "lexing {text:?}");
+        }
+        // A keyword still ends where the name ends.
+        assert_eq!(
+            kinds("if(a)"),
+            [
+                TokenKind::Keyword(If),
+                TokenKind::LParen,
+                PLAIN,
+                TokenKind::RParen,
+                TokenKind::Eof
+            ]
+        );
+    }
+
+    #[test]
+    fn a_reserved_word_spelled_with_an_escape_is_a_name_and_not_a_keyword() {
+        // §12.7.2 Note 1: "A code point in a keyword cannot be expressed by a \ Unicode-
+        // EscapeSequence." So this is an IdentifierName whose value happens to be "else" —
+        // which §13.1.1 then refuses as a binding, but that is the parser's rule and needs the
+        // `contains_escape` flag this token carries.
+        assert_eq!(kinds("els\\u{65}"), [ESCAPED, TokenKind::Eof]);
+        assert_eq!(name_of("els\\u{65}"), "else");
+        // …and the same for an escape at the very start.
+        assert_eq!(kinds("\\u0069f"), [ESCAPED, TokenKind::Eof]);
+        assert_eq!(name_of("\\u0069f"), "if");
+        // Without the escape, both are keywords. The flag is the only difference, and it is
+        // the whole difference.
+        assert_eq!(
+            kinds("else"),
+            [TokenKind::Keyword(ReservedWord::Else), TokenKind::Eof]
+        );
+        assert_eq!(
+            kinds("if"),
+            [TokenKind::Keyword(ReservedWord::If), TokenKind::Eof]
+        );
+    }
+
+    #[test]
+    fn a_unicode_escape_contributes_a_code_point_to_the_name() {
+        // §12.7.1.2 IdentifierCodePoints: the `\` contributes nothing and the escape
+        // contributes exactly one code point, so an escaped spelling and a plain one name the
+        // same thing (§12.7.1: "All interpretations… are based upon their actual code points").
+        assert_eq!(name_of("\\u0061bc"), "abc");
+        assert_eq!(name_of("a\\u{62}c"), "abc");
+        assert_eq!(name_of("\\u{61}\\u{62}"), "ab");
+        assert_eq!(kinds("\\u0061bc"), [ESCAPED, TokenKind::Eof]);
+        // Both forms of the sequence, and both hex cases.
+        assert_eq!(name_of("\\u00E9"), "\u{e9}");
+        assert_eq!(name_of("\\u00e9"), "\u{e9}");
+        assert_eq!(name_of("\\u{E9}"), "\u{e9}");
+        // `CodePoint :: HexDigits[~Sep]` — any number of digits, so leading zeros are fine and
+        // there is no four-digit limit inside the braces.
+        assert_eq!(name_of("\\u{000000000000061}"), "a");
+        // An astral escape is one code point, not a surrogate pair.
+        assert_eq!(name_of("\\u{1D49C}"), "\u{1d49c}");
+        // The span covers the spelling as written — escapes are longer than what they denote.
+        assert_eq!(first("\\u{61}").span, Span::new(0, 6));
+        // A name that merely contains a `u` is not an escape.
+        assert_eq!(name_of("u0061"), "u0061");
+    }
+
+    #[test]
+    fn an_escape_must_denote_a_character_that_could_have_been_written_directly() {
+        // §12.7.1.1: it is a Syntax Error if the escape's code point is not matched by
+        // IdentifierStartChar (first) or IdentifierPartChar (later). Put plainly: replacing the
+        // escape with what it denotes must leave a valid name. Without this rule `\u{20}` is a
+        // space inside an identifier and every downstream assumption breaks.
+        let not_a_name_char = |source: &str| {
+            assert_eq!(
+                Lexer::new(source).tokens().map(|t| t.len()),
+                Err(LexError {
+                    kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
+                    span: Span::new(0, source.len() as u32),
+                }),
+                "on {source:?}"
+            );
+        };
+        not_a_name_char("\\u0020"); // a space
+        not_a_name_char("\\u{2e}"); // a full stop
+        not_a_name_char("\\uD800"); // a lone surrogate — well-formed, and not a character
+        not_a_name_char("\\u{10FFFF}"); // in range, still not an identifier character
+
+        // A digit cannot START a name even when escaped, but it can continue one — the two
+        // halves of the early error use different predicates, and this is the pair that proves
+        // the `is_start` flag is actually consulted.
+        assert_eq!(
+            Lexer::new("\\u0030").tokens(),
+            Err(LexError {
+                kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
+                span: Span::new(0, 6),
+            })
+        );
+        assert_eq!(name_of("a\\u0030"), "a0");
+        // …and `_` the other way round: legal in both positions, but only because §12.7 adds it
+        // explicitly at the start.
+        assert_eq!(name_of("\\u005F"), "_");
+        assert_eq!(name_of("a\\u005F"), "a_");
+        // A bad escape in the middle reports where the escape is, not where the name began.
+        assert_eq!(
+            Lexer::new("ab\\u0020").tokens(),
+            Err(LexError {
+                kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
+                span: Span::new(2, 8),
+            })
+        );
+    }
+
+    #[test]
+    fn a_malformed_escape_is_an_error_rather_than_a_shorter_name() {
+        // `IdentifierPart :: \ UnicodeEscapeSequence` is the only alternative beginning with a
+        // backslash, so a `\` that is not a well-formed escape cannot fall back to "the name
+        // ended here" — `a\x` is a syntax error, not the name `a`.
+        // The span runs from the backslash to exactly where the sequence stopped being a
+        // possible escape — so `\x` reports two characters' worth of nothing, while `\u12g4`
+        // reports the four it did manage to read. That rule is uniform, and the expected ends
+        // below are what pin it.
+        for (source, start, end) in [
+            ("\\", 0, 1),       // nothing at all after it
+            ("\\x", 0, 1),      // not a `u`; the `x` is not part of any escape
+            ("\\u", 0, 2),      // no digits
+            ("\\u12", 0, 4),    // fewer than four
+            ("\\u123", 0, 5),   // still fewer than four
+            ("\\u12g4", 0, 4),  // a non-hex digit among the four
+            ("\\u{", 0, 3),     // an unclosed brace
+            ("\\u{}", 0, 3),    // no digits at all
+            ("\\u{61", 0, 5),   // digits, but never closed
+            ("\\u{zz}", 0, 3),  // no hex digits inside
+            ("\\u{61 }", 0, 5), // `HexDigits[~Sep]` admits no spaces…
+            ("\\u{6_1}", 0, 4), // …and no numeric separators either
+            ("a\\x", 1, 2),     // and all the same, mid-name
+            ("a\\u{}", 1, 4),   //
+        ] {
+            assert_eq!(
+                Lexer::new(source).tokens().map(|t| t.len()),
+                Err(LexError {
+                    kind: LexErrorKind::InvalidUnicodeEscape,
+                    span: Span::new(start, end),
+                }),
+                "on {source:?}"
+            );
+        }
+
+        // Exactly four, no more and no fewer: a fifth hex digit is simply the next character of
+        // the name. Read five and `a0` becomes the single character U+610.
+        assert_eq!(name_of("\\u00610"), "a0");
+        assert_eq!(name_of("\\u0061a"), "aa");
+    }
+
+    #[test]
+    fn an_escape_beyond_the_last_code_point_is_out_of_range_rather_than_malformed() {
+        // `CodePoint :: HexDigits but only if the MV of HexDigits ≤ 0x10FFFF`; anything larger
+        // is `NotCodePoint`. Distinguishing this from a malformed escape matters to whoever
+        // reads the message — one is a typo, the other is a misunderstanding.
+        for source in [
+            "\\u{110000}",         // one past the last code point
+            "\\u{FFFFFFFF}",       // fills a u32 exactly
+            "\\u{FFFFFFFFFFFFFF}", // and one that would overflow it — saturation, not a panic
+        ] {
+            assert_eq!(
+                Lexer::new(source).tokens().map(|t| t.len()),
+                Err(LexError {
+                    kind: LexErrorKind::CodePointOutOfRange,
+                    span: Span::new(0, source.len() as u32),
+                }),
+                "on {source:?}"
+            );
+        }
+        // The boundary itself is in range — it is rejected later, and for a different reason.
+        assert_eq!(
+            Lexer::new("\\u{10FFFF}").tokens(),
+            Err(LexError {
+                kind: LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
+                span: Span::new(0, 10),
+            })
+        );
+    }
+
+    #[test]
+    fn a_private_name_keeps_its_hash_in_both_the_span_and_the_value() {
+        // `PrivateIdentifier :: # IdentifierName` (§12.7). The spec's StringValue is the number
+        // sign concatenated with the name's, so the `#` is part of what the token means — two
+        // different classes may each have a `#x`, and the `#` is what says so.
+        let private = TokenKind::PrivateIdentifier {
+            contains_escape: false,
+        };
+        assert_eq!(kinds("#x"), [private, TokenKind::Eof]);
+        assert_eq!(first("#x").span, Span::new(0, 2));
+        assert_eq!(name_of("#x"), "#x");
+        assert_eq!(name_of("#count"), "#count");
+        assert_eq!(
+            kinds("this.#x"),
+            [
+                TokenKind::Keyword(ReservedWord::This),
+                TokenKind::Dot,
+                private,
+                TokenKind::Eof
+            ]
+        );
+        // Escapes work in a private name too, and the flag travels with it.
+        assert_eq!(
+            kinds("#\\u0078"),
+            [
+                TokenKind::PrivateIdentifier {
+                    contains_escape: true
+                },
+                TokenKind::Eof
+            ]
+        );
+        assert_eq!(name_of("#\\u0078"), "#x");
+        // `#` is not a punctuator and there is no empty private name: what follows must start
+        // one. The error points where the name was expected, just past the `#`.
+        // (`#!` is absent deliberately: at byte 0 those two characters are a hashbang comment,
+        // which is its own test.)
+        for (source, span) in [
+            ("#", Span::new(1, 1)),
+            ("#5", Span::new(1, 2)),
+            ("# x", Span::new(1, 2)),
+            ("#\u{200b}", Span::new(1, 4)),
+        ] {
+            assert_eq!(
+                Lexer::new(source).tokens().map(|t| t.len()),
+                Err(LexError {
+                    kind: LexErrorKind::UnexpectedCharacter,
+                    span,
+                }),
+                "on {source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_hashbang_is_a_comment_only_at_the_very_first_byte() {
+        // §12.5: hashbang comments are "location-sensitive". At byte 0 this is how a script
+        // becomes executable; anywhere else the same two characters are a malformed private
+        // name, and treating them as a comment would silently delete a line of code.
+        assert_eq!(
+            kinds("#!/usr/bin/env node\n;"),
+            [TokenKind::Semicolon, TokenKind::Eof]
+        );
+        assert!(first("#!/usr/bin/env node\n;").newline_before);
+        // It runs to the line terminator and no further, and may end at EOF instead.
+        assert_eq!(kinds("#!x"), [TokenKind::Eof]);
+        assert_eq!(
+            kinds("#!"),
+            [TokenKind::Eof],
+            "the shortest hashbang there is"
+        );
+        // A second one on the next line is NOT a comment — it is at byte 4.
+        assert_eq!(
+            Lexer::new("#!x\n#!y").tokens(),
+            Err(LexError {
+                kind: LexErrorKind::UnexpectedCharacter,
+                span: Span::new(5, 6),
+            })
+        );
+        // One byte later it is not a comment. Even a single space disqualifies it, because the
+        // hashbang precedes everything — including white space.
+        for source in [" #!x", "\n#!x", ";#!x"] {
+            assert_eq!(
+                Lexer::new(source).tokens().map(|t| t.len()),
+                Err(LexError {
+                    kind: LexErrorKind::UnexpectedCharacter,
+                    span: Span::new(2, 3),
+                }),
+                "on {source:?}"
+            );
+        }
+        // A `#` at byte 0 that is not followed by `!` is an ordinary private name.
+        assert_eq!(
+            kinds("#x"),
+            [
+                TokenKind::PrivateIdentifier {
+                    contains_escape: false
+                },
+                TokenKind::Eof
+            ]
+        );
+    }
+
+    #[test]
+    fn identifier_value_borrows_the_common_case_and_owns_only_what_it_must() {
+        // Nearly every name in a program is written plainly; allocating a String for each would
+        // be a cost paid on every identifier to serve the handful that are spelled oddly.
+        let source = "plain \\u0061bc";
+        let plain = first(source);
+        assert!(matches!(
+            identifier_value(source, plain.span),
+            Some(Cow::Borrowed("plain"))
+        ));
+        let escaped = Lexer::new(source)
+            .tokens()
+            .expect("this lexes") // the assertion under test needs the tokens
+            [1];
+        assert!(matches!(
+            identifier_value(source, escaped.span),
+            Some(Cow::Owned(ref value)) if value == "abc"
+        ));
+        // A span the lexer never produced gets an answer, not a panic: off the end, off a
+        // character boundary, and over a malformed escape.
+        assert_eq!(identifier_value("abc", Span::new(0, 99)), None);
+        assert_eq!(identifier_value("\u{e9}", Span::new(0, 1)), None);
+        assert_eq!(identifier_value("a\\u", Span::new(0, 3)), None);
+        // A *well-formed* escape denoting something that could never appear in a name reads
+        // back as what it says. Validity was settled when the lexer refused to produce this
+        // token; asking again here would be a second, weaker opinion.
+        assert_eq!(
+            identifier_value("a\\u{20}", Span::new(0, 7)).as_deref(),
+            Some("a ")
+        );
+        assert!(
+            Lexer::new("a\\u{20}").tokens().is_err(),
+            "…and the lexer does refuse it"
+        );
+        // An empty span is an empty value rather than a failure — `Span::empty_at` is what EOF
+        // carries, and asking it for a name should not be exciting.
+        assert_eq!(
+            identifier_value("abc", Span::empty_at(1)).as_deref(),
+            Some("")
         );
     }
 
