@@ -294,11 +294,17 @@ fn visit<'a>(
                     .map(|stmt| (stmt, inner.clone())),
             );
         }
+        // A function body is where every one of these operations stops (§8.3 defines them over
+        // a `FunctionStatementList` separately, from `« »`), so a `break` inside a function
+        // cannot see a loop outside it — `while (1) { function f() { break; } }` is a Syntax
+        // Error, and the body is asked all five rules again on its own.
+        StmtKind::Function(_) => {}
         // §8.3 gives all of these `false`, and none of them holds a statement to look inside.
         StmtKind::Empty
         | StmtKind::Expression(_)
         | StmtKind::Debugger
         | StmtKind::Declaration(_)
+        | StmtKind::Return(_)
         | StmtKind::Throw(_) => {}
     }
     None

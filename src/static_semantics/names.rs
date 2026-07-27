@@ -35,12 +35,37 @@ use crate::ast::{Binding, BindingPattern, Stmt, StmtKind};
 /// of a script is var-scoped rather than lexical — and there are none yet. The day there are,
 /// this needs a sibling and the callers need to choose between them.
 pub fn lexically_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
+    collect_lexical(body, false)
+}
+
+/// `TopLevelLexicallyDeclaredNames` of a `StatementList` (§8.2.10).
+///
+/// What a `Script` body and a `FunctionStatementList` want instead. It differs from its sibling in
+/// one production: a `HoistableDeclaration` — a function — contributes nothing here, being
+/// var-scoped at a top level and lexically scoped anywhere else. That single line is the whole of
+/// why `function f() {} function f() {}` is fine at the top of a script and
+/// `{ function f() {} let f; }` is not.
+pub fn top_level_lexically_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
+    collect_lexical(body, true)
+}
+
+/// Both of the above, which differ only in what they do with a function.
+fn collect_lexical(body: &[Stmt], top_level: bool) -> Vec<DeclaredName<'_>> {
     let mut names = Vec::new();
     for stmt in body {
-        if let StmtKind::Declaration(declaration) = &stmt.kind
-            && declaration.kind.is_lexical()
-        {
-            push_bound_names(declaration, &mut names);
+        match &stmt.kind {
+            StmtKind::Declaration(declaration) if declaration.kind.is_lexical() => {
+                push_bound_names(declaration, &mut names);
+            }
+            StmtKind::Function(function) if !top_level => {
+                if let Some(name) = &function.name {
+                    names.push(DeclaredName {
+                        name: &name.name,
+                        span: name.span,
+                    });
+                }
+            }
+            _ => {}
         }
     }
     names
@@ -68,12 +93,34 @@ pub fn lexically_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
 /// It will stop at a function body when there are functions — that is the boundary a `var` does
 /// not cross, and the point at which this and `TopLevelVarDeclaredNames` (§8.2.12) stop agreeing.
 pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
+    collect_var(body, false)
+}
+
+/// `TopLevelVarDeclaredNames` of a `StatementList` (§8.2.12).
+///
+/// The mirror of [`top_level_lexically_declared_names`], and the mirror of its one difference: a
+/// function declared *directly* in this list is var-scoped and so belongs here. Only directly —
+/// a nested `StatementListItem` is asked the ordinary question, which is why
+/// `function f() { { function g() {} } }` declares no `g` at `f`'s top level.
+pub fn top_level_var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
+    collect_var(body, true)
+}
+
+/// Both of the above. `top_level` applies to the direct items of `body` and to nothing below
+/// them, exactly as §8.2.12 hands `VarDeclaredNames` to everything it descends into.
+fn collect_var(body: &[Stmt], top_level: bool) -> Vec<DeclaredName<'_>> {
     let mut names = Vec::new();
     // Reversed, so popping yields source order — which is the order the specification's
     // list-concatenation produces, and the order that makes a diagnostic point at the first
     // offender rather than an arbitrary one.
-    let mut pending: Vec<&Stmt> = body.iter().rev().collect();
-    while let Some(stmt) = pending.pop() {
+    let mut pending: Vec<(&Stmt, bool)> = body.iter().rev().map(|stmt| (stmt, top_level)).collect();
+    // Everything a statement contains is asked the ordinary question: §8.2.12 hands
+    // `VarDeclaredNames` to what it descends into, and only the direct items of this list get the
+    // top-level reading.
+    fn nested(stmt: &Stmt) -> (&Stmt, bool) {
+        (stmt, false)
+    }
+    while let Some((stmt, direct)) = pending.pop() {
         match &stmt.kind {
             StmtKind::Declaration(declaration) => {
                 // A lexical declaration contributes nothing: §8.2.8 gives
@@ -83,19 +130,33 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
                     push_bound_names(declaration, &mut names);
                 }
             }
-            StmtKind::Block(inner) => pending.extend(inner.iter().rev()),
+            // §8.2.12: a `HoistableDeclaration` written *directly* in a top-level list is
+            // var-scoped and belongs here. Written anywhere else it is lexical, and §8.2.8 gives
+            // a `Declaration` nothing. Either way its body is not descended into — a `var` in
+            // there belongs to *that* function.
+            StmtKind::Function(function) => {
+                if direct && let Some(name) = &function.name {
+                    names.push(DeclaredName {
+                        name: &name.name,
+                        span: name.span,
+                    });
+                }
+            }
+            StmtKind::Block(inner) => pending.extend(inner.iter().rev().map(nested)),
             StmtKind::If(statement) => {
                 if let Some(alternate) = &statement.alternate {
-                    pending.push(alternate);
+                    pending.push(nested(alternate));
                 }
-                pending.push(&statement.consequent);
+                pending.push(nested(&statement.consequent));
             }
-            StmtKind::Labelled(statement) => pending.push(&statement.body),
-            StmtKind::With(statement) => pending.push(&statement.body),
-            StmtKind::While(statement) => pending.push(&statement.body),
-            StmtKind::DoWhile(statement) => pending.push(&statement.body),
+            // §8.2.12 hands a `LabelledStatement` to `TopLevelVarDeclaredNames` rather than to
+            // the ordinary one, so a function under a label at a top level is still var-scoped.
+            StmtKind::Labelled(statement) => pending.push((&statement.body, direct)),
+            StmtKind::With(statement) => pending.push(nested(&statement.body)),
+            StmtKind::While(statement) => pending.push(nested(&statement.body)),
+            StmtKind::DoWhile(statement) => pending.push(nested(&statement.body)),
             StmtKind::For(statement) => {
-                pending.push(&statement.body);
+                pending.push(nested(&statement.body));
                 // §8.2.8 gives the `var` header form the BoundNames of its list and gives the
                 // lexical form nothing — the same split as any other declaration, in the one
                 // place a declaration is not a statement.
@@ -106,7 +167,7 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
                 }
             }
             StmtKind::ForInOf(statement) => {
-                pending.push(&statement.body);
+                pending.push(nested(&statement.body));
                 // The same split as the three-part form: a `var` header binds a var name and a
                 // lexical one does not. The target-expression form binds nothing at all.
                 if let crate::ast::ForInOfTarget::Declaration(declaration) = &statement.left
@@ -124,7 +185,8 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
                         .cases
                         .iter()
                         .rev()
-                        .flat_map(|case| case.body.iter().rev()),
+                        .flat_map(|case| case.body.iter().rev())
+                        .map(nested),
                 );
             }
             StmtKind::Try(statement) => {
@@ -132,20 +194,21 @@ pub fn var_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
                 // function just as much. The catch *parameter* is not among them — it is bound
                 // by the handler's own scope and is not a var name at all.
                 if let Some(finalizer) = &statement.finalizer {
-                    pending.extend(finalizer.iter().rev());
+                    pending.extend(finalizer.iter().rev().map(nested));
                 }
                 if let Some(handler) = &statement.handler {
-                    pending.extend(handler.body.iter().rev());
+                    pending.extend(handler.body.iter().rev().map(nested));
                 }
-                pending.extend(statement.block.iter().rev());
+                pending.extend(statement.block.iter().rev().map(nested));
             }
             // §8.2.8 lists these explicitly as contributing nothing, and they contain no
             // statement to look inside: empty, expression, `continue`, `break`, `throw`,
-            // `debugger`. `return` joins them when functions arrive.
+            // `debugger`, `return`.
             StmtKind::Empty
             | StmtKind::Expression(_)
             | StmtKind::Debugger
             | StmtKind::Throw(_)
+            | StmtKind::Return(_)
             | StmtKind::Break(_)
             | StmtKind::Continue(_) => {}
         }

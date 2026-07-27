@@ -3,8 +3,8 @@
 use super::{ParseError, parse_expression};
 use crate::ast::{
     ArrayElement, AssignmentTarget, Binding, BindingElement, BindingPattern, Declaration, Expr,
-    ExprKind, ForInOfKind, ForInOfTarget, ForInit, Pattern, PatternElement, PropertyDefinition,
-    PropertyKey, RegExpLiteral, Stmt, StmtKind,
+    ExprKind, ForInOfKind, ForInOfTarget, ForInit, Function, Pattern, PatternElement,
+    PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
 };
 
 /// The parsed expression of `source`.
@@ -82,6 +82,7 @@ pub(super) fn render(expr: &Expr) -> String {
             operator.as_str(),
             render(argument)
         ),
+        ExprKind::Function(function) => render_function(function),
         ExprKind::Array(elements) => {
             let rendered: Vec<String> = elements
                 .iter()
@@ -114,6 +115,25 @@ pub(super) fn render(expr: &Expr) -> String {
             format!("(, {})", rendered.join(" "))
         }
     }
+}
+
+/// A function, rendered as `(fn name [params] {body})`.
+pub(super) fn render_function(function: &Function) -> String {
+    let mut parameters: Vec<String> = function
+        .parameters
+        .items
+        .iter()
+        .map(render_binding_element)
+        .collect();
+    if let Some(rest) = &function.parameters.rest {
+        parameters.push(format!("(... {})", render_binding(rest)));
+    }
+    format!(
+        "(fn {} [{}] {})",
+        function.name.as_ref().map_or("<anon>", |name| &name.name),
+        parameters.join(" "),
+        render_block(&function.body)
+    )
 }
 
 /// A binding: a name, or the pattern of them a declaration creates.
@@ -374,6 +394,11 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
             render(&statement.object),
             render_statement(&statement.body)
         ),
+        StmtKind::Function(function) => render_function(function),
+        StmtKind::Return(value) => match value {
+            Some(value) => format!("(return {})", render(value)),
+            None => "return".to_string(),
+        },
         StmtKind::Break(label) => match label {
             Some(label) => format!("(break {})", label.name),
             None => "break".to_string(),

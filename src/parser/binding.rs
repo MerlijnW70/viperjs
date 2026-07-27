@@ -174,7 +174,7 @@ impl Parser<'_> {
     }
 
     /// `BindingElement : SingleNameBinding | BindingPattern Initializer_opt` (§14.3.3).
-    fn parse_binding_element(&mut self) -> Result<BindingElement, ParseError> {
+    pub(super) fn parse_binding_element(&mut self) -> Result<BindingElement, ParseError> {
         let target = self.parse_binding()?;
         Ok(BindingElement {
             default: self.parse_binding_default()?,

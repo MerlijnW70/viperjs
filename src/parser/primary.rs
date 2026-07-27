@@ -59,6 +59,9 @@ impl Parser<'_> {
         if token.kind == TokenKind::LBrace {
             return self.parse_object_literal();
         }
+        if token.kind == TokenKind::Keyword(ReservedWord::Function) {
+            return self.parse_function_expression();
+        }
         let literal = |kind| Ok(Expr::new(kind, token.span));
         match token.kind {
             TokenKind::Keyword(ReservedWord::This) => {

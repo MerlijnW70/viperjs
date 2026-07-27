@@ -181,7 +181,13 @@ mod tests {
         assert!(parse_script("a: const b = 1;").is_err());
         // …and inside a block, which is a StatementList, both are fine again.
         assert_eq!(statements("a: { let b; }"), ["(label a {(let b)})"]);
-        // A function declaration is §14.13.1's alternative and arrives with functions.
+        // `LabelledItem : FunctionDeclaration` is the other alternative, and §14.13.1 makes it a
+        // Syntax Error "unless that source text is non-strict code and the host is a web browser
+        // or otherwise supports Labelled Function Declarations". It is refused here, and the
+        // reason is the one Annex B.3.5 was refused for: the exemption turns on strictness, which
+        // this parser cannot yet tell. Accepting unconditionally would be wrong in strict code on
+        // every host; refusing is wrong only for sloppy code on a host that implements it. V8
+        // accepts it, so this is a divergence — and one that goes away with strict mode.
         assert!(parse_script("a: function f() {}").is_err());
     }
 

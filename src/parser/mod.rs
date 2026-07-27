@@ -35,6 +35,7 @@
 //! - `object_literal` — `{…}` (§13.2.5), which has no elisions and one rule about `__proto__`.
 //! - `pattern` — refining either literal into the assignment pattern it covered (§13.15.5).
 //! - `binding` — binding patterns (§14.3.3), which need no cover grammar and say so.
+//! - `function` — function definitions (§15.2), and the `return` they make legal (§14.10).
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -55,6 +56,7 @@ mod error;
 mod expression;
 mod for_in_of;
 mod for_statement;
+mod function;
 mod labelled;
 mod member;
 mod object_literal;
@@ -103,6 +105,7 @@ use crate::span::Span;
 /// | array literals | 82 | 48 |
 /// | object literals | 73 | 48 |
 /// | destructuring assignment patterns | 67 | 48 |
+/// | functions, and `return` | 67 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -131,8 +134,8 @@ use crate::span::Span;
 /// set this number — the narrowest bracket does, and every literal with a bracket in it is a
 /// candidate, which is now most of them.
 ///
-/// As of the patterns, the standings are: object literal 67, array literal 77, pattern refinement
-/// 76, expressions 113. The refinement is not the binding one and was never likely to be — it
+/// As of functions, the standings are: object literal 67, array literal 77, pattern refinement
+/// 76, expressions 113, a function 251. The refinement is not the binding one and was never likely to be — it
 /// recurses over a tree the parse has already finished with, so its frames replace the parse's
 /// rather than adding to them.
 ///
@@ -242,6 +245,13 @@ struct Parser<'a> {
     /// look identical once parsed — a trailing comma leaves no element — so the literal parser
     /// records it and refinement is what turns it into an error.
     pub(super) rest_followed_by_comma: Option<Span>,
+    /// Whether a `FunctionBody` encloses this — the `[Return]` grammar parameter of §14.10.
+    ///
+    /// A field rather than a parameter, where `[In]` is a parameter, and the difference is which
+    /// kind of fact each is. `[In]` resets at every bracket, so each bracket is a decision worth
+    /// making the compiler ask about. `[Return]` is set by one production and never turned off
+    /// within it, so it is not a decision anywhere: it is where you are.
+    pub(super) inside_function: bool,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -266,6 +276,7 @@ impl<'a> Parser<'a> {
             cover_initialized_name: None,
             rest_followed_by_comma: None,
             literal_depth: 0,
+            inside_function: false,
         })
     }
 

@@ -69,6 +69,11 @@ pub enum StmtKind {
     Labelled(Box<LabelledStatement>),
     /// `with (…) …` (§14.11).
     With(Box<WithStatement>),
+    /// `function f(…) { … }` (§15.2) — a `Declaration`, so it belongs to a `StatementList` and
+    /// never to a `Statement`.
+    Function(Box<super::Function>),
+    /// `return;` or `return …;` (§14.10), which only a function body admits.
+    Return(Option<Box<Expr>>),
     /// `break;` or `break a;` (§14.9).
     Break(Option<Box<Label>>),
     /// `continue;` or `continue a;` (§14.8).

@@ -57,7 +57,7 @@ fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     let body = parser.parse_statement_list(TokenKind::Eof)?;
     parser.expect_eof()?;
     // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
-    super::scope::check_declared_names(&body)?;
+    super::scope::check_declared_names(&body, super::scope::Level::Top)?;
     Ok(Script {
         body,
         span: Span::new(0, source.len() as u32),
@@ -91,6 +91,11 @@ impl Parser<'_> {
     /// `if (a) var b = 1;` does. That asymmetry is in the grammar rather than in any early error
     /// about it, and this is where it lives.
     pub(super) fn parse_statement_list_item(&mut self) -> Result<Stmt, ParseError> {
+        // A `FunctionDeclaration` is a `Declaration`, so it stands here and not among the
+        // statements below — `while (x) function f() {}` has no derivation.
+        if self.current.kind == TokenKind::Keyword(ReservedWord::Function) {
+            return self.parse_function_declaration();
+        }
         if self.current.kind == TokenKind::Keyword(ReservedWord::Const) {
             return self.parse_declaration(DeclarationKind::Const);
         }
@@ -137,6 +142,7 @@ impl Parser<'_> {
             TokenKind::Keyword(ReservedWord::Do) => self.parse_do_while(),
             TokenKind::Keyword(ReservedWord::For) => self.parse_for(),
             TokenKind::Keyword(ReservedWord::Throw) => self.parse_throw(),
+            TokenKind::Keyword(ReservedWord::Return) => self.parse_return(),
             TokenKind::Keyword(ReservedWord::Try) => self.parse_try(),
             TokenKind::Keyword(ReservedWord::Switch) => self.parse_switch(),
             TokenKind::Keyword(ReservedWord::With) => self.parse_with(),
@@ -145,6 +151,14 @@ impl Parser<'_> {
             // An identifier and a `:` is a `LabelledStatement`, which is the second and last
             // place this parser needs two tokens — and, like `let`, a case where one token
             // begins two productions.
+            // §14.5: an `ExpressionStatement` may not begin with `function`, because that is a
+            // declaration — and a `Statement` has no `Declaration` alternative, so there is
+            // nowhere here for one to go. `if (x) function f() {}` and `a: function f() {}` are
+            // both refused, and Annex B.3.2 and §14.13.1 are what would let a web host take them.
+            TokenKind::Keyword(ReservedWord::Function) => Err(ParseError {
+                kind: ParseErrorKind::FunctionInStatementPosition,
+                span: self.current.span,
+            }),
             _ if self.at_labelled_statement()? => self.parse_labelled_statement(),
             _ => self.parse_expression_statement(),
         }
@@ -165,7 +179,7 @@ impl Parser<'_> {
         let body = body?;
         let close = self.eat(TokenKind::RBrace, Goal::RegExp, "`}`")?;
         // §14.2.1, on the finished list — see `super::scope`.
-        super::scope::check_declared_names(&body)?;
+        super::scope::check_declared_names(&body, super::scope::Level::Block)?;
         Ok((body, open.span.to(close.span)))
     }
 
@@ -355,9 +369,18 @@ mod tests {
         // or `class` as well as `{`, each because it would be ambiguous with a declaration. None
         // of those is an expression here either, so each fails rather than being misread — and
         // will start parsing the day its declaration form lands.
-        for source in ["function f() {}", "class C {}", "return 1;"] {
+        for source in ["class C {}", "class C extends D {}"] {
             assert!(parse_script(source).is_err(), "{source:?}");
         }
+        // `function` and `return` used to be on that list. The first is a `Declaration` now, and
+        // the second is a `Statement` — but only under `[+Return]`, so at the top of a script it
+        // is still refused, for a reason the grammar states rather than for want of an
+        // implementation.
+        assert_eq!(statements("function f() {}"), ["(fn f [] {})"]);
+        assert_eq!(
+            script_error("return 1;").kind,
+            ParseErrorKind::ReturnOutsideFunction
+        );
         // The `let [` pin that stood here through three slices has come all the way round:
         // §14.5 forbids an ExpressionStatement from beginning with `let [` because that is a
         // lexical declaration, and now it is one.

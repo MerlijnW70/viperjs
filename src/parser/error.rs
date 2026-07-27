@@ -45,6 +45,29 @@ pub enum ParseErrorKind {
     /// can build so far the answer is "an identifier, however many parentheses are around it".
     /// `1 = 2` and `(a, b) = 3` are the shapes this rejects.
     InvalidAssignmentTarget,
+    /// §14.5: a `function` where only a `Statement` may stand.
+    ///
+    /// A `FunctionDeclaration` is a `Declaration`, so it belongs to a `StatementList` — and
+    /// §14.5 keeps an `ExpressionStatement` from beginning with the word, so it cannot be a
+    /// function *expression* either. `if (x) function f() {}` and `a: function f() {}` are the
+    /// shapes; Annex B.3.2 and §14.13.1 are the exemptions a web host takes, and both turn on
+    /// strictness, which this parser cannot yet tell.
+    FunctionInStatementPosition,
+    /// §14.10: a `return` outside any function body.
+    ///
+    /// `ReturnStatement` is an alternative of `Statement[Return]`, and only a `FunctionBody` sets
+    /// that parameter — so outside one there is no such statement rather than a bad one.
+    ReturnOutsideFunction,
+    /// §15.1.1: a non-simple parameter list repeats a name.
+    ///
+    /// `function f(a, a) {}` is legal and `function f(a, a = 1) {}` is not. A non-simple list is
+    /// initialised by running code, and that code has to know which `a` it means.
+    DuplicateParameterName,
+    /// §15.2.1: a parameter name is also lexically declared by the body.
+    ///
+    /// `function f(a) { let a; }` is refused and `function f(a) { var a; }` is not — the second
+    /// is one binding written twice.
+    ParameterRedeclaredInBody,
     /// §14.3.3: a binding pattern with no initialiser — `var [a];`.
     ///
     /// `VariableDeclaration : BindingIdentifier Initializer_opt | BindingPattern Initializer` —
@@ -201,6 +224,20 @@ impl fmt::Display for ParseErrorKind {
                 }
             }
             Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            Self::FunctionInStatementPosition => write!(
+                f,
+                "a function declaration may not stand where only a statement may"
+            ),
+            Self::ReturnOutsideFunction => {
+                write!(f, "`return` is only allowed inside a function")
+            }
+            Self::DuplicateParameterName => write!(
+                f,
+                "this parameter name is bound twice, which a list with defaults or patterns may not do"
+            ),
+            Self::ParameterRedeclaredInBody => {
+                write!(f, "this name is already a parameter of the function")
+            }
             Self::PatternWithoutInitializer => {
                 write!(f, "a destructuring declaration must have an initializer")
             }

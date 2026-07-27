@@ -26,7 +26,7 @@ use crate::ast::{Declaration, Stmt, SwitchCase};
 use crate::span::Span;
 use crate::static_semantics::{
     DeclaredName, LabelProblemKind, bound_names, first_label_problem, lexically_declared_names,
-    var_declared_names,
+    top_level_lexically_declared_names, top_level_var_declared_names, var_declared_names,
 };
 use std::collections::HashMap;
 
@@ -36,8 +36,27 @@ use std::collections::HashMap;
 /// finished tree and can be read straight against §14.2.1. A free function rather than a method
 /// on the parser because it needs nothing the parser knows: the tree is the whole input, which is
 /// the point of computing early errors this way.
-pub(super) fn check_declared_names(body: &[Stmt]) -> Result<(), ParseError> {
-    check(lexically_declared_names(body), var_declared_names(body))
+pub(super) fn check_declared_names(body: &[Stmt], level: Level) -> Result<(), ParseError> {
+    match level {
+        Level::Block => check(lexically_declared_names(body), var_declared_names(body)),
+        Level::Top => check(
+            top_level_lexically_declared_names(body),
+            top_level_var_declared_names(body),
+        ),
+    }
+}
+
+/// Which of §8.2's two readings of a `StatementList` applies.
+///
+/// The rules are the same; the lists are not. A function declaration is var-scoped at a top level
+/// and lexically scoped in a block, so `function f() {} function f() {}` is fine at the top of a
+/// script and `{ let f; function f() {} }` is a redeclaration. Everything else reads alike.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Level {
+    /// A `Block` (§14.2.1) or a `CaseBlock` (§14.12.1).
+    Block,
+    /// A `Script` body (§16.1.1) or a `FunctionStatementList` (§15.2.1).
+    Top,
 }
 
 /// The same two rules over a `CaseBlock` (§14.12.1).

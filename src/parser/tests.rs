@@ -72,6 +72,12 @@ fn parsing_at_the_cap_fits_in_the_stack_it_claims_to_need() {
         format!("{}a;", "if (a) b; else ".repeat(deep)),
         format!("{}a;", "while (a) ".repeat(deep)),
         format!("{}a;", "for (;;) ".repeat(deep)),
+        // Half the levels: a function spends one of the count on itself and one on its body.
+        format!(
+            "{}{}",
+            "function f() { ".repeat(deep / 2),
+            "}".repeat(deep / 2)
+        ),
         // Distinct labels, since §8.3.1 refuses a repeat before the stack ever gets a say.
         format!(
             "{};",
