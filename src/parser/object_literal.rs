@@ -44,7 +44,9 @@ impl Parser<'_> {
     pub(super) fn parse_object_literal(&mut self) -> Result<Expr, ParseError> {
         let open = self.advance(Goal::RegExp)?;
         self.enter()?;
+        self.literal_depth += 1;
         let properties = self.parse_property_definitions();
+        self.literal_depth -= 1;
         self.leave();
         let properties = properties?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
@@ -105,13 +107,17 @@ impl Parser<'_> {
                 span: token.span,
             });
         }
-        // §13.2.5.1: `CoverInitializedName` is always a Syntax Error where an object literal is
-        // an object literal. It exists so the cover grammar can reach `({a = 1} = b)`, which is a
-        // pattern and is refused here for want of the refinement rather than for want of this
-        // rule.
+        // `CoverInitializedName`. Kept rather than refused, because the cover grammar needs it:
+        // `({a = 1} = b)` is a pattern, and the `=` that says so is several tokens away. §13.2.5.1
+        // makes it a Syntax Error where the literal stays a literal, and the record left here is
+        // what becomes that error when no refinement claims it.
         if self.current.kind == TokenKind::Eq {
-            return Err(ParseError {
-                kind: ParseErrorKind::ShorthandPropertyWithInitializer,
+            self.advance(Goal::RegExp)?;
+            let default = self.parse_assignment(AllowIn::Yes)?;
+            self.cover_initialized_name.get_or_insert(token.span);
+            return Ok(PropertyDefinition::ShorthandWithDefault {
+                name,
+                default: Box::new(default),
                 span: token.span,
             });
         }
@@ -293,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn an_object_is_a_value_and_not_yet_a_pattern_or_a_home_for_methods() {
+    fn an_object_is_a_value_here_and_a_home_for_no_methods() {
         // `CoverInitializedName` is always a Syntax Error in an object literal (§13.2.5.1). It
         // exists so the cover grammar can reach `({a = 1} = b)` — which is a pattern, and is
         // refused here for want of the refinement rather than for want of this rule.
@@ -301,10 +307,15 @@ mod tests {
             error_kind("({a = 1})"),
             ParseErrorKind::ShorthandPropertyWithInitializer
         );
-        // The patterns themselves, which parse in ECMAScript and will here when literals can be
-        // refined into them — the same slice that owes `[a] = b`.
+        assert_eq!(
+            error_kind("[{a = 1}]"),
+            ParseErrorKind::ShorthandPropertyWithInitializer,
+            "an open literal defers the question; a closed one settles it"
+        );
+        // …and every one of those is a pattern the moment an `=` follows it, including the
+        // `{a = 1}` above — which is the whole reason the literal parser keeps it.
         for source in ["({a} = b);", "({a: b} = c);", "({} = b);", "({a = 1} = b);"] {
-            assert!(parse_script(source).is_err(), "{source:?}");
+            assert!(parse_script(source).is_ok(), "{source:?}");
         }
         // `MethodDefinition` is the remaining `PropertyDefinition` alternative and needs
         // functions.

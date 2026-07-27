@@ -33,6 +33,7 @@
 //! - `primary` — `PrimaryExpression` (§13.2), the operands everything else is built from.
 //! - `array_literal` — `[…]` (§13.2.4), and the two different things a comma does inside one.
 //! - `object_literal` — `{…}` (§13.2.5), which has no elisions and one rule about `__proto__`.
+//! - `pattern` — refining either literal into the assignment pattern it covered (§13.15.5).
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -56,6 +57,7 @@ mod labelled;
 mod member;
 mod object_literal;
 mod operator;
+mod pattern;
 mod primary;
 mod scope;
 mod statement;
@@ -71,6 +73,7 @@ pub(crate) use self::statement::parse_script_with_label_rules_unchecked;
 
 use crate::ast::Expr;
 use crate::lexer::{Goal, Lexer, Token, TokenKind};
+use crate::span::Span;
 
 /// How deeply the grammar may nest before the parser gives up.
 ///
@@ -97,6 +100,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | labelled statements, and `with` | 113 | 48 |
 /// | array literals | 82 | 48 |
 /// | object literals | 73 | 48 |
+/// | destructuring assignment patterns | 67 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -121,9 +125,14 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 ///
 /// The array literal is the first thing that did, and it took the lead: `[[[…]]]` recurses
 /// through the whole precedence ladder *and* two frames of its own, so it affords 82 levels where
-/// `(((…)))` affords 113. The object literal then took it from the array, at 73. Expressions no
-/// longer set this number — the narrowest bracket does, and every literal with a bracket in it is
-/// a candidate, which is now most of them.
+/// `(((…)))` affords 113. The object literal then took it from the array. Expressions no longer
+/// set this number — the narrowest bracket does, and every literal with a bracket in it is a
+/// candidate, which is now most of them.
+///
+/// As of the patterns, the standings are: object literal 67, array literal 77, pattern refinement
+/// 76, expressions 113. The refinement is not the binding one and was never likely to be — it
+/// recurses over a tree the parse has already finished with, so its frames replace the parse's
+/// rather than adding to them.
 ///
 /// Stack is not the only thing a level spends, though, and the two newest forms show it. A `try`
 /// takes *two* of the count on each level, one for the statement and one for its guarded `Block`,
@@ -136,12 +145,12 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// recursive path in a thread with exactly one mebibyte. That test is the real specification of
 /// this constant: raise the cap, or make a level cost more stack, and it fails.
 ///
-/// The margin over the narrowest path is 1.5×, and was two for the first several slices. It has
+/// The margin over the narrowest path is 1.4×, and was two for the first several slices. It has
 /// not been lowered to restore the ratio, because the ratio is comfort and the test is the
 /// guarantee — buying a rounder number would cost real programs a third of the nesting they are
-/// entitled to. The trend is the thing to watch rather than the number: each bracketed literal has
-/// taken a bite, and the next one may well be what forces the cap down. The day the narrowest path
-/// falls below it, that test says so.
+/// entitled to, for no failure that has happened. The trend is the thing to watch rather than the
+/// number: each bracketed literal has taken a bite, and the next one may well be what forces the
+/// cap down. The day the narrowest path falls below it, that test says so and the number moves.
 ///
 /// # Why a count and not a stack measurement
 ///
@@ -181,6 +190,27 @@ struct Parser<'a> {
     pub(super) current: Token,
     /// How many recursive entries are open. See [`Parser::enter`].
     depth: u32,
+    /// Where the first `{a = 1}` was written, if one has been parsed and not yet refined away.
+    ///
+    /// The first half of the cover grammar's bookkeeping (§13.2.5.1, §13.15.5). A
+    /// `CoverInitializedName` is a legal *pattern* and never a legal *literal*, so the literal
+    /// parser accepts it and leaves this behind; refining the literal into a pattern clears it,
+    /// and an expression that reaches the end of an `AssignmentExpression` still carrying one is
+    /// the Syntax Error §13.2.5.1 describes.
+    pub(super) cover_initialized_name: Option<Span>,
+    /// Where a `...` element was followed by a comma, if one has been parsed.
+    ///
+    /// The other half, and the opposite way round: `[...a, ]` is a legal *literal* and never a
+    /// legal *pattern*, an `AssignmentRestElement` being last with nothing after it. The two
+    /// look identical once parsed — a trailing comma leaves no element — so the literal parser
+    /// records it and refinement is what turns it into an error.
+    pub(super) rest_followed_by_comma: Option<Span>,
+    /// How many array or object literals are open.
+    ///
+    /// What makes the record above a *deferred* error rather than an immediate one: inside a
+    /// literal, an expression may still turn out to be part of a pattern, so nothing is decided.
+    /// At nought, it cannot — which is why `[{a = 1}] = b` parses and `f({a = 1})` does not.
+    pub(super) literal_depth: u32,
 }
 
 impl<'a> Parser<'a> {
@@ -196,6 +226,9 @@ impl<'a> Parser<'a> {
             lexer,
             current,
             depth: 0,
+            cover_initialized_name: None,
+            rest_followed_by_comma: None,
+            literal_depth: 0,
         })
     }
 
@@ -354,6 +387,8 @@ mod tests {
             format!("{}1{}", "(".repeat(deep), ")".repeat(deep)),
             format!("{}{}", "{".repeat(deep), "}".repeat(deep)),
             format!("{}{};", "[".repeat(deep), "]".repeat(deep)),
+            // The pattern refinement recurses once per level too, on top of the parse.
+            format!("{}a{} = b;", "[".repeat(deep), "]".repeat(deep)),
             format!("{}1{};", "({a: ".repeat(deep / 2), "})".repeat(deep / 2)),
             format!("{}a;", "if (a) ".repeat(deep)),
             format!("{}a;", "if (a) b; else ".repeat(deep)),

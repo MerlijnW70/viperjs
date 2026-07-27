@@ -66,6 +66,27 @@ pub enum ParseErrorKind {
     /// bindings of `a` in one scope even though nothing at either level looks like a
     /// redeclaration.
     ConflictingVarAndLexicalDeclaration,
+    /// §13.15.5.1: something in a destructuring pattern that cannot be assigned to.
+    ///
+    /// Stricter than [`ParseErrorKind::InvalidAssignmentTarget`]: that one refuses a target whose
+    /// `AssignmentTargetType` is *invalid*, and this one refuses anything not *simple* — so the
+    /// `web-compat` case of §8.6.4 is refused here on every host, `[f()] = b` being a Syntax
+    /// Error where `f() = b` is a run-time one.
+    InvalidDestructuringTarget,
+    /// §13.15.5: a `...` element with something after it.
+    ///
+    /// Including a comma: `[...a, ] = b` has no derivation, an `AssignmentRestElement` being last
+    /// with nothing following. As a literal the same text is fine, which is why this is found
+    /// during refinement rather than while reading.
+    RestElementMustBeLast,
+    /// §13.15.5: a `...` element with an initialiser — `[...a = 1] = b`.
+    RestElementWithInitializer,
+    /// §13.15.5.1: an `AssignmentRestProperty` target that is an array or object literal.
+    ///
+    /// `({...[a]} = b)` has no derivation where `[...[a]] = b` does. The asymmetry is real: the
+    /// remaining elements of an iterator can be spread into a pattern, and there is no way to
+    /// spread the remaining properties of an object into one.
+    RestTargetMayNotBePattern,
     /// §13.2.5.1: two `__proto__` properties written as `PropertyName : AssignmentExpression`.
     ///
     /// Only that production counts: a computed key and a shorthand are invisible to the rule,
@@ -184,6 +205,19 @@ impl fmt::Display for ParseErrorKind {
             Self::ConflictingVarAndLexicalDeclaration => write!(
                 f,
                 "this name is declared by `var` and by `let` or `const` in the same scope"
+            ),
+            Self::InvalidDestructuringTarget => {
+                write!(f, "this expression cannot be destructured into")
+            }
+            Self::RestElementMustBeLast => {
+                write!(f, "a `...` element must be the last thing in a pattern")
+            }
+            Self::RestElementWithInitializer => {
+                write!(f, "a `...` element may not have a default")
+            }
+            Self::RestTargetMayNotBePattern => write!(
+                f,
+                "a `...` property must name somewhere to put an object, not a pattern"
             ),
             Self::DuplicateProto => {
                 write!(f, "an object literal may set `__proto__` only once")

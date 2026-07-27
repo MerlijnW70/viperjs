@@ -78,16 +78,34 @@ impl Parser<'_> {
             left = self.parse_conditional_tail(left, allow_in)?;
         }
         let Some(operator) = assignment_operator(self.current.kind) else {
+            // Nothing will refine this now, so a `{a = 1}` inside it is the Syntax Error
+            // §13.2.5.1 says it is — unless a literal is still open around it, in which case the
+            // literal may yet become a pattern and nothing is settled. See
+            // [`Parser::cover_initialized_name`].
+            self.report_unrefined_cover_grammar()?;
             return Ok(left);
         };
-        // §13.15.1. The check is here rather than in the AST because it is a *syntax* error:
-        // `1 = 2` must be refused before anything runs, not when it runs.
-        if !is_simple_assignment_target(&left) {
-            return Err(ParseError {
-                kind: ParseErrorKind::InvalidAssignmentTarget,
-                span: left.span,
-            });
-        }
+        // §13.15.1's carve-out: an `ObjectLiteral` or `ArrayLiteral` on the left of `=` is not a
+        // target at all but a pattern that was covered by one, and gets refined instead of
+        // checked. Only `=` — the compound operators take a `LeftHandSideExpression`, so
+        // `[a] += b` has no derivation.
+        let target = if operator == crate::ast::AssignmentOperator::Assign
+            && Self::covers_a_pattern(&left)
+        {
+            crate::ast::AssignmentTarget::Pattern(self.refine_to_pattern(left)?)
+        } else {
+            // §13.15.1. The check is here rather than in the AST because it is a *syntax* error:
+            // `1 = 2` must be refused before anything runs, not when it runs.
+            if !is_simple_assignment_target(&left) {
+                return Err(ParseError {
+                    kind: ParseErrorKind::InvalidAssignmentTarget,
+                    span: left.span,
+                });
+            }
+            self.report_unrefined_cover_grammar()?;
+            crate::ast::AssignmentTarget::Simple(left)
+        };
+        let target = Box::new(target);
         self.advance(Goal::RegExp)?;
         self.enter()?;
         // `LeftHandSideExpression = AssignmentExpression` — the recursion is on the right, so
@@ -95,11 +113,11 @@ impl Parser<'_> {
         let value = self.parse_assignment(allow_in);
         self.leave();
         let value = value?;
-        let span = left.span.to(value.span);
+        let span = target.span().to(value.span);
         Ok(Expr::new(
             ExprKind::Assignment {
                 operator,
-                target: Box::new(left),
+                target,
                 value: Box::new(value),
             },
             span,
@@ -276,6 +294,7 @@ impl Parser<'_> {
 mod tests {
     use super::*;
     use crate::ast::AssignmentOperator;
+    use crate::ast::AssignmentTarget;
     use crate::parser::parse_expression;
     use crate::parser::test_support::*;
     #[test]
@@ -539,7 +558,8 @@ mod tests {
         assert_eq!(shape("((a)) = 1"), "(= a 1)");
         assert!(matches!(
             parse("(a) = 1").kind,
-            ExprKind::Assignment { ref target, .. } if target.parenthesized
+            ExprKind::Assignment { ref target, .. }
+                if matches!(&**target, AssignmentTarget::Simple(expr) if expr.parenthesized)
         ));
         assert_eq!(parse("a = b").span, Span::new(0, 5));
         assert!(!parse("a = b").parenthesized);

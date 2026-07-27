@@ -37,7 +37,11 @@ impl Parser<'_> {
     pub(super) fn parse_array_literal(&mut self) -> Result<Expr, ParseError> {
         let open = self.advance(Goal::RegExp)?;
         self.enter()?;
+        // Inside a literal nothing is decided: an expression here may still turn out to be part
+        // of a pattern. See [`Parser::literal_depth`].
+        self.literal_depth += 1;
         let elements = self.parse_array_elements();
+        self.literal_depth -= 1;
         self.leave();
         let elements = elements?;
         let close = self.eat(TokenKind::RBracket, Goal::Div, "`]`")?;
@@ -80,6 +84,16 @@ impl Parser<'_> {
             });
             if self.current.kind != TokenKind::Comma {
                 break;
+            }
+            // A *trailing* comma after a `...` leaves no trace once parsed — it adds no
+            // element, so `[...a, ]` and `[...a]` become the same list. They are not the same
+            // pattern, so the difference is recorded while it is still there to see. A comma with
+            // an element after it needs no record: that element is visible in the list, and
+            // refinement finds it sitting behind a rest.
+            if matches!(elements.last(), Some(ArrayElement::Spread(_)))
+                && self.peek(Goal::RegExp)?.kind == TokenKind::RBracket
+            {
+                self.rest_followed_by_comma.get_or_insert(self.current.span);
             }
             // The separator. If a `]` follows it the literal simply ends — a trailing comma adds
             // nothing, which is what makes `[1, ]` one element and `[1, , ]` two.
@@ -171,27 +185,23 @@ mod tests {
     }
 
     #[test]
-    fn an_array_is_a_value_and_not_yet_a_pattern() {
+    fn an_array_is_a_value_here_and_a_pattern_only_where_an_equals_says_so() {
         // §13.15.1 skips its AssignmentTargetType rule when the left of an assignment is an
-        // `ArrayLiteral`, because §13.15.5 refines it into an `ArrayAssignmentPattern` instead.
-        // That refinement is the next slice, so these are refused here and parse in ECMAScript —
-        // the day patterns land, this test changes on purpose.
-        assert_eq!(
-            script_error_kind("[a] = b;"),
-            ParseErrorKind::InvalidAssignmentTarget
-        );
-        assert_eq!(
-            script_error_kind("[a, b] = c;"),
-            ParseErrorKind::InvalidAssignmentTarget
-        );
-        assert_eq!(
-            script_error_kind("for ([a] of b);"),
-            ParseErrorKind::InvalidAssignmentTarget
-        );
-        // …while an array as a *value* is unaffected, which is the whole of what this slice adds.
+        // `ArrayLiteral`, because §13.15.5 refines it into an `ArrayAssignmentPattern` instead —
+        // see [`super::super::pattern`], which is where that happens.
+        assert!(parse_script("[a] = b;").is_ok());
+        assert!(parse_script("for ([a] of b);").is_ok());
+        // Everywhere else the brackets are a value, and this file is what reads them.
         assert!(parse_script("a = [1, 2];").is_ok());
         assert!(parse_script("f([1], [2]);").is_ok());
         assert!(parse_script("[1, 2].length;").is_ok());
+        // The refinement is the `=`'s doing, so an array that is merely compared stays a value —
+        // and one that cannot be a pattern says so only when something asks it to be.
+        assert!(parse_script("[1] == b;").is_ok());
+        assert_eq!(
+            script_error_kind("[1] = b;"),
+            ParseErrorKind::InvalidDestructuringTarget
+        );
     }
 
     /// The kind of error `source` fails with, as a script.

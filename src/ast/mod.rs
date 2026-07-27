@@ -12,11 +12,13 @@
 //! - `statement` — §14, plus the declarations that appear only in a `StatementList`.
 //! - `expression` — §13, down to the literals.
 //! - `operator` — the operator enums of §13.4 – §13.15, and how each is written.
+//! - `pattern` — destructuring assignment patterns (§13.15.5), and what a literal covers.
 //!
 //! Everything is re-exported here, so `crate::ast::Whatever` names it wherever it lives.
 
 mod expression;
 mod operator;
+mod pattern;
 mod statement;
 
 pub use self::expression::{
@@ -24,6 +26,9 @@ pub use self::expression::{
 };
 pub use self::operator::{
     AssignmentOperator, BinaryOperator, LogicalOperator, UnaryOperator, UpdateOperator,
+};
+pub use self::pattern::{
+    ArrayPattern, AssignmentTarget, ObjectPattern, Pattern, PatternElement, PatternProperty,
 };
 pub use self::statement::{
     CatchClause, CatchParameter, Declaration, DeclarationKind, Declarator, DoWhileStatement,

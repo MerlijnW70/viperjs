@@ -2,8 +2,9 @@
 
 use super::{ParseError, parse_expression};
 use crate::ast::{
-    ArrayElement, Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit,
-    PropertyDefinition, PropertyKey, RegExpLiteral, Stmt, StmtKind,
+    ArrayElement, AssignmentTarget, Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget,
+    ForInit, Pattern, PatternElement, PropertyDefinition, PropertyKey, RegExpLiteral, Stmt,
+    StmtKind,
 };
 
 /// The parsed expression of `source`.
@@ -56,7 +57,7 @@ pub(super) fn render(expr: &Expr) -> String {
         } => format!(
             "({} {} {})",
             operator.as_str(),
-            render(target),
+            render_target(target),
             render(value)
         ),
         ExprKind::Member { object, property } => format!("(. {} {})", render(object), property),
@@ -100,6 +101,9 @@ pub(super) fn render(expr: &Expr) -> String {
                         format!("({} {})", render_key(key), render(value))
                     }
                     PropertyDefinition::Shorthand { name, .. } => name.to_string(),
+                    PropertyDefinition::ShorthandWithDefault { name, default, .. } => {
+                        format!("(= {} {})", name, render(default))
+                    }
                     PropertyDefinition::Spread(value) => format!("(... {})", render(value)),
                 })
                 .collect();
@@ -109,6 +113,59 @@ pub(super) fn render(expr: &Expr) -> String {
             let rendered: Vec<String> = parts.iter().map(render).collect();
             format!("(, {})", rendered.join(" "))
         }
+    }
+}
+
+/// An assignment target: an expression, or the pattern a literal covered.
+pub(super) fn render_target(target: &AssignmentTarget) -> String {
+    match target {
+        AssignmentTarget::Simple(expr) => render(expr),
+        AssignmentTarget::Pattern(pattern) => render_pattern(pattern),
+    }
+}
+
+/// A destructuring pattern, rendered so a hole and a default are both visible.
+fn render_pattern(pattern: &Pattern) -> String {
+    match pattern {
+        Pattern::Array(pattern) => {
+            let mut parts: Vec<String> = pattern
+                .elements
+                .iter()
+                .map(|element| match element {
+                    Some(element) => render_element(element),
+                    None => "<hole>".to_string(),
+                })
+                .collect();
+            if let Some(rest) = &pattern.rest {
+                parts.push(format!("(... {})", render_target(rest)));
+            }
+            format!("[{}]", parts.join(" "))
+        }
+        Pattern::Object(pattern) => {
+            let mut parts: Vec<String> = pattern
+                .properties
+                .iter()
+                .map(|property| {
+                    format!(
+                        "({} {})",
+                        render_key(&property.key),
+                        render_element(&property.value)
+                    )
+                })
+                .collect();
+            if let Some(rest) = &pattern.rest {
+                parts.push(format!("(... {})", render(rest)));
+            }
+            format!("{{{}}}", parts.join(" "))
+        }
+    }
+}
+
+/// One target, and its default if it has one.
+fn render_element(element: &PatternElement) -> String {
+    match &element.default {
+        Some(default) => format!("(= {} {})", render_target(&element.target), render(default)),
+        None => render_target(&element.target),
     }
 }
 
@@ -222,7 +279,7 @@ pub(super) fn render_statement(stmt: &Stmt) -> String {
                 ForInOfKind::Of => "of",
             },
             match &statement.left {
-                ForInOfTarget::Expression(expr) => render(expr),
+                ForInOfTarget::Expression(target) => render_target(target),
                 ForInOfTarget::Declaration(declaration) => render_declaration(declaration),
             },
             render(&statement.right),

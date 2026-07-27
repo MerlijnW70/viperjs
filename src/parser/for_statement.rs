@@ -129,6 +129,17 @@ impl Parser<'_> {
             self.eat(TokenKind::Semicolon, Goal::RegExp, "`;`")?;
             return self.parse_three_part_tail(Some(ForInit::Expression(Box::new(expr))));
         };
+        // §13.15.1's carve-out again: a literal here is a pattern, refined the same way the
+        // left of an `=` is. `for ([a] of b)` and `[a] = b` are the same rule twice.
+        if Self::covers_a_pattern(&expr) {
+            // Neither lookahead restriction can bite here: a pattern begins with `[` or `{`,
+            // which is neither the token `let` nor the token `async`.
+            let pattern = self.refine_to_pattern(expr)?;
+            return self.parse_for_in_of_tail(
+                ForInOfTarget::Expression(Box::new(crate::ast::AssignmentTarget::Pattern(pattern))),
+                operator,
+            );
+        }
         if operator == ForInOfKind::Of {
             if begins_with_let {
                 return Err(ParseError {
@@ -154,7 +165,10 @@ impl Parser<'_> {
             }
         }
         self.check_for_in_of_target(&expr)?;
-        self.parse_for_in_of_tail(ForInOfTarget::Expression(Box::new(expr)), operator)
+        self.parse_for_in_of_tail(
+            ForInOfTarget::Expression(Box::new(crate::ast::AssignmentTarget::Simple(expr))),
+            operator,
+        )
     }
 
     /// The two remaining clauses and the body of a three-part `for`, with its init already read.

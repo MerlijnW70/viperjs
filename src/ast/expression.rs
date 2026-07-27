@@ -4,7 +4,10 @@
 //! parentheses. That is not decoration — several rules turn on it, and they are named on
 //! [`Expr::new`], which is the one place that decides what "not parenthesized" means.
 
-use super::{AssignmentOperator, BinaryOperator, LogicalOperator, UnaryOperator, UpdateOperator};
+use super::{
+    AssignmentOperator, AssignmentTarget, BinaryOperator, LogicalOperator, UnaryOperator,
+    UpdateOperator,
+};
 use crate::span::Span;
 
 /// One element of an array literal (§13.2.4).
@@ -40,6 +43,20 @@ pub enum PropertyDefinition {
         /// The name, which is both the key and the value.
         name: Box<str>,
         /// Where it was written.
+        span: Span,
+    },
+    /// `{a = 1}` — a `CoverInitializedName`, which is **not** a legal object literal.
+    ///
+    /// §13.2.5.1 says it is always a Syntax Error where an object literal stays one. It is here
+    /// because the cover grammar needs it: `({a = 1} = b)` is a pattern, and the `=` that says so
+    /// arrives long after this has been parsed. A literal that still holds one when the
+    /// expression around it is finished is that Syntax Error — see [`crate::parser`].
+    ShorthandWithDefault {
+        /// The name, which is both the key and the target.
+        name: Box<str>,
+        /// What to use when the value is `undefined`.
+        default: Box<Expr>,
+        /// Where the name was written.
         span: Span,
     },
     /// `...a`, which stands wherever any other property may.
@@ -235,9 +252,9 @@ pub enum ExprKind {
     Assignment {
         /// Which operator.
         operator: AssignmentOperator,
-        /// What is assigned to. §13.15.1 requires this to be a valid assignment target, which
-        /// the parser has already checked.
-        target: Box<Expr>,
+        /// What is assigned to, already checked against §13.15.1 — and already refined, if it
+        /// was a literal covering a pattern.
+        target: Box<AssignmentTarget>,
         /// What is assigned.
         value: Box<Expr>,
     },

@@ -173,8 +173,8 @@ pub enum ForInOfKind {
 /// The left of a `for`-`in` or `for`-`of` header (§14.7.5).
 #[derive(Debug, Clone, PartialEq)]
 pub enum ForInOfTarget {
-    /// `for (a.b of c)` — an existing target, assigned to on each iteration.
-    Expression(Box<Expr>),
+    /// `for (a.b of c)`, `for ([a] of b)` — an existing target, assigned to on each iteration.
+    Expression(Box<super::AssignmentTarget>),
     /// `for (let a of b)` — a fresh binding, which for a lexical declaration is a fresh one each
     /// time round. Always exactly one declarator with no initialiser: `ForBinding` is singular
     /// and the grammar gives it no `Initializer`.
