@@ -216,9 +216,5 @@ pub(super) fn combine(left: Expr, operator: Operator, right: Expr) -> Result<Exp
             }
         }
     };
-    Ok(Expr {
-        kind,
-        span,
-        parenthesized: false,
-    })
+    Ok(Expr::new(kind, span))
 }

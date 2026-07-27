@@ -57,11 +57,10 @@ impl<'a> Parser<'a> {
             // an empty span is the answer that costs nothing if it somehow does.
             _ => Span::empty_at(self.current.span.start),
         };
-        Ok(Expr {
-            kind: ExprKind::Sequence(parts.into_boxed_slice()),
+        Ok(Expr::new(
+            ExprKind::Sequence(parts.into_boxed_slice()),
             span,
-            parenthesized: false,
-        })
+        ))
     }
 
     /// `AssignmentExpression` (§13.15) and `ConditionalExpression` (§13.14), in one frame.
@@ -97,15 +96,15 @@ impl<'a> Parser<'a> {
         let value = self.parse_assignment(allow_in);
         self.leave();
         let value = value?;
-        Ok(Expr {
-            span: left.span.to(value.span),
-            kind: ExprKind::Assignment {
+        let span = left.span.to(value.span);
+        Ok(Expr::new(
+            ExprKind::Assignment {
                 operator,
                 target: Box::new(left),
                 value: Box::new(value),
             },
-            parenthesized: false,
-        })
+            span,
+        ))
     }
 
     /// `? AssignmentExpression : AssignmentExpression` (§13.14), with `test` already parsed.
@@ -123,15 +122,15 @@ impl<'a> Parser<'a> {
         let arms = self.parse_conditional_arms(allow_in);
         self.leave();
         let (consequent, alternate) = arms?;
-        Ok(Expr {
-            span: test.span.to(alternate.span),
-            kind: ExprKind::Conditional {
+        let span = test.span.to(alternate.span);
+        Ok(Expr::new(
+            ExprKind::Conditional {
                 test: Box::new(test),
                 consequent: Box::new(consequent),
                 alternate: Box::new(alternate),
             },
-            parenthesized: false,
-        })
+            span,
+        ))
     }
 
     /// The two arms of a conditional, split out so their locals do not sit in a frame that the
@@ -208,14 +207,14 @@ impl<'a> Parser<'a> {
             let argument = self.parse_unary();
             self.leave();
             let argument = argument?;
-            return Ok(Expr {
-                span: token.span.to(argument.span),
-                kind: ExprKind::Unary {
+            let span = token.span.to(argument.span);
+            return Ok(Expr::new(
+                ExprKind::Unary {
                     operator,
                     argument: Box::new(argument),
                 },
-                parenthesized: false,
-            });
+                span,
+            ));
         }
         if let Some(operator) = update_operator(self.current.kind) {
             let token = self.advance(Goal::RegExp)?;
@@ -262,15 +261,15 @@ impl<'a> Parser<'a> {
                 span: argument.span,
             });
         }
-        Ok(Expr {
-            span: operator_span.to(argument.span),
-            kind: ExprKind::Update {
+        let span = operator_span.to(argument.span);
+        Ok(Expr::new(
+            ExprKind::Update {
                 operator,
                 prefix,
                 argument: Box::new(argument),
             },
-            parenthesized: false,
-        })
+            span,
+        ))
     }
 
     /// `LeftHandSideExpression` (§13.3): a primary expression with member accesses and calls
@@ -308,14 +307,14 @@ impl<'a> Parser<'a> {
     fn member_after_dot(&mut self, object: Expr) -> Result<Expr, ParseError> {
         self.advance(Goal::Div)?;
         let (property, end) = self.parse_property_name()?;
-        Ok(Expr {
-            span: object.span.to(end),
-            kind: ExprKind::Member {
+        let span = object.span.to(end);
+        Ok(Expr::new(
+            ExprKind::Member {
                 object: Box::new(object),
                 property,
             },
-            parenthesized: false,
-        })
+            span,
+        ))
     }
 
     /// `MemberExpression [ Expression ]`, with the cursor on the `[`.
@@ -328,27 +327,27 @@ impl<'a> Parser<'a> {
         self.leave();
         let property = property?;
         let close = self.eat(TokenKind::RBracket, Goal::Div, "`]`")?;
-        Ok(Expr {
-            span: object.span.to(close.span),
-            kind: ExprKind::ComputedMember {
+        let span = object.span.to(close.span);
+        Ok(Expr::new(
+            ExprKind::ComputedMember {
                 object: Box::new(object),
                 property: Box::new(property),
             },
-            parenthesized: false,
-        })
+            span,
+        ))
     }
 
     /// `CallExpression Arguments`, with the cursor on the `(`.
     fn call_after(&mut self, callee: Expr) -> Result<Expr, ParseError> {
         let (arguments, end) = self.parse_arguments()?;
-        Ok(Expr {
-            span: callee.span.to(end),
-            kind: ExprKind::Call {
+        let span = callee.span.to(end);
+        Ok(Expr::new(
+            ExprKind::Call {
                 callee: Box::new(callee),
                 arguments,
             },
-            parenthesized: false,
-        })
+            span,
+        ))
     }
 
     /// `new MemberExpression Arguments` or `new NewExpression` (§13.3).
@@ -368,14 +367,13 @@ impl<'a> Parser<'a> {
         } else {
             (Vec::new().into_boxed_slice(), callee.span)
         };
-        Ok(Expr {
-            span: token.span.to(end),
-            kind: ExprKind::New {
+        Ok(Expr::new(
+            ExprKind::New {
                 callee: Box::new(callee),
                 arguments,
             },
-            parenthesized: false,
-        })
+            token.span.to(end),
+        ))
     }
 
     /// `Arguments` (§13.3), with the cursor on the `(`. Returns them and the closing span.
@@ -452,13 +450,12 @@ impl<'a> Parser<'a> {
 
     /// The `PrimaryExpression` forms that contain no other expression.
     fn parse_atom(&mut self, token: Token) -> Result<Expr, ParseError> {
-        let literal = |kind| {
-            Ok(Expr {
-                kind,
-                span: token.span,
-                parenthesized: false,
-            })
-        };
+        // …except this one, which does — but which opens a bracket of its own, so it recurses
+        // through its own frame rather than adding one to every atom.
+        if token.kind == TokenKind::LBracket {
+            return self.parse_array_literal();
+        }
+        let literal = |kind| Ok(Expr::new(kind, token.span));
         match token.kind {
             TokenKind::Keyword(ReservedWord::This) => {
                 self.advance(Goal::Div)?;
@@ -870,15 +867,10 @@ mod tests {
                 "{source:?} failed with {kind:?}"
             );
         }
-        // `super`, `import()` and spread arguments fail as unrecognised operands.
-        for source in [
-            "super.a",
-            "super()",
-            "import('x')",
-            "f(...a)",
-            "[1]",
-            "({})",
-        ] {
+        // `super`, `import()`, spread arguments and object literals fail as unrecognised
+        // operands. Array literals used to be on this list and now parse — see
+        // [`super::array_literal`].
+        for source in ["super.a", "super()", "import('x')", "f(...a)", "({})"] {
             assert!(parse_expression(source).is_err(), "{source:?}");
         }
     }

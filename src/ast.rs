@@ -349,6 +349,22 @@ pub struct Declarator {
     pub span: Span,
 }
 
+/// One element of an array literal (§13.2.4).
+///
+/// A hole is an element and not an absence: `[, 1]` has two of them, and `[1, ]` has one. The
+/// difference is whether a comma had anything before it in its slot, which is the whole content
+/// of `Elision` and the one thing about array literals that is easy to get wrong.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ArrayElement {
+    /// A comma with nothing before it — `[, 1]`, `[1, , 2]`. Reads as `undefined` and is not the
+    /// same as one: the index is absent from the array rather than holding that value.
+    Hole,
+    /// An ordinary element.
+    Value(Expr),
+    /// `...a` — a `SpreadElement`, which contributes however many elements it turns out to have.
+    Spread(Expr),
+}
+
 /// An expression, with where it was written.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expr {
@@ -371,6 +387,26 @@ impl Expr {
     ///
     /// The span grows because that is what a reader points at: in `((a + b))`, the construct a
     /// diagnostic should underline is the whole bracketed text, not the `a + b` inside it.
+    /// An expression that was not written inside parentheses.
+    ///
+    /// Every construction site that is not [`Expr::in_parentheses`] goes through here, so the one
+    /// place that decides what "not parenthesized" means is this one. That matters more than the
+    /// three lines it saves: whether an expression was bracketed changes what several rules do to
+    /// it — §13.6 lets `(-a) ** b` through where `-a ** b` has no derivation, §13.13 lets
+    /// `(a ?? b) || c` through, §13.15.1 lets `(a) = 1` through — so a site that set the flag
+    /// wrongly would be a rule quietly failing somewhere else.
+    pub fn new(kind: ExprKind, span: Span) -> Self {
+        Self {
+            kind,
+            span,
+            parenthesized: false,
+        }
+    }
+
+    /// The same expression, marked as having been written inside parentheses.
+    ///
+    /// The span grows to include them, because that is what a reader points at: in `((a + b))`,
+    /// the construct a diagnostic should underline is the whole bracketed text.
     pub fn in_parentheses(self, span: Span) -> Self {
         Self {
             span,
@@ -497,6 +533,8 @@ pub enum ExprKind {
     /// would nest once per comma and a long list would nest deeply for no reason; evaluation is
     /// left to right with the last value as the result either way.
     Sequence(Box<[Expr]>),
+    /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
+    Array(Box<[ArrayElement]>),
     /// `&&`, `||` or `??` (§13.13), kept apart from [`ExprKind::Binary`] because they are apart
     /// in the grammar and in what they compile to: the right operand may never be evaluated, so
     /// there is a branch here where an arithmetic operator has none.
@@ -762,11 +800,7 @@ mod tests {
     use super::*;
 
     fn expr(kind: ExprKind) -> Expr {
-        Expr {
-            kind,
-            span: Span::new(0, 1),
-            parenthesized: false,
-        }
+        Expr::new(kind, Span::new(0, 1))
     }
 
     #[test]

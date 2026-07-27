@@ -2,7 +2,8 @@
 
 use super::{ParseError, parse_expression};
 use crate::ast::{
-    Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, RegExpLiteral, Stmt, StmtKind,
+    ArrayElement, Declaration, Expr, ExprKind, ForInOfKind, ForInOfTarget, ForInit, RegExpLiteral,
+    Stmt, StmtKind,
 };
 
 /// The parsed expression of `source`.
@@ -80,6 +81,17 @@ pub(super) fn render(expr: &Expr) -> String {
             operator.as_str(),
             render(argument)
         ),
+        ExprKind::Array(elements) => {
+            let rendered: Vec<String> = elements
+                .iter()
+                .map(|element| match element {
+                    ArrayElement::Hole => "<hole>".to_string(),
+                    ArrayElement::Value(value) => render(value),
+                    ArrayElement::Spread(value) => format!("(... {})", render(value)),
+                })
+                .collect();
+            format!("[{}]", rendered.join(" "))
+        }
         ExprKind::Sequence(parts) => {
             let rendered: Vec<String> = parts.iter().map(render).collect();
             format!("(, {})", rendered.join(" "))

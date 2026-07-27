@@ -29,6 +29,7 @@
 //! - `error` — [`ParseError`] and its kinds.
 //! - `operator` — precedence, associativity, and the pairs §13 keeps apart.
 //! - `expression` — the grammar of §13, from `Expression` down to `PrimaryExpression`.
+//! - `array_literal` — `[…]` (§13.2.4), and the two different things a comma does inside one.
 //! - `statement` — the grammar of §14, and automatic semicolon insertion (§12.10).
 //! - `declaration` — `var`, `let` and `const` (§14.3), and the early errors on them.
 //! - `control` — conditionals, loops, `throw`, `break` and `continue` (§14.6 – §14.14).
@@ -41,6 +42,7 @@
 //! - here — the [`Parser`] itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 
+mod array_literal;
 mod control;
 mod declaration;
 mod error;
@@ -87,6 +89,7 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// | the `[In]` parameter, and `for` | 113 | 48 |
 /// | `for`-`in` and `for`-`of` | 113 | 48 |
 /// | labelled statements, and `with` | 113 | 48 |
+/// | array literals | 82 | 48 |
 ///
 /// Each slice put another function between one bracket and the next. That is the trajectory to
 /// expect, and it is why keeping the recursive path narrow counts as correctness work rather
@@ -107,10 +110,12 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// level. Statements are cheap next to expressions — a level of `if` is three frames where a
 /// level of `(` is the whole precedence ladder — and measured alone they afford 339 levels,
 /// `with` 508, `while` 504, a label 476, a block 392, a `for` 254, a `try` 221, a `for`-`in`
-/// 202, a `switch` 185. So the
-/// expression path
-/// still sets the number, and will keep setting it until a statement form recurses through an
-/// expression-sized descent.
+/// 202, a `switch` 185. None of them came near the expressions.
+///
+/// The array literal is the first thing that did, and it took the lead: `[[[…]]]` recurses
+/// through the whole precedence ladder *and* two frames of its own, so it affords 82 levels where
+/// `(((…)))` affords 113. Expressions no longer set this number — the narrowest bracket does, and
+/// every future literal with a bracket in it is a candidate.
 ///
 /// Stack is not the only thing a level spends, though, and the two newest forms show it. A `try`
 /// takes *two* of the count on each level, one for the statement and one for its guarded `Block`,
@@ -120,9 +125,14 @@ use crate::lexer::{Goal, Lexer, Token, TokenKind};
 /// descents, and the cap is about what the machine can afford rather than about tidy numbers.
 ///
 /// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` runs a full-depth parse of each
-/// recursive path in a thread with exactly one mebibyte, and this cap leaves a factor of about
-/// two in hand on the narrowest of them. That test is the real specification of this constant:
-/// raise the cap, or make a level cost more stack, and it fails.
+/// recursive path in a thread with exactly one mebibyte. That test is the real specification of
+/// this constant: raise the cap, or make a level cost more stack, and it fails.
+///
+/// The margin over the narrowest path is 1.7×, and was two for the first several slices. It was
+/// not lowered to restore the ratio, because the ratio is comfort and the test is the guarantee —
+/// buying a rounder number would cost real programs eight levels of nesting they are entitled to.
+/// The day a slice takes the narrowest path below the cap, that test says so and the number
+/// moves.
 ///
 /// # Why a count and not a stack measurement
 ///
@@ -334,6 +344,7 @@ mod tests {
         let paths = [
             format!("{}1{}", "(".repeat(deep), ")".repeat(deep)),
             format!("{}{}", "{".repeat(deep), "}".repeat(deep)),
+            format!("{}{};", "[".repeat(deep), "]".repeat(deep)),
             format!("{}a;", "if (a) ".repeat(deep)),
             format!("{}a;", "if (a) b; else ".repeat(deep)),
             format!("{}a;", "while (a) ".repeat(deep)),
