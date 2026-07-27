@@ -29,17 +29,28 @@
 use super::{Binding, BindingElement, BindingName, Expr, Stmt};
 use crate::span::Span;
 
-/// A `FunctionDeclaration` or `FunctionExpression` (§15.2).
+/// A `FunctionDeclaration` or `FunctionExpression` (§15.2), a `GeneratorDeclaration` or
+/// `GeneratorExpression` (§15.5), or the function half of a `MethodDefinition` (§15.4).
+///
+/// One type for four productions because they differ in exactly one bit of syntax — the `*` — and
+/// in what that bit does to the grammar parameters. Everything the tree holds is the same.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     /// The name. Required of a declaration and optional of an expression, where it names the
-    /// function to its own body and to nothing outside.
+    /// function to its own body and to nothing outside. A method has none: its name is its key's.
     pub name: Option<BindingName>,
     /// What it takes.
     pub parameters: FormalParameters,
     /// The `FunctionStatementList`, which is a scope of its own and a boundary for several of
     /// the static semantics — see the module documentation.
     pub body: Box<[Stmt]>,
+    /// Whether a `*` followed the `function`, making this a generator (§15.5).
+    ///
+    /// What it changes is the `[Yield]` grammar parameter over the parameters and the body: with
+    /// it set, `yield` is a `YieldExpression` and is not an identifier anywhere within. It is one
+    /// bit rather than a separate type because that is genuinely all the syntax difference there
+    /// is; the runtime difference is enormous and is M3's problem.
+    pub is_generator: bool,
     /// `function` through the closing brace.
     pub span: Span,
 }

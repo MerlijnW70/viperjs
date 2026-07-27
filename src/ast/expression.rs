@@ -72,6 +72,34 @@ pub enum PropertyDefinition {
     Spread(Expr),
 }
 
+/// A `YieldExpression` (§15.5).
+///
+/// Three productions in one node, because two of them differ only by a flag and the third only by
+/// the operand being absent:
+///
+/// ```text
+/// YieldExpression[In, Await] :
+///   yield
+///   yield [no LineTerminator here] AssignmentExpression[?In, +Yield, ?Await]
+///   yield [no LineTerminator here] * AssignmentExpression[?In, +Yield, ?Await]
+/// ```
+///
+/// It is an `AssignmentExpression` and nothing tighter, which is the whole reason
+/// `1 + yield` and `yield ? a : b` have no derivation: both operators want an operand narrower
+/// than one.
+#[derive(Debug, Clone, PartialEq)]
+pub struct YieldExpression {
+    /// What is yielded, or nothing for a bare `yield`.
+    ///
+    /// Absent when a line terminator followed the `yield`, or when the next token could not begin
+    /// an `AssignmentExpression` — the two ways the grammar's first production wins.
+    pub argument: Option<Box<Expr>>,
+    /// Whether a `*` followed, making this `yield*` — delegation to another iterable.
+    ///
+    /// Never true without an argument: `yield*` with nothing after it has no derivation.
+    pub delegate: bool,
+}
+
 /// A `TemplateLiteral` (§13.2.8) — its literal parts, and the expressions between them.
 ///
 /// `quasis` is always one longer than `expressions`: a template begins and ends with a literal
@@ -311,6 +339,8 @@ pub enum ExprKind {
     Sequence(Box<[Expr]>),
     /// `[…]` (§13.2.4). Holes and spreads are elements, so the list is what `length` will be.
     Array(Box<[ArrayElement]>),
+    /// `yield`, `yield a` or `yield* a` (§15.5) — only inside a generator.
+    Yield(Box<YieldExpression>),
     /// `class … { … }` (§15.7) — an expression, so its name is optional and its own.
     Class(Box<super::Class>),
     /// `super`, which is only ever the head of a `SuperProperty` or a `SuperCall` (§13.3).

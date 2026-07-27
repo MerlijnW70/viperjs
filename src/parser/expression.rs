@@ -14,7 +14,7 @@ use super::operator::{
 };
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{BinaryOperator, Expr, ExprKind, UpdateOperator};
-use crate::lexer::{Goal, TokenKind};
+use crate::lexer::{Goal, ReservedWord, TokenKind};
 use crate::span::Span;
 
 /// Whether `in` is a relational operator here — the `[In]` grammar parameter of §13.
@@ -77,6 +77,12 @@ impl Parser<'_> {
         // is the only level that may produce one — see [`super::arrow`]. What comes back may
         // also be a parenthesized expression the attempt had to read to find out, in which case
         // it becomes the head of the ordinary operand path rather than being read twice.
+        // §15.5: a `YieldExpression` is an `AssignmentExpression` and nothing tighter, so this
+        // level produces it as it does an arrow — and for the same reason. `1 + yield` and
+        // `yield ? a : b` have no derivation because both operators want a narrower operand.
+        if self.yield_allowed && self.current.kind == TokenKind::Keyword(ReservedWord::Yield) {
+            return self.parse_yield(allow_in);
+        }
         let head = match self.parse_arrow_or_group(allow_in)? {
             super::arrow::ArrowOrGroup::Arrow(arrow) => return Ok(arrow),
             super::arrow::ArrowOrGroup::Operand(expr) => Some(expr),

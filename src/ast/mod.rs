@@ -31,7 +31,7 @@ pub use self::binding::{
 };
 pub use self::expression::{
     ArrayElement, Expr, ExprKind, MethodKind, PropertyDefinition, PropertyKey, RegExpLiteral,
-    TemplateElement, TemplateLiteral,
+    TemplateElement, TemplateLiteral, YieldExpression,
 };
 pub(crate) use self::function::key_is;
 pub use self::function::{

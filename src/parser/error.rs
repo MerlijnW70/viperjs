@@ -169,6 +169,18 @@ pub enum ParseErrorKind {
     /// `FormalParameter` — singular, and a `FormalParameter` rather than a `FormalParameters`, so
     /// a setter may take a pattern or a default and may not take a rest.
     AccessorParameterCount,
+    /// §15.5.1: a `YieldExpression` in a generator's parameter list.
+    ///
+    /// `function* g(a = yield) {}`. A default is evaluated before the generator is in a resumable
+    /// state, so there would be nothing for it to yield to — the refusal is about the runtime
+    /// having no answer, not about the syntax being ambiguous. `Contains` stops at a function
+    /// boundary, so `function* g(a = function*() { yield; }) {}` is fine.
+    YieldInParameters,
+    /// §15.7.1: a `constructor` written as a generator.
+    ///
+    /// `class C { *constructor() {} }`. A constructor is the function the class is, and `new`
+    /// cannot resume a generator — so `SpecialMethod` being true of it is a Syntax Error.
+    ConstructorMayNotBeAGenerator,
     /// §15.7.1: two methods named `constructor` in one class body.
     ///
     /// Prototype methods only, and never an accessor or a static one — a class may have a static
@@ -378,6 +390,13 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "these parentheses are only an expression when `=>` follows them"
             ),
+            Self::YieldInParameters => write!(
+                f,
+                "`yield` may not appear in a generator's own parameter list"
+            ),
+            Self::ConstructorMayNotBeAGenerator => {
+                write!(f, "`constructor` may not be a generator")
+            }
             Self::DuplicateConstructor => {
                 write!(f, "a class may have only one `constructor`")
             }

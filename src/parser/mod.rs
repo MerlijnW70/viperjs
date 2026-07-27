@@ -63,6 +63,7 @@ mod expression;
 mod for_in_of;
 mod for_statement;
 mod function;
+mod generator;
 mod labelled;
 mod member;
 mod method;
@@ -203,41 +204,6 @@ pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     Ok(expr)
 }
 
-/// Whether this token can stand where §13.1 wants an `Identifier`.
-///
-/// `Identifier : IdentifierName but not ReservedWord`, and `yield` and `await` are both reserved
-/// words — so on the face of it neither could ever be a name. §13.1 gives all three identifier
-/// productions extra alternatives that say otherwise:
-///
-/// ```text
-/// IdentifierReference[Yield, Await] : Identifier | [~Yield] yield | [~Await] await
-/// BindingIdentifier[Yield, Await]   : Identifier |          yield |          await
-/// LabelIdentifier[Yield, Await]     : Identifier | [~Yield] yield | [~Await] await
-/// ```
-///
-/// The `BindingIdentifier` row takes them unconditionally and leaves the refusing to §13.1.1's
-/// early errors; the other two are gated on the grammar parameters. Either way the question is
-/// the same one — are we inside a generator, an async function, or a module — and the answer here
-/// is always no, because there are none of those to be inside.
-///
-/// # Why the parameters are not threaded, when `[In]` was
-///
-/// Because nothing would ever turn them on. `[+Yield]` comes from a `GeneratorBody`, `[+Await]`
-/// from an `AsyncFunctionBody` or the `Module` goal, and this parser has no production that
-/// reaches any of them. A parameter whose value is the same on every path is not a parameter: it
-/// is a constant with a branch on it, and every one of those branches would be something no input
-/// could tell from its absence — which mutation testing would rightly call untested.
-///
-/// So the alternatives are taken directly and the parameters arrive with the constructs that vary
-/// them. `class yield {}` is the shape that will need them first, a class body being strict code.
-pub(super) fn is_identifier_token(kind: TokenKind) -> bool {
-    matches!(
-        kind,
-        TokenKind::Identifier { .. }
-            | TokenKind::Keyword(ReservedWord::Yield | ReservedWord::Await)
-    )
-}
-
 /// A recursive-descent parser over one source text.
 struct Parser<'a> {
     pub(super) source: &'a str,
@@ -283,6 +249,20 @@ struct Parser<'a> {
     /// place: a function body is where both of `super`'s permissions stop, so a function
     /// nested inside a method has neither.
     pub(super) super_allowed: self::class::SuperAllowed,
+    /// The `[Yield]` grammar parameter (§15.5) — whether `yield` is an operator here.
+    ///
+    /// A field for the reason `inside_function` is one, and unlike it in that a nested ordinary
+    /// function turns it back off. Every place it changes is a place this parser already saves
+    /// state, so it costs one field; [`self::generator`] has the table of where and why.
+    pub(super) yield_allowed: bool,
+    /// Where a `YieldExpression` was read, since the last function boundary.
+    ///
+    /// `Contains YieldExpression` (§15.5.1) asked as a record rather than as a walk, because
+    /// `Contains` stops at a function boundary and so does this — it is saved and restored by
+    /// [`Parser::parse_function_body`] and by the parameter list. The same deferral as
+    /// `cover_initialized_name`, for the same reason: the question is asked later than the answer
+    /// is known.
+    pub(super) yield_expression: Option<Span>,
     /// How many array or object literals are open.
     ///
     /// What makes the record above a *deferred* error rather than an immediate one: inside a
@@ -309,8 +289,39 @@ impl<'a> Parser<'a> {
             literal_depth: 0,
             inside_function: false,
             super_allowed: self::class::SuperAllowed::NEITHER,
+            yield_allowed: false,
+            yield_expression: None,
             strict: false,
         })
+    }
+
+    /// Whether this token can stand where §13.1 wants an `Identifier`.
+    ///
+    /// `Identifier : IdentifierName but not ReservedWord`, and `yield` and `await` are both
+    /// reserved words — so on the face of it neither could ever be a name. §13.1 gives all three
+    /// identifier productions extra alternatives that say otherwise:
+    ///
+    /// ```text
+    /// IdentifierReference[Yield, Await] : Identifier | [~Yield] yield | [~Await] await
+    /// BindingIdentifier[Yield, Await]   : Identifier |          yield |          await
+    /// LabelIdentifier[Yield, Await]     : Identifier | [~Yield] yield | [~Await] await
+    /// ```
+    ///
+    /// The `BindingIdentifier` row takes `yield` unconditionally and leaves the refusing to
+    /// §13.1.1's early error "It is a Syntax Error if this production has a `[Yield]` parameter";
+    /// the other two rows are gated in the grammar itself. The two routes reach the same place, so
+    /// one question is asked here for all three and the answer is [`Parser::yield_allowed`].
+    ///
+    /// `await` is still taken unconditionally: `[+Await]` comes from an `AsyncFunctionBody` or the
+    /// `Module` goal, and this parser has no production that reaches either. A parameter with the
+    /// same value on every path is not a parameter — it is a constant with untestable branches on
+    /// it — so it arrives with the construct that varies it, as `[Yield]` just did.
+    pub(super) fn is_identifier_token(&self, kind: TokenKind) -> bool {
+        match kind {
+            TokenKind::Identifier { .. } | TokenKind::Keyword(ReservedWord::Await) => true,
+            TokenKind::Keyword(ReservedWord::Yield) => !self.yield_allowed,
+            _ => false,
+        }
     }
 
     /// Consume the current token and read the next one under `goal`.

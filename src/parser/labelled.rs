@@ -34,7 +34,7 @@ impl Parser<'_> {
     /// An identifier and then a `:`. The identifier may be written with escapes — unlike `let`,
     /// nothing here is a terminal, so `a: ;` labels `a` exactly as `a: ;` does.
     pub(super) fn at_labelled_statement(&self) -> Result<bool, ParseError> {
-        if !super::is_identifier_token(self.current.kind) {
+        if !self.is_identifier_token(self.current.kind) {
             return Ok(false);
         }
         Ok(self.peek(Goal::Div)?.kind == TokenKind::Colon)

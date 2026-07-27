@@ -63,32 +63,68 @@ impl Parser<'_> {
     /// Both forms, which differ only in whether the name may be left out.
     fn parse_function(&mut self, name_required: bool) -> Result<Function, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
-        let name = if self.current.kind == TokenKind::LParen && !name_required {
-            None
-        } else {
-            Some(self.parse_binding_name()?)
-        };
+        // `function *` — the one bit of syntax between §15.2's productions and §15.5's, and
+        // nothing about it is restricted — no `[no LineTerminator here]`, so `function*g`,
+        // `function * g` and a `*` on its own line are the same generator.
+        let is_generator = self.current.kind == TokenKind::Star;
+        if is_generator {
+            self.advance(Goal::RegExp)?;
+        }
+        let name = self.parse_function_name(name_required, is_generator)?;
         self.enter()?;
-        let parts = self.parse_function_parts();
+        let parts = self.parse_function_parts(is_generator);
         self.leave();
         let (parameters, body, end) = parts?;
         Ok(Function {
             name,
             parameters,
             body,
+            is_generator,
             span: keyword.span.to(end),
         })
+    }
+
+    /// The `BindingIdentifier`, under the `[Yield]` the production gives it.
+    ///
+    /// A *declaration's* name is `[?Yield]`: it is a binding in the scope around the function, so
+    /// it is read under whatever that scope has, and `function* g() { function yield() {} }` is
+    /// refused. An *expression's* name belongs to the function and is read under the function's
+    /// own — `[~Yield]` for a plain one, `[+Yield]` for a generator — so
+    /// `function* g() { (function yield() {}); }` parses and `(function* yield() {})` does not.
+    fn parse_function_name(
+        &mut self,
+        name_required: bool,
+        is_generator: bool,
+    ) -> Result<Option<crate::ast::BindingName>, ParseError> {
+        if self.current.kind == TokenKind::LParen && !name_required {
+            return Ok(None);
+        }
+        let enclosing = self.yield_allowed;
+        if !name_required {
+            self.yield_allowed = is_generator;
+        }
+        let name = self.parse_binding_name();
+        self.yield_allowed = enclosing;
+        Ok(Some(name?))
     }
 
     /// The parameters and the body, apart so their locals are not carried by every level of
     /// nesting that passes through [`Parser::parse_function`].
     fn parse_function_parts(
         &mut self,
+        is_generator: bool,
     ) -> Result<(FormalParameters, Box<[Stmt]>, Span), ParseError> {
-        let parameters = self.parse_formal_parameters()?;
+        // `FormalParameters[+Yield]` for a generator and `[~Yield]` for everything else — which
+        // is why a plain function nested in a generator may still take a parameter called
+        // `yield`. The refusal of a `YieldExpression` among them lives there too.
+        let parameters = self.parse_parameters_of(is_generator)?;
         // A plain function is where `super` stops, however deep inside a method it is written:
         // §15.2.1 makes a `FunctionBody` containing either form a Syntax Error outright.
-        let (body, end, declares_strict) = self.parse_function_body(SuperAllowed::NEITHER)?;
+        let enclosing_yield = self.yield_allowed;
+        self.yield_allowed = is_generator;
+        let parts = self.parse_function_body(SuperAllowed::NEITHER);
+        self.yield_allowed = enclosing_yield;
+        let (body, end, declares_strict) = parts?;
         check_parameters_against_body(&parameters, &body)?;
         // The two rules that cannot be applied while the parameters are read, because the body
         // has not said whether it is strict yet.
@@ -156,12 +192,16 @@ impl Parser<'_> {
         let enclosing = self.inside_function;
         let enclosing_strict = self.strict;
         let enclosing_super = self.super_allowed;
+        // `Contains` stops at a function boundary, and this is the boundary — so a `yield`
+        // written in here is never a `yield` written in the parameter list that encloses it.
+        let enclosing_yield_expression = self.yield_expression.take();
         self.inside_function = true;
         self.super_allowed = super_allowed;
         let body = self.parse_body_with_prologue(TokenKind::RBrace);
         self.inside_function = enclosing;
         self.strict = enclosing_strict;
         self.super_allowed = enclosing_super;
+        self.yield_expression = enclosing_yield_expression;
         let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks

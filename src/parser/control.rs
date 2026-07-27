@@ -168,7 +168,7 @@ impl Parser<'_> {
 
     /// The optional `LabelIdentifier` of a `break` or `continue`, if one is on this line.
     fn parse_jump_label(&mut self) -> Result<Option<Box<Label>>, ParseError> {
-        if self.current.newline_before || !super::is_identifier_token(self.current.kind) {
+        if self.current.newline_before || !self.is_identifier_token(self.current.kind) {
             return Ok(None);
         }
         let token = self.advance(Goal::Div)?;

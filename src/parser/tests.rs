@@ -115,6 +115,9 @@ fn parsing_at_the_cap_fits_in_the_stack_it_claims_to_need() {
         ),
         // Through the method bodies instead, which is the deeper path per level.
         format!("{}{}", "class C { m() { ".repeat(deep), "} }".repeat(deep)),
+        // A `yield` operand is an `AssignmentExpression`, so a chain of them nests. One
+        // shallower, the generator itself holding a level while its body is read.
+        format!("function* g() {{ {}1; }}", "yield ".repeat(deep - 1)),
     ];
     let worker = std::thread::Builder::new()
         .stack_size(1024 * 1024)

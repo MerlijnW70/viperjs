@@ -82,6 +82,13 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::Function(function) => render_function(function),
         ExprKind::Class(class) => render_class(class),
         ExprKind::Super => "super".to_string(),
+        ExprKind::Yield(yielded) => {
+            let star = if yielded.delegate { "*" } else { "" };
+            match &yielded.argument {
+                Some(argument) => format!("(yield{star} {})", render(argument)),
+                None => format!("(yield{star})"),
+            }
+        }
         ExprKind::Template(quasi) => render_template(quasi),
         ExprKind::TaggedTemplate { tag, quasi } => {
             format!("(tag {} {})", render(tag), render_template(quasi))
@@ -180,7 +187,8 @@ pub(in crate::parser) fn render_function(function: &Function) -> String {
         parameters.push(format!("(... {})", render_binding(rest)));
     }
     format!(
-        "(fn {} [{}] {})",
+        "({} {} [{}] {})",
+        if function.is_generator { "fn*" } else { "fn" },
         function.name.as_ref().map_or("<anon>", |name| &name.name),
         parameters.join(" "),
         render_block(&function.body)

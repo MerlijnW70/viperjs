@@ -40,7 +40,7 @@ impl Parser<'_> {
         // A name or one of the two patterns. `is_identifier_token` rather than a plain
         // `Identifier`, because §13.1 lets `yield` and `await` be bound here too — so
         // `let await = 1;` is a declaration and not two expressions.
-        Ok(super::is_identifier_token(next.kind)
+        Ok(self.is_identifier_token(next.kind)
             || matches!(next.kind, TokenKind::LBracket | TokenKind::LBrace))
     }
 
@@ -191,7 +191,7 @@ impl Parser<'_> {
     /// impose it on every caller, including the ones the specification exempts.
     pub(super) fn parse_binding_identifier(&mut self) -> Result<(Box<str>, Span), ParseError> {
         let token = self.current;
-        if !super::is_identifier_token(token.kind) {
+        if !self.is_identifier_token(token.kind) {
             return Err(self.unexpected("a binding name"));
         }
         self.advance(Goal::Div)?;

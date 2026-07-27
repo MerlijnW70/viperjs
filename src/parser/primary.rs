@@ -94,7 +94,7 @@ impl Parser<'_> {
             }
             // An `Identifier` is an `IdentifierName` that is not a `ReservedWord` — and the lexer
             // has already made that distinction, contextual keywords included.
-            _ if super::is_identifier_token(token.kind) => {
+            _ if self.is_identifier_token(token.kind) => {
                 self.advance(Goal::Div)?;
                 let name = identifier_value(self.source, token.span)
                     .ok_or_else(|| self.value_missing(token))?;
@@ -154,6 +154,112 @@ impl Parser<'_> {
             },
             span: token.span,
         }
+    }
+}
+
+/// Whether an `AssignmentExpression` may begin with this token.
+///
+/// One place needs this: `YieldExpression : yield` competes with
+/// `yield [no LineTerminator here] AssignmentExpression`, and one token has to settle which. Every
+/// other optional-operand form in the grammar is decided by a line terminator or a `;` instead,
+/// which is why this predicate has waited until §15.5 to be needed at all.
+///
+/// The match is exhaustive on purpose — no catch-all arm. This has to agree with
+/// [`Parser::parse_primary`] and [`Parser::parse_unary`], and the two are in different files; an
+/// arm-less `_ => false` would let a new token kind quietly become "not an expression", which for
+/// `yield` means silently reading `yield <thing>` as two statements. A compile error is the only
+/// reminder that survives.
+pub(super) fn begins_an_expression(kind: TokenKind) -> bool {
+    match kind {
+        // Operands.
+        TokenKind::Identifier { .. }
+        | TokenKind::PrivateIdentifier { .. }
+        | TokenKind::Number { .. }
+        | TokenKind::String { .. }
+        | TokenKind::Template { .. }
+        | TokenKind::RegExp
+        | TokenKind::BigInt
+        | TokenKind::LParen
+        | TokenKind::LBracket
+        | TokenKind::LBrace => true,
+        // The prefix operators of §13.4 and §13.5, which `parse_unary` reads before an operand.
+        TokenKind::Plus
+        | TokenKind::Minus
+        | TokenKind::Bang
+        | TokenKind::Tilde
+        | TokenKind::PlusPlus
+        | TokenKind::MinusMinus => true,
+        // The words that are operands or prefix operators rather than statements. `yield` and
+        // `await` are here because §13.1 makes each an `IdentifierReference` where its parameter
+        // is unset, and a `YieldExpression` where it is set — either way something begins.
+        TokenKind::Keyword(word) => matches!(
+            word,
+            ReservedWord::This
+                | ReservedWord::Null
+                | ReservedWord::True
+                | ReservedWord::False
+                | ReservedWord::Function
+                | ReservedWord::Class
+                | ReservedWord::New
+                | ReservedWord::Super
+                | ReservedWord::Import
+                | ReservedWord::Typeof
+                | ReservedWord::Void
+                | ReservedWord::Delete
+                | ReservedWord::Yield
+                | ReservedWord::Await
+        ),
+        // Everything else closes something, separates something, or is an infix operator — none
+        // of which any expression may start with.
+        TokenKind::Eof
+        | TokenKind::RBrace
+        | TokenKind::RParen
+        | TokenKind::RBracket
+        | TokenKind::Dot
+        | TokenKind::DotDotDot
+        | TokenKind::Semicolon
+        | TokenKind::Comma
+        | TokenKind::Colon
+        | TokenKind::Arrow
+        | TokenKind::QuestionDot
+        | TokenKind::Question
+        | TokenKind::Lt
+        | TokenKind::Gt
+        | TokenKind::LtEq
+        | TokenKind::GtEq
+        | TokenKind::EqEq
+        | TokenKind::BangEq
+        | TokenKind::EqEqEq
+        | TokenKind::BangEqEq
+        | TokenKind::Star
+        | TokenKind::Slash
+        | TokenKind::Percent
+        | TokenKind::StarStar
+        | TokenKind::LtLt
+        | TokenKind::GtGt
+        | TokenKind::GtGtGt
+        | TokenKind::Amp
+        | TokenKind::Pipe
+        | TokenKind::Caret
+        | TokenKind::AmpAmp
+        | TokenKind::PipePipe
+        | TokenKind::QuestionQuestion
+        | TokenKind::Eq
+        | TokenKind::PlusEq
+        | TokenKind::MinusEq
+        | TokenKind::StarEq
+        | TokenKind::SlashEq
+        | TokenKind::PercentEq
+        | TokenKind::StarStarEq
+        | TokenKind::LtLtEq
+        | TokenKind::GtGtEq
+        | TokenKind::GtGtGtEq
+        | TokenKind::AmpEq
+        | TokenKind::PipeEq
+        | TokenKind::CaretEq
+        | TokenKind::AmpAmpEq
+        | TokenKind::PipePipeEq
+        | TokenKind::QuestionQuestionEq => false,
     }
 }
 

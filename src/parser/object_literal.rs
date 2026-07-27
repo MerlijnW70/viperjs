@@ -94,6 +94,21 @@ impl Parser<'_> {
 
     /// One `PropertyDefinition` that is not a spread (§13.2.5).
     fn parse_property_definition(&mut self) -> Result<PropertyDefinition, ParseError> {
+        // `GeneratorMethod : * ClassElementName ( … ) { GeneratorBody }` — the `*` comes before
+        // the name, so it is read before anything knows what the name will be. Nothing else in a
+        // `PropertyDefinition` may begin with one.
+        let is_generator = self.current.kind == TokenKind::Star;
+        if is_generator {
+            self.advance(Goal::RegExp)?;
+            let key = self.parse_property_key()?;
+            let kind = crate::ast::MethodKind::Normal;
+            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY, true)?;
+            return Ok(PropertyDefinition::Method {
+                key,
+                kind,
+                function,
+            });
+        }
         let token = self.current;
         let escaped = matches!(
             token.kind,
@@ -106,7 +121,7 @@ impl Parser<'_> {
         // [`super::method`]. A `(` means the word was the name.
         if let Some(kind) = self.at_accessor(&key, escaped) {
             let key = self.parse_property_key()?;
-            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY)?;
+            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY, false)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -115,7 +130,7 @@ impl Parser<'_> {
         }
         if self.current.kind == TokenKind::LParen {
             let kind = crate::ast::MethodKind::Normal;
-            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY)?;
+            let function = self.parse_method(kind, SUPER_PROPERTY_ONLY, false)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -134,7 +149,7 @@ impl Parser<'_> {
         let PropertyKey::Identifier(name) = key else {
             return Err(self.unexpected("`:`"));
         };
-        if !super::is_identifier_token(token.kind) {
+        if !self.is_identifier_token(token.kind) {
             return Err(ParseError {
                 kind: ParseErrorKind::Unexpected {
                     expected: "`:`",
@@ -355,11 +370,16 @@ mod tests {
         }
         // `MethodDefinition` was the remaining `PropertyDefinition` alternative and needed
         // functions — and is here now, in [`super::super::method`]. Only the generator and async
-        // forms are left, and they arrive with the constructs that vary `[Yield]` and `[Await]`.
-        for source in ["({a() {}})", "({get a() {}})", "({set a(v) {}})"] {
+        // form is left, and it arrives with the construct that varies `[Await]`.
+        for source in [
+            "({a() {}})",
+            "({get a() {}})",
+            "({set a(v) {}})",
+            "({*a() {}})",
+        ] {
             assert!(parse_expression(source).is_ok(), "{source:?}");
         }
-        assert!(parse_expression("({*a() {}})").is_err());
+        assert!(parse_expression("({async a() {}})").is_err());
         // …while an object as a value is unaffected, which is what this slice adds.
         assert!(parse_script("a = {b: 1};").is_ok());
         assert!(parse_script("f({a: 1}, {b: 2});").is_ok());

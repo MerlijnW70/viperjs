@@ -156,6 +156,12 @@ impl Parser<'_> {
         if is_static {
             self.advance(Goal::Div)?;
         }
+        // `MethodDefinition : GeneratorMethod`, and a `GeneratorMethod` begins with its `*` —
+        // after `static`, which the grammar puts on the `ClassElement` rather than the method.
+        let is_generator = self.current.kind == TokenKind::Star;
+        if is_generator {
+            self.advance(Goal::RegExp)?;
+        }
         let first = self.current;
         let escaped = matches!(
             first.kind,
@@ -190,12 +196,21 @@ impl Parser<'_> {
         }
         // `super.a` in any method; `super(…)` in the constructor of a derived class and nowhere
         // else — a base class has no parent constructor for it to reach.
+        // §15.7.1: `SpecialMethod` of the constructor is a Syntax Error — `new` cannot resume
+        // a generator, so there would be nothing for the class to be.
+        if is_constructor && is_generator {
+            return Err(ParseError {
+                kind: ParseErrorKind::ConstructorMayNotBeAGenerator,
+                span: key_span,
+            });
+        }
         let function = self.parse_method(
             kind,
             SuperAllowed {
                 property: true,
                 call: is_constructor && derived,
             },
+            is_generator,
         )?;
         Ok(ClassElement {
             key,

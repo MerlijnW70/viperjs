@@ -73,9 +73,21 @@ impl Parser<'_> {
         &mut self,
         kind: MethodKind,
         super_allowed: SuperAllowed,
+        is_generator: bool,
     ) -> Result<Box<Function>, ParseError> {
-        let parameters = self.parse_method_parameters(kind)?;
-        let (body, end, declares_strict) = self.parse_function_body(super_allowed)?;
+        // `GeneratorMethod : * ClassElementName ( UniqueFormalParameters[+Yield] ) { GeneratorBody }`
+        // — so the `*` reaches the parameters as much as the body, exactly as a generator
+        // function's does.
+        let enclosing_yield = self.yield_allowed;
+        self.yield_allowed = is_generator;
+        let parts = self
+            .parse_method_parameters(kind, is_generator)
+            .and_then(|parameters| {
+                let body = self.parse_function_body(super_allowed)?;
+                Ok((parameters, body))
+            });
+        self.yield_allowed = enclosing_yield;
+        let (parameters, (body, end, declares_strict)) = parts?;
         self.check_method_body(&parameters, &body, declares_strict)?;
         Ok(Box::new(Function {
             // A method's name is its key's, and the key is not a binding — nothing inside the
@@ -83,6 +95,7 @@ impl Parser<'_> {
             name: None,
             parameters,
             body,
+            is_generator,
             span: end,
         }))
     }
@@ -91,8 +104,9 @@ impl Parser<'_> {
     fn parse_method_parameters(
         &mut self,
         kind: MethodKind,
+        is_generator: bool,
     ) -> Result<FormalParameters, ParseError> {
-        let parameters = self.parse_formal_parameters()?;
+        let parameters = self.parse_parameters_of(is_generator)?;
         let count = parameters.items.len();
         match kind {
             // `get ClassElementName ( )` — the parentheses are empty in the grammar, so a getter
@@ -283,9 +297,10 @@ mod tests {
         ] {
             let _ = parse_expression(source);
         }
-        // Generators and async methods are the other `MethodDefinition` alternatives and arrive
-        // with the constructs that vary `[Yield]` and `[Await]`.
-        assert!(parse_expression("({*a() {}})").is_err());
+        // A `GeneratorMethod` is one now — see [`super::generator`]. An async method is the
+        // last `MethodDefinition` alternative and arrives with the construct that varies
+        // `[Await]`.
+        assert!(parse_expression("({*a() {}})").is_ok());
         assert!(parse_expression("({async a() {}})").is_err());
     }
 }
