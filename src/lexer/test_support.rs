@@ -38,3 +38,13 @@ pub(super) const NUMBER: TokenKind = TokenKind::Number { legacy: false };
 
 /// `Number { legacy: true }`, Annex B.1.1's two forms — a Syntax Error in strict code.
 pub(super) const LEGACY: TokenKind = TokenKind::Number { legacy: true };
+
+/// `String { legacy_escape: false }`, every literal that uses no Annex B escape.
+pub(super) const STRING: TokenKind = TokenKind::String {
+    legacy_escape: false,
+};
+
+/// `String { legacy_escape: true }` — a Syntax Error in strict code (§12.9.4.1).
+pub(super) const LEGACY_STRING: TokenKind = TokenKind::String {
+    legacy_escape: true,
+};

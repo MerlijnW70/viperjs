@@ -59,15 +59,6 @@ pub fn identifier_value<'a>(source: &'a str, span: Span) -> Option<Cow<'a, str>>
     Some(Cow::Owned(value))
 }
 
-/// The value of one `HexDigit` (§12.9.3), or `None` if `ch` is not one.
-///
-/// `char::to_digit` is exactly right here and rarely is: it accepts only `0-9`, `a-z` and `A-Z`,
-/// so it agrees with `HexDigit` on the ASCII range and — importantly — rejects the Arabic-Indic
-/// and fullwidth digits that a `is_numeric`-based check would wave through.
-fn hex_value(ch: char) -> Option<u32> {
-    ch.to_digit(16)
-}
-
 // `pub(super)` on exactly the two entry points `next_token` dispatches to, and no further:
 // the escape machinery is reachable only through them, which is what keeps the early errors
 // of §12.7.1.1 from being bypassable by some later caller in the parent module.
@@ -154,74 +145,6 @@ impl<'a> Lexer<'a> {
             });
         }
         Ok(true)
-    }
-
-    /// Consume `\ UnicodeEscapeSequence` (§12.9.4) and return the code point it denotes.
-    ///
-    /// Two forms: `\u` followed by exactly four hex digits, or `\u{` HexDigits `}` where the
-    /// value must not exceed U+10FFFF (the spec's `CodePoint`, against `NotCodePoint`). The
-    /// braced form takes `HexDigits[~Sep]` — **no numeric separators**, and any number of
-    /// digits, so `\u{00000000000061}` is a perfectly ordinary `a`.
-    ///
-    /// The returned value is deliberately a `u32` and not a `char`: `\uD800` and `\u{10FFFF}`
-    /// are both well-formed escapes whose acceptability depends on where they appear, and the
-    /// caller is the one that knows.
-    fn read_unicode_escape(&mut self) -> Result<u32, LexError> {
-        let start = self.cursor.offset();
-        // Every ill-formed exit reports the same span: from the backslash to wherever the
-        // sequence stopped making sense.
-        macro_rules! malformed {
-            () => {
-                LexError {
-                    kind: LexErrorKind::InvalidUnicodeEscape,
-                    span: Span::new(start, self.cursor.offset()),
-                }
-            };
-        }
-
-        self.cursor.advance_ascii(1); // the `\`
-        if self.cursor.peek() != Some('u') {
-            return Err(malformed!());
-        }
-        self.cursor.advance_ascii(1);
-
-        if self.cursor.peek() == Some('{') {
-            self.cursor.advance_ascii(1);
-            let mut value: u32 = 0;
-            let mut digits = 0usize;
-            while let Some(digit) = self.cursor.peek().and_then(hex_value) {
-                let _ = self.cursor.bump();
-                digits += 1;
-                // Saturating, not wrapping: the digit count is chosen by whoever wrote the
-                // source, so `\u{FFFFFFFFFFFFFFFF}` is an input, and an input may not overflow
-                // (DR-0002). Saturation lands far above U+10FFFF, which is the answer anyway.
-                value = value.saturating_mul(16).saturating_add(digit);
-            }
-            if digits == 0 || self.cursor.peek() != Some('}') {
-                return Err(malformed!());
-            }
-            self.cursor.advance_ascii(1);
-            if value > 0x10ffff {
-                return Err(LexError {
-                    kind: LexErrorKind::CodePointOutOfRange,
-                    span: Span::new(start, self.cursor.offset()),
-                });
-            }
-            return Ok(value);
-        }
-
-        // `Hex4Digits :: HexDigit HexDigit HexDigit HexDigit` — exactly four. A fifth digit is
-        // simply the next character of the name, which is what makes `a0` the name `a0`.
-        let mut value: u32 = 0;
-        for _ in 0..4 {
-            let Some(digit) = self.cursor.peek().and_then(hex_value) else {
-                return Err(malformed!());
-            };
-            let _ = self.cursor.bump();
-            // Bounded by construction: four hex digits cannot exceed 0xFFFF.
-            value = value * 16 + digit;
-        }
-        Ok(value)
     }
 }
 

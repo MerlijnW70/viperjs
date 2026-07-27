@@ -78,6 +78,17 @@ pub enum TokenKind {
         legacy: bool,
     },
 
+    /// A `StringLiteral` (§12.9.4). [`crate::lexer::string_value`] reads its code units.
+    String {
+        /// Whether it used one of Annex B's legacy escapes — `LegacyOctalEscapeSequence` like
+        /// `\7`, or `NonOctalDecimalEscapeSequence`, which is `\8` and `\9`.
+        ///
+        /// §12.9.4.1 makes both a Syntax Error in strict code. Its Note 2 explains why the lexer
+        /// cannot settle it: a literal may *precede* the directive that makes its own code
+        /// strict, as in `function invalid() { "\7"; "use strict"; }`.
+        legacy_escape: bool,
+    },
+
     /// A `NumericLiteral` carrying the `n` of `BigIntLiteralSuffix` (§12.9.3).
     ///
     /// Recognised now although BigInt values arrive at M7, because the alternative is worse than
@@ -226,7 +237,8 @@ impl TokenKind {
             Self::Identifier { .. }
             | Self::PrivateIdentifier { .. }
             | Self::Number { .. }
-            | Self::BigInt => return None,
+            | Self::BigInt
+            | Self::String { .. } => return None,
             Self::Keyword(word) => word.as_str(),
 
             Self::LBrace => "{",

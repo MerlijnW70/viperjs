@@ -42,6 +42,11 @@ pub enum LexErrorKind {
     /// are a Syntax Error and nothing a script can observe tells them apart, so the lexer
     /// reports the one that says what to fix.
     MissingDigitsAfterRadixPrefix,
+    /// A `StringLiteral` whose closing quote never arrived — because the line ended first
+    /// (§12.9.4 forbids a literal `<LF>` or `<CR>` inside one) or because the source did.
+    UnterminatedStringLiteral,
+    /// `\x` not followed by exactly two hex digits (`HexEscapeSequence`, §12.9.4).
+    InvalidHexEscape,
     /// §12.9.3: "The SourceCharacter immediately following a NumericLiteral must not be an
     /// IdentifierStart or DecimalDigit." The spec's own example is that `3in` is an error, and
     /// not the two input elements `3` and `in`.
@@ -58,6 +63,8 @@ impl fmt::Display for LexErrorKind {
             Self::EscapedCodePointIsNotAnIdentifierCharacter => {
                 "escaped code point is not valid in an identifier"
             }
+            Self::UnterminatedStringLiteral => "unterminated string literal",
+            Self::InvalidHexEscape => "malformed hexadecimal escape sequence",
             Self::MisplacedNumericSeparator => "numeric separator must sit between two digits",
             Self::MissingDigitsAfterRadixPrefix => "missing digits after the radix prefix",
             Self::NumericLiteralFollowedByIdentifierOrDigit => {
@@ -87,6 +94,11 @@ mod tests {
                 LexErrorKind::EscapedCodePointIsNotAnIdentifierCharacter,
                 "escaped code point",
             ),
+            (
+                LexErrorKind::UnterminatedStringLiteral,
+                "unterminated string",
+            ),
+            (LexErrorKind::InvalidHexEscape, "hexadecimal"),
             (LexErrorKind::MisplacedNumericSeparator, "separator"),
             (LexErrorKind::MissingDigitsAfterRadixPrefix, "radix"),
             (
@@ -106,7 +118,7 @@ mod tests {
         }
         assert_eq!(
             messages.len(),
-            8,
+            10,
             "one message for each kind, and no kind missed"
         );
     }

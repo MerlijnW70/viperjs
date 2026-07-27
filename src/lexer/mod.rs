@@ -7,11 +7,11 @@
 //!
 //! # What is not here yet
 //!
-//! String literals, templates and regular expressions arrive in the following slices. Until
-//! then a character that can only begin one of those — `"`, `'`, `` ` `` — is a
-//! [`LexErrorKind::UnexpectedCharacter`], which is also the permanent answer for a character
-//! with no token form at all (`@`, `€`, `\0`). Two deferrals remain, each pinned by a test so
-//! that implementing it is a deliberate change and not an accident:
+//! Templates and regular expressions arrive in the following slices. Until then a character
+//! that can only begin one of those — `` ` `` — is a [`LexErrorKind::UnexpectedCharacter`],
+//! which is also the permanent answer for a character with no token form at all (`@`, `€`,
+//! `\0`). Two deferrals remain, each pinned by a test so that implementing it is a deliberate
+//! change and not an accident:
 //!
 //! - **Annex B.1.1 HTML-like comments.** `<!--` lexes as `<` `!` `--` today; `-->` would
 //!   additionally need "nothing but trivia before it on this line" state and a Script-vs-Module
@@ -45,13 +45,17 @@
 //! - `trivia` — white space, comments, and the hashbang (§12.2 – §12.5).
 //! - `name` — identifiers, `\u` escapes, and the keyword decision (§12.7).
 //! - `number` — numeric literals and their values (§12.9.3), Annex B's legacy forms included.
+//! - `string` — string literals and the code units they denote (§12.9.4).
+//! - `escape` — `UnicodeEscapeSequence` and UTF-16 encoding, shared by `name` and `string`.
 //! - here — the cursor, and [`Lexer::next_token`]: the one place that decides which of the
 //!   above a character belongs to.
 
 mod error;
+mod escape;
 mod name;
 mod number;
 mod reserved;
+mod string;
 #[cfg(test)]
 mod test_support;
 mod token;
@@ -61,6 +65,7 @@ pub use self::error::{LexError, LexErrorKind};
 pub use self::name::identifier_value;
 pub use self::number::numeric_value;
 pub use self::reserved::ReservedWord;
+pub use self::string::string_value;
 pub use self::token::{Token, TokenKind};
 
 use self::token::PUNCTUATORS;
@@ -194,6 +199,16 @@ impl<'a> Lexer<'a> {
             return Ok(Token {
                 kind: self.classify_name(span, contains_escape),
                 span,
+                newline_before,
+            });
+        }
+
+        // A quote can only open a string literal, so this needs no lookahead at all.
+        if first == '"' || first == '\'' {
+            let kind = self.scan_string(first)?;
+            return Ok(Token {
+                kind,
+                span: Span::new(start, self.cursor.offset()),
                 newline_before,
             });
         }
@@ -344,6 +359,14 @@ mod tests {
             "0x1F 0b1_0 0o7 0123 08",      // every radix, Annex B's two included
             "1n 0x2n",                     // BigInt, whose `n` is part of the span
             "1..toString",                 // `1.` then `.` then a name
+            "\"\" ''",                     // both empty literals
+            "\"a\" 'b'",                   // …and both non-empty
+            "\"it's\"",                    // the other quote, unescaped
+            "\"a\\\"b\"",                  // an escaped quote, which does not end the literal
+            "\"a\\\nb\"",                  // a line continuation, spanning a line inside a token
+            "\"\\u{1f680}\\ud800\\x41\"",  // escapes of every form, lone surrogate included
+            "\"\\7\\8\"",                  // Annex B legacy escapes
+            "\"\u{2028}\"",                // <LS>, legal raw here and nowhere else
         ];
         for source in lexes_completely {
             let (tiled, stopped) = retile(source);
@@ -361,6 +384,9 @@ mod tests {
             "3in",
             "0x",
             "1__0",
+            "\"abc",
+            "\"a\nb\"",
+            "\"\\x4\"",
             ";\u{200b}",
             "a\\x",
             "#5",
@@ -522,7 +548,6 @@ mod tests {
         // worse, would leave the cursor off a boundary.
         let cases = [
             ("@", 1),        // never a token in any edition
-            ("\"", 1),       // a string literal: a later slice
             ("`", 1),        // a template: a later slice
             ("\u{0000}", 1), // NUL is legal source text, just not a token start
             // Multi-byte code points that are not identifier characters — `é` and `א` would be
