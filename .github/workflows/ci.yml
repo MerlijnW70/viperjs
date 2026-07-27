@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  # The engine has no dependencies, so nothing rots underneath it — but the compiler moves,
+  # and a weekly run is what catches a new lint or a behaviour change before a contributor does.
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  test:
+    name: test / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Three platforms because two of the engine's guarantees are platform-shaped: the parser
+      # asserts a full-depth parse survives one mebibyte of stack, and spans are asserted over
+      # sources with every line-terminator form. Both have failed on exactly one OS before.
+      - run: cargo test --workspace --all-targets
+      - run: cargo test --workspace --doc
+
+  lint:
+    name: fmt, clippy, docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      # `missing_docs` is denied in lib.rs, so this fails on an undocumented public item.
+      - run: cargo doc --no-deps --workspace
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  msrv:
+    name: minimum supported Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --workspace --all-targets
+
+  invariants:
+    name: zero dependencies, no unsafe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # Two of the three non-negotiables in GOAL.md, checked mechanically rather than trusted.
+      # `#![forbid(unsafe_code)]` makes the compiler enforce the second; this asserts the
+      # attribute is still there, since deleting it is the one way to get around it quietly.
+      - name: the dependency table is empty
+        run: |
+          count=$(cargo metadata --no-deps --format-version 1 \
+            | python3 -c 'import json,sys; p=json.load(sys.stdin)["packages"]; print(sum(len(x["dependencies"]) for x in p if x["name"]=="praxis"))')
+          echo "praxis declares $count dependencies"
+          test "$count" -eq 0
+      - name: unsafe code is forbidden crate-wide
+        run: grep -q '^#!\[forbid(unsafe_code)\]' src/lib.rs

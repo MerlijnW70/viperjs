@@ -4,8 +4,18 @@ version = "0.1.0"
 edition = "2024"
 description = "An embeddable JavaScript engine in safe Rust, with zero runtime dependencies."
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/MerlijnW70/praxis"
+homepage = "https://github.com/MerlijnW70/praxis"
+documentation = "https://docs.rs/praxis"
+readme = "README.md"
+authors = ["MerlijnW70"]
 keywords = ["javascript", "ecmascript", "interpreter", "engine", "embeddable"]
 categories = ["compilers"]
+# Edition 2024 is what sets this, not a policy of its own. It is stated so that a bump is a
+# deliberate change with a release note, rather than something a contributor discovers in CI.
+rust-version = "1.85"
+# The lab is a workspace member and never ships; test262 is vendored and never committed.
+exclude = ["/lab", "/conformance", "/decisions", "/.github"]
 
 # ZERO runtime dependencies, forever (GOAL.md non-negotiable #2). This table stays empty.
 # If you believe you need a crate, stop and say so — do not add one.
@@ -14,8 +24,8 @@ categories = ["compilers"]
 [dev-dependencies]
 
 # The lab (see lab/README.md) is a WORKSPACE MEMBER, never a dependency: experiments are
-# built and run on demand, are not probed, not linted, and cannot reach the engine's
-# release artifact. `cargo test` at the root touches the engine only.
+# built and run on demand, are not linted, and cannot reach the engine's release artifact.
+# `cargo test` at the root touches the engine only.
 [workspace]
 members = ["lab"]
 
@@ -26,6 +36,6 @@ opt-level = 3
 lto = "thin"
 
 [profile.test]
-# Mutation testing runs the suite once per mutant, so test-build time dominates a run.
-# Nothing here debugs the test binary — skip the debuginfo and its link cost.
+# The suite is run far more often than it is debugged, and nothing here steps through a test
+# binary — so skip the debuginfo and the link cost that comes with it.
 debug = 0

@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Cargo is deliberately absent: the engine declares zero runtime dependencies and the table
+  # stays empty, so there is nothing for Dependabot to raise. Actions are a real supply chain
+  # and do get pinned updates.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "C-chore"

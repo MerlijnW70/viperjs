@@ -1,0 +1,57 @@
+name: Bug report
+description: Something the engine gets wrong, crashes on, or refuses that it should accept.
+labels: ["C-bug", "S-needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two kinds of bug jump the queue, so say so plainly if this is one of them:
+
+        - **A panic, abort, or hang on any input.** No script may crash the embedder's process.
+          That is a non-negotiable in [GOAL.md](../blob/master/GOAL.md), so any reproducer counts
+          however absurd the input looks.
+        - **A conformance regression** — something that used to pass and no longer does.
+
+  - type: textarea
+    id: script
+    attributes:
+      label: The JavaScript
+      description: The smallest source that shows it. Paste the text, not a screenshot.
+      render: javascript
+    validations:
+      required: true
+
+  - type: dropdown
+    id: goal
+    attributes:
+      label: Parsed as
+      description: Script and Module are different grammars, and the answer often differs.
+      options: ["Script", "Module", "not sure"]
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen, and what the spec says
+      description: >
+        A section of ECMA-262 is worth more here than anything else. If another engine disagrees
+        with praxis, say which and what it does — that is usually enough to find the fault.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens instead
+      description: The error, the wrong tree, or the backtrace.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "0.1.0, or the commit SHA"
+    validations:
+      required: true

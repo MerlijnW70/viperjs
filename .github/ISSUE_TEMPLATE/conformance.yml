@@ -1,0 +1,38 @@
+name: Conformance failure
+description: A test262 case that fails, or an expectations entry that should be gone.
+labels: ["C-conformance", "S-needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The conformance harness lands at M5 — until then this template is for cases you have
+        checked by hand. See [conformance/README.md](../blob/master/conformance/README.md).
+
+  - type: input
+    id: test
+    attributes:
+      label: test262 path
+      placeholder: test/language/expressions/assignment/S11.13.1_A5_T1.js
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Which way round
+      options:
+        - Fails and is not in expectations.txt (a regression)
+        - Passes but is still listed in expectations.txt (delete the line)
+        - Listed with a reason that does not hold up
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: What the test asks for, and what praxis does
+      description: >
+        Quote the assertion and the spec section it comes from. An expectations entry that says
+        only "flaky" or "weird" is not a reason and is worth reporting on its own.
+    validations:
+      required: true

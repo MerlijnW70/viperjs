@@ -1,0 +1,38 @@
+name: Feature or API request
+description: A language feature, or something the embedding surface should offer.
+labels: ["C-feature", "S-needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The milestone order in [AGENTS.md](../blob/master/AGENTS.md) is deliberate — each one
+        genuinely needs the one before it, so "this is planned for M6" is a common and honest
+        answer. Say what you are blocked on and it can be argued about on the merits.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What is missing
+      description: The feature, with the ECMA-262 section if it is a language one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: What you are trying to do
+      description: >
+        The use case, not the solution. Several requests turn out to be the same underlying gap,
+        and the only way to see that is to know what each one was for.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints you have read
+      options:
+        - label: I understand praxis will not take a runtime dependency to do this.
+          required: true
+        - label: I understand `unsafe` is not available, crate-wide.
+          required: true

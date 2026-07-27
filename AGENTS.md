@@ -121,5 +121,10 @@ a commit, and none may cost a single conformance test.
 
 ## Start here
 
-The engine is at M0: `src/span.rs` exists and the lab is empty. **M1 (the
-lexer) is the next thing to build.** Read `GOAL.md`, then `src/span.rs` to calibrate, then begin.
+M1 is complete and M2 is most of the way there: the lexer handles every token form, and the
+parser covers the grammar through classes, generators, `async`/`await` and modules. There is no
+interpreter, so there is no conformance number yet — M3 is what changes that.
+
+Read [`GOAL.md`](GOAL.md) first, then `src/span.rs` to calibrate on the bar, then pick up the
+milestone in progress. `cargo run --release --example parse -- --commonjs <dir>` over a real
+repository is the fastest way to find something worth fixing.
