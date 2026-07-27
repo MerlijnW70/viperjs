@@ -24,12 +24,15 @@
 //! into a structure that is not part of the tree, and the `=>` decides which of the two things it
 //! becomes. That is what a cover grammar is: one reading of the source, committed to late.
 //!
-//! # A third refinement, and why it is not one of the other two
+//! # A third refinement, which lives next to the grammar it produces
 //!
 //! `([a]) => b` needs its array literal turned into an `ArrayBindingPattern`, not into an
-//! `ArrayAssignmentPattern`: arrow parameters *create* names. So this refines an `Expr` into a
-//! [`Binding`], where [`super::pattern`] refines one into a `Pattern`. The two differ exactly
-//! where the two pattern grammars do — `([a.b]) => c` has no derivation and `[a.b] = c` does.
+//! `ArrayAssignmentPattern`: arrow parameters *create* names. That refinement is in
+//! [`super::binding`] rather than here, because what it may produce is that file's grammar and
+//! not this one's — it must refuse exactly what parsing a `BindingPattern` directly would refuse.
+//! [`super::pattern`] is the mirror, refining an `Expr` into a `Pattern` instead. The two differ
+//! exactly where the two pattern grammars do: `([a.b]) => c` has no derivation and
+//! `[a.b] = c` does.
 //!
 //! # `[no LineTerminator here]`
 //!
@@ -41,8 +44,7 @@
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{
-    ArrowBody, ArrowFunction, Binding, BindingElement, BindingPattern, BindingProperty, Expr,
-    ExprKind, FormalParameters, PropertyDefinition,
+    ArrowBody, ArrowFunction, Binding, BindingElement, Expr, ExprKind, FormalParameters,
 };
 use crate::lexer::{Goal, TokenKind};
 use crate::span::Span;
@@ -267,165 +269,6 @@ impl Parser<'_> {
         let value = self.parse_assignment(allow_in)?;
         let end = value.span;
         Ok((ArrowBody::Expression(Box::new(value)), end, false))
-    }
-
-    /// One parameter, refined from the expression that covered it.
-    fn refine_to_binding_element(&mut self, expr: Expr) -> Result<BindingElement, ParseError> {
-        let ExprKind::Assignment {
-            operator,
-            target,
-            value,
-        } = expr.kind
-        else {
-            return Ok(BindingElement {
-                target: self.refine_to_binding(expr)?,
-                default: None,
-            });
-        };
-        if operator != crate::ast::AssignmentOperator::Assign {
-            return Err(ParseError {
-                kind: ParseErrorKind::InvalidArrowParameter,
-                span: expr.span,
-            });
-        }
-        let target = match *target {
-            crate::ast::AssignmentTarget::Simple(target) => self.refine_to_binding(target)?,
-            // The literal was already refined into an assignment pattern by the `=`; refining it
-            // again as a binding would mean parsing it a third time, so the shapes are converted.
-            crate::ast::AssignmentTarget::Pattern(pattern) => {
-                return Err(ParseError {
-                    kind: ParseErrorKind::InvalidArrowParameter,
-                    span: pattern.span(),
-                });
-            }
-        };
-        Ok(BindingElement {
-            target,
-            default: Some(value),
-        })
-    }
-
-    /// An expression, refined into the name or pattern it covered.
-    fn refine_to_binding(&mut self, expr: Expr) -> Result<Binding, ParseError> {
-        let span = expr.span;
-        match expr.kind {
-            ExprKind::Identifier(name) => Ok(Binding::Identifier(crate::ast::BindingName {
-                name: name.into_boxed_str(),
-                span,
-            })),
-            ExprKind::Array(elements) => {
-                self.enter()?;
-                let refined = self.refine_array_binding(elements, span);
-                self.leave();
-                Ok(Binding::Pattern(BindingPattern::Array(refined?)))
-            }
-            ExprKind::Object(properties) => {
-                self.enter()?;
-                let refined = self.refine_object_binding(properties, span);
-                self.leave();
-                Ok(Binding::Pattern(BindingPattern::Object(refined?)))
-            }
-            // A binding creates a name, so `a.b` is refused where an assignment pattern takes it.
-            _ => Err(ParseError {
-                kind: ParseErrorKind::InvalidArrowParameter,
-                span,
-            }),
-        }
-    }
-
-    /// An array literal, refined into an `ArrayBindingPattern`.
-    fn refine_array_binding(
-        &mut self,
-        elements: Box<[crate::ast::ArrayElement]>,
-        span: Span,
-    ) -> Result<crate::ast::ArrayBindingPattern, ParseError> {
-        let mut refined = Vec::with_capacity(elements.len());
-        let mut rest = None;
-        for element in Vec::from(elements) {
-            if rest.is_some() {
-                return Err(ParseError {
-                    kind: ParseErrorKind::RestElementMustBeLast,
-                    span,
-                });
-            }
-            match element {
-                crate::ast::ArrayElement::Hole => refined.push(None),
-                crate::ast::ArrayElement::Value(value) => {
-                    refined.push(Some(self.refine_to_binding_element(value)?));
-                }
-                crate::ast::ArrayElement::Spread(target) => {
-                    rest = Some(Box::new(self.refine_to_binding(target)?));
-                }
-            }
-        }
-        Ok(crate::ast::ArrayBindingPattern {
-            elements: refined.into_boxed_slice(),
-            rest,
-            span,
-        })
-    }
-
-    /// An object literal, refined into an `ObjectBindingPattern`.
-    fn refine_object_binding(
-        &mut self,
-        properties: Box<[PropertyDefinition]>,
-        span: Span,
-    ) -> Result<crate::ast::ObjectBindingPattern, ParseError> {
-        let mut refined = Vec::with_capacity(properties.len());
-        let mut rest = None;
-        for property in Vec::from(properties) {
-            if rest.is_some() {
-                return Err(ParseError {
-                    kind: ParseErrorKind::RestElementMustBeLast,
-                    span,
-                });
-            }
-            match property {
-                PropertyDefinition::KeyValue { key, value } => refined.push(BindingProperty {
-                    key,
-                    value: self.refine_to_binding_element(value)?,
-                }),
-                PropertyDefinition::Shorthand { name, span } => refined.push(BindingProperty {
-                    key: crate::ast::PropertyKey::Identifier(name.clone()),
-                    value: BindingElement {
-                        target: Binding::Identifier(crate::ast::BindingName { name, span }),
-                        default: None,
-                    },
-                }),
-                PropertyDefinition::ShorthandWithDefault {
-                    name,
-                    default,
-                    span,
-                } => refined.push(BindingProperty {
-                    key: crate::ast::PropertyKey::Identifier(name.clone()),
-                    value: BindingElement {
-                        target: Binding::Identifier(crate::ast::BindingName { name, span }),
-                        default: Some(default),
-                    },
-                }),
-                // `BindingRestProperty : ... BindingIdentifier`, as everywhere else.
-                PropertyDefinition::Spread(target) => {
-                    let Binding::Identifier(name) = self.refine_to_binding(target)? else {
-                        return Err(ParseError {
-                            kind: ParseErrorKind::RestTargetMayNotBePattern,
-                            span,
-                        });
-                    };
-                    rest = Some(name);
-                }
-                PropertyDefinition::Method { function, .. } => {
-                    return Err(ParseError {
-                        kind: ParseErrorKind::InvalidArrowParameter,
-                        span: function.span,
-                    });
-                }
-            }
-        }
-        Ok(crate::ast::ObjectBindingPattern {
-            properties: refined.into_boxed_slice(),
-            rest,
-            span,
-        })
     }
 }
 

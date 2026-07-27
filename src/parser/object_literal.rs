@@ -365,15 +365,8 @@ mod tests {
         assert!(parse_script("f({a: 1}, {b: 2});").is_ok());
         assert!(parse_script("({a: 1}).a;").is_ok());
         // §14.5's restriction still holds: a `{` where a statement may begin is a block.
-        assert_eq!(statements_of("{}"), ["{}"]);
-        assert_eq!(statements_of("({})"), ["{}"]);
-    }
-
-    /// The rendered statements of `source`.
-    fn statements_of(source: &str) -> Vec<String> {
-        let script = parse_script(source)
-            .unwrap_or_else(|err| panic!("{source:?} should parse, got {}", err.kind)); // needs the tree
-        script.body.iter().map(render_statement).collect()
+        assert_eq!(statements("{}"), ["{}"]);
+        assert_eq!(statements("({})"), ["{}"]);
     }
 
     #[test]
