@@ -461,8 +461,8 @@ mod tests {
     use super::*;
     use crate::ast::AssignmentOperator;
     use crate::ast::AssignmentTarget;
-    use crate::parser::parse_expression;
     use crate::parser::test_support::*;
+    use crate::parser::{parse_expression, parse_script};
     #[test]
     fn every_prefix_operator_the_grammar_has_today() {
         // §13.5. `await` is absent: it is the `[+Await]` alternative and needs a parameter that
@@ -661,6 +661,42 @@ mod tests {
         assert!(!parse("a ? b : c").parenthesized);
         assert!(parse("(a ? b : c)").parenthesized);
     }
+    #[test]
+    fn a_call_is_never_an_assignment_target_however_the_assignment_is_written() {
+        // §8.6.4 gives a host two conformant answers for a `CallExpression`, and DR-0009 records
+        // which one this is. `web-compat` would make `f() = 1` parse in sloppy code and throw at
+        // run time, as browsers do; praxis is not a web host and returns `invalid` in both modes.
+        //
+        // The shapes are the ones test262 has a test for, each of them flagged `onlyStrict`
+        // there because only the strict half is host-independent.
+        for source in [
+            "f() = 1;",
+            "f() += 1;",
+            "f() -= 1;",
+            "f() &&= 1;",
+            "f()++;",
+            "++f();",
+            "for (f() in x);",
+            "for (f() of x);",
+            "(f()) = 1;",
+            "f`t` = 1;",
+        ] {
+            assert!(
+                parse_script(source).is_err(),
+                "{source:?} assigns to a call and has no derivation here"
+            );
+            let strict = format!("\"use strict\"; {source}");
+            assert!(parse_script(&strict).is_err(), "{strict:?} likewise");
+        }
+        // A *property of* a call is an ordinary `MemberExpression` and always was simple.
+        assert!(parse_script("f().a = 1;").is_ok());
+        assert!(parse_script("f()[0] = 1;").is_ok());
+        // …and a call is refused as a destructuring target too, where even a web host refuses
+        // it: the host option is about the direct form and reaches no further.
+        assert!(parse_script("[f()] = x;").is_err());
+        assert!(parse_script("({a: f()} = x);").is_err());
+    }
+
     #[test]
     fn assignment_groups_to_the_right_and_only_targets_what_can_be_assigned_to() {
         // §13.15: `LeftHandSideExpression = AssignmentExpression` — the recursion is on the

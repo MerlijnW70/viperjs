@@ -129,7 +129,12 @@ pub(super) fn assignment_operator(kind: TokenKind) -> Option<AssignmentOperator>
 ///
 /// The specification defines it per production, and every one that answers "simple" is either an
 /// `IdentifierReference` or a `MemberExpression` — which is exactly the three below. Everything
-/// else, from `1` to `f()` to a conditional, is invalid.
+/// else, from `1` to a conditional, is invalid.
+///
+/// `f()` is invalid too, and that one is a decision rather than a reading: §8.6.4 lets a host
+/// answer `web-compat` for a `CallExpression` in sloppy code, which is what browsers do and why
+/// `f() = 1` throws at run time there instead of failing to parse. praxis is not one — see
+/// DR-0009, which also records what refusing it costs.
 ///
 /// Parentheses need no mention, and that is not an oversight. Because a bracketed expression is
 /// a flag on the node rather than a node of its own, `(a)` *is* the identifier `a` and answers
