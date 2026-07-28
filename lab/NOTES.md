@@ -87,6 +87,19 @@ constant that does not depend on how the engine was compiled, so it has to be sa
 build. What would revive this is M3's embedder-set limit, where somebody knows how much stack there
 actually is: at that point the release figure is the one that matters and it is six times larger.
 
+**The number the experiment was missing, added later.** This measured what a level *costs* and
+never what real code *needs*, so the cap's adequacy was an argument rather than a figure. A sweep
+of 4,733 minified files — 120 MB of published npm bundles, plus every built library WordPress and
+Moodle vendor — supplies it: two files exceed the cap, both copies of the same Emscripten-generated
+Draco decoder, and bisecting `MAX_NESTING_DEPTH` against one says it needs **77**.
+
+That sharpens the verdict rather than changing it. 77 is thirteen past the cap and seven past the
+70 levels the narrowest path survives in the build the stack test asserts against, so taking that
+file still needs the operand ladder to get cheaper — which is the thing this experiment looked for
+and did not find. What it does settle is the size of the gap: not "deeper than anything reasonable"
+but *seven levels* beyond what the debug build affords, and comfortably inside what release
+already does. That is an argument for M3's embedder-set limit and not for moving the constant.
+
 The instrument stays. It is the thing that answers "did that slice make a level more expensive",
 and the cap is going to be argued about again.
 

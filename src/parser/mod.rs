@@ -210,6 +210,20 @@ use crate::span::Span;
 /// comfortable margin if it were allowed to depend on the build, and DR-0006 says it may not. The
 /// lab notebook has the numbers and the argument.
 ///
+/// # What real code asks for
+///
+/// 64 is a number this repository chose; the number the world asks for was measured separately,
+/// by sweeping 4,733 minified files — 120 MB of what npm actually ships, plus every built library
+/// WordPress and Moodle vendor. Two files went past the cap. They are two copies of the same
+/// Emscripten-generated Draco decoder, and bisecting the constant against one of them says it
+/// needs **77**: thirteen more than there is.
+///
+/// That is close enough to be worth stating precisely and still out of reach, because 77 is past
+/// the 70 the narrowest path survives in the build being asserted against. Nothing else came
+/// near: WordPress's and Moodle's 4,589 built files all parse, and so does every other bundle
+/// fetched. The shape is not "minified code nests deeply" — it is one code generator emitting
+/// labelled blocks where a person would write anything else.
+///
 /// # Why a count and not a stack measurement
 ///
 /// Because a stack measurement would make which programs parse depend on how the engine was
