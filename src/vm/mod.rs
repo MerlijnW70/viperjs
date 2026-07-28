@@ -13,6 +13,12 @@
 //! week to find. And if it were a panic, DR-0002 would hold only as long as the compiler is
 //! correct, which is not what DR-0002 says.
 //!
+//! # How this module is laid out
+//!
+//! - `property` — the object's internal methods a running program reaches: `[[Get]]`, `[[Set]]`,
+//!   `[[Delete]]` and `[[HasProperty]]`, each of which can throw.
+//! - here — the loop, the frames, and the two kinds of failure.
+//!
 //! # A throw is an answer, not a failure
 //!
 //! §6.2.4's Completion Records have five types, and a bytecode compiler turns four of them into
@@ -21,11 +27,14 @@
 //! looks like when it happens. So an [`Outcome`] is a value or a thrown value, and the rest of
 //! §6.2.4 lives in [`crate::compile`].
 
+mod property;
+
 use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
-use crate::heap::{Heap, PropertyDescriptor, PropertyKey, PropertyKind};
+use crate::heap::{Heap, Object, PropertyDescriptor};
 use crate::realm::{NativeError, Realm};
 use crate::value::{Completion, TypeError, Value, apply_binary};
+use std::rc::Rc;
 
 /// A chunk that does not make sense.
 ///
@@ -46,6 +55,10 @@ pub enum Fault {
     MissingLocal,
     /// A `PopHandler` with no matching `PushHandler`.
     UnmatchedPopHandler,
+    /// A `MakeFunction` naming a body this chunk does not have.
+    MissingFunction,
+    /// A `Return` with no call to return from.
+    ReturnWithNoCall,
     /// A `DefineField` on something that is not an object.
     ///
     /// Only an object literal emits one, and it emits `NewObject` first, so no chunk the compiler
@@ -75,11 +88,42 @@ pub enum Outcome {
     Thrown(Value),
 }
 
+/// One suspended call — where to come back to, and what to put back when we do.
+///
+/// A call does **not** recurse into the interpreter. The loop stays one loop and a frame is a
+/// record, which is why a thousand-deep JavaScript recursion costs a thousand small structs
+/// rather than a thousand Rust stack frames — and why the limit on it can be a number rather than
+/// a guess about the host's stack.
+#[derive(Debug)]
+struct Frame {
+    /// The code that was running, and the instruction to come back to.
+    code: Option<Rc<Chunk>>,
+    at: usize,
+    /// Where this frame's locals begin, and where its operands do.
+    ///
+    /// Both are floors rather than counts. Returning truncates back to them, which is what makes
+    /// a `return` from the middle of an expression leave nothing of that expression behind.
+    locals_base: usize,
+    stack_base: usize,
+    /// How many handlers were installed when the call began.
+    ///
+    /// A `try` inside the callee must not catch on the caller's behalf, and a throw that escapes
+    /// the callee must find the caller's handlers intact — so unwinding pops frames and handlers
+    /// together, down to this mark.
+    handlers_base: usize,
+}
+
 /// Where a throw goes, and what the stack should look like when it gets there.
 #[derive(Debug, Clone, Copy)]
 struct Handler {
     /// The instruction to continue at.
     target: u32,
+    /// How many calls were waiting when the handler was installed.
+    ///
+    /// A `try` in a caller must still be found by a throw from a callee, and the jump it makes is
+    /// into the *caller's* code — so unwinding pops frames back to here before it jumps, and
+    /// `depth` below is a depth in that frame's stack rather than in the one that threw.
+    frames: usize,
     /// How deep the operand stack was when the handler was installed.
     ///
     /// A throw in the middle of an expression leaves its half-built operands behind. Without
@@ -104,6 +148,8 @@ pub struct Vm {
     escaped: Option<Value>,
     /// The handlers a throw would look at, innermost last.
     handlers: Vec<Handler>,
+    /// The calls that are waiting, outermost first.
+    frames: Vec<Frame>,
     /// One slot per local variable, all starting as `undefined`.
     ///
     /// Resolved to indices at compile time, so nothing here searches for a name. That is what
@@ -125,6 +171,7 @@ impl Vm {
             escaped: None,
             stack: Vec::new(),
             handlers: Vec::new(),
+            frames: Vec::new(),
             locals: Vec::new(),
             completion: Value::Undefined,
         }
@@ -137,28 +184,41 @@ impl Vm {
     pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
         self.stack.clear();
         self.handlers.clear();
+        self.frames.clear();
         self.escaped = None;
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
         self.locals.clear();
         self.locals.resize(chunk.locals(), Value::Undefined);
-        let code = chunk.code();
+        // `None` is the script itself, which the caller owns; `Some` is a function body, which
+        // the function object owns. Two sources rather than one because the root is borrowed and
+        // a callee is reference-counted, and moving the root into an `Rc` would make every
+        // embedder pay for a call it may never make.
+        let mut current: Option<Rc<Chunk>> = None;
         let mut at = 0_usize;
         // A counter rather than an iterator, because a jump moves it. Nothing bounds how long
         // this runs: a backward jump is how a loop will be built, and a script that loops forever
         // is a script that loops forever. DR-0002 is about panics, not about halting.
-        while let Some(instruction) = code.get(at) {
+        loop {
+            let running: &Chunk = current.as_deref().unwrap_or(chunk);
+            let code = running.code();
+            let Some(instruction) = code.get(at).copied() else {
+                break;
+            };
             at += 1;
-            match *instruction {
+            match instruction {
                 Instruction::Constant(index) => {
-                    let value = chunk.constant(index).ok_or(Fault::MissingConstant)?;
+                    // The *running* chunk's table, not the root's. A callee has its own
+                    // constants numbered from zero, and reading the caller's by mistake is the
+                    // kind of bug that gives a plausible wrong value rather than a crash.
+                    let value = running.constant(index).ok_or(Fault::MissingConstant)?;
                     self.stack.push(value);
                 }
                 Instruction::Unary(operator) => {
                     let operand = self.pop()?;
                     let value = apply_unary(operator, operand, heap);
-                    match self.settle(value, heap, &mut at, code.len())? {
+                    match self.settle(value, heap, chunk, &mut current, &mut at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -169,7 +229,7 @@ impl Vm {
                     let right = self.pop()?;
                     let left = self.pop()?;
                     let value = apply_binary(operator, left, right, heap);
-                    match self.settle(value, heap, &mut at, code.len())? {
+                    match self.settle(value, heap, chunk, &mut current, &mut at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -209,20 +269,108 @@ impl Vm {
                     self.pop()?;
                 }
                 Instruction::LoadLocal(slot) => {
-                    let value = *self.locals.get(slot as usize).ok_or(Fault::MissingLocal)?;
+                    let at = self.frame_slot(slot)?;
+                    let value = *self.locals.get(at).ok_or(Fault::MissingLocal)?;
                     self.stack.push(value);
                 }
                 Instruction::StoreLocal(slot) => {
                     // Peeked, not popped: assignment is an expression, and `a = (b = 1)` needs
                     // the inner one to leave its value behind.
+                    let at = self.frame_slot(slot)?;
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    *self.locals.get_mut(at).ok_or(Fault::MissingLocal)? = value;
+                }
+                Instruction::SetCompletion => {
+                    self.completion = self.pop()?;
+                }
+                Instruction::MakeFunction(index) => {
+                    let Some(body) = running.function(index) else {
+                        return Err(Fault::MissingFunction);
+                    };
+                    let object = heap.new_function(self.realm.function_prototype(), body.clone());
+                    self.stack.push(Value::Object(object));
+                }
+                Instruction::Call(count) => {
+                    let count = count as usize;
+                    // The callee sits under its arguments, because it was pushed first.
+                    let Some(callee_at) = self.stack.len().checked_sub(count + 1) else {
+                        return Err(Fault::StackUnderflow);
+                    };
+                    let callee = self.stack[callee_at];
+                    let Value::Object(object) = callee else {
+                        self.throw_type_error(
+                            TypeError("what was called is not a function"),
+                            heap,
+                            chunk,
+                            &mut current,
+                            &mut at,
+                        )?;
+                        continue;
+                    };
+                    let Some(body) = heap.object(object).and_then(Object::call) else {
+                        self.throw_type_error(
+                            TypeError("what was called is not a function"),
+                            heap,
+                            chunk,
+                            &mut current,
+                            &mut at,
+                        )?;
+                        continue;
+                    };
+                    let body = body.clone();
+                    // §10.2.1 — the frame is as wide as the body needs, the arguments fill its
+                    // first slots in order, and anything the caller did not supply is
+                    // `undefined`. An argument too many is discarded: reaching it needs
+                    // `arguments`, which is a slice of its own.
+                    if self.frames.len() >= MAX_CALL_DEPTH {
+                        let thrown =
+                            self.realm
+                                .error(heap, NativeError::Range, "too much recursion");
+                        self.unwind(thrown, chunk, &mut current, &mut at)?;
+                        continue;
+                    }
+                    let locals_base = self.locals.len();
+                    self.locals
+                        .resize(locals_base + body.locals(), Value::Undefined);
+                    for offset in 0..body.parameters().min(count) {
+                        self.locals[locals_base + offset] = self.stack[callee_at + 1 + offset];
+                    }
+                    self.stack.truncate(callee_at);
+                    self.frames.push(Frame {
+                        code: current.take(),
+                        at,
+                        locals_base,
+                        stack_base: callee_at,
+                        handlers_base: self.handlers.len(),
+                    });
+                    current = Some(body);
+                    at = 0;
+                }
+                Instruction::Return => {
+                    let value = self.pop()?;
+                    let Some(frame) = self.frames.pop() else {
+                        return Err(Fault::ReturnWithNoCall);
+                    };
+                    // Everything the callee left behind goes with it: its operands, its locals,
+                    // and any handler it installed and did not take down.
+                    self.stack.truncate(frame.stack_base);
+                    self.locals.truncate(frame.locals_base);
+                    self.handlers.truncate(frame.handlers_base);
+                    self.stack.push(value);
+                    current = frame.code;
+                    at = frame.at;
+                }
+                Instruction::LoadScript(slot) => {
+                    // The script's frame is the one at the bottom, so its slots are absolute.
+                    let value = *self.locals.get(slot as usize).ok_or(Fault::MissingLocal)?;
+                    self.stack.push(value);
+                }
+                Instruction::StoreScript(slot) => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     *self
                         .locals
                         .get_mut(slot as usize)
                         .ok_or(Fault::MissingLocal)? = value;
-                }
-                Instruction::SetCompletion => {
-                    self.completion = self.pop()?;
                 }
                 Instruction::NewObject => {
                     let object = heap.new_object(Some(self.realm.object_prototype()));
@@ -254,7 +402,7 @@ impl Vm {
                     let key = match self.property_key(key, heap) {
                         Ok(key) => key,
                         Err(error) => {
-                            self.throw_type_error(error, heap, &mut at, code.len())?;
+                            self.throw_type_error(error, heap, chunk, &mut current, &mut at)?;
                             continue;
                         }
                     };
@@ -272,7 +420,7 @@ impl Vm {
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let got = self.get_property(base, key, heap);
-                    match self.settle(got, heap, &mut at, code.len())? {
+                    match self.settle(got, heap, chunk, &mut current, &mut at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -282,7 +430,7 @@ impl Vm {
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let done = self.set_property(base, key, value, heap);
-                    match self.settle(done, heap, &mut at, code.len())? {
+                    match self.settle(done, heap, chunk, &mut current, &mut at)? {
                         // §13.15.2 — the value of an assignment is the value assigned, whether or
                         // not the object took it. A silent refusal is what sloppy mode is.
                         Some(_) => self.stack.push(value),
@@ -293,7 +441,7 @@ impl Vm {
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let done = self.delete_property(base, key, heap);
-                    match self.settle(done, heap, &mut at, code.len())? {
+                    match self.settle(done, heap, chunk, &mut current, &mut at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -302,7 +450,7 @@ impl Vm {
                     let base = self.pop()?;
                     let key = self.pop()?;
                     let has = self.has_property(base, key, heap);
-                    match self.settle(has, heap, &mut at, code.len())? {
+                    match self.settle(has, heap, chunk, &mut current, &mut at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -311,10 +459,11 @@ impl Vm {
                     // §6.2.4 — a throw completion travels up until something wants it. Here that
                     // is the innermost handler; with nothing to want it, it leaves the script.
                     let thrown = self.pop()?;
-                    self.unwind(thrown, &mut at, code.len())?;
+                    self.unwind(thrown, chunk, &mut current, &mut at)?;
                 }
                 Instruction::PushHandler(target) => self.handlers.push(Handler {
                     target,
+                    frames: self.frames.len(),
                     depth: self.stack.len(),
                 }),
                 Instruction::PopHandler => {
@@ -335,155 +484,14 @@ impl Vm {
         Ok(Outcome::Value(self.completion))
     }
 
-    /// `ToPropertyKey` (§7.1.19), for the keys that exist.
+    /// Where slot `slot` of the running frame sits in the locals stack.
     ///
-    /// A Symbol is a key as it stands; everything else becomes the String `ToString` writes, which
-    /// is why `o[1]` and `o["1"]` are one property and `o[1.0]` is the same one again.
-    fn property_key(&self, key: Value, heap: &mut Heap) -> Completion<PropertyKey> {
-        let id = key.to_string(heap)?;
-        Ok(PropertyKey::from_string(heap, id))
-    }
-
-    /// `[[Get]]` (§10.1.8) — the value of `base`'s `key`, its prototypes included.
-    ///
-    /// A base that is not an object is a **TypeError**. That is right for `null` and `undefined`
-    /// and is *temporary* for everything else: §7.3.2 wraps a primitive in its own object first,
-    /// so `"abc".length` works by way of `String.prototype` — and there is no `String.prototype`
-    /// yet. The message says "an object" rather than naming the type, so it does not have to
-    /// change when that arrives.
-    pub(crate) fn get_property(
-        &self,
-        base: Value,
-        key: Value,
-        heap: &mut Heap,
-    ) -> Completion<Value> {
-        let Value::Object(object) = base else {
-            return Err(TypeError(
-                "cannot read a property of something that is not an object",
-            ));
-        };
-        let key = self.property_key(key, heap)?;
-        // §10.1.8.1 step 3 — a property that is nowhere on the chain is `undefined`, not an
-        // error. That is the whole reason `o.missing` is a value and `missing` is a ReferenceError.
-        let Some((_, property)) = heap.find_own(object, key) else {
-            return Ok(Value::Undefined);
-        };
-        match property.kind {
-            PropertyKind::Data { value, .. } => Ok(value),
-            // §10.1.8.1 steps 5 and 6 — an accessor with no getter answers `undefined`, and one
-            // with a getter has it called. Nothing is callable yet, so the second is a TypeError
-            // for whatever was put there; both are reachable by defining the property directly.
-            PropertyKind::Accessor {
-                getter: Value::Undefined,
-                ..
-            } => Ok(Value::Undefined),
-            PropertyKind::Accessor { .. } => Err(TypeError("a getter is not callable")),
-        }
-    }
-
-    /// `[[Set]]` (§10.1.9) — put `value` under `key`, and answer whether it was allowed.
-    ///
-    /// The Boolean is thrown away by sloppy code and turned into a TypeError by strict code, which
-    /// is why this answers rather than throwing: the caller knows which it is and this does not.
-    pub(crate) fn set_property(
-        &self,
-        base: Value,
-        key: Value,
-        value: Value,
-        heap: &mut Heap,
-    ) -> Completion<Value> {
-        let Value::Object(object) = base else {
-            return Err(TypeError(
-                "cannot set a property of something that is not an object",
-            ));
-        };
-        let key = self.property_key(key, heap)?;
-        // §10.1.9.2 — an *inherited* accessor is called, and an inherited non-writable data
-        // property refuses the write. An inherited writable one does not: the value is filed on
-        // the receiver, which is what makes a prototype's property shadowable.
-        if let Some((owner, property)) = heap.find_own(object, key) {
-            match property.kind {
-                PropertyKind::Accessor {
-                    setter: Value::Undefined,
-                    ..
-                } => {
-                    return Ok(Value::Boolean(false));
-                }
-                PropertyKind::Accessor { .. } => {
-                    return Err(TypeError("a setter is not callable"));
-                }
-                PropertyKind::Data {
-                    writable: false, ..
-                } => {
-                    return Ok(Value::Boolean(false));
-                }
-                PropertyKind::Data { .. } if owner == object => {
-                    // An own writable data property is changed in place, keeping its attributes:
-                    // assignment never makes a property enumerable that was not.
-                    let descriptor = PropertyDescriptor {
-                        value: Some(value),
-                        ..PropertyDescriptor::EMPTY
-                    };
-                    return Ok(Value::Boolean(heap.define_own_property(
-                        object,
-                        key,
-                        &descriptor,
-                    )));
-                }
-                PropertyKind::Data { .. } => {}
-            }
-        }
-        // A new property, or one that shadows an inherited writable one. Either way it is created
-        // on the receiver with the three attributes assignment always gives.
-        let descriptor = PropertyDescriptor {
-            value: Some(value),
-            writable: Some(true),
-            enumerable: Some(true),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        };
-        Ok(Value::Boolean(heap.define_own_property(
-            object,
-            key,
-            &descriptor,
-        )))
-    }
-
-    /// `[[Delete]]` (§10.1.10) through §13.5.1's operator.
-    pub(crate) fn delete_property(
-        &self,
-        base: Value,
-        key: Value,
-        heap: &mut Heap,
-    ) -> Completion<Value> {
-        let Value::Object(object) = base else {
-            return Err(TypeError(
-                "cannot delete a property of something that is not an object",
-            ));
-        };
-        let key = self.property_key(key, heap)?;
-        // Own only: `delete` never reaches through a prototype, which is why deleting an
-        // inherited property answers `true` and leaves it exactly where it was.
-        let gone = heap
-            .object_mut(object)
-            .is_some_and(|found| found.delete(key));
-        Ok(Value::Boolean(gone))
-    }
-
-    /// `[[HasProperty]]` (§10.1.7) through §13.10.1's `in`.
-    pub(crate) fn has_property(
-        &self,
-        base: Value,
-        key: Value,
-        heap: &mut Heap,
-    ) -> Completion<Value> {
-        let Value::Object(object) = base else {
-            // §13.10.1 step 5 — `in` is the one operator that names the requirement out loud
-            // rather than converting: `1 in 2` is a TypeError and not `false`.
-            return Err(TypeError("the right operand of in must be an object"));
-        };
-        let key = self.property_key(key, heap)?;
-        Ok(Value::Boolean(heap.has_property(object, key)))
+    /// A function's slots are counted from the bottom of its own frame; the script's are counted
+    /// from the bottom of everything, which is the same thing for the script because its frame is
+    /// at the bottom. That is why [`Instruction::LoadScript`] needs no translation and this does.
+    fn frame_slot(&self, slot: u32) -> Result<usize, Fault> {
+        let base = self.frames.last().map_or(0, |frame| frame.locals_base);
+        base.checked_add(slot as usize).ok_or(Fault::MissingLocal)
     }
 
     /// Throw a TypeError with this message, from a place that has no completion to settle.
@@ -491,12 +499,13 @@ impl Vm {
         &mut self,
         error: TypeError,
         heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
-        length: usize,
     ) -> Result<(), Fault> {
         let TypeError(message) = error;
         let thrown = self.realm.error(heap, NativeError::Type, message);
-        self.unwind(thrown, at, length)?;
+        self.unwind(thrown, root, current, at)?;
         Ok(())
     }
 
@@ -512,8 +521,9 @@ impl Vm {
         &mut self,
         outcome: Completion<Value>,
         heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
-        length: usize,
     ) -> Result<Option<Value>, Fault> {
         let TypeError(message) = match outcome {
             Ok(value) => return Ok(Some(value)),
@@ -522,21 +532,37 @@ impl Vm {
         // The value layer said which error; the realm decides what object stands for it. This is
         // the seam described in [`crate::realm`].
         let thrown = self.realm.error(heap, NativeError::Type, message);
-        self.unwind(thrown, at, length)
+        self.unwind(thrown, root, current, at)
     }
 
     /// Hand `thrown` to the innermost handler, or answer that nothing wanted it.
     fn unwind(
         &mut self,
         thrown: Value,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
-        length: usize,
     ) -> Result<Option<Value>, Fault> {
         let Some(handler) = self.handlers.pop() else {
+            // Nothing wanted it anywhere, in this call or in any that is waiting. The script
+            // ends with a throw completion, and the frames go with it.
             self.escaped = Some(thrown);
-            *at = length;
+            self.frames.clear();
+            *current = None;
+            *at = root.code().len();
             return Ok(None);
         };
+        // The handler may belong to a caller. Abandoning the calls between here and there is what
+        // an exception *is*: each one's operands, locals and code are dropped on the way past.
+        while self.frames.len() > handler.frames {
+            let Some(frame) = self.frames.pop() else {
+                return Err(Fault::ReturnWithNoCall);
+            };
+            self.locals.truncate(frame.locals_base);
+            *current = frame.code;
+            *at = frame.at;
+        }
+        let length = current.as_deref().unwrap_or(root).code().len();
         self.stack.truncate(handler.depth);
         self.stack.push(thrown);
         *at = jump_to(handler.target, length)?;
@@ -548,6 +574,18 @@ impl Vm {
         self.stack.pop().ok_or(Fault::StackUnderflow)
     }
 }
+
+/// How many calls may be waiting at once before a further one is a **RangeError**.
+///
+/// Every engine has one and none of them is in the specification: §9.4's note says an
+/// implementation may limit recursion and should report it as a RangeError, which is the
+/// "Maximum call stack size exceeded" every browser prints.
+///
+/// The number is about memory rather than about the host's stack, because a call here is a frame
+/// *record* and not a Rust frame — the interpreter's loop stays one loop however deep the
+/// JavaScript goes. Ten thousand is deeper than any recursion a program means to make and
+/// shallow enough that overrunning it costs a few hundred kilobytes rather than the machine.
+const MAX_CALL_DEPTH: usize = 10_000;
 
 /// Where a jump goes, or a fault if that is not inside the chunk.
 ///
@@ -575,7 +613,7 @@ fn apply_unary(operator: UnaryOperator, operand: Value, heap: &mut Heap) -> Comp
         // §13.5.3 — the operator that never throws, which is why `typeof undeclared` is the one
         // safe way to ask about a name that may not exist.
         UnaryOperator::Typeof => {
-            let text = operand.type_of();
+            let text = operand.type_of(heap);
             Value::String(heap.new_string(text.encode_utf16().collect()))
         }
         // §13.5.4 — unary `+` is `ToNumber` and nothing else, which is why `+x` is the shortest
@@ -600,7 +638,7 @@ mod tests {
     use super::*;
     use crate::ast::BinaryOperator;
     use crate::compile::{compile_expression, compile_script};
-    use crate::heap::ObjectId;
+    use crate::heap::{ObjectId, PropertyKey, PropertyKind};
     use crate::parser::{parse_expression, parse_script};
 
     /// Evaluate `source` and describe the result the way `String(x)` would, so that a row of a
@@ -637,7 +675,7 @@ mod tests {
         // Naming it by its type is enough for a test row to say which error it was, and it stops
         // one describing failure from failing.
         let Ok(id) = value.to_string(heap) else {
-            return format!("{prefix}[{}]", value.type_of());
+            return format!("{prefix}[{}]", value.type_of(heap));
         };
         format!(
             "{prefix}{}",
@@ -780,7 +818,7 @@ mod tests {
         let cases = [
             ("let x = 1;", "let and const"),
             ("const x = 1;", "let and const"),
-            ("function f() {}", "a function declaration"),
+            ("function* g() {}", "an async function or a generator"),
             ("try { } catch ([a]) { }", "a destructuring catch parameter"),
             ("switch (1) { }", "switch"),
             ("for (var k in 1) ;", "for-in and for-of"),
@@ -1594,6 +1632,224 @@ mod tests {
                 "compiling {source:?}"
             );
         }
+    }
+
+    #[test]
+    fn a_function_declaration_exists_before_the_line_that_declares_it() {
+        // The difference between a declaration and an assignment, and the reason both spellings
+        // exist. §10.2.11 *initialises* a function declaration at instantiation time; a `var`
+        // holding a function expression is only declared then, and assigned where it is written.
+        assert_eq!(run("f(); function f() {} 'ran';"), "ran");
+        assert_eq!(run("typeof f; function f() {}"), "function");
+        assert_eq!(
+            run("try { g(); } catch (e) { e.name; } var g = function () {};"),
+            "TypeError"
+        );
+    }
+
+    #[test]
+    fn a_call_passes_its_arguments_and_answers_what_was_returned() {
+        assert_eq!(run("function f(a, b) { return a + b; } f(1, 2);"), "3");
+        assert_eq!(
+            run("function f(a, b) { return a + b; } f(1, 2) + f(10, 20);"),
+            "33"
+        );
+        assert_eq!(run("function f() { return 'x'; } f();"), "x");
+        // §10.2.1 step 4 — falling off the end is `undefined`, and so is a bare `return`.
+        assert_eq!(run("function f() {} typeof f();"), "undefined");
+        assert_eq!(run("function f() { return; } typeof f();"), "undefined");
+        assert_eq!(run("function f() { 1; } typeof f();"), "undefined");
+        // A parameter the caller did not supply is `undefined`; an argument too many is
+        // discarded, since reaching it needs `arguments`.
+        assert_eq!(
+            run("function f(a, b) { return typeof b; } f(1);"),
+            "undefined"
+        );
+        assert_eq!(run("function f(a) { return a; } f(1, 2, 3);"), "1");
+        assert_eq!(run("function f() { return 1; } f(1, 2, 3);"), "1");
+    }
+
+    #[test]
+    fn a_function_is_a_value_and_says_so() {
+        assert_eq!(run("function f() {} typeof f;"), "function");
+        assert_eq!(run("typeof function () {};"), "function");
+        assert_eq!(run("var f = function () {}; typeof f;"), "function");
+        assert_eq!(run("typeof {};"), "object");
+        // It can be passed, returned and called through another name — and it is an object, so
+        // two of them are never the same value.
+        assert_eq!(run("function id(x) { return x; } id(id)(42);"), "42");
+        assert_eq!(run("function f() {} var g = f; g === f;"), "true");
+        assert_eq!(
+            run("function make() { return function () {}; } make() === make();"),
+            "false"
+        );
+        // …and a function is truthy and is an ordinary object otherwise.
+        assert_eq!(run("function f() {} f ? 'yes' : 'no';"), "yes");
+        assert_eq!(run("function f() {} f.own = 1; f.own;"), "1");
+    }
+
+    #[test]
+    fn a_functions_own_names_do_not_leak_and_the_scripts_do_not_hide() {
+        // A parameter and a `var` belong to the call, so each call gets its own and the script
+        // never sees them…
+        assert_eq!(
+            run("var n = 'outer'; function f(n) { return n; } f('inner') + n;"),
+            "innerouter"
+        );
+        assert_eq!(
+            run(
+                "var only = 'outer'; function f() { var only = 'inner'; return only; } f() + only;"
+            ),
+            "innerouter"
+        );
+        // …while a name declared at the top level is reachable from inside, and writing it
+        // reaches the same binding rather than a copy.
+        assert_eq!(
+            run("var total = 0; function add(n) { total = total + n; } add(2); add(3); total;"),
+            "5"
+        );
+        assert_eq!(
+            run("var shared = 'seen'; function f() { return shared; } f();"),
+            "seen"
+        );
+    }
+
+    #[test]
+    fn recursion_works_and_runs_out_with_a_range_error_rather_than_a_crash() {
+        assert_eq!(
+            run("function fact(n) { if (n <= 1) return 1; return n * fact(n - 1); } fact(10);"),
+            "3628800"
+        );
+        assert_eq!(
+            run(
+                "function fib(n) { if (n < 2) return n; return fib(n - 1) + fib(n - 2); } fib(15);"
+            ),
+            "610"
+        );
+        // §9.4's note: an implementation may limit recursion and should report it as a
+        // RangeError. A frame here is a record rather than a Rust stack frame, so this is a
+        // number the engine chose and not the host's stack running out.
+        assert_eq!(
+            run("function loop(n) { return loop(n + 1); } try { loop(0); } catch (e) { e.name; }"),
+            "RangeError"
+        );
+        // …and the machine is usable afterwards, which is the half that matters: the frames are
+        // unwound rather than abandoned.
+        assert_eq!(
+            run(
+                "function loop(n) { return loop(n + 1); } function ok() { return 'fine'; } try { loop(0); } catch (e) { ok(); }"
+            ),
+            "fine"
+        );
+    }
+
+    #[test]
+    fn calling_something_that_is_not_a_function_is_a_type_error() {
+        for source in [
+            "var x = 1; x();",
+            "var x = 'a'; x();",
+            "var x = {}; x();",
+            "var x = null; x();",
+        ] {
+            let script = format!("try {{ {source} }} catch (e) {{ e.name + ': ' + e.message; }}");
+            assert_eq!(
+                run(&script),
+                "TypeError: what was called is not a function",
+                "running {source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_throw_crosses_a_call_and_finds_the_handler_that_was_waiting() {
+        assert_eq!(
+            run("function t() { throw 'inside'; } try { t(); } catch (e) { 'caught ' + e; }"),
+            "caught inside"
+        );
+        // Through two calls, and past a `finally` that runs on the way.
+        assert_eq!(
+            run(
+                "var log = ''; function inner() { throw 1; } function outer() { try { inner(); } finally { log = log + 'f'; } } try { outer(); } catch (e) { log + e; }"
+            ),
+            "f1"
+        );
+        // A handler *inside* the callee catches first, and the caller's is untouched.
+        assert_eq!(
+            run(
+                "function t() { try { throw 1; } catch (e) { return 'inner'; } } try { t(); } catch (e) { 'outer'; }"
+            ),
+            "inner"
+        );
+        // …and the operand stack comes back level, so what follows is computed on a clean one.
+        assert_eq!(
+            run("function t() { throw 1; } var r; try { r = 1 + t(); } catch (e) { r = 9; } r;"),
+            "9"
+        );
+    }
+
+    #[test]
+    fn what_a_function_evaluates_to_is_not_the_scripts_completion_value() {
+        // §14.2.2 — the completion value belongs to the script. A statement inside a function
+        // discards its value, so calling one cannot change what the script came to.
+        assert_eq!(run("7; function f() { 99; } f();"), "undefined");
+        assert_eq!(run("function f() { 99; } f(); 7;"), "7");
+        assert_eq!(run("7; function f() { 99; }"), "7");
+    }
+
+    #[test]
+    fn what_functions_cannot_do_yet_says_which_and_where() {
+        let cases = [
+            (
+                "function outer() { var x; function inner() { return x; } }",
+                "a closure over an outer variable",
+            ),
+            ("function f() { return this; }", "this"),
+            ("function* g() {}", "an async function or a generator"),
+            ("async function f() {}", "an async function or a generator"),
+            ("function f(a = 1) {}", "a default parameter"),
+            ("function f(...rest) {}", "a rest parameter"),
+            ("function f([a]) {}", "a destructuring parameter"),
+            ("var o = {}; o.m = function () {}; o.m();", "a method call"),
+            ("function f() {} f(...[1]);", "a spread argument"),
+            ("var f = function () {}; f?.();", "optional chaining"),
+        ];
+        let mut heap = Heap::new();
+        for (source, what) in cases {
+            let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
+            let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+            assert_eq!(
+                error.kind,
+                crate::compile::ErrorKind::Unsupported(what),
+                "compiling {source:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_functions_statements_do_not_touch_the_scripts_completion_value() {
+        // §14.2.2 — the completion value is the *script's*. The call itself is an expression
+        // statement and sets it, which hides the difference; a call in a *declaration* does not,
+        // so this is where a function writing to it would show.
+        assert_eq!(run("7; function f() { 99; } var x = f();"), "7");
+        assert_eq!(run("7; function f() { 99; } f();"), "undefined");
+        assert_eq!(run("function f() { 99; } var x = f(); 'end';"), "end");
+    }
+
+    #[test]
+    fn the_call_limit_is_a_count_of_frames_and_the_count_is_exact() {
+        // The limit is a number this engine chose, so an off-by-one in it is invisible unless
+        // something counts. This counts: every entry increments, and the call that is refused is
+        // the one that would have made the frames one deeper than allowed.
+        let reached = run(
+            "var deep = 0; function f() { deep = deep + 1; return f(); } \
+             try { f(); } catch (e) { deep; }",
+        );
+        assert_eq!(reached, MAX_CALL_DEPTH.to_string());
+        // …and it is a RangeError rather than anything else, which is what §9.4's note asks for.
+        assert_eq!(
+            run("function f() { return f(); } try { f(); } catch (e) { e.name; }"),
+            "RangeError"
+        );
     }
 
     #[test]

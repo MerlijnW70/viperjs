@@ -19,8 +19,10 @@
 //! in the specification's behaviour depends on which is used, which is exactly why the choice can
 //! wait for evidence.
 
+use crate::compile::Chunk;
 use crate::heap::{Heap, Property, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::value::Value;
+use std::rc::Rc;
 
 /// An object on the heap.
 ///
@@ -42,6 +44,17 @@ pub struct Object {
     /// `Object.preventExtensions` a guarantee rather than a suggestion, and it is why
     /// [`Object::prevent_extensions`] takes no argument.
     extensible: bool,
+    /// The body this object runs when it is called — its `[[Call]]` internal method.
+    ///
+    /// `None` for an ordinary object, which is most of them. An object is *callable* exactly when
+    /// this is present, which is the whole of what `typeof f === "function"` and "x is not a
+    /// function" are asking about.
+    ///
+    /// Holding the code here rather than in an arena beside it is deliberate: a function object
+    /// is the thing that owns its body, and the `Rc` is what lets a closure outlive the call that
+    /// made it. See [`Chunk`] for why reference counting is safe for code where DR-0010 rejects
+    /// it for values.
+    call: Option<Rc<Chunk>>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -82,6 +95,7 @@ impl Object {
         Self {
             prototype,
             extensible: true,
+            call: None,
             properties: Vec::new(),
         }
     }
@@ -89,6 +103,11 @@ impl Object {
     /// `[[GetPrototypeOf]]` (§10.1.1) — the prototype, or `None` for `null`.
     pub fn prototype(&self) -> Option<ObjectId> {
         self.prototype
+    }
+
+    /// The body this object runs when called, if it is callable at all.
+    pub fn call(&self) -> Option<&Rc<Chunk>> {
+        self.call.as_ref()
     }
 
     /// `[[IsExtensible]]` (§10.1.3).
@@ -341,6 +360,19 @@ fn apply(descriptor: &PropertyDescriptor, current: Option<&Property>) -> Propert
 }
 
 impl Heap {
+    /// Put a function object on the heap — `OrdinaryFunctionCreate` (§10.2.3), in the part that
+    /// is about the object rather than about the environment.
+    ///
+    /// Ordinary in every way but one: it has a `[[Call]]`, which is what makes `typeof` say
+    /// `"function"` and what a call expression looks for.
+    pub fn new_function(&mut self, prototype: ObjectId, body: Rc<Chunk>) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(Some(prototype));
+        object.call = Some(body);
+        self.objects.push(object);
+        id
+    }
+
     /// Put an ordinary object on the heap — `OrdinaryObjectCreate` (§10.1.12).
     pub fn new_object(&mut self, prototype: Option<ObjectId>) -> ObjectId {
         let id = ObjectId(self.objects.len());

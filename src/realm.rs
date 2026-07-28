@@ -25,6 +25,7 @@ use crate::value::Value;
 #[derive(Debug, Clone, Copy)]
 pub struct Realm {
     object_prototype: ObjectId,
+    function_prototype: ObjectId,
     error_prototype: ObjectId,
     type_error_prototype: ObjectId,
     range_error_prototype: ObjectId,
@@ -65,6 +66,10 @@ impl Realm {
     /// `instanceof` exists to ask.
     pub fn new(heap: &mut Heap) -> Self {
         let object_prototype = heap.new_object(None);
+        // §20.2.3 — every function inherits from this, and it is itself an ordinary object here.
+        // It is callable in the specification, and callable with no arguments returning
+        // `undefined`, which needs a native function and so waits for one.
+        let function_prototype = heap.new_object(Some(object_prototype));
         let error_prototype = heap.new_object(Some(object_prototype));
         // §20.5.3 — `Error.prototype` has a `name` of `"Error"` and an empty `message`, and both
         // are ordinary writable properties rather than anything special. That an error's message
@@ -87,6 +92,7 @@ impl Realm {
 
         Self {
             object_prototype,
+            function_prototype,
             error_prototype,
             type_error_prototype,
             range_error_prototype,
@@ -97,6 +103,11 @@ impl Realm {
     /// `%Object.prototype%` — what an object literal inherits from.
     pub fn object_prototype(&self) -> ObjectId {
         self.object_prototype
+    }
+
+    /// `%Function.prototype%` — what every function inherits from.
+    pub fn function_prototype(&self) -> ObjectId {
+        self.function_prototype
     }
 
     /// `%Error.prototype%`.

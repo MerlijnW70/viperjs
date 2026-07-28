@@ -15,10 +15,10 @@
 //! parameter spreads to every operation that could meet a String: truthiness asks whether it is
 //! empty, equality compares its code units, and `ToNumber` reads a whole grammar out of it.
 //!
-//! [`Value::type_of`] is the exception and stays free of it, because the variant already
-//! answers — no operand is read. That asymmetry is worth keeping rather than smoothing over: it
-//! says exactly which questions are about the *shape* of a value and which are about its
-//! contents.
+//! [`Value::type_of`] used to be the exception, because the variant answered on its own. It is
+//! not any more, and the reason is worth keeping: §13.5.3 answers `"function"` for an Object with
+//! a `[[Call]]`, so `typeof` is the one question about a value's *shape* that an object can still
+//! change the answer to.
 //!
 //! # Why there is no `PartialEq`
 //!
@@ -112,17 +112,21 @@ impl Value {
     /// `typeof null` is `"object"`, which is not a bug being reproduced but the specification's
     /// own table: it was a mistake in 1995 and became load-bearing before anyone could fix it.
     /// The table is here rather than in the operator because it is a fact about the value.
-    pub fn type_of(&self) -> &'static str {
+    pub fn type_of(&self, heap: &Heap) -> &'static str {
         match self {
             Self::Undefined => "undefined",
             Self::Null => "object",
             Self::Boolean(_) => "boolean",
             Self::Number(_) => "number",
             Self::String(_) => "string",
-            // §13.5.3's table again: an Object is `"object"` unless it is callable, in which case
-            // it is `"function"`. Nothing is callable yet, so nothing here asks — and when
-            // something is, this is the line that has to.
-            Self::Object(_) => "object",
+            // §13.5.3's table again, and the one row that has to look inside: an Object is
+            // `"object"` unless it has a `[[Call]]`, in which case it is `"function"`. A handle
+            // this heap does not know is `"object"`, which is what an object with nothing
+            // callable about it would be.
+            Self::Object(id) => match heap.object(*id).and_then(crate::heap::Object::call) {
+                Some(_) => "function",
+                None => "object",
+            },
         }
     }
 
@@ -469,11 +473,12 @@ mod tests {
 
     #[test]
     fn typeof_null_is_object_and_the_rest_say_what_they_are() {
-        assert_eq!(UNDEFINED.type_of(), "undefined");
-        assert_eq!(boolean(true).type_of(), "boolean");
-        assert_eq!(number(1.0).type_of(), "number");
+        let heap = Heap::new();
+        assert_eq!(UNDEFINED.type_of(&heap), "undefined");
+        assert_eq!(boolean(true).type_of(&heap), "boolean");
+        assert_eq!(number(1.0).type_of(&heap), "number");
         // §13.5.3's table, and the one entry that surprises everyone who has not met it.
-        assert_eq!(NULL.type_of(), "object");
+        assert_eq!(NULL.type_of(&heap), "object");
     }
 
     #[test]
@@ -933,7 +938,7 @@ mod tests {
         let empty = Value::String(heap.new_string(Vec::new()));
         let zero = Value::String(heap.new_string("0".encode_utf16().collect()));
         let space = Value::String(heap.new_string(" ".encode_utf16().collect()));
-        assert_eq!(empty.type_of(), "string");
+        assert_eq!(empty.type_of(&heap), "string");
         // §7.1.2 asks about the length and nothing else, which is why `"0"` and `"false"` are
         // true while `Number("0")` is false — the two operations are not the same question.
         assert!(!empty.to_boolean(&heap));
@@ -1002,7 +1007,7 @@ mod tests {
         let known = Value::String(mine.new_string("b".encode_utf16().collect()));
         assert!(!foreign.to_boolean(&mine));
         assert!(foreign.to_number(&mine).is_ok_and(f64::is_nan));
-        assert_eq!(foreign.type_of(), "string");
+        assert_eq!(foreign.type_of(&mine), "string");
         assert!(!foreign.same_value(&foreign, &mine));
         assert!(!foreign.same_value(&known, &mine));
         assert!(!known.same_value(&foreign, &mine));
@@ -1038,7 +1043,7 @@ mod tests {
                 .expect("a primitive converts");
             let _ = value.to_int32(&heap).expect("a primitive converts");
             let _ = value.to_uint32(&heap).expect("a primitive converts");
-            let _ = value.type_of();
+            let _ = value.type_of(&heap);
             let _ = value.same_value(&value, &heap);
             let _ = value.same_value_zero(&value, &heap);
             let _ = value.is_strictly_equal(&value, &heap);
@@ -1050,7 +1055,7 @@ mod tests {
         let mut heap = Heap::new();
         let first = Value::Object(heap.new_object(None));
         let second = Value::Object(heap.new_object(None));
-        assert_eq!(first.type_of(), "object");
+        assert_eq!(first.type_of(&heap), "object");
         // Every object is truthy — an empty one, one with a null prototype, any of them. The
         // famous counter-example is a host object with an [[IsHTMLDDA]] slot, which is a browser
         // thing and not a language thing.
@@ -1082,7 +1087,7 @@ mod tests {
         assert!(object.to_integer_or_infinity(&heap).is_err());
         // …while the operations that do not convert still answer, which is the line §7.1.2 draws.
         assert!(object.to_boolean(&heap));
-        assert_eq!(object.type_of(), "object");
+        assert_eq!(object.type_of(&heap), "object");
         // `ToPrimitive` of anything that is already primitive is itself, under either hint.
         assert!(matches!(
             Value::Number(1.0).to_primitive(&heap, Hint::Number),
@@ -1173,7 +1178,7 @@ mod tests {
                 .expect("a primitive converts");
             let _ = value.to_int32(&heap).expect("a primitive converts");
             let _ = value.to_uint32(&heap).expect("a primitive converts");
-            let _ = value.type_of();
+            let _ = value.type_of(&heap);
             let _ = value.same_value(&value, &heap);
             let _ = value.same_value_zero(&value, &heap);
             let _ = value.is_strictly_equal(&value, &heap);

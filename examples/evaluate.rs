@@ -54,7 +54,7 @@ fn evaluate(source: &str) -> String {
     // An object has no `toString` to call yet, so writing one down throws again. Naming it by its
     // type says which it was without the description itself failing.
     let Ok(id) = value.to_string(&mut heap) else {
-        return format!("{prefix}[{}]", value.type_of());
+        return format!("{prefix}[{}]", value.type_of(&heap));
     };
     format!(
         "{prefix}{}",
