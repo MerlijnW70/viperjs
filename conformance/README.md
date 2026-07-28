@@ -37,8 +37,8 @@ engine rather than in the harness.
 ## What a run says
 
 ```
-7679 passed, 859 failed, 84623 not run
-89.94% of what ran — 8.98% of the whole suite
+7679 passed, 539 failed, 84943 not run
+93.44% of what ran — 8.24% of the whole suite
 ```
 
 Both percentages, always. The first flatters an engine that declines most of the suite, and it
@@ -49,12 +49,13 @@ Then the buckets:
 
 ```
 what stopped the rest, commonest first:
-   83774  a reference to an undeclared name is not implemented yet
+   73357  a reference to an undeclared name is not implemented yet
+   10737  an async test reports through $DONE, which needs a host function
      830  modules are M7
 ```
 
-That list is the reason the directory exists. A bucket with eighty thousand runs behind it is the
-next milestone; one with four is not.
+That list is the reason the directory exists. A bucket with seventy thousand runs behind it is
+the next milestone; one with four is not.
 
 ## Passed, failed, and not run
 
@@ -103,8 +104,8 @@ The exit code is what CI reads. A summary printed to stdout is not a verdict.
 
 The reason column is load-bearing. `expectations.txt` is the one place the conformance number
 can be quietly laundered — "just add it to the list" is always available and always tempting.
-Every entry says why (`# M6: generators not implemented`), and those reasons get
-interrogated rather than taken on faith. A reason like "flaky" or "weird" is
+Every entry says why — `:: it threw a RangeError` is a reason, and those reasons
+get interrogated rather than taken on faith. A reason like "flaky" or "weird" is
 not a reason. Which is why `--bless` rewrites the file wholesale and nothing else may add a line:
 a harness that could write its own excuses would not be a ratchet.
 
