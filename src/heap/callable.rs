@@ -39,12 +39,12 @@ pub enum Callable {
 
 /// A built-in's body.
 ///
-/// # Why it may only throw a TypeError so far
+/// # What it may throw
 ///
-/// [`Completion`] carries [`crate::value::TypeError`] and a `&'static str`, which is every error
-/// the built-ins in this slice raise. A built-in that needs a RangeError, or one that needs a
-/// message built at run time, needs a wider abrupt completion than this — and it will get one
-/// when there is a built-in that needs it, rather than a fortnight before.
+/// [`Completion`] carries a [`crate::value::Abrupt`], which names an error kind and a message
+/// written in the source — or carries a value that has already been thrown. A built-in that needs
+/// a message built at *run time* still cannot have one; that is the next thing this type will
+/// grow, and it will grow it when a built-in needs it rather than a fortnight before.
 pub type Native = fn(&mut Heap, &Realm, &NativeCall<'_>) -> Completion<Value>;
 
 /// What a built-in is told about the call it is answering.

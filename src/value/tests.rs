@@ -626,10 +626,16 @@ fn an_object_that_cannot_be_made_primitive_throws_rather_than_answering() {
     // methods; what will not change is that the answer is a *throw* and not a guess.
     let mut heap = Heap::new();
     let object = Value::Object(heap.new_object(None));
-    assert_eq!(
+    // Matched rather than compared: an abrupt completion may carry a thrown `Value`, and `Value`
+    // has no equality of its own — comparing two of them would be asking a question the language
+    // answers with `===` and Rust would answer differently.
+    assert!(matches!(
         object.to_number(&heap),
-        Err(TypeError("cannot convert an object to a primitive value"))
-    );
+        Err(Abrupt::Raised(
+            ErrorKind::Type,
+            "cannot convert an object to a primitive value"
+        ))
+    ));
     assert!(object.to_string(&mut heap).is_err());
     assert!(object.to_int32(&heap).is_err());
     assert!(object.to_uint32(&heap).is_err());

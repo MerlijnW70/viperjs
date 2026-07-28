@@ -38,7 +38,7 @@ use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
 use crate::heap::{EnvironmentId, Heap, PropertyDescriptor};
 use crate::realm::{NativeError, Realm};
-use crate::value::{Completion, TypeError, Value, apply_binary};
+use crate::value::{Abrupt, Completion, Value, apply_binary};
 use std::rc::Rc;
 
 /// A chunk that does not make sense.
@@ -515,19 +515,32 @@ impl Vm {
         Ok(Outcome::Value(self.completion))
     }
 
-    /// Throw a TypeError with this message, from a place that has no completion to settle.
+    /// Throw, from a place that has no completion to settle.
     fn throw_type_error(
         &mut self,
-        error: TypeError,
+        error: Abrupt,
         heap: &mut Heap,
         root: &Chunk,
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<(), Fault> {
-        let TypeError(message) = error;
-        let thrown = self.realm.error(heap, NativeError::Type, message);
+        let thrown = self.thrown_value(error, heap);
         self.unwind(thrown, root, current, at)?;
         Ok(())
+    }
+
+    /// The value a `catch` block receives, out of an abrupt completion.
+    ///
+    /// The seam described in [`crate::realm`], in one place: the value layer says *which* error
+    /// and why, and the realm decides what object stands for it. A completion that already
+    /// carries a value has nothing to decide — it is the one that was thrown, and building a
+    /// second object from its parts would hand the program a different error than the one it
+    /// raised.
+    fn thrown_value(&self, error: Abrupt, heap: &mut Heap) -> Value {
+        match error {
+            Abrupt::Raised(kind, message) => self.realm.error(heap, kind, message),
+            Abrupt::Thrown(value) => value,
+        }
     }
 
     /// What to do with an operation that may have thrown.
@@ -546,13 +559,11 @@ impl Vm {
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<Option<Value>, Fault> {
-        let TypeError(message) = match outcome {
+        let error = match outcome {
             Ok(value) => return Ok(Some(value)),
             Err(error) => error,
         };
-        // The value layer said which error; the realm decides what object stands for it. This is
-        // the seam described in [`crate::realm`].
-        let thrown = self.realm.error(heap, NativeError::Type, message);
+        let thrown = self.thrown_value(error, heap);
         self.unwind(thrown, root, current, at)
     }
 

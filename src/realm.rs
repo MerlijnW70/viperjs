@@ -7,16 +7,15 @@
 //! # Why an error is an object at all
 //!
 //! Because `catch (e) { e.message }` has to work, and because `throw` takes a value rather than a
-//! condition. [`crate::value::TypeError`] says *which* error and why; this decides what object
+//! condition. [`crate::value::Abrupt`] says *which* error and why; this decides what object
 //! stands for it, and that decision needs a prototype, which needs a realm. Keeping the two apart
 //! is what lets `value/` stay a description of values rather than of a running engine.
 //!
 //! # What is missing, and how you can tell
 //!
-//! `Error.prototype` has a `name` and a `message` and no methods, because a method is a function
-//! and there are none. So `String(e)` on an error does not yet say `"TypeError: …"` — it throws,
-//! since `ToPrimitive` finds no `toString` to call. That is the correct answer for the object as
-//! it stands, and it changes on its own when `Object.prototype.toString` arrives.
+//! §9.3 lists about two hundred intrinsics. `Object` and the error hierarchy are here; everything
+//! else — `Array`, `String`, `Number`, `Function.prototype`'s methods — is not, and the
+//! conformance expectations name every test that notices.
 
 use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::value::Value;
@@ -50,27 +49,12 @@ const NATIVE_ERRORS: [&str; 6] = [
     "URIError",
 ];
 
-/// Which of §20.5.5's five native error types this is.
+/// Which of §20.5.5's error types an engine-raised failure is.
 ///
-/// `Error` itself is not among them: it is the one a *program* throws, and an engine throws one
-/// of these. `EvalError` and `URIError` join the list when the builtins that produce them do.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NativeError {
-    /// The operand is the wrong kind of thing — §20.5.5.5. By far the commonest.
-    Type,
-    /// A number is outside the interval something allows — §20.5.5.2.
-    Range,
-    /// A name has no binding, or is used before it has one — §20.5.5.3.
-    Reference,
-    /// The source could not be parsed — §20.5.5.4. Thrown by `eval` and by `Function`.
-    Syntax,
-    /// Reserved by §20.5.5.1 and thrown by nothing in the language itself.
-    ///
-    /// It exists because a *script* can throw one, and because the suite checks that it does.
-    Eval,
-    /// A URI-handling function was given something it cannot encode — §20.5.5.6.
-    Uri,
-}
+/// Defined in [`crate::value`] because it is a *description* of a failure rather than an
+/// intrinsic: the value layer can say "this is a RangeError" without knowing what one looks like.
+/// Re-exported here under the name the realm uses, because this is where a kind becomes an object.
+pub use crate::value::ErrorKind as NativeError;
 
 impl NativeError {
     /// Where this kind's prototype sits in [`NATIVE_ERRORS`].

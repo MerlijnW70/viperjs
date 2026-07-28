@@ -7,7 +7,7 @@
 
 use super::Vm;
 use crate::heap::{Heap, PropertyDescriptor, PropertyKey, PropertyKind};
-use crate::value::{Completion, TypeError, Value};
+use crate::value::{Abrupt, Completion, Value};
 
 impl Vm {
     /// `ToPropertyKey` (§7.1.19), for the keys that exist.
@@ -46,7 +46,7 @@ impl Vm {
         heap: &mut Heap,
     ) -> Completion<Value> {
         let Value::Object(object) = base else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "cannot read a property of something that is not an object",
             ));
         };
@@ -64,7 +64,7 @@ impl Vm {
                 getter: Value::Undefined,
                 ..
             } => Ok(Value::Undefined),
-            PropertyKind::Accessor { .. } => Err(TypeError("a getter is not callable")),
+            PropertyKind::Accessor { .. } => Err(Abrupt::type_error("a getter is not callable")),
         }
     }
     /// `[[Set]]` (§10.1.9) — put `value` under `key`, and answer whether it was allowed.
@@ -91,7 +91,7 @@ impl Vm {
         heap: &mut Heap,
     ) -> Completion<Value> {
         let Value::Object(object) = base else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "cannot set a property of something that is not an object",
             ));
         };
@@ -107,7 +107,7 @@ impl Vm {
                     return Ok(Value::Boolean(false));
                 }
                 PropertyKind::Accessor { .. } => {
-                    return Err(TypeError("a setter is not callable"));
+                    return Err(Abrupt::type_error("a setter is not callable"));
                 }
                 PropertyKind::Data {
                     writable: false, ..
@@ -169,7 +169,7 @@ impl Vm {
         heap: &mut Heap,
     ) -> Completion<Value> {
         let Value::Object(constructor) = target else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "the right operand of instanceof must be an object",
             ));
         };
@@ -177,7 +177,9 @@ impl Vm {
             .object(constructor)
             .is_some_and(|object| object.call().is_some())
         {
-            return Err(TypeError("the right operand of instanceof is not callable"));
+            return Err(Abrupt::type_error(
+                "the right operand of instanceof is not callable",
+            ));
         }
         // §7.3.22 step 3 — a primitive is an instance of nothing, and that is an *answer* rather
         // than an error. `1 instanceof Object` is `false`, not a mistake.
@@ -186,7 +188,7 @@ impl Vm {
         };
         let prototype = self.get_property(target, self.well_known("prototype", heap), heap)?;
         let Value::Object(prototype) = prototype else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "the prototype of the right operand of instanceof is not an object",
             ));
         };
@@ -216,7 +218,7 @@ impl Vm {
         heap: &mut Heap,
     ) -> Completion<Value> {
         let Value::Object(object) = base else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "cannot delete a property of something that is not an object",
             ));
         };
@@ -238,7 +240,9 @@ impl Vm {
         let Value::Object(object) = base else {
             // §13.10.1 step 5 — `in` is the one operator that names the requirement out loud
             // rather than converting: `1 in 2` is a TypeError and not `false`.
-            return Err(TypeError("the right operand of in must be an object"));
+            return Err(Abrupt::type_error(
+                "the right operand of in must be an object",
+            ));
         };
         let key = self.property_key(key, heap)?;
         Ok(Value::Boolean(heap.has_property(object, key)))

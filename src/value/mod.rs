@@ -45,11 +45,15 @@
 //! however strange `x` is. The three equality relations are not either — they compare, and never
 //! convert.
 //!
-//! What a failure carries is a [`TypeError`] and not an Error *object*. An object needs a
+//! What a failure carries is an [`Abrupt`] and not an Error *object*. An object needs a
 //! prototype, a prototype belongs to a realm, and a realm is a thing the interpreter has and the
 //! value representation should not. So this layer says which error and why, and
 //! [`crate::realm`] decides what object stands for it — which is also where the message will
 //! acquire a stack trace it cannot have here.
+//!
+//! An `Abrupt` can also carry a value outright, and that half is not for this layer at all: it is
+//! for a throw that has already happened somewhere with a realm — inside a `valueOf` a `+` called,
+//! for instance — and is travelling back through code that only knows how to pass it on.
 //!
 //! # How this module is laid out
 //!
@@ -195,7 +199,9 @@ impl Value {
     pub fn to_primitive(&self, heap: &Heap, hint: Hint) -> Completion<Self> {
         let _ = (heap, hint);
         match self {
-            Self::Object(_) => Err(TypeError("cannot convert an object to a primitive value")),
+            Self::Object(_) => Err(Abrupt::type_error(
+                "cannot convert an object to a primitive value",
+            )),
             primitive => Ok(*primitive),
         }
     }
@@ -317,23 +323,73 @@ pub enum Hint {
     String,
 }
 
-/// A **TypeError** that has happened, named by what it was.
+/// Which of §20.5.5's error types an abrupt completion names.
 ///
-/// Not an Error object: an object needs a prototype, a prototype belongs to a realm, and a realm
-/// is not something the value representation should know about. [`crate::realm::Realm`] turns one
-/// of these into the object a `catch` block receives.
-///
-/// The message is `&'static str` because every message this layer produces is written in it.
-/// Anything that needs to name a value — "x is not a function" — is produced where the value is,
-/// which is the interpreter.
+/// Here rather than in [`crate::realm`] because it is a *description* of a failure and not an
+/// intrinsic object: the value layer can say "this is a RangeError" without knowing what a
+/// RangeError object looks like. The realm re-exports it as `NativeError` and turns one into the
+/// object a `catch` block receives.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TypeError(pub &'static str);
+pub enum ErrorKind {
+    /// The operand is the wrong kind of thing — §20.5.5.5. By far the commonest.
+    Type,
+    /// A number is outside the interval something allows — §20.5.5.2.
+    Range,
+    /// A name has no binding, or is used before it has one — §20.5.5.3.
+    Reference,
+    /// The source could not be parsed — §20.5.5.4. Thrown by `eval` and by `Function`.
+    Syntax,
+    /// Reserved by §20.5.5.1 and thrown by nothing in the language itself.
+    ///
+    /// It exists because a *script* can throw one, and because the suite checks that it does.
+    Eval,
+    /// A URI-handling function was given something it cannot encode — §20.5.5.6.
+    Uri,
+}
+
+/// §6.2.4's **throw** completion, as the parts of the engine that cannot build one carry it.
+///
+/// # Why there are two shapes and not one
+///
+/// Most failures in this layer are the engine's own: `null.x` is a TypeError with a message
+/// written in the source. Those cannot be *objects* here — an object needs a prototype, a
+/// prototype belongs to a realm, and a realm is not something the value representation should know
+/// about — so they name a kind and a message and let the interpreter build the object.
+///
+/// But a throw can also be a value that already exists. `throw new RangeError("x")` inside a
+/// `valueOf` that a `+` called is a completion travelling back through Rust, and the object it
+/// carries is the one the `catch` must receive. Flattening it into a kind and a message would
+/// hand back a *different* error than the one that was thrown — the same object identity, message
+/// and prototype all lost — and it would look like it worked.
+#[derive(Debug, Clone, Copy)]
+pub enum Abrupt {
+    /// An error the engine raised, named by kind and by a message written in the source.
+    ///
+    /// The message is `&'static str` because every message this layer produces is written in it.
+    /// Anything that has to name a *value* — "x is not defined" — is produced where the value is,
+    /// which is the interpreter, and arrives as [`Abrupt::Thrown`].
+    Raised(ErrorKind, &'static str),
+    /// A value that is already what will be thrown.
+    Thrown(Value),
+}
+
+impl Abrupt {
+    /// The commonest one, spelled short because it is written forty times.
+    pub const fn type_error(message: &'static str) -> Self {
+        Self::Raised(ErrorKind::Type, message)
+    }
+
+    /// §20.5.5.2, for an operand that is outside the interval something allows.
+    pub const fn range_error(message: &'static str) -> Self {
+        Self::Raised(ErrorKind::Range, message)
+    }
+}
 
 /// The result of an operation that may throw — §6.2.4's normal and throw completions.
 ///
 /// `break`, `continue` and `return` are not here: a bytecode compiler turns those into jumps,
 /// because it knows at compile time where they go. Only a throw has to travel.
-pub type Completion<T> = Result<T, TypeError>;
+pub type Completion<T> = Result<T, Abrupt>;
 
 /// `CanonicalNumericIndexString` (§7.1.21) — the Number `units` spells, if it spells one exactly.
 ///

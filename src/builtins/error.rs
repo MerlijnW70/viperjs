@@ -18,7 +18,7 @@
 
 use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor};
 use crate::realm::Realm;
-use crate::value::{Completion, TypeError, Value};
+use crate::value::{Abrupt, Completion, Value};
 
 use super::{define_method, define_value, key, own_value, text};
 
@@ -69,7 +69,9 @@ pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Comp
         // §20.5.3.4 step 2. Reachable as `Error.prototype.toString.call(1)`, and the reason
         // §10.3.1 must not substitute a receiver: with the global object put here instead, this
         // would answer `"undefined"` rather than refusing.
-        return Err(TypeError("Error.prototype.toString requires an object"));
+        return Err(Abrupt::type_error(
+            "Error.prototype.toString requires an object",
+        ));
     };
     // §20.5.3.4 steps 3 and 5 — absent is `"Error"` for the name and `""` for the message, which
     // is what makes an object with neither print as `"Error"`.
@@ -120,7 +122,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, global, "Error", Value::Object(error));
 
     // §20.5.3.4 — the one method, on `Error.prototype`, inherited by every native error's
-    // prototype rather than repeated on each. That is why `new TypeError("x") + ""` says
+    // prototype rather than repeated on each. That is why `new Abrupt::type_error("x") + ""` says
     // `"TypeError: x"` with no `TypeError.prototype.toString` anywhere.
     define_method(
         heap,

@@ -9,7 +9,7 @@ use super::{Fault, Vm};
 use crate::compile::Chunk;
 use crate::heap::{Callable, EnvironmentId, Heap, Object};
 use crate::realm::NativeError;
-use crate::value::{TypeError, Value};
+use crate::value::{Abrupt, Value};
 use std::rc::Rc;
 
 impl Vm {
@@ -46,7 +46,7 @@ impl Vm {
 
         let Value::Object(object) = callee else {
             self.throw_type_error(
-                TypeError("what was called is not a function"),
+                Abrupt::type_error("what was called is not a function"),
                 heap,
                 chunk,
                 current,
@@ -56,7 +56,7 @@ impl Vm {
         };
         let Some(callable) = heap.object(object).and_then(Object::call).cloned() else {
             self.throw_type_error(
-                TypeError("what was called is not a function"),
+                Abrupt::type_error("what was called is not a function"),
                 heap,
                 chunk,
                 current,

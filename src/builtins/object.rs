@@ -24,7 +24,7 @@ use crate::heap::{
     Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKey, PropertyKind,
 };
 use crate::realm::Realm;
-use crate::value::{Completion, TypeError, Value};
+use crate::value::{Abrupt, Completion, ErrorKind, Value};
 
 use super::{define_method, define_value, key, text};
 
@@ -40,7 +40,7 @@ pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Compl
             heap.new_object(Some(realm.object_prototype())),
         )),
         // §7.1.18 `ToObject` wraps a primitive, and there is nothing to wrap it in yet.
-        _ => Err(TypeError(
+        _ => Err(Abrupt::type_error(
             "Object() of a primitive needs a wrapper object, which is not implemented yet",
         )),
     }
@@ -61,7 +61,7 @@ pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Comp
         },
         // §7.1.18 again: a primitive would be wrapped and its wrapper's tag used.
         _ => {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "Object.prototype.toString of a primitive needs a wrapper object",
             ));
         }
@@ -73,7 +73,9 @@ pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Comp
 pub fn value_of(_heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
     match call.this_value {
         Value::Object(object) => Ok(Value::Object(object)),
-        _ => Err(TypeError("Object.prototype.valueOf requires an object")),
+        _ => Err(Abrupt::type_error(
+            "Object.prototype.valueOf requires an object",
+        )),
     }
 }
 
@@ -164,7 +166,7 @@ pub fn define_property(
     // allowed it, and a `false` here is a TypeError rather than a silent nothing. That is the
     // difference between `defineProperty` and `Reflect.defineProperty`.
     if !heap.define_own_property(object, key, &descriptor) {
-        return Err(TypeError("this property cannot be redefined"));
+        return Err(Abrupt::type_error("this property cannot be redefined"));
     }
     Ok(Value::Object(object))
 }
@@ -191,7 +193,7 @@ pub fn create(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completi
         Value::Object(prototype) => Some(prototype),
         Value::Null => None,
         _ => {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "the prototype given to Object.create must be an object or null",
             ));
         }
@@ -335,7 +337,7 @@ fn define_each(
             continue;
         }
         let PropertyKind::Data { value, .. } = property.kind else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "a getter on a property-descriptor list is not supported yet",
             ));
         };
@@ -343,7 +345,7 @@ fn define_each(
     }
     for (key, descriptor) in pending {
         if !heap.define_own_property(object, key, &descriptor) {
-            return Err(TypeError("this property cannot be redefined"));
+            return Err(Abrupt::type_error("this property cannot be redefined"));
         }
     }
     Ok(())
@@ -397,7 +399,9 @@ fn own_keys(
 /// `Object.defineProperty(o, "k", {})` leave an existing property alone.
 fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyDescriptor> {
     let Value::Object(source) = value else {
-        return Err(TypeError("a property descriptor must be an object"));
+        return Err(Abrupt::type_error(
+            "a property descriptor must be an object",
+        ));
     };
     let mut descriptor = PropertyDescriptor::EMPTY;
     for (name, at) in [
@@ -415,7 +419,7 @@ fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyD
             continue;
         };
         let PropertyKind::Data { value, .. } = property.kind else {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "a getter on a property descriptor is not supported yet",
             ));
         };
@@ -437,7 +441,7 @@ fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyD
             || matches!(accessor, Value::Object(object)
                 if heap.object(object).is_some_and(|found| found.call().is_some()));
         if !callable {
-            return Err(TypeError(
+            return Err(Abrupt::type_error(
                 "a getter or setter must be callable or undefined",
             ));
         }
@@ -447,7 +451,7 @@ fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyD
     let data = descriptor.value.is_some() || descriptor.writable.is_some();
     let accessor = descriptor.getter.is_some() || descriptor.setter.is_some();
     if data && accessor {
-        return Err(TypeError(
+        return Err(Abrupt::type_error(
             "a property descriptor may not have both a value and an accessor",
         ));
     }
@@ -501,7 +505,7 @@ fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Completion<Object
 fn to_object(value: Value, wanted: &'static str) -> Completion<ObjectId> {
     match value {
         Value::Object(object) => Ok(object),
-        _ => Err(TypeError(wanted)),
+        _ => Err(Abrupt::Raised(ErrorKind::Type, wanted)),
     }
 }
 
