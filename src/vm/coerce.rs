@@ -156,7 +156,7 @@ impl Vm {
                 this_value,
                 arguments,
             };
-            return native(heap, &self.realm, &call);
+            return native(self, heap, &call);
         }
         if self.reentries >= MAX_REENTRY_DEPTH {
             // A program chose this depth, so it is a run-time error like any other recursion that

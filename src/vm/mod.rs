@@ -191,6 +191,14 @@ impl Vm {
         }
     }
 
+    /// The intrinsics this machine belongs to — §9.3's realm.
+    ///
+    /// `Copy`, so this hands one out rather than lending it: a built-in that needs
+    /// `%Object.prototype%` should not be holding a borrow of the machine it is running inside.
+    pub fn realm(&self) -> Realm {
+        self.realm
+    }
+
     /// Run `chunk` to the end and answer the single value it leaves behind.
     ///
     /// The stack is cleared first, so a machine that faulted once is usable again: a fault says

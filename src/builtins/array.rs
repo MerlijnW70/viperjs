@@ -7,6 +7,7 @@
 use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, ErrorKind, Value};
+use crate::vm::Vm;
 
 use super::{define_method, define_value, key};
 
@@ -20,8 +21,8 @@ use super::{define_method, define_value, key};
 ///
 /// A length that is not an integer index is a RangeError rather than a rounding — `Array(1.5)`
 /// throws where `a.length = 1.5` throws for the same reason.
-pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
-    let prototype = realm.array_prototype();
+pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let prototype = vm.realm().array_prototype();
     if call.arguments.len() == 1
         && let Value::Number(length) = call.argument(0)
     {
@@ -55,7 +56,7 @@ pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Compl
 /// The only way to ask. `instanceof Array` answers a different question — it walks a prototype
 /// chain, so it is false for an array from another realm and true for anything given
 /// `Array.prototype`— and `typeof` says `"object"` for both. This asks what the object *is*.
-pub fn is_array(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn is_array(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let Value::Object(object) = call.argument(0) else {
         return Ok(Value::Boolean(false));
     };

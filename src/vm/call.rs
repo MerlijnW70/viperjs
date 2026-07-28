@@ -182,7 +182,7 @@ impl Vm {
             this_value,
             arguments: &arguments,
         };
-        let answer = native(heap, &self.realm, &call);
+        let answer = native(self, heap, &call);
         // The callee, its receiver and its arguments all go, and the answer takes their place —
         // exactly what a return from a JavaScript function leaves behind.
         self.stack.truncate(receiver_at);

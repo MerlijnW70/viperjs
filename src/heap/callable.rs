@@ -11,18 +11,21 @@
 //!
 //! So [`Callable`] is an enum, and the difference is decided once, where the call is made.
 //!
-//! # Why this names `Realm`
+//! # Why this names `Vm`
 //!
-//! A built-in reaches intrinsics: `Error.prototype.toString` needs no realm, but almost anything
-//! that *makes* an object needs `%Object.prototype%`. Naming it here points the heap at a module
-//! that points back — the same shape `Object` already has with [`crate::compile::Chunk`], and for
-//! the same reason: the type is a description of what a function *is*, and the heap is where a
-//! function lives. Nothing here calls anything; the interpreter does that.
+//! Because a built-in can call JavaScript. `Array.prototype.map` runs its callback, and `join`
+//! reaches `ToString` of an element, which may run a `toString` — so a built-in needs the machine
+//! and not merely the heap. It reaches the intrinsics through it as well.
+//!
+//! Naming it here points the heap at a module that points back, which is the shape `Object`
+//! already has with [`crate::compile::Chunk`] and for the same reason: the type is a description
+//! of what a function *is*, and the heap is where a function lives. Nothing here calls anything;
+//! the interpreter does that.
 
 use super::{Heap, ObjectId};
 use crate::compile::Chunk;
-use crate::realm::Realm;
 use crate::value::{Completion, Value};
+use crate::vm::Vm;
 use std::rc::Rc;
 
 /// What an object runs when it is called.
@@ -45,7 +48,7 @@ pub enum Callable {
 /// written in the source — or carries a value that has already been thrown. A built-in that needs
 /// a message built at *run time* still cannot have one; that is the next thing this type will
 /// grow, and it will grow it when a built-in needs it rather than a fortnight before.
-pub type Native = fn(&mut Heap, &Realm, &NativeCall<'_>) -> Completion<Value>;
+pub type Native = fn(&mut Vm, &mut Heap, &NativeCall<'_>) -> Completion<Value>;
 
 /// What a built-in is told about the call it is answering.
 #[derive(Debug)]

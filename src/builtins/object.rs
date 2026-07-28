@@ -26,11 +26,12 @@ use crate::heap::{
 };
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, ErrorKind, Value};
+use crate::vm::Vm;
 
 use super::{define_method, define_value, key, text};
 
 /// §20.1.1.1 `Object(value)`.
-pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     match call.argument(0) {
         // §20.1.1.1 step 3 — an object is handed back *as it stands*, which is what makes
         // `Object(o) === o` true and why the function is useless as a copy.
@@ -38,7 +39,7 @@ pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Compl
         // Steps 1 and 2 — `undefined` and `null` make a new ordinary object, the same one
         // `{}` makes.
         Value::Undefined | Value::Null => Ok(Value::Object(
-            heap.new_object(Some(realm.object_prototype())),
+            heap.new_object(Some(vm.realm().object_prototype())),
         )),
         // §7.1.18 `ToObject` wraps a primitive, and there is nothing to wrap it in yet.
         _ => Err(Abrupt::type_error(
@@ -48,7 +49,7 @@ pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Compl
 }
 
 /// §20.1.3.6 `Object.prototype.toString`.
-pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Steps 1 and 2 — the two values that have no object to ask, and the reason this method is
     // the idiomatic type test: it answers for `undefined` and `null` rather than throwing.
     let tag = match call.this_value {
@@ -71,7 +72,7 @@ pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Comp
 }
 
 /// §20.1.3.7 `Object.prototype.valueOf` — `ToObject(this)`, which for an object is itself.
-pub fn value_of(_heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn value_of(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     match call.this_value {
         Value::Object(object) => Ok(Value::Object(object)),
         _ => Err(Abrupt::type_error(
@@ -81,18 +82,14 @@ pub fn value_of(_heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Comp
 }
 
 /// §20.1.3.2 `Object.prototype.hasOwnProperty`.
-pub fn has_own_property(
-    heap: &mut Heap,
-    _realm: &Realm,
-    call: &NativeCall<'_>,
-) -> Completion<Value> {
+pub fn has_own_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let key = property_key(heap, call.argument(0))?;
     let object = this_object(call, "Object.prototype.hasOwnProperty requires an object")?;
     Ok(Value::Boolean(own_property(heap, object, key).is_some()))
 }
 
 /// §20.1.2.13 `Object.hasOwn(o, key)` — the same question without borrowing a method.
-pub fn has_own(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn has_own(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = to_object(call.argument(0), "Object.hasOwn requires an object")?;
     let key = property_key(heap, call.argument(1))?;
     Ok(Value::Boolean(own_property(heap, object, key).is_some()))
@@ -100,8 +97,8 @@ pub fn has_own(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Comple
 
 /// §20.1.3.4 `Object.prototype.propertyIsEnumerable`.
 pub fn property_is_enumerable(
+    _vm: &mut Vm,
     heap: &mut Heap,
-    _realm: &Realm,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
     let key = property_key(heap, call.argument(0))?;
@@ -116,11 +113,7 @@ pub fn property_is_enumerable(
 }
 
 /// §20.1.3.3 `Object.prototype.isPrototypeOf`.
-pub fn is_prototype_of(
-    heap: &mut Heap,
-    _realm: &Realm,
-    call: &NativeCall<'_>,
-) -> Completion<Value> {
+pub fn is_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = this_object(call, "Object.prototype.isPrototypeOf requires an object")?;
     // Step 1 — a primitive argument is `false` rather than an error, because the question is
     // about *its* chain and a primitive has none of its own.
@@ -140,11 +133,7 @@ pub fn is_prototype_of(
 }
 
 /// §20.1.2.12 `Object.getPrototypeOf`.
-pub fn get_prototype_of(
-    heap: &mut Heap,
-    _realm: &Realm,
-    call: &NativeCall<'_>,
-) -> Completion<Value> {
+pub fn get_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = to_object(call.argument(0), "Object.getPrototypeOf requires an object")?;
     Ok(
         match heap.object(object).and_then(|found| found.prototype()) {
@@ -155,11 +144,7 @@ pub fn get_prototype_of(
 }
 
 /// §20.1.2.4 `Object.defineProperty`.
-pub fn define_property(
-    heap: &mut Heap,
-    _realm: &Realm,
-    call: &NativeCall<'_>,
-) -> Completion<Value> {
+pub fn define_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = object_argument(call.argument(0), "Object.defineProperty requires an object")?;
     let key = property_key(heap, call.argument(1))?;
     let descriptor = to_property_descriptor(heap, call.argument(2))?;
@@ -171,21 +156,18 @@ pub fn define_property(
 }
 
 /// §20.1.2.3 `Object.defineProperties`.
-pub fn define_properties(
-    heap: &mut Heap,
-    realm: &Realm,
-    call: &NativeCall<'_>,
-) -> Completion<Value> {
+pub fn define_properties(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = object_argument(
         call.argument(0),
         "Object.defineProperties requires an object",
     )?;
-    define_each(heap, realm, object, call.argument(1))?;
+    let realm = vm.realm();
+    define_each(heap, &realm, object, call.argument(1))?;
     Ok(Value::Object(object))
 }
 
 /// §20.1.2.2 `Object.create`.
-pub fn create(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn create(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Step 1 — the prototype may be `null`, and that is the whole reason `Object.create` exists:
     // it is the only way to make an object with no prototype at all.
     let prototype = match call.argument(0) {
@@ -200,15 +182,16 @@ pub fn create(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completi
     let object = heap.new_object(prototype);
     let properties = call.argument(1);
     if !matches!(properties, Value::Undefined) {
-        define_each(heap, realm, object, properties)?;
+        let realm = vm.realm();
+        define_each(heap, &realm, object, properties)?;
     }
     Ok(Value::Object(object))
 }
 
 /// §20.1.2.8 `Object.getOwnPropertyDescriptor`.
 pub fn get_own_property_descriptor(
+    vm: &mut Vm,
     heap: &mut Heap,
-    realm: &Realm,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
     let object = to_object(
@@ -221,27 +204,27 @@ pub fn get_own_property_descriptor(
     let Some(property) = own_property(heap, object, key) else {
         return Ok(Value::Undefined);
     };
-    Ok(from_property_descriptor(heap, realm, property))
+    Ok(from_property_descriptor(heap, &vm.realm(), property))
 }
 
 /// §20.1.2.17 `Object.keys` — own, enumerable, string-keyed, in creation order.
-pub fn keys(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
-    own_keys(heap, realm, call, true)
+pub fn keys(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    own_keys(vm, heap, call, true)
 }
 
 /// §20.1.2.10 `Object.getOwnPropertyNames` — the same list without the enumerable filter.
 pub fn get_own_property_names(
+    vm: &mut Vm,
     heap: &mut Heap,
-    realm: &Realm,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
-    own_keys(heap, realm, call, false)
+    own_keys(vm, heap, call, false)
 }
 
 /// §20.1.2.19 `Object.preventExtensions`.
 pub fn prevent_extensions(
+    _vm: &mut Vm,
     heap: &mut Heap,
-    _realm: &Realm,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
     let value = call.argument(0);
@@ -256,7 +239,7 @@ pub fn prevent_extensions(
 }
 
 /// §20.1.2.16 `Object.isExtensible`.
-pub fn is_extensible(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn is_extensible(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Step 1 — a primitive is `false` rather than an error: it is not extensible, which is a
     // true answer to the question asked.
     let Value::Object(object) = call.argument(0) else {
@@ -350,8 +333,8 @@ fn define_each(
 
 /// §20.1.2.17 and §20.1.2.10, which differ in one filter.
 fn own_keys(
+    vm: &mut Vm,
     heap: &mut Heap,
-    realm: &Realm,
     call: &NativeCall<'_>,
     enumerable_only: bool,
 ) -> Completion<Value> {
@@ -370,7 +353,7 @@ fn own_keys(
         names.push(Value::String(key.as_string()));
     }
     // §20.1.2.17 answers an Array, and now there are some.
-    let list = heap.new_array(realm.array_prototype(), 0);
+    let list = heap.new_array(vm.realm().array_prototype(), 0);
     for (at, name) in names.iter().enumerate() {
         let key = self::key(heap, &at.to_string());
         let descriptor = PropertyDescriptor {

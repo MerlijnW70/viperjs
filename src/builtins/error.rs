@@ -19,6 +19,7 @@
 use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
+use crate::vm::Vm;
 
 use super::{define_method, define_value, key, own_value, text};
 
@@ -32,12 +33,12 @@ use super::{define_method, define_value, key, own_value, text};
 /// `Error("x")` and `new Error("x")` do the same thing, which is why §20.5.1.1 step 1 mentions
 /// `NewTarget` only to pick a prototype and never to refuse. That is unusual and deliberate:
 /// nearly every other constructor in the language throws when called without `new`.
-pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // §10.1.13 `GetPrototypeFromConstructor` — the constructor's own `prototype`, and
     // `%Error.prototype%` when a script has replaced it with something that is not an object.
     let prototype = match own_value(heap, call.function, "prototype") {
         Some(Value::Object(prototype)) => prototype,
-        _ => realm.error_prototype(),
+        _ => vm.realm().error_prototype(),
     };
     let error = heap.new_object(Some(prototype));
 
@@ -64,7 +65,7 @@ pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Compl
 /// It reads `name` and `message` off `this` through the prototype chain rather than off the
 /// error itself, which is why an error made by `Object.create(Error.prototype)` prints as
 /// `"Error"` and why assigning `e.name` changes what it prints.
-pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let Value::Object(object) = call.this_value else {
         // §20.5.3.4 step 2. Reachable as `Error.prototype.toString.call(1)`, and the reason
         // §10.3.1 must not substitute a receiver: with the global object put here instead, this
