@@ -133,6 +133,40 @@ impl Realm {
         self.error_prototype
     }
 
+    /// Give a function the `prototype` object its instances will inherit from — §10.2.5.
+    ///
+    /// The pair is mutual: the function's `prototype` points at the object, and the object's
+    /// `constructor` points back at the function. That is what makes `new F().constructor === F`
+    /// true, and it is why neither can be made lazily without the other noticing.
+    ///
+    /// The attributes are §10.2.5's and they are not the ones assignment gives. `prototype` is
+    /// writable and *not* configurable — a script may replace it and may not delete it — while
+    /// `constructor` is writable and configurable and hidden from enumeration, so `for...in` over
+    /// an instance finds nothing.
+    pub fn make_constructor(&self, heap: &mut Heap, function: ObjectId) {
+        let prototype = heap.new_object(Some(self.object_prototype));
+        let constructor =
+            PropertyKey::from_units(heap, &"constructor".encode_utf16().collect::<Vec<_>>());
+        let descriptor = PropertyDescriptor {
+            value: Some(Value::Object(function)),
+            writable: Some(true),
+            enumerable: Some(false),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(prototype, constructor, &descriptor);
+
+        let key = PropertyKey::from_units(heap, &"prototype".encode_utf16().collect::<Vec<_>>());
+        let descriptor = PropertyDescriptor {
+            value: Some(Value::Object(prototype)),
+            writable: Some(true),
+            enumerable: Some(false),
+            configurable: Some(false),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(function, key, &descriptor);
+    }
+
     /// A new error object of this kind, carrying `message`.
     ///
     /// §20.5.1.1 in the part that is not about `new`: an ordinary object with the right prototype
@@ -203,6 +237,53 @@ mod tests {
             Value::String(id) => String::from_utf16_lossy(heap.string(id).unwrap_or(&[])),
             other => format!("{other:?}"),
         }
+    }
+
+    #[test]
+    fn a_constructors_pair_of_properties_have_the_attributes_ten_two_five_gives_them() {
+        // §10.2.5's `prototype` and `constructor`, and their attributes are not the same as each
+        // other's — which is a distinction nothing in the language can see yet, because seeing it
+        // needs `for...in` or `getOwnPropertyDescriptor`.
+        //
+        // `prototype` is writable and **not configurable**: a script may replace it and may not
+        // delete it. `constructor` is writable *and* configurable. Both are hidden from
+        // enumeration, which is why `for (var k in new F())` finds nothing.
+        let mut heap = Heap::new();
+        let realm = Realm::new(&mut heap);
+        let environment = heap.new_environment(None, 0);
+        let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
+        let function = heap.new_function(realm.function_prototype(), body, environment);
+        realm.make_constructor(&mut heap, function);
+
+        let on_the_function = attributes(&heap, function, "prototype").expect("made"); // the test is about it
+        assert_eq!(on_the_function, (true, false, false));
+
+        let Some(Value::Object(prototype)) = property(&heap, function, "prototype") else {
+            panic!("the prototype is an object")
+        };
+        let on_the_prototype = attributes(&heap, prototype, "constructor").expect("made"); // same
+        assert_eq!(on_the_prototype, (true, false, true));
+
+        // …and the pair points both ways, which is what makes `new F().constructor === F` true.
+        assert!(matches!(
+            property(&heap, prototype, "constructor"),
+            Some(Value::Object(back)) if back == function
+        ));
+    }
+
+    /// The `(writable, enumerable, configurable)` of an own data property.
+    fn attributes(heap: &Heap, object: ObjectId, name: &str) -> Option<(bool, bool, bool)> {
+        let units: Vec<u16> = name.encode_utf16().collect();
+        let key = heap
+            .object(object)?
+            .own_property_keys(heap)
+            .into_iter()
+            .find(|key| heap.string(key.as_string()) == Some(&units[..]))?;
+        let found = heap.object(object)?.get_own_property(key)?;
+        let PropertyKind::Data { writable, .. } = found.kind else {
+            return None;
+        };
+        Some((writable, found.enumerable, found.configurable))
     }
 
     #[test]

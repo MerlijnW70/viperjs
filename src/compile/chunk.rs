@@ -131,6 +131,12 @@ pub enum Instruction {
     /// call the same function with different `this`, which is the whole reason the receiver
     /// travels with the call rather than with the function.
     CallMethod(u32),
+    /// Take a constructor and this many arguments and construct — §13.3.5.
+    ///
+    /// Not a call with a different receiver: the receiver is *made* here, out of the
+    /// constructor's own `prototype` property, and the result is that object unless the body
+    /// returned one of its own.
+    Construct(u32),
     /// Push the running function's `this`.
     LoadThis,
     /// Push a copy of the top value.
@@ -309,6 +315,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::PopHandler
         | Instruction::MakeFunction(_)
         | Instruction::Call(_)
+        | Instruction::Construct(_)
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
         | Instruction::Duplicate

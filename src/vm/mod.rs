@@ -31,7 +31,7 @@
 mod call;
 mod property;
 
-use self::call::Frame;
+use self::call::{Entry, Frame};
 
 use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
@@ -288,11 +288,20 @@ impl Vm {
                         body.clone(),
                         self.environment,
                     );
+                    // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
+                    // object, and that object gets a `constructor` back. The pair is what makes
+                    // `new f() instanceof f` true, and it is made eagerly because a function may
+                    // be constructed with at any time — including before anything reads it.
+                    self.realm.make_constructor(heap, object);
                     self.stack.push(Value::Object(object));
                 }
                 Instruction::Call(count) | Instruction::CallMethod(count) => {
                     let method = matches!(instruction, Instruction::CallMethod(_));
-                    self.enter(method, count, heap, chunk, &mut current, &mut at)?;
+                    let how = if method { Entry::Method } else { Entry::Plain };
+                    self.enter(how, count, heap, chunk, &mut current, &mut at)?;
+                }
+                Instruction::Construct(count) => {
+                    self.enter(Entry::Construct, count, heap, chunk, &mut current, &mut at)?;
                 }
                 Instruction::Return => {
                     let value = self.pop()?;
@@ -303,7 +312,14 @@ impl Vm {
                     // and any handler it installed and did not take down.
                     self.stack.truncate(frame.stack_base);
                     self.handlers.truncate(frame.handlers_base);
-                    self.stack.push(value);
+                    // §10.2.2 step 13 — a construction answers with the object it made, unless
+                    // the body returned an object of its own. A primitive `return` is *ignored*,
+                    // which is why `function F() { return 1; }` still constructs an `F`.
+                    let answer = match (frame.constructed, value) {
+                        (Some(_), Value::Object(_)) | (None, _) => value,
+                        (Some(made), _) => made,
+                    };
+                    self.stack.push(answer);
                     self.environment = frame.environment;
                     self.this_value = frame.this_value;
                     current = frame.code;

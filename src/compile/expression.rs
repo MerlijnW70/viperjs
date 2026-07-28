@@ -10,8 +10,8 @@ use super::{
 };
 use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
-    AssignmentOperator, AssignmentTarget, BinaryOperator, Expr, ExprKind, LogicalOperator,
-    PropertyDefinition, UnaryOperator,
+    Argument, AssignmentOperator, AssignmentTarget, BinaryOperator, Expr, ExprKind,
+    LogicalOperator, PropertyDefinition, UnaryOperator,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -194,7 +194,23 @@ impl Compiler<'_> {
                 }
                 self.call(callee, arguments, span)
             }
-            ExprKind::New { .. } => Err(unsupported("the new operator", span)),
+            // §13.3.5 — `new f(a)`. The callee is an ordinary expression and never a method:
+            // `new o.m()` constructs with `o.m`, and the `o` plays no part.
+            ExprKind::New { callee, arguments } => {
+                self.expression(callee)?;
+                for argument in arguments.iter() {
+                    let Argument::Value(value) = argument else {
+                        return Err(unsupported("a spread argument", span));
+                    };
+                    self.expression(value)?;
+                }
+                let count = u32::try_from(arguments.len()).map_err(|_| CompileError {
+                    kind: ErrorKind::TooLong,
+                    span,
+                })?;
+                self.chunk.emit(Instruction::Construct(count));
+                Ok(())
+            }
             ExprKind::Update { .. } => Err(unsupported("an update expression", span)),
             // §13.15 — assignment, whose *value* is the value assigned. That is why the store
             // leaves it on the stack rather than taking it: `a = b = 1` and `f(a = 1)` both

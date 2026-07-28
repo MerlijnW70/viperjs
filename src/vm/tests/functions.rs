@@ -389,3 +389,94 @@ fn this_is_restored_when_a_call_returns_however_it_returns() {
         "true"
     );
 }
+
+#[test]
+fn new_makes_an_object_out_of_the_constructors_prototype() {
+    // §10.2.2 — `new` does not call with a different receiver, it *makes* one, from the
+    // constructor's own `prototype` property. So the instance inherits whatever is put there.
+    assert_eq!(
+        run("function F(a) { this.v = a; } var f = new F(7); f.v;"),
+        "7"
+    );
+    assert_eq!(
+        run("function F() { this.v = 1; } typeof new F();"),
+        "object"
+    );
+    assert_eq!(
+        run("function F() {} F.prototype.shared = 'proto'; new F().shared;"),
+        "proto"
+    );
+    // §10.2.5's pair, and the reason it is made eagerly: each points at the other.
+    assert_eq!(run("function F() {} new F().constructor === F;"), "true");
+    assert_eq!(
+        run("function F() {} F.prototype.constructor === F;"),
+        "true"
+    );
+    // Two constructions are two objects.
+    assert_eq!(
+        run("function F() {} var a = new F(); var b = new F(); a === b;"),
+        "false"
+    );
+}
+
+#[test]
+fn a_constructors_return_is_ignored_unless_it_is_an_object() {
+    // §10.2.2 step 13, and the row everyone is surprised by: a primitive `return` from a
+    // constructor is thrown away and the constructed object is the answer anyway.
+    assert_eq!(
+        run("function F() { this.v = 1; return 42; } new F().v;"),
+        "1"
+    );
+    assert_eq!(
+        run("function F() { this.v = 1; return 'x'; } new F().v;"),
+        "1"
+    );
+    assert_eq!(run("function F() { this.v = 1; return; } new F().v;"), "1");
+    // …while an *object* return replaces it entirely, which is how a factory pretends to be a
+    // constructor.
+    assert_eq!(
+        run("function F() { return { v: 'own' }; } new F().v;"),
+        "own"
+    );
+    assert_eq!(
+        run("function F() { this.v = 1; return { v: 2 }; } new F().v;"),
+        "2"
+    );
+}
+
+#[test]
+fn a_prototype_that_is_not_an_object_falls_back_rather_than_failing() {
+    // §10.1.13 — a function's `prototype` is an ordinary writable property, so a script may put
+    // anything there. An instance then inherits from `Object.prototype` instead, which is a
+    // fallback and not an error.
+    assert_eq!(
+        run("function F() {} F.prototype = 1; typeof new F();"),
+        "object"
+    );
+    assert_eq!(
+        run("function F() {} F.prototype = null; typeof new F();"),
+        "object"
+    );
+    assert_eq!(
+        run("function F() { this.v = 1; } F.prototype = 'x'; new F().v;"),
+        "1"
+    );
+}
+
+#[test]
+fn constructing_something_that_is_not_a_function_is_a_type_error() {
+    for source in [
+        "var x = 1; new x();",
+        "var x = {}; new x();",
+        "var x = null; new x();",
+    ] {
+        let script = format!("try {{ {source} }} catch (e) {{ e.name; }}");
+        assert_eq!(run(&script), "TypeError", "running {source:?}");
+    }
+    // …and a throw from inside a constructor is an ordinary throw: the half-made object goes
+    // with the frame.
+    assert_eq!(
+        run("function F() { throw 'boom'; } try { new F(); } catch (e) { 'caught ' + e; }"),
+        "caught boom"
+    );
+}
