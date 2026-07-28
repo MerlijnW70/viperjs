@@ -51,6 +51,13 @@ pub enum ParseErrorKind {
     /// and `yield` — the words a future edition wanted room for, left available to the sloppy
     /// code that was already using them.
     StrictReservedWord,
+    /// §13.1.1: `Identifier : IdentifierName but not ReservedWord`, asked of the *StringValue*.
+    ///
+    /// Only an escape can reach this. §12.7.2 Note 1 says a keyword matches literal source
+    /// characters, so `br\u0065ak` is an `IdentifierName` and not the token `break` — but its
+    /// `StringValue` is still `"break"`, and §13.1.1 asks about the value. Writing a reserved
+    /// word with an escape does not make it available as a name.
+    EscapedReservedWord,
     /// §13.1.1: `eval` or `arguments` bound or assigned to in strict code.
     ///
     /// Reading them is fine; it is binding one or assigning to one that is refused, which is why
@@ -433,6 +440,10 @@ impl fmt::Display for ParseErrorKind {
             Self::StrictReservedWord => {
                 write!(f, "this name is reserved in strict mode code")
             }
+            Self::EscapedReservedWord => write!(
+                f,
+                "a reserved word spelled with an escape is still a reserved word"
+            ),
             Self::StrictEvalOrArguments => write!(
                 f,
                 "strict mode code may not bind or assign to `eval` or `arguments`"

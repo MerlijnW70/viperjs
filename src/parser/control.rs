@@ -174,6 +174,8 @@ impl Parser<'_> {
         let token = self.advance(Goal::Div)?;
         let name =
             identifier_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
+        // The label a `break` or `continue` names is a `LabelIdentifier` too.
+        self.check_strict_name(&name, token.span, false)?;
         Ok(Some(Box::new(Label {
             name: name.into_owned().into_boxed_str(),
             span: token.span,

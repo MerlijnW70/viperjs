@@ -105,17 +105,46 @@ impl Parser<'_> {
         Ok((body.into_boxed_slice(), declares_strict))
     }
 
-    /// §13.1.1: a name that strict code may not bind or reference.
+    /// §13.1.1, asked of every `Identifier`, `BindingIdentifier` and `LabelIdentifier`.
+    ///
+    /// Three rules, and the first applies to sloppy code too:
+    ///
+    /// - **`Identifier : IdentifierName but not ReservedWord`**, asked of the `StringValue`.
+    ///   Only an escape can fail it, §12.7.2 Note 1 having already kept `br\u0065ak` from
+    ///   lexing as the token `break` — but the value is still `"break"` and the value is what
+    ///   the rule asks about. `yield` and `await` are exempt here because each has a rule of its
+    ///   own below; every other reserved word is refused outright.
+    /// - **`yield`** is refused where `[Yield]` is set, and in strict code, which the list below
+    ///   already covers.
+    /// - **`await`** is refused where `[Await]` is set, and everywhere in a module: §13.1.1
+    ///   states that one without a parameter, so a non-async function inside a module cannot
+    ///   have a variable called `await` either.
     ///
     /// `eval` and `arguments` are refused only where something is *bound* — `eval` may be read
     /// and called in strict code, and only assigning to it or declaring it is refused — so the
     /// caller says which question it is asking.
+    ///
+    /// A property name never asks: `x.br\u0065ak` and `({br\u0065ak: 1})` are an
+    /// `IdentifierName`, which this rule is the *exception* to rather than a case of.
     pub(super) fn check_strict_name(
         &self,
         name: &str,
         span: Span,
         binding: bool,
     ) -> Result<(), ParseError> {
+        if let Some(word) = crate::lexer::ReservedWord::from_text(name) {
+            let refused = match word {
+                crate::lexer::ReservedWord::Yield => self.yield_allowed,
+                crate::lexer::ReservedWord::Await => self.await_allowed || self.module,
+                _ => true,
+            };
+            if refused {
+                return Err(ParseError {
+                    kind: ParseErrorKind::EscapedReservedWord,
+                    span,
+                });
+            }
+        }
         if !self.strict {
             return Ok(());
         }
@@ -143,6 +172,119 @@ mod tests {
     /// The kind of error `source` fails with.
     fn kind(source: &str) -> ParseErrorKind {
         script_error(source).kind
+    }
+
+    /// The kind of error `source` fails with, read under the Module goal.
+    fn module_kind(source: &str) -> ParseErrorKind {
+        match crate::parser::parse_module(source) {
+            Err(error) => error.kind,
+            Ok(module) => panic!("{source:?} should not parse, got {module:?}"), // a test about an error needs one
+        }
+    }
+
+    #[test]
+    fn a_label_and_a_shorthand_read_a_name_rather_than_binding_one() {
+        // §13.1.1 refuses `eval` and `arguments` in strict code only where one is *bound* or
+        // assigned to. A `LabelIdentifier` is neither — it names a statement, not a variable —
+        // and a shorthand property is an `IdentifierReference`, which is a read. So all of
+        // these are legal in strict code, and each one is a different place that had to ask
+        // the question the right way round.
+        assert!(parse_script(r#""use strict"; eval: ;"#).is_ok());
+        assert!(parse_script(r#""use strict"; arguments: ;"#).is_ok());
+        assert!(parse_script(r#""use strict"; eval: while (x) { break eval; }"#).is_ok());
+        assert!(parse_script(r#""use strict"; ({eval});"#).is_ok());
+        assert!(parse_script(r#""use strict"; ({arguments});"#).is_ok());
+        // …while binding one is refused, which is the rule those three must not have copied.
+        assert_eq!(
+            kind(r#""use strict"; var eval;"#),
+            ParseErrorKind::StrictEvalOrArguments
+        );
+    }
+
+    #[test]
+    fn a_reserved_word_spelled_with_an_escape_is_still_a_reserved_word() {
+        // §13.1.1: `Identifier : IdentifierName but not ReservedWord`, asked of the *StringValue*.
+        // §12.7.2 Note 1 already keeps `br\u0065ak` from lexing as the token `break` — a keyword
+        // matches literal characters — so this is the only thing standing between that spelling
+        // and a program using `break` as a variable.
+        assert_eq!(
+            kind(r"var br\u0065ak;"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        assert_eq!(kind(r"br\u0065ak;"), ParseErrorKind::EscapedReservedWord);
+        assert_eq!(kind(r"th\u0069s;"), ParseErrorKind::EscapedReservedWord);
+        assert_eq!(kind(r"tr\u0075e;"), ParseErrorKind::EscapedReservedWord);
+        assert_eq!(kind(r"var n\u0075ll;"), ParseErrorKind::EscapedReservedWord);
+        assert_eq!(
+            kind(r"function f(){ r\u0065turn; }"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        // A `LabelIdentifier` is an `Identifier`, both where one is declared and where one is
+        // named. Neither asked before.
+        assert_eq!(kind(r"n\u0065w: ;"), ParseErrorKind::EscapedReservedWord);
+        // The label a `break` names is read somewhere else again, and without the rule
+        // this one would be reported as an undeclared label rather than as the name it
+        // may not be.
+        assert_eq!(
+            kind(r"while (x) { break n\u0065w; }"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        // Shorthand is the one place a name is both things: as a `PropertyName` any
+        // `IdentifierName` will do, and written as shorthand it has to be a name a program
+        // could read.
+        assert_eq!(
+            kind(r"var x = { bre\u0061k } = { break: 42 };"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        // …which is why these two stay legal. A property name is what the rule is the
+        // *exception* to, not a case of it.
+        assert!(parse_script(r"x.br\u0065ak;").is_ok());
+        assert!(parse_script(r"var o = { br\u0065ak: 1 };").is_ok());
+        assert!(parse_script(r"class C { br\u0065ak() {} }").is_ok());
+        // `let` is not a `ReservedWord` at all — it is contextual, and sloppy code may use it.
+        assert!(parse_script(r"var l\u0065t = 1;").is_ok());
+    }
+
+    #[test]
+    fn an_escaped_yield_or_await_is_refused_exactly_where_the_plain_spelling_is() {
+        // Both are exempt from the blanket rule because each has one of its own, parameterised:
+        // §13.1.1 refuses `yield` under `[Yield]` and `await` under `[Await]`. Writing either
+        // with an escape changes nothing, which is the whole point of the rule being about the
+        // `StringValue`.
+        assert!(parse_script(r"var \u0079ield;").is_ok());
+        assert!(parse_script(r"function f() { var \u0079ield; }").is_ok());
+        assert_eq!(
+            kind(r"function* g() { var \u0079ield; }"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        assert_eq!(
+            kind(r"function* g() { \u0079ield: ; }"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        // Strict code reserves `yield` however it is spelled, and that rule was already here.
+        assert_eq!(
+            kind(r#""use strict"; var \u0079ield;"#),
+            ParseErrorKind::StrictReservedWord
+        );
+
+        assert!(parse_script(r"var \u0061wait;").is_ok());
+        assert!(parse_script(r"function f() { var \u0061wait; }").is_ok());
+        assert_eq!(
+            kind(r"async function f() { var \u0061wait; }"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        // A module refuses it with no parameter at all, so even a plain function inside one may
+        // not have a variable called `await`.
+        assert_eq!(
+            module_kind(r"function f() { var \u0061wait; }"),
+            ParseErrorKind::EscapedReservedWord
+        );
+        assert_eq!(
+            module_kind(r#"import { x as \u0061wait } from "m";"#),
+            ParseErrorKind::EscapedReservedWord
+        );
+        // `ModuleExportName` is an `IdentifierName`, so the rule does not reach it.
+        assert!(crate::parser::parse_module(r#"var x; export { x as br\u0065ak };"#).is_ok());
     }
 
     #[test]

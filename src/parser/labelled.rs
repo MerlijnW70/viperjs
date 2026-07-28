@@ -45,6 +45,8 @@ impl Parser<'_> {
         let token = self.advance(Goal::Div)?;
         let name =
             identifier_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
+        // `LabelIdentifier : Identifier`, so §13.1.1 applies here as it does to a reference.
+        self.check_strict_name(&name, token.span, false)?;
         self.eat(TokenKind::Colon, Goal::RegExp, "`:`")?;
         self.enter()?;
         // `LabelledItem : Statement`, so a declaration may not be labelled — `a: let b;` has no

@@ -155,6 +155,10 @@ impl Parser<'_> {
         let PropertyKey::Identifier(name) = key else {
             return Err(self.unexpected("`:`"));
         };
+        // §13.1.1 applies because this is a reference, and it is the one place a name is both:
+        // as a `PropertyName` it may be any `IdentifierName`, and `({break: 1})` is fine —
+        // but written as shorthand the same text has to be a name a program could read.
+        self.check_strict_name(&name, token.span, false)?;
         if !self.is_identifier_token(token.kind) {
             return Err(ParseError {
                 kind: ParseErrorKind::Unexpected {
