@@ -6,8 +6,25 @@
 //! `define_own_property` answers a Boolean and needs none of that.
 
 use super::Vm;
-use crate::heap::{Heap, PropertyDescriptor, PropertyKey, PropertyKind};
-use crate::value::{Abrupt, Completion, Value};
+use crate::heap::{DefineOutcome, Heap, PropertyDescriptor, PropertyKey, PropertyKind};
+use crate::value::{Abrupt, Completion, ErrorKind, Value};
+
+/// What `[[Set]]` answers, out of what the define came to.
+///
+/// The Boolean is thrown away by sloppy code and turned into a TypeError by strict code, so a
+/// refusal is not this function's business. §10.4.2.4 step 2 is: an array length that is not an
+/// integer index **throws**, and it is the one assignment in the language that does — which is
+/// exactly why a define answers three things rather than two.
+fn stored(outcome: DefineOutcome) -> Completion<Value> {
+    match outcome {
+        DefineOutcome::Defined => Ok(Value::Boolean(true)),
+        DefineOutcome::Refused => Ok(Value::Boolean(false)),
+        DefineOutcome::BadLength => Err(Abrupt::Raised(
+            ErrorKind::Range,
+            "an array length must be an integer index",
+        )),
+    }
+}
 
 impl Vm {
     /// `ToPropertyKey` (§7.1.19), for the keys that exist.
@@ -120,11 +137,7 @@ impl Vm {
                         value: Some(value),
                         ..PropertyDescriptor::EMPTY
                     };
-                    return Ok(Value::Boolean(heap.define_own_property(
-                        object,
-                        key,
-                        &descriptor,
-                    )));
+                    return stored(heap.define_property_outcome(object, key, &descriptor));
                 }
                 PropertyKind::Data { .. } => {}
             }
@@ -138,11 +151,7 @@ impl Vm {
             configurable: Some(true),
             ..PropertyDescriptor::EMPTY
         };
-        Ok(Value::Boolean(heap.define_own_property(
-            object,
-            key,
-            &descriptor,
-        )))
+        stored(heap.define_property_outcome(object, key, &descriptor))
     }
     /// §13.10.2's `InstanceofOperator`, by way of §7.3.22's `OrdinaryHasInstance`.
     ///

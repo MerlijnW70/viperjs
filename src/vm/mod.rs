@@ -443,6 +443,11 @@ impl Vm {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     self.stack.push(value);
                 }
+                Instruction::NewArray(length) => {
+                    let prototype = self.realm.array_prototype();
+                    let array = heap.new_array(prototype, length);
+                    self.stack.push(Value::Object(array));
+                }
                 Instruction::NewObject => {
                     let object = heap.new_object(Some(self.realm.object_prototype()));
                     self.stack.push(Value::Object(object));

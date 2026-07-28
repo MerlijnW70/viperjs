@@ -109,6 +109,12 @@ pub enum Instruction {
     DeclareGlobal(u32),
     /// Push a new empty ordinary object, inheriting from `Object.prototype`.
     NewObject,
+    /// Push a new empty Array of this length, inheriting from `Array.prototype`.
+    ///
+    /// The length is the literal's *element count*, holes included — §13.2.4.1 gives
+    /// `[, , 1]` a length of 3 with one element in it. So the length is set once here rather
+    /// than being raised element by element, which is also what makes a trailing hole count.
+    NewArray(u32),
     /// Push a copy of the top two values, in the same order.
     ///
     /// A compound assignment to a property reads it and then writes it, and both need the base
@@ -370,6 +376,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Duplicate
         | Instruction::Return
         | Instruction::NewObject
+        | Instruction::NewArray(_)
         | Instruction::DuplicateTwo
         | Instruction::Bury(_)
         | Instruction::DefineField

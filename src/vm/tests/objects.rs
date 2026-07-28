@@ -410,3 +410,55 @@ fn a_script_var_gets_the_three_attributes_9_1_1_4_17_gives_it() {
         assert!(!property.configurable, "{name} is not configurable");
     }
 }
+
+#[test]
+fn set_answers_whether_the_write_was_allowed_even_though_nothing_reads_it_yet() {
+    // §10.1.9 answers a Boolean, and sloppy code throws it away — so today nothing in the
+    // language can see the difference between a write that worked and one that was refused.
+    // Strict mode is what turns a `false` into a TypeError, and until it exists this is the only
+    // place the answer is observable at all. Asked here rather than left as a claim in a comment.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let object = heap.new_object(None);
+    let key = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
+    let descriptor = crate::heap::PropertyDescriptor {
+        value: Some(Value::Number(1.0)),
+        writable: Some(false),
+        enumerable: Some(true),
+        configurable: Some(false),
+        ..crate::heap::PropertyDescriptor::EMPTY
+    };
+    assert!(heap.define_own_property(object, key, &descriptor));
+
+    let base = Value::Object(object);
+    let name = key_of(&mut heap, "a");
+    // A non-writable property refuses the write and says so.
+    assert!(matches!(
+        vm.set_property(base, name, Value::Number(2.0), &mut heap),
+        Ok(Value::Boolean(false))
+    ));
+    // …and a writable one allows it and says that.
+    let other = key_of(&mut heap, "b");
+    assert!(matches!(
+        vm.set_property(base, other, Value::Number(2.0), &mut heap),
+        Ok(Value::Boolean(true))
+    ));
+    // A *new* property on an object that is not extensible is the other way a write is refused,
+    // and it takes a different path: §10.1.9.2 refuses the first one before a define is even
+    // attempted, where this one is the define itself answering.
+    let sealed = heap.new_object(None);
+    if let Some(found) = heap.object_mut(sealed) {
+        found.prevent_extensions();
+    }
+    let fresh = key_of(&mut heap, "c");
+    assert!(matches!(
+        vm.set_property(Value::Object(sealed), fresh, Value::Number(1.0), &mut heap),
+        Ok(Value::Boolean(false))
+    ));
+    // The value the refusal left behind is the one that was there, which is the part sloppy code
+    // *can* see.
+    assert_eq!(
+        run("var o = {}; Object.defineProperty(o, 'a', {value: 1}); o.a = 2; o.a"),
+        "1"
+    );
+}

@@ -21,7 +21,8 @@
 //! can currently make except an error.
 
 use crate::heap::{
-    Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKey, PropertyKind,
+    DefineOutcome, Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKey,
+    PropertyKind,
 };
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, ErrorKind, Value};
@@ -162,12 +163,10 @@ pub fn define_property(
     let object = object_argument(call.argument(0), "Object.defineProperty requires an object")?;
     let key = property_key(heap, call.argument(1))?;
     let descriptor = to_property_descriptor(heap, call.argument(2))?;
-    // §20.1.2.4 step 4 is `DefinePropertyOrThrow`: the heap answers whether §10.1.6.3's rules
-    // allowed it, and a `false` here is a TypeError rather than a silent nothing. That is the
-    // difference between `defineProperty` and `Reflect.defineProperty`.
-    if !heap.define_own_property(object, key, &descriptor) {
-        return Err(Abrupt::type_error("this property cannot be redefined"));
-    }
+    // §20.1.2.4 step 4 is `DefinePropertyOrThrow`: the heap answers what §10.1.6.3's rules made
+    // of it, and a refusal here throws rather than doing nothing quietly. That is the difference
+    // between `defineProperty` and `Reflect.defineProperty`.
+    defined(heap.define_property_outcome(object, key, &descriptor))?;
     Ok(Value::Object(object))
 }
 
@@ -344,9 +343,7 @@ fn define_each(
         pending.push((key, to_property_descriptor(heap, value)?));
     }
     for (key, descriptor) in pending {
-        if !heap.define_own_property(object, key, &descriptor) {
-            return Err(Abrupt::type_error("this property cannot be redefined"));
-        }
+        defined(heap.define_property_outcome(object, key, &descriptor))?;
     }
     Ok(())
 }
@@ -372,10 +369,8 @@ fn own_keys(
         }
         names.push(Value::String(key.as_string()));
     }
-    // §20.1.2.17 answers an Array, and there are none yet. An object with the names under
-    // ascending integer keys and a `length` is what an Array *is* in every respect this can
-    // reach; what it is not is an instance of `Array`, and a test that asks will say so.
-    let list = heap.new_object(Some(realm.object_prototype()));
+    // §20.1.2.17 answers an Array, and now there are some.
+    let list = heap.new_array(realm.array_prototype(), 0);
     for (at, name) in names.iter().enumerate() {
         let key = self::key(heap, &at.to_string());
         let descriptor = PropertyDescriptor {
@@ -387,7 +382,6 @@ fn own_keys(
         };
         let _ = heap.define_own_property(list, key, &descriptor);
     }
-    define_value(heap, list, "length", Value::Number(names.len() as f64));
     Ok(Value::Object(list))
 }
 
@@ -515,6 +509,22 @@ fn to_object(value: Value, wanted: &'static str) -> Completion<ObjectId> {
 /// defining a property on a throwaway wrapper would silently do nothing.
 fn object_argument(value: Value, wanted: &'static str) -> Completion<ObjectId> {
     to_object(value, wanted)
+}
+
+/// Turn a define's outcome into the completion §20.1's `DefinePropertyOrThrow` wants.
+///
+/// Two different errors, because they are two different mistakes: a rule that would not allow the
+/// property is a TypeError, and a value that is not a length at all is §10.4.2.4 step 2's
+/// RangeError. Written once so `defineProperty` and `defineProperties` cannot drift apart.
+fn defined(outcome: DefineOutcome) -> Completion<()> {
+    match outcome {
+        DefineOutcome::Defined => Ok(()),
+        DefineOutcome::Refused => Err(Abrupt::type_error("this property cannot be redefined")),
+        DefineOutcome::BadLength => Err(Abrupt::Raised(
+            ErrorKind::Range,
+            "an array length must be an integer index",
+        )),
+    }
 }
 
 /// An object's own property under `key`, if it has one.

@@ -8,6 +8,7 @@ use super::function::Keep;
 use super::{
     CompileError, Compiler, ErrorKind, Instruction, MAX_EXPRESSION_DEPTH, ShortCircuit, unsupported,
 };
+use crate::ast::ArrayElement;
 use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
     Argument, AssignmentOperator, AssignmentTarget, BinaryOperator, Expr, ExprKind,
@@ -261,7 +262,36 @@ impl Compiler<'_> {
                 }
                 self.store_name(name)
             }
-            ExprKind::Array(_) => Err(unsupported("an array literal", span)),
+            // §13.2.4 — an array literal. The length is the element count *including holes*, so
+            // it is known here and set once; each element that was written is then defined at its
+            // own index, and each one that was not is simply never defined. That absence is what
+            // a hole is: `[, 1]` has a length of 2 and one property, and `0 in [, 1]` is false
+            // where `0 in [undefined, 1]` is true.
+            ExprKind::Array(elements) => {
+                let count = u32::try_from(elements.len()).map_err(|_| CompileError {
+                    kind: ErrorKind::TooLong,
+                    span,
+                })?;
+                self.chunk.emit(Instruction::NewArray(count));
+                for (at, element) in elements.iter().enumerate() {
+                    let value = match element {
+                        ArrayElement::Hole => continue,
+                        ArrayElement::Spread { .. } => {
+                            return Err(unsupported("a spread element", span));
+                        }
+                        ArrayElement::Value(value) => value,
+                    };
+                    // The index as a *name*, because that is what a property key is: an array
+                    // holds `"0"` and not `0`, which is why `a["0"]` and `a[0]` are one property.
+                    let id = self
+                        .heap
+                        .new_string(at.to_string().encode_utf16().collect());
+                    self.constant(Value::String(id))?;
+                    self.expression(value)?;
+                    self.chunk.emit(Instruction::DefineField);
+                }
+                Ok(())
+            }
             // §15.2.5 — a function expression. The object is made where the expression is
             // *evaluated*, so a `function` keyword inside a loop makes one object per iteration.
             ExprKind::Function(function) => self.make_function(function, span),

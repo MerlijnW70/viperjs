@@ -1,6 +1,8 @@
-# DR-0011 — A coercion re-enters the interpreter, and that re-entry is bounded separately
-
-## The decision
+---
+id: DR-0011
+title: A coercion re-enters the interpreter, and that re-entry is bounded separately
+status: prose-only
+---
 
 `ToPrimitive` of an object calls a method, so a value operation must be able to run JavaScript.
 It does that by starting a **nested execution**: a real Rust call into the same interpreter loop.

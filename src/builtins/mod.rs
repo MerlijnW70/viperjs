@@ -14,6 +14,7 @@
 //! an exception it should be visible next to the built-ins it governs — not buried in a heap
 //! method that also serves object literals.
 
+pub mod array;
 pub mod error;
 pub mod object;
 
@@ -28,6 +29,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // before it would inherit from a prototype with no methods on it yet.
     object::install(heap, realm, global);
     error::install(heap, realm, global);
+    array::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.

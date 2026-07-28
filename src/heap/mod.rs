@@ -33,6 +33,7 @@
 //! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
+mod array;
 mod callable;
 mod collect;
 mod define;
@@ -41,6 +42,33 @@ mod object;
 mod property;
 
 pub use self::callable::{Callable, Native, NativeCall};
+
+/// What `[[DefineOwnProperty]]` came to.
+///
+/// Three answers rather than two, because §10.4.2.4 step 2 has one that a Boolean cannot carry:
+/// an array length that is not an integer index is a **RangeError**, where every other refusal is
+/// a `false` that sloppy code ignores. Written as an enum so the difference cannot be lost by a
+/// caller that was not thinking about arrays — which is what happened when the rule was written
+/// twice, once here and once in a predicate the callers had to remember to ask.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DefineOutcome {
+    /// The property is now what the descriptor asked for.
+    Defined,
+    /// §10.1.6.3's rules did not allow it. Sloppy code ignores this; strict code throws.
+    Refused,
+    /// §10.4.2.4 step 2 — the value is not a length, which throws rather than being refused.
+    BadLength,
+}
+
+impl From<bool> for DefineOutcome {
+    /// What an ordinary define answered, which is only ever two of the three.
+    fn from(defined: bool) -> Self {
+        match defined {
+            true => Self::Defined,
+            false => Self::Refused,
+        }
+    }
+}
 pub use self::collect::{Collected, Roots};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Object, ObjectId};

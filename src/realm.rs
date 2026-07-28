@@ -27,6 +27,7 @@ pub struct Realm {
     global: ObjectId,
     function_prototype: ObjectId,
     error_prototype: ObjectId,
+    array_prototype: ObjectId,
     /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
     ///
     /// An array rather than six fields because nothing here treats one differently from another:
@@ -89,6 +90,10 @@ impl Realm {
         // call with no receiver gets this rather than `undefined`.
         let global = heap.new_object(Some(object_prototype));
         let error_prototype = heap.new_object(Some(object_prototype));
+        // §23.1.3 — `Array.prototype` is itself an Array, with a `length` of zero. Not a detail:
+        // it is why `Array.prototype.length` is 0 rather than absent, and why `Array.isArray` of
+        // it is true.
+        let array_prototype = heap.new_array(object_prototype, 0);
         // §20.5.3 — `Error.prototype` has a `name` of `"Error"` and an empty `message`, and both
         // are ordinary writable properties rather than anything special. That an error's message
         // usually comes from the *instance* and its name from the *prototype* is why
@@ -137,6 +142,7 @@ impl Realm {
             global,
             function_prototype,
             error_prototype,
+            array_prototype,
             native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
@@ -178,6 +184,11 @@ impl Realm {
     /// `%Error.prototype%`.
     pub fn error_prototype(&self) -> ObjectId {
         self.error_prototype
+    }
+
+    /// `%Array.prototype%` — itself an Array, per §23.1.3.
+    pub fn array_prototype(&self) -> ObjectId {
+        self.array_prototype
     }
 
     /// Give a function the `prototype` object its instances will inherit from — §10.2.5.

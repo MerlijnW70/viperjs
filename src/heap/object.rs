@@ -22,7 +22,7 @@
 use crate::compile::Chunk;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::{
-    Callable, EnvironmentId, Heap, Native, Property, PropertyDescriptor, PropertyKey,
+    Callable, DefineOutcome, EnvironmentId, Heap, Native, Property, PropertyDescriptor, PropertyKey,
 };
 use std::rc::Rc;
 
@@ -62,6 +62,8 @@ pub struct Object {
     /// A closure is this field. The call that made the function is long gone by the time the
     /// function runs, and the variables it could see are still here because this holds them.
     environment: Option<EnvironmentId>,
+    /// Whether this is §10.4.2's exotic Array, whose `length` and indices move each other.
+    pub(super) array: bool,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -80,10 +82,16 @@ impl Object {
         Self {
             prototype,
             extensible: true,
+            array: false,
             call: None,
             environment: None,
             properties: Vec::new(),
         }
+    }
+
+    /// Whether this is an Array — §10.4.2's exotic object, and the only one there is.
+    pub fn is_array(&self) -> bool {
+        self.array
     }
 
     /// `[[GetPrototypeOf]]` (§10.1.1) — the prototype, or `None` for `null`.
@@ -276,6 +284,37 @@ impl Heap {
     /// can answer. An object cannot hold the heap it lives in, so the operation lives outside and
     /// takes both.
     pub fn define_own_property(
+        &mut self,
+        object: ObjectId,
+        key: PropertyKey,
+        descriptor: &PropertyDescriptor,
+    ) -> bool {
+        self.define_property_outcome(object, key, descriptor) == DefineOutcome::Defined
+    }
+
+    /// `[[DefineOwnProperty]]`, with the one answer a Boolean cannot carry.
+    ///
+    /// §10.4.2.4 step 2's bad array length is a **RangeError** and every other refusal is a
+    /// `false` that sloppy code ignores. A caller that can throw asks this; one that only wants
+    /// to know whether the property is now there asks [`Heap::define_own_property`].
+    pub fn define_property_outcome(
+        &mut self,
+        object: ObjectId,
+        key: PropertyKey,
+        descriptor: &PropertyDescriptor,
+    ) -> DefineOutcome {
+        // §10.4.2.1 — an Array's is not the ordinary one. Dispatching here rather than at every
+        // call site is what makes `a[0] = 1` and `Object.defineProperty(a, "0", …)` agree about
+        // what happens to `length`, which they must.
+        if self.object(object).is_some_and(Object::is_array) {
+            return self.define_array_property(object, key, descriptor);
+        }
+        DefineOutcome::from(self.define_ordinary_property(object, key, descriptor))
+    }
+
+    /// §10.1.6.3 `OrdinaryDefineOwnProperty` — the rules every object but an Array uses whole,
+    /// and the ones an Array uses after it has moved its `length`.
+    pub(super) fn define_ordinary_property(
         &mut self,
         object: ObjectId,
         key: PropertyKey,
