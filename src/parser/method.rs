@@ -33,7 +33,7 @@
 use super::body::{BodyContext, SuperAllowed};
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{FormalParameters, Function, MethodKind, PropertyKey};
-use crate::lexer::TokenKind;
+use crate::lexer::{Goal, TokenKind};
 use crate::static_semantics::bound_names;
 use std::collections::HashSet;
 
@@ -92,7 +92,11 @@ impl Parser<'_> {
         let parts = self
             .parse_method_parameters(kind, is_generator, is_async)
             .and_then(|parameters| {
-                let body = self.parse_function_body(BodyContext::method(super_allowed))?;
+                // A method is followed by another element or by the closing brace of the class or
+                // object it is in, and none of those may begin with a `/`. So the goal here is
+                // not observable, and `Div` is the one an expression would ask for.
+                let body =
+                    self.parse_function_body(BodyContext::method(super_allowed), Goal::Div)?;
                 Ok((parameters, body))
             });
         (self.yield_allowed, self.await_allowed) = enclosing;

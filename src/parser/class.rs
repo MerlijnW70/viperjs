@@ -48,7 +48,7 @@ impl Parser<'_> {
         &mut self,
         name_required: NameRequired,
     ) -> Result<Stmt, ParseError> {
-        let class = self.parse_class(name_required == NameRequired::Yes)?;
+        let class = self.parse_class(name_required == NameRequired::Yes, Goal::RegExp)?;
         Ok(Stmt {
             span: class.span,
             kind: StmtKind::Class(Box::new(class)),
@@ -57,13 +57,14 @@ impl Parser<'_> {
 
     /// `ClassExpression` (§15.7), with the cursor on `class`.
     pub(super) fn parse_class_expression(&mut self) -> Result<Expr, ParseError> {
-        let class = self.parse_class(false)?;
+        let class = self.parse_class(false, Goal::Div)?;
         let span = class.span;
         Ok(Expr::new(ExprKind::Class(Box::new(class)), span))
     }
 
-    /// Both forms, which differ only in whether the name may be left out.
-    fn parse_class(&mut self, name_required: bool) -> Result<Class, ParseError> {
+    /// Both forms, which differ only in whether the name may be left out and in what may
+    /// follow them — see [`Parser::parse_function`], which carries `after` for the same reason.
+    fn parse_class(&mut self, name_required: bool, after: Goal) -> Result<Class, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
         // One level of the count for the whole class, as a function takes one for itself: both of
         // a class's recursions run through here. The heritage is an expression and a class is one,
@@ -78,7 +79,7 @@ impl Parser<'_> {
         // way to opt out — so the name is read under it too, and `class yield {}` is refused.
         let enclosing_strict = self.strict;
         self.strict = true;
-        let class = self.parse_class_parts(keyword.span, name_required);
+        let class = self.parse_class_parts(keyword.span, name_required, after);
         self.strict = enclosing_strict;
         self.leave();
         class
@@ -90,6 +91,7 @@ impl Parser<'_> {
         &mut self,
         keyword: crate::span::Span,
         name_required: bool,
+        after: Goal,
     ) -> Result<Class, ParseError> {
         let name = if matches!(
             self.current.kind,
@@ -140,7 +142,7 @@ impl Parser<'_> {
             }
             elements.push(element);
         }
-        let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
+        let close = self.eat(TokenKind::RBrace, after, "`}`")?;
         self.resolve_private_names(&elements, mark)?;
         Ok(Class {
             name,

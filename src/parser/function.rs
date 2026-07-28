@@ -47,7 +47,7 @@ impl Parser<'_> {
         &mut self,
         is_async: bool,
     ) -> Result<Stmt, ParseError> {
-        let function = self.parse_function(true, is_async)?;
+        let function = self.parse_function(true, is_async, Goal::RegExp)?;
         Ok(Stmt {
             span: function.span,
             kind: StmtKind::Function(Box::new(function)),
@@ -60,7 +60,7 @@ impl Parser<'_> {
     /// The one position where a declaration may be anonymous: `export default function () {}`
     /// binds `*default*` and needs no name of its own.
     pub(super) fn parse_default_function(&mut self, is_async: bool) -> Result<Stmt, ParseError> {
-        let function = self.parse_function(false, is_async)?;
+        let function = self.parse_function(false, is_async, Goal::RegExp)?;
         Ok(Stmt {
             span: function.span,
             kind: StmtKind::Function(Box::new(function)),
@@ -73,7 +73,7 @@ impl Parser<'_> {
         &mut self,
         is_async: bool,
     ) -> Result<crate::ast::Expr, ParseError> {
-        let function = self.parse_function(false, is_async)?;
+        let function = self.parse_function(false, is_async, Goal::Div)?;
         let span = function.span;
         Ok(crate::ast::Expr::new(
             ExprKind::Function(Box::new(function)),
@@ -82,10 +82,18 @@ impl Parser<'_> {
     }
 
     /// Both forms, which differ only in whether the name may be left out.
+    ///
+    /// `after` is the goal the token following the closing `}` is read under, and it is the
+    /// caller's to give because the same production is both a declaration and an expression.
+    /// A declaration ends a statement, so an operand comes next and a `/` there opens a regular
+    /// expression: `function f() {}` then `/re/.test(x)` is two statements. An expression is
+    /// followed by an operator instead. §12.6 makes this the parser's call, and it is the one
+    /// place a `FunctionBody` cannot decide for itself — see [`Goal`].
     fn parse_function(
         &mut self,
         name_required: bool,
         is_async: bool,
+        after: Goal,
     ) -> Result<Function, ParseError> {
         // `async [no LineTerminator here] function` — the caller checked both, and the `async` is
         // still the current token when it did not.
@@ -102,7 +110,7 @@ impl Parser<'_> {
         }
         let name = self.parse_function_name(name_required, is_generator, is_async)?;
         self.enter()?;
-        let parts = self.parse_function_parts(is_generator, is_async);
+        let parts = self.parse_function_parts(is_generator, is_async, after);
         self.leave();
         let (parameters, body, end) = parts?;
         Ok(Function {
@@ -147,6 +155,7 @@ impl Parser<'_> {
         &mut self,
         is_generator: bool,
         is_async: bool,
+        after: Goal,
     ) -> Result<(FormalParameters, Box<[Stmt]>, Span), ParseError> {
         // `FormalParameters[+Yield]` for a generator and `[~Yield]` for everything else — which
         // is why a plain function nested in a generator may still take a parameter called
@@ -157,7 +166,7 @@ impl Parser<'_> {
         let enclosing = (self.yield_allowed, self.await_allowed);
         self.yield_allowed = is_generator;
         self.await_allowed = is_async;
-        let parts = self.parse_function_body(BodyContext::FUNCTION);
+        let parts = self.parse_function_body(BodyContext::FUNCTION, after);
         (self.yield_allowed, self.await_allowed) = enclosing;
         let (body, end, declares_strict) = parts?;
         check_parameters_against_body(&parameters, &body)?;
@@ -218,6 +227,7 @@ impl Parser<'_> {
     pub(super) fn parse_function_body(
         &mut self,
         body_context: BodyContext,
+        after: Goal,
     ) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         // `[+Return]`, which only this production sets — and which is restored on the way out
@@ -242,7 +252,7 @@ impl Parser<'_> {
         self.forbidden_in_parameters = enclosing_forbidden_in_parameters;
         self.arguments_reference = enclosing_arguments;
         let (body, declares_strict) = body?;
-        let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
+        let close = self.eat(TokenKind::RBrace, after, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks
         // it again rather than inheriting — this is where those walks stop.
         super::scope::check_declared_names(&body, super::scope::Level::Top)?;
@@ -396,6 +406,28 @@ fn check_parameters_against_body(
 mod tests {
     use crate::parser::test_support::*;
     use crate::parser::{ParseErrorKind, parse_script};
+
+    #[test]
+    fn a_slash_after_a_declaration_opens_a_regular_expression() {
+        // §12.6: the goal symbol for a token is the parser's to choose, and a `}` that ends a
+        // *declaration* ends a statement — so an operand comes next and a `/` there opens a
+        // literal. The same `}` ending a function *expression* is followed by an operator.
+        // One production serves both, which is why the caller has to say which it asked for.
+        assert!(parse_script("function f() {}\n/re/.test(x);").is_ok());
+        assert!(parse_script("class C {}\n/re/.test(x);").is_ok());
+        assert!(parse_script("async function f() {}\n/re/.test(x);").is_ok());
+        assert!(parse_script("function* g() {}\n/re/.test(x);").is_ok());
+        // The shape babel's corpus has, where the declaration is inside another function.
+        assert!(parse_script("function fn() {\n return\n function foo() {}\n /42/i\n }").is_ok());
+        // …and the expression side, where the very same `}` is followed by division.
+        assert_eq!(shape("(function () {}) / 2"), "(/ (fn <anon> [] {}) 2)");
+        assert_eq!(shape("(class {}) / 2"), "(/ (class <anon> - []) 2)");
+        // Without the parentheses the same text is still an expression, a `FunctionExpression`
+        // being a `PrimaryExpression` and so an operand of `/` like any other. That it divides
+        // rather than opening a literal is the whole of what the expression side asks for.
+        assert!(parse_script("x = function () {} / 2;").is_ok());
+        assert!(parse_script("x = class {} / 2;").is_ok());
+    }
 
     #[test]
     fn a_declaration_must_be_named_and_an_expression_need_not_be() {
