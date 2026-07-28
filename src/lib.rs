@@ -21,6 +21,7 @@ pub mod span;
 pub mod static_semantics;
 mod unicode_id;
 mod unicode_id_table;
+pub mod value;
 
 /// The engine version, as reported to embedders (`praxis::VERSION`).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
