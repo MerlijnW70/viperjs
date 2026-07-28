@@ -43,8 +43,8 @@ pub enum Fault {
     JumpOutOfRange,
     /// A `LoadLocal` or `StoreLocal` named a slot the frame does not have.
     MissingLocal,
-    /// A `PopHandler` with no handler installed.
-    NoHandlerToPop,
+    /// A `PopHandler` with no matching `PushHandler`.
+    UnmatchedPopHandler,
     /// The chunk finished with something still on the stack.
     ///
     /// Every statement is stack-neutral and every expression consumes its operands, so a chunk
@@ -223,7 +223,7 @@ impl Vm {
                 Instruction::PopHandler => {
                     // A pop with nothing to pop is a chunk that does not make sense: the compiler
                     // emits these in pairs.
-                    self.handlers.pop().ok_or(Fault::NoHandlerToPop)?;
+                    self.handlers.pop().ok_or(Fault::UnmatchedPopHandler)?;
                 }
             }
         }
