@@ -15,6 +15,7 @@
 #![deny(missing_docs)]
 
 pub mod ast;
+pub mod compile;
 pub mod heap;
 pub mod lexer;
 pub mod parser;
@@ -23,6 +24,7 @@ pub mod static_semantics;
 mod unicode_id;
 mod unicode_id_table;
 pub mod value;
+pub mod vm;
 
 /// The engine version, as reported to embedders (`praxis::VERSION`).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

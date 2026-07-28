@@ -51,13 +51,17 @@
 //!   character by character rather than looking it up in a table.
 //! - `number_to_string` — §6.1.6.1.20, the other direction, which decides how many digits a
 //!   Number needs and where the point goes.
+//! - `operators` — what the binary operators mean (§13.15.3, §7.2.12, §7.2.13).
 //! - here — [`Value`] itself, the conversions and the three equality relations.
 //!
 //! The two directions are checked against each other rather than only against a table: reading
 //! back what was written must give the same Number, for any Number at all.
 
 mod number_to_string;
+mod operators;
 mod string_to_number;
+
+pub use self::operators::{apply_binary, is_loosely_equal};
 
 use self::number_to_string::number_to_string;
 use self::string_to_number::string_to_number;
