@@ -223,6 +223,7 @@ fn evaluate(program: &str, block: &Frontmatter) -> Verdict {
         },
         Ok(VmOutcome::Thrown(thrown)) => {
             let what = describe(thrown, &mut heap);
+            let said = explain(thrown, &mut heap);
             match negative {
                 // A test that must fail at *parse* time and instead threw while running has not
                 // passed. The program should never have begun, and that it went wrong later is a
@@ -230,14 +231,14 @@ fn evaluate(program: &str, block: &Frontmatter) -> Verdict {
                 Some(expected) if expected.phase == "runtime" => match what == expected.kind {
                     true => Verdict::Passed,
                     false => {
-                        Verdict::Failed(format!("expected a {} and it threw {what}", expected.kind))
+                        Verdict::Failed(format!("expected a {} and it threw {said}", expected.kind))
                     }
                 },
                 Some(expected) => Verdict::Failed(format!(
-                    "expected a {} at {} time, and it threw {what} while running",
+                    "expected a {} at {} time, and it threw {said} while running",
                     expected.kind, expected.phase
                 )),
-                None => Verdict::Failed(format!("it threw {what}")),
+                None => Verdict::Failed(format!("it threw {said}")),
             }
         }
     }
@@ -273,6 +274,43 @@ fn describe(thrown: praxis::value::Value, heap: &mut Heap) -> String {
         return "an object whose name is not a string".to_string();
     };
     text(heap, name)
+}
+
+/// What was thrown, said the way a work list needs it: the kind, and what it said.
+///
+/// `describe` answers the *kind* alone because that is what `negative.type` names and what a
+/// negative test is checked against. A failure line is read by a person deciding what to build
+/// next, and seventeen thousand lines reading `it threw ReferenceError` say nothing at all —
+/// where `ReferenceError: Object is not defined` names the builtin that is missing and sorts
+/// itself into a bucket.
+fn explain(thrown: praxis::value::Value, heap: &mut Heap) -> String {
+    let kind = describe(thrown, heap);
+    match message(thrown, heap) {
+        Some(message) if !message.is_empty() => format!("{kind}: {message}"),
+        _ => kind,
+    }
+}
+
+/// An error's own `message`, if it has one that is a string.
+///
+/// Own rather than inherited, because §20.5.3.3 puts an empty `message` on `Error.prototype` and
+/// an inherited empty string is the absence of a message rather than a message.
+fn message(thrown: praxis::value::Value, heap: &mut Heap) -> Option<String> {
+    use praxis::heap::{PropertyKey, PropertyKind};
+    use praxis::value::Value;
+
+    let Value::Object(object) = thrown else {
+        return None;
+    };
+    let key = PropertyKey::from_units(heap, &"message".encode_utf16().collect::<Vec<_>>());
+    let property = heap.object(object)?.get_own_property(key)?;
+    match property.kind {
+        PropertyKind::Data {
+            value: Value::String(id),
+            ..
+        } => Some(text(heap, id)),
+        _ => None,
+    }
 }
 
 /// A heap string as Rust text, for putting in a message.
@@ -450,9 +488,14 @@ mod tests {
         assert!(outcomes.iter().all(|run| run.verdict == Verdict::Passed));
 
         // `raw` means exactly the text and nothing else. Nothing was prepended, so the name that
-        // `sta.js` would have declared is not declared, and the run never starts.
+        // `sta.js` would have declared is a name nothing declares — and reading one of those is a
+        // ReferenceError, which is how the absence is observed.
         let outcomes = run(&root, "/*---\nflags: [raw]\n---*/\nvar x = fromSta;");
-        assert!(matches!(outcomes[0].verdict, Verdict::Skipped(_)));
+        assert!(
+            matches!(&outcomes[0].verdict, Verdict::Failed(why) if why.contains("ReferenceError")),
+            "{:?}",
+            outcomes[0].verdict
+        );
         let _ = std::fs::remove_dir_all(&root);
     }
 
@@ -526,6 +569,39 @@ mod tests {
         let outcomes = run(&root, "/*---\ndescription: x\n---*/\nassert(true);");
         assert_eq!(outcomes[0].name, "one.js");
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_failure_says_what_was_thrown_and_what_it_said() {
+        // The line a person reads to decide what to build next. `it threw ReferenceError` seventeen
+        // thousand times says nothing; `ReferenceError: Object is not defined` names the builtin.
+        let thrown = "/*---
+description: x
+---*/
+var e = {}; e.name = 'Weird'; e.message = 'because'; throw e;";
+        assert_eq!(
+            verdict(thrown),
+            Verdict::Failed("it threw Weird: because".to_string())
+        );
+        // An *empty* message is the absence of one, not a message that is blank — so the kind
+        // stands alone rather than trailing a colon with nothing after it.
+        let blank = "/*---
+description: x
+---*/
+var e = {}; e.name = 'Weird'; e.message = ''; throw e;";
+        assert_eq!(
+            verdict(blank),
+            Verdict::Failed("it threw Weird".to_string())
+        );
+        // …and so is no `message` property at all, which is what §20.5.1.1 gives `new Error()`.
+        let silent = "/*---
+description: x
+---*/
+var e = {}; e.name = 'Weird'; throw e;";
+        assert_eq!(
+            verdict(silent),
+            Verdict::Failed("it threw Weird".to_string())
+        );
     }
 
     #[test]

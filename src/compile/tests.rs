@@ -47,7 +47,6 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // The parser accepted every one of these. Refusing with a span is the difference between
     // "praxis cannot do this yet" and a wrong answer nobody notices.
     let cases = [
-        ("x", "a reference to an undeclared name"),
         ("f?.()", "optional chaining"),
         ("[1]", "an array literal"),
         (
@@ -56,9 +55,8 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
         ),
         ("1n", "a BigInt literal"),
         ("delete x", "deleting a name"),
-        ("1 instanceof 2", "the instanceof operator"),
         ("`a`", "a template literal"),
-        ("1 ? b : c", "a reference to an undeclared name"),
+        ("1 ? 2n : 3", "a BigInt literal"),
         ("/re/", "a regular expression literal"),
     ];
     for (source, what) in cases {
@@ -197,27 +195,20 @@ fn a_return_at_the_top_level_is_refused_by_the_compiler_too() {
 }
 
 #[test]
-fn a_name_no_scope_declares_is_refused_however_deeply_it_is_nested() {
-    // Reading outwards stops at the script, and a name that is nowhere on the chain is a
-    // mistake rather than a feature that is missing. The enclosing function has a local of
-    // its own, so the walk has something to look at and still answers correctly.
+fn a_name_no_scope_declares_is_a_global_however_deeply_it_is_nested() {
+    // Reading outwards stops at the script, and what is past the script is the global object.
+    // So a name that is nowhere on the chain is not a mistake the compiler can name — it is a
+    // question for run time, because the global it wants may be created a line later. The
+    // enclosing function has a local of its own, so the walk has something to look at and still
+    // reaches the same answer.
     let mut heap = Heap::new();
-    let cases = [
-        (
-            "function outer() { var x; function inner() { return nowhere; } }",
-            "a reference to an undeclared name",
-        ),
-        (
-            "function outer() { var x; function inner() { nowhere = 1; } }",
-            "an assignment to an undeclared name",
-        ),
-    ];
-    for (source, what) in cases {
+    for source in [
+        "function outer() { var x; function inner() { return nowhere; } }",
+        "function outer() { var x; function inner() { nowhere = 1; } }",
+    ] {
         let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
-        let error = compile_script(&script, &mut heap).expect_err("refused"); // same
-        assert_eq!(
-            error.kind,
-            ErrorKind::Unsupported(what),
+        assert!(
+            compile_script(&script, &mut heap).is_ok(),
             "compiling {source:?}"
         );
     }
@@ -272,10 +263,7 @@ fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
 fn a_refusal_deep_inside_an_expression_carries_the_inner_span() {
     // The refusal comes from where the trouble is, not from the top: an engine that reported
     // the whole line would be useless on a long one.
-    let error = compile("1 + 2 * (3 - x)").expect_err("x is not implemented yet"); // same
-    assert_eq!(
-        error.kind,
-        ErrorKind::Unsupported("a reference to an undeclared name")
-    );
-    assert_eq!(error.span, Span::new(13, 14));
+    let error = compile("1 + 2 * (3 - 4n)").expect_err("a BigInt is not implemented yet"); // same
+    assert_eq!(error.kind, ErrorKind::Unsupported("a BigInt literal"));
+    assert_eq!(error.span, Span::new(13, 15));
 }

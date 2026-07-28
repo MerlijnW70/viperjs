@@ -29,6 +29,7 @@
 //! §6.2.4 lives in [`crate::compile`].
 
 mod call;
+mod global;
 mod property;
 
 use self::call::{Entry, Frame};
@@ -273,6 +274,67 @@ impl Vm {
                         return Err(Fault::MissingLocal);
                     }
                 }
+                Instruction::LoadGlobal(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    // §6.2.5.5 `GetValue` — an unresolvable reference is a ReferenceError, and
+                    // this is the line that makes `missing` differ from `o.missing`.
+                    let Some(read) = self.global_binding(key, heap) else {
+                        let message = self.missing_global(key, heap);
+                        let thrown = self.realm.error(heap, NativeError::Reference, &message);
+                        self.unwind(thrown, chunk, &mut current, &mut at)?;
+                        continue;
+                    };
+                    match self.settle(read, heap, chunk, &mut current, &mut at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
+                Instruction::StoreGlobal(index) => {
+                    // Peeked, not popped, for the same reason `StoreVariable` peeks.
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let key = self.global_name(running, index, heap)?;
+                    let global = Value::Object(self.realm.global());
+                    // §6.2.5.6 `PutValue`: a name that resolves to nothing is created on the
+                    // global object. That is the *sloppy* answer — strict code throws a
+                    // ReferenceError instead — and this engine does not yet carry a strictness
+                    // through to here, so it gives the one that is right for a Script's default.
+                    let stored = self.set_property_key(global, key, value, heap);
+                    if self
+                        .settle(stored, heap, chunk, &mut current, &mut at)?
+                        .is_none()
+                    {
+                        continue;
+                    }
+                }
+                Instruction::TypeofGlobal(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    // §13.5.1.1 step 2 — no such global is `"undefined"`, not a throw.
+                    let read = match self.global_binding(key, heap) {
+                        Some(read) => read,
+                        None => Ok(Value::Undefined),
+                    };
+                    let answer = match self.settle(read, heap, chunk, &mut current, &mut at)? {
+                        Some(value) => value.type_of(heap),
+                        None => continue,
+                    };
+                    let id = heap.new_string(answer.encode_utf16().collect());
+                    self.stack.push(Value::String(id));
+                }
+                Instruction::DeclareGlobal(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    self.declare_global(key, heap);
+                }
+                Instruction::Bury(depth) => {
+                    // Removed from the top and inserted lower down rather than swapped along:
+                    // everything it passes keeps its order, and only this value moves.
+                    let value = self.pop()?;
+                    let at = self
+                        .stack
+                        .len()
+                        .checked_sub(depth as usize)
+                        .ok_or(Fault::StackUnderflow)?;
+                    self.stack.insert(at, value);
+                }
                 Instruction::SetCompletion => {
                     self.completion = self.pop()?;
                 }
@@ -409,6 +471,17 @@ impl Vm {
                     let key = self.pop()?;
                     let has = self.has_property(base, key, heap);
                     match self.settle(has, heap, chunk, &mut current, &mut at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
+                Instruction::Instanceof => {
+                    // Right first: it was pushed second, so it is on top — the same order every
+                    // binary operator here pops in.
+                    let target = self.pop()?;
+                    let value = self.pop()?;
+                    let answer = self.instance_of(value, target, heap);
+                    match self.settle(answer, heap, chunk, &mut current, &mut at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }

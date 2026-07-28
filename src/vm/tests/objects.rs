@@ -368,3 +368,47 @@ fn optional_chaining_and_private_names_are_refused_with_a_span() {
         );
     }
 }
+
+#[test]
+fn a_script_var_gets_the_three_attributes_9_1_1_4_17_gives_it() {
+    // §9.1.1.4.17 `CreateGlobalVarBinding`: writable and enumerable, and **not** configurable.
+    // The last is what `delete` observes; the other two have nothing in the language to observe
+    // them yet — `for...in` and `Object.keys` are both still to come — so they are read off the
+    // object directly rather than left as a claim in a comment nobody checks.
+    let mut heap = Heap::new();
+    let script = parse_script("var declared = 1; function fn() {}").expect("it parses"); // the test needs a chunk
+    let chunk = compile_script(&script, &mut heap).expect("it compiles"); // same
+    let mut vm = Vm::new(&mut heap);
+    vm.run(&chunk, &mut heap).expect("it runs"); // same
+    let global = vm.realm.global();
+
+    for name in ["declared", "fn"] {
+        let property = own(&mut heap, global, name).unwrap_or_else(|| panic!("{name} is a global")); // the test is about it
+        let PropertyKind::Data { writable, .. } = property.kind else {
+            panic!("{name} is a data property"); // same
+        };
+        assert!(writable, "{name} is writable");
+        assert!(property.enumerable, "{name} is enumerable");
+        assert!(!property.configurable, "{name} is not configurable");
+    }
+
+    // An ordinary assignment gives the three §6.1.7.1 defaults instead, and the difference
+    // between the two is the whole reason a `var` cannot be deleted.
+    let assigned = own(&mut heap, global, "globalThis").expect("globalThis is a global"); // same
+    assert!(!assigned.enumerable, "a built-in is not enumerable");
+    assert!(assigned.configurable, "globalThis is configurable");
+
+    // §19.1.2–4 give `undefined`, `NaN` and `Infinity` all three attributes off. Two of them are
+    // observable from source — a write is ignored and a delete answers `false` — and the third
+    // is not, so it is read here rather than assumed. §17 is why: a built-in never shows up in
+    // an enumeration, and nothing enumerates yet.
+    for name in ["undefined", "NaN", "Infinity"] {
+        let property = own(&mut heap, global, name).unwrap_or_else(|| panic!("{name} is a global")); // the test is about it
+        let PropertyKind::Data { writable, .. } = property.kind else {
+            panic!("{name} is a data property"); // same
+        };
+        assert!(!writable, "{name} is not writable");
+        assert!(!property.enumerable, "{name} is not enumerable");
+        assert!(!property.configurable, "{name} is not configurable");
+    }
+}

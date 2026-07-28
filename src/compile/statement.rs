@@ -145,12 +145,23 @@ impl Compiler<'_> {
             let Some(initializer) = &declarator.initializer else {
                 continue;
             };
-            let slot = self.declare(&name.name);
-            self.expression(initializer)?;
-            self.chunk.emit(Instruction::StoreVariable(0, slot));
+            // A `var` belongs to whatever it is written in, and at the top level of a script that
+            // is the *global object* rather than a scope — §9.1.1.4 again. The binding itself was
+            // made before anything ran, either way; this is only the initializer running where it
+            // was written, which is why `x` is `undefined` above its `var x = 1` and 1 below it.
+            match self.at_global_scope() {
+                true => {
+                    let index = self.name(&name.name)?;
+                    self.expression(initializer)?;
+                    self.chunk.emit(Instruction::StoreGlobal(index));
+                }
+                false => {
+                    let slot = self.declare(&name.name);
+                    self.expression(initializer)?;
+                    self.chunk.emit(Instruction::StoreVariable(0, slot));
+                }
+            }
             self.chunk.emit(Instruction::Pop);
-            // A `var` always belongs to the function it is written in, so it is always a local —
-            // even inside a function that also reads script-level names.
         }
         Ok(())
     }
@@ -541,9 +552,24 @@ impl Compiler<'_> {
                     statement.span,
                 ));
             };
-            let slot = self.declare(&name.name);
-            self.make_function(function, statement.span)?;
-            self.chunk.emit(Instruction::StoreVariable(0, slot));
+            // §9.1.1.4.16 `CreateGlobalFunctionBinding` at the top level of a script, and an
+            // ordinary slot everywhere else. The declaration comes first so the property exists
+            // with a script's attributes — writable, enumerable, not configurable — and the store
+            // then puts the function in it. Assigning to a name that does not exist yet would
+            // create it *configurable*, and `delete f` would then work on a function declaration.
+            match self.at_global_scope() {
+                true => {
+                    let index = self.name(&name.name)?;
+                    self.chunk.emit(Instruction::DeclareGlobal(index));
+                    self.make_function(function, statement.span)?;
+                    self.chunk.emit(Instruction::StoreGlobal(index));
+                }
+                false => {
+                    let slot = self.declare(&name.name);
+                    self.make_function(function, statement.span)?;
+                    self.chunk.emit(Instruction::StoreVariable(0, slot));
+                }
+            }
             self.chunk.emit(Instruction::Pop);
         }
         Ok(())

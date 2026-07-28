@@ -96,6 +96,30 @@ impl Realm {
         let range_error_prototype = native(NativeError::Range);
         let reference_error_prototype = native(NativeError::Reference);
 
+        // §19.1's value properties of the global object — the four that are values rather than
+        // functions, and so the four that can exist before anything is callable.
+        //
+        // §19.1.1's `globalThis` is an ordinary property: writable, not enumerable, configurable.
+        // The other three are §19.1.2–4 and are none of those things. That `undefined` is a
+        // read-only *property* rather than a keyword is why `var undefined = 1` is legal and does
+        // nothing, and why a minifier can shorten it to `void 0` but not redefine it.
+        define(heap, global, "globalThis", Value::Object(global));
+        for (name, value) in [
+            ("undefined", Value::Undefined),
+            ("NaN", Value::Number(f64::NAN)),
+            ("Infinity", Value::Number(f64::INFINITY)),
+        ] {
+            let key = PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
+            let descriptor = PropertyDescriptor {
+                value: Some(value),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(false),
+                ..PropertyDescriptor::EMPTY
+            };
+            let _ = heap.define_own_property(global, key, &descriptor);
+        }
+
         Self {
             object_prototype,
             global,

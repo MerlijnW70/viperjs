@@ -218,3 +218,112 @@ fn the_comma_operator_keeps_the_last_value_and_discards_the_rest() {
     // work — which is the only reason anyone writes one.
     assert_eq!(eval("('a' + 'b', 'c')"), "c");
 }
+
+#[test]
+fn an_update_coerces_the_old_value_before_it_adds_one() {
+    // §13.4.4.1 step 3 — `ToNumeric` runs on the *old* value, and only then is one added. Do it
+    // the other way round and `x = "1"; x++` concatenates: the row below would be "11".
+    assert_eq!(run("var x = '1'; var r = x++; r + '|' + x"), "1|2");
+    assert_eq!(run("var x = '1'; var r = ++x; r + '|' + x"), "2|2");
+    // The value a postfix one produces is the coerced old one, not the original — so it is a
+    // Number even when what was there was a String.
+    assert_eq!(run("var x = '1'; typeof (x++)"), "number");
+    assert_eq!(run("var x = 'abc'; var r = x++; r + '|' + x"), "NaN|NaN");
+    assert_eq!(run("var x = '0x10'; x++; x"), "17");
+    assert_eq!(run("var x = 1; var r = x--; r + '|' + x"), "1|0");
+    assert_eq!(run("var x = 1; var r = --x; r + '|' + x"), "0|0");
+}
+
+#[test]
+fn a_postfix_update_answers_the_old_value_and_a_prefix_one_the_new() {
+    // The only difference between the two, and the reason the old value has to be kept rather
+    // than computed back: at 2^53 adding one changes nothing, so `new - 1` is not the old value.
+    assert_eq!(
+        run("var x = 9007199254740992; var r = x++; r + '|' + x"),
+        "9007199254740992|9007199254740992"
+    );
+    assert_eq!(
+        run("var o = {p: 9007199254740992}; var r = o.p++; r + '|' + o.p"),
+        "9007199254740992|9007199254740992"
+    );
+    // …and NaN, where nothing at all can be recovered from the new value.
+    assert_eq!(
+        run("var o = {p: NaN}; var r = o.p--; r + '|' + o.p"),
+        "NaN|NaN"
+    );
+    assert_eq!(run("var x = 1; x++ + x++"), "3");
+    assert_eq!(run("var x = 1; ++x + ++x"), "5");
+}
+
+#[test]
+fn an_update_of_a_property_evaluates_its_key_once() {
+    // §13.4.4.1 step 1 evaluates the reference once, and this is where that is observable: a
+    // computed key with a side effect must not run twice between the read and the write.
+    assert_eq!(
+        run(
+            "var n = 0; var o = {a: 5}; function f() { n = n + 1; return 'a' } var r = o[f()]++; r + '|' + o.a + '|' + n"
+        ),
+        "5|6|1"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; var o = {a: 5}; function f() { n = n + 1; return 'a' } var r = ++o[f()]; r + '|' + o.a + '|' + n"
+        ),
+        "6|6|1"
+    );
+}
+
+#[test]
+fn instanceof_walks_the_prototype_chain_and_asks_nothing_else() {
+    // §7.3.22 — it looks for the object `C.prototype` *holds* on the chain. Not which
+    // constructor ran, which is why it is a question about objects rather than about history.
+    let chain = "function A() {} function B() {} B.prototype = new A(); var b = new B();";
+    assert_eq!(run(&format!("{chain} b instanceof B")), "true");
+    assert_eq!(run(&format!("{chain} b instanceof A")), "true");
+    assert_eq!(run(&format!("{chain} new A() instanceof B")), "false");
+    // Reassigning `prototype` afterwards changes the answer for objects that already exist —
+    // not a bug, and the reason `instanceof` is unreliable across realms.
+    assert_eq!(
+        run(&format!("{chain} B.prototype = {{}}; b instanceof B")),
+        "false"
+    );
+    // A primitive is an instance of nothing, and that is an answer rather than an error.
+    assert_eq!(run("function f() {} 1 instanceof f"), "false");
+    assert_eq!(run("function f() {} null instanceof f"), "false");
+}
+
+#[test]
+fn instanceof_refuses_a_right_operand_it_cannot_ask() {
+    // Three different mistakes, so three different sentences. §13.10.2 step 3 — not an object.
+    assert_eq!(
+        run("try { 1 instanceof 2 } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // Step 5 — an object, but not callable, which is what `1 instanceof {}` reaches.
+    assert_eq!(
+        run("try { 1 instanceof ({}) } catch (e) { e.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { 1 instanceof ({}) } catch (e) { e.message }"),
+        "the right operand of instanceof is not callable"
+    );
+    // §7.3.22 step 5 — callable, but its `prototype` is not an object, so there is no chain to
+    // look on. Reachable only by assigning one, which is why it needs its own row.
+    assert_eq!(
+        run("function f() {} f.prototype = 1; try { ({}) instanceof f } catch (e) { e.message }"),
+        "the prototype of the right operand of instanceof is not an object"
+    );
+    // A callable with an object prototype answers rather than throwing, even for a primitive
+    // left operand — which is what makes the rows above about the *right* operand.
+    assert_eq!(run("function f() {} 1 instanceof f"), "false");
+}
+
+#[test]
+fn a_prototype_chain_of_any_length_answers_without_running_out_of_stack() {
+    // The walk is over data, and data is as deep as a program makes it. Recursing would run out
+    // of Rust stack on a long chain rather than on nesting, which DR-0002 does not allow.
+    let deep = "function A() {} var o = {}; var i = 0; while (i < 50000) { var n = {}; \
+                var k = n; o = n; i = i + 1; } A.prototype = {}; o instanceof A";
+    assert_eq!(run(deep), "false");
+}

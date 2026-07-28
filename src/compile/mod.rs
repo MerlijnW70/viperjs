@@ -25,6 +25,7 @@
 //! the errors are how a reader can tell what is genuinely finished.
 
 use crate::ast::{Expr, Script};
+use crate::value::Value;
 mod chunk;
 mod expression;
 mod function;
@@ -91,17 +92,18 @@ pub fn compile_expression(expression: &Expr, heap: &mut Heap) -> Result<Chunk, C
 /// is what hoisting *is*: `x` is readable before its declaration and holds nothing.
 pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(heap);
-    // §16.1.7 step 8's `GlobalDeclarationInstantiation`, in the part that is not about the global
-    // object. `VarDeclaredNames` of the whole body rather than of the top level, because a `var`
-    // inside a block or a loop belongs to the script all the same — that is the difference
-    // between `var` and everything that replaced it.
+    // §16.1.7 step 8's `GlobalDeclarationInstantiation`. A script's `var`s belong to the *global
+    // object*, not to a scope of its own — which is why `var x = 1` at the top level makes
+    // `globalThis.x` and a `let` never will. `VarDeclaredNames` of the whole body rather than of
+    // the top level, because a `var` inside a block or a loop belongs to the script all the same;
+    // that is the difference between `var` and everything that replaced it.
     //
     // `TopLevelVarDeclaredNames` would answer the same thing today. The two differ on exactly one
-    // production, a *function declaration* at the top level, which is var-scoped and which this
-    // compiler refuses; when it stops refusing, they part company and this is the one that stays
-    // right for a Script.
+    // production, a *function declaration* at the top level, which is var-scoped and which
+    // `hoist_functions` handles separately; this is the one that stays right for a Script.
     for name in var_declared_names(&script.body) {
-        compiler.declare(name.name);
+        let index = compiler.name(name.name)?;
+        compiler.chunk.emit(Instruction::DeclareGlobal(index));
     }
     compiler.hoist_functions(&script.body)?;
     compiler.statements(&script.body)?;
@@ -243,6 +245,60 @@ impl<'a> Compiler<'a> {
     fn store(&mut self, binding: Where) {
         self.chunk
             .emit(Instruction::StoreVariable(binding.depth, binding.index));
+    }
+
+    /// Whether this compiler is the script's own, rather than some function's body.
+    ///
+    /// Derived rather than stored, because it is already recorded: a function body is compiled
+    /// with the chain of scopes it is written inside, and only the script itself is written
+    /// inside none. A separate flag could disagree with that; this cannot.
+    pub(super) fn at_global_scope(&self) -> bool {
+        self.outer.is_empty()
+    }
+
+    /// The constant index holding `name` as a String, for the instructions that name a global.
+    ///
+    /// The name is interned, so the hundred references to `assert` in one test share one String —
+    /// and so the property key made from it at run time is the key the global object already has.
+    pub(super) fn name(&mut self, name: &str) -> Result<u32, CompileError> {
+        let units: Vec<u16> = name.encode_utf16().collect();
+        let interned = self.heap.intern(&units);
+        self.chunk.add_constant(Value::String(interned))
+    }
+
+    /// Emit a read of `name`, from a scope if it has one and from the global object if not.
+    ///
+    /// §9.4.2 `ResolveBinding` walks the environment chain outwards and ends at the Global
+    /// Environment Record, so a name the compiler cannot place is not an unknown name — it is a
+    /// name whose binding, if any, is a property of the global object. Whether it is there is a
+    /// question for run time, because a script can create one at any moment.
+    pub(super) fn load_name(&mut self, name: &str) -> Result<(), CompileError> {
+        match self.binding(name) {
+            Some(binding) => {
+                self.load(binding);
+                Ok(())
+            }
+            None => {
+                let index = self.name(name)?;
+                self.chunk.emit(Instruction::LoadGlobal(index));
+                Ok(())
+            }
+        }
+    }
+
+    /// Emit a write of `name`, leaving the value on the stack.
+    pub(super) fn store_name(&mut self, name: &str) -> Result<(), CompileError> {
+        match self.binding(name) {
+            Some(binding) => {
+                self.store(binding);
+                Ok(())
+            }
+            None => {
+                let index = self.name(name)?;
+                self.chunk.emit(Instruction::StoreGlobal(index));
+                Ok(())
+            }
+        }
     }
 }
 

@@ -31,12 +31,25 @@ impl Vm {
         key: Value,
         heap: &mut Heap,
     ) -> Completion<Value> {
+        let key = self.property_key(key, heap)?;
+        self.get_property_key(base, key, heap)
+    }
+
+    /// `[[Get]]` when the key is already a key.
+    ///
+    /// A global reference names its property in the bytecode, so it never had a *value* to
+    /// convert. Splitting the conversion off means the two paths cannot drift on what a get is.
+    pub(crate) fn get_property_key(
+        &self,
+        base: Value,
+        key: PropertyKey,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
         let Value::Object(object) = base else {
             return Err(TypeError(
                 "cannot read a property of something that is not an object",
             ));
         };
-        let key = self.property_key(key, heap)?;
         // §10.1.8.1 step 3 — a property that is nowhere on the chain is `undefined`, not an
         // error. That is the whole reason `o.missing` is a value and `missing` is a ReferenceError.
         let Some((_, property)) = heap.find_own(object, key) else {
@@ -65,12 +78,23 @@ impl Vm {
         value: Value,
         heap: &mut Heap,
     ) -> Completion<Value> {
+        let key = self.property_key(key, heap)?;
+        self.set_property_key(base, key, value, heap)
+    }
+
+    /// `[[Set]]` when the key is already a key — see [`Vm::get_property_key`].
+    pub(crate) fn set_property_key(
+        &self,
+        base: Value,
+        key: PropertyKey,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
         let Value::Object(object) = base else {
             return Err(TypeError(
                 "cannot set a property of something that is not an object",
             ));
         };
-        let key = self.property_key(key, heap)?;
         // §10.1.9.2 — an *inherited* accessor is called, and an inherited non-writable data
         // property refuses the write. An inherited writable one does not: the value is filed on
         // the receiver, which is what makes a prototype's property shadowable.
@@ -121,6 +145,69 @@ impl Vm {
             &descriptor,
         )))
     }
+    /// §13.10.2's `InstanceofOperator`, by way of §7.3.22's `OrdinaryHasInstance`.
+    ///
+    /// # What it asks, and what it does not
+    ///
+    /// It walks `value`'s prototype chain looking for the *object* `target.prototype` holds. So it
+    /// is a question about the chain and never about which constructor was called: reassign
+    /// `C.prototype` and every object made before the reassignment stops being an instance of `C`,
+    /// which is not a bug and is why `instanceof` is unreliable across frames.
+    ///
+    /// Three TypeErrors, and they are different sentences because they are different mistakes: a
+    /// right operand that is not an object at all (§13.10.2 step 3), one that is an object but not
+    /// callable (step 5), and a callable one whose `prototype` is not an object (§7.3.22 step 5) —
+    /// the last being what `Object.create(null) instanceof f` after `f.prototype = 1` reaches.
+    ///
+    /// §13.10.2 step 4 looks for `@@hasInstance` first, which is how `Symbol.hasInstance` lets a
+    /// class say what `instanceof` means for it. There are no Symbols yet, so every object takes
+    /// the ordinary path; when they arrive this gains a step in front rather than changing.
+    pub(crate) fn instance_of(
+        &self,
+        value: Value,
+        target: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let Value::Object(constructor) = target else {
+            return Err(TypeError(
+                "the right operand of instanceof must be an object",
+            ));
+        };
+        if !heap
+            .object(constructor)
+            .is_some_and(|object| object.call().is_some())
+        {
+            return Err(TypeError("the right operand of instanceof is not callable"));
+        }
+        // §7.3.22 step 3 — a primitive is an instance of nothing, and that is an *answer* rather
+        // than an error. `1 instanceof Object` is `false`, not a mistake.
+        let Value::Object(mut walk) = value else {
+            return Ok(Value::Boolean(false));
+        };
+        let prototype = self.get_property(target, self.well_known("prototype", heap), heap)?;
+        let Value::Object(prototype) = prototype else {
+            return Err(TypeError(
+                "the prototype of the right operand of instanceof is not an object",
+            ));
+        };
+        // Iterative, because a prototype chain is as long as a program makes it and DR-0002 does
+        // not let input decide how much Rust stack is used.
+        loop {
+            let Some(next) = heap.object(walk).and_then(|object| object.prototype()) else {
+                return Ok(Value::Boolean(false));
+            };
+            if next == prototype {
+                return Ok(Value::Boolean(true));
+            }
+            walk = next;
+        }
+    }
+
+    /// A String value for a name the engine itself knows, for asking an object about it.
+    fn well_known(&self, name: &str, heap: &mut Heap) -> Value {
+        Value::String(heap.intern(&name.encode_utf16().collect::<Vec<_>>()))
+    }
+
     /// `[[Delete]]` (§10.1.10) through §13.5.1's operator.
     pub(crate) fn delete_property(
         &self,

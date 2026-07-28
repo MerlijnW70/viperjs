@@ -78,6 +78,34 @@ pub enum Instruction {
     /// Assignment is an expression: `a = (b = 1)` works because the inner one leaves its value
     /// behind. A statement that only wants the effect follows this with a [`Instruction::Pop`].
     StoreVariable(u32, u32),
+    /// Push the value of a global, named by the String constant at this index.
+    ///
+    /// The other half of §9.4.2's `ResolveBinding`. A name the compiler could not place in any
+    /// scope is not an error — it is a question for the global object, and one whose answer can
+    /// change between one line and the next. A name that is not there when it is *read* is a
+    /// **ReferenceError** (§6.2.5.5 `GetValue` on an unresolvable reference), which is the one
+    /// thing that separates `missing` from `o.missing`.
+    LoadGlobal(u32),
+    /// Store the top value into a global, **without** taking it off the stack.
+    ///
+    /// §6.2.5.6 `PutValue`, in the sloppy-mode half: assigning to a name that is nowhere creates
+    /// it on the global object. Strict code throws a ReferenceError instead, and this engine does
+    /// not know yet which it is compiling — see the note on [`super::Compiler`].
+    StoreGlobal(u32),
+    /// Push the `typeof` of a global, or `"undefined"` when there is no such global.
+    ///
+    /// §13.5.1.1 step 2: `typeof` is the one operator that takes an unresolvable reference and
+    /// answers rather than throwing. It is how a program asks whether a feature exists at all —
+    /// `typeof JSON !== "undefined"` is in test262's own harness — so a plain
+    /// [`Instruction::LoadGlobal`] would turn the question into the error it was asked to avoid.
+    TypeofGlobal(u32),
+    /// Give the global object this name as a `var` binding, if it has not got one.
+    ///
+    /// §9.1.1.4.17 `CreateGlobalVarBinding`: writable and enumerable like an ordinary property,
+    /// and **not** configurable — a script's `var` cannot be deleted, which is exactly what makes
+    /// `var x` different from `globalThis.x = 1`. An existing property is left alone: `var x`
+    /// after `x` already holds something does not put `undefined` back, and that is hoisting.
+    DeclareGlobal(u32),
     /// Push a new empty ordinary object, inheriting from `Object.prototype`.
     NewObject,
     /// Push a copy of the top two values, in the same order.
@@ -87,6 +115,16 @@ pub enum Instruction {
     /// evaluated once and copied — which is what makes the once-only guarantee an instruction
     /// rather than a promise.
     DuplicateTwo,
+    /// Take the top value and put it back this many places further down.
+    ///
+    /// `Bury(3)` turns `[a, b, c, v]` into `[v, a, b, c]`. There is one thing that needs it:
+    /// `o.p++` has to keep the **old** value somewhere the store cannot reach, and the base, the
+    /// key and the copy it is about to add one to are all sitting above it.
+    ///
+    /// Recovering the old value from the new one afterwards would need no instruction at all and
+    /// would be wrong: `x = 2 ** 53; x++` leaves `x` unchanged, so `new - 1` is not the old
+    /// value — and nothing is, once `NaN` is in play.
+    Bury(u32),
     /// Take a value and a key and file the value under it, leaving the object where it is.
     ///
     /// `CreateDataPropertyOrThrow` (§7.3.5): an object literal *defines* its properties rather
@@ -97,6 +135,12 @@ pub enum Instruction {
     GetProperty,
     /// Take a value, a key and a base; store the value and leave it on the stack — §10.1.9.
     SetProperty,
+    /// Take a constructor and a value and push whether the value is an instance of it.
+    ///
+    /// §13.10.2's `InstanceofOperator`. An instruction rather than a row in `apply_binary` for
+    /// the same reason `in` is one: it asks an object a question instead of converting a value,
+    /// and answering needs the prototype chain.
+    Instanceof,
     /// Take a key and a base and push whether the property was there to remove — §13.5.1.
     DeleteProperty,
     /// Take a base and a key and push whether the base has it — §13.10.1's `in`.
@@ -310,6 +354,10 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Pop
         | Instruction::LoadVariable(_, _)
         | Instruction::StoreVariable(_, _)
+        | Instruction::LoadGlobal(_)
+        | Instruction::StoreGlobal(_)
+        | Instruction::TypeofGlobal(_)
+        | Instruction::DeclareGlobal(_)
         | Instruction::SetCompletion
         | Instruction::Throw
         | Instruction::PopHandler
@@ -322,10 +370,12 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Return
         | Instruction::NewObject
         | Instruction::DuplicateTwo
+        | Instruction::Bury(_)
         | Instruction::DefineField
         | Instruction::GetProperty
         | Instruction::SetProperty
         | Instruction::DeleteProperty
-        | Instruction::HasProperty => instruction,
+        | Instruction::HasProperty
+        | Instruction::Instanceof => instruction,
     }
 }

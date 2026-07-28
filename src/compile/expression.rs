@@ -11,7 +11,7 @@ use super::{
 use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
     Argument, AssignmentOperator, AssignmentTarget, BinaryOperator, Expr, ExprKind,
-    LogicalOperator, PropertyDefinition, UnaryOperator,
+    LogicalOperator, PropertyDefinition, UnaryOperator, UpdateOperator,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -60,6 +60,20 @@ impl Compiler<'_> {
                 if *operator == UnaryOperator::Delete {
                     return self.delete(argument, span);
                 }
+                // §13.5.1.1 step 2 — `typeof` is the one operator that takes an *unresolvable*
+                // reference and answers instead of throwing. `typeof JSON !== "undefined"` is
+                // how a program asks whether something exists at all, and it is in test262's own
+                // harness; evaluating the operand first would turn the question into the very
+                // error it was written to avoid. Only a bare name can be unresolvable, so only a
+                // bare name takes this path.
+                if *operator == UnaryOperator::Typeof
+                    && let ExprKind::Identifier(name) = &argument.kind
+                    && self.binding(name).is_none()
+                {
+                    let index = self.name(name)?;
+                    self.chunk.emit(Instruction::TypeofGlobal(index));
+                    return Ok(());
+                }
                 self.expression(argument)?;
                 self.chunk.emit(Instruction::Unary(*operator));
                 Ok(())
@@ -84,24 +98,19 @@ impl Compiler<'_> {
                     right,
                 } = &innermost.kind
                 {
-                    // §13.10.1 — `instanceof` calls a method on its right operand, so it waits
-                    // for something that can be called.
-                    if *operator == BinaryOperator::Instanceof {
-                        return Err(unsupported("the instanceof operator", innermost.span));
-                    }
                     spine.push((*operator, &**right));
                     innermost = left;
                 }
                 self.expression(innermost)?;
                 for (operator, right) in spine.into_iter().rev() {
                     self.expression(right)?;
-                    // `in` is the one binary operator that is not a value operation: it asks an
-                    // object a question rather than converting one, so it is an instruction of
-                    // its own rather than a row in `apply_binary`.
-                    if operator == BinaryOperator::In {
-                        self.chunk.emit(Instruction::HasProperty);
-                    } else {
-                        self.chunk.emit(Instruction::Binary(operator));
+                    // Two of them are not value operations: they ask an object a question
+                    // rather than converting one, so each is an instruction of its own rather
+                    // than a row in `apply_binary`.
+                    match operator {
+                        BinaryOperator::In => self.chunk.emit(Instruction::HasProperty),
+                        BinaryOperator::Instanceof => self.chunk.emit(Instruction::Instanceof),
+                        _ => self.chunk.emit(Instruction::Binary(operator)),
                     }
                 }
                 Ok(())
@@ -167,17 +176,10 @@ impl Compiler<'_> {
             }
             // Everything else, named as the specification names it so that the message says which
             // clause is missing rather than which Rust variant.
-            // §13.1.3 — a name is a slot, resolved here rather than looked up at run time.
-            // A name with no slot is a *global*, which needs the global object, so refusing is
-            // the honest answer until there is one — and it is why `undefined` is still spelled
-            // `void 0` in this engine's tests.
-            ExprKind::Identifier(name) => match self.binding(name) {
-                Some(binding) => {
-                    self.load(binding);
-                    Ok(())
-                }
-                None => Err(unsupported("a reference to an undeclared name", span)),
-            },
+            // §13.1.3 — a name is a slot when the compiler can place it and a property of the
+            // global object when it cannot. Which of the two is decided here; whether the global
+            // is *there* is decided at run time, because a script can make one at any moment.
+            ExprKind::Identifier(name) => self.load_name(name),
             // §13.2.1 — `this`, which the call decided and the frame is holding.
             ExprKind::This => {
                 self.chunk.emit(Instruction::LoadThis);
@@ -211,7 +213,13 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::Construct(count));
                 Ok(())
             }
-            ExprKind::Update { .. } => Err(unsupported("an update expression", span)),
+            // §13.4 — `++a` and `a++`, which differ in what they *evaluate to* and in nothing
+            // else. Both read, coerce, add one and write back.
+            ExprKind::Update {
+                operator,
+                prefix,
+                argument,
+            } => self.update(*operator, *prefix, argument, span),
             // §13.15 — assignment, whose *value* is the value assigned. That is why the store
             // leaves it on the stack rather than taking it: `a = b = 1` and `f(a = 1)` both
             // need it.
@@ -232,20 +240,17 @@ impl Compiler<'_> {
                         target.span,
                     ));
                 };
-                let Some(target_binding) = self.binding(name) else {
-                    return Err(unsupported(
-                        "an assignment to an undeclared name",
-                        target.span,
-                    ));
-                };
                 match compound_operator(*operator) {
                     // `a = v`.
                     None if *operator == AssignmentOperator::Assign => self.expression(value)?,
                     // `a += v` is `a = a + v`, with `a` read once — which matters not at all for
                     // a slot and matters a great deal for `o[f()] += 1`, where the property key
                     // is evaluated once. The shape is the same either way.
+                    //
+                    // The read is an ordinary one, so `undeclared += 1` is a ReferenceError from
+                    // the *read* — §13.15.2 evaluates the target's value before the operator.
                     Some(binary) => {
-                        self.load(target_binding);
+                        self.load_name(name)?;
                         self.expression(value)?;
                         self.chunk.emit(Instruction::Binary(binary));
                     }
@@ -254,10 +259,7 @@ impl Compiler<'_> {
                     // reason to build it.
                     None => return Err(unsupported("a logical assignment", span)),
                 }
-                {
-                    self.store(target_binding);
-                    Ok(())
-                }
+                self.store_name(name)
             }
             ExprKind::Array(_) => Err(unsupported("an array literal", span)),
             // §15.2.5 — a function expression. The object is made where the expression is
@@ -427,6 +429,79 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::SetProperty);
         Ok(())
     }
+    /// §13.4 — `++a`, `a++`, `--a` and `a--`.
+    ///
+    /// # Why the operand is coerced before anything is added
+    ///
+    /// §13.4.4.1 step 3 applies `ToNumeric` to the *old* value and then adds one to the result.
+    /// That is not the same as adding one and coercing afterwards: `x = "1"; x++` leaves `x` as
+    /// the number 2 and evaluates to the number **1**, not to the string `"1"`. So the coercion
+    /// is an instruction of its own — `+x` is exactly `ToNumber` (§13.5.4) — and once it has run
+    /// the addition cannot be string concatenation, whatever was there before.
+    ///
+    /// `ToNumeric` rather than `ToNumber` is what the specification says, and the difference is
+    /// BigInt: `1n++` is 2n and never becomes a Number. There are no BigInt values yet, so the
+    /// two agree on every value that exists, and this changes when they stop agreeing.
+    fn update(
+        &mut self,
+        operator: UpdateOperator,
+        prefix: bool,
+        argument: &Expr,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let step = match operator {
+            UpdateOperator::Increment => BinaryOperator::Add,
+            UpdateOperator::Decrement => BinaryOperator::Subtract,
+        };
+        match &argument.kind {
+            ExprKind::Identifier(name) => {
+                self.load_name(name)?;
+                self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
+                // The old value has to outlive the store, and only a postfix one needs it.
+                if !prefix {
+                    self.chunk.emit(Instruction::Duplicate);
+                }
+                self.constant(Value::Number(1.0))?;
+                self.chunk.emit(Instruction::Binary(step));
+                self.store_name(name)?;
+                // The store leaves the *new* value behind. A postfix one wants the old, which is
+                // underneath it, so the new one goes.
+                if !prefix {
+                    self.chunk.emit(Instruction::Pop);
+                }
+                Ok(())
+            }
+            ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
+                // §13.4.4.1 step 1 evaluates the reference *once*, so `o[f()]++` calls `f` once —
+                // the same guarantee `o[f()] += 1` needs, and the same instructions.
+                self.property_reference(argument, Keep::Nothing)?;
+                self.chunk.emit(Instruction::DuplicateTwo);
+                self.chunk.emit(Instruction::GetProperty);
+                self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
+                if !prefix {
+                    // Under the base, the key and the copy that is about to become the new value
+                    // — the three the store is going to consume. It surfaces again when the new
+                    // value the store leaves behind is discarded.
+                    self.chunk.emit(Instruction::Duplicate);
+                    self.chunk.emit(Instruction::Bury(3));
+                }
+                self.constant(Value::Number(1.0))?;
+                self.chunk.emit(Instruction::Binary(step));
+                self.chunk.emit(Instruction::SetProperty);
+                if !prefix {
+                    self.chunk.emit(Instruction::Pop);
+                }
+                Ok(())
+            }
+            // §13.4.1 — the parser has already refused anything that is not a simple assignment
+            // target, so what is left is a target this compiler has not learned yet.
+            _ => Err(unsupported(
+                "an update of something that is not a name",
+                span,
+            )),
+        }
+    }
+
     /// Emit a constant and the instruction that pushes it.
     pub(super) fn constant(&mut self, value: Value) -> Result<(), CompileError> {
         let index = self.chunk.add_constant(value)?;

@@ -146,8 +146,6 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
             "outer: { break outer; }",
             "a label on something that is not a loop",
         ),
-        ("x;", "a reference to an undeclared name"),
-        ("undeclared = 1;", "an assignment to an undeclared name"),
         ("delete x;", "deleting a name"),
         ("var a; a ||= 1;", "a logical assignment"),
     ];
@@ -483,5 +481,112 @@ fn a_labelled_break_may_not_cross_a_finally_either() {
             "var n = 0; outer: while (1) { try { n = 1; } finally { n = n + 10; } break outer; } n;"
         ),
         "11"
+    );
+}
+
+#[test]
+fn a_name_that_is_nowhere_is_a_reference_error_when_it_is_read() {
+    // §6.2.5.5 — the one line that separates a name from a property. `o.missing` is `undefined`
+    // because an object was asked for a property it has not got; `missing` is an error because a
+    // *scope* was asked for a binding that does not exist, and there is no such thing.
+    assert_eq!(
+        run("try { nowhere } catch (e) { e.name }"),
+        "ReferenceError"
+    );
+    // The message names it, because at run time the name is the whole diagnosis — there is no
+    // span to point at and nothing else to say.
+    assert_eq!(
+        run("try { nowhere } catch (e) { e.message }"),
+        "nowhere is not defined"
+    );
+    // A compound assignment reads before it writes (§13.15.2), so it throws from the read.
+    assert_eq!(
+        run("try { nowhere += 1 } catch (e) { e.name }"),
+        "ReferenceError"
+    );
+    // …and an object really does answer `undefined` for the same question, which is the contrast
+    // the whole rule exists to make.
+    assert_eq!(run("var o = {}; o.missing"), "undefined");
+}
+
+#[test]
+fn typeof_is_the_one_operator_that_survives_a_name_that_is_nowhere() {
+    // §13.5.1.1 step 2. This is how a program asks whether a feature exists at all, and test262's
+    // own harness does exactly this before it reaches for JSON — so getting it wrong turns the
+    // question into the error it was written to avoid.
+    assert_eq!(run("typeof nowhere"), "undefined");
+    // Only the *bare name* form is spared. Everything else evaluates its operand first, so a
+    // property of a name that is nowhere still throws.
+    assert_eq!(
+        run("try { typeof nowhere.x } catch (e) { e.name }"),
+        "ReferenceError"
+    );
+    // A global that exists is described by what it holds, not by whether it was declared.
+    assert_eq!(run("var here = 1; typeof here"), "number");
+    assert_eq!(run("var undef; typeof undef"), "undefined");
+    // A local shadows the global path entirely, and `typeof` follows it.
+    assert_eq!(
+        run("function f() { var here = 'a'; return typeof here } f()"),
+        "string"
+    );
+}
+
+#[test]
+fn a_script_var_is_a_property_of_the_global_object_and_a_function_local_is_not() {
+    // §9.1.1.4 — the difference that makes `globalThis` mean anything. A script's `var` is a
+    // property; a function's is a slot nothing outside can reach.
+    assert_eq!(run("var x = 5; this.x"), "5");
+    assert_eq!(run("var x = 5; globalThis.x"), "5");
+    assert_eq!(
+        run("function f() { var inner = 1; return 0 } f(); typeof globalThis.inner"),
+        "undefined"
+    );
+    // A function declaration at the top level is one too, and it is the same object.
+    assert_eq!(run("function f() { return 7 } globalThis.f()"), "7");
+    // Assigning to a name that is nowhere creates the global — §6.2.5.6's sloppy-mode half.
+    assert_eq!(run("made = 3; globalThis.made"), "3");
+}
+
+#[test]
+fn a_script_var_may_not_be_deleted_and_a_property_of_the_same_name_may() {
+    // §9.1.1.4.17 gives a `var` binding `[[Configurable]]: false`, and that single attribute is
+    // the whole observable difference between `var x = 1` and `globalThis.x = 1`.
+    assert_eq!(run("var x = 1; delete globalThis.x"), "false");
+    assert_eq!(run("function f() {} delete globalThis.f"), "false");
+    assert_eq!(run("globalThis.y = 1; delete globalThis.y"), "true");
+    // …and deleting one that was never there is `true`, which is what makes the first row a
+    // statement about the attribute rather than about the property merely existing.
+    assert_eq!(run("delete globalThis.neverThere"), "true");
+    // Hoisting does not put `undefined` back over a value that is already there.
+    assert_eq!(run("var x = 1; var x; x"), "1");
+}
+
+#[test]
+fn the_globals_that_are_values_rather_than_functions_are_there_with_their_attributes() {
+    // §19.1.2–4. That `undefined` is a read-only property rather than a keyword is why
+    // `var undefined = 1` is legal and does nothing at all.
+    assert_eq!(run("undefined"), "undefined");
+    assert_eq!(run("NaN !== NaN"), "true");
+    assert_eq!(run("1 / 0 === Infinity"), "true");
+    assert_eq!(run("globalThis === this"), "true");
+    // Not writable, and a sloppy-mode write is silently ignored rather than an error.
+    assert_eq!(run("Infinity = 1; 1 / 0 === Infinity"), "true");
+    // Not configurable either, which `globalThis` — an ordinary property — is.
+    assert_eq!(run("delete globalThis.NaN"), "false");
+    assert_eq!(run("delete globalThis.globalThis"), "true");
+}
+
+#[test]
+fn a_global_is_looked_up_each_time_because_a_script_can_change_it_underneath() {
+    // The reason a global carries its *name* into the bytecode while a local carries a number:
+    // the global scope is not closed. A function compiled before the global existed still finds
+    // it, which is what makes the whole of test262's harness work.
+    assert_eq!(run("function f() { return later } later = 4; f()"), "4");
+    // …and one that stops existing goes back to being an error.
+    assert_eq!(
+        run(
+            "globalThis.gone = 1; function f() { return gone } delete globalThis.gone; try { f() } catch (e) { e.name }"
+        ),
+        "ReferenceError"
     );
 }
