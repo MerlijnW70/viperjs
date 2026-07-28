@@ -203,7 +203,15 @@ impl Parser<'_> {
     /// directly, and wrapping each in a [`StmtKind::Block`] would invent a scope the grammar does
     /// not have. Every one of them is a `Block`, though, so every one gets §14.2.1 — which is the
     /// reason the check lives here and not in the statement form.
-    pub(super) fn parse_block_body(&mut self) -> Result<(Box<[Stmt]>, Span), ParseError> {
+    /// `level` is which of §8.2's two readings of the list applies, and the caller has to say
+    /// because the braces do not. Every `Block` is `Level::Block`; a `ClassStaticBlock` is
+    /// written with the same braces and is not one — §15.7.1 asks its statement list the
+    /// questions §15.2.1 asks a `FunctionBody`, so a `function` declared at the top of it is
+    /// var-scoped and `static { var B; function B() {} }` is ordinary.
+    pub(super) fn parse_block_body(
+        &mut self,
+        level: super::scope::Level,
+    ) -> Result<(Box<[Stmt]>, Span), ParseError> {
         let open = self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         self.enter()?;
         let body = self.parse_statement_list(TokenKind::RBrace);
@@ -211,13 +219,13 @@ impl Parser<'_> {
         let body = body?;
         let close = self.eat(TokenKind::RBrace, Goal::RegExp, "`}`")?;
         // §14.2.1, on the finished list — see `super::scope`.
-        super::scope::check_declared_names(&body, super::scope::Level::Block)?;
+        super::scope::check_declared_names(&body, level)?;
         Ok((body, open.span.to(close.span)))
     }
 
     /// `Block` where a `Statement` is wanted (§14.2).
     fn parse_block(&mut self) -> Result<Stmt, ParseError> {
-        let (body, span) = self.parse_block_body()?;
+        let (body, span) = self.parse_block_body(super::scope::Level::Block)?;
         Ok(Stmt {
             kind: StmtKind::Block(body),
             span,

@@ -274,7 +274,9 @@ impl Parser<'_> {
         // `~Return`, so a `return` here is refused exactly as one at the top of a script is.
         self.inside_function = false;
         self.body_context = BodyContext::CLASS_INITIALIZER;
-        let body = self.parse_block_body();
+        // §15.7.1 reads this list the way §15.2.1 reads a `FunctionBody`, not the way §14.2.1
+        // reads a `Block`. The braces are the same and the rule is not.
+        let body = self.parse_block_body(super::scope::Level::Top);
         let forbidden = self.forbidden_in_parameters;
         let arguments = self.arguments_reference;
         self.yield_allowed = enclosing_yield;
@@ -319,6 +321,34 @@ mod tests {
     /// The kind of error `source` fails with, as a script.
     fn kind(source: &str) -> ParseErrorKind {
         script_error(source).kind
+    }
+
+    #[test]
+    fn a_static_blocks_statement_list_is_read_as_a_body_and_not_as_a_block() {
+        // §15.7.1 asks a `ClassStaticBlockStatementList` the questions §15.2.1 asks a
+        // `FunctionBody`, not the ones §14.2.1 asks a `Block`. The braces look identical and the
+        // reading is not: at the top of a body a `function` declaration is var-scoped, so it
+        // neither collides with a `var` of the same name nor with another declaration of itself.
+        assert!(parse_script("class A { static { var B; function B() {} } }").is_ok());
+        assert!(parse_script("class A { static { function B() {} var B; } }").is_ok());
+        assert!(parse_script("class A { static { function B() {} function B() {} } }").is_ok());
+        // …which is exactly what a function body already did, and what a `Block` still does not.
+        assert!(parse_script("function f() { var B; function B() {} }").is_ok());
+        assert!(parse_script("{ var B; function B() {} }").is_err());
+        assert!(parse_script("function f() { { var B; function B() {} } }").is_err());
+
+        // `let` and `const` stay lexical wherever they are written, so the reading changes
+        // nothing for them — this is about `function` alone.
+        assert!(parse_script("class A { static { let B; function B() {} } }").is_err());
+        assert!(parse_script("class A { static { var B; let B; } }").is_err());
+        assert!(parse_script("class A { static { let B; let B; } }").is_err());
+
+        // A block *inside* a static block is an ordinary `Block` again, and the rule comes back
+        // with it. V8 accepts this and it is wrong to: the same engine accepts
+        // `class A { static { { var B; let B; } } }`, which nothing claims is legal — it simply
+        // does not collect a nested block's `VarDeclaredNames` inside a static block.
+        assert!(parse_script("class A { static { { var B; function B() {} } } }").is_err());
+        assert!(parse_script("class A { static { { var B; let B; } } }").is_err());
     }
 
     #[test]
