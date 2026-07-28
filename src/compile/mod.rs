@@ -147,6 +147,15 @@ struct Compiler<'a> {
     /// so the table shrinks. The frame still has to be big enough for the moment it was widest,
     /// which is what a run-time slot index is an index into.
     high_water: usize,
+    /// Where each function declaration that was hoisted was written.
+    ///
+    /// [`Compiler::hoist_functions`] runs over the *top level* of a body and nothing else, so a
+    /// declaration inside a block was never made — and the statement itself does nothing, because
+    /// hoisting is supposed to have done it. Without this the two facts together would make
+    /// `{ function g() {} } typeof g` answer `"undefined"` in silence, which is a wrong answer
+    /// rather than a missing feature. §14.1 block-scopes such a declaration and Annex B.3.3
+    /// hoists it in sloppy code; both need block scoping, so until then it is refused.
+    hoisted: Vec<Span>,
     /// The labels in scope, and how many loops were open when each was met.
     ///
     /// A `break name` joins the break list of the loop that number identifies, which is what
@@ -169,6 +178,7 @@ impl<'a> Compiler<'a> {
             locals: Vec::new(),
             breaks: Vec::new(),
             continues: Vec::new(),
+            hoisted: Vec::new(),
             labels: Vec::new(),
             finally_guards: Vec::new(),
             high_water: 0,

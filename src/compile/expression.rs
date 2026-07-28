@@ -9,6 +9,7 @@ use super::{
     CompileError, Compiler, ErrorKind, Instruction, MAX_EXPRESSION_DEPTH, ShortCircuit, unsupported,
 };
 use crate::ast::ArrayElement;
+use crate::ast::MethodKind;
 use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
     Argument, AssignmentOperator, AssignmentTarget, BinaryOperator, Expr, ExprKind,
@@ -325,12 +326,34 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::NewObject);
 
         for property in properties.iter() {
-            let PropertyDefinition::KeyValue { key, value } = property else {
-                return Err(unsupported(
-                    "a shorthand, spread or method in an object literal",
-                    span,
-                ));
+            // §13.2.5's four productions that make a property, reduced to a key and something to
+            // put under it. A shorthand is `{a: a}` — the name is both — and a method is a
+            // function expression with the property's name; only an *accessor* is a different
+            // kind of property rather than a different way of writing a value.
+            let (key, value, accessor) = match property {
+                PropertyDefinition::KeyValue { key, value } => (key, Element::Value(value), None),
+                PropertyDefinition::Shorthand { name, span } => (
+                    &AstPropertyKey::Identifier(name.clone()),
+                    Element::Name(name, *span),
+                    None,
+                ),
+                PropertyDefinition::Method {
+                    key,
+                    kind,
+                    function,
+                } => (key, Element::Function(function), Some(*kind)),
+                // §13.2.5.1 — `{a = 1}` is a Syntax Error wherever the literal stays a literal,
+                // and the parser has already refused every position where it does. Reaching it
+                // here would mean a tree no source produces.
+                PropertyDefinition::ShorthandWithDefault { .. } => {
+                    return Err(unsupported("a shorthand with an initializer", span));
+                }
+                PropertyDefinition::Spread { .. } => {
+                    return Err(unsupported("a spread in an object literal", span));
+                }
             };
+            // A key is pushed once and used twice for an accessor pair, so it is emitted here
+            // whatever kind of property follows.
             match key {
                 AstPropertyKey::Identifier(name) => {
                     let units: Vec<u16> = name.encode_utf16().collect();
@@ -356,8 +379,25 @@ impl Compiler<'_> {
                     return Err(unsupported("a BigInt or private key", span));
                 }
             }
-            self.expression(value)?;
-            self.chunk.emit(Instruction::DefineField);
+            match value {
+                Element::Value(expression) => self.expression(expression)?,
+                Element::Name(name, at) => {
+                    let _ = at;
+                    self.load_name(name)?;
+                }
+                Element::Function(function) => self.make_function(function, span)?,
+            }
+            match accessor {
+                // §15.4.5 — a getter and a setter are *halves* of one property, so defining one
+                // must not wipe the other. That is `DefineOwnProperty` with only the half that
+                // was written, which is not what `CreateDataProperty` does.
+                Some(MethodKind::Get) => self.chunk.emit(Instruction::DefineGetter),
+                Some(MethodKind::Set) => self.chunk.emit(Instruction::DefineSetter),
+                // §15.4.4's ordinary method is a data property like any other. What makes it a
+                // method rather than a function *expression* is the `name` and the missing
+                // `prototype`, and neither is here yet.
+                _ => self.chunk.emit(Instruction::DefineField),
+            }
         }
         Ok(())
     }
@@ -564,4 +604,18 @@ fn compound_operator(operator: AssignmentOperator) -> Option<BinaryOperator> {
         | AssignmentOperator::LogicalOr
         | AssignmentOperator::NullishCoalescing => return None,
     })
+}
+
+/// What an object literal puts under a key.
+///
+/// Three shapes and one destination: a shorthand reads the name it also files under, and a method
+/// is a function made where the literal is evaluated — so `{m() {}}` inside a loop makes one
+/// function object per turn, exactly as `{m: function () {}}` does.
+enum Element<'a> {
+    /// `a: 1` — an ordinary expression.
+    Value(&'a Expr),
+    /// `{a}` — the name is both the key and the value.
+    Name(&'a str, Span),
+    /// `a() {}`, `get a() {}`, `set a(v) {}`.
+    Function(&'a crate::ast::Function),
 }

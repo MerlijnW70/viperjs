@@ -138,6 +138,15 @@ pub enum Instruction {
     /// than assigning them, which is why `{__proto__: 1}` in a literal is special and
     /// `o.__proto__ = 1` is not, and why a literal can shadow a non-writable inherited property.
     DefineField,
+    /// Take a function and a key and give the object under them a getter, keeping any setter.
+    ///
+    /// §15.4.5's `DefineMethod` half of an accessor. Not a [`Instruction::DefineField`] with a
+    /// descriptor: a getter and a setter are two halves of *one* property, so defining one must
+    /// leave the other where it is — which is why `{get a() {}, set a(v) {}}` is one property
+    /// with both and not the second overwriting the first.
+    DefineGetter,
+    /// The same for a setter.
+    DefineSetter,
     /// Take a key and a base and push the property's value — `[[Get]]`, §10.1.8.
     GetProperty,
     /// Take a value, a key and a base; store the value and leave it on the stack — §10.1.9.
@@ -380,6 +389,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::DuplicateTwo
         | Instruction::Bury(_)
         | Instruction::DefineField
+        | Instruction::DefineGetter
+        | Instruction::DefineSetter
         | Instruction::GetProperty
         | Instruction::SetProperty
         | Instruction::DeleteProperty

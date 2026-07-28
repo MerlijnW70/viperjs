@@ -9,12 +9,14 @@
 //! - `objects` — literals, properties, attributes.
 //! - `builtins` — the objects a script can reach without making them.
 //! - `coercion` — what an operator does when an operand is an object.
+//! - `accessors` — a property whose value is a pair of functions.
 //! - `arrays` — §10.4.2's exotic `length`, and the literal that makes one.
 //! - `array_methods` — §23.1.3, and the two of §20.2.3 that reach it.
 //! - `array_more` — the rest of §23.1.3: folding, quantifying, and moving elements.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 
+mod accessors;
 mod array_methods;
 mod array_more;
 mod arrays;

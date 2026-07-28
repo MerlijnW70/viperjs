@@ -49,10 +49,7 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     let cases = [
         ("f?.()", "optional chaining"),
         ("[...a]", "a spread element"),
-        (
-            "({a})",
-            "a shorthand, spread or method in an object literal",
-        ),
+        ("({...a})", "a spread in an object literal"),
         ("1n", "a BigInt literal"),
         ("delete x", "deleting a name"),
         ("`a`", "a template literal"),

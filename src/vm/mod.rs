@@ -500,6 +500,42 @@ impl Vm {
                     // `CreateDataProperty` on a fresh, extensible object cannot be refused.
                     let _ = heap.define_own_property(base, key, &descriptor);
                 }
+                Instruction::DefineGetter | Instruction::DefineSetter => {
+                    let function = self.pop()?;
+                    let key = self.pop()?;
+                    let base = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let Value::Object(base) = base else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let key = match self.property_key(key, heap) {
+                        Ok(key) => key,
+                        Err(error) => {
+                            self.throw_type_error(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    // Only the half that was written. §10.1.6.3 leaves an absent field alone, so
+                    // a getter defined after a setter joins it rather than replacing it — which
+                    // is what makes `{get a() {}, set a(v) {}}` one property with both.
+                    let half = match instruction {
+                        Instruction::DefineGetter => PropertyDescriptor {
+                            getter: Some(function),
+                            ..PropertyDescriptor::EMPTY
+                        },
+                        _ => PropertyDescriptor {
+                            setter: Some(function),
+                            ..PropertyDescriptor::EMPTY
+                        },
+                    };
+                    // §15.4.5 gives an accessor made this way `[[Enumerable]]` and
+                    // `[[Configurable]]`, the same two an ordinary literal property gets.
+                    let descriptor = PropertyDescriptor {
+                        enumerable: Some(true),
+                        configurable: Some(true),
+                        ..half
+                    };
+                    let _ = heap.define_own_property(base, key, &descriptor);
+                }
                 Instruction::GetProperty => {
                     let key = self.pop()?;
                     let base = self.pop()?;

@@ -56,7 +56,7 @@ impl Vm {
     /// A global reference names its property in the bytecode, so it never had a *value* to
     /// convert. Splitting the conversion off means the two paths cannot drift on what a get is.
     pub(crate) fn get_property_key(
-        &self,
+        &mut self,
         base: Value,
         key: PropertyKey,
         heap: &mut Heap,
@@ -74,13 +74,14 @@ impl Vm {
         match property.kind {
             PropertyKind::Data { value, .. } => Ok(value),
             // §10.1.8.1 steps 5 and 6 — an accessor with no getter answers `undefined`, and one
-            // with a getter has it called. Nothing is callable yet, so the second is a TypeError
-            // for whatever was put there; both are reachable by defining the property directly.
+            // with a getter has it **called**, with the object the property was read *through*
+            // as its receiver rather than the one it was found on. That is what makes an accessor
+            // on a prototype see the instance, and it is the whole reason a getter is useful.
             PropertyKind::Accessor {
                 getter: Value::Undefined,
                 ..
             } => Ok(Value::Undefined),
-            PropertyKind::Accessor { .. } => Err(Abrupt::type_error("a getter is not callable")),
+            PropertyKind::Accessor { getter, .. } => self.call_value(getter, base, &[], heap),
         }
     }
     /// `[[Set]]` (§10.1.9) — put `value` under `key`, and answer whether it was allowed.
@@ -100,7 +101,7 @@ impl Vm {
 
     /// `[[Set]]` when the key is already a key — see [`Vm::get_property_key`].
     pub(crate) fn set_property_key(
-        &self,
+        &mut self,
         base: Value,
         key: PropertyKey,
         value: Value,
@@ -122,8 +123,12 @@ impl Vm {
                 } => {
                     return Ok(Value::Boolean(false));
                 }
-                PropertyKind::Accessor { .. } => {
-                    return Err(Abrupt::type_error("a setter is not callable"));
+                // §10.1.9.2 step 5 — the setter is called with the value, and its *answer* is
+                // thrown away: a setter cannot refuse a write, it can only decline to record it.
+                // The receiver is again the object the write went through.
+                PropertyKind::Accessor { setter, .. } => {
+                    self.call_value(setter, base, &[value], heap)?;
+                    return Ok(Value::Boolean(true));
                 }
                 PropertyKind::Data {
                     writable: false, ..

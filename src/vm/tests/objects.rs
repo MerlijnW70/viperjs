@@ -455,6 +455,43 @@ fn set_answers_whether_the_write_was_allowed_even_though_nothing_reads_it_yet() 
         vm.set_property(Value::Object(sealed), fresh, Value::Number(1.0), &mut heap),
         Ok(Value::Boolean(false))
     ));
+    // §10.1.9.2 step 5 — a setter that ran answers `true`, and an accessor with no setter
+    // answers `false`. Sloppy code sees neither, and strict mode will turn the second into a
+    // TypeError, so this is the only place the pair can be told apart today.
+    let accessors = heap.new_object(None);
+    let with_setter = PropertyKey::from_units(&mut heap, &"w".encode_utf16().collect::<Vec<_>>());
+    let read_only = PropertyKey::from_units(&mut heap, &"r".encode_utf16().collect::<Vec<_>>());
+    let setter = {
+        let script = parse_script("(function (v) {})").expect("parses"); // the test needs a function
+        let chunk = compile_script(&script, &mut heap).expect("compiles"); // same
+        let outcome = Vm::new(&mut heap).run(&chunk, &mut heap).expect("runs"); // same
+        let Outcome::Value(function) = outcome else {
+            panic!("a function expression evaluates to a function") // same
+        };
+        function
+    };
+    for (key, half) in [(with_setter, Some(setter)), (read_only, None)] {
+        let descriptor = crate::heap::PropertyDescriptor {
+            getter: Some(Value::Undefined),
+            setter: Some(half.unwrap_or(Value::Undefined)),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..crate::heap::PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(accessors, key, &descriptor));
+    }
+    let holder = Value::Object(accessors);
+    let writable = key_of(&mut heap, "w");
+    assert!(matches!(
+        vm.set_property(holder, writable, Value::Number(1.0), &mut heap),
+        Ok(Value::Boolean(true))
+    ));
+    let unwritable = key_of(&mut heap, "r");
+    assert!(matches!(
+        vm.set_property(holder, unwritable, Value::Number(1.0), &mut heap),
+        Ok(Value::Boolean(false))
+    ));
+
     // The value the refusal left behind is the one that was there, which is the part sloppy code
     // *can* see.
     assert_eq!(

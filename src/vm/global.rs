@@ -53,7 +53,7 @@ impl Vm {
     /// inherits from `Object.prototype`, so `toString` really does resolve as a bare name at the
     /// top level, and a program can rely on it.
     pub(super) fn global_binding(
-        &self,
+        &mut self,
         key: PropertyKey,
         heap: &mut Heap,
     ) -> Option<crate::value::Completion<Value>> {

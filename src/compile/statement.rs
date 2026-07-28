@@ -102,10 +102,17 @@ impl Compiler<'_> {
             // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
             StmtKind::Labelled(statement) => self.labelled_statement(statement, span),
             StmtKind::With(_) => Err(unsupported("with", span)),
-            // Already made by [`Compiler::hoist_functions`] before the body ran, so the
-            // declaration itself has nothing left to do. That it produces no completion value is
-            // §14.2.2 as well: `function f() {}` alone evaluates to `undefined`.
-            StmtKind::Function(_) => Ok(()),
+            // Already made by [`Compiler::hoist_functions`] before the body ran, so a declaration
+            // at a body's top level has nothing left to do — and produces no completion value,
+            // which is §14.2.2: `function f() {}` alone evaluates to `undefined`.
+            //
+            // One inside a *block* was not hoisted, so doing nothing here would leave the name
+            // unbound and say nothing about it. §14.1 block-scopes it and Annex B.3.3 hoists it
+            // in sloppy code; both need block scoping, so it is refused until that exists.
+            StmtKind::Function(_) => match self.hoisted.contains(&span) {
+                true => Ok(()),
+                false => Err(unsupported("a function declaration inside a block", span)),
+            },
             StmtKind::Class(_) => Err(unsupported("a class declaration", span)),
             // §14.10 — `return`, whose argument is optional and whose absence is `undefined`.
             StmtKind::Return(argument) => {
@@ -552,6 +559,9 @@ impl Compiler<'_> {
                     statement.span,
                 ));
             };
+            // Remembered so the statement itself knows it was hoisted. One inside a block never
+            // reaches here, and doing nothing for it would leave the name unbound in silence.
+            self.hoisted.push(statement.span);
             // §9.1.1.4.16 `CreateGlobalFunctionBinding` at the top level of a script, and an
             // ordinary slot everywhere else. The declaration comes first so the property exists
             // with a script's attributes — writable, enumerable, not configurable — and the store
