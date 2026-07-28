@@ -33,11 +33,18 @@
 //!
 //! # Which goal symbol
 //!
-//! A `Script` and a `Module` are different languages — see `src/parser/module.rs` — and nothing in
-//! a `.js` file says which it is. So the default asks the extension, and for `.js` tries every
-//! reading it might be. A file only counts as a failure when *none* of them takes it, which is the
-//! honest bar: the question here is whether the engine can parse real JavaScript, not whether it
-//! guessed the goal.
+//! A `Script` and a `Module` are different languages — see `src/parser/module.rs` — and nothing
+//! *in* a `.js` file says which it is. `.mjs` and `.cjs` say it themselves; for `.js` the answer
+//! lives in the nearest `package.json`, and this asks it the way node does: walk up until one is
+//! found, and read its top-level `"type"`.
+//!
+//! Every reading is still tried, so a file counts as a failure only when *none* of them takes it
+//! — the honest bar, since the question is whether the engine can parse real JavaScript and not
+//! whether the sweep guessed the goal. What the manifest changes is which reading goes **first**,
+//! and that is what matters, because the error reported is the first reading's. Before this, a
+//! `.js` module was always tried as a script first, so every ESM file that failed for a real
+//! reason was reported as `expected \`(\` or \`.\`, found \`{\`` on its first `import` line —
+//! a message about the goal, pointing at the wrong line, hiding the error that mattered.
 //!
 //! # Panics are failures too
 //!
@@ -70,6 +77,145 @@ enum Goal {
     Module,
     /// The default: ask the extension, and try every reading a `.js` might be.
     FromExtension,
+}
+
+/// What the package scope around a file says a `.js` in it is (node's `"type"` field).
+///
+/// `.mjs` and `.cjs` say it themselves and never ask. This is only about `.js`, which is the
+/// one extension whose meaning lives somewhere else entirely.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PackageType {
+    /// The nearest `package.json` says `"type": "module"`.
+    Module,
+    /// It says `"type": "commonjs"`, or says nothing, which is the same thing — node's default.
+    CommonJs,
+    /// There is no `package.json` above the file at all, so nobody has said.
+    Unstated,
+}
+
+/// The package scope of each directory, worked out once.
+///
+/// A sweep asks this per file and a repository has far more files than directories, so without
+/// the cache a 20,000-file run would stat its way up the tree 20,000 times. Every directory on
+/// the way up gets the answer, not just the one that had the `package.json`.
+#[derive(Default)]
+struct Scopes {
+    known: HashMap<PathBuf, PackageType>,
+}
+
+impl Scopes {
+    /// What a `.js` at `file` is, by node's rule.
+    ///
+    /// Node walks up from the file until it finds a `package.json` and reads its top-level
+    /// `"type"`; the *nearest* one wins whether or not it has the field, and a missing field
+    /// means CommonJS. The walk goes to the filesystem root rather than stopping at whatever
+    /// directory the sweep was pointed at, because that is what node does — sweeping
+    /// `some-repo/lib` has to find `some-repo/package.json` or it would answer differently from
+    /// the runtime the code was written for.
+    fn of(&mut self, file: &Path) -> PackageType {
+        let mut visited = Vec::new();
+        let mut directory = file.parent();
+        let answer = loop {
+            let Some(current) = directory else {
+                break PackageType::Unstated;
+            };
+            if let Some(known) = self.known.get(current) {
+                break *known;
+            }
+            visited.push(current.to_path_buf());
+            let manifest = current.join("package.json");
+            // A manifest that cannot be read is treated as absent rather than as an error: the
+            // sweep is about the engine, and a permission problem three directories up is not
+            // something to abort a 20,000-file run over.
+            if let Ok(text) = std::fs::read_to_string(&manifest) {
+                break match top_level_string(&text, "type").as_deref() {
+                    Some("module") => PackageType::Module,
+                    _ => PackageType::CommonJs,
+                };
+            }
+            directory = current.parent();
+        };
+        for directory in visited {
+            self.known.insert(directory, answer);
+        }
+        answer
+    }
+}
+
+/// The value of a top-level string field of a JSON object, or `None` if there is not one.
+///
+/// Hand-written because the repository takes no dependencies (GOAL.md non-negotiable #2), and
+/// deliberately not a substring search for `"type"`: a `package.json` puts a `"type"` inside
+/// `"exports"` conditions all the time, and one nested three levels down would answer for the
+/// whole package. So the nesting is tracked, and only a key at depth one is an answer.
+///
+/// Escapes are located but not decoded — a `\"` does not end the string, which is what keeps the
+/// scan aligned, but `m` stays as written. The two values node's resolution asks about are
+/// `module` and `commonjs`, neither of which can contain an escape, so a value that does simply
+/// fails to match and the caller falls back to CommonJS. That is node's own default, so the one
+/// imprecision here fails in the safe direction.
+fn top_level_string(json: &str, key: &str) -> Option<String> {
+    let bytes = json.as_bytes();
+    let mut at = 0;
+    let mut depth = 0usize;
+    // The last key seen at depth one, which is what the next value at depth one belongs to.
+    let mut pending: Option<String> = None;
+    while at < bytes.len() {
+        match bytes[at] {
+            b'{' | b'[' => {
+                depth += 1;
+                at += 1;
+            }
+            b'}' | b']' => {
+                depth = depth.saturating_sub(1);
+                at += 1;
+            }
+            b'"' => {
+                let (text, after) = json_string(json, at)?;
+                let next = after
+                    + bytes[after..]
+                        .iter()
+                        .take_while(|b| b.is_ascii_whitespace())
+                        .count();
+                if bytes.get(next) == Some(&b':') {
+                    // A key, at whatever depth. It is not filtered here because it cannot need
+                    // to be: a value at depth one is always preceded by a key at depth one, so a
+                    // key from deeper down is overwritten before it could ever be consulted. The
+                    // depth that decides an answer is the one on the *value*, below.
+                    pending = Some(text.to_string());
+                    at = next + 1;
+                } else {
+                    if depth == 1 && pending.as_deref() == Some(key) {
+                        return Some(text.to_string());
+                    }
+                    pending = None;
+                    at = after;
+                }
+            }
+            _ => at += 1,
+        }
+    }
+    None
+}
+
+/// The contents of the JSON string starting at `at`, and the offset just past its closing quote.
+///
+/// Returns `None` for a string that never closes, which is a malformed manifest — the caller
+/// treats that as having said nothing, which is the same as having no manifest at all.
+fn json_string(json: &str, at: usize) -> Option<(&str, usize)> {
+    let bytes = json.as_bytes();
+    let mut cursor = at + 1;
+    while cursor < bytes.len() {
+        match bytes[cursor] {
+            // A backslash escapes whatever follows it, including a quote and another backslash.
+            // Skipping two bytes is what stops `"a\\"` from being read as unterminated and
+            // `"a\""` from being read as ending early.
+            b'\\' => cursor += 2,
+            b'"' => return json.get(at + 1..cursor).map(|text| (text, cursor + 1)),
+            _ => cursor += 1,
+        }
+    }
+    None
 }
 
 /// Everything the command line said.
@@ -129,8 +275,10 @@ fn main() -> ExitCode {
     std::panic::set_hook(Box::new(|_| {}));
     let started = Instant::now();
     let mut report = Report::default();
+    let mut scopes = Scopes::default();
     for file in &files {
-        report.record(file, &options);
+        let scope = scopes.of(file);
+        report.record(file, &options, scope);
     }
     let elapsed = started.elapsed();
     std::panic::set_hook(hook);
@@ -156,7 +304,7 @@ struct Report {
 
 impl Report {
     /// Parse one file and fold the result in.
-    fn record(&mut self, file: &Path, options: &Options) {
+    fn record(&mut self, file: &Path, options: &Options, scope: PackageType) {
         let source = match std::fs::read_to_string(file) {
             Ok(source) => source,
             Err(error) => {
@@ -171,7 +319,7 @@ impl Report {
             }
         };
         self.bytes += source.len() as u64;
-        match parse(&source, file, options) {
+        match parse(&source, file, options, scope) {
             Outcome::Parsed(under) => {
                 self.parsed += 1;
                 if options.list {
@@ -242,17 +390,21 @@ impl Report {
 }
 
 /// Parse `source` every way it might legitimately be read, inside a panic guard.
-fn parse(source: &str, path: &Path, options: &Options) -> Outcome {
-    let readings: &[(&'static str, bool)] = match options.goal {
+fn parse(source: &str, path: &Path, options: &Options, scope: PackageType) -> Outcome {
+    const AS_MODULE: [(&str, bool); 2] = [("module", true), ("script", false)];
+    const AS_SCRIPT: [(&str, bool); 2] = [("script", false), ("module", true)];
+    let readings: &[(&str, bool)] = match options.goal {
         Goal::Script => &[("script", false)],
         Goal::Module => &[("module", true)],
         Goal::FromExtension => match extension(path) {
             Some("mjs") => &[("module", true)],
             Some("cjs") => &[("script", false)],
-            // Nothing in a `.js` file says which it is, so it is a failure only if neither takes
-            // it. The script error is the one reported: a `.js` file is a script far more often
-            // than not, so it is the more likely to be about the code rather than the goal.
-            _ => &[("script", false), ("module", true)],
+            // Both readings, ordered by what the package scope says the file is. Both, because
+            // a manifest can be wrong or absent and the bar is whether *any* reading takes it;
+            // ordered, because the error reported is the first one's and an error about the
+            // wrong goal is worse than no error at all — it points at the wrong line.
+            _ if scope == PackageType::Module => &AS_MODULE,
+            _ => &AS_SCRIPT,
         },
     };
     let mut first: Option<praxis::parser::ParseError> = None;
@@ -267,7 +419,13 @@ fn parse(source: &str, path: &Path, options: &Options) -> Outcome {
     // module wrapper. An approximation of the real wrapper, and enough to tell a CommonJS file
     // from one this parser cannot read. The verdict comes from the wrapped source and the
     // *message* from the unwrapped one, so no offset ever refers to text nobody wrote.
-    if options.commonjs && !matches!(options.goal, Goal::Module) {
+    // Not for a file the package scope calls a module: node does not wrap those, and wrapping
+    // one here would only give a second wrong reading a chance to hide the first right one.
+    if options.commonjs
+        && !matches!(options.goal, Goal::Module)
+        && scope != PackageType::Module
+        && extension(path) != Some("mjs")
+    {
         // A `HashbangComment` (§12.5) is only one at offset zero, so the wrapper goes *after* it
         // — which is the order node does it in too, the hashbang being stripped before the module
         // wrapper is applied.
@@ -475,4 +633,157 @@ separately and is a P0 whatever the input looked like (DR-0002).
 
 exits 0 only if every file parsed."
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn type_of(json: &str) -> Option<String> {
+        top_level_string(json, "type")
+    }
+
+    #[test]
+    fn a_top_level_type_is_read_and_a_nested_one_is_not() {
+        assert_eq!(type_of(r#"{"type": "module"}"#).as_deref(), Some("module"));
+        assert_eq!(
+            type_of(r#"{"type":"commonjs"}"#).as_deref(),
+            Some("commonjs")
+        );
+        // The whole reason this is not a substring search. A `package.json` puts a `"type"`
+        // inside `"exports"` conditions constantly, and one of those answers for nothing.
+        assert_eq!(type_of(r#"{"exports": {"./x": {"type": "module"}}}"#), None);
+        assert_eq!(type_of(r#"{"a": {"b": {"type": "module"}}}"#), None);
+        // …including inside an array, where the depth also has to be counted.
+        assert_eq!(type_of(r#"{"files": [{"type": "module"}]}"#), None);
+        // A nested key must clear the pending one, or the value that closes the nesting would
+        // be read as the outer key's.
+        assert_eq!(type_of(r#"{"type": {"a": "module"}}"#), None);
+        // The field is found wherever it stands among its siblings.
+        assert_eq!(
+            type_of(r#"{"name": "x", "type": "module", "main": "i.js"}"#).as_deref(),
+            Some("module")
+        );
+    }
+
+    #[test]
+    fn a_string_that_looks_like_the_field_but_is_not_it_is_ignored() {
+        // A *value* that happens to spell the key. `pending` is what tells them apart.
+        assert_eq!(type_of(r#"{"name": "type"}"#), None);
+        assert_eq!(type_of(r#"{"keywords": ["type", "module"]}"#), None);
+        // A different key entirely.
+        assert_eq!(type_of(r#"{"types": "module"}"#), None);
+        assert_eq!(type_of(r#"{"subtype": "module"}"#), None);
+    }
+
+    #[test]
+    fn an_escape_inside_a_string_does_not_end_it() {
+        // The alignment case: a `\"` that ended the string early would leave the scan reading
+        // the rest of the file as keys and values it is not.
+        assert_eq!(
+            type_of(r#"{"name": "a\"b", "type": "module"}"#).as_deref(),
+            Some("module")
+        );
+        // A trailing backslash is itself escaped, so this string ends at the *second* quote.
+        assert_eq!(
+            type_of(r#"{"name": "a\\", "type": "module"}"#).as_deref(),
+            Some("module")
+        );
+        // A `:` or a brace inside a string is text, not structure.
+        assert_eq!(
+            type_of(r#"{"desc": "a{b}:c", "type": "module"}"#).as_deref(),
+            Some("module")
+        );
+        // The ones that actually pin it, and finding them took a search rather than an argument:
+        // most misalignments come back into step by accident a token or two later, so a test has
+        // to be one where they do not. Ending a string at an escaped quote leaves every later
+        // quote on the wrong side of the boundary, and the field is then never seen as a key.
+        assert_eq!(
+            type_of(r#"{"d": "\"", "type": "commonjs"}"#).as_deref(),
+            Some("commonjs")
+        );
+        assert_eq!(
+            type_of(r#"{"d": "q\"", "type": "commonjs"}"#).as_deref(),
+            Some("commonjs")
+        );
+        // A description that quotes a manifest at anyone reading it — the realistic shape of the
+        // same trap, and the one where a mis-scan would answer with the *quoted* package's type.
+        assert_eq!(
+            type_of(r#"{"x": "\"type\":\"module\",\"y\":\"", "type": "commonjs"}"#).as_deref(),
+            Some("commonjs")
+        );
+    }
+
+    #[test]
+    fn a_manifest_that_says_nothing_usable_answers_nothing() {
+        assert_eq!(type_of("{}"), None);
+        assert_eq!(type_of(""), None);
+        assert_eq!(type_of("null"), None);
+        assert_eq!(type_of(r#"{"type": 1}"#), None);
+        assert_eq!(type_of(r#"{"type": true}"#), None);
+        assert_eq!(type_of(r#"{"type": null}"#), None);
+        assert_eq!(type_of(r#"{"type": ["module"]}"#), None);
+        // Malformed, which a caller treats as no manifest at all rather than as an error.
+        assert_eq!(type_of(r#"{"type": "modu"#), None);
+        assert_eq!(type_of(r#"{"type""#), None);
+        assert_eq!(type_of("{{{{"), None);
+        assert_eq!(type_of("}}}}"), None);
+    }
+
+    #[test]
+    fn no_input_makes_the_scanner_loop_or_panic() {
+        // The sweep's own rule, applied to itself: this reads files nobody vetted, so every
+        // shape has to terminate with an answer rather than with a crash.
+        for json in [
+            "\"",
+            "\\",
+            "{\"",
+            "{\"a\"",
+            "{\"a\":",
+            "{\"a\":\"",
+            "[[[[",
+            "\u{1f600}",
+            "{\"type\":\"m\u{fffd}\"}",
+            "{\"\\\\\"",
+            "{\"a\\",
+            "\0",
+            "{\"type\":\"module\"",
+        ] {
+            let _ = top_level_string(json, "type");
+        }
+        // A long alternation of opens and closes: depth must not underflow on the closes.
+        let deep: String = "[{]}".repeat(2_000);
+        assert_eq!(top_level_string(&deep, "type"), None);
+    }
+
+    #[test]
+    fn the_nearest_manifest_wins_and_every_directory_on_the_way_is_remembered() {
+        let root = std::env::temp_dir().join("praxis-scope-test");
+        let _ = std::fs::remove_dir_all(&root);
+        let inner = root.join("packages").join("inner").join("src");
+        std::fs::create_dir_all(&inner).expect("a temp tree");
+        std::fs::write(root.join("package.json"), r#"{"type": "commonjs"}"#).expect("write");
+        std::fs::write(
+            root.join("packages").join("inner").join("package.json"),
+            r#"{"type": "module"}"#,
+        )
+        .expect("write");
+
+        let mut scopes = Scopes::default();
+        // The inner manifest is nearer, so it is the one that answers.
+        assert!(scopes.of(&inner.join("a.js")) == PackageType::Module);
+        // …and the outer one still answers for a file outside the inner package.
+        assert!(scopes.of(&root.join("b.js")) == PackageType::CommonJs);
+        // Every directory walked past is cached, not only the one holding the manifest.
+        assert!(scopes.known.contains_key(&inner));
+        assert!(scopes.known.contains_key(&root));
+        // And a second file in a directory already answered for gets the same answer. This is
+        // the only thing that reads the cache back, so without it the read is a branch no test
+        // touches — and a cache that answers differently the second time is exactly the bug
+        // worth having a test for, since it would make two files in one directory disagree.
+        assert!(scopes.of(&inner.join("b.js")) == PackageType::Module);
+        assert!(scopes.of(&inner.join("deeper").join("c.js")) == PackageType::Module);
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
 }
