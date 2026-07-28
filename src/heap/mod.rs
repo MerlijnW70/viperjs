@@ -27,10 +27,13 @@
 //! # How this module is laid out
 //!
 //! - `property` — [`PropertyKey`], and what an object files under one.
-//! - here — the arena, [`StringId`], and the intern table property keys need.
+//! - `object` — the ordinary object (§10.1) and its internal methods.
+//! - here — the arenas, their handles, and the intern table property keys need.
 
+mod object;
 mod property;
 
+pub use self::object::{Object, ObjectId};
 pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
 
 use crate::span::Span;
@@ -71,6 +74,12 @@ pub struct Heap {
     /// is a hand-written map rather than the standard library's. Real engines do share the
     /// storage; doing so here is an M8 experiment with a measurement, not a guess.
     interned: HashMap<Box<[u16]>, StringId>,
+    /// Every object ever allocated, in the order they were allocated.
+    ///
+    /// A separate arena from the strings, so that an [`ObjectId`] cannot address a String and the
+    /// compiler says so — one arena per type is DR-0010's second consequence, after the shape of
+    /// the handle itself.
+    objects: Vec<Object>,
 }
 
 impl Heap {
