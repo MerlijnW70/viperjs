@@ -145,6 +145,13 @@ struct Compiler<'a> {
     /// so the table shrinks. The frame still has to be big enough for the moment it was widest,
     /// which is what a run-time slot index is an index into.
     high_water: usize,
+    /// The labels in scope, and how many loops were open when each was met.
+    ///
+    /// A `break name` joins the break list of the loop that number identifies, which is what
+    /// makes it leave *that* statement rather than the innermost one. Innermost last, so a
+    /// backwards search finds the nearest of two labels with the same name — which the parser
+    /// forbids, and which costs nothing to be right about.
+    labels: Vec<(Box<str>, usize)>,
     /// For each enclosing `try` that has a `finally`, how many loops were open when it began.
     ///
     /// A `break` may not jump past a `finally`, and this is what tells the two cases apart: a
@@ -160,6 +167,7 @@ impl<'a> Compiler<'a> {
             locals: Vec::new(),
             breaks: Vec::new(),
             continues: Vec::new(),
+            labels: Vec::new(),
             finally_guards: Vec::new(),
             high_water: 0,
             depth: 0,

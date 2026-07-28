@@ -6,7 +6,8 @@
 
 use super::{CompileError, Compiler, Instruction, Unpatched, unsupported};
 use crate::ast::{
-    Binding, Declaration, DeclarationKind, ForInit, ForStatement, Stmt, StmtKind, TryStatement,
+    BinaryOperator, Binding, Declaration, DeclarationKind, ForInit, ForStatement,
+    LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -84,9 +85,8 @@ impl Compiler<'_> {
             // §14.9 and §14.8 — a jump out of, or back to, the innermost loop.
             StmtKind::Break(None) => self.leave_loop(true, span),
             StmtKind::Continue(None) => self.leave_loop(false, span),
-            StmtKind::Break(Some(_)) | StmtKind::Continue(Some(_)) => {
-                Err(unsupported("a labelled break or continue", span))
-            }
+            StmtKind::Break(Some(label)) => self.leave_labelled(&label.name, true, span),
+            StmtKind::Continue(Some(label)) => self.leave_labelled(&label.name, false, span),
             // §14.14 — throw. The value travels up until a handler wants it, or out of the
             // script; nothing looks at what it is.
             StmtKind::Throw(expression) => {
@@ -96,9 +96,11 @@ impl Compiler<'_> {
             }
             // §14.15 — try, in its three shapes.
             StmtKind::Try(statement) => self.try_statement(statement, span),
-            StmtKind::Switch(_) => Err(unsupported("switch", span)),
+            // §14.12 — switch.
+            StmtKind::Switch(statement) => self.switch_statement(statement),
             StmtKind::ForInOf(_) => Err(unsupported("for-in and for-of", span)),
-            StmtKind::Labelled(_) => Err(unsupported("a labelled statement", span)),
+            // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
+            StmtKind::Labelled(statement) => self.labelled_statement(statement, span),
             StmtKind::With(_) => Err(unsupported("with", span)),
             // Already made by [`Compiler::hoist_functions`] before the body ran, so the
             // declaration itself has nothing left to do. That it produces no completion value is
@@ -214,6 +216,147 @@ impl Compiler<'_> {
         }
         Ok(())
     }
+    /// §14.12 — `switch`.
+    ///
+    /// # Why the tests come first and the bodies afterwards
+    ///
+    /// Because a `switch` is not a chain of `if`s. §14.12.4 evaluates the case tests **in order**
+    /// until one is strictly equal to the discriminant, and *then* runs every statement from that
+    /// case to the end of the switch — through the other cases, not into them. Fall-through is
+    /// not a quirk of the syntax; it is what the algorithm says, and compiling the bodies as one
+    /// run of statements with entry points into it is the shape that makes it true for free.
+    ///
+    /// `default` is not tried in that first pass. §14.12.4 runs the tests, and only if none
+    /// matched does it come back to the default — so `switch (x) { default: a; case 1: b; }` with
+    /// `x` of 1 runs `b` alone, and with `x` of 2 runs `a` and then `b`.
+    fn switch_statement(&mut self, statement: &SwitchStatement) -> Result<(), CompileError> {
+        self.expression(&statement.discriminant)?;
+        // A `break` inside a switch leaves the switch, so it is a breakable statement like a
+        // loop — but not a *continuable* one, which is why only the break stack is pushed.
+        self.breaks.push(Vec::new());
+
+        // The tests, in order, each jumping to where its body begins.
+        let mut entries = Vec::new();
+        let mut to_default = None;
+        for case in statement.cases.iter() {
+            let Some(test) = &case.test else {
+                to_default = Some(entries.len());
+                entries.push(None);
+                continue;
+            };
+            // The discriminant is compared once per test and has to survive each comparison.
+            self.chunk.emit(Instruction::Duplicate);
+            self.expression(test)?;
+            self.chunk
+                .emit(Instruction::Binary(BinaryOperator::StrictEqual));
+            entries.push(Some(self.chunk.emit_jump(Instruction::JumpIfTrue)));
+        }
+        // Nothing matched: to the default if there is one, past everything if there is not.
+        let fallback = self.chunk.emit_jump(Instruction::Jump);
+
+        // The bodies, as one run of statements with an entry point at each case.
+        let mut starts = Vec::new();
+        for case in statement.cases.iter() {
+            starts.push(self.here()?);
+            self.statements(&case.body)?;
+        }
+        let after = self.here()?;
+        for (entry, start) in entries.into_iter().zip(&starts) {
+            if let Some(entry) = entry {
+                self.chunk.patch_to(entry, *start);
+            }
+        }
+        match to_default.and_then(|at| starts.get(at)) {
+            Some(start) => self.chunk.patch_to(fallback, *start),
+            None => self.chunk.patch(fallback)?,
+        }
+
+        // The discriminant is still under everything, and a `break` jumps here — so it is
+        // discarded after the breaks land rather than before, or a break would leave it behind.
+        let breaks = self.breaks.pop().unwrap_or_default();
+        for jump in breaks {
+            self.chunk.patch_to(jump, after);
+        }
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
+    }
+
+    /// §14.13 — a labelled statement.
+    ///
+    /// A label is a name attached to the statement that follows, and what it is *for* is being
+    /// aimed at: `break outer` leaves the statement the label is on, and `continue outer` goes
+    /// round it again. So the label is remembered for as long as that statement is being
+    /// compiled, and a `break` that names it patches into the same list the statement's own
+    /// breaks do.
+    fn labelled_statement(
+        &mut self,
+        statement: &LabelledStatement,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        // §14.13.1 — a label may not be nested inside one of the same name. The parser refuses
+        // that, so this is not a duplicate check; it is what makes the innermost match the right
+        // one when the names differ.
+        let breakable = matches!(
+            statement.body.kind,
+            StmtKind::While(_) | StmtKind::DoWhile(_) | StmtKind::For(_)
+        );
+        if !breakable {
+            // `outer: { break outer; }` is legal and needs a break target with no loop under it.
+            // A block is not a loop, so there is nowhere for the jump to land yet.
+            return Err(unsupported("a label on something that is not a loop", span));
+        }
+        self.labels
+            .push((statement.label.name.clone(), self.breaks.len()));
+        let compiled = self.statement(&statement.body);
+        self.labels.pop();
+        compiled
+    }
+
+    /// `break name` or `continue name` — §14.9 and §14.8 with a label.
+    ///
+    /// The label names a *statement*, and the jump goes to that statement's end or its next turn
+    /// — so the only thing that differs from an unlabelled one is which list the jump joins.
+    fn leave_labelled(
+        &mut self,
+        name: &str,
+        leaving: bool,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let Some((_, depth)) = self.labels.iter().rev().find(|(label, _)| &**label == name) else {
+            // The parser refuses a label that is not in scope, so this is unreachable from
+            // source — and refusing rather than guessing keeps it that way.
+            return Err(unsupported("a break or continue to an unknown label", span));
+        };
+        let depth = *depth;
+        // `depth` is the *index* of the loop's break list, so the loop is `depth + 1` deep —
+        // and a guard recorded at that same number was raised *inside* this loop rather than
+        // outside it. Comparing the index against the count directly refuses a break that
+        // crosses nothing.
+        if self
+            .finally_guards
+            .last()
+            .is_some_and(|guard| depth < *guard)
+        {
+            return Err(unsupported(
+                "break or continue out of a try with a finally",
+                span,
+            ));
+        }
+        // No "is there a list" check, because there always is: [`Compiler::labelled_statement`]
+        // records a label only for a loop, and a loop pushes both lists before its body is
+        // compiled. Written with a guard, that guard was a branch nothing could take.
+        let jump = self.chunk.emit_jump(Instruction::Jump);
+        let pending = if leaving {
+            self.breaks.get_mut(depth)
+        } else {
+            self.continues.get_mut(depth)
+        };
+        if let Some(pending) = pending {
+            pending.push(jump);
+        }
+        Ok(())
+    }
+
     /// `break` or `continue` — a jump whose target is not compiled yet.
     ///
     /// The parser refuses either outside a loop, so an empty stack here is unreachable from
@@ -231,6 +374,10 @@ impl Compiler<'_> {
         // run on the way past. A loop written inside the `try` is unaffected, which is what the
         // depth comparison is for: the jump only crosses the finally when its loop began before
         // the `try` did.
+        // `depth` is the *index* of the loop's break list, so the loop is `depth + 1` deep —
+        // and a guard recorded at that same number was raised *inside* this loop rather than
+        // outside it. Comparing the index against the count directly refuses a break that
+        // crosses nothing.
         if self
             .finally_guards
             .last()

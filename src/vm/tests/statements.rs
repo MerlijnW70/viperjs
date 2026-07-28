@@ -140,10 +140,12 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
         ("const x = 1;", "let and const"),
         ("function* g() {}", "an async function or a generator"),
         ("try { } catch ([a]) { }", "a destructuring catch parameter"),
-        ("switch (1) { }", "switch"),
         ("for (var k in 1) ;", "for-in and for-of"),
         ("var [a] = 1;", "a destructuring binding"),
-        ("outer: while (1) break outer;", "a labelled statement"),
+        (
+            "outer: { break outer; }",
+            "a label on something that is not a loop",
+        ),
         ("x;", "a reference to an undeclared name"),
         ("undeclared = 1;", "an assignment to an undeclared name"),
         ("delete x;", "deleting a name"),
@@ -370,4 +372,116 @@ fn a_long_chain_costs_no_stack_and_a_deep_nest_is_refused() {
             crate::compile::ErrorKind::TooDeep | crate::compile::ErrorKind::Unsupported(_)
         ));
     }
+}
+
+#[test]
+fn a_switch_falls_through_because_that_is_what_the_algorithm_says() {
+    // §14.12.4 runs the tests in order until one is strictly equal, and then runs every statement
+    // from there to the end — through the other cases, not into them. Fall-through is not a quirk
+    // of the syntax; it is the algorithm.
+    assert_eq!(
+        run(
+            "var r = ''; switch (2) { case 1: r = r + 'a'; case 2: r = r + 'b'; case 3: r = r + 'c'; } r;"
+        ),
+        "bc"
+    );
+    assert_eq!(
+        run(
+            "var r = ''; switch (2) { case 1: r = r + 'a'; break; case 2: r = r + 'b'; break; } r;"
+        ),
+        "b"
+    );
+    assert_eq!(
+        run("var r = ''; switch (9) { case 1: r = r + 'a'; break; default: r = r + 'd'; } r;"),
+        "d"
+    );
+    // Strictly equal, so no conversion: `'1'` does not match `1`.
+    assert_eq!(
+        run("switch ('1') { case 1: 'number'; break; default: 'no match'; }"),
+        "no match"
+    );
+    assert_eq!(
+        run("switch (1) { case 1: 'matched'; break; default: 'no'; }"),
+        "matched"
+    );
+    // A switch with nothing in it evaluates its discriminant and does nothing else.
+    assert_eq!(run("var seen = 0; switch (seen = 1) { } seen;"), "1");
+}
+
+#[test]
+fn the_default_case_is_tried_last_wherever_it_is_written() {
+    // §14.12.4 runs *every* test first and only then comes back to the default — so where the
+    // default sits decides what falls through into what, and not whether it is reached.
+    assert_eq!(
+        run("var r = ''; switch (1) { default: r = r + 'd'; case 1: r = r + 'b'; } r;"),
+        "b"
+    );
+    assert_eq!(
+        run("var r = ''; switch (2) { default: r = r + 'd'; case 1: r = r + 'b'; } r;"),
+        "db"
+    );
+    assert_eq!(
+        run("var r = ''; switch (2) { case 1: r = r + 'b'; default: r = r + 'd'; } r;"),
+        "d"
+    );
+}
+
+#[test]
+fn a_label_names_the_statement_that_break_and_continue_aim_at() {
+    // §14.13 — the label is on the statement, and `break name` leaves *that* one rather than the
+    // innermost. Two loops deep is where the difference shows.
+    assert_eq!(
+        run("var n = 0; outer: while (1) { while (1) { n = n + 1; break outer; } } n;"),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; outer: for (var i = 0; i < 3; i = i + 1) { for (var j = 0; j < 3; j = j + 1) { n = n + 1; continue outer; } } n;"
+        ),
+        "3"
+    );
+    // …and on one loop it behaves as the unlabelled form does.
+    assert_eq!(
+        run(
+            "var s = 0; a: for (var i = 0; i < 3; i = i + 1) { if (i === 1) continue a; s = s + i; } s;"
+        ),
+        "2"
+    );
+    assert_eq!(run("var n = 0; a: while (1) { n = 1; break a; } n;"), "1");
+    // An inner label wins over an outer one of a different name only where it is aimed at.
+    assert_eq!(
+        run(
+            "var log = ''; a: for (var i = 0; i < 2; i = i + 1) { b: for (var j = 0; j < 2; j = j + 1) { log = log + 'x'; continue b; } } log;"
+        ),
+        "xxxx"
+    );
+}
+
+#[test]
+fn a_labelled_break_may_not_cross_a_finally_either() {
+    // The same rule the unlabelled one has, and the label makes it easier to break: `break outer`
+    // from inside a `try` leaves a statement further out, so it crosses the finally on the way.
+    let mut heap = Heap::new();
+    let source = "outer: while (1) { try { break outer; } finally { } }";
+    let script = parse_script(source).expect("parses"); // the test is about compiling
+    let error = compile_script(&script, &mut heap).expect_err("crosses a finally"); // same
+    assert_eq!(
+        error.kind,
+        crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
+    );
+
+    // A loop *inside* the try is unaffected, labelled or not — the jump crosses nothing.
+    assert_eq!(
+        run(
+            "var n = 0; try { inner: while (1) { n = 1; break inner; } } finally { n = n + 10; } n;"
+        ),
+        "11"
+    );
+    // …and so is a labelled break that stays outside the try altogether.
+    assert_eq!(
+        run(
+            "var n = 0; outer: while (1) { try { n = 1; } finally { n = n + 10; } break outer; } n;"
+        ),
+        "11"
+    );
 }
