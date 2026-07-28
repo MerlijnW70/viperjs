@@ -407,14 +407,27 @@ fn parse(source: &str, path: &Path, options: &Options, scope: PackageType) -> Ou
             _ => &AS_SCRIPT,
         },
     };
-    let mut first: Option<praxis::parser::ParseError> = None;
+    // When no reading takes the file, the one that got *furthest* is the one worth reporting.
+    // An ESM file read as a script fails on its first `import`, which is a fact about the goal
+    // and not about the code; read as a module it fails wherever the real trouble is. Reporting
+    // the first reading's error instead sends a reader to line 1 of 1,338 of react's files, and
+    // that is how long it took to notice.
+    let mut furthest: Option<praxis::parser::ParseError> = None;
     for (name, as_module) in readings {
         match guarded(source, *as_module) {
             Err(()) => return Outcome::Panicked,
             Ok(Ok(())) => return Outcome::Parsed(name),
-            Ok(Err(error)) => first.get_or_insert(error),
+            Ok(Err(error)) => {
+                let further = furthest
+                    .as_ref()
+                    .is_none_or(|best| error.span.start > best.span.start);
+                if further {
+                    furthest = Some(error);
+                }
+            }
         };
     }
+    let first = furthest;
     // What node does to a `.js` file: wrap it, so a top-level `return` is a return from the
     // module wrapper. An approximation of the real wrapper, and enough to tell a CommonJS file
     // from one this parser cannot read. The verdict comes from the wrapped source and the
