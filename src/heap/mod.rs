@@ -29,14 +29,17 @@
 //! - `property` — [`PropertyKey`], and what an object files under one.
 //! - `object` — the ordinary object (§10.1) and its internal methods.
 //! - `define` — §10.1.6.3, which decides whether a property may change and then changes it.
+//! - `collect` — mark and sweep, and what counts as a root.
 //! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
+mod collect;
 mod define;
 mod environment;
 mod object;
 mod property;
 
+pub use self::collect::{Collected, Roots};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Object, ObjectId};
 pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
@@ -53,7 +56,7 @@ use std::collections::HashMap;
 /// Meaningful only to the [`Heap`] that issued it. See [`Heap::string`] for what happens when it
 /// is given to another one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StringId(usize);
+pub struct StringId(pub(super) usize);
 
 /// The arena every heap-allocated value lives in.
 ///
@@ -67,7 +70,7 @@ pub struct Heap {
     /// A `Box<[u16]>` and not a `Vec<u16>`: a String is immutable once made — §6.1.4 gives no way
     /// to change one — so the spare capacity a `Vec` keeps for growth would be paid for by every
     /// string in the program and used by none of them.
-    strings: Vec<Box<[u16]>>,
+    strings: Vec<Option<Box<[u16]>>>,
     /// Where a given sequence of code units was interned, if it ever was.
     ///
     /// Only property keys go in here, and [`Heap::intern`] says why they must: two Strings with
@@ -84,12 +87,12 @@ pub struct Heap {
     /// A separate arena from the strings, so that an [`ObjectId`] cannot address a String and the
     /// compiler says so — one arena per type is DR-0010's second consequence, after the shape of
     /// the handle itself.
-    objects: Vec<Object>,
+    objects: Vec<Option<Object>>,
     /// Every environment ever made — one per call, plus the script's.
     ///
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
     /// frame is gone and the variables are not. See [`Environment`].
-    environments: Vec<Environment>,
+    environments: Vec<Option<Environment>>,
 }
 
 impl Heap {
@@ -108,7 +111,7 @@ impl Heap {
     /// something narrower that would need one.
     pub fn new_string(&mut self, units: Vec<u16>) -> StringId {
         let id = StringId(self.strings.len());
-        self.strings.push(units.into_boxed_slice());
+        self.strings.push(Some(units.into_boxed_slice()));
         id
     }
 
@@ -134,7 +137,7 @@ impl Heap {
     /// that needs an identifier on every handle, and one realm on one thread means no script can
     /// produce the situation — see DR-0010 for the whole of the argument.
     pub fn string(&self, id: StringId) -> Option<&[u16]> {
-        self.strings.get(id.0).map(|units| &**units)
+        self.strings.get(id.0)?.as_deref()
     }
 
     /// The one String on this heap with these contents, allocating it if there is not one yet.
@@ -180,7 +183,7 @@ impl Heap {
     /// For tests and for whatever reports on the heap later. It counts allocations rather than
     /// live values, which is the same number until something sweeps.
     pub fn string_count(&self) -> usize {
-        self.strings.len()
+        self.strings.iter().filter(|slot| slot.is_some()).count()
     }
 }
 

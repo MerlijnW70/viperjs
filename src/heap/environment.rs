@@ -37,7 +37,7 @@ use crate::value::Value;
 ///
 /// Meaningful only to the [`Heap`] that issued it, on the same terms as every other handle here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct EnvironmentId(usize);
+pub struct EnvironmentId(pub(super) usize);
 
 /// One scope's variables, and the scope it is written inside.
 #[derive(Debug)]
@@ -55,14 +55,26 @@ pub struct Environment {
     parent: Option<EnvironmentId>,
 }
 
+impl Environment {
+    /// The variables, for the collector to walk.
+    pub(super) fn slots(&self) -> &[Value] {
+        &self.slots
+    }
+
+    /// The environment this one is written inside.
+    pub(super) fn parent(&self) -> Option<EnvironmentId> {
+        self.parent
+    }
+}
+
 impl Heap {
     /// A new environment with `size` slots, written inside `parent`.
     pub fn new_environment(&mut self, parent: Option<EnvironmentId>, size: usize) -> EnvironmentId {
         let id = EnvironmentId(self.environments.len());
-        self.environments.push(Environment {
+        self.environments.push(Some(Environment {
             slots: vec![Value::Undefined; size],
             parent,
-        });
+        }));
         id
     }
 
@@ -74,7 +86,7 @@ impl Heap {
     pub fn environment_at(&self, from: EnvironmentId, depth: u32) -> Option<EnvironmentId> {
         let mut at = from;
         for _ in 0..depth {
-            at = self.environments.get(at.0)?.parent?;
+            at = self.environments.get(at.0)?.as_ref()?.parent?;
         }
         Some(at)
     }
@@ -83,6 +95,7 @@ impl Heap {
     pub fn variable(&self, environment: EnvironmentId, index: u32) -> Option<Value> {
         self.environments
             .get(environment.0)?
+            .as_ref()?
             .slots
             .get(index as usize)
             .copied()
@@ -93,6 +106,7 @@ impl Heap {
         let Some(slot) = self
             .environments
             .get_mut(environment.0)
+            .and_then(Option::as_mut)
             .and_then(|found| found.slots.get_mut(index as usize))
         else {
             return false;
@@ -103,7 +117,10 @@ impl Heap {
 
     /// How many environments this heap holds.
     pub fn environment_count(&self) -> usize {
-        self.environments.len()
+        self.environments
+            .iter()
+            .filter(|slot| slot.is_some())
+            .count()
     }
 }
 

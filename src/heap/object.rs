@@ -28,7 +28,7 @@ use std::rc::Rc;
 ///
 /// Meaningful only to the [`Heap`] that issued it, on the same terms as [`crate::heap::StringId`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ObjectId(usize);
+pub struct ObjectId(pub(super) usize);
 
 /// An ordinary object — §10.1.
 #[derive(Debug, Default)]
@@ -213,14 +213,14 @@ impl Heap {
         let mut object = Object::new(Some(prototype));
         object.call = Some(body);
         object.environment = Some(environment);
-        self.objects.push(object);
+        self.objects.push(Some(object));
         id
     }
 
     /// Put an ordinary object on the heap — `OrdinaryObjectCreate` (§10.1.12).
     pub fn new_object(&mut self, prototype: Option<ObjectId>) -> ObjectId {
         let id = ObjectId(self.objects.len());
-        self.objects.push(Object::new(prototype));
+        self.objects.push(Some(Object::new(prototype)));
         id
     }
 
@@ -229,17 +229,17 @@ impl Heap {
     /// The same narrow promise [`Heap::string`] makes about a foreign handle, for the same
     /// reason: no panic and no out-of-range read, and no detection.
     pub fn object(&self, id: ObjectId) -> Option<&Object> {
-        self.objects.get(id.0)
+        self.objects.get(id.0)?.as_ref()
     }
 
     /// The object `id` refers to, to be changed.
     pub fn object_mut(&mut self, id: ObjectId) -> Option<&mut Object> {
-        self.objects.get_mut(id.0)
+        self.objects.get_mut(id.0)?.as_mut()
     }
 
     /// How many objects this heap holds.
     pub fn object_count(&self) -> usize {
-        self.objects.len()
+        self.objects.iter().filter(|slot| slot.is_some()).count()
     }
 
     /// `[[DefineOwnProperty]]` (§10.1.6) — apply `descriptor` to `object`'s `key`, if the rules
