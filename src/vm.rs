@@ -23,7 +23,7 @@
 
 use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
-use crate::heap::Heap;
+use crate::heap::{Heap, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::realm::{NativeError, Realm};
 use crate::value::{Completion, TypeError, Value, apply_binary};
 
@@ -46,6 +46,11 @@ pub enum Fault {
     MissingLocal,
     /// A `PopHandler` with no matching `PushHandler`.
     UnmatchedPopHandler,
+    /// A `DefineField` on something that is not an object.
+    ///
+    /// Only an object literal emits one, and it emits `NewObject` first, so no chunk the compiler
+    /// produces can reach this.
+    NotAnObject,
     /// The chunk finished with something still on the stack.
     ///
     /// Every statement is stack-neutral and every expression consumes its operands, so a chunk
@@ -219,6 +224,89 @@ impl Vm {
                 Instruction::SetCompletion => {
                     self.completion = self.pop()?;
                 }
+                Instruction::NewObject => {
+                    let object = heap.new_object(Some(self.realm.object_prototype()));
+                    self.stack.push(Value::Object(object));
+                }
+                Instruction::DuplicateTwo => {
+                    let depth = self.stack.len();
+                    let (Some(first), Some(second)) = (
+                        depth
+                            .checked_sub(2)
+                            .and_then(|at| self.stack.get(at))
+                            .copied(),
+                        self.stack.last().copied(),
+                    ) else {
+                        return Err(Fault::StackUnderflow);
+                    };
+                    self.stack.push(first);
+                    self.stack.push(second);
+                }
+                Instruction::DefineField => {
+                    let value = self.pop()?;
+                    let key = self.pop()?;
+                    // Peeked: an object literal defines one property after another and the object
+                    // is the expression's value, so it stays where it is until the last one.
+                    let base = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let Value::Object(base) = base else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let key = match self.property_key(key, heap) {
+                        Ok(key) => key,
+                        Err(error) => {
+                            self.throw_type_error(error, heap, &mut at, code.len())?;
+                            continue;
+                        }
+                    };
+                    let descriptor = PropertyDescriptor {
+                        value: Some(value),
+                        writable: Some(true),
+                        enumerable: Some(true),
+                        configurable: Some(true),
+                        ..PropertyDescriptor::EMPTY
+                    };
+                    // `CreateDataProperty` on a fresh, extensible object cannot be refused.
+                    let _ = heap.define_own_property(base, key, &descriptor);
+                }
+                Instruction::GetProperty => {
+                    let key = self.pop()?;
+                    let base = self.pop()?;
+                    let got = self.get_property(base, key, heap);
+                    match self.settle(got, heap, &mut at, code.len())? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
+                Instruction::SetProperty => {
+                    let value = self.pop()?;
+                    let key = self.pop()?;
+                    let base = self.pop()?;
+                    let done = self.set_property(base, key, value, heap);
+                    match self.settle(done, heap, &mut at, code.len())? {
+                        // §13.15.2 — the value of an assignment is the value assigned, whether or
+                        // not the object took it. A silent refusal is what sloppy mode is.
+                        Some(_) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
+                Instruction::DeleteProperty => {
+                    let key = self.pop()?;
+                    let base = self.pop()?;
+                    let done = self.delete_property(base, key, heap);
+                    match self.settle(done, heap, &mut at, code.len())? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
+                Instruction::HasProperty => {
+                    let base = self.pop()?;
+                    let key = self.pop()?;
+                    let has = self.has_property(base, key, heap);
+                    match self.settle(has, heap, &mut at, code.len())? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
                 Instruction::Throw => {
                     // §6.2.4 — a throw completion travels up until something wants it. Here that
                     // is the innermost handler; with nothing to want it, it leaves the script.
@@ -245,6 +333,171 @@ impl Vm {
             return Err(Fault::UnbalancedStack);
         }
         Ok(Outcome::Value(self.completion))
+    }
+
+    /// `ToPropertyKey` (§7.1.19), for the keys that exist.
+    ///
+    /// A Symbol is a key as it stands; everything else becomes the String `ToString` writes, which
+    /// is why `o[1]` and `o["1"]` are one property and `o[1.0]` is the same one again.
+    fn property_key(&self, key: Value, heap: &mut Heap) -> Completion<PropertyKey> {
+        let id = key.to_string(heap)?;
+        Ok(PropertyKey::from_string(heap, id))
+    }
+
+    /// `[[Get]]` (§10.1.8) — the value of `base`'s `key`, its prototypes included.
+    ///
+    /// A base that is not an object is a **TypeError**. That is right for `null` and `undefined`
+    /// and is *temporary* for everything else: §7.3.2 wraps a primitive in its own object first,
+    /// so `"abc".length` works by way of `String.prototype` — and there is no `String.prototype`
+    /// yet. The message says "an object" rather than naming the type, so it does not have to
+    /// change when that arrives.
+    pub(crate) fn get_property(
+        &self,
+        base: Value,
+        key: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let Value::Object(object) = base else {
+            return Err(TypeError(
+                "cannot read a property of something that is not an object",
+            ));
+        };
+        let key = self.property_key(key, heap)?;
+        // §10.1.8.1 step 3 — a property that is nowhere on the chain is `undefined`, not an
+        // error. That is the whole reason `o.missing` is a value and `missing` is a ReferenceError.
+        let Some((_, property)) = heap.find_own(object, key) else {
+            return Ok(Value::Undefined);
+        };
+        match property.kind {
+            PropertyKind::Data { value, .. } => Ok(value),
+            // §10.1.8.1 steps 5 and 6 — an accessor with no getter answers `undefined`, and one
+            // with a getter has it called. Nothing is callable yet, so the second is a TypeError
+            // for whatever was put there; both are reachable by defining the property directly.
+            PropertyKind::Accessor {
+                getter: Value::Undefined,
+                ..
+            } => Ok(Value::Undefined),
+            PropertyKind::Accessor { .. } => Err(TypeError("a getter is not callable")),
+        }
+    }
+
+    /// `[[Set]]` (§10.1.9) — put `value` under `key`, and answer whether it was allowed.
+    ///
+    /// The Boolean is thrown away by sloppy code and turned into a TypeError by strict code, which
+    /// is why this answers rather than throwing: the caller knows which it is and this does not.
+    pub(crate) fn set_property(
+        &self,
+        base: Value,
+        key: Value,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let Value::Object(object) = base else {
+            return Err(TypeError(
+                "cannot set a property of something that is not an object",
+            ));
+        };
+        let key = self.property_key(key, heap)?;
+        // §10.1.9.2 — an *inherited* accessor is called, and an inherited non-writable data
+        // property refuses the write. An inherited writable one does not: the value is filed on
+        // the receiver, which is what makes a prototype's property shadowable.
+        if let Some((owner, property)) = heap.find_own(object, key) {
+            match property.kind {
+                PropertyKind::Accessor {
+                    setter: Value::Undefined,
+                    ..
+                } => {
+                    return Ok(Value::Boolean(false));
+                }
+                PropertyKind::Accessor { .. } => {
+                    return Err(TypeError("a setter is not callable"));
+                }
+                PropertyKind::Data {
+                    writable: false, ..
+                } => {
+                    return Ok(Value::Boolean(false));
+                }
+                PropertyKind::Data { .. } if owner == object => {
+                    // An own writable data property is changed in place, keeping its attributes:
+                    // assignment never makes a property enumerable that was not.
+                    let descriptor = PropertyDescriptor {
+                        value: Some(value),
+                        ..PropertyDescriptor::EMPTY
+                    };
+                    return Ok(Value::Boolean(heap.define_own_property(
+                        object,
+                        key,
+                        &descriptor,
+                    )));
+                }
+                PropertyKind::Data { .. } => {}
+            }
+        }
+        // A new property, or one that shadows an inherited writable one. Either way it is created
+        // on the receiver with the three attributes assignment always gives.
+        let descriptor = PropertyDescriptor {
+            value: Some(value),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        Ok(Value::Boolean(heap.define_own_property(
+            object,
+            key,
+            &descriptor,
+        )))
+    }
+
+    /// `[[Delete]]` (§10.1.10) through §13.5.1's operator.
+    pub(crate) fn delete_property(
+        &self,
+        base: Value,
+        key: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let Value::Object(object) = base else {
+            return Err(TypeError(
+                "cannot delete a property of something that is not an object",
+            ));
+        };
+        let key = self.property_key(key, heap)?;
+        // Own only: `delete` never reaches through a prototype, which is why deleting an
+        // inherited property answers `true` and leaves it exactly where it was.
+        let gone = heap
+            .object_mut(object)
+            .is_some_and(|found| found.delete(key));
+        Ok(Value::Boolean(gone))
+    }
+
+    /// `[[HasProperty]]` (§10.1.7) through §13.10.1's `in`.
+    pub(crate) fn has_property(
+        &self,
+        base: Value,
+        key: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let Value::Object(object) = base else {
+            // §13.10.1 step 5 — `in` is the one operator that names the requirement out loud
+            // rather than converting: `1 in 2` is a TypeError and not `false`.
+            return Err(TypeError("the right operand of in must be an object"));
+        };
+        let key = self.property_key(key, heap)?;
+        Ok(Value::Boolean(heap.has_property(object, key)))
+    }
+
+    /// Throw a TypeError with this message, from a place that has no completion to settle.
+    fn throw_type_error(
+        &mut self,
+        error: TypeError,
+        heap: &mut Heap,
+        at: &mut usize,
+        length: usize,
+    ) -> Result<(), Fault> {
+        let TypeError(message) = error;
+        let thrown = self.realm.error(heap, NativeError::Type, message);
+        self.unwind(thrown, at, length)?;
+        Ok(())
     }
 
     /// What to do with an operation that may have thrown.
@@ -347,6 +600,7 @@ mod tests {
     use super::*;
     use crate::ast::BinaryOperator;
     use crate::compile::{compile_expression, compile_script};
+    use crate::heap::ObjectId;
     use crate::parser::{parse_expression, parse_script};
 
     /// Evaluate `source` and describe the result the way `String(x)` would, so that a row of a
@@ -533,8 +787,8 @@ mod tests {
             ("var [a] = 1;", "a destructuring binding"),
             ("outer: while (1) break outer;", "a labelled statement"),
             ("x;", "a reference to an undeclared name"),
-            ("var a; a.b = 1;", "an assignment to a property"),
             ("undeclared = 1;", "an assignment to an undeclared name"),
+            ("delete x;", "deleting a name"),
             ("var a; a ||= 1;", "a logical assignment"),
         ];
         for (source, what) in cases {
@@ -940,6 +1194,406 @@ mod tests {
             error.kind,
             crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
         );
+    }
+
+    #[test]
+    fn an_object_literal_makes_properties_that_can_be_read_back() {
+        assert_eq!(run("var o = {a: 1}; o.a;"), "1");
+        assert_eq!(run("var o = {a: 1, b: 2}; o.a + o.b;"), "3");
+        assert_eq!(run("var o = {}; o.missing;"), "undefined");
+        // Every spelling of a key names the same property, because every one of them is the
+        // String `ToString` writes: a quoted name, a bare name, a number, a computed expression.
+        assert_eq!(run("var o = {'a': 1}; o.a;"), "1");
+        assert_eq!(run("var o = {1: 'x'}; o[1];"), "x");
+        assert_eq!(run("var o = {1: 'x'}; o['1'];"), "x");
+        assert_eq!(run("var o = {1.0: 'x'}; o[1];"), "x");
+        assert_eq!(run("var k = 'a'; var o = {[k]: 1}; o.a;"), "1");
+        assert_eq!(run("var o = {1e21: 'x'}; o['1e+21'];"), "x");
+        // A later property wins, and it is one property rather than two.
+        assert_eq!(run("var o = {a: 1, a: 2}; o.a;"), "2");
+    }
+
+    #[test]
+    fn a_property_is_written_read_and_deleted_through_the_prototype_chain() {
+        assert_eq!(run("var o = {}; o.a = 1; o.a;"), "1");
+        assert_eq!(run("var o = {}; o['a'] = 1; o.a;"), "1");
+        assert_eq!(run("var o = {a: 1}; o.a = 2; o.a;"), "2");
+        // Assignment is an expression whose value is the value assigned.
+        assert_eq!(run("var o = {}; o.a = 5;"), "5");
+        assert_eq!(run("var o = {}; var x = o.a = 5; x;"), "5");
+        // Compound assignment reads and writes the same property.
+        assert_eq!(run("var o = {a: 1}; o.a += 2; o.a;"), "3");
+        assert_eq!(run("var o = {a: 'x'}; o.a += 'y'; o.a;"), "xy");
+        assert_eq!(run("var o = {a: 8}; o['a'] /= 2; o.a;"), "4");
+        // `delete` answers whether the property is gone, which is true even when there was none.
+        assert_eq!(run("var o = {a: 1}; delete o.a;"), "true");
+        assert_eq!(run("var o = {a: 1}; delete o.a; o.a;"), "undefined");
+        assert_eq!(run("var o = {}; delete o.nothing;"), "true");
+        // …and `in` asks about the chain rather than about own properties.
+        assert_eq!(run("var o = {a: 1}; 'a' in o;"), "true");
+        assert_eq!(run("var o = {a: 1}; 'b' in o;"), "false");
+        assert_eq!(run("var o = {a: 1}; delete o.a; 'a' in o;"), "false");
+    }
+
+    #[test]
+    fn a_key_is_evaluated_once_even_when_the_property_is_read_and_written() {
+        // §13.15.2 — `o[k] += 1` evaluates the key once. With no function calls yet the only way
+        // to see that is a key expression with a side effect, and assignment is one: if the key
+        // were evaluated twice, `i` would end at 2 and the property written would be `o[1]`.
+        assert_eq!(run("var o = {}; var i = 0; o[i = i + 1] = 5; i;"), "1");
+        assert_eq!(
+            run("var o = {0: 10}; var i = 0; o[i = i + 1] = 5; o[1];"),
+            "5"
+        );
+        assert_eq!(
+            run("var o = {1: 10}; var i = 0; o[i = i + 1] += 5; o[1];"),
+            "15"
+        );
+        assert_eq!(
+            run("var o = {1: 10}; var i = 0; o[i = i + 1] += 5; i;"),
+            "1"
+        );
+    }
+
+    #[test]
+    fn reading_a_property_of_something_that_is_not_an_object_is_a_type_error() {
+        // Right for `null` and `undefined`, and temporary for the rest: §7.3.2 wraps a primitive
+        // in its own object first, and there is no `String.prototype` to wrap one in yet.
+        assert_eq!(run("try { null.a; } catch (e) { e.name; }"), "TypeError");
+        assert_eq!(
+            run("try { (void 0).a; } catch (e) { e.name; }"),
+            "TypeError"
+        );
+        assert_eq!(
+            run("try { null.a = 1; } catch (e) { e.name; }"),
+            "TypeError"
+        );
+        assert_eq!(run("try { 1 in 2; } catch (e) { e.name; }"), "TypeError");
+        // The error is an object with a message of its own and a name from its prototype, which
+        // is the seam between the value layer and the realm made visible.
+        assert_eq!(run("try { null.a; } catch (e) { typeof e; }"), "object");
+        assert_eq!(
+            run("try { ({}) + 1; } catch (e) { e.name + ': ' + e.message; }"),
+            "TypeError: cannot convert an object to a primitive value"
+        );
+    }
+
+    #[test]
+    fn an_object_inherits_from_its_prototype_and_shadows_what_it_writes() {
+        // Everything a literal makes inherits from `Object.prototype`, so a property put there is
+        // visible from every object — and writing the same name makes an own property that hides
+        // it rather than changing it.
+        assert_eq!(run("var o = {}; 'nothing' in o;"), "false");
+        assert_eq!(run("var o = {a: 1}; var p = {a: 2}; o.a + p.a;"), "3");
+        // A property that does not exist reads as `undefined` rather than throwing, which is the
+        // difference between a property and a name.
+        assert_eq!(run("var o = {}; typeof o.missing;"), "undefined");
+        assert_eq!(run("var o = {a: void 0}; 'a' in o;"), "true");
+    }
+
+    #[test]
+    fn a_long_chain_costs_no_stack_and_a_deep_nest_is_refused() {
+        // The two shapes a deep expression comes in, and they need opposite answers.
+        //
+        // A *chain* — `a + b + c` — is a tree as deep as it is long, and minified code chains
+        // thousands of terms. It costs no recursion at all, because the left spine is walked with
+        // a loop; two hundred thousand terms compile on a 1 MiB stack where four hundred used to
+        // overflow.
+        let long_chain = std::iter::repeat_n("1", 5000)
+            .collect::<Vec<_>>()
+            .join(" + ");
+        assert_eq!(run(&long_chain), "5000");
+        assert_eq!(
+            run(&std::iter::repeat_n("1", 300)
+                .collect::<Vec<_>>()
+                .join(" + ")),
+            "300"
+        );
+
+        // A *nest* does recurse, and is refused with a span rather than crashing. The parser
+        // stops most of these first — this is the backstop for the ones it does not.
+        let nested = format!("{}1{}", "[".repeat(4000), "]".repeat(4000));
+        let mut heap = Heap::new();
+        if let Ok(script) = parse_script(&nested) {
+            let error = compile_script(&script, &mut heap).expect_err("too deep to compile"); // the test is about the error
+            assert!(matches!(
+                error.kind,
+                crate::compile::ErrorKind::TooDeep | crate::compile::ErrorKind::Unsupported(_)
+            ));
+        }
+    }
+
+    /// The property `object` files under `name`, if it has one of its own.
+    fn own(heap: &mut Heap, object: ObjectId, name: &str) -> Option<crate::heap::Property> {
+        let key = PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
+        heap.object(object)?.get_own_property(key).copied()
+    }
+
+    fn key_of(heap: &mut Heap, name: &str) -> Value {
+        Value::String(heap.new_string(name.encode_utf16().collect()))
+    }
+
+    #[test]
+    fn an_object_literal_makes_the_same_ordinary_properties_assignment_does() {
+        // §13.2.5's `CreateDataPropertyOrThrow` gives all three attributes, and they are *not*
+        // §6.1.7.1's defaults: a property a program writes is writable, enumerable and
+        // configurable, where one `Object.defineProperty` makes is none of those.
+        //
+        // No source can see this yet — that needs `for...in` or `getOwnPropertyDescriptor` — but
+        // the object itself is the script's completion value, so the heap can be asked directly.
+        let mut heap = Heap::new();
+        let mut vm = Vm::new(&mut heap);
+        let script = parse_script("({a: 1})").expect("parses"); // the test is about the object
+        let chunk = compile_script(&script, &mut heap).expect("compiles"); // same
+        let outcome = vm.run(&chunk, &mut heap).expect("well formed"); // same
+        let Outcome::Value(Value::Object(object)) = outcome else {
+            panic!("an object literal evaluates to an object")
+        };
+        let property = own(&mut heap, object, "a").expect("just defined"); // same
+        assert!(property.enumerable);
+        assert!(property.configurable);
+        assert!(matches!(
+            property.kind,
+            PropertyKind::Data {
+                value: Value::Number(value),
+                writable: true
+            } if value == 1.0
+        ));
+    }
+
+    #[test]
+    fn assignment_and_a_literal_both_make_an_ordinary_property() {
+        // §10.1.9's `CreateDataProperty` and §13.2.5's define give the same three attributes, and
+        // they are *not* §6.1.7.1's defaults: a property a program makes is writable, enumerable
+        // and configurable, where one `Object.defineProperty` makes is none of those.
+        //
+        // Nothing in the language can see this yet — that needs `for...in` and
+        // `getOwnPropertyDescriptor` — so it is checked where it is decided.
+        let mut heap = Heap::new();
+        let vm = Vm::new(&mut heap);
+        let object = heap.new_object(None);
+        let key = key_of(&mut heap, "a");
+        let base = Value::Object(object);
+        assert!(matches!(
+            vm.set_property(base, key, Value::Number(1.0), &mut heap),
+            Ok(Value::Boolean(true))
+        ));
+        let property = own(&mut heap, object, "a").expect("just assigned"); // the test is about it
+        assert!(property.enumerable);
+        assert!(property.configurable);
+        assert!(matches!(
+            property.kind,
+            PropertyKind::Data { writable: true, .. }
+        ));
+    }
+
+    #[test]
+    fn assignment_keeps_the_attributes_an_existing_own_property_had() {
+        // §10.1.9.2 — writing to an own property changes its value and nothing else. A property
+        // that was hidden stays hidden, which is why assigning to a built-in does not suddenly
+        // make it turn up in `for...in`.
+        let mut heap = Heap::new();
+        let vm = Vm::new(&mut heap);
+        let object = heap.new_object(None);
+        let hidden = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
+        let descriptor = PropertyDescriptor {
+            value: Some(Value::Number(1.0)),
+            writable: Some(true),
+            enumerable: Some(false),
+            configurable: Some(false),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(object, hidden, &descriptor));
+
+        let key = key_of(&mut heap, "a");
+        let base = Value::Object(object);
+        assert!(matches!(
+            vm.set_property(base, key, Value::Number(2.0), &mut heap),
+            Ok(Value::Boolean(true))
+        ));
+        let property = own(&mut heap, object, "a").expect("still there"); // same
+        assert!(!property.enumerable);
+        assert!(!property.configurable);
+        assert!(matches!(
+            property.kind,
+            PropertyKind::Data { value: Value::Number(value), .. } if value == 2.0
+        ));
+    }
+
+    #[test]
+    fn a_write_is_refused_by_what_it_would_have_to_go_through() {
+        // The three ways §10.1.9 answers `false`, and none of them throws: a plain assignment in
+        // sloppy code swallows the answer, which is why `o.frozen = 1` is silent.
+        let mut heap = Heap::new();
+        let vm = Vm::new(&mut heap);
+        let prototype = heap.new_object(None);
+        let object = heap.new_object(Some(prototype));
+        let name = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
+
+        // A non-writable *inherited* data property refuses the write on the receiver too.
+        let frozen = PropertyDescriptor {
+            value: Some(Value::Number(1.0)),
+            writable: Some(false),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(prototype, name, &frozen));
+        let key = key_of(&mut heap, "a");
+        let base = Value::Object(object);
+        assert!(matches!(
+            vm.set_property(base, key, Value::Number(2.0), &mut heap),
+            Ok(Value::Boolean(false))
+        ));
+        assert!(own(&mut heap, object, "a").is_none());
+
+        // An accessor with no setter refuses as well…
+        let setterless =
+            PropertyKey::from_units(&mut heap, &"b".encode_utf16().collect::<Vec<_>>());
+        let accessor = PropertyDescriptor {
+            getter: Some(Value::Undefined),
+            setter: Some(Value::Undefined),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(prototype, setterless, &accessor));
+        let key = key_of(&mut heap, "b");
+        assert!(matches!(
+            vm.set_property(base, key, Value::Number(2.0), &mut heap),
+            Ok(Value::Boolean(false))
+        ));
+        // …and one whose setter is not callable is a TypeError rather than a refusal, because
+        // §10.1.9.2 calls it and calling a non-function throws.
+        let uncallable =
+            PropertyKey::from_units(&mut heap, &"c".encode_utf16().collect::<Vec<_>>());
+        let accessor = PropertyDescriptor {
+            setter: Some(Value::Number(0.0)),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(prototype, uncallable, &accessor));
+        let key = key_of(&mut heap, "c");
+        assert!(
+            vm.set_property(base, key, Value::Number(2.0), &mut heap)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn a_writable_inherited_property_is_shadowed_rather_than_changed() {
+        // §10.1.9.2 again, and the case that makes prototypes useful: writing a name the
+        // prototype has puts an *own* property on the receiver and leaves the prototype's alone.
+        let mut heap = Heap::new();
+        let vm = Vm::new(&mut heap);
+        let prototype = heap.new_object(None);
+        let object = heap.new_object(Some(prototype));
+        let name = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
+        let inherited = PropertyDescriptor {
+            value: Some(Value::Number(1.0)),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(prototype, name, &inherited));
+
+        let key = key_of(&mut heap, "a");
+        let base = Value::Object(object);
+        assert!(matches!(
+            vm.set_property(base, key, Value::Number(2.0), &mut heap),
+            Ok(Value::Boolean(true))
+        ));
+        assert!(matches!(
+            own(&mut heap, object, "a").expect("shadowed").kind, // the test is about it
+            PropertyKind::Data { value: Value::Number(value), .. } if value == 2.0
+        ));
+        assert!(matches!(
+            own(&mut heap, prototype, "a").expect("untouched").kind, // same
+            PropertyKind::Data { value: Value::Number(value), .. } if value == 1.0
+        ));
+    }
+
+    #[test]
+    fn an_accessor_answers_undefined_without_a_getter_and_throws_with_one() {
+        // §10.1.8.1 steps 5 and 6. Nothing is callable yet, so the second is a TypeError for
+        // whatever was put there — and both are reachable by defining the property directly,
+        // which is why neither is a branch nothing can take.
+        let mut heap = Heap::new();
+        let vm = Vm::new(&mut heap);
+        let object = heap.new_object(None);
+        let getterless =
+            PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
+        let accessor = PropertyDescriptor {
+            getter: Some(Value::Undefined),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(object, getterless, &accessor));
+        let base = Value::Object(object);
+        let key = key_of(&mut heap, "a");
+        assert!(matches!(
+            vm.get_property(base, key, &mut heap),
+            Ok(Value::Undefined)
+        ));
+
+        let uncallable =
+            PropertyKey::from_units(&mut heap, &"b".encode_utf16().collect::<Vec<_>>());
+        let accessor = PropertyDescriptor {
+            getter: Some(Value::Number(0.0)),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(object, uncallable, &accessor));
+        let key = key_of(&mut heap, "b");
+        assert!(vm.get_property(base, key, &mut heap).is_err());
+    }
+
+    #[test]
+    fn delete_reaches_only_own_properties_and_a_non_reference_is_always_gone() {
+        let mut heap = Heap::new();
+        let vm = Vm::new(&mut heap);
+        let prototype = heap.new_object(None);
+        let object = heap.new_object(Some(prototype));
+        let name = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
+        let descriptor = PropertyDescriptor {
+            value: Some(Value::Number(1.0)),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        assert!(heap.define_own_property(prototype, name, &descriptor));
+        // Deleting an inherited property answers `true` and leaves it exactly where it was, which
+        // is the trap: `delete o.inherited` looks like it worked and `o.inherited` still reads.
+        let base = Value::Object(object);
+        let key = key_of(&mut heap, "a");
+        assert!(matches!(
+            vm.delete_property(base, key, &mut heap),
+            Ok(Value::Boolean(true))
+        ));
+        assert!(own(&mut heap, prototype, "a").is_some());
+        assert!(matches!(
+            vm.get_property(base, key, &mut heap),
+            Ok(Value::Number(value)) if value == 1.0
+        ));
+        // …and deleting something that is not a property reference at all is `true` too, which is
+        // why `delete 1` is legal outside strict mode.
+        assert_eq!(run("delete (1 + 1);"), "true");
+        assert_eq!(run("var n = 0; delete (n = 1); n;"), "1");
+    }
+
+    #[test]
+    fn optional_chaining_and_private_names_are_refused_with_a_span() {
+        let mut heap = Heap::new();
+        for (source, what) in [
+            ("var o = {}; o?.a;", "optional chaining"),
+            ("var o = {}; delete o?.a;", "optional chaining"),
+            ("var o = {}; o?.['a'];", "optional chaining"),
+            ("var o = {}; delete o?.['a'];", "optional chaining"),
+        ] {
+            // Every row here parses; a row that did not would silently test nothing, which is
+            // how a table of refusals stops refusing anything.
+            let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
+
+            let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // the test is about the error
+            assert_eq!(
+                error.kind,
+                crate::compile::ErrorKind::Unsupported(what),
+                "compiling {source:?}"
+            );
+        }
     }
 
     #[test]

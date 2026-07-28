@@ -16,10 +16,11 @@
 //! a location, not a panic and not a silent wrong answer. That list shrinks with each slice, and
 //! the errors are how a reader can tell what is genuinely finished.
 
+use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
     AssignmentOperator, AssignmentTarget, BinaryOperator, Binding, Declaration, DeclarationKind,
-    Expr, ExprKind, ForInit, ForStatement, LogicalOperator, Script, Stmt, StmtKind, TryStatement,
-    UnaryOperator,
+    Expr, ExprKind, ForInit, ForStatement, LogicalOperator, PropertyDefinition, Script, Stmt,
+    StmtKind, TryStatement, UnaryOperator,
 };
 use crate::heap::Heap;
 use crate::span::Span;
@@ -80,6 +81,29 @@ pub enum Instruction {
     /// Assignment is an expression: `a = (b = 1)` works because the inner one leaves its value
     /// behind. A statement that only wants the effect follows this with a [`Instruction::Pop`].
     StoreLocal(u32),
+    /// Push a new empty ordinary object, inheriting from `Object.prototype`.
+    NewObject,
+    /// Push a copy of the top two values, in the same order.
+    ///
+    /// A compound assignment to a property reads it and then writes it, and both need the base
+    /// and the key. Evaluating them twice would call `f` twice in `o[f()] += 1`, so they are
+    /// evaluated once and copied — which is what makes the once-only guarantee an instruction
+    /// rather than a promise.
+    DuplicateTwo,
+    /// Take a value and a key and file the value under it, leaving the object where it is.
+    ///
+    /// `CreateDataPropertyOrThrow` (§7.3.5): an object literal *defines* its properties rather
+    /// than assigning them, which is why `{__proto__: 1}` in a literal is special and
+    /// `o.__proto__ = 1` is not, and why a literal can shadow a non-writable inherited property.
+    DefineField,
+    /// Take a key and a base and push the property's value — `[[Get]]`, §10.1.8.
+    GetProperty,
+    /// Take a value, a key and a base; store the value and leave it on the stack — §10.1.9.
+    SetProperty,
+    /// Take a key and a base and push whether the property was there to remove — §13.5.1.
+    DeleteProperty,
+    /// Take a base and a key and push whether the base has it — §13.10.1's `in`.
+    HasProperty,
     /// Take the top value and throw it — §14.14.
     ///
     /// Any value, not only an Error: `throw 1` is legal, and the specification never asks what
@@ -242,6 +266,8 @@ pub enum ErrorKind {
     TooManyConstants,
     /// More than `u32::MAX` instructions in one chunk, so a jump could not name its target.
     TooLong,
+    /// An expression nested deeper than the compiler will walk.
+    TooDeep,
 }
 
 impl CompileError {
@@ -251,6 +277,7 @@ impl CompileError {
             ErrorKind::Unsupported(what) => format!("{what} is not implemented yet"),
             ErrorKind::TooManyConstants => "too many constants in one unit of code".to_string(),
             ErrorKind::TooLong => "too many instructions in one unit of code".to_string(),
+            ErrorKind::TooDeep => "an expression nested too deeply to compile".to_string(),
         }
     }
 }
@@ -304,6 +331,8 @@ struct Compiler<'a> {
     breaks: Vec<Vec<Unpatched>>,
     /// Where `continue` goes — the top of the innermost loop's test, or its update.
     continues: Vec<Vec<Unpatched>>,
+    /// How deep into an expression the compiler currently is.
+    depth: u32,
     /// The most slots that were in use at once.
     ///
     /// Not `locals.len()` at the end: a catch parameter's slot is given back when its block ends,
@@ -327,6 +356,7 @@ impl<'a> Compiler<'a> {
             continues: Vec::new(),
             finally_guards: Vec::new(),
             high_water: 0,
+            depth: 0,
         }
     }
 
@@ -373,6 +403,29 @@ impl Compiler<'_> {
     /// Compile `expression` so that it leaves exactly one value on the stack.
     fn expression(&mut self, expression: &Expr) -> Result<(), CompileError> {
         let span = expression.span;
+        // The tree is walked by recursing, so a nested expression is as deep as it is nested and
+        // the Rust stack is what runs out. Counting is DR-0006's argument again: a count is
+        // portable and a measurement of the remaining stack is not.
+        //
+        // One increment and one decrement, with the refusal *between* them rather than beside
+        // them. Written with an early return it needed a second decrement on the error path — a
+        // line that could be anything at all, since a failed compilation is discarded whole and
+        // nothing ever reads the depth again.
+        self.depth += 1;
+        let compiled = if self.depth > MAX_EXPRESSION_DEPTH {
+            Err(CompileError {
+                kind: ErrorKind::TooDeep,
+                span,
+            })
+        } else {
+            self.expression_inner(expression, span)
+        };
+        self.depth -= 1;
+        compiled
+    }
+
+    /// Compile `expression`, with the depth already counted.
+    fn expression_inner(&mut self, expression: &Expr, span: Span) -> Result<(), CompileError> {
         match &expression.kind {
             // The literals. `undefined` is not among them because it is not a literal: it is an
             // identifier that happens to resolve to a property of the global object, which is why
@@ -381,33 +434,60 @@ impl Compiler<'_> {
             ExprKind::Boolean(value) => self.constant(Value::Boolean(*value)),
             ExprKind::Number(value) => self.constant(Value::Number(*value)),
             ExprKind::String(units) => {
-                let id = self.heap.new_string(units.clone());
+                let id = self.heap.new_string(units.to_vec());
                 self.constant(Value::String(id))
             }
             ExprKind::Unary { operator, argument } => {
-                // §13.5.1.2 — `delete` does not evaluate its operand to a *value*; it needs the
-                // reference, which is a thing the compiler does not have until names exist.
+                // §13.5.1 — `delete` does not evaluate its operand to a *value*; it wants the
+                // reference. For a property that is the base and the key, and for anything else
+                // there is nothing to delete.
                 if *operator == UnaryOperator::Delete {
-                    return Err(unsupported("the delete operator", span));
+                    return self.delete(argument, span);
                 }
                 self.expression(argument)?;
                 self.chunk.emit(Instruction::Unary(*operator));
                 Ok(())
             }
-            ExprKind::Binary {
-                operator,
-                left,
-                right,
-            } => {
-                if matches!(operator, BinaryOperator::Instanceof | BinaryOperator::In) {
-                    return Err(unsupported("the instanceof and in operators", span));
+            // §13.15 — a binary operator, and its whole left-leaning chain at once.
+            //
+            // `a + b + c` is `((a + b) + c)`, so a chain is a tree as deep as it is long, and
+            // minified code chains thousands of terms. Recursing once per term would run out of
+            // Rust stack long before the source ran out of terms — which is exactly how the
+            // parser handles the same shape, with a loop rather than recursion (DR-0006).
+            //
+            // So the left spine is walked flat: down to the innermost operand, then back out
+            // emitting each right operand and its operator. The order is unchanged, which is what
+            // matters — §13.15.1 evaluates the left operand first, and that is what the emitted
+            // order still says.
+            ExprKind::Binary { .. } => {
+                let mut spine = Vec::new();
+                let mut innermost = expression;
+                while let ExprKind::Binary {
+                    operator,
+                    left,
+                    right,
+                } = &innermost.kind
+                {
+                    // §13.10.1 — `instanceof` calls a method on its right operand, so it waits
+                    // for something that can be called.
+                    if *operator == BinaryOperator::Instanceof {
+                        return Err(unsupported("the instanceof operator", innermost.span));
+                    }
+                    spine.push((*operator, &**right));
+                    innermost = left;
                 }
-                // Left before right, always. §13.15.1 evaluates the left operand first and every
-                // operand may have side effects, so the order the instructions are emitted in *is*
-                // the order the language guarantees.
-                self.expression(left)?;
-                self.expression(right)?;
-                self.chunk.emit(Instruction::Binary(*operator));
+                self.expression(innermost)?;
+                for (operator, right) in spine.into_iter().rev() {
+                    self.expression(right)?;
+                    // `in` is the one binary operator that is not a value operation: it asks an
+                    // object a question rather than converting one, so it is an instruction of
+                    // its own rather than a row in `apply_binary`.
+                    if operator == BinaryOperator::In {
+                        self.chunk.emit(Instruction::HasProperty);
+                    } else {
+                        self.chunk.emit(Instruction::Binary(operator));
+                    }
+                }
                 Ok(())
             }
             // §13.13 and §13.14 — the operators that may not evaluate their right operand at all.
@@ -460,6 +540,15 @@ impl Compiler<'_> {
                 }
                 self.expression(last)
             }
+            // §13.2.5 — an object literal.
+            ExprKind::Object(properties) => self.object_literal(properties, span),
+            // §13.3.2 and §13.3.3 — `o.x` and `o[k]`. The name is a constant where the key is
+            // an expression, which is the whole difference between the two forms.
+            ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
+                self.property_reference(expression)?;
+                self.chunk.emit(Instruction::GetProperty);
+                Ok(())
+            }
             // Everything else, named as the specification names it so that the message says which
             // clause is missing rather than which Rust variant.
             // §13.1.3 — a name is a slot, resolved here rather than looked up at run time.
@@ -475,9 +564,6 @@ impl Compiler<'_> {
             },
             ExprKind::This => Err(unsupported("this", span)),
             ExprKind::BigInt(_) => Err(unsupported("a BigInt literal", span)),
-            ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
-                Err(unsupported("a member expression", span))
-            }
             ExprKind::Call { .. } => Err(unsupported("a call expression", span)),
             ExprKind::New { .. } => Err(unsupported("the new operator", span)),
             ExprKind::Update { .. } => Err(unsupported("an update expression", span)),
@@ -492,8 +578,14 @@ impl Compiler<'_> {
                 let AssignmentTarget::Simple(target) = &**target else {
                     return Err(unsupported("a destructuring assignment", span));
                 };
+                if let ExprKind::Member { .. } | ExprKind::ComputedMember { .. } = &target.kind {
+                    return self.assign_to_property(*operator, target, value, span);
+                }
                 let ExprKind::Identifier(name) = &target.kind else {
-                    return Err(unsupported("an assignment to a property", target.span));
+                    return Err(unsupported(
+                        "an assignment to something that is not a name",
+                        target.span,
+                    ));
                 };
                 let Some(slot) = self.resolve(name) else {
                     return Err(unsupported(
@@ -521,7 +613,6 @@ impl Compiler<'_> {
                 Ok(())
             }
             ExprKind::Array(_) => Err(unsupported("an array literal", span)),
-            ExprKind::Object(_) => Err(unsupported("an object literal", span)),
             ExprKind::Function(_) => Err(unsupported("a function expression", span)),
             ExprKind::Arrow(_) => Err(unsupported("an arrow function", span)),
             ExprKind::Class(_) => Err(unsupported("a class expression", span)),
@@ -780,6 +871,153 @@ impl Compiler<'_> {
         self.declare_shadowing(&name)
     }
 
+    /// §13.2.5 — an object literal.
+    ///
+    /// Every property is *defined* rather than assigned, so nothing inherited can refuse one and
+    /// no setter can intercept it. Its own method rather than an arm of [`Compiler::expression`]
+    /// because that function recurses once per level of an expression, and every arm's locals are
+    /// part of every frame: a long `a + b + c` chain is as deep as it is long, and the frame it
+    /// walks with should be no larger than it has to be.
+    fn object_literal(
+        &mut self,
+        properties: &[PropertyDefinition],
+        span: Span,
+    ) -> Result<(), CompileError> {
+        self.chunk.emit(Instruction::NewObject);
+
+        for property in properties.iter() {
+            let PropertyDefinition::KeyValue { key, value } = property else {
+                return Err(unsupported(
+                    "a shorthand, spread or method in an object literal",
+                    span,
+                ));
+            };
+            match key {
+                AstPropertyKey::Identifier(name) => {
+                    let units: Vec<u16> = name.encode_utf16().collect();
+                    let id = self.heap.new_string(units);
+                    self.constant(Value::String(id))?;
+                }
+                AstPropertyKey::String(units) => {
+                    let id = self.heap.new_string(units.to_vec());
+                    self.constant(Value::String(id))?;
+                }
+                // §13.2.5.5 — a numeric key becomes the String `ToString` writes, at
+                // compile time because the number is already known: `{1.0: x}` and
+                // `{1: x}` are one property, and `{1e21: x}` is the key `"1e+21"`.
+                AstPropertyKey::Number(number) => {
+                    let value = Value::Number(*number);
+                    let id = value
+                        .to_string(self.heap)
+                        .map_err(|_| unsupported("a key that cannot be written down", span))?;
+                    self.constant(Value::String(id))?;
+                }
+                AstPropertyKey::Computed(expression) => self.expression(expression)?,
+                AstPropertyKey::BigInt(_) | AstPropertyKey::Private(_) => {
+                    return Err(unsupported("a BigInt or private key", span));
+                }
+            }
+            self.expression(value)?;
+            self.chunk.emit(Instruction::DefineField);
+        }
+        Ok(())
+    }
+
+    /// The base and the key of a property reference, pushed in that order.
+    ///
+    /// Shared by reading, writing and deleting, which all need the same two values and all refuse
+    /// the same two things. Written out three times it was the same guard three times, and two of
+    /// them were unreachable: `o?.a = 1` and `#x` outside a class are refused by the parser long
+    /// before they reach a compiler.
+    fn property_reference(&mut self, target: &Expr) -> Result<(), CompileError> {
+        match &target.kind {
+            ExprKind::Member {
+                private,
+                optional,
+                object,
+                property,
+            } => {
+                if *private {
+                    return Err(unsupported("a private name", target.span));
+                }
+                if *optional {
+                    return Err(unsupported("optional chaining", target.span));
+                }
+                self.expression(object)?;
+                let units: Vec<u16> = property.encode_utf16().collect();
+                let id = self.heap.new_string(units);
+                self.constant(Value::String(id))
+            }
+            ExprKind::ComputedMember {
+                optional,
+                object,
+                property,
+            } => {
+                if *optional {
+                    return Err(unsupported("optional chaining", target.span));
+                }
+                self.expression(object)?;
+                self.expression(property)
+            }
+            _ => Err(unsupported(
+                "a reference to something that is not a property",
+                target.span,
+            )),
+        }
+    }
+
+    /// §13.5.1 — `delete`.
+    ///
+    /// Answers whether the property is gone, which is not the same as whether it was there:
+    /// `delete o.nothing` is `true`. Deleting anything that is not a property reference is also
+    /// `true` and does nothing at all, which is why `delete 1` is legal outside strict mode.
+    fn delete(&mut self, argument: &Expr, span: Span) -> Result<(), CompileError> {
+        match &argument.kind {
+            ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
+                self.property_reference(argument)?;
+                self.chunk.emit(Instruction::DeleteProperty);
+                Ok(())
+            }
+            // §13.5.1.2 step 2 — deleting a name is only legal in sloppy code and only for a
+            // configurable global, which needs the global object. Deleting anything else at all
+            // evaluates it and answers `true`.
+            ExprKind::Identifier(_) => Err(unsupported("deleting a name", span)),
+            _ => {
+                self.expression(argument)?;
+                self.chunk.emit(Instruction::Pop);
+                self.constant(Value::Boolean(true))
+            }
+        }
+    }
+
+    /// `o.x = v` and `o[k] = v`, and their compound forms — §13.15.2.
+    ///
+    /// The base and the key are evaluated **once**, which is what makes `o[f()] += 1` call `f`
+    /// once rather than twice. For a compound operator that means the two have to be on the stack
+    /// twice over — once for the read and once for the write — which is what `DuplicateTwo` is
+    /// for.
+    fn assign_to_property(
+        &mut self,
+        operator: AssignmentOperator,
+        target: &Expr,
+        value: &Expr,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        self.property_reference(target)?;
+        match compound_operator(operator) {
+            None if operator == AssignmentOperator::Assign => self.expression(value)?,
+            Some(binary) => {
+                self.chunk.emit(Instruction::DuplicateTwo);
+                self.chunk.emit(Instruction::GetProperty);
+                self.expression(value)?;
+                self.chunk.emit(Instruction::Binary(binary));
+            }
+            None => return Err(unsupported("a logical assignment", span)),
+        }
+        self.chunk.emit(Instruction::SetProperty);
+        Ok(())
+    }
+
     /// `break` or `continue` — a jump whose target is not compiled yet.
     ///
     /// The parser refuses either outside a loop, so an empty stack here is unreachable from
@@ -970,9 +1208,34 @@ fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::StoreLocal(_)
         | Instruction::SetCompletion
         | Instruction::Throw
-        | Instruction::PopHandler => instruction,
+        | Instruction::PopHandler
+        | Instruction::NewObject
+        | Instruction::DuplicateTwo
+        | Instruction::DefineField
+        | Instruction::GetProperty
+        | Instruction::SetProperty
+        | Instruction::DeleteProperty
+        | Instruction::HasProperty => instruction,
     }
 }
+
+/// How deeply an expression may nest before the compiler refuses it.
+///
+/// Not a limit the language has — an arbitrarily deep expression is legal, and every engine
+/// refuses one somewhere. The number matters because two kinds of program come near it from
+/// opposite directions: hand-written code nests a handful deep, and minified code chains
+/// thousands of terms with `+` and `,`, each of which is one more level of tree.
+///
+/// Measured rather than guessed, and the measurement is smaller than it looks: on the 1 MiB main
+/// thread Windows gives a program, a debug build — whose frames are largest — runs out of stack
+/// somewhere between 200 and 400 levels. A test thread has eight times that, which is exactly the
+/// trap: a limit checked only under `cargo test` would be four times too large in a real embedder.
+///
+/// 128 is well inside the smallest of those. It can be that small because the deep shapes are not
+/// nesting: the parser refuses nesting past its own limit (DR-0006), and the one thing it *can*
+/// build arbitrarily deep — a left-leaning operator chain — is compiled with a loop rather than
+/// by recursing. What is left is bounded by the parser before it reaches here.
+const MAX_EXPRESSION_DEPTH: u32 = 128;
 
 /// A refusal with a location.
 fn unsupported(what: &'static str, span: Span) -> CompileError {
@@ -1023,10 +1286,13 @@ mod tests {
             ("x", "a reference to an undeclared name"),
             ("f()", "a call expression"),
             ("[1]", "an array literal"),
-            ("({})", "an object literal"),
+            (
+                "({a})",
+                "a shorthand, spread or method in an object literal",
+            ),
             ("1n", "a BigInt literal"),
-            ("delete x.y", "the delete operator"),
-            ("1 instanceof 2", "the instanceof and in operators"),
+            ("delete x", "deleting a name"),
+            ("1 instanceof 2", "the instanceof operator"),
             ("`a`", "a template literal"),
             ("1 ? b : c", "a reference to an undeclared name"),
             ("/re/", "a regular expression literal"),
@@ -1045,6 +1311,103 @@ mod tests {
                 "the span of {source:?} is inside it"
             );
         }
+    }
+
+    /// An expression nested `depth` levels deep, built rather than parsed.
+    ///
+    /// `!!!…1`, which is the cheapest shape that costs one level of tree per character. The
+    /// parser refuses one this deep long before the compiler would see it (DR-0006), which is
+    /// exactly why it is built here: a guard nothing can reach is a guard nothing can check.
+    fn nested(depth: u32) -> Expr {
+        let mut expression = Expr::new(ExprKind::Number(1.0), Span::new(0, 1));
+        for _ in 0..depth {
+            expression = Expr::new(
+                ExprKind::Unary {
+                    operator: UnaryOperator::LogicalNot,
+                    argument: Box::new(expression),
+                },
+                Span::new(0, 1),
+            );
+        }
+        expression
+    }
+
+    #[test]
+    fn an_expression_is_refused_one_level_past_the_limit_and_not_one_before() {
+        let mut heap = Heap::new();
+        // `nested(n)` is `n` operators over one literal, so it is `n + 1` levels deep. The limit
+        // is on the levels, so `MAX - 1` operators is the deepest that compiles.
+        let deepest = nested(MAX_EXPRESSION_DEPTH - 1);
+        assert!(compile_expression(&deepest, &mut heap).is_ok());
+
+        let one_too_deep = nested(MAX_EXPRESSION_DEPTH);
+        let error = compile_expression(&one_too_deep, &mut heap).expect_err("one level too deep"); // the test is about the error
+        assert_eq!(error.kind, ErrorKind::TooDeep);
+        assert!(error.message().contains("nested too deeply"));
+
+        // …and the counter comes back down, so a compiler that refused once can compile again.
+        // Written with an early return this leaked a level per refusal, which nothing observes
+        // today and would observe the moment one compiler compiled two things.
+        let mut compiler = Compiler::new(&mut heap);
+        assert!(compiler.expression(&one_too_deep).is_err());
+        assert_eq!(compiler.depth, 0);
+        assert!(compiler.expression(&nested(1)).is_ok());
+    }
+
+    #[test]
+    fn a_property_reference_the_parser_cannot_build_is_still_refused() {
+        // The parser wraps an optional chain in `OptionalChain` and refuses `#x` outside a class,
+        // so neither flag reaches the compiler from source. The *tree* can hold them, and a
+        // compiler that ignored them would read `o?.a` as `o.a` — a wrong answer rather than a
+        // refusal — the day the wrapper is handled. So the guards are checked where they can be
+        // reached, which is here.
+        let mut heap = Heap::new();
+        let object = || Box::new(Expr::new(ExprKind::Number(1.0), Span::new(0, 1)));
+        let cases = [
+            (
+                ExprKind::Member {
+                    private: true,
+                    optional: false,
+                    object: object(),
+                    property: "x".into(),
+                },
+                "a private name",
+            ),
+            (
+                ExprKind::Member {
+                    private: false,
+                    optional: true,
+                    object: object(),
+                    property: "x".into(),
+                },
+                "optional chaining",
+            ),
+            (
+                ExprKind::ComputedMember {
+                    optional: true,
+                    object: object(),
+                    property: object(),
+                },
+                "optional chaining",
+            ),
+        ];
+        for (kind, what) in cases {
+            let expression = Expr::new(kind, Span::new(0, 4));
+            let error = compile_expression(&expression, &mut heap).expect_err("refused"); // the test is about the error
+            assert_eq!(error.kind, ErrorKind::Unsupported(what));
+        }
+
+        // A reference that is neither kind of member is refused too — the arm that catches a
+        // tree nobody should have built.
+        let not_a_reference = Expr::new(ExprKind::Number(1.0), Span::new(0, 1));
+        let mut compiler = Compiler::new(&mut heap);
+        let error = compiler
+            .property_reference(&not_a_reference)
+            .expect_err("not a property reference"); // same
+        assert_eq!(
+            error.kind,
+            ErrorKind::Unsupported("a reference to something that is not a property")
+        );
     }
 
     #[test]
