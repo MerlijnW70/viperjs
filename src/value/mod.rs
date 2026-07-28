@@ -313,6 +313,37 @@ impl Value {
     }
 }
 
+/// `CanonicalNumericIndexString` (§7.1.21) — the Number `units` spells, if it spells one exactly.
+///
+/// Answers `None` for a String that is not the *canonical* spelling of any Number. That word is
+/// the whole operation: `"1"` is canonical and `"1.0"`, `"01"`, `"1e0"` and `" 1"` are not, because
+/// none of them is what `ToString` writes for the Number they read as. It is what keeps `a["01"]`
+/// an ordinary named property while `a["1"]` is an element.
+///
+/// `"-0"` is the one exception the specification writes out, and it is not an accident: `-0` is a
+/// Number whose `ToString` is `"0"`, so without step 1 no String would denote it. It is
+/// deliberately *not* an index — see [`crate::heap::PropertyKey`] — but it is canonical.
+///
+/// Here rather than with the keys because it is a conversion, and because it is the one operation
+/// that needs both directions of the Number/String correspondence at once: the round trip closing
+/// is precisely the question it asks.
+pub fn canonical_numeric_index(units: &[u16]) -> Option<f64> {
+    // Step 1.
+    if units == "-0".encode_utf16().collect::<Vec<_>>() {
+        return Some(-0.0);
+    }
+    // Steps 2 and 3. `ToString(ToNumber(arg)) is arg` — an identity, not a comparison of value:
+    // a String that reads as a Number and is written back differently is not canonical, and NaN
+    // is caught by the same test rather than by a rule of its own, since `"NaN"` is written back
+    // as `"NaN"` and so *is* canonical.
+    let number = string_to_number(units);
+    let written = number_to_string(number);
+    if written.encode_utf16().eq(units.iter().copied()) {
+        return Some(number);
+    }
+    None
+}
+
 /// `Number::sameValue` (§6.1.6.1.14), which is not `==` and not `total_cmp` either.
 ///
 /// Written out rather than reached for, because both of the obvious shortcuts are wrong in a way

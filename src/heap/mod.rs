@@ -23,8 +23,18 @@
 //! may reallocate the arena, so a borrow of one string would freeze the heap against every other
 //! use of it. An index survives reallocation, which is the whole reason arenas are shaped this
 //! way — and the reason reading one takes the `Heap` back as an argument.
+//!
+//! # How this module is laid out
+//!
+//! - `property` — [`PropertyKey`], and what an object files under one.
+//! - here — the arena, [`StringId`], and the intern table property keys need.
+
+mod property;
+
+pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
 
 use crate::span::Span;
+use std::collections::HashMap;
 
 /// A String on the heap — a sequence of UTF-16 code units (DR-0004).
 ///
@@ -50,6 +60,17 @@ pub struct Heap {
     /// to change one — so the spare capacity a `Vec` keeps for growth would be paid for by every
     /// string in the program and used by none of them.
     strings: Vec<Box<[u16]>>,
+    /// Where a given sequence of code units was interned, if it ever was.
+    ///
+    /// Only property keys go in here, and [`Heap::intern`] says why they must: two Strings with
+    /// the same contents are two Strings, so `o.a` written twice makes two handles, and a
+    /// property map keyed by a handle would file them under different properties.
+    ///
+    /// The units are held twice — once here as the key and once in `strings`. That is the boring
+    /// implementation: a table that borrowed from the arena would have to hash through it, which
+    /// is a hand-written map rather than the standard library's. Real engines do share the
+    /// storage; doing so here is an M8 experiment with a measurement, not a guess.
+    interned: HashMap<Box<[u16]>, StringId>,
 }
 
 impl Heap {
@@ -95,6 +116,44 @@ impl Heap {
     /// produce the situation — see DR-0010 for the whole of the argument.
     pub fn string(&self, id: StringId) -> Option<&[u16]> {
         self.strings.get(id.0).map(|units| &**units)
+    }
+
+    /// The one String on this heap with these contents, allocating it if there is not one yet.
+    ///
+    /// # Why anything is interned at all
+    ///
+    /// DR-0010 says nothing is, and for values that stays true — `"a" === "a"` compares code
+    /// units, not handles. A property *key* is different: an object files its properties under
+    /// keys, and `o.a = 1; o.a` produces two Strings with the same contents. A map keyed by a
+    /// raw handle would file those as two properties, and the second read would find nothing.
+    ///
+    /// So keys are interned and values are not, and the two are different types for exactly that
+    /// reason — see [`PropertyKey`], whose only constructors go through here.
+    ///
+    /// # What it costs
+    ///
+    /// A hash of the contents per key made, and one copy of the units kept in the table. Nothing
+    /// is ever removed: until the collector exists, an interned key lives as long as the heap.
+    /// That is a leak in the same sense that everything else here is one, and the sweep will
+    /// treat this table the way engines do — weakly.
+    pub fn intern(&mut self, units: &[u16]) -> StringId {
+        if let Some(id) = self.interned.get(units) {
+            return *id;
+        }
+        let id = self.new_string(units.to_vec());
+        self.interned.insert(units.into(), id);
+        id
+    }
+
+    /// The interned String with the same contents as `id`, which may be `id` itself.
+    ///
+    /// What `ToPropertyKey` needs: a String a script computed, filed under the one handle every
+    /// equal String will be filed under. A handle this heap does not know interns as the empty
+    /// String, which is the same answer [`Heap::string`] gives it — see there for why that
+    /// situation is bounded rather than detected.
+    pub fn intern_id(&mut self, id: StringId) -> StringId {
+        let units = self.string(id).unwrap_or(&[]).to_vec();
+        self.intern(&units)
     }
 
     /// How many Strings this heap holds.
