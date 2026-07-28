@@ -29,7 +29,7 @@ use super::{define_method, key};
 /// `ToLength` clamps to `[0, 2^53 - 1]`: a negative length reads as zero and an enormous one as
 /// the largest a Number can index exactly. That is why `{length: -1}` iterates nothing rather
 /// than failing, and why these methods can be handed anything at all without checking first.
-fn length_of(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<u64> {
+pub(super) fn length_of(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<u64> {
     let name = key(heap, "length");
     let value = vm.get_property_key(Value::Object(object), name, heap)?;
     let number = vm.to_number(value, heap)?;
@@ -43,7 +43,7 @@ fn length_of(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<u64> 
 /// which is §7.1.20 steps 2 and 3 exactly. A guard in front of it would be a branch no input
 /// could tell from its absence.
 #[allow(clippy::manual_clamp)] // see the note below
-fn to_length(number: f64) -> u64 {
+pub(super) fn to_length(number: f64) -> u64 {
     const MAX: f64 = 9_007_199_254_740_991.0;
     // Not `clamp`: its own documentation says it answers NaN for a NaN input, and §7.1.20
     // step 2 says a NaN length is zero. `max` then `min` is the pair that gets that right,
@@ -52,7 +52,7 @@ fn to_length(number: f64) -> u64 {
 }
 
 /// The key an index is filed under — the decimal spelling, which is what a property key is.
-fn index_key(heap: &mut Heap, index: u64) -> PropertyKey {
+pub(super) fn index_key(heap: &mut Heap, index: u64) -> PropertyKey {
     PropertyKey::from_units(heap, &index.to_string().encode_utf16().collect::<Vec<_>>())
 }
 
@@ -60,20 +60,30 @@ fn index_key(heap: &mut Heap, index: u64) -> PropertyKey {
 ///
 /// The question that tells a hole from an `undefined`, and the one that makes `[, 1]` and
 /// `[undefined, 1]` behave differently in half of §23.1.3.
-fn has_index(vm: &mut Vm, heap: &mut Heap, object: ObjectId, index: u64) -> Completion<bool> {
+pub(super) fn has_index(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    index: u64,
+) -> Completion<bool> {
     let name = index_key(heap, index);
     let found = vm.has_property_key(Value::Object(object), name, heap)?;
     Ok(found)
 }
 
 /// The value at this index — §7.3.2 `Get`.
-fn get_index(vm: &mut Vm, heap: &mut Heap, object: ObjectId, index: u64) -> Completion<Value> {
+pub(super) fn get_index(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    index: u64,
+) -> Completion<Value> {
     let name = index_key(heap, index);
     vm.get_property_key(Value::Object(object), name, heap)
 }
 
 /// Put a value at this index of an object being built — §7.3.5 `CreateDataPropertyOrThrow`.
-fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Value) {
+pub(super) fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Value) {
     let name = index_key(heap, index);
     let descriptor = PropertyDescriptor {
         value: Some(value),
@@ -86,7 +96,7 @@ fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Value) {
 }
 
 /// `this` as an object — §7.1.18, in the part that does not need a wrapper.
-fn this_object(call: &NativeCall<'_>) -> Completion<ObjectId> {
+pub(super) fn this_object(call: &NativeCall<'_>) -> Completion<ObjectId> {
     match call.this_value {
         Value::Object(object) => Ok(object),
         _ => Err(Abrupt::type_error(
@@ -100,7 +110,7 @@ fn this_object(call: &NativeCall<'_>) -> Completion<ObjectId> {
 /// Checked up front rather than at the first element, because §23.1.3.15 step 3 says so: an empty
 /// array with a callback that is not a function still throws, and a program that relied on the
 /// check being skipped would be relying on the array being empty.
-fn callback(call: &NativeCall<'_>, heap: &Heap) -> Completion<Value> {
+pub(super) fn callback(call: &NativeCall<'_>, heap: &Heap) -> Completion<Value> {
     let function = call.argument(0);
     let callable = matches!(function, Value::Object(object)
         if heap.object(object).is_some_and(|found| found.call().is_some()));
@@ -226,7 +236,12 @@ pub fn index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 ///
 /// A negative index counts from the end, and one past the start is clamped to zero rather than
 /// wrapping — `[1, 2].indexOf(1, -5)` searches the whole array.
-fn start_index(vm: &mut Vm, heap: &mut Heap, value: Value, length: u64) -> Completion<u64> {
+pub(super) fn start_index(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    value: Value,
+    length: u64,
+) -> Completion<u64> {
     // No special case for an absent argument: `ToNumber(undefined)` is NaN, and §23.1.3.17 step 6
     // reads NaN as zero — so the ordinary path already answers what "from the beginning" means.
     let number = vm.to_number(value, heap)?;
@@ -340,23 +355,41 @@ pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// `LengthOfArrayLike` allows up to `2^53 - 1` and an Array's `length` stops at `2^32 - 1`, so an
 /// array-like longer than an Array can be is clamped rather than refused — the methods that build
 /// a result would otherwise fail on an object no Array could have been.
-fn to_index(length: u64) -> u32 {
+pub(super) fn to_index(length: u64) -> u32 {
     u32::try_from(length).unwrap_or(u32::MAX - 1)
 }
 
 /// Build `Array.prototype`'s methods into `heap`.
 pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
     let prototype = realm.array_prototype();
+    use super::{array_edit as edit, array_iterate as iterate};
     for (name, length, native) in [
-        ("filter", 1, filter as crate::heap::Native),
+        ("at", 1, edit::at as crate::heap::Native),
+        ("concat", 1, edit::concat),
+        ("every", 1, iterate::every),
+        ("fill", 1, edit::fill),
+        ("filter", 1, filter),
+        ("find", 1, iterate::find),
+        ("findIndex", 1, iterate::find_index),
+        ("findLast", 1, iterate::find_last),
+        ("findLastIndex", 1, iterate::find_last_index),
         ("forEach", 1, for_each),
+        ("includes", 1, edit::includes),
         ("indexOf", 1, index_of),
         ("join", 1, join),
+        ("lastIndexOf", 1, edit::last_index_of),
         ("map", 1, map),
         ("pop", 0, pop),
         ("push", 1, push),
+        ("reduce", 1, iterate::reduce),
+        ("reduceRight", 1, iterate::reduce_right),
+        ("reverse", 0, edit::reverse),
+        ("shift", 0, edit::shift),
         ("slice", 2, slice),
+        ("some", 1, iterate::some),
+        ("splice", 2, edit::splice),
         ("toString", 0, to_string),
+        ("unshift", 1, edit::unshift),
     ] {
         define_method(heap, realm, prototype, name, length, native);
     }

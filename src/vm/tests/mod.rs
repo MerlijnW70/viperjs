@@ -11,10 +11,12 @@
 //! - `coercion` — what an operator does when an operand is an object.
 //! - `arrays` — §10.4.2's exotic `length`, and the literal that makes one.
 //! - `array_methods` — §23.1.3, and the two of §20.2.3 that reach it.
+//! - `array_more` — the rest of §23.1.3: folding, quantifying, and moving elements.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 
 mod array_methods;
+mod array_more;
 mod arrays;
 mod builtins;
 mod coercion;

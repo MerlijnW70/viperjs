@@ -15,6 +15,8 @@
 //! method that also serves object literals.
 
 pub mod array;
+pub mod array_edit;
+pub mod array_iterate;
 pub mod array_methods;
 pub mod error;
 pub mod function;
