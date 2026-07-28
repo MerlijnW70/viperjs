@@ -105,14 +105,13 @@ fn read_list<'a>(
             .collect();
     }
     let mut items = Vec::new();
-    while let Some(line) = lines.peek() {
-        let Some(item) = line.trim_start().strip_prefix("- ") else {
-            break;
-        };
-        // An indented `- ` under the key; anything at the margin ends the list.
-        if !line.starts_with(char::is_whitespace) {
-            break;
-        }
+    // The `- ` is the whole delimiter. YAML lets a sequence sit at its key's own indentation as
+    // well as under it, so an indentation test here would refuse a list that is written correctly
+    // — and the first line without a `- ` ends the list either way.
+    while let Some(item) = lines
+        .peek()
+        .and_then(|line| line.trim_start().strip_prefix("- "))
+    {
         items.push(item.trim().to_string());
         lines.next();
     }
@@ -175,6 +174,14 @@ mod tests {
         assert_eq!(block.includes, ["assert.js", "propertyHelper.js"]);
         assert!(block.has("noStrict"));
         assert!(!block.has("onlyStrict"));
+
+        // YAML lets a sequence sit at its key's own indentation, and a list written that way is
+        // written correctly. The `- ` is the delimiter; where it starts on the line is not.
+        let flush = "/*---\nincludes:\n- assert.js\n- compareArray.js\ndescription: after\n---*/";
+        let block = Frontmatter::parse(flush).expect("a block"); // same
+        assert_eq!(block.includes, ["assert.js", "compareArray.js"]);
+        // …and the first line without a `- ` ends the list rather than joining it.
+        assert_eq!(block.description, "after");
     }
 
     #[test]
@@ -187,6 +194,17 @@ mod tests {
         assert_eq!(negative.phase, "parse");
         assert_eq!(negative.kind, "SyntaxError");
         assert!(block.has("raw"));
+
+        // A `negative` block is nested, and two keys at the margin are two keys rather than the
+        // inside of the block above them. Read otherwise, a file could acquire an expectation of
+        // failure it never wrote.
+        let flat = "/*---\nnegative:\nphase: parse\ntype: SyntaxError\n---*/";
+        assert!(
+            Frontmatter::parse(flat)
+                .expect("a block")
+                .negative
+                .is_none()
+        ); // same
 
         // Half a negative block is not one. A test that says it must fail without saying how
         // cannot be checked, and reading it as "any failure will do" would pass on the wrong one.

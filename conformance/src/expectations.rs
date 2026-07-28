@@ -201,6 +201,28 @@ mod tests {
     }
 
     #[test]
+    fn a_file_that_is_not_there_is_no_expectations_and_one_that_will_not_open_is_an_error() {
+        // The first run of a new checkout has no file, and starting from nothing is right — every
+        // failure is then a regression, which is exactly what `--bless` is for.
+        let missing = std::env::temp_dir().join("praxis-conformance-no-such-file.txt");
+        let _ = std::fs::remove_file(&missing);
+        assert!(
+            Expectations::read(&missing)
+                .expect("a missing file is empty")
+                .is_empty()
+        ); // the test is about the value
+
+        // Any other failure is not "no expectations". Read as an empty set, a ratchet file that
+        // could not be opened would turn every recorded failure into a regression and every run
+        // into a red one for a reason that is not about the engine at all. A directory is the
+        // portable way to have a path that exists and cannot be read as a file.
+        let directory = std::env::temp_dir().join("praxis-conformance-not-a-file");
+        std::fs::create_dir_all(&directory).expect("a writable temp dir"); // the test needs one
+        assert!(Expectations::read(&directory).is_err());
+        let _ = std::fs::remove_dir_all(&directory);
+    }
+
+    #[test]
     fn a_failure_that_is_written_down_is_not_a_regression_and_one_that_is_not_is() {
         let expectations = Expectations::parse("a.js :: it threw TypeError\n");
         let judgement = expectations.judge(&[

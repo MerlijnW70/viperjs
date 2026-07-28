@@ -68,12 +68,25 @@ impl Runner {
     ///
     /// `assert.js` is included by nearly every test in the suite, so reading it from disk each
     /// time would be most of the harness's work.
-    fn harness(&mut self, name: &str) -> Option<&str> {
-        if !self.harness.contains_key(name) {
-            let text = std::fs::read_to_string(self.root.join("harness").join(name)).ok()?;
-            self.harness.insert(name.to_string(), text);
-        }
-        self.harness.get(name).map(String::as_str)
+    ///
+    /// The error is a sentence rather than a flag because the two ways this fails need different
+    /// answers from whoever reads it: a file that is not there means the checkout is wrong, and a
+    /// file that is there but unreadable means the machine is. Reporting both as "missing" would
+    /// send someone to re-clone a suite they already have.
+    fn harness(&mut self, name: &str) -> Result<&str, String> {
+        use std::collections::hash_map::Entry;
+
+        // `entry` rather than `contains_key` then `get`: the second lookup would be a branch on a
+        // key just inserted, which no test could distinguish from its absence.
+        Ok(match self.harness.entry(name.to_string()) {
+            Entry::Occupied(slot) => slot.into_mut(),
+            Entry::Vacant(slot) => {
+                let path = self.root.join("harness").join(name);
+                let text = std::fs::read_to_string(&path)
+                    .map_err(|error| format!("{}: {error}", path.display()))?;
+                slot.insert(text)
+            }
+        })
     }
 
     /// Run one file, in both modes if its flags allow both.
@@ -127,6 +140,14 @@ impl Runner {
         if block.has("CanBlockIsFalse") || block.has("CanBlockIsTrue") {
             return Verdict::Skipped("agents are not implemented".to_string());
         }
+        // An `async` test signals that it finished by calling `$DONE`, and a host that does not
+        // provide `$DONE` cannot tell a test that completed from one that never got there —
+        // both simply end without throwing. Running it would manufacture passes.
+        if block.has("async") {
+            return Verdict::Skipped(
+                "an async test reports through $DONE, which needs a host function".to_string(),
+            );
+        }
         // `raw` means exactly the text and nothing else — no harness, no strict prologue. It is
         // used by tests that are *about* the prologue, so prepending one would test the reverse.
         let mut program = String::new();
@@ -134,29 +155,18 @@ impl Runner {
             program.push_str("\"use strict\";\n");
         }
         if !block.has("raw") {
-            // `INTERPRETING.md`: every non-raw test gets these two, whether it asks or not.
-            for name in ["assert.js", "sta.js"] {
-                let Some(text) = self.harness(name) else {
-                    return Verdict::Skipped(format!("the harness file {name} is missing"));
-                };
-                program.push_str(text);
-                program.push('\n');
-            }
-            if block.has("async") {
-                let Some(text) = self.harness("doneprintHandle.js") else {
-                    return Verdict::Skipped(
-                        "the harness file doneprintHandle.js is missing".to_string(),
-                    );
-                };
-                program.push_str(text);
-                program.push('\n');
-            }
-            for name in &block.includes {
-                let Some(text) = self.harness(name) else {
-                    return Verdict::Skipped(format!("the harness file {name} is missing"));
-                };
-                program.push_str(text);
-                program.push('\n');
+            // `INTERPRETING.md`: every non-raw test gets `assert.js` and `sta.js` whether it asks
+            // or not, and then whatever the file named. In that order, because an include may use
+            // `assert` at its own top level, and several do.
+            let always = ["assert.js", "sta.js"].into_iter();
+            for name in always.chain(block.includes.iter().map(String::as_str)) {
+                match self.harness(name) {
+                    Err(why) => return Verdict::Skipped(why),
+                    Ok(text) => {
+                        program.push_str(text);
+                        program.push('\n');
+                    }
+                }
             }
         }
         program.push_str(source);
@@ -282,6 +292,38 @@ mod tests {
         evaluate(source, &block)
     }
 
+    /// A checkout with a hand-written harness, so that what gets prepended is observable.
+    ///
+    /// The real `assert.js` needs globals praxis has not built, so a test about *assembly* would
+    /// be drowned by one skip reason. These stand in for it and are small enough that what each
+    /// file contributes can be seen in the verdict.
+    fn checkout(name: &str) -> PathBuf {
+        let root = std::env::temp_dir().join(format!("praxis-conformance-{name}"));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("harness")).expect("a writable temp dir"); // the test needs one
+        std::fs::create_dir_all(root.join("test")).expect("writable"); // same
+        for (file, text) in [
+            ("assert.js", "function assert(ok) { if (!ok) { throw 1; } }"),
+            ("sta.js", "var fromSta = 1;"),
+            // An include that uses `assert` at its top level, which only works if the two that
+            // are always there were written out first.
+            (
+                "uses-assert.js",
+                "assert(fromSta === 1); var fromInclude = 2;",
+            ),
+        ] {
+            std::fs::write(root.join("harness").join(file), text).expect("writable"); // same
+        }
+        root
+    }
+
+    /// Write one test into a checkout and run it.
+    fn run(root: &Path, source: &str) -> Vec<Outcome> {
+        let file = root.join("test").join("one.js");
+        std::fs::write(&file, source).expect("writable"); // the test needs the file
+        Runner::new(root).run_file(&file)
+    }
+
     #[test]
     fn a_positive_test_passes_by_running_to_the_end() {
         assert_eq!(
@@ -330,6 +372,160 @@ mod tests {
             verdict("/*---\ndescription: nonsense\n---*/\nvar 1 = ;"),
             Verdict::Failed(_)
         ));
+    }
+
+    #[test]
+    fn a_strict_run_prepends_the_prologue_and_a_sloppy_one_does_not() {
+        // Observable because §12.9.3.1 keeps Annex B's legacy octal literals out of strict code
+        // and B.1.1 allows them everywhere else — so the same source parses in one mode and not
+        // the other, and only a prologue that is really there can make that happen.
+        let root = checkout("prologue");
+        let outcomes = run(&root, "/*---\ndescription: x\n---*/\nvar x = 010;");
+        let strict = outcomes
+            .iter()
+            .find(|run| run.strict)
+            .expect("a strict run"); // the test is about it
+        let sloppy = outcomes
+            .iter()
+            .find(|run| !run.strict)
+            .expect("a sloppy run"); // same
+        assert!(matches!(strict.verdict, Verdict::Failed(_)), "{strict:?}");
+        assert_eq!(sloppy.verdict, Verdict::Passed);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn what_this_harness_cannot_honestly_run_is_skipped_and_says_which() {
+        let root = checkout("declined");
+        // A module is a different goal symbol with its own scoping and `import` machinery.
+        let module = run(&root, "/*---\nflags: [module]\n---*/\nassert(true);");
+        assert!(matches!(&module[0].verdict, Verdict::Skipped(why) if why.contains("module")));
+        // …and it is one run rather than two: a module is always strict, so there is no second
+        // mode to measure.
+        assert_eq!(module.len(), 1);
+        assert!(!module[0].strict);
+
+        // An async test reports completion by calling `$DONE`. With no host function to receive
+        // it, a test that finished and one that never got there both simply end without
+        // throwing — so running it would manufacture a pass.
+        let done = run(&root, "/*---\nflags: [async]\n---*/\nassert(true);");
+        assert!(matches!(&done[0].verdict, Verdict::Skipped(why) if why.contains("$DONE")));
+
+        // Both spellings of the agent flag, because each is a separate claim about the host.
+        for flag in ["CanBlockIsFalse", "CanBlockIsTrue"] {
+            let outcomes = run(
+                &root,
+                &format!("/*---\nflags: [{flag}]\n---*/\nassert(true);"),
+            );
+            assert!(
+                matches!(&outcomes[0].verdict, Verdict::Skipped(why) if why.contains("agents")),
+                "{flag}: {outcomes:?}"
+            );
+        }
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_raw_test_is_one_run_and_it_is_the_sloppy_one() {
+        // `raw` means exactly the text: no harness, and no prologue either. The tests that use it
+        // are largely tests *about* the prologue, so a strict run of one would check the reverse
+        // of what it was written to check.
+        let root = checkout("raw");
+        let outcomes = run(&root, "/*---\nflags: [raw]\n---*/\nvar x = 1;");
+        assert_eq!(outcomes.len(), 1);
+        assert!(!outcomes[0].strict);
+        assert_eq!(outcomes[0].verdict, Verdict::Passed);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn every_test_gets_assert_and_sta_whether_it_asked_for_them_or_not() {
+        // `INTERPRETING.md` says so, and a test that named neither still uses what they define —
+        // most of test262 calls `assert` without an `includes` line anywhere in the file.
+        let root = checkout("always");
+        let outcomes = run(
+            &root,
+            "/*---\ndescription: x\n---*/\nassert(fromSta === 1);",
+        );
+        assert!(outcomes.iter().all(|run| run.verdict == Verdict::Passed));
+
+        // `raw` means exactly the text and nothing else. Nothing was prepended, so the name that
+        // `sta.js` would have declared is not declared, and the run never starts.
+        let outcomes = run(&root, "/*---\nflags: [raw]\n---*/\nvar x = fromSta;");
+        assert!(matches!(outcomes[0].verdict, Verdict::Skipped(_)));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn an_include_comes_after_the_two_that_are_always_there() {
+        // Not a formality: an include may use `assert` at its own top level, and this one does.
+        // Written out first it would be a reference to a name nothing has declared yet.
+        let root = checkout("order");
+        let source = "/*---\nincludes: [uses-assert.js]\n---*/\nassert(fromInclude === 2);";
+        let outcomes = run(&root, source);
+        assert!(outcomes.iter().all(|run| run.verdict == Verdict::Passed));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_file_with_neither_mode_flag_is_two_runs_and_one_with_a_flag_is_one() {
+        // §11.2.2 — the same source means different things in the two modes, so a file that names
+        // neither has to be measured in both or half of any disagreement goes unseen.
+        let root = checkout("modes");
+        let both = run(&root, "/*---\ndescription: x\n---*/\nassert(true);");
+        assert_eq!(both.len(), 2);
+        assert_eq!(both.iter().filter(|run| run.strict).count(), 1);
+
+        let strict = run(&root, "/*---\nflags: [onlyStrict]\n---*/\nassert(true);");
+        assert_eq!(strict.len(), 1);
+        assert!(strict[0].strict);
+
+        let sloppy = run(&root, "/*---\nflags: [noStrict]\n---*/\nassert(true);");
+        assert_eq!(sloppy.len(), 1);
+        assert!(!sloppy[0].strict);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_harness_file_that_is_not_there_says_which_one_and_where() {
+        // "missing" alone would send someone to re-clone a suite they already have. The path is
+        // what tells a wrong checkout from an unreadable one.
+        let root = checkout("missing");
+        let outcomes = run(&root, "/*---\nincludes: [nosuch.js]\n---*/\nassert(true);");
+        let Verdict::Skipped(why) = &outcomes[0].verdict else {
+            panic!("a missing include cannot be run"); // the test is about the skip
+        };
+        assert!(why.contains("nosuch.js"), "{why}");
+
+        // A file that is not a test at all is not run either, and says which of the two it is.
+        let file = root.join("test").join("bare.js");
+        std::fs::write(&file, "var x = 1;").expect("writable"); // the test needs the file
+        let outcomes = Runner::new(&root).run_file(&file);
+        assert!(
+            matches!(&outcomes[0].verdict, Verdict::Skipped(why) if why.contains("frontmatter"))
+        );
+        // Recorded as the sloppy run, because there is only one of it — a name that said
+        // "(strict)" would claim a mode was measured when nothing was.
+        assert!(!outcomes[0].strict);
+
+        // …and neither is a file that cannot be read, which on every platform includes a
+        // directory. Also one run, and also the sloppy one.
+        let outcomes = Runner::new(&root).run_file(&root.join("test"));
+        assert_eq!(outcomes.len(), 1);
+        assert!(!outcomes[0].strict);
+        assert!(matches!(outcomes[0].verdict, Verdict::Skipped(_)));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_test_is_named_by_its_path_below_test_slash() {
+        // The name is what the expectations file keys on, so it has to be the same on a machine
+        // whose checkout is somewhere else — and the same on Windows, whose paths are otherwise
+        // spelled with backslashes.
+        let root = checkout("naming");
+        let outcomes = run(&root, "/*---\ndescription: x\n---*/\nassert(true);");
+        assert_eq!(outcomes[0].name, "one.js");
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

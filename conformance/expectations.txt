@@ -236,134 +236,6 @@ language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-i
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
@@ -524,132 +396,10 @@ language/expressions/dynamic-import/syntax/valid/top-level-import-source-empty-s
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/statements/await-using/Symbol.asyncDispose-getter.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.asyncDispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.asyncDispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.asyncDispose-method-called-with-correct-this.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.asyncDispose-method-not-async.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.asyncDispose-method-not-async.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.dispose-getter.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.dispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.dispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/Symbol.dispose-method-called-with-correct-this.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-Symbol.asyncDispose-allows-non-promise-return-value.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-Symbol.asyncDispose-allows-non-promise-return-value.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-Symbol.asyncDispose-allows-promiselike-return-value.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-Symbol.asyncDispose-allows-promiselike-return-value.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-allows-null-initializer.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-allows-null-initializer.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-allows-undefined-initializer.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-allows-undefined-initializer.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-does-not-imply-await-if-not-evaluated.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-does-not-imply-await-if-not-evaluated.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-implies-await-if-evaluated.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/await-using-implies-await-if-evaluated.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/block-local-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/block-local-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/block-local-use-before-initialization-in-declaration-statement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/block-local-use-before-initialization-in-declaration-statement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/block-local-use-before-initialization-in-prior-statement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/block-local-use-before-initialization-in-prior-statement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-arrow.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-arrow.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-class.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-class.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-cover.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-cover.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-fn.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-fn.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-gen.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/fn-name-gen.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/function-local-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/function-local-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/function-local-use-before-initialization-in-declaration-statement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/function-local-use-before-initialization-in-declaration-statement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/function-local-use-before-initialization-in-prior-statement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/function-local-use-before-initialization-in-prior-statement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.asyncDispose-property-once.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.asyncDispose-property-once.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-null.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-null.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-undefined.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-undefined.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.dispose-property-once.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-Symbol.dispose-property-once.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-does-not-read-Symbol.dispose-if-Symbol.asyncDispose-exists.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/gets-initializer-does-not-read-Symbol.dispose-if-Symbol.asyncDispose-exists.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/global-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/global-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/global-use-before-initialization-in-declaration-statement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/global-use-before-initialization-in-declaration-statement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/global-use-before-initialization-in-prior-statement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/global-use-before-initialization-in-prior-statement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncgeneratorbody.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-block.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-block.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-each-iteration-of-forofstatement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-each-iteration-of-forofstatement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-forstatement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-forstatement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws-in-forstatement-head.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncgeneratorbody.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-block.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-block.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-each-iteration-of-forofstatement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-each-iteration-of-forofstatement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-forstatement.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-forstatement.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws-in-forstatement-head.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/multiple-resources-disposed-in-reverse-order.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/multiple-resources-disposed-in-reverse-order.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-multiple-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-allows-bindingidentifier.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-allows-bindingidentifier.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-multiple-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-invalid-assignment-next-expression-for.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-invalid-assignment-next-expression-for.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js :: it did not parse: this expression cannot be assigned to
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js (strict) :: it did not parse: this expression cannot be assigned to
-language/statements/await-using/throws-error-as-is-if-only-one-error-during-disposal.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-error-as-is-if-only-one-error-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-null.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-null.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-undefined.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-undefined.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-not-callable.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-not-callable.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-null.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-null.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-undefined.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-undefined.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.dispose-property-not-callable.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-Symbol.dispose-property-not-callable.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-missing-both-Symbol.asyncDispose-and-Symbol.dispose.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-missing-both-Symbol.asyncDispose-and-Symbol.dispose.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-not-object.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-if-initializer-not-object.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js :: it did not parse: expected `;`, found an identifier
-language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/class-element-decorator-call-expr-identifier-reference.js :: it did not parse: unexpected character
@@ -677,70 +427,6 @@ language/statements/class/static-init-arguments-functions.js :: it did not parse
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
-language/statements/for-await-of/async-func-decl-dstr-array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
-language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
 language/statements/for-of/dstr/array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
@@ -772,8 +458,6 @@ language/statements/for-of/dstr/obj-id-init-order.js (strict) :: it did not pars
 language/statements/for-of/dstr/obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
-language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-fresh-binding-per-iteration.js :: it did not parse: expected `;`, found an identifier
@@ -812,10 +496,6 @@ language/statements/using/global-use-before-initialization-in-declaration-statem
 language/statements/using/global-use-before-initialization-in-declaration-statement.js (strict) :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
 language/statements/using/global-use-before-initialization-in-prior-statement.js :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
 language/statements/using/global-use-before-initialization-in-prior-statement.js (strict) :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
-language/statements/using/initializer-disposed-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
-language/statements/using/initializer-disposed-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/using/initializer-disposed-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
-language/statements/using/initializer-disposed-at-end-of-asyncgeneratorbody.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-block.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-block.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-forstatement.js :: it did not parse: expected `;`, found an identifier
