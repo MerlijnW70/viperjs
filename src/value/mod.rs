@@ -49,10 +49,17 @@
 //!
 //! - `string_to_number` — §7.1.4.1's grammar, which is the only thing here that reads a value
 //!   character by character rather than looking it up in a table.
+//! - `number_to_string` — §6.1.6.1.20, the other direction, which decides how many digits a
+//!   Number needs and where the point goes.
 //! - here — [`Value`] itself, the conversions and the three equality relations.
+//!
+//! The two directions are checked against each other rather than only against a table: reading
+//! back what was written must give the same Number, for any Number at all.
 
+mod number_to_string;
 mod string_to_number;
 
+use self::number_to_string::number_to_string;
 use self::string_to_number::string_to_number;
 use crate::heap::{Heap, StringId};
 
@@ -140,6 +147,31 @@ impl Value {
             // text that is not a `StrNumericLiteral`.
             Self::String(id) => heap.string(*id).map_or(f64::NAN, string_to_number),
         }
+    }
+
+    /// `ToString` (§7.1.17) — the String a value is written as.
+    ///
+    /// Takes the heap by `&mut` because the answer is a String and a String has to live
+    /// somewhere; this is the first operation here that *makes* a value rather than reading one.
+    /// A String argument is returned unchanged rather than copied, which §7.1.17 says by
+    /// returning the argument itself and which is why this may hand back the handle it was given.
+    ///
+    /// Total for the types that are here, and it will not stay that way for the same reason
+    /// [`Value::to_number`] will not: §7.1.17 throws a **TypeError** for a Symbol, and reaches
+    /// user code for an Object.
+    pub fn to_string(&self, heap: &mut Heap) -> StringId {
+        // The four constants are spelled out rather than shared, because §7.1.17's table is a
+        // table: `String(null)` is `"null"` and not `typeof null`, which is `"object"`.
+        let text = match self {
+            Self::Undefined => "undefined".to_string(),
+            Self::Null => "null".to_string(),
+            Self::Boolean(true) => "true".to_string(),
+            Self::Boolean(false) => "false".to_string(),
+            Self::Number(number) => number_to_string(*number),
+            Self::String(id) => return *id,
+        };
+        // Every one of those is ASCII, so the UTF-16 encoding is a widening and cannot fail.
+        heap.new_string(text.encode_utf16().collect())
     }
 
     /// `ToIntegerOrInfinity` (§7.1.5) — the value truncated towards zero, or ±∞.
@@ -557,6 +589,46 @@ mod tests {
                 "SameValueZero of {left:?} and {right:?}"
             );
         }
+    }
+
+    #[test]
+    fn to_string_writes_each_type_the_way_the_table_says_and_not_the_way_typeof_does() {
+        let mut heap = Heap::new();
+        let table = [
+            (UNDEFINED, "undefined"),
+            // §7.1.17's row, not §13.5.3's: `String(null)` is `"null"` where `typeof null` is
+            // `"object"`. The two tables disagree here and nowhere else.
+            (NULL, "null"),
+            (boolean(true), "true"),
+            (boolean(false), "false"),
+            (number(1.5), "1.5"),
+            (number(-0.0), "0"),
+            (number(f64::NAN), "NaN"),
+            (number(f64::NEG_INFINITY), "-Infinity"),
+            (number(1e21), "1e+21"),
+        ];
+        for (value, expected) in table {
+            let id = value.to_string(&mut heap);
+            let units: Vec<u16> = expected.encode_utf16().collect();
+            assert_eq!(heap.string(id), Some(units.as_slice()), "String({value:?})");
+        }
+    }
+
+    #[test]
+    fn to_string_of_a_string_hands_back_the_same_string_rather_than_a_copy() {
+        // §7.1.17 returns the argument itself for a String, and this is where that is visible:
+        // no second String appears on the heap, and the handle that comes back is the one that
+        // went in. A copy would be correct in every observable way and would still be wrong —
+        // `String(s)` in a loop would grow the heap without bound.
+        let mut heap = Heap::new();
+        let original = heap.new_string("abc".encode_utf16().collect());
+        let before = heap.string_count();
+        let returned = Value::String(original).to_string(&mut heap);
+        assert_eq!(returned, original);
+        assert_eq!(heap.string_count(), before);
+        // …while every other type does allocate, since its text has to live somewhere.
+        let _ = NULL.to_string(&mut heap);
+        assert_eq!(heap.string_count(), before + 1);
     }
 
     #[test]
