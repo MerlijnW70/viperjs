@@ -306,7 +306,7 @@ mod tests {
         let realm = Realm::new(&mut heap);
         let environment = heap.new_environment(None, 0);
         let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
-        let function = heap.new_function(realm.function_prototype(), body, environment);
+        let function = heap.new_function(realm.function_prototype(), body, environment, None);
         realm.make_constructor(&mut heap, function);
 
         let on_the_function = attributes(&heap, function, "prototype").expect("made"); // the test is about it

@@ -24,6 +24,7 @@ use crate::heap::define::{Validation, apply, validate};
 use crate::heap::{
     Callable, DefineOutcome, EnvironmentId, Heap, Native, Property, PropertyDescriptor, PropertyKey,
 };
+use crate::value::Value;
 use std::rc::Rc;
 
 /// An object on the heap.
@@ -62,6 +63,16 @@ pub struct Object {
     /// A closure is this field. The call that made the function is long gone by the time the
     /// function runs, and the variables it could see are still here because this holds them.
     environment: Option<EnvironmentId>,
+    /// The `this` an arrow was written beside — §10.2's `[[ThisMode]]` of `lexical`.
+    ///
+    /// `None` for every function that binds its own, which is all of them but arrows. Present, it
+    /// is the same idea as `environment` one field up and for the same reason: the call that made
+    /// the arrow is gone by the time the arrow runs, so the `this` it could see has to be *held*
+    /// rather than looked for. §9.1.1.3 words it as a function environment with no `[[ThisBinding]]`
+    /// whose `ResolveThisBinding` walks outward; the environment that walk arrives at is exactly
+    /// the one running when the arrow was made, so recording its `this` here is that walk, done
+    /// once and in advance.
+    lexical_this: Option<Value>,
     /// Whether this is §10.4.2's exotic Array, whose `length` and indices move each other.
     pub(super) array: bool,
     /// The own properties, in the order they were created.
@@ -85,6 +96,7 @@ impl Object {
             array: false,
             call: None,
             environment: None,
+            lexical_this: None,
             properties: Vec::new(),
         }
     }
@@ -110,6 +122,14 @@ impl Object {
     /// The environment this function was written in, if it is a function at all.
     pub fn environment(&self) -> Option<EnvironmentId> {
         self.environment
+    }
+
+    /// The `this` this function took from around it, if it is an arrow.
+    ///
+    /// `None` means the function binds `this` from the call, which is every function but an arrow
+    /// — and also every non-function, which has no `this` to speak of either way.
+    pub fn lexical_this(&self) -> Option<Value> {
+        self.lexical_this
     }
 
     /// `[[IsExtensible]]` (§10.1.3).
@@ -216,16 +236,22 @@ impl Heap {
     ///
     /// Ordinary in every way but one: it has a `[[Call]]`, which is what makes `typeof` say
     /// `"function"` and what a call expression looks for.
+    ///
+    /// `lexical_this` is `Some` only for an arrow, and holds the `this` in force where the arrow
+    /// was written — §10.2.3 step 6's `[[ThisMode]]` of `lexical`, captured rather than resolved.
+    /// Every other function is handed its `this` by the call, so it passes `None`.
     pub fn new_function(
         &mut self,
         prototype: ObjectId,
         body: Rc<Chunk>,
         environment: EnvironmentId,
+        lexical_this: Option<Value>,
     ) -> ObjectId {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Bytecode(body));
         object.environment = Some(environment);
+        object.lexical_this = lexical_this;
         self.objects.push(Some(object));
         id
     }

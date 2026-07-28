@@ -404,16 +404,28 @@ impl Vm {
                     // The environment the function is *written* in, not the one it will run
                     // in. That is the whole of a closure: `counter()` returns a function that
                     // still holds the environment `counter`'s call made, after the call is gone.
+                    //
+                    // An arrow captures the `this` in force here for exactly the same reason and
+                    // at exactly the same moment (§10.2.3 step 6). Reading it at *call* time
+                    // instead would be dynamic `this` wearing a lexical name: the two agree only
+                    // while the arrow is called from inside the call that made it.
+                    let lexical_this = body.is_arrow().then_some(self.this_value);
                     let object = heap.new_function(
                         self.realm.function_prototype(),
                         body.clone(),
                         self.environment,
+                        lexical_this,
                     );
                     // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
                     // object, and that object gets a `constructor` back. The pair is what makes
                     // `new f() instanceof f` true, and it is made eagerly because a function may
                     // be constructed with at any time — including before anything reads it.
-                    self.realm.make_constructor(heap, object);
+                    //
+                    // An arrow gets neither. §15.3 gives it no `[[Construct]]`, so a `prototype`
+                    // would be an object nothing could ever inherit from.
+                    if !body.is_arrow() {
+                        self.realm.make_constructor(heap, object);
+                    }
                     self.stack.push(Value::Object(object));
                 }
                 Instruction::Call(count) | Instruction::CallMethod(count) => {

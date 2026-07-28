@@ -15,11 +15,13 @@
 //! - `array_more` — the rest of §23.1.3: folding, quantifying, and moving elements.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
+//! - `arrows` — §15.3, and the `this` an arrow does not bind.
 
 mod accessors;
 mod array_methods;
 mod array_more;
 mod arrays;
+mod arrows;
 mod builtins;
 mod coercion;
 mod functions;

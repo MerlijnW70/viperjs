@@ -54,6 +54,7 @@ impl Vm {
             )?;
             return Ok(());
         };
+        let lexical_this = heap.object(object).and_then(Object::lexical_this);
         let Some(callable) = heap.object(object).and_then(Object::call).cloned() else {
             self.throw_type_error(
                 Abrupt::type_error("what was called is not a function"),
@@ -84,6 +85,18 @@ impl Vm {
             }
             Callable::Bytecode(body) => body,
         };
+        // §15.3 — an arrow has no `[[Construct]]`, so `new (() => {})` is a TypeError rather than
+        // an object nothing could be an instance of.
+        if body.is_arrow() && how == Entry::Construct {
+            self.throw_type_error(
+                Abrupt::type_error("an arrow function is not a constructor"),
+                heap,
+                chunk,
+                current,
+                at,
+            )?;
+            return Ok(());
+        }
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
         // different in each of the three ways in.
         let receiver = match how {
@@ -150,7 +163,15 @@ impl Vm {
             },
         });
         self.environment = environment;
-        self.this_value = receiver;
+        // §10.2.1.2 step 1 — an arrow's `[[ThisMode]]` is `lexical`, so `OrdinaryCallBindThis`
+        // returns without binding anything and the receiver computed above is discarded. What the
+        // body sees instead is the `this` the arrow was *written* beside, which it has held since
+        // it was made. This is why `f.call(other)` cannot move an arrow's `this` and why passing
+        // one as a callback keeps it: neither is a place the arrow was written.
+        self.this_value = match lexical_this {
+            Some(captured) => captured,
+            None => receiver,
+        };
         *current = Some(body);
         *at = 0;
         Ok(())

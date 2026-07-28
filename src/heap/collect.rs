@@ -127,6 +127,14 @@ impl Heap {
             if let Some(environment) = object.environment() {
                 self.mark_environment(environment, marked);
             }
+            // An arrow's captured `this` is reachable *through the arrow*, and nothing else may
+            // be holding it: `function F() { return () => this; }` leaves the constructed object
+            // alive only because the arrow it returned points at it.
+            match object.lexical_this() {
+                Some(Value::Object(reached)) => pending.push(reached),
+                Some(other) => self.mark_value(other, marked),
+                None => {}
+            }
             for key in object.own_property_keys(self) {
                 // A key is a String and is reachable *because* it is a key: a property nothing
                 // else names still has its name.
@@ -400,7 +408,7 @@ mod tests {
         assert!(heap.set_variable(captured, 0, Value::Object(held)));
         let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
         let prototype = heap.new_object(None);
-        let function = heap.new_function(prototype, body, captured);
+        let function = heap.new_function(prototype, body, captured, None);
 
         let roots = Roots {
             values: vec![Value::Object(function)],
@@ -410,6 +418,42 @@ mod tests {
         // The variable the closure can still read is still there, which is the property that
         // makes a closure work at all.
         assert!(heap.object(held).is_some());
+    }
+
+    #[test]
+    fn an_arrow_keeps_the_this_it_closed_over() {
+        // §15.3's captured `this` is an edge in the object graph like any other, and it is the
+        // *only* one holding the receiver: `function F() { return () => this; }` leaves nothing
+        // else pointing at the constructed object. A collector that walked the environment but
+        // not this field would free the object the arrow is about to answer with — a
+        // use-after-free with the types intact, which is the wrong kind of failure.
+        let mut heap = Heap::new();
+        let environment = heap.new_environment(None, 0);
+        let receiver = heap.new_object(None);
+        let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
+        let prototype = heap.new_object(None);
+        let arrow = heap.new_function(prototype, body, environment, Some(Value::Object(receiver)));
+
+        let roots = Roots {
+            values: vec![Value::Object(arrow)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(receiver).is_some());
+        // …and a captured String is kept for the same reason, a primitive `this` being reachable
+        // exactly as far as the arrow is.
+        let mut heap = Heap::new();
+        let environment = heap.new_environment(None, 0);
+        let text = heap.intern(&"held".encode_utf16().collect::<Vec<_>>());
+        let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
+        let prototype = heap.new_object(None);
+        let arrow = heap.new_function(prototype, body, environment, Some(Value::String(text)));
+        let roots = Roots {
+            values: vec![Value::Object(arrow)],
+            ..Roots::default()
+        };
+        assert_eq!(heap.collect(&roots).strings, 0);
+        assert!(heap.string(text).is_some());
     }
 
     #[test]

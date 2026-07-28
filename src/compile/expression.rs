@@ -296,7 +296,8 @@ impl Compiler<'_> {
             // §15.2.5 — a function expression. The object is made where the expression is
             // *evaluated*, so a `function` keyword inside a loop makes one object per iteration.
             ExprKind::Function(function) => self.make_function(function, span),
-            ExprKind::Arrow(_) => Err(unsupported("an arrow function", span)),
+            // §15.3 — an arrow, which is a function expression that keeps the `this` around it.
+            ExprKind::Arrow(arrow) => self.make_arrow(arrow, span),
             ExprKind::Class(_) => Err(unsupported("a class expression", span)),
             ExprKind::Template(_) => Err(unsupported("a template literal", span)),
             ExprKind::TaggedTemplate { .. } => Err(unsupported("a tagged template", span)),

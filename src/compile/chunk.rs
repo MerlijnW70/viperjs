@@ -22,6 +22,12 @@ pub struct Chunk {
     pub(super) constants: Vec<Value>,
     pub(super) locals: usize,
     pub(super) parameters: usize,
+    /// Whether this body is an arrow's — §15.3.
+    ///
+    /// An arrow has no `this` of its own, no `prototype`, and no `[[Construct]]`. All three come
+    /// from the same fact: §15.3 makes it a function *expression* over the scope it was written
+    /// in rather than a thing you can be inside of, so `this` is whatever it was one line above.
+    pub(super) arrow: bool,
     /// The bodies of the functions written inside this one, in the order they were met.
     ///
     /// An `Rc` because a function object has to outlive the code that made it — `var f = g()`
@@ -259,13 +265,15 @@ impl Chunk {
     /// is here so that a chunk the compiler would never produce can be *written*, which is the
     /// only way to reach [`crate::vm::Fault`] and therefore the only way to test that a malformed
     /// chunk is answered rather than crashed on.
+    /// Everything but the code and the constants is left at its default, and *deliberately* not
+    /// restated: a hand-built chunk is never a callee, so a field like `arrow` could be set to
+    /// anything here without any test being able to tell. Written twice, the second copy would be
+    /// a value no test can reach — so it is written once, where the compiler also gets it.
     pub fn from_parts(code: Vec<Instruction>, constants: Vec<Value>) -> Self {
         Self {
             code,
             constants,
-            locals: 0,
-            parameters: 0,
-            functions: Vec::new(),
+            ..Self::default()
         }
     }
 
@@ -289,6 +297,11 @@ impl Chunk {
     /// `var` readable before its declaration and holding nothing.
     pub fn locals(&self) -> usize {
         self.locals
+    }
+
+    /// Whether this body is an arrow's, and so has no `this` of its own.
+    pub fn is_arrow(&self) -> bool {
+        self.arrow
     }
 
     /// Point a jump at a target that is already known, which a backward jump's is.
