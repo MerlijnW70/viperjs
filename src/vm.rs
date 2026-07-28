@@ -20,7 +20,7 @@
 //! either an operation that can fail or a `throw` statement, and both arrive with the statements.
 
 use crate::ast::UnaryOperator;
-use crate::compile::{Chunk, Instruction};
+use crate::compile::{Chunk, Instruction, ShortCircuit};
 use crate::heap::Heap;
 use crate::value::{Value, apply_binary};
 
@@ -34,6 +34,11 @@ pub enum Fault {
     StackUnderflow,
     /// A `Constant` instruction pointed past the end of the constant table.
     MissingConstant,
+    /// A jump named an instruction past the end of the chunk.
+    ///
+    /// Includes the placeholder an unpatched forward jump carries, which is `u32::MAX` precisely
+    /// so that forgetting to patch one is loud rather than a jump to somewhere plausible.
+    JumpOutOfRange,
     /// The chunk finished without leaving exactly one value behind.
     ///
     /// An expression evaluates to one value. Zero means the chunk did nothing; more than one
@@ -63,7 +68,13 @@ impl Vm {
     /// the chunk was wrong, not that the interpreter is now untrustworthy.
     pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Value, Fault> {
         self.stack.clear();
-        for instruction in chunk.code() {
+        let code = chunk.code();
+        let mut at = 0_usize;
+        // A counter rather than an iterator, because a jump moves it. Nothing bounds how long
+        // this runs: a backward jump is how a loop will be built, and a script that loops forever
+        // is a script that loops forever. DR-0002 is about panics, not about halting.
+        while let Some(instruction) = code.get(at) {
+            at += 1;
             match *instruction {
                 Instruction::Constant(index) => {
                     let value = chunk.constant(index).ok_or(Fault::MissingConstant)?;
@@ -80,6 +91,35 @@ impl Vm {
                     let left = self.pop()?;
                     self.stack.push(apply_binary(operator, left, right, heap));
                 }
+                Instruction::Jump(target) => at = jump_to(target, code.len())?,
+                Instruction::JumpIfFalse(target) => {
+                    // The test is consumed either way — this is the conditional operator's jump,
+                    // and `a ? b : c` evaluates to `b` or `c` and never to `a`.
+                    if !self.pop()?.to_boolean(heap) {
+                        at = jump_to(target, code.len())?;
+                    }
+                }
+                Instruction::JumpKeeping(condition, target) => {
+                    // Peeked, not popped: if the short circuit fires, this value *is* the answer.
+                    let deciding = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let stop = match condition {
+                        ShortCircuit::WhenFalsy => !deciding.to_boolean(heap),
+                        ShortCircuit::WhenTruthy => deciding.to_boolean(heap),
+                        ShortCircuit::WhenNotNullish => {
+                            !matches!(deciding, Value::Undefined | Value::Null)
+                        }
+                    };
+                    if stop {
+                        at = jump_to(target, code.len())?;
+                    } else {
+                        // It did not decide, so it is not the answer and the right operand's
+                        // value will take its place.
+                        self.pop()?;
+                    }
+                }
+                Instruction::Pop => {
+                    self.pop()?;
+                }
             }
         }
         // An expression is one value. Anything else means the chunk and the compiler disagree
@@ -94,6 +134,20 @@ impl Vm {
     fn pop(&mut self) -> Result<Value, Fault> {
         self.stack.pop().ok_or(Fault::StackUnderflow)
     }
+}
+
+/// Where a jump goes, or a fault if that is not inside the chunk.
+///
+/// `length` itself is a legal target and means "the end": a jump over the last instruction lands
+/// there, and the compiler emits exactly that for `a || b` when `b` is the final expression.
+/// Anything past it is a chunk that does not make sense — including the `u32::MAX` placeholder a
+/// jump carries before it is patched, which is why that placeholder is `u32::MAX`.
+fn jump_to(target: u32, length: usize) -> Result<usize, Fault> {
+    let target = target as usize;
+    if target > length {
+        return Err(Fault::JumpOutOfRange);
+    }
+    Ok(target)
 }
 
 /// The unary operators — §13.5.
@@ -300,6 +354,69 @@ mod tests {
     }
 
     #[test]
+    fn a_short_circuit_answers_with_the_operand_that_decided() {
+        // The thing that makes `&&` and `||` operators rather than `if` in disguise: the value
+        // that stopped the evaluation *is* the answer. `0 || 'a'` is `'a'`, and `1 || 'a'` is
+        // `1` and not `true`.
+        assert_eq!(eval("1 && 2"), "2");
+        assert_eq!(eval("0 && 2"), "0");
+        assert_eq!(eval("'' && 2"), "");
+        assert_eq!(eval("1 || 2"), "1");
+        assert_eq!(eval("0 || 2"), "2");
+        assert_eq!(eval("'' || 'a'"), "a");
+        assert_eq!(eval("null || 'a'"), "a");
+        // Chained, and left-associative: `a && b && c`.
+        assert_eq!(eval("1 && 2 && 3"), "3");
+        assert_eq!(eval("1 && 0 && 3"), "0");
+        assert_eq!(eval("0 || '' || 'last'"), "last");
+        // Mixed with an operator that is not short-circuiting, to check the stack comes out level.
+        assert_eq!(eval("(1 && 2) + 1"), "3");
+        assert_eq!(eval("1 + (0 || 5)"), "6");
+    }
+
+    #[test]
+    fn nullish_coalescing_asks_a_different_question_from_or() {
+        // The whole reason `??` was added: `||` tests truthiness and `??` tests only `null` and
+        // `undefined`, so every falsy value that is not nullish is where they part company.
+        assert_eq!(eval("0 || 'fallback'"), "fallback");
+        assert_eq!(eval("0 ?? 'fallback'"), "0");
+        assert_eq!(eval("'' ?? 'fallback'"), "");
+        assert_eq!(eval("false ?? 'fallback'"), "false");
+        assert_eq!(eval("(0 / 0) ?? 'fallback'"), "NaN");
+        // …and where they agree.
+        assert_eq!(eval("null ?? 'fallback'"), "fallback");
+        assert_eq!(eval("void 0 ?? 'fallback'"), "fallback");
+        assert_eq!(eval("1 ?? 'fallback'"), "1");
+    }
+
+    #[test]
+    fn the_conditional_operator_evaluates_one_branch_and_never_the_test() {
+        // Unlike a short circuit, the test is thrown away: `a ? b : c` is `b` or `c` and is never
+        // `a`, however truthy `a` was.
+        assert_eq!(eval("1 ? 'yes' : 'no'"), "yes");
+        assert_eq!(eval("0 ? 'yes' : 'no'"), "no");
+        assert_eq!(eval("'' ? 'yes' : 'no'"), "no");
+        assert_eq!(eval("'0' ? 'yes' : 'no'"), "yes");
+        assert_eq!(eval("null ? 'yes' : 'no'"), "no");
+        // Right-associative, so this is `1 ? 'a' : (0 ? 'b' : 'c')` and nesting works in both
+        // branches — the two jumps have to be patched to different places.
+        assert_eq!(eval("1 ? 'a' : 0 ? 'b' : 'c'"), "a");
+        assert_eq!(eval("0 ? 'a' : 0 ? 'b' : 'c'"), "c");
+        assert_eq!(eval("0 ? 'a' : 1 ? 'b' : 'c'"), "b");
+        assert_eq!(eval("(1 ? 2 : 3) + 10"), "12");
+    }
+
+    #[test]
+    fn the_comma_operator_keeps_the_last_value_and_discards_the_rest() {
+        assert_eq!(eval("(1, 2)"), "2");
+        assert_eq!(eval("(1, 2, 3)"), "3");
+        assert_eq!(eval("(1, 2) + 1"), "3");
+        // Each earlier operand is still *evaluated* — the discarding is of the value, not of the
+        // work — which is the only reason anyone writes one.
+        assert_eq!(eval("('a' + 'b', 'c')"), "c");
+    }
+
+    #[test]
     fn a_chunk_that_does_not_make_sense_is_a_fault_and_not_a_panic() {
         // The three ways a chunk can be wrong, each reached by handing the VM one no compiler
         // would produce. A script cannot get here; a compiler bug can, and DR-0002 is a promise
@@ -329,6 +446,53 @@ mod tests {
         assert!(matches!(
             vm.run(&missing, &mut heap),
             Err(Fault::MissingConstant)
+        ));
+
+        // A jump past the end, including the placeholder an unpatched one carries — which is the
+        // shape a compiler bug would actually take.
+        let far = Chunk::from_parts(vec![Instruction::Jump(99)], Vec::new());
+        assert!(matches!(
+            vm.run(&far, &mut heap),
+            Err(Fault::JumpOutOfRange)
+        ));
+        let unpatched = Chunk::from_parts(
+            vec![
+                Instruction::Constant(0),
+                Instruction::JumpKeeping(ShortCircuit::WhenTruthy, u32::MAX),
+            ],
+            vec![Value::Boolean(true)],
+        );
+        assert!(matches!(
+            vm.run(&unpatched, &mut heap),
+            Err(Fault::JumpOutOfRange)
+        ));
+        // …while a jump to exactly the end is how every short circuit finishes, and is fine.
+        let to_the_end = Chunk::from_parts(
+            vec![Instruction::Constant(0), Instruction::Jump(2)],
+            vec![Value::Boolean(true)],
+        );
+        assert!(matches!(
+            vm.run(&to_the_end, &mut heap),
+            Ok(Value::Boolean(true))
+        ));
+        // A short circuit that has to peek at an empty stack is an underflow like any other.
+        let nothing_to_peek = Chunk::from_parts(
+            vec![Instruction::JumpKeeping(ShortCircuit::WhenFalsy, 1)],
+            Vec::new(),
+        );
+        assert!(matches!(
+            vm.run(&nothing_to_peek, &mut heap),
+            Err(Fault::StackUnderflow)
+        ));
+        let nothing_to_pop = Chunk::from_parts(vec![Instruction::Pop], Vec::new());
+        assert!(matches!(
+            vm.run(&nothing_to_pop, &mut heap),
+            Err(Fault::StackUnderflow)
+        ));
+        let nothing_to_test = Chunk::from_parts(vec![Instruction::JumpIfFalse(1)], Vec::new());
+        assert!(matches!(
+            vm.run(&nothing_to_test, &mut heap),
+            Err(Fault::StackUnderflow)
         ));
 
         // Two values pushed and nothing to join them, and a chunk that pushed none at all.

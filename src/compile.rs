@@ -16,7 +16,7 @@
 //! a location, not a panic and not a silent wrong answer. That list shrinks with each slice, and
 //! the errors are how a reader can tell what is genuinely finished.
 
-use crate::ast::{BinaryOperator, Expr, ExprKind, UnaryOperator};
+use crate::ast::{BinaryOperator, Expr, ExprKind, LogicalOperator, UnaryOperator};
 use crate::heap::Heap;
 use crate::span::Span;
 use crate::value::Value;
@@ -46,7 +46,46 @@ pub enum Instruction {
     Unary(UnaryOperator),
     /// Replace the top two values with the result of a binary operator, left below right.
     Binary(BinaryOperator),
+    /// Continue at this instruction instead of the next one.
+    Jump(u32),
+    /// Take the top value; if it is falsy, continue at this instruction instead.
+    ///
+    /// The value is consumed either way. This is the conditional operator's jump, where the test
+    /// is asked about and then thrown away.
+    JumpIfFalse(u32),
+    /// Look at the top value; if the condition holds, continue at this instruction and **leave it
+    /// where it is**. Otherwise take it and carry on.
+    ///
+    /// The short circuits' jump, and the reason they are not `if` in disguise: `a || b` is not
+    /// `a ? true : b`, it is *`a` itself* when `a` is truthy. So the value that decided has to
+    /// survive being the answer.
+    JumpKeeping(ShortCircuit, u32),
+    /// Discard the top value.
+    Pop,
 }
+
+/// When a [`Instruction::JumpKeeping`] jumps — one per short-circuiting operator (§13.13, §13.14).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShortCircuit {
+    /// `&&` — stop at the first falsy operand, which becomes the answer.
+    WhenFalsy,
+    /// `||` — stop at the first truthy one.
+    WhenTruthy,
+    /// `??` — stop at the first that is neither `null` nor `undefined`.
+    ///
+    /// A different test from `||`, and the whole reason `??` exists: `0 || 1` is `1` and
+    /// `0 ?? 1` is `0`, because `0` is falsy and is not nullish.
+    WhenNotNullish,
+}
+
+/// A jump that has been emitted and does not know where it goes yet.
+///
+/// Exists to make forgetting one impossible rather than unlikely. It is `#[must_use]`, it is not
+/// `Copy`, and [`Chunk::patch`] takes it by value — so the only way to obtain one is to emit a
+/// jump and the only way to be rid of one is to patch it. A dangling jump becomes a build failure
+/// under the gate's denied warnings, which is a stronger claim than any test could make.
+#[must_use = "a jump that is never patched jumps nowhere"]
+struct Unpatched(usize);
 
 impl Chunk {
     /// The instructions, in order.
@@ -76,6 +115,42 @@ impl Chunk {
     /// Add an instruction.
     fn emit(&mut self, instruction: Instruction) {
         self.code.push(instruction);
+    }
+
+    /// Emit a jump whose target is not known yet.
+    ///
+    /// The target of a forward jump is decided by code that has not been compiled — that is what
+    /// makes it forward — so a placeholder goes in and [`Chunk::patch`] replaces it once the
+    /// destination exists.
+    ///
+    /// The placeholder is never seen, and not by luck: [`Unpatched`] is `#[must_use]` and is
+    /// consumed by `patch`, so a jump left dangling is a warning and the gate denies warnings.
+    /// It is `u32::MAX` anyway, so that if that ever stops being true the answer is a loud
+    /// [`crate::vm::Fault::JumpOutOfRange`] rather than a quiet jump to the beginning.
+    fn emit_jump(&mut self, make: impl FnOnce(u32) -> Instruction) -> Unpatched {
+        let at = self.code.len();
+        self.emit(make(u32::MAX));
+        Unpatched(at)
+    }
+
+    /// Point a jump at wherever the next instruction will go.
+    fn patch(&mut self, jump: Unpatched) -> Result<(), CompileError> {
+        let Unpatched(at) = jump;
+        let target = u32::try_from(self.code.len()).map_err(|_| CompileError {
+            kind: ErrorKind::TooLong,
+            span: Span::new(0, 0),
+        })?;
+        if let Some(instruction) = self.code.get_mut(at) {
+            *instruction = match *instruction {
+                Instruction::Jump(_) => Instruction::Jump(target),
+                Instruction::JumpIfFalse(_) => Instruction::JumpIfFalse(target),
+                Instruction::JumpKeeping(condition, _) => {
+                    Instruction::JumpKeeping(condition, target)
+                }
+                other => other,
+            };
+        }
+        Ok(())
     }
 
     /// Add a constant and answer where it went.
@@ -116,6 +191,8 @@ pub enum ErrorKind {
     Unsupported(&'static str),
     /// More than `u32::MAX` constants in one chunk.
     TooManyConstants,
+    /// More than `u32::MAX` instructions in one chunk, so a jump could not name its target.
+    TooLong,
 }
 
 impl CompileError {
@@ -124,6 +201,7 @@ impl CompileError {
         match self.kind {
             ErrorKind::Unsupported(what) => format!("{what} is not implemented yet"),
             ErrorKind::TooManyConstants => "too many constants in one unit of code".to_string(),
+            ErrorKind::TooLong => "too many instructions in one unit of code".to_string(),
         }
     }
 }
@@ -177,6 +255,55 @@ fn compile_into(chunk: &mut Chunk, expression: &Expr, heap: &mut Heap) -> Result
             chunk.emit(Instruction::Binary(*operator));
             Ok(())
         }
+        // §13.13 and §13.14 — the operators that may not evaluate their right operand at all.
+        // The left one is evaluated, looked at, and *kept* if it decides the answer: `a || b` is
+        // `a` itself when `a` is truthy, not `true`.
+        ExprKind::Logical {
+            operator,
+            left,
+            right,
+        } => {
+            let condition = match operator {
+                LogicalOperator::And => ShortCircuit::WhenFalsy,
+                LogicalOperator::Or => ShortCircuit::WhenTruthy,
+                LogicalOperator::NullishCoalescing => ShortCircuit::WhenNotNullish,
+            };
+            compile_into(chunk, left, heap)?;
+            let over_the_right =
+                chunk.emit_jump(|target| Instruction::JumpKeeping(condition, target));
+            compile_into(chunk, right, heap)?;
+            chunk.patch(over_the_right)
+        }
+        // §13.14 — the conditional operator, where the test *is* thrown away and exactly one of
+        // the two branches runs.
+        ExprKind::Conditional {
+            test,
+            consequent,
+            alternate,
+        } => {
+            compile_into(chunk, test, heap)?;
+            let to_alternate = chunk.emit_jump(Instruction::JumpIfFalse);
+            compile_into(chunk, consequent, heap)?;
+            let past_the_alternate = chunk.emit_jump(Instruction::Jump);
+            chunk.patch(to_alternate)?;
+            compile_into(chunk, alternate, heap)?;
+            chunk.patch(past_the_alternate)
+        }
+        // §13.16 — the comma operator: evaluate each, keep the last. Every earlier value is
+        // discarded, which is the only reason it is ever written.
+        ExprKind::Sequence(expressions) => {
+            let Some((last, earlier)) = expressions.split_last() else {
+                // A comma expression with no operands has no production. The parser cannot build
+                // one; if the tree ever holds one, an empty chunk would leave the VM with an
+                // unbalanced stack, so saying so here is the honest answer.
+                return Err(unsupported("an empty comma expression", span));
+            };
+            for expression in earlier {
+                compile_into(chunk, expression, heap)?;
+                chunk.emit(Instruction::Pop);
+            }
+            compile_into(chunk, last, heap)
+        }
         // Everything else, named as the specification names it so that the message says which
         // clause is missing rather than which Rust variant.
         ExprKind::Identifier(_) => Err(unsupported("an identifier reference", span)),
@@ -188,9 +315,7 @@ fn compile_into(chunk: &mut Chunk, expression: &Expr, heap: &mut Heap) -> Result
         ExprKind::Call { .. } => Err(unsupported("a call expression", span)),
         ExprKind::New { .. } => Err(unsupported("the new operator", span)),
         ExprKind::Update { .. } => Err(unsupported("an update expression", span)),
-        ExprKind::Conditional { .. } => Err(unsupported("a conditional expression", span)),
         ExprKind::Assignment { .. } => Err(unsupported("an assignment", span)),
-        ExprKind::Sequence(_) => Err(unsupported("the comma operator", span)),
         ExprKind::Array(_) => Err(unsupported("an array literal", span)),
         ExprKind::Object(_) => Err(unsupported("an object literal", span)),
         ExprKind::Function(_) => Err(unsupported("a function expression", span)),
@@ -199,7 +324,6 @@ fn compile_into(chunk: &mut Chunk, expression: &Expr, heap: &mut Heap) -> Result
         ExprKind::Template(_) => Err(unsupported("a template literal", span)),
         ExprKind::TaggedTemplate { .. } => Err(unsupported("a tagged template", span)),
         ExprKind::RegExp(_) => Err(unsupported("a regular expression literal", span)),
-        ExprKind::Logical { .. } => Err(unsupported("a short-circuiting operator", span)),
         ExprKind::Await(_) => Err(unsupported("await", span)),
         ExprKind::Yield(_) => Err(unsupported("yield", span)),
         ExprKind::Super => Err(unsupported("super", span)),
@@ -269,7 +393,7 @@ mod tests {
             ("delete x.y", "the delete operator"),
             ("1 instanceof 2", "the instanceof and in operators"),
             ("`a`", "a template literal"),
-            ("a ? b : c", "a conditional expression"),
+            ("1 ? b : c", "an identifier reference"),
             ("/re/", "a regular expression literal"),
         ];
         for (source, what) in cases {
