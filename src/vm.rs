@@ -13,11 +13,13 @@
 //! week to find. And if it were a panic, DR-0002 would hold only as long as the compiler is
 //! correct, which is not what DR-0002 says.
 //!
-//! # What it can run so far
+//! # A throw is an answer, not a failure
 //!
-//! What [`crate::compile`] can compile: expressions over primitives. Nothing here throws yet,
-//! which is why the answer is a `Result<Value, Fault>` and not a completion — a throw needs
-//! either an operation that can fail or a `throw` statement, and both arrive with the statements.
+//! §6.2.4's Completion Records have five types, and a bytecode compiler turns four of them into
+//! jumps: `break`, `continue` and `return` are known at compile time and become instructions.
+//! Only **throw** has to travel at run time, because where it lands depends on what the stack
+//! looks like when it happens. So an [`Outcome`] is a value or a thrown value, and the rest of
+//! §6.2.4 lives in [`crate::compile`].
 
 use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
@@ -41,12 +43,43 @@ pub enum Fault {
     JumpOutOfRange,
     /// A `LoadLocal` or `StoreLocal` named a slot the frame does not have.
     MissingLocal,
+    /// A `PopHandler` with no handler installed.
+    NoHandlerToPop,
     /// The chunk finished with something still on the stack.
     ///
     /// Every statement is stack-neutral and every expression consumes its operands, so a chunk
     /// that has run to the end has nothing left over. Anything else is a compiler bug that would
     /// otherwise show up much later as the wrong value.
     UnbalancedStack,
+}
+
+/// What running a chunk came to.
+///
+/// Two of §6.2.4's completion types, and the two that a *script* can end with. `break` and
+/// `continue` never escape the code that names them, and `return` needs a function to return
+/// from.
+#[derive(Debug, Clone, Copy)]
+pub enum Outcome {
+    /// The script finished; this is its completion value.
+    Value(Value),
+    /// The script threw and nothing caught it.
+    ///
+    /// The value is whatever was thrown, which need not be an Error: `throw 1` is legal and the
+    /// specification never asks what it was given.
+    Thrown(Value),
+}
+
+/// Where a throw goes, and what the stack should look like when it gets there.
+#[derive(Debug, Clone, Copy)]
+struct Handler {
+    /// The instruction to continue at.
+    target: u32,
+    /// How deep the operand stack was when the handler was installed.
+    ///
+    /// A throw in the middle of an expression leaves its half-built operands behind. Without
+    /// this, a caught exception would leave rubbish under everything the handler pushed
+    /// afterwards, and the imbalance would surface somewhere else entirely.
+    depth: usize,
 }
 
 /// The interpreter.
@@ -56,6 +89,8 @@ pub enum Fault {
 #[derive(Debug)]
 pub struct Vm {
     stack: Vec<Value>,
+    /// The handlers a throw would look at, innermost last.
+    handlers: Vec<Handler>,
     /// One slot per local variable, all starting as `undefined`.
     ///
     /// Resolved to indices at compile time, so nothing here searches for a name. That is what
@@ -77,6 +112,7 @@ impl Vm {
     pub fn new() -> Self {
         Self {
             stack: Vec::new(),
+            handlers: Vec::new(),
             locals: Vec::new(),
             completion: Value::Undefined,
         }
@@ -86,8 +122,9 @@ impl Vm {
     ///
     /// The stack is cleared first, so a machine that faulted once is usable again: a fault says
     /// the chunk was wrong, not that the interpreter is now untrustworthy.
-    pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Value, Fault> {
+    pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
         self.stack.clear();
+        self.handlers.clear();
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
@@ -166,6 +203,28 @@ impl Vm {
                 Instruction::SetCompletion => {
                     self.completion = self.pop()?;
                 }
+                Instruction::Throw => {
+                    let thrown = self.pop()?;
+                    // §6.2.4 — a throw completion travels up until something wants it. Here that
+                    // is the innermost handler; with nothing to want it, it leaves the script.
+                    let Some(handler) = self.handlers.pop() else {
+                        return Ok(Outcome::Thrown(thrown));
+                    };
+                    // Back to the depth the protected region began at, throwing away whatever the
+                    // interrupted expression had half-built, and then the value the handler wants.
+                    self.stack.truncate(handler.depth);
+                    self.stack.push(thrown);
+                    at = jump_to(handler.target, code.len())?;
+                }
+                Instruction::PushHandler(target) => self.handlers.push(Handler {
+                    target,
+                    depth: self.stack.len(),
+                }),
+                Instruction::PopHandler => {
+                    // A pop with nothing to pop is a chunk that does not make sense: the compiler
+                    // emits these in pairs.
+                    self.handlers.pop().ok_or(Fault::NoHandlerToPop)?;
+                }
             }
         }
         // Nothing should be left. Anything else means the chunk and the compiler disagree about
@@ -173,7 +232,7 @@ impl Vm {
         if !self.stack.is_empty() {
             return Err(Fault::UnbalancedStack);
         }
-        Ok(self.completion)
+        Ok(Outcome::Value(self.completion))
     }
 
     /// Take the top of the stack.
@@ -241,11 +300,10 @@ mod tests {
         let mut heap = Heap::new();
         let expression = parse_expression(source).expect("the source parses"); // a VM test needs a chunk
         let chunk = compile_expression(&expression, &mut heap).expect("the source compiles"); // same
-        let value = Vm::new()
+        let outcome = Vm::new()
             .run(&chunk, &mut heap)
             .expect("the chunk is well formed"); // same
-        let id = value.to_string(&mut heap);
-        String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+        describe(outcome, &mut heap)
     }
 
     /// Run a whole script and describe its completion value the way `String(x)` would.
@@ -253,11 +311,24 @@ mod tests {
         let mut heap = Heap::new();
         let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
         let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
-        let value = Vm::new()
+        let outcome = Vm::new()
             .run(&chunk, &mut heap)
             .expect("the chunk is well formed"); // same
-        let id = value.to_string(&mut heap);
-        String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+        describe(outcome, &mut heap)
+    }
+
+    /// The outcome, written the way `String(x)` would write it — with a thrown one marked, so
+    /// that a test row saying `"thrown 1"` cannot be confused with one saying `"1"`.
+    fn describe(outcome: Outcome, heap: &mut Heap) -> String {
+        let (prefix, value) = match outcome {
+            Outcome::Value(value) => ("", value),
+            Outcome::Thrown(value) => ("thrown ", value),
+        };
+        let id = value.to_string(heap);
+        format!(
+            "{prefix}{}",
+            String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+        )
     }
 
     #[test]
@@ -396,8 +467,7 @@ mod tests {
             ("let x = 1;", "let and const"),
             ("const x = 1;", "let and const"),
             ("function f() {}", "a function declaration"),
-            ("throw 1;", "throw"),
-            ("try { } catch (e) { }", "try"),
+            ("try { } catch ([a]) { }", "a destructuring catch parameter"),
             ("switch (1) { }", "switch"),
             ("for (var k in 1) ;", "for-in and for-of"),
             ("var [a] = 1;", "a destructuring binding"),
@@ -634,6 +704,185 @@ mod tests {
     }
 
     #[test]
+    fn a_throw_that_nothing_catches_leaves_the_script() {
+        // §14.14 — anything at all may be thrown, and nothing asks what it is. An Error object
+        // would be the usual thing; there are no objects yet and the language never required one.
+        assert_eq!(run("throw 1;"), "thrown 1");
+        assert_eq!(run("throw 'a' + 'b';"), "thrown ab");
+        assert_eq!(run("throw void 0;"), "thrown undefined");
+        // Everything after the throw is skipped, including the statement that would have set the
+        // completion value.
+        assert_eq!(run("1; throw 2; 3;"), "thrown 2");
+        assert_eq!(
+            run("var n = 0; while (1) { n = n + 1; if (n > 2) throw n; } n;"),
+            "thrown 3"
+        );
+    }
+
+    #[test]
+    fn a_catch_block_receives_the_value_and_the_script_carries_on() {
+        assert_eq!(run("try { throw 1; } catch (e) { e; }"), "1");
+        assert_eq!(
+            run("try { throw 'x'; } catch (e) { 'caught ' + e; }"),
+            "caught x"
+        );
+        // The try block's own value survives when nothing is thrown, and the catch block is not
+        // entered at all.
+        assert_eq!(run("try { 7; } catch (e) { 8; }"), "7");
+        // ES2019's optional binding: the value is simply discarded.
+        assert_eq!(run("try { throw 1; } catch { 'caught'; }"), "caught");
+        // A throw inside a loop inside a try still finds the handler.
+        assert_eq!(
+            run(
+                "try { var i = 0; while (1) { i = i + 1; if (i > 2) throw i; } } catch (e) { 'caught ' + e; }"
+            ),
+            "caught 3"
+        );
+    }
+
+    #[test]
+    fn a_throw_in_the_middle_of_an_expression_leaves_no_rubbish_behind() {
+        // The handler puts the operand stack back to the depth the protected region began at, so
+        // the half-built operands of the interrupted expression are discarded rather than left
+        // under everything that follows. No source can reach this yet — nothing throws from
+        // inside an expression until an operation can — so the chunk is written by hand, the way
+        // a malformed one is.
+        let mut heap = Heap::new();
+        let mut vm = Vm::new();
+        let chunk = Chunk::from_parts(
+            vec![
+                // try {
+                Instruction::PushHandler(6),
+                // …two operands of an expression that never finishes…
+                Instruction::Constant(0),
+                Instruction::Constant(0),
+                // …and a throw from the middle of it.
+                Instruction::Constant(1),
+                Instruction::Throw,
+                Instruction::PopHandler,
+                // catch: the thrown value is here and the two operands are not.
+                Instruction::SetCompletion,
+            ],
+            vec![Value::Number(9.0), Value::Number(1.0)],
+        );
+        // A leftover operand would be an unbalanced stack rather than a wrong answer, which is
+        // exactly what makes the balance check worth having.
+        let outcome = vm.run(&chunk, &mut heap).expect("well formed"); // the test is about the outcome
+        assert_eq!(describe(outcome, &mut heap), "1");
+    }
+
+    #[test]
+    fn a_nested_try_is_caught_by_the_innermost_handler_that_is_still_open() {
+        assert_eq!(
+            run("try { try { throw 1; } catch (e) { 'inner ' + e; } } catch (e) { 'outer'; }"),
+            "inner 1"
+        );
+        // A throw from a *catch* block is not caught by its own try.
+        assert_eq!(
+            run("try { try { throw 1; } catch (e) { throw 2; } } catch (e) { 'outer ' + e; }"),
+            "outer 2"
+        );
+        // …and one that nothing catches still leaves the script.
+        assert_eq!(
+            run("try { throw 1; } catch (e) { throw e + 1; }"),
+            "thrown 2"
+        );
+    }
+
+    #[test]
+    fn a_finally_block_runs_on_both_ways_out() {
+        // The normal way…
+        assert_eq!(
+            run("var log = ''; try { log = log + 'a'; } finally { log = log + 'b'; } log;"),
+            "ab"
+        );
+        // …and the way that carries a thrown value, which then carries on outwards.
+        assert_eq!(
+            run("var log = ''; try { throw 1; } finally { log = log + 'f'; }"),
+            "thrown 1"
+        );
+        assert_eq!(
+            run(
+                "var log = ''; try { try { throw 1; } finally { log = log + 'f'; } } catch (e) { log + e; }"
+            ),
+            "f1"
+        );
+        // All three tails together, and a throw from the *catch* block still runs the finally.
+        assert_eq!(
+            run(
+                "var log = ''; try { try { throw 1; } catch (e) { log = log + 'c'; throw 2; } finally { log = log + 'f'; } } catch (e) { log + e; }"
+            ),
+            "cf2"
+        );
+        // …and when nothing throws at all, the catch is skipped and the finally is not.
+        assert_eq!(
+            run(
+                "var log = ''; try { log = log + 't'; } catch (e) { log = log + 'c'; } finally { log = log + 'f'; } log;"
+            ),
+            "tf"
+        );
+    }
+
+    #[test]
+    fn a_catch_parameter_shadows_an_outer_name_only_inside_its_block() {
+        // §14.15.3 — the parameter is a binding of its own. Inside the block it is the thrown
+        // value; outside it, the outer binding is untouched.
+        assert_eq!(
+            run("var e = 'outer'; try { throw 'inner'; } catch (e) { e; }"),
+            "inner"
+        );
+        assert_eq!(
+            run("var e = 'outer'; try { throw 'inner'; } catch (e) { e; } e;"),
+            "outer"
+        );
+        // Assigning to it inside the block does not reach the outer one either.
+        assert_eq!(
+            run("var e = 'outer'; try { throw 1; } catch (e) { e = 'changed'; } e;"),
+            "outer"
+        );
+    }
+
+    #[test]
+    fn leaving_a_try_that_has_a_finally_is_refused_rather_than_skipping_it() {
+        // A `break` past a `finally` is a third way out, and the finally would have to run on the
+        // way. Refusing is narrow: a loop written *inside* the try is unaffected, which is the
+        // second row.
+        let mut heap = Heap::new();
+        let script = parse_script("while (1) { try { break; } finally { } }").expect("parses"); // the test is about compiling
+        let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+        assert_eq!(
+            error.kind,
+            crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
+        );
+        // A loop inside the `try` may still be left, because that jump crosses no finally.
+        assert_eq!(
+            run("var n = 0; try { while (1) { n = n + 1; break; } } finally { n = n + 10; } n;"),
+            "11"
+        );
+        // …and a `break` inside a `try` that has only a `catch` is fine too.
+        assert_eq!(
+            run("var n = 0; while (1) { try { break; } catch (e) { } } n;"),
+            "0"
+        );
+
+        // The guard belongs to the `try` that raised it and is put down when that `try` ends, so
+        // a `break` *after* one is crossing nothing.
+        assert_eq!(
+            run("var n = 0; while (1) { try { } finally { } n = 1; break; } n;"),
+            "1"
+        );
+        // …and an inner `try` with no finally does not put down the outer one's guard, so a
+        // `break` inside it is still refused.
+        let source = "while (1) { try { try { } catch (e) { } break; } finally { } }";
+        let script = parse_script(source).expect("parses"); // the test is about compiling
+        let error = compile_script(&script, &mut heap).expect_err("still crosses a finally"); // same
+        assert_eq!(
+            error.kind,
+            crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
+        );
+    }
+
+    #[test]
     fn a_chunk_that_does_not_make_sense_is_a_fault_and_not_a_panic() {
         // The three ways a chunk can be wrong, each reached by handing the VM one no compiler
         // would produce. A script cannot get here; a compiler bug can, and DR-0002 is a promise
@@ -695,7 +944,7 @@ mod tests {
         );
         assert!(matches!(
             vm.run(&to_the_end, &mut heap),
-            Ok(Value::Boolean(true))
+            Ok(Outcome::Value(Value::Boolean(true)))
         ));
         // A short circuit that has to peek at an empty stack is an underflow like any other.
         let nothing_to_peek = Chunk::from_parts(
@@ -729,7 +978,10 @@ mod tests {
         // An *empty* chunk is not a fault — it is an empty script, whose completion value is
         // `undefined`.
         let empty = Chunk::from_parts(Vec::new(), Vec::new());
-        assert!(matches!(vm.run(&empty, &mut heap), Ok(Value::Undefined)));
+        assert!(matches!(
+            vm.run(&empty, &mut heap),
+            Ok(Outcome::Value(Value::Undefined))
+        ));
 
         // A slot the frame does not have, in both directions.
         let no_such_slot = Chunk::from_parts(vec![Instruction::LoadLocal(3)], Vec::new());
@@ -762,7 +1014,10 @@ mod tests {
             vec![Instruction::Constant(0), Instruction::SetCompletion],
             vec![Value::Null],
         );
-        assert!(matches!(vm.run(&sound, &mut heap), Ok(Value::Null)));
+        assert!(matches!(
+            vm.run(&sound, &mut heap),
+            Ok(Outcome::Value(Value::Null))
+        ));
     }
 
     #[test]

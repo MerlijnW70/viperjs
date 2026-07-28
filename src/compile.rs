@@ -18,7 +18,8 @@
 
 use crate::ast::{
     AssignmentOperator, AssignmentTarget, BinaryOperator, Binding, Declaration, DeclarationKind,
-    Expr, ExprKind, ForInit, ForStatement, LogicalOperator, Script, Stmt, StmtKind, UnaryOperator,
+    Expr, ExprKind, ForInit, ForStatement, LogicalOperator, Script, Stmt, StmtKind, TryStatement,
+    UnaryOperator,
 };
 use crate::heap::Heap;
 use crate::span::Span;
@@ -79,6 +80,20 @@ pub enum Instruction {
     /// Assignment is an expression: `a = (b = 1)` works because the inner one leaves its value
     /// behind. A statement that only wants the effect follows this with a [`Instruction::Pop`].
     StoreLocal(u32),
+    /// Take the top value and throw it — §14.14.
+    ///
+    /// Any value, not only an Error: `throw 1` is legal, and the specification never asks what
+    /// was thrown. Where it lands is [`Instruction::PushHandler`]'s business.
+    Throw,
+    /// Remember that a throw from here until the matching pop should continue at this instruction.
+    ///
+    /// The operand stack's depth is remembered with it. A throw in the middle of an expression
+    /// leaves whatever it had pushed behind, and unwinding has to put the stack back where the
+    /// handler expects it — otherwise a caught exception would leave rubbish under every
+    /// subsequent value.
+    PushHandler(u32),
+    /// Forget the innermost handler, because its protected region finished normally.
+    PopHandler,
     /// Take the top value and make it the script's completion value.
     ///
     /// §14.2.2 — a Script evaluates to the value of its last *value-producing* statement, which
@@ -152,15 +167,7 @@ impl Chunk {
     fn patch_to(&mut self, jump: Unpatched, target: u32) {
         let Unpatched(at) = jump;
         if let Some(instruction) = self.code.get_mut(at) {
-            *instruction = match *instruction {
-                Instruction::Jump(_) => Instruction::Jump(target),
-                Instruction::JumpIfFalse(_) => Instruction::JumpIfFalse(target),
-                Instruction::JumpIfTrue(_) => Instruction::JumpIfTrue(target),
-                Instruction::JumpKeeping(condition, _) => {
-                    Instruction::JumpKeeping(condition, target)
-                }
-                other => other,
-            };
+            *instruction = retarget(*instruction, target);
         }
     }
 
@@ -187,21 +194,11 @@ impl Chunk {
 
     /// Point a jump at wherever the next instruction will go.
     fn patch(&mut self, jump: Unpatched) -> Result<(), CompileError> {
-        let Unpatched(at) = jump;
         let target = u32::try_from(self.code.len()).map_err(|_| CompileError {
             kind: ErrorKind::TooLong,
             span: Span::new(0, 0),
         })?;
-        if let Some(instruction) = self.code.get_mut(at) {
-            *instruction = match *instruction {
-                Instruction::Jump(_) => Instruction::Jump(target),
-                Instruction::JumpIfFalse(_) => Instruction::JumpIfFalse(target),
-                Instruction::JumpKeeping(condition, _) => {
-                    Instruction::JumpKeeping(condition, target)
-                }
-                other => other,
-            };
-        }
+        self.patch_to(jump, target);
         Ok(())
     }
 
@@ -307,6 +304,17 @@ struct Compiler<'a> {
     breaks: Vec<Vec<Unpatched>>,
     /// Where `continue` goes — the top of the innermost loop's test, or its update.
     continues: Vec<Vec<Unpatched>>,
+    /// The most slots that were in use at once.
+    ///
+    /// Not `locals.len()` at the end: a catch parameter's slot is given back when its block ends,
+    /// so the table shrinks. The frame still has to be big enough for the moment it was widest,
+    /// which is what a run-time slot index is an index into.
+    high_water: usize,
+    /// For each enclosing `try` that has a `finally`, how many loops were open when it began.
+    ///
+    /// A `break` may not jump past a `finally`, and this is what tells the two cases apart: a
+    /// loop opened inside the `try` has a greater depth than the number recorded here.
+    finally_guards: Vec<usize>,
 }
 
 impl<'a> Compiler<'a> {
@@ -317,12 +325,14 @@ impl<'a> Compiler<'a> {
             locals: Vec::new(),
             breaks: Vec::new(),
             continues: Vec::new(),
+            finally_guards: Vec::new(),
+            high_water: 0,
         }
     }
 
     fn finish(self) -> Chunk {
         let mut chunk = self.chunk;
-        chunk.locals = self.locals.len();
+        chunk.locals = self.high_water;
         chunk
     }
 
@@ -334,24 +344,19 @@ impl<'a> Compiler<'a> {
         if let Some(slot) = self.resolve(name) {
             return slot;
         }
-        // Taken before the push, so it is the index the name is about to have. A script with
-        // four billion variables is not one anyone wrote; the slot still has to fit in the
-        // instruction, and `u32::MAX` is what it saturates to rather than wrapping onto somebody
-        // else's variable.
-        let slot = u32::try_from(self.locals.len()).unwrap_or(u32::MAX);
-        self.locals.push(name.into());
-        slot
+        self.declare_shadowing(name)
     }
 
     /// Which slot `name` is in, if any.
     ///
-    /// A forward search, because there is never more than one match: [`Compiler::declare`] hands
-    /// back the existing slot rather than making a second one, so a name appears in this table
-    /// once. When block scoping arrives, an inner `let` will be able to shadow an outer one and
-    /// the direction of this search will start to matter — it does not yet, and writing it as
-    /// though it did would be a claim nothing could check.
+    /// Searched from the end, because the last binding with a given name is the innermost one.
+    ///
+    /// `var` alone never puts a name in twice — [`Compiler::declare`] hands back the existing
+    /// slot — so this mattered to nothing until the catch parameter arrived. That one *does*
+    /// shadow: `var e = 1; try { throw 2 } catch (e) { e }` is 2 inside the block and 1 after it,
+    /// which is what [`Compiler::declare_shadowing`] and the truncation afterwards produce.
     fn resolve(&self, name: &str) -> Option<u32> {
-        let at = self.locals.iter().position(|local| &**local == name)?;
+        let at = self.locals.iter().rposition(|local| &**local == name)?;
         u32::try_from(at).ok()
     }
 
@@ -613,8 +618,15 @@ impl Compiler<'_> {
             StmtKind::Break(Some(_)) | StmtKind::Continue(Some(_)) => {
                 Err(unsupported("a labelled break or continue", span))
             }
-            StmtKind::Throw(_) => Err(unsupported("throw", span)),
-            StmtKind::Try(_) => Err(unsupported("try", span)),
+            // §14.14 — throw. The value travels up until a handler wants it, or out of the
+            // script; nothing looks at what it is.
+            StmtKind::Throw(expression) => {
+                self.expression(expression)?;
+                self.chunk.emit(Instruction::Throw);
+                Ok(())
+            }
+            // §14.15 — try, in its three shapes.
+            StmtKind::Try(statement) => self.try_statement(statement, span),
             StmtKind::Switch(_) => Err(unsupported("switch", span)),
             StmtKind::ForInOf(_) => Err(unsupported("for-in and for-of", span)),
             StmtKind::Labelled(_) => Err(unsupported("a labelled statement", span)),
@@ -623,6 +635,149 @@ impl Compiler<'_> {
             StmtKind::Class(_) => Err(unsupported("a class declaration", span)),
             StmtKind::Return(_) => Err(unsupported("return", span)),
         }
+    }
+
+    /// §14.15 — `try`, with or without each of its two tails.
+    ///
+    /// # Why the `finally` block is compiled twice
+    ///
+    /// It has to run on the way out however the `try` was left, and there are two ways: normally,
+    /// and carrying a thrown value. The alternative to two copies is a subroutine that both paths
+    /// call and that returns to a variable address — the shape that gave the JVM `jsr`/`ret` and
+    /// then a decade of verifier bugs. Two copies of a block are larger and are obviously right.
+    ///
+    /// # The shape
+    ///
+    /// ```text
+    ///   PushHandler(UNWIND)    ; only when there is a finally
+    ///   PushHandler(CATCH)     ; only when there is a catch
+    ///   <the try block>
+    ///   PopHandler             ; the inner one
+    ///   Jump(AFTER)
+    /// CATCH:                   ; the thrown value is on the stack
+    ///   StoreLocal(parameter); Pop
+    ///   <the catch block>
+    /// AFTER:
+    ///   PopHandler             ; the outer one
+    ///   <the finally block>
+    ///   Jump(END)
+    /// UNWIND:                  ; the thrown value is on the stack
+    ///   StoreLocal(saved); Pop
+    ///   <the finally block>
+    ///   LoadLocal(saved)
+    ///   Throw                  ; on to the next handler out
+    /// END:
+    /// ```
+    ///
+    /// The outer handler is what makes a throw *inside the catch block* still run the finally,
+    /// which is the case a single handler gets wrong.
+    fn try_statement(&mut self, statement: &TryStatement, span: Span) -> Result<(), CompileError> {
+        let has_finally = statement.finalizer.is_some();
+        // `break` and `continue` out of a `try` would have to run the finally on the way past,
+        // which is a third exit path and a larger design. Refusing the ones that leave the `try`
+        // is narrow and honest; a loop written *inside* the try is unaffected, which is why this
+        // records the loop depth rather than refusing outright.
+        if has_finally {
+            self.finally_guards.push(self.breaks.len());
+        }
+        let unwind = has_finally.then(|| self.chunk.emit_jump(Instruction::PushHandler));
+        let to_catch = statement
+            .handler
+            .as_ref()
+            .map(|_| self.chunk.emit_jump(Instruction::PushHandler));
+
+        let compiled = self.try_body(statement, to_catch);
+        if has_finally {
+            self.finally_guards.pop();
+        }
+        compiled?;
+
+        if let Some(unwind) = unwind {
+            // The normal way out: forget the handler, then run the finally.
+            self.chunk.emit(Instruction::PopHandler);
+            if let Some(finalizer) = &statement.finalizer {
+                self.statements(finalizer)?;
+            }
+            let end = self.chunk.emit_jump(Instruction::Jump);
+            // …and the other way out, carrying whatever was thrown. The value is parked in a
+            // slot no source text can name, because the finally block may use the stack.
+            self.chunk.patch(unwind)?;
+            let saved = self.declare_hidden("thrown");
+            self.chunk.emit(Instruction::StoreLocal(saved));
+            self.chunk.emit(Instruction::Pop);
+            if let Some(finalizer) = &statement.finalizer {
+                self.statements(finalizer)?;
+            }
+            self.chunk.emit(Instruction::LoadLocal(saved));
+            self.chunk.emit(Instruction::Throw);
+            self.chunk.patch(end)?;
+        }
+        let _ = span;
+        Ok(())
+    }
+
+    /// The try block and its catch clause, up to the point where the finally would begin.
+    fn try_body(
+        &mut self,
+        statement: &TryStatement,
+        to_catch: Option<Unpatched>,
+    ) -> Result<(), CompileError> {
+        self.statements(&statement.block)?;
+        let Some(to_catch) = to_catch else {
+            // No catch clause, so the try block's protection ends here and a throw inside it has
+            // already gone to the finally's handler.
+            return Ok(());
+        };
+        // The try block finished without throwing, so its handler is no longer wanted and the
+        // catch block must be jumped over.
+        self.chunk.emit(Instruction::PopHandler);
+        let past_the_catch = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(to_catch)?;
+
+        let Some(handler) = &statement.handler else {
+            // Unreachable: `to_catch` exists only when the handler does. Saying so with a jump
+            // that lands here rather than an assertion keeps this total.
+            return self.chunk.patch(past_the_catch);
+        };
+        // §14.15.3 — the catch parameter is a *block-scoped* binding of its own, so it is given a
+        // slot for the duration of the catch block and taken away again. `catch { }` with no
+        // parameter is ES2019's optional binding: the value is simply discarded.
+        let outer_locals = self.locals.len();
+        match &handler.parameter {
+            Some(parameter) => {
+                let Binding::Identifier(name) = &parameter.binding else {
+                    return Err(unsupported("a destructuring catch parameter", handler.span));
+                };
+                let slot = self.declare_shadowing(&name.name);
+                self.chunk.emit(Instruction::StoreLocal(slot));
+                self.chunk.emit(Instruction::Pop);
+            }
+            None => self.chunk.emit(Instruction::Pop),
+        }
+        self.statements(&handler.body)?;
+        self.locals.truncate(outer_locals);
+        self.chunk.patch(past_the_catch)
+    }
+
+    /// Give `name` a slot of its own even if the name is already taken.
+    ///
+    /// A catch parameter shadows anything outside it for the length of its block, which is why
+    /// this pushes rather than reusing — and why [`Compiler::resolve`] searches from the end.
+    fn declare_shadowing(&mut self, name: &str) -> u32 {
+        let slot = u32::try_from(self.locals.len()).unwrap_or(u32::MAX);
+        self.locals.push(name.into());
+        self.high_water = self.high_water.max(self.locals.len());
+        slot
+    }
+
+    /// A slot for the compiler's own use, under a name no source text can spell.
+    ///
+    /// `%` is not in `IdentifierStart` or `IdentifierPart`, so a script cannot name this and
+    /// cannot reach it. The alternative is a second table of nameless slots, which is the same
+    /// thing with more machinery.
+    fn declare_hidden(&mut self, what: &str) -> u32 {
+        let name = format!("%{what}{}", self.locals.len());
+        self.declare_shadowing(&name)
     }
 
     /// `break` or `continue` — a jump whose target is not compiled yet.
@@ -637,6 +792,20 @@ impl Compiler<'_> {
         };
         if pending.is_none() {
             return Err(unsupported("break or continue outside a loop", span));
+        }
+        // Leaving a `try` that has a `finally` is a third way out of it, and the finally has to
+        // run on the way past. A loop written inside the `try` is unaffected, which is what the
+        // depth comparison is for: the jump only crosses the finally when its loop began before
+        // the `try` did.
+        if self
+            .finally_guards
+            .last()
+            .is_some_and(|depth| self.breaks.len() <= *depth)
+        {
+            return Err(unsupported(
+                "break or continue out of a try with a finally",
+                span,
+            ));
         }
         let jump = self.chunk.emit_jump(Instruction::Jump);
         let pending = if leaving {
@@ -775,6 +944,34 @@ fn compound_operator(operator: AssignmentOperator) -> Option<BinaryOperator> {
         | AssignmentOperator::LogicalOr
         | AssignmentOperator::NullishCoalescing => return None,
     })
+}
+
+/// The same jump, pointed somewhere else.
+///
+/// Exhaustive on purpose. Written with a catch-all arm it silently did nothing to a `PushHandler`,
+/// whose target then stayed at the unpatched placeholder — so every `try` jumped off the end of
+/// its chunk. Listing every instruction means the next one that carries a target cannot be
+/// forgotten here: leaving it out is a compile error.
+fn retarget(instruction: Instruction, target: u32) -> Instruction {
+    match instruction {
+        Instruction::Jump(_) => Instruction::Jump(target),
+        Instruction::JumpIfFalse(_) => Instruction::JumpIfFalse(target),
+        Instruction::JumpIfTrue(_) => Instruction::JumpIfTrue(target),
+        Instruction::JumpKeeping(condition, _) => Instruction::JumpKeeping(condition, target),
+        Instruction::PushHandler(_) => Instruction::PushHandler(target),
+        // Not a jump. An `Unpatched` can only ever name one, since `emit_jump` is the only way
+        // to make one — so these are unreachable, and are listed rather than swept into a
+        // catch-all so that a new jump cannot hide among them.
+        Instruction::Constant(_)
+        | Instruction::Unary(_)
+        | Instruction::Binary(_)
+        | Instruction::Pop
+        | Instruction::LoadLocal(_)
+        | Instruction::StoreLocal(_)
+        | Instruction::SetCompletion
+        | Instruction::Throw
+        | Instruction::PopHandler => instruction,
+    }
 }
 
 /// A refusal with a location.

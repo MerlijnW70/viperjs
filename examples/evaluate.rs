@@ -12,7 +12,7 @@
 use praxis::compile::compile_script;
 use praxis::heap::Heap;
 use praxis::parser::parse_script;
-use praxis::vm::Vm;
+use praxis::vm::{Outcome, Vm};
 use std::io::{self, BufRead, Write};
 
 fn main() {
@@ -43,10 +43,16 @@ fn evaluate(source: &str) -> String {
         Ok(chunk) => chunk,
         Err(error) => return format!("!compile: {}", error.message()),
     };
-    let value = match Vm::new().run(&chunk, &mut heap) {
-        Ok(value) => value,
+    // A thrown outcome is marked rather than printed bare, so that a sweep comparing this
+    // against another engine cannot read `throw 1` and `1` as the same answer.
+    let (prefix, value) = match Vm::new().run(&chunk, &mut heap) {
+        Ok(Outcome::Value(value)) => ("", value),
+        Ok(Outcome::Thrown(value)) => ("!thrown: ", value),
         Err(fault) => return format!("!fault: {fault:?}"),
     };
     let id = value.to_string(&mut heap);
-    String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+    format!(
+        "{prefix}{}",
+        String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+    )
 }
