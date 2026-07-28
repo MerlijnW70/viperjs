@@ -86,9 +86,16 @@ impl Parser<'_> {
         // `GeneratorMethod : * ClassElementName ( UniqueFormalParameters[+Yield] ) { GeneratorBody }`
         // — so the `*` reaches the parameters as much as the body, exactly as a generator
         // function's does.
+        //
+        // The same is true of what a method grants: its parameters are inside it, so
+        // `constructor(x = () => super.foo)` reaches the home object exactly as the body does.
+        // `parse_function_body` sets this again for the body itself, to the same value — the
+        // one that matters is this one, which is in place while the parameters are read.
         let enclosing = (self.yield_allowed, self.await_allowed);
+        let enclosing_context = self.body_context;
         self.yield_allowed = is_generator;
         self.await_allowed = is_async;
+        self.body_context = BodyContext::method(super_allowed);
         let parts = self
             .parse_method_parameters(kind, is_generator, is_async)
             .and_then(|parameters| {
@@ -100,6 +107,7 @@ impl Parser<'_> {
                 Ok((parameters, body))
             });
         (self.yield_allowed, self.await_allowed) = enclosing;
+        self.body_context = enclosing_context;
         let (parameters, (body, end, declares_strict)) = parts?;
         self.check_method_body(&parameters, &body, declares_strict)?;
         Ok(Box::new(Function {
@@ -189,7 +197,7 @@ impl Parser<'_> {
 #[cfg(test)]
 mod tests {
     use crate::parser::test_support::*;
-    use crate::parser::{ParseErrorKind, parse_expression};
+    use crate::parser::{ParseErrorKind, parse_expression, parse_script};
 
     /// The kind of error `source` fails with.
     fn kind(source: &str) -> ParseErrorKind {
@@ -197,6 +205,54 @@ mod tests {
             Err(err) => err.kind,
             Ok(expr) => panic!("{source:?} should not parse, got {expr:?}"), // needs the error
         }
+    }
+
+    #[test]
+    fn a_parameter_list_is_inside_the_function_it_belongs_to() {
+        // What a function grants, its parameters are granted: they are part of it, so a method's
+        // home object is in scope while its defaults are read. This is the shape jerryscript's
+        // regression-test-issue-4876 is about, and every one of these was refused.
+        assert!(
+            parse_script("class N extends M { constructor(x = () => super.foo) { super(); } }")
+                .is_ok()
+        );
+        assert!(
+            parse_script("class N extends M { constructor(x = super.foo) { super(); } }").is_ok()
+        );
+        assert!(parse_script("class N extends M { m(x = super.foo) {} }").is_ok());
+        assert!(parse_script("class N { m(x = super.foo) {} }").is_ok());
+        assert!(parse_script("({ m(x = super.foo) {} });").is_ok());
+        assert!(parse_script("class N extends M { static m(x = super.foo) {} }").is_ok());
+        assert!(parse_script("class N extends M { *m(x = super.foo) {} }").is_ok());
+        assert!(parse_script("class N extends M { async m(x = super.foo) {} }").is_ok());
+        // A `SuperCall` is narrower than a `SuperProperty`, and the parameters inherit that
+        // narrowness too: only a derived constructor may make one.
+        assert!(
+            parse_script("class N extends M { constructor(x = () => super()) { super(); } }")
+                .is_ok()
+        );
+        assert!(parse_script("class N extends M { m(x = () => super()) {} }").is_err());
+        assert!(parse_script("class N { constructor(x = () => super()) {} }").is_err());
+
+        // …and what a function takes away, its parameters lose. A plain function is where
+        // `super` stops, so this is a Syntax Error even though the same text one level out is
+        // not — which is the half that used to be accepted.
+        assert!(
+            parse_script("class N extends M { m() { function f(x = super.foo) {} } }").is_err()
+        );
+        assert!(parse_script("function f(x = super.foo) {}").is_err());
+        assert!(parse_script("function f(x = () => super.foo) {}").is_err());
+        // An arrow passes the context through rather than replacing it, in its parameters as in
+        // its body — so the same arrow is legal in a method and not at the top level.
+        assert!(parse_script("class N extends M { m() { ((x = super.foo) => 0); } }").is_ok());
+        assert!(parse_script("((x = super.foo) => 0);").is_err());
+
+        // And it is put back on the way out. A method that left its own context behind would
+        // hand it to whatever came next, which is nothing to do with the method — these two
+        // would be accepted, and the second is the more alarming because a class is a
+        // declaration and the leak would outlive the statement.
+        assert!(parse_script("({ m() {} }); super.foo;").is_err());
+        assert!(parse_script("class C extends D { m() {} } super.foo;").is_err());
     }
 
     #[test]

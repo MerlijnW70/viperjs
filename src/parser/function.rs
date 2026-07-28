@@ -160,7 +160,17 @@ impl Parser<'_> {
         // `FormalParameters[+Yield]` for a generator and `[~Yield]` for everything else — which
         // is why a plain function nested in a generator may still take a parameter called
         // `yield`. The refusal of a `YieldExpression` among them lives there too.
-        let parameters = self.parse_parameters_of(is_generator, is_async)?;
+        //
+        // The parameters are *inside* the function, so what the function grants they are granted
+        // — and what it takes away they lose. A plain function is where `super` stops, so
+        // `class C extends D { m() { function f(x = super.foo) {} } }` is a Syntax Error even
+        // though the same text one level out is fine. Restored around the read rather than set
+        // once, because a parameter default may contain a whole function of its own.
+        let enclosing_context = self.body_context;
+        self.body_context = BodyContext::FUNCTION;
+        let parameters = self.parse_parameters_of(is_generator, is_async);
+        self.body_context = enclosing_context;
+        let parameters = parameters?;
         // A plain function is where `super` stops, however deep inside a method it is written:
         // §15.2.1 makes a `FunctionBody` containing either form a Syntax Error outright.
         let enclosing = (self.yield_allowed, self.await_allowed);
