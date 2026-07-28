@@ -304,8 +304,23 @@ impl Parser<'_> {
         if self.current.kind == TokenKind::LBrace {
             // An arrow has no `this` and no home object of its own, so it does not stop
             // `super` either — which is what makes `constructor() { () => super(); }` legal.
+            // `Goal::RegExp`, where a function or class *expression* asks for `Goal::Div` — and
+            // the difference is the grammar rather than a preference. An `ArrowFunction` is an
+            // `AssignmentExpression` and nothing tighter, so it can never be the left operand of
+            // a `/`: `x => {} / 2` has no derivation where `function () {} / 2` and
+            // `class {} / 2` both do. With nothing to divide, a `/` after the body can only open
+            // a literal — which is what makes
+            //
+            // ```js
+            // var f = x => {}
+            // /re/.test(x)
+            // ```
+            //
+            // two statements, the arrow having ended the first. Parentheses change it back,
+            // `(x => {}) / 2` being a `PrimaryExpression` divided; the `)` sets the goal there
+            // and always did.
             let (body, end, declares_strict) =
-                self.parse_function_body(self.body_context, Goal::Div)?;
+                self.parse_function_body(self.body_context, Goal::RegExp)?;
             // §15.3.1 borrows §15.2.1's: the parameters were read before the body could say it
             // was strict, so this is the one rule that has to wait for the body.
             if declares_strict && !parameters.is_simple() {

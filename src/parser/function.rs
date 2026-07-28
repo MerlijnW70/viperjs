@@ -427,6 +427,51 @@ mod tests {
         // rather than opening a literal is the whole of what the expression side asks for.
         assert!(parse_script("x = function () {} / 2;").is_ok());
         assert!(parse_script("x = class {} / 2;").is_ok());
+        // An arrow is the exception, and it is the grammar that makes it one: an
+        // `ArrowFunction` is an `AssignmentExpression` and nothing tighter, so it can never be
+        // the left operand of a `/`. With nothing there to divide, the `/` opens a literal and
+        // the arrow has ended the statement.
+        assert!(
+            parse_script(
+                "var f = x => {}
+/re/.test(x);"
+            )
+            .is_ok()
+        );
+        assert!(
+            parse_script(
+                "var f = async x => {}
+/re/.test(x);"
+            )
+            .is_ok()
+        );
+        assert!(
+            parse_script(
+                "var f = async (x) => {}
+/re/.test(x);"
+            )
+            .is_ok()
+        );
+        assert!(
+            parse_script(
+                "var g = () => { var f = x => {}
+/re/.test(x) };"
+            )
+            .is_ok()
+        );
+        // …so this has no derivation, where the two above it do.
+        assert!(parse_script("x = y => {} / 2;").is_err());
+        // Parentheses put it back: `(x => {})` is a `PrimaryExpression`, and the `)` decides.
+        assert!(parse_script("x = (y => {}) / 2;").is_ok());
+        // A *concise* body has no brace to decide about — the body is an expression, so the
+        // division simply continues it and no literal is opened.
+        assert!(
+            parse_script(
+                "var f = x => y
+/re/.test(x);"
+            )
+            .is_err()
+        );
     }
 
     #[test]
