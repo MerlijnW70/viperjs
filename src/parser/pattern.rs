@@ -165,30 +165,38 @@ impl Parser<'_> {
                     key,
                     value: self.refine_element(value)?,
                 }),
-                PropertyDefinition::Shorthand { name, span } => refined.push(PatternProperty {
-                    key: crate::ast::PropertyKey::Identifier(name.clone()),
-                    value: PatternElement {
-                        target: AssignmentTarget::Simple(Expr::new(
-                            ExprKind::Identifier(name.into_string()),
-                            span,
-                        )),
-                        default: None,
-                    },
-                }),
+                // Both shorthand forms build their own target rather than refining one, so
+                // each asks for itself — `refine_target` never sees them.
+                PropertyDefinition::Shorthand { name, span } => {
+                    self.check_target_name(&name, span)?;
+                    refined.push(PatternProperty {
+                        key: crate::ast::PropertyKey::Identifier(name.clone()),
+                        value: PatternElement {
+                            target: AssignmentTarget::Simple(Expr::new(
+                                ExprKind::Identifier(name.into_string()),
+                                span,
+                            )),
+                            default: None,
+                        },
+                    })
+                }
                 PropertyDefinition::ShorthandWithDefault {
                     name,
                     default,
                     span,
-                } => refined.push(PatternProperty {
-                    key: crate::ast::PropertyKey::Identifier(name.clone()),
-                    value: PatternElement {
-                        target: AssignmentTarget::Simple(Expr::new(
-                            ExprKind::Identifier(name.into_string()),
-                            span,
-                        )),
-                        default: Some(default),
-                    },
-                }),
+                } => {
+                    self.check_target_name(&name, span)?;
+                    refined.push(PatternProperty {
+                        key: crate::ast::PropertyKey::Identifier(name.clone()),
+                        value: PatternElement {
+                            target: AssignmentTarget::Simple(Expr::new(
+                                ExprKind::Identifier(name.into_string()),
+                                span,
+                            )),
+                            default: Some(default),
+                        },
+                    })
+                }
                 // A `MethodDefinition` has no `AssignmentProperty` to be refined into: there is
                 // nowhere to put a value that is written as a function.
                 PropertyDefinition::Method {
@@ -224,6 +232,11 @@ impl Parser<'_> {
                         });
                     }
                     Self::require_simple_target(&target)?;
+                    // The refusal above means this cannot reach `refine_target`, which is where
+                    // every other simple target asks — so this one asks for itself.
+                    if let ExprKind::Identifier(name) = &target.kind {
+                        self.check_target_name(name, target.span)?;
+                    }
                     rest = Some(Box::new(target));
                 }
             }
@@ -282,6 +295,13 @@ impl Parser<'_> {
             return Ok(AssignmentTarget::Pattern(self.refine_pattern(expr)?));
         }
         Self::require_simple_target(&expr)?;
+        // The one choke point every other simple target passes through: an array element, a
+        // property's value, a rest element, and each of those nested inside another pattern.
+        // A member expression is a target too and has no name to ask about — `[eval.b] = x` is
+        // ordinary in strict code, because what is assigned to is the property.
+        if let ExprKind::Identifier(name) = &expr.kind {
+            self.check_target_name(name, expr.span)?;
+        }
         Ok(AssignmentTarget::Simple(expr))
     }
 
@@ -402,6 +422,69 @@ mod tests {
         match parse_expression(source) {
             Err(err) => err.kind,
             Ok(expr) => panic!("{source:?} should not parse, got {expr:?}"), // a test about an error needs one
+        }
+    }
+
+    #[test]
+    fn a_name_a_pattern_binds_or_assigns_to_is_asked_the_same_question_a_plain_one_is() {
+        // §13.1.1 and §13.15.1 refuse `eval` and `arguments` where strict code binds or assigns
+        // to one. A name inside a pattern is read as an ordinary reference first and only
+        // becomes a target when a refinement several tokens later says so, so every route that
+        // makes one has to ask — and each of these took a different route.
+        let refused = [
+            // assignment patterns, through the refinement
+            r#""use strict"; ({eval} = x);"#,
+            r#""use strict"; ({arguments} = x);"#,
+            r#""use strict"; ({eval = 1} = x);"#,
+            r#""use strict"; [eval] = x;"#,
+            r#""use strict"; ({a: eval} = x);"#,
+            r#""use strict"; [...eval] = x;"#,
+            r#""use strict"; ({...eval} = x);"#,
+            // nested one inside another, which is the same routes recursing
+            r#""use strict"; [[eval]] = x;"#,
+            r#""use strict"; ({a: {b: eval}} = x);"#,
+            // binding patterns, which never went through a literal at all
+            r#""use strict"; var {eval} = x;"#,
+            r#""use strict"; var {eval = 1} = x;"#,
+            r#""use strict"; try {} catch ({eval}) {}"#,
+            // an arrow's parameters, where a literal is refined into a *binding* instead
+            r#""use strict"; ({eval}) => 0;"#,
+            r#""use strict"; ({eval = 1}) => 0;"#,
+            // a `for`-`in` or `for`-`of` head, which assigns on every turn of the loop
+            r#""use strict"; for (eval in x);"#,
+            r#""use strict"; for (eval of x);"#,
+            r#""use strict"; for ({eval} of x);"#,
+            r#""use strict"; for (var {eval} of x);"#,
+            // the rule is not only about `eval`: every strict-reserved word reaches it
+            r#""use strict"; ({yield} = x);"#,
+            r#""use strict"; var {public} = x;"#,
+        ];
+        for source in refused {
+            assert!(
+                parse_script(source).is_err(),
+                "{source:?} should be refused in strict code"
+            );
+        }
+
+        // Reading a name is not binding it, whatever it is written next to.
+        assert!(parse_script(r#""use strict"; ({eval});"#).is_ok());
+        assert!(parse_script(r#""use strict"; ({a: eval});"#).is_ok());
+        assert!(parse_script(r#""use strict"; x = eval;"#).is_ok());
+        // A member expression is a target with no name to ask about: what is assigned to is the
+        // property, and the object is only read.
+        assert!(parse_script(r#""use strict"; [eval.b] = x;"#).is_ok());
+        assert!(parse_script(r#""use strict"; ({a: eval.b} = x);"#).is_ok());
+        // `eval` as a *key* is a property name and never a target.
+        assert!(parse_script(r#""use strict"; ({eval: a} = x);"#).is_ok());
+        // …and none of it applies to sloppy code, which is where the rule stops.
+        for source in [
+            "({eval} = x);",
+            "var {eval} = x;",
+            "[eval] = x;",
+            "({eval}) => 0;",
+            "for (eval in x);",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source:?} is legal sloppy");
         }
     }
 

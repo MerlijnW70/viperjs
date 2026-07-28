@@ -105,6 +105,21 @@ impl Parser<'_> {
         Ok((body.into_boxed_slice(), declares_strict))
     }
 
+    /// §13.1.1 and §13.15.1, asked of a name that a *pattern* binds or assigns to.
+    ///
+    /// The plain sites ask for themselves: `var a` goes through `parse_binding_identifier` and
+    /// `a = 1` through the assignment level. A name reached through a pattern passes through
+    /// neither — it is read as an ordinary reference first, and only a refinement several
+    /// tokens later says it was a target. So every place that turns a name into one asks here.
+    ///
+    /// Reading is not binding, which is why an object literal's shorthand asks with `false`
+    /// where it is read and this asks again once it is known to be a target. `"use strict";
+    /// ({eval});` is legal and `"use strict"; ({eval} = x);` is not, from the same four
+    /// characters.
+    pub(super) fn check_target_name(&self, name: &str, span: Span) -> Result<(), ParseError> {
+        self.check_strict_name(name, span, true)
+    }
+
     /// §13.1.1, asked of every `Identifier`, `BindingIdentifier` and `LabelIdentifier`.
     ///
     /// Three rules, and the first applies to sloppy code too:

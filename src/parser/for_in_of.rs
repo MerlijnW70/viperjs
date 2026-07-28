@@ -101,6 +101,12 @@ impl Parser<'_> {
     /// a thing is.
     pub(super) fn check_for_in_of_target(&self, left: &Expr) -> Result<(), ParseError> {
         if super::operator::is_simple_assignment_target(left) {
+            // A head like `for (eval in x)` assigns to the name on every turn of the loop, so
+            // §13.1.1 reaches it — and this is the only place it can be asked, the target here
+            // never passing through the assignment level or through a refinement.
+            if let crate::ast::ExprKind::Identifier(name) = &left.kind {
+                self.check_target_name(name, left.span)?;
+            }
             return Ok(());
         }
         Err(ParseError {

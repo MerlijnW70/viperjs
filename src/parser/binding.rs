@@ -174,6 +174,9 @@ impl Parser<'_> {
                 span: token.span,
             });
         }
+        // `SingleNameBinding` is a `BindingIdentifier`, so §13.1.1 applies — and this form does
+        // not go through `parse_binding_identifier`, which is where every other one asks.
+        self.check_target_name(name, token.span)?;
         let target = Binding::Identifier(BindingName {
             name: name.clone(),
             span: token.span,
@@ -446,6 +449,13 @@ impl Parser<'_> {
                     key,
                     value: self.refine_to_binding_element(value)?,
                 }),
+                // The same two shorthand forms as the assignment side, and the only ones here
+                // that do *not* ask about the name. This refinement is reached from one place —
+                // an arrow's parameter list — and [`super::function::check_strict_parameters`]
+                // already walks that, after the body has had its say about strictness. Asking
+                // here as well would be a branch no input could tell from its absence, and
+                // asking here *instead* would be worse: it would settle the question before
+                // `({eval}) => { "use strict"; }` had said which mode it is in.
                 PropertyDefinition::Shorthand { name, span } => refined.push(BindingProperty {
                     key: crate::ast::PropertyKey::Identifier(name.clone()),
                     value: BindingElement {
