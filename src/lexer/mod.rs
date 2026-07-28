@@ -70,11 +70,17 @@ mod trivia;
 pub use self::error::{LexError, LexErrorKind};
 pub use self::name::identifier_value;
 pub use self::number_value::{bigint_digits, numeric_value};
+// Shared with [`crate::value`], which needs the same three productions rather than three of
+// its own: §7.1.4.1's `StrWhiteSpaceChar` is §12.2's `WhiteSpace` and §12.3's
+// `LineTerminator` by name, and its `StrNumericLiteral` names §12.9.3's
+// `NonDecimalIntegerLiteral` the same way. Two copies of one production is how the two drift.
+pub(crate) use self::number_value::power_of_two_value;
 pub use self::regexp::{RegExpParts, regexp_parts};
 pub use self::reserved::ReservedWord;
 pub use self::string::string_value;
 pub use self::template::{TemplatePart, TemplateValue, template_value};
 pub use self::token::{Token, TokenKind};
+pub(crate) use self::trivia::{is_line_terminator, is_whitespace};
 
 use self::token::PUNCTUATORS;
 use crate::span::Span;

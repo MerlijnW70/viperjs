@@ -14,7 +14,7 @@ use crate::span::Span;
 /// twice over: U+FEFF (`<ZWNBSP>`) is ECMAScript white space and Rust says it is not, while
 /// U+0085 (NEL) is not and Rust says it is. §12.2 Note 2 makes the exclusion explicit — the
 /// Unicode `White_Space` property is deliberately *not* the criterion.
-fn is_whitespace(ch: char) -> bool {
+pub(crate) fn is_whitespace(ch: char) -> bool {
     matches!(
         ch,
         '\u{0009}'      // <TAB>  CHARACTER TABULATION
@@ -49,7 +49,7 @@ fn is_space_separator(ch: char) -> bool {
 /// ECMA-262 §12.3 Line Terminators, Table 32 — all four, the same set [`crate::span::line_col`]
 /// counts lines by. The two agreeing is not optional: a token whose `newline_before` disagrees
 /// with the line number in its own error message is a bug report nobody can act on.
-fn is_line_terminator(ch: char) -> bool {
+pub(crate) fn is_line_terminator(ch: char) -> bool {
     matches!(ch, '\u{000a}' | '\u{000d}' | '\u{2028}' | '\u{2029}')
 }
 

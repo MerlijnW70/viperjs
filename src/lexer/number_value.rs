@@ -121,7 +121,7 @@ pub fn bigint_digits(source: &str, span: Span) -> Option<(u32, String)> {
 ///
 /// Returns `None` if any character is not a digit of the radix; `_` is skipped, since §12.9.3's
 /// MV rules define separators to contribute nothing.
-fn power_of_two_value(digits: &str, bits: u32) -> Option<f64> {
+pub(crate) fn power_of_two_value(digits: &str, bits: u32) -> Option<f64> {
     let radix = 1u32 << bits;
     let mut top: u64 = 0;
     let mut dropped: u32 = 0;
