@@ -99,6 +99,8 @@ struct Frame {
     /// The code that was running, and the instruction to come back to.
     code: Option<Rc<Chunk>>,
     at: usize,
+    /// The `this` to go back to.
+    this_value: Value,
     /// The environment to go back to.
     ///
     /// Not the callee's — that one may outlive the call, if the callee made a closure over it.
@@ -153,6 +155,8 @@ pub struct Vm {
     handlers: Vec<Handler>,
     /// The calls that are waiting, outermost first.
     frames: Vec<Frame>,
+    /// The running function's `this` — §10.2.1.2's binding, decided by the call.
+    this_value: Value,
     /// The environment the running code is in.
     ///
     /// Set when [`Vm::run`] begins and changed by every call and return. A variable is found by
@@ -177,6 +181,7 @@ impl Vm {
             // Replaced by the script's own before anything runs; a machine with no environment
             // at all is not a state that has to be representable.
             environment: heap.new_environment(None, 0),
+            this_value: Value::Undefined,
             completion: Value::Undefined,
         }
     }
@@ -196,6 +201,9 @@ impl Vm {
         // §16.1.7 — the script's own environment, and the root of every chain a function it
         // declares will walk.
         self.environment = heap.new_environment(None, chunk.locals());
+        // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined`, which is
+        // the one place the two goal symbols disagree about it.
+        self.this_value = Value::Object(self.realm.global());
         // `None` is the script itself, which the caller owns; `Some` is a function body, which
         // the function object owns. Two sources rather than one because the root is borrowed and
         // a callee is reference-counted, and moving the root into an `Rc` would make every
@@ -308,13 +316,31 @@ impl Vm {
                     );
                     self.stack.push(Value::Object(object));
                 }
-                Instruction::Call(count) => {
+                Instruction::Call(count) | Instruction::CallMethod(count) => {
+                    let method = matches!(instruction, Instruction::CallMethod(_));
                     let count = count as usize;
-                    // The callee sits under its arguments, because it was pushed first.
+                    // The callee sits under its arguments, because it was pushed first — and a
+                    // method call has its receiver under *that*.
                     let Some(callee_at) = self.stack.len().checked_sub(count + 1) else {
                         return Err(Fault::StackUnderflow);
                     };
+                    let receiver_at = if method {
+                        match callee_at.checked_sub(1) {
+                            Some(at) => at,
+                            None => return Err(Fault::StackUnderflow),
+                        }
+                    } else {
+                        callee_at
+                    };
                     let callee = self.stack[callee_at];
+                    // §10.2.1.2 — a call with no receiver, and a sloppy-mode function, get the
+                    // global object rather than `undefined`. Strict mode keeps the `undefined`,
+                    // and telling the two apart needs the flag the parser already computes.
+                    let receiver = if method {
+                        self.stack[receiver_at]
+                    } else {
+                        Value::Object(self.realm.global())
+                    };
                     let Value::Object(object) = callee else {
                         self.throw_type_error(
                             TypeError("what was called is not a function"),
@@ -336,10 +362,6 @@ impl Vm {
                         continue;
                     };
                     let body = body.clone();
-                    // §10.2.1 — the frame is as wide as the body needs, the arguments fill its
-                    // first slots in order, and anything the caller did not supply is
-                    // `undefined`. An argument too many is discarded: reaching it needs
-                    // `arguments`, which is a slice of its own.
                     if self.frames.len() >= MAX_CALL_DEPTH {
                         let thrown =
                             self.realm
@@ -360,15 +382,17 @@ impl Vm {
                         let index = u32::try_from(offset).unwrap_or(u32::MAX);
                         heap.set_variable(environment, index, argument);
                     }
-                    self.stack.truncate(callee_at);
+                    self.stack.truncate(receiver_at);
                     self.frames.push(Frame {
                         code: current.take(),
                         at,
+                        this_value: self.this_value,
                         environment: self.environment,
-                        stack_base: callee_at,
+                        stack_base: receiver_at,
                         handlers_base: self.handlers.len(),
                     });
                     self.environment = environment;
+                    self.this_value = receiver;
                     current = Some(body);
                     at = 0;
                 }
@@ -383,8 +407,14 @@ impl Vm {
                     self.handlers.truncate(frame.handlers_base);
                     self.stack.push(value);
                     self.environment = frame.environment;
+                    self.this_value = frame.this_value;
                     current = frame.code;
                     at = frame.at;
+                }
+                Instruction::LoadThis => self.stack.push(self.this_value),
+                Instruction::Duplicate => {
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    self.stack.push(value);
                 }
                 Instruction::NewObject => {
                     let object = heap.new_object(Some(self.realm.object_prototype()));
@@ -563,6 +593,7 @@ impl Vm {
                 return Err(Fault::ReturnWithNoCall);
             };
             self.environment = frame.environment;
+            self.this_value = frame.this_value;
             *current = frame.code;
             *at = frame.at;
         }
@@ -1803,13 +1834,11 @@ mod tests {
     #[test]
     fn what_functions_cannot_do_yet_says_which_and_where() {
         let cases = [
-            ("function f() { return this; }", "this"),
             ("function* g() {}", "an async function or a generator"),
             ("async function f() {}", "an async function or a generator"),
             ("function f(a = 1) {}", "a default parameter"),
             ("function f(...rest) {}", "a rest parameter"),
             ("function f([a]) {}", "a destructuring parameter"),
-            ("var o = {}; o.m = function () {}; o.m();", "a method call"),
             ("function f() {} f(...[1]);", "a spread argument"),
             ("var f = function () {}; f?.();", "optional chaining"),
         ];
@@ -1942,6 +1971,92 @@ mod tests {
                  var f = hold(10); f(); f();"
             ),
             "12"
+        );
+    }
+
+    #[test]
+    fn a_method_call_receives_the_object_it_was_found_on() {
+        // §13.3.6.1 — the receiver travels with the *call*, not with the function. The same
+        // function called two ways has two different `this`, which is the whole reason a method
+        // is not simply a property whose value happens to be callable.
+        assert_eq!(
+            run("var o = { v: 7 }; o.get = function () { return this.v; }; o.get();"),
+            "7"
+        );
+        assert_eq!(
+            run(
+                "var o = { v: 7 }; o.get = function () { return this.v; }; var f = o.get; typeof f();"
+            ),
+            "undefined"
+        );
+        // The *nearest* base is the receiver, not the outermost one.
+        assert_eq!(
+            run("var o = { a: { v: 1 } }; o.a.get = function () { return this.v; }; o.a.get();"),
+            "1"
+        );
+        // Arguments still work, and a computed key finds the same method.
+        assert_eq!(
+            run("var o = { v: 2 }; o.m = function (x) { return this.v + x; }; o.m(3);"),
+            "5"
+        );
+        assert_eq!(
+            run("var o = { v: 1 }; o['m'] = function () { return this.v; }; o['m']();"),
+            "1"
+        );
+    }
+
+    #[test]
+    fn the_base_of_a_method_call_is_evaluated_exactly_once() {
+        // `f().m()` calls `f` once. Compiling the base twice — once to find the method and once
+        // to be the receiver — would call it twice, and that is a side effect nobody asked for.
+        assert_eq!(
+            run("var calls = 0; function base() { calls = calls + 1; \
+                 return { m: function () { return 'ok'; } }; } base().m(); calls;"),
+            "1"
+        );
+        // …and a computed key is evaluated once too, which is the same rule one level down.
+        assert_eq!(
+            run(
+                "var keys = 0; var o = { m: function () { return 'ok'; } }; \
+                 function key() { keys = keys + 1; return 'm'; } o[key()](); keys;"
+            ),
+            "1"
+        );
+    }
+
+    #[test]
+    fn a_call_with_no_receiver_gets_the_global_object() {
+        // §10.2.1.2's substitution. Strict mode keeps the `undefined` instead, and telling the
+        // two apart needs the flag the parser already computes — so this is the sloppy answer,
+        // which is what an ordinary script gets.
+        assert_eq!(run("function f() { return typeof this; } f();"), "object");
+        assert_eq!(run("typeof this;"), "object");
+        // The script's `this` and a plain call's are the same object (§16.1.7).
+        assert_eq!(
+            run("var top = this; function f() { return this === top; } f();"),
+            "true"
+        );
+        // …and a method's is not.
+        assert_eq!(
+            run("var top = this; var o = { m: function () { return this === top; } }; o.m();"),
+            "false"
+        );
+    }
+
+    #[test]
+    fn this_is_restored_when_a_call_returns_however_it_returns() {
+        assert_eq!(
+            run(
+                "var o = { v: 'inner', m: function () { return this.v; } }; \
+                 var outer = this; o.m(); typeof this;"
+            ),
+            "object"
+        );
+        // Including when the call left by throwing, which unwinds frames rather than returning.
+        assert_eq!(
+            run("var top = this; var o = { m: function () { throw 1; } }; \
+                 try { o.m(); } catch (e) { this === top; }"),
+            "true"
         );
     }
 

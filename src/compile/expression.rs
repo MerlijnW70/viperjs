@@ -164,7 +164,7 @@ impl Compiler<'_> {
             // §13.3.2 and §13.3.3 — `o.x` and `o[k]`. The name is a constant where the key is
             // an expression, which is the whole difference between the two forms.
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
-                self.property_reference(expression)?;
+                self.property_reference(expression, Keep::Nothing)?;
                 self.chunk.emit(Instruction::GetProperty);
                 Ok(())
             }
@@ -181,7 +181,11 @@ impl Compiler<'_> {
                 }
                 None => Err(unsupported("a reference to an undeclared name", span)),
             },
-            ExprKind::This => Err(unsupported("this", span)),
+            // §13.2.1 — `this`, which the call decided and the frame is holding.
+            ExprKind::This => {
+                self.chunk.emit(Instruction::LoadThis);
+                Ok(())
+            }
             ExprKind::BigInt(_) => Err(unsupported("a BigInt literal", span)),
             ExprKind::Call {
                 optional,
@@ -318,7 +322,11 @@ impl Compiler<'_> {
     /// the same two things. Written out three times it was the same guard three times, and two of
     /// them were unreachable: `o?.a = 1` and `#x` outside a class are refused by the parser long
     /// before they reach a compiler.
-    pub(super) fn property_reference(&mut self, target: &Expr) -> Result<(), CompileError> {
+    pub(super) fn property_reference(
+        &mut self,
+        target: &Expr,
+        keep: Keep,
+    ) -> Result<(), CompileError> {
         match &target.kind {
             ExprKind::Member {
                 private,
@@ -333,6 +341,7 @@ impl Compiler<'_> {
                     return Err(unsupported("optional chaining", target.span));
                 }
                 self.expression(object)?;
+                keep.receiver(self);
                 let units: Vec<u16> = property.encode_utf16().collect();
                 let id = self.heap.new_string(units);
                 self.constant(Value::String(id))
@@ -346,6 +355,7 @@ impl Compiler<'_> {
                     return Err(unsupported("optional chaining", target.span));
                 }
                 self.expression(object)?;
+                keep.receiver(self);
                 self.expression(property)
             }
             _ => Err(unsupported(
@@ -362,7 +372,7 @@ impl Compiler<'_> {
     fn delete(&mut self, argument: &Expr, span: Span) -> Result<(), CompileError> {
         match &argument.kind {
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
-                self.property_reference(argument)?;
+                self.property_reference(argument, Keep::Nothing)?;
                 self.chunk.emit(Instruction::DeleteProperty);
                 Ok(())
             }
@@ -390,7 +400,7 @@ impl Compiler<'_> {
         value: &Expr,
         span: Span,
     ) -> Result<(), CompileError> {
-        self.property_reference(target)?;
+        self.property_reference(target, Keep::Nothing)?;
         match compound_operator(operator) {
             None if operator == AssignmentOperator::Assign => self.expression(value)?,
             Some(binary) => {
@@ -448,16 +458,21 @@ impl Compiler<'_> {
         arguments: &[Argument],
         span: Span,
     ) -> Result<(), CompileError> {
-        // A method call needs `this` to be the object the method was found on, and there is no
-        // `this` yet — so a call whose callee is a property is refused rather than called with
-        // the wrong receiver.
-        if matches!(
+        // §13.3.6.1 — a method call keeps the object the method was *found on* as the receiver.
+        // The base is evaluated once and copied, because `f().m()` must call `f` once.
+        let method = matches!(
             callee.kind,
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
-        ) {
-            return Err(unsupported("a method call", span));
+        );
+        if method {
+            // The base is evaluated once and copied *before* the key, so the stack ends as
+            // [receiver, method] with nothing between them. Copying after the key would leave the
+            // key underneath, and evaluating the base twice would run `f()` twice in `f().m()`.
+            self.property_reference(callee, Keep::Receiver)?;
+            self.chunk.emit(Instruction::GetProperty);
+        } else {
+            self.expression(callee)?;
         }
-        self.expression(callee)?;
         for argument in arguments {
             let Argument::Value(value) = argument else {
                 return Err(unsupported("a spread argument", span));
@@ -468,7 +483,11 @@ impl Compiler<'_> {
             kind: ErrorKind::TooLong,
             span,
         })?;
-        self.chunk.emit(Instruction::Call(count));
+        self.chunk.emit(if method {
+            Instruction::CallMethod(count)
+        } else {
+            Instruction::Call(count)
+        });
         Ok(())
     }
 }
@@ -543,4 +562,27 @@ fn compile_function_body(
     compiler.constant(Value::Undefined)?;
     compiler.chunk.emit(Instruction::Return);
     Ok(compiler.finish())
+}
+
+/// Whether a property reference should leave its base behind as well.
+///
+/// A method call wants the object it found the method on — that object becomes the `this` of the
+/// call — and every other use of a property wants only the base and the key. One function with a
+/// flag rather than two: the guards a property reference has to make are the same either way, and
+/// written twice one of the copies is a guard no test can reach.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Keep {
+    /// Just the base and the key, which is what a get, a set and a delete need.
+    Nothing,
+    /// A copy of the base under them, to be the receiver of a call.
+    Receiver,
+}
+
+impl Keep {
+    /// Emit the copy, if one was asked for.
+    fn receiver(self, compiler: &mut Compiler<'_>) {
+        if self == Self::Receiver {
+            compiler.chunk.emit(Instruction::Duplicate);
+        }
+    }
 }

@@ -143,7 +143,22 @@ pub enum Instruction {
     /// keyword make two objects, and `f !== f` across calls is the whole reason closures work.
     MakeFunction(u32),
     /// Take a callee and this many arguments and call it, leaving what it returned — §13.3.6.
+    ///
+    /// The callee gets no receiver, so its `this` is §10.2.1.2's substitution: the global object.
     Call(u32),
+    /// Take a receiver, a callee and this many arguments, and call the callee *on* the receiver.
+    ///
+    /// A method call is not a plain call of a property's value. `o.m()` and `var f = o.m; f()`
+    /// call the same function with different `this`, which is the whole reason the receiver
+    /// travels with the call rather than with the function.
+    CallMethod(u32),
+    /// Push the running function's `this`.
+    LoadThis,
+    /// Push a copy of the top value.
+    ///
+    /// A method call needs the base twice — once to find the method on and once to call it with —
+    /// and evaluating it twice would run its side effects twice.
+    Duplicate,
     /// Leave the current function, taking the top value with it — §14.10.
     Return,
     /// Take the top value and make it the script's completion value.
@@ -548,6 +563,9 @@ fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::PopHandler
         | Instruction::MakeFunction(_)
         | Instruction::Call(_)
+        | Instruction::CallMethod(_)
+        | Instruction::LoadThis
+        | Instruction::Duplicate
         | Instruction::Return
         | Instruction::NewObject
         | Instruction::DuplicateTwo
@@ -759,7 +777,7 @@ mod tests {
         let not_a_reference = Expr::new(ExprKind::Number(1.0), Span::new(0, 1));
         let mut compiler = Compiler::new(&mut heap);
         let error = compiler
-            .property_reference(&not_a_reference)
+            .property_reference(&not_a_reference, crate::compile::expression::Keep::Nothing)
             .expect_err("not a property reference"); // same
         assert_eq!(
             error.kind,

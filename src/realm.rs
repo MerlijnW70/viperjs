@@ -25,6 +25,7 @@ use crate::value::Value;
 #[derive(Debug, Clone, Copy)]
 pub struct Realm {
     object_prototype: ObjectId,
+    global: ObjectId,
     function_prototype: ObjectId,
     error_prototype: ObjectId,
     type_error_prototype: ObjectId,
@@ -70,6 +71,11 @@ impl Realm {
         // It is callable in the specification, and callable with no arguments returning
         // `undefined`, which needs a native function and so waits for one.
         let function_prototype = heap.new_object(Some(object_prototype));
+        // §9.3.4's global object, in the part that exists yet: an ordinary object with
+        // `Object.prototype` behind it. It has no properties, because every property it should
+        // have is a builtin. What it is *for* today is §10.2.1.2's substitution — a sloppy-mode
+        // call with no receiver gets this rather than `undefined`.
+        let global = heap.new_object(Some(object_prototype));
         let error_prototype = heap.new_object(Some(object_prototype));
         // §20.5.3 — `Error.prototype` has a `name` of `"Error"` and an empty `message`, and both
         // are ordinary writable properties rather than anything special. That an error's message
@@ -92,6 +98,7 @@ impl Realm {
 
         Self {
             object_prototype,
+            global,
             function_prototype,
             error_prototype,
             type_error_prototype,
@@ -103,6 +110,17 @@ impl Realm {
     /// `%Object.prototype%` — what an object literal inherits from.
     pub fn object_prototype(&self) -> ObjectId {
         self.object_prototype
+    }
+
+    /// The global object — `globalThis`.
+    ///
+    /// Bare so far. A script's `this` is this object (§16.1.7), and so is the `this` of a
+    /// sloppy-mode function called with no receiver. What it does *not* do yet is hold the
+    /// script's `var` declarations, which §9.3's Global Environment Record puts here — those live
+    /// in the script's declarative environment, and moving them is the slice that gives an
+    /// undeclared name a ReferenceError instead of a refusal to compile.
+    pub fn global(&self) -> ObjectId {
+        self.global
     }
 
     /// `%Function.prototype%` — what every function inherits from.
