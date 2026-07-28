@@ -29,11 +29,11 @@ include = ["/src", "/examples", "/Cargo.toml", "/README.md", "/CHANGELOG.md", "/
 
 [dev-dependencies]
 
-# The lab (see lab/README.md) is a WORKSPACE MEMBER, never a dependency: experiments are
-# built and run on demand, are not linted, and cannot reach the engine's release artifact.
-# `cargo test` at the root touches the engine only.
+# Both are WORKSPACE MEMBERS and neither is a dependency: `cargo test` at the root touches the
+# engine alone. The lab (see lab/README.md) holds experiments; `conformance/` runs test262 and
+# depends on the engine one way only, which is what keeps the engine's dependency table empty.
 [workspace]
-members = ["lab"]
+members = ["conformance", "lab"]
 
 [profile.release]
 # The engine is embedded in other people's binaries: size and predictability beat the last

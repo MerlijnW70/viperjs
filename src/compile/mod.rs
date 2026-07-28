@@ -222,8 +222,12 @@ impl<'a> Compiler<'a> {
             let Some(at) = scope.iter().rposition(|local| &**local == name) else {
                 continue;
             };
-            let depth = u32::try_from(back + 1).ok()?;
-            let index = u32::try_from(at).ok()?;
+            // `back` counts enclosing scopes and `at` indexes one scope's locals, so both are
+            // bounded by how much source there is — and `Span` being `u32` already puts a source
+            // longer than `u32::MAX` bytes outside what this engine agreed to read. Neither
+            // conversion can fail on a source we accepted in the first place.
+            let depth = u32::try_from(back + 1).ok()?; // bounded by the u32 source-length contract
+            let index = u32::try_from(at).ok()?; // same
             return Some(Where { depth, index });
         }
         None
