@@ -75,10 +75,11 @@ impl Parser<'_> {
     /// `RelationalExpression : PrivateIdentifier in ShiftExpression` (§13.10), with the cursor on
     /// the name.
     ///
-    /// Produced at the assignment level rather than woven into the operator ladder because the
-    /// left operand is not an expression: no production makes a `PrivateIdentifier` an operand, so
-    /// there is nothing for [`Parser::parse_binary`] to have read. The `in` is required — a
-    /// private name alone is not anything — and `[~In]` refuses it as it refuses any other `in`.
+    /// Entered from the top of [`Parser::parse_binary`], which is where every operand position
+    /// passes through — the left operand here is not an expression, so there is nothing for
+    /// `parse_unary` to have read and the alternative has to be taken instead of it rather than
+    /// inside it. The `in` is required, a private name alone being not anything, and `[~In]`
+    /// refuses it as it refuses any other `in`.
     pub(super) fn parse_private_in(&mut self, allow_in: AllowIn) -> Result<Expr, ParseError> {
         let token = self.advance(Goal::Div)?;
         let name = self.private_name(token)?;
@@ -107,17 +108,6 @@ impl Parser<'_> {
         // is the only level that may produce one — see [`super::arrow`]. What comes back may
         // also be a parenthesized expression the attempt had to read to find out, in which case
         // it becomes the head of the ordinary operand path rather than being read twice.
-        // §13.10: `RelationalExpression : PrivateIdentifier in ShiftExpression` — the one place
-        // a private name stands on its own, so that code can ask whether an object carries a
-        // private field without the access throwing. Read here because a `#a` may begin nothing
-        // else: there is no production that makes one an operand.
-        if matches!(self.current.kind, TokenKind::PrivateIdentifier { .. }) {
-            // A `RelationalExpression`, so everything looser than one still applies to it:
-            // `#a in b in c` is `(#a in b) in c` and `#a in b == c` is `(#a in b) == c`.
-            let relational = self.parse_private_in(allow_in)?;
-            let left = self.parse_binary_tail(relational, 0, allow_in)?;
-            return self.parse_conditional_and_assignment(left, allow_in);
-        }
         // §15.5: a `YieldExpression` is an `AssignmentExpression` and nothing tighter, so this
         // level produces it as it does an arrow — and for the same reason. `1 + yield` and
         // `yield ? a : b` have no derivation because both operators want a narrower operand.
@@ -252,6 +242,24 @@ impl Parser<'_> {
         // to see whether a `=>` followed it. Passed down rather than kept on the parser, so the
         // compiler is what makes sure it reaches exactly one place — and measurably free, the
         // restructuring below being what the depth went on.
+        // §13.10: `RelationalExpression : PrivateIdentifier in ShiftExpression`. A private name
+        // is not an operand — no production makes one — so `parse_unary` has nothing to read and
+        // this alternative has to be taken before it rather than through it.
+        //
+        // `minimum < RELATIONAL_PRECEDENCE` is the whole of where it may stand, and it is the
+        // grammar rather than a list: this alternative *is* a `RelationalExpression`, so it fits
+        // exactly where one fits. An operator whose right operand is a `RelationalExpression` or
+        // looser admits it — `x && #a in v`, `x == #a in v`, `x | #a in v`, `x, #a in v` — and
+        // one whose right operand is a `ShiftExpression` or tighter does not, which is why
+        // `x < #a in v` and `x + #a in v` have no derivation. Every entry from the assignment
+        // level arrives with `minimum` at zero, so nothing there needs a case of its own.
+        if head.is_none()
+            && minimum < RELATIONAL_PRECEDENCE
+            && matches!(self.current.kind, TokenKind::PrivateIdentifier { .. })
+        {
+            let relational = self.parse_private_in(allow_in)?;
+            return self.parse_binary_tail(relational, minimum, allow_in);
+        }
         let left = self.parse_unary(head)?;
         self.parse_binary_tail(left, minimum, allow_in)
     }

@@ -559,6 +559,71 @@ mod tests {
     }
 
     #[test]
+    fn a_private_name_may_begin_any_operand_a_relational_expression_could_stand_in() {
+        // §13.10 makes `PrivateIdentifier in ShiftExpression` an alternative of
+        // `RelationalExpression`, so it stands exactly where one stands — which is a rule about
+        // precedence and not a list of operators. An operator whose right operand is a
+        // `RelationalExpression` or looser takes it…
+        let body = |source: &str| {
+            let rendered = shape(&format!("(class {{ #a; m(v, w) {{ return {source}; }} }})"));
+            rendered
+                .split("(return ")
+                .nth(1)
+                .map(|tail| tail.trim_end_matches(")}))])").to_string())
+                .unwrap_or(rendered)
+        };
+        assert_eq!(body("x && #a in v"), "(&& x (#in a v))");
+        assert_eq!(body("x || #a in v"), "(|| x (#in a v))");
+        assert_eq!(body("x ?? #a in v"), "(?? x (#in a v))");
+        assert_eq!(body("x == #a in v"), "(== x (#in a v))");
+        assert_eq!(body("x | #a in v"), "(| x (#in a v))");
+        assert_eq!(body("x & #a in v"), "(& x (#in a v))");
+        // …and one whose right operand is a `ShiftExpression` or tighter does not. These are the
+        // boundary: `==` binds looser than a relational and `<` is one, so the alternative is
+        // available on one side of that line and has no derivation on the other.
+        for refused in [
+            "x < #a in v",
+            "x > #a in v",
+            "x instanceof #a in v",
+            "x in #a in v",
+            "x << #a in v",
+            "x + #a in v",
+            "x * #a in v",
+            "x ** #a in v",
+        ] {
+            assert!(
+                parse_script(&format!("class C {{ #a; m(v) {{ {refused}; }} }}")).is_err(),
+                "{refused:?} should have no derivation"
+            );
+        }
+        // Reached through an operand position rather than an operator, which is the same rule
+        // seen from the other side: each of these reads an `AssignmentExpression`.
+        assert!(parse_script("class C { #a; m(v) { [#a in v]; } }").is_ok());
+        assert!(parse_script("class C { #a; m(v) { f(#a in v); } }").is_ok());
+        assert!(parse_script("class C { #a; m(v) { ({p: #a in v}); } }").is_ok());
+        assert!(parse_script("class C { #a; m(v) { x ? #a in v : y; } }").is_ok());
+        assert!(parse_script("class C { #a; m(v) { `${#a in v}`; } }").is_ok());
+        assert!(parse_script("class C { #a; m(v) { x, #a in v; } }").is_ok());
+        // A private name is still not an operand on its own, wherever it is written — the `in`
+        // is what the production is about, and without one there is nothing to derive.
+        assert!(parse_script("class C { #a; m(v) { x && #a; } }").is_err());
+        assert!(parse_script("class C { #a; m(v) { x == #a; } }").is_err());
+        assert!(parse_script("class C { #a; m(v) { !#a in v; } }").is_err());
+        // An operand that has already been read is one this alternative may not replace. The
+        // assignment level opens a `(` before it knows whether an arrow follows, and hands what
+        // it read down as the left operand — so without that guard `(x) #a in v` would *parse*,
+        // silently discarding the `(x)`. It is a syntax error, and only a line terminator makes
+        // it anything else: then ASI ends the first statement and the second is ordinary.
+        assert!(parse_script("class C { #a; m(v) { (x) #a in v; } }").is_err());
+        assert!(
+            parse_script(
+                "class C { #a; m(v) { (x)
+#a in v; } }"
+            )
+            .is_ok()
+        );
+    }
+    #[test]
     fn a_field_is_a_name_an_optional_initialiser_and_a_semicolon_that_may_be_inserted() {
         assert_eq!(
             statements("class C { a; }"),
