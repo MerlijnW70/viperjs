@@ -145,7 +145,7 @@ impl Compiler<'_> {
             };
             let slot = self.declare(&name.name);
             self.expression(initializer)?;
-            self.chunk.emit(Instruction::StoreLocal(slot));
+            self.chunk.emit(Instruction::StoreVariable(0, slot));
             self.chunk.emit(Instruction::Pop);
             // A `var` always belongs to the function it is written in, so it is always a local —
             // even inside a function that also reads script-level names.
@@ -318,12 +318,12 @@ impl Compiler<'_> {
             // slot no source text can name, because the finally block may use the stack.
             self.chunk.patch(unwind)?;
             let saved = self.declare_hidden("thrown");
-            self.chunk.emit(Instruction::StoreLocal(saved));
+            self.chunk.emit(Instruction::StoreVariable(0, saved));
             self.chunk.emit(Instruction::Pop);
             if let Some(finalizer) = &statement.finalizer {
                 self.statements(finalizer)?;
             }
-            self.chunk.emit(Instruction::LoadLocal(saved));
+            self.chunk.emit(Instruction::LoadVariable(0, saved));
             self.chunk.emit(Instruction::Throw);
             self.chunk.patch(end)?;
         }
@@ -363,7 +363,7 @@ impl Compiler<'_> {
                     return Err(unsupported("a destructuring catch parameter", handler.span));
                 };
                 let slot = self.declare_shadowing(&name.name);
-                self.chunk.emit(Instruction::StoreLocal(slot));
+                self.chunk.emit(Instruction::StoreVariable(0, slot));
                 self.chunk.emit(Instruction::Pop);
             }
             None => self.chunk.emit(Instruction::Pop),
@@ -396,7 +396,7 @@ impl Compiler<'_> {
             };
             let slot = self.declare(&name.name);
             self.make_function(function, statement.span)?;
-            self.chunk.emit(Instruction::StoreLocal(slot));
+            self.chunk.emit(Instruction::StoreVariable(0, slot));
             self.chunk.emit(Instruction::Pop);
         }
         Ok(())

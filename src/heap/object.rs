@@ -20,7 +20,7 @@
 //! wait for evidence.
 
 use crate::compile::Chunk;
-use crate::heap::{Heap, Property, PropertyDescriptor, PropertyKey, PropertyKind};
+use crate::heap::{EnvironmentId, Heap, Property, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::value::Value;
 use std::rc::Rc;
 
@@ -55,6 +55,11 @@ pub struct Object {
     /// made it. See [`Chunk`] for why reference counting is safe for code where DR-0010 rejects
     /// it for values.
     call: Option<Rc<Chunk>>,
+    /// The environment this function was *written* in — §10.2's `[[Environment]]`.
+    ///
+    /// A closure is this field. The call that made the function is long gone by the time the
+    /// function runs, and the variables it could see are still here because this holds them.
+    environment: Option<EnvironmentId>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -96,6 +101,7 @@ impl Object {
             prototype,
             extensible: true,
             call: None,
+            environment: None,
             properties: Vec::new(),
         }
     }
@@ -108,6 +114,11 @@ impl Object {
     /// The body this object runs when called, if it is callable at all.
     pub fn call(&self) -> Option<&Rc<Chunk>> {
         self.call.as_ref()
+    }
+
+    /// The environment this function was written in, if it is a function at all.
+    pub fn environment(&self) -> Option<EnvironmentId> {
+        self.environment
     }
 
     /// `[[IsExtensible]]` (§10.1.3).
@@ -365,10 +376,16 @@ impl Heap {
     ///
     /// Ordinary in every way but one: it has a `[[Call]]`, which is what makes `typeof` say
     /// `"function"` and what a call expression looks for.
-    pub fn new_function(&mut self, prototype: ObjectId, body: Rc<Chunk>) -> ObjectId {
+    pub fn new_function(
+        &mut self,
+        prototype: ObjectId,
+        body: Rc<Chunk>,
+        environment: EnvironmentId,
+    ) -> ObjectId {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(body);
+        object.environment = Some(environment);
         self.objects.push(object);
         id
     }

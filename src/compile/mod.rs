@@ -88,13 +88,17 @@ pub enum Instruction {
     JumpIfTrue(u32),
     /// Discard the top value.
     Pop,
-    /// Push the value of the local variable in this slot.
-    LoadLocal(u32),
-    /// Store the top value into this slot, **without** taking it off the stack.
+    /// Push the value of a variable: this many environments out, at this index.
+    ///
+    /// One instruction rather than one per scope kind. The compiler built the chain of scopes, so
+    /// it knows how far out a name is and nothing here searches for it — §9.1's environment
+    /// records, resolved at compile time.
+    LoadVariable(u32, u32),
+    /// Store the top value into a variable, **without** taking it off the stack.
     ///
     /// Assignment is an expression: `a = (b = 1)` works because the inner one leaves its value
     /// behind. A statement that only wants the effect follows this with a [`Instruction::Pop`].
-    StoreLocal(u32),
+    StoreVariable(u32, u32),
     /// Push a new empty ordinary object, inheriting from `Object.prototype`.
     NewObject,
     /// Push a copy of the top two values, in the same order.
@@ -142,15 +146,6 @@ pub enum Instruction {
     Call(u32),
     /// Leave the current function, taking the top value with it — §14.10.
     Return,
-    /// Push the value of a script-level variable.
-    ///
-    /// Separate from [`Instruction::LoadLocal`] because a function's slots are counted from the
-    /// bottom of *its* frame and the script's are counted from the bottom of everything. A
-    /// function that reads a name declared at the top level is reaching past its own frame, and
-    /// this is the instruction that says so.
-    LoadScript(u32),
-    /// Store the top value into a script-level variable, leaving it on the stack.
-    StoreScript(u32),
     /// Take the top value and make it the script's completion value.
     ///
     /// §14.2.2 — a Script evaluates to the value of its last *value-producing* statement, which
@@ -383,17 +378,12 @@ struct Compiler<'a> {
     continues: Vec<Vec<Unpatched>>,
     /// How deep into an expression the compiler currently is.
     depth: u32,
-    /// The script's slots, by name — reachable from inside any function.
+    /// The scopes this one is written inside, outermost first.
     ///
-    /// Empty while the script itself is being compiled, because then [`Compiler::locals`] *is*
-    /// that table and a name in it is an ordinary local.
-    script_names: Vec<Box<str>>,
-    /// The slots of every enclosing *function*, by name.
-    ///
-    /// Not to resolve against — to refuse against. A name found here needs a closure, and saying
-    /// "that is a closure and there are none yet" is a far better answer than resolving it to the
-    /// wrong slot or to nothing at all.
-    enclosing_names: Vec<Box<str>>,
+    /// The script's is at the front and the immediately enclosing function's at the back, so
+    /// counting *backwards* from the end is counting environments outwards — which is exactly
+    /// what a [`Instruction::LoadVariable`] depth means.
+    outer: Vec<Vec<Box<str>>>,
     /// Whether this is the script rather than a function body.
     ///
     /// §14.2.2's completion value belongs to the script; what a function's statements evaluate to
@@ -424,8 +414,7 @@ impl<'a> Compiler<'a> {
             finally_guards: Vec::new(),
             high_water: 0,
             depth: 0,
-            script_names: Vec::new(),
-            enclosing_names: Vec::new(),
+            outer: Vec::new(),
             is_script: true,
         }
     }
@@ -462,42 +451,37 @@ impl<'a> Compiler<'a> {
 
     /// Where `name` lives, from where the compiler is standing.
     ///
-    /// Three answers and not two. A name is this function's own, or the script's, or an enclosing
-    /// function's — and the third is refused rather than resolved, because reaching it needs a
-    /// closure and there are none yet. Refusing is what keeps the difference visible: without it,
-    /// `function outer() { var x; function inner() { return x; } }` would either find nothing or
-    /// find the wrong `x`, and both are worse than a message.
+    /// A depth and an index, because the compiler built the chain of scopes and so knows the
+    /// answer: how many environments out, and which slot there. Nothing at run time compares a
+    /// string to find a variable — §9.1's records, resolved once.
     fn binding(&self, name: &str) -> Option<Where> {
-        if let Some(slot) = self.resolve(name) {
-            return Some(Where::Local(slot));
+        if let Some(index) = self.resolve(name) {
+            return Some(Where { depth: 0, index });
         }
-        if let Some(at) = self.script_names.iter().rposition(|local| &**local == name) {
-            return u32::try_from(at).ok().map(Where::Script);
-        }
-        if self.enclosing_names.iter().any(|local| &**local == name) {
-            return Some(Where::Captured);
+        // Outwards, one scope at a time. The innermost enclosing scope is the *last* of `outer`,
+        // so walking it in reverse is walking the environment chain — and the count is the depth
+        // the instruction carries.
+        for (back, scope) in self.outer.iter().rev().enumerate() {
+            let Some(at) = scope.iter().rposition(|local| &**local == name) else {
+                continue;
+            };
+            let depth = u32::try_from(back + 1).ok()?;
+            let index = u32::try_from(at).ok()?;
+            return Some(Where { depth, index });
         }
         None
     }
 
     /// Emit the instruction that reads `binding`.
-    fn load(&mut self, binding: Where, span: Span) -> Result<(), CompileError> {
-        match binding {
-            Where::Local(slot) => self.chunk.emit(Instruction::LoadLocal(slot)),
-            Where::Script(slot) => self.chunk.emit(Instruction::LoadScript(slot)),
-            Where::Captured => return Err(unsupported("a closure over an outer variable", span)),
-        }
-        Ok(())
+    fn load(&mut self, binding: Where) {
+        self.chunk
+            .emit(Instruction::LoadVariable(binding.depth, binding.index));
     }
 
     /// Emit the instruction that writes `binding`, leaving the value on the stack.
-    fn store(&mut self, binding: Where, span: Span) -> Result<(), CompileError> {
-        match binding {
-            Where::Local(slot) => self.chunk.emit(Instruction::StoreLocal(slot)),
-            Where::Script(slot) => self.chunk.emit(Instruction::StoreScript(slot)),
-            Where::Captured => return Err(unsupported("a closure over an outer variable", span)),
-        }
-        Ok(())
+    fn store(&mut self, binding: Where) {
+        self.chunk
+            .emit(Instruction::StoreVariable(binding.depth, binding.index));
     }
 }
 
@@ -557,16 +541,14 @@ fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Unary(_)
         | Instruction::Binary(_)
         | Instruction::Pop
-        | Instruction::LoadLocal(_)
-        | Instruction::StoreLocal(_)
+        | Instruction::LoadVariable(_, _)
+        | Instruction::StoreVariable(_, _)
         | Instruction::SetCompletion
         | Instruction::Throw
         | Instruction::PopHandler
         | Instruction::MakeFunction(_)
         | Instruction::Call(_)
         | Instruction::Return
-        | Instruction::LoadScript(_)
-        | Instruction::StoreScript(_)
         | Instruction::NewObject
         | Instruction::DuplicateTwo
         | Instruction::DefineField
@@ -595,18 +577,19 @@ fn retarget(instruction: Instruction, target: u32) -> Instruction {
 /// by recursing. What is left is bounded by the parser before it reaches here.
 const MAX_EXPRESSION_DEPTH: u32 = 128;
 
-/// Where a name lives — §9.1's environment records, flattened to what this engine has.
+/// Where a name lives — §9.1's environment records, resolved at compile time.
 ///
 /// Named for the question rather than for the thing, because the syntax tree already has a
 /// `Binding` and it means something else entirely: the *form* a declaration takes.
+///
+/// Two numbers rather than a name, because the compiler built the chain of scopes and so knows
+/// the answer. Nothing at run time compares a string to find a variable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Where {
-    /// A slot in the running function's own frame: a parameter, or a `var` it declares.
-    Local(u32),
-    /// A slot in the script's frame, which every function can reach past its own.
-    Script(u32),
-    /// A slot in an enclosing *function*, which needs a closure and has none yet.
-    Captured,
+struct Where {
+    /// How many environments out — `0` is the running function's own.
+    depth: u32,
+    /// Which slot, in that environment.
+    index: u32,
 }
 
 /// A refusal with a location.
@@ -807,17 +790,12 @@ mod tests {
     }
 
     #[test]
-    fn an_undeclared_name_inside_a_function_is_not_reported_as_a_closure() {
-        // Two refusals that would be easy to confuse, and the difference matters to whoever reads
-        // the message: one says "this engine cannot do that yet" and the other says "you have a
-        // typo". The test needs an enclosing function with a local, so that the closure check has
-        // something to look at and still answers correctly.
+    fn a_name_no_scope_declares_is_refused_however_deeply_it_is_nested() {
+        // Reading outwards stops at the script, and a name that is nowhere on the chain is a
+        // mistake rather than a feature that is missing. The enclosing function has a local of
+        // its own, so the walk has something to look at and still answers correctly.
         let mut heap = Heap::new();
         let cases = [
-            (
-                "function outer() { var x; function inner() { return x; } }",
-                "a closure over an outer variable",
-            ),
             (
                 "function outer() { var x; function inner() { return nowhere; } }",
                 "a reference to an undeclared name",

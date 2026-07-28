@@ -31,7 +31,7 @@ mod property;
 
 use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
-use crate::heap::{Heap, Object, PropertyDescriptor};
+use crate::heap::{EnvironmentId, Heap, Object, PropertyDescriptor};
 use crate::realm::{NativeError, Realm};
 use crate::value::{Completion, TypeError, Value, apply_binary};
 use std::rc::Rc;
@@ -99,11 +99,14 @@ struct Frame {
     /// The code that was running, and the instruction to come back to.
     code: Option<Rc<Chunk>>,
     at: usize,
-    /// Where this frame's locals begin, and where its operands do.
+    /// The environment to go back to.
     ///
-    /// Both are floors rather than counts. Returning truncates back to them, which is what makes
-    /// a `return` from the middle of an expression leave nothing of that expression behind.
-    locals_base: usize,
+    /// Not the callee's — that one may outlive the call, if the callee made a closure over it.
+    environment: EnvironmentId,
+    /// Where this frame's operands begin.
+    ///
+    /// A floor rather than a count: returning truncates back to it, which is what makes a
+    /// `return` from the middle of an expression leave nothing of that expression behind.
     stack_base: usize,
     /// How many handlers were installed when the call began.
     ///
@@ -150,12 +153,11 @@ pub struct Vm {
     handlers: Vec<Handler>,
     /// The calls that are waiting, outermost first.
     frames: Vec<Frame>,
-    /// One slot per local variable, all starting as `undefined`.
+    /// The environment the running code is in.
     ///
-    /// Resolved to indices at compile time, so nothing here searches for a name. That is what
-    /// makes hoisting free: the slot exists before the first instruction runs, which is exactly
-    /// what a `var` read before its declaration is asking for.
-    locals: Vec<Value>,
+    /// Set when [`Vm::run`] begins and changed by every call and return. A variable is found by
+    /// walking out from here, which the compiler has already counted the steps for.
+    environment: EnvironmentId,
     /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
     completion: Value,
 }
@@ -172,7 +174,9 @@ impl Vm {
             stack: Vec::new(),
             handlers: Vec::new(),
             frames: Vec::new(),
-            locals: Vec::new(),
+            // Replaced by the script's own before anything runs; a machine with no environment
+            // at all is not a state that has to be representable.
+            environment: heap.new_environment(None, 0),
             completion: Value::Undefined,
         }
     }
@@ -189,8 +193,9 @@ impl Vm {
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
-        self.locals.clear();
-        self.locals.resize(chunk.locals(), Value::Undefined);
+        // §16.1.7 — the script's own environment, and the root of every chain a function it
+        // declares will walk.
+        self.environment = heap.new_environment(None, chunk.locals());
         // `None` is the script itself, which the caller owns; `Some` is a function body, which
         // the function object owns. Two sources rather than one because the root is borrowed and
         // a callee is reference-counted, and moving the root into an `Rc` would make every
@@ -268,17 +273,23 @@ impl Vm {
                 Instruction::Pop => {
                     self.pop()?;
                 }
-                Instruction::LoadLocal(slot) => {
-                    let at = self.frame_slot(slot)?;
-                    let value = *self.locals.get(at).ok_or(Fault::MissingLocal)?;
+                Instruction::LoadVariable(depth, index) => {
+                    let value = heap
+                        .environment_at(self.environment, depth)
+                        .and_then(|at| heap.variable(at, index))
+                        .ok_or(Fault::MissingLocal)?;
                     self.stack.push(value);
                 }
-                Instruction::StoreLocal(slot) => {
+                Instruction::StoreVariable(depth, index) => {
                     // Peeked, not popped: assignment is an expression, and `a = (b = 1)` needs
                     // the inner one to leave its value behind.
-                    let at = self.frame_slot(slot)?;
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
-                    *self.locals.get_mut(at).ok_or(Fault::MissingLocal)? = value;
+                    let target = heap
+                        .environment_at(self.environment, depth)
+                        .ok_or(Fault::MissingLocal)?;
+                    if !heap.set_variable(target, index, value) {
+                        return Err(Fault::MissingLocal);
+                    }
                 }
                 Instruction::SetCompletion => {
                     self.completion = self.pop()?;
@@ -287,7 +298,14 @@ impl Vm {
                     let Some(body) = running.function(index) else {
                         return Err(Fault::MissingFunction);
                     };
-                    let object = heap.new_function(self.realm.function_prototype(), body.clone());
+                    // The environment the function is *written* in, not the one it will run
+                    // in. That is the whole of a closure: `counter()` returns a function that
+                    // still holds the environment `counter`'s call made, after the call is gone.
+                    let object = heap.new_function(
+                        self.realm.function_prototype(),
+                        body.clone(),
+                        self.environment,
+                    );
                     self.stack.push(Value::Object(object));
                 }
                 Instruction::Call(count) => {
@@ -329,20 +347,28 @@ impl Vm {
                         self.unwind(thrown, chunk, &mut current, &mut at)?;
                         continue;
                     }
-                    let locals_base = self.locals.len();
-                    self.locals
-                        .resize(locals_base + body.locals(), Value::Undefined);
+                    // §10.2.11 — a new environment per call, written inside the one the function
+                    // was *defined* in. That parent is the whole of what a closure is: the
+                    // caller's environment has nothing to do with it, which is the difference
+                    // between lexical scope and dynamic scope.
+                    let Some(defined_in) = heap.object(object).and_then(Object::environment) else {
+                        return Err(Fault::MissingFunction);
+                    };
+                    let environment = heap.new_environment(Some(defined_in), body.locals());
                     for offset in 0..body.parameters().min(count) {
-                        self.locals[locals_base + offset] = self.stack[callee_at + 1 + offset];
+                        let argument = self.stack[callee_at + 1 + offset];
+                        let index = u32::try_from(offset).unwrap_or(u32::MAX);
+                        heap.set_variable(environment, index, argument);
                     }
                     self.stack.truncate(callee_at);
                     self.frames.push(Frame {
                         code: current.take(),
                         at,
-                        locals_base,
+                        environment: self.environment,
                         stack_base: callee_at,
                         handlers_base: self.handlers.len(),
                     });
+                    self.environment = environment;
                     current = Some(body);
                     at = 0;
                 }
@@ -354,23 +380,11 @@ impl Vm {
                     // Everything the callee left behind goes with it: its operands, its locals,
                     // and any handler it installed and did not take down.
                     self.stack.truncate(frame.stack_base);
-                    self.locals.truncate(frame.locals_base);
                     self.handlers.truncate(frame.handlers_base);
                     self.stack.push(value);
+                    self.environment = frame.environment;
                     current = frame.code;
                     at = frame.at;
-                }
-                Instruction::LoadScript(slot) => {
-                    // The script's frame is the one at the bottom, so its slots are absolute.
-                    let value = *self.locals.get(slot as usize).ok_or(Fault::MissingLocal)?;
-                    self.stack.push(value);
-                }
-                Instruction::StoreScript(slot) => {
-                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
-                    *self
-                        .locals
-                        .get_mut(slot as usize)
-                        .ok_or(Fault::MissingLocal)? = value;
                 }
                 Instruction::NewObject => {
                     let object = heap.new_object(Some(self.realm.object_prototype()));
@@ -484,16 +498,6 @@ impl Vm {
         Ok(Outcome::Value(self.completion))
     }
 
-    /// Where slot `slot` of the running frame sits in the locals stack.
-    ///
-    /// A function's slots are counted from the bottom of its own frame; the script's are counted
-    /// from the bottom of everything, which is the same thing for the script because its frame is
-    /// at the bottom. That is why [`Instruction::LoadScript`] needs no translation and this does.
-    fn frame_slot(&self, slot: u32) -> Result<usize, Fault> {
-        let base = self.frames.last().map_or(0, |frame| frame.locals_base);
-        base.checked_add(slot as usize).ok_or(Fault::MissingLocal)
-    }
-
     /// Throw a TypeError with this message, from a place that has no completion to settle.
     fn throw_type_error(
         &mut self,
@@ -558,7 +562,7 @@ impl Vm {
             let Some(frame) = self.frames.pop() else {
                 return Err(Fault::ReturnWithNoCall);
             };
-            self.locals.truncate(frame.locals_base);
+            self.environment = frame.environment;
             *current = frame.code;
             *at = frame.at;
         }
@@ -1799,10 +1803,6 @@ mod tests {
     #[test]
     fn what_functions_cannot_do_yet_says_which_and_where() {
         let cases = [
-            (
-                "function outer() { var x; function inner() { return x; } }",
-                "a closure over an outer variable",
-            ),
             ("function f() { return this; }", "this"),
             ("function* g() {}", "an async function or a generator"),
             ("async function f() {}", "an async function or a generator"),
@@ -1849,6 +1849,99 @@ mod tests {
         assert_eq!(
             run("function f() { return f(); } try { f(); } catch (e) { e.name; }"),
             "RangeError"
+        );
+    }
+
+    #[test]
+    fn a_closure_keeps_the_variables_of_a_call_that_has_already_returned() {
+        // The definition of a closure, and the reason a variable cannot live in a frame: by the
+        // time `next` runs, `counter`'s call is over and `n` is still there.
+        assert_eq!(
+            run(
+                "function counter() { var n = 0; return function () { n = n + 1; return n; }; } \
+                 var next = counter(); next(); next(); next();"
+            ),
+            "3"
+        );
+        // Capturing by *value* at creation would answer 1 three times, which is why this is the
+        // first row: it is the mistake the whole design exists to avoid.
+        assert_eq!(
+            run("function adder(x) { return function (y) { return x + y; }; } adder(3)(4);"),
+            "7"
+        );
+    }
+
+    #[test]
+    fn each_call_makes_its_own_environment_and_closures_over_it_share_only_that_one() {
+        // Two calls to the same function make two environments, so two closures made from them
+        // count separately — while two closures from the *same* call share one.
+        assert_eq!(
+            run(
+                "function counter() { var n = 0; return function () { n = n + 1; return n; }; } \
+                 var a = counter(); var b = counter(); a(); a(); b();"
+            ),
+            "1"
+        );
+        assert_eq!(
+            run(
+                "function counter() { var n = 0; return function () { n = n + 1; return n; }; } \
+                 var a = counter(); a(); a(); a();"
+            ),
+            "3"
+        );
+        // A recursive call does not overwrite its caller's variables, which is the same rule seen
+        // from the other side.
+        assert_eq!(
+            run("function f(n) { var mine = n; if (n > 0) f(n - 1); return mine; } f(3);"),
+            "3"
+        );
+    }
+
+    #[test]
+    fn an_inner_function_writes_the_outer_variable_rather_than_a_copy() {
+        assert_eq!(
+            run("function o() { var x = 'a'; function set() { x = 'b'; } set(); return x; } o();"),
+            "b"
+        );
+        // Through two levels, which is where a depth counted wrongly would show.
+        assert_eq!(
+            run(
+                "function outer() { var x = 1; function middle() { function inner() { return x; } \
+                 return inner(); } return middle(); } outer();"
+            ),
+            "1"
+        );
+        assert_eq!(
+            run(
+                "function outer() { var x = 1; function middle() { function inner() { x = 9; } \
+                 inner(); } middle(); return x; } outer();"
+            ),
+            "9"
+        );
+        // …and the script's own variables are the far end of the same chain.
+        assert_eq!(
+            run("var top = 1; function f() { function g() { top = top + 1; } g(); } f(); top;"),
+            "2"
+        );
+    }
+
+    #[test]
+    fn a_parameter_is_a_variable_of_the_call_like_any_other() {
+        // §10.2.11 — the parameters are the first slots of the call's environment, so a closure
+        // over one is a closure over that call's copy.
+        assert_eq!(
+            run(
+                "function hold(x) { return function () { return x; }; } var a = hold(1); \
+                 var b = hold(2); a() + b();"
+            ),
+            "3"
+        );
+        assert_eq!(
+            run(
+                "function hold(x) { return function () { x = x + 1; return x; }; } \
+                 var f = hold(10); f(); f();"
+            ),
+            "12"
         );
     }
 
@@ -1954,20 +2047,21 @@ mod tests {
         ));
 
         // A slot the frame does not have, in both directions.
-        let no_such_slot = Chunk::from_parts(vec![Instruction::LoadLocal(3)], Vec::new());
+        let no_such_slot = Chunk::from_parts(vec![Instruction::LoadVariable(0, 3)], Vec::new());
         assert!(matches!(
             vm.run(&no_such_slot, &mut heap),
             Err(Fault::MissingLocal)
         ));
         let nowhere_to_store = Chunk::from_parts(
-            vec![Instruction::Constant(0), Instruction::StoreLocal(3)],
+            vec![Instruction::Constant(0), Instruction::StoreVariable(0, 3)],
             vec![Value::Null],
         );
         assert!(matches!(
             vm.run(&nowhere_to_store, &mut heap),
             Err(Fault::MissingLocal)
         ));
-        let nothing_to_store = Chunk::from_parts(vec![Instruction::StoreLocal(0)], Vec::new());
+        let nothing_to_store =
+            Chunk::from_parts(vec![Instruction::StoreVariable(0, 0)], Vec::new());
         assert!(matches!(
             vm.run(&nothing_to_store, &mut heap),
             Err(Fault::StackUnderflow)

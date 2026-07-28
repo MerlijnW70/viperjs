@@ -175,7 +175,10 @@ impl Compiler<'_> {
             // the honest answer until there is one — and it is why `undefined` is still spelled
             // `void 0` in this engine's tests.
             ExprKind::Identifier(name) => match self.binding(name) {
-                Some(binding) => self.load(binding, span),
+                Some(binding) => {
+                    self.load(binding);
+                    Ok(())
+                }
                 None => Err(unsupported("a reference to an undeclared name", span)),
             },
             ExprKind::This => Err(unsupported("this", span)),
@@ -225,7 +228,7 @@ impl Compiler<'_> {
                     // a slot and matters a great deal for `o[f()] += 1`, where the property key
                     // is evaluated once. The shape is the same either way.
                     Some(binary) => {
-                        self.load(target_binding, target.span)?;
+                        self.load(target_binding);
                         self.expression(value)?;
                         self.chunk.emit(Instruction::Binary(binary));
                     }
@@ -234,7 +237,10 @@ impl Compiler<'_> {
                     // reason to build it.
                     None => return Err(unsupported("a logical assignment", span)),
                 }
-                self.store(target_binding, target.span)
+                {
+                    self.store(target_binding);
+                    Ok(())
+                }
             }
             ExprKind::Array(_) => Err(unsupported("an array literal", span)),
             // §15.2.5 — a function expression. The object is made where the expression is
@@ -420,14 +426,10 @@ impl Compiler<'_> {
         }
         // What the body may see: the script's names, and — only to refuse against — the names of
         // every function it is written inside.
-        let (script_names, enclosing) = if self.is_script {
-            (self.locals.clone(), self.locals.clone())
-        } else {
-            let mut enclosing = self.enclosing_names.clone();
-            enclosing.extend(self.locals.iter().cloned());
-            (self.script_names.clone(), enclosing)
-        };
-        let body = compile_function_body(self.heap, function, script_names, enclosing, span)?;
+        // The body is written inside this scope, so its chain is ours with ours on the end.
+        let mut outer = self.outer.clone();
+        outer.push(self.locals.clone());
+        let body = compile_function_body(self.heap, function, outer, span)?;
         let index = u32::try_from(self.chunk.functions.len()).map_err(|_| CompileError {
             kind: ErrorKind::TooLong,
             span,
@@ -505,8 +507,7 @@ fn compound_operator(operator: AssignmentOperator) -> Option<BinaryOperator> {
 fn compile_function_body(
     heap: &mut Heap,
     function: &Function,
-    script_names: Vec<Box<str>>,
-    enclosing_names: Vec<Box<str>>,
+    outer: Vec<Vec<Box<str>>>,
     span: Span,
 ) -> Result<Chunk, CompileError> {
     if function.parameters.rest.is_some() {
@@ -514,8 +515,7 @@ fn compile_function_body(
     }
     let mut compiler = Compiler::new(heap);
     compiler.is_script = false;
-    compiler.script_names = script_names;
-    compiler.enclosing_names = enclosing_names;
+    compiler.outer = outer;
 
     // §10.2.11 — the parameters are the first slots, in order, so an argument can be put in place
     // without the callee being consulted. A default or a pattern would need code to run *inside*

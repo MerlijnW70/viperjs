@@ -28,11 +28,14 @@
 //!
 //! - `property` — [`PropertyKey`], and what an object files under one.
 //! - `object` — the ordinary object (§10.1) and its internal methods.
+//! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
+mod environment;
 mod object;
 mod property;
 
+pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Object, ObjectId};
 pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
 
@@ -80,6 +83,11 @@ pub struct Heap {
     /// compiler says so — one arena per type is DR-0010's second consequence, after the shape of
     /// the handle itself.
     objects: Vec<Object>,
+    /// Every environment ever made — one per call, plus the script's.
+    ///
+    /// On the heap rather than on a stack because a closure outlives the call that made it: the
+    /// frame is gone and the variables are not. See [`Environment`].
+    environments: Vec<Environment>,
 }
 
 impl Heap {
