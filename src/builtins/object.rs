@@ -1,0 +1,525 @@
+//! §20.1 — `Object`, and the surface every other object is described through.
+//!
+//! # Why this one, and why this much of it
+//!
+//! The conformance suite asked, and it asked precisely: `Object.defineProperty` was named by 742
+//! failing tests and `Object.getOwnPropertyDescriptor` by 584, with `create` and
+//! `defineProperties` behind them. Those four are one subject — a property descriptor as a
+//! *value* — and the heap already does the hard half in §10.1.6.3's validation. What is here is
+//! the translation either way: §6.2.6.5 turning an object into a descriptor, and §6.2.6.4 turning
+//! a descriptor back into an object.
+//!
+//! # What is deliberately absent
+//!
+//! `Object(primitive)` should wrap — §7.1.18's `ToObject` makes a Number object out of `1` — and
+//! there are no wrapper objects yet, so it refuses with a message saying so rather than answering
+//! something that is not what the specification says.
+//!
+//! §20.1.3.6's `toString` reads a *builtin tag* out of internal slots, so `[object Error]` and
+//! `[object Array]` need slots this heap does not keep. It answers `[object Object]` for every
+//! ordinary object and `[object Function]` for a callable, which is right for everything praxis
+//! can currently make except an error.
+
+use crate::heap::{
+    Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKey, PropertyKind,
+};
+use crate::realm::Realm;
+use crate::value::{Completion, TypeError, Value};
+
+use super::{define_method, define_value, key, text};
+
+/// §20.1.1.1 `Object(value)`.
+pub fn construct(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    match call.argument(0) {
+        // §20.1.1.1 step 3 — an object is handed back *as it stands*, which is what makes
+        // `Object(o) === o` true and why the function is useless as a copy.
+        Value::Object(object) => Ok(Value::Object(object)),
+        // Steps 1 and 2 — `undefined` and `null` make a new ordinary object, the same one
+        // `{}` makes.
+        Value::Undefined | Value::Null => Ok(Value::Object(
+            heap.new_object(Some(realm.object_prototype())),
+        )),
+        // §7.1.18 `ToObject` wraps a primitive, and there is nothing to wrap it in yet.
+        _ => Err(TypeError(
+            "Object() of a primitive needs a wrapper object, which is not implemented yet",
+        )),
+    }
+}
+
+/// §20.1.3.6 `Object.prototype.toString`.
+pub fn to_string(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    // Steps 1 and 2 — the two values that have no object to ask, and the reason this method is
+    // the idiomatic type test: it answers for `undefined` and `null` rather than throwing.
+    let tag = match call.this_value {
+        Value::Undefined => "Undefined",
+        Value::Null => "Null",
+        Value::Object(object) => match heap.object(object).is_some_and(|it| it.call().is_some()) {
+            // Step 6. The rest of §20.1.3.6's table reads internal slots this heap does not
+            // keep, so `[object Error]` and `[object Array]` are not distinguished yet.
+            true => "Function",
+            false => "Object",
+        },
+        // §7.1.18 again: a primitive would be wrapped and its wrapper's tag used.
+        _ => {
+            return Err(TypeError(
+                "Object.prototype.toString of a primitive needs a wrapper object",
+            ));
+        }
+    };
+    Ok(text(heap, &format!("[object {tag}]")))
+}
+
+/// §20.1.3.7 `Object.prototype.valueOf` — `ToObject(this)`, which for an object is itself.
+pub fn value_of(_heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    match call.this_value {
+        Value::Object(object) => Ok(Value::Object(object)),
+        _ => Err(TypeError("Object.prototype.valueOf requires an object")),
+    }
+}
+
+/// §20.1.3.2 `Object.prototype.hasOwnProperty`.
+pub fn has_own_property(
+    heap: &mut Heap,
+    _realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let key = property_key(heap, call.argument(0))?;
+    let object = this_object(call, "Object.prototype.hasOwnProperty requires an object")?;
+    Ok(Value::Boolean(own_property(heap, object, key).is_some()))
+}
+
+/// §20.1.2.13 `Object.hasOwn(o, key)` — the same question without borrowing a method.
+pub fn has_own(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = to_object(call.argument(0), "Object.hasOwn requires an object")?;
+    let key = property_key(heap, call.argument(1))?;
+    Ok(Value::Boolean(own_property(heap, object, key).is_some()))
+}
+
+/// §20.1.3.4 `Object.prototype.propertyIsEnumerable`.
+pub fn property_is_enumerable(
+    heap: &mut Heap,
+    _realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let key = property_key(heap, call.argument(0))?;
+    let object = this_object(
+        call,
+        "Object.prototype.propertyIsEnumerable requires an object",
+    )?;
+    // Own only, and `false` rather than an error when there is no such property — which is why
+    // it cannot be used to ask whether a property exists at all.
+    let answer = own_property(heap, object, key).is_some_and(|property| property.enumerable);
+    Ok(Value::Boolean(answer))
+}
+
+/// §20.1.3.3 `Object.prototype.isPrototypeOf`.
+pub fn is_prototype_of(
+    heap: &mut Heap,
+    _realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let object = this_object(call, "Object.prototype.isPrototypeOf requires an object")?;
+    // Step 1 — a primitive argument is `false` rather than an error, because the question is
+    // about *its* chain and a primitive has none of its own.
+    let Value::Object(mut walk) = call.argument(0) else {
+        return Ok(Value::Boolean(false));
+    };
+    // Step 3's loop, iteratively: a chain is as long as a program makes it (DR-0002).
+    loop {
+        let Some(next) = heap.object(walk).and_then(|found| found.prototype()) else {
+            return Ok(Value::Boolean(false));
+        };
+        if next == object {
+            return Ok(Value::Boolean(true));
+        }
+        walk = next;
+    }
+}
+
+/// §20.1.2.12 `Object.getPrototypeOf`.
+pub fn get_prototype_of(
+    heap: &mut Heap,
+    _realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let object = to_object(call.argument(0), "Object.getPrototypeOf requires an object")?;
+    Ok(
+        match heap.object(object).and_then(|found| found.prototype()) {
+            Some(prototype) => Value::Object(prototype),
+            None => Value::Null,
+        },
+    )
+}
+
+/// §20.1.2.4 `Object.defineProperty`.
+pub fn define_property(
+    heap: &mut Heap,
+    _realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let object = object_argument(call.argument(0), "Object.defineProperty requires an object")?;
+    let key = property_key(heap, call.argument(1))?;
+    let descriptor = to_property_descriptor(heap, call.argument(2))?;
+    // §20.1.2.4 step 4 is `DefinePropertyOrThrow`: the heap answers whether §10.1.6.3's rules
+    // allowed it, and a `false` here is a TypeError rather than a silent nothing. That is the
+    // difference between `defineProperty` and `Reflect.defineProperty`.
+    if !heap.define_own_property(object, key, &descriptor) {
+        return Err(TypeError("this property cannot be redefined"));
+    }
+    Ok(Value::Object(object))
+}
+
+/// §20.1.2.3 `Object.defineProperties`.
+pub fn define_properties(
+    heap: &mut Heap,
+    realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let object = object_argument(
+        call.argument(0),
+        "Object.defineProperties requires an object",
+    )?;
+    define_each(heap, realm, object, call.argument(1))?;
+    Ok(Value::Object(object))
+}
+
+/// §20.1.2.2 `Object.create`.
+pub fn create(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — the prototype may be `null`, and that is the whole reason `Object.create` exists:
+    // it is the only way to make an object with no prototype at all.
+    let prototype = match call.argument(0) {
+        Value::Object(prototype) => Some(prototype),
+        Value::Null => None,
+        _ => {
+            return Err(TypeError(
+                "the prototype given to Object.create must be an object or null",
+            ));
+        }
+    };
+    let object = heap.new_object(prototype);
+    let properties = call.argument(1);
+    if !matches!(properties, Value::Undefined) {
+        define_each(heap, realm, object, properties)?;
+    }
+    Ok(Value::Object(object))
+}
+
+/// §20.1.2.8 `Object.getOwnPropertyDescriptor`.
+pub fn get_own_property_descriptor(
+    heap: &mut Heap,
+    realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let object = to_object(
+        call.argument(0),
+        "Object.getOwnPropertyDescriptor requires an object",
+    )?;
+    let key = property_key(heap, call.argument(1))?;
+    // §6.2.6.4 — a property that is not there is `undefined`, not an empty descriptor, which is
+    // how a caller tells "absent" from "present and undefined".
+    let Some(property) = own_property(heap, object, key) else {
+        return Ok(Value::Undefined);
+    };
+    Ok(from_property_descriptor(heap, realm, property))
+}
+
+/// §20.1.2.17 `Object.keys` — own, enumerable, string-keyed, in creation order.
+pub fn keys(heap: &mut Heap, realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    own_keys(heap, realm, call, true)
+}
+
+/// §20.1.2.10 `Object.getOwnPropertyNames` — the same list without the enumerable filter.
+pub fn get_own_property_names(
+    heap: &mut Heap,
+    realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    own_keys(heap, realm, call, false)
+}
+
+/// §20.1.2.19 `Object.preventExtensions`.
+pub fn prevent_extensions(
+    heap: &mut Heap,
+    _realm: &Realm,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let value = call.argument(0);
+    // Step 1 — a primitive is handed straight back rather than refused, because it was never
+    // extensible in the first place and the request is already satisfied.
+    if let Value::Object(object) = value
+        && let Some(found) = heap.object_mut(object)
+    {
+        found.prevent_extensions();
+    }
+    Ok(value)
+}
+
+/// §20.1.2.16 `Object.isExtensible`.
+pub fn is_extensible(heap: &mut Heap, _realm: &Realm, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — a primitive is `false` rather than an error: it is not extensible, which is a
+    // true answer to the question asked.
+    let Value::Object(object) = call.argument(0) else {
+        return Ok(Value::Boolean(false));
+    };
+    let answer = heap
+        .object(object)
+        .is_some_and(|found| found.is_extensible());
+    Ok(Value::Boolean(answer))
+}
+
+/// Build `Object` into `heap`.
+pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
+    let prototype = realm.object_prototype();
+    let function = heap.new_native_function(realm.function_prototype(), construct);
+    super::define_function_metadata(heap, function, "Object", 1);
+
+    // §20.1.2.20 — `Object.prototype` is not writable, not enumerable and not configurable, for
+    // the same reason `Error.prototype` is not: every object in the realm inherits from it.
+    let key = key(heap, "prototype");
+    let descriptor = PropertyDescriptor {
+        value: Some(Value::Object(prototype)),
+        writable: Some(false),
+        enumerable: Some(false),
+        configurable: Some(false),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(function, key, &descriptor);
+    define_value(heap, prototype, "constructor", Value::Object(function));
+    define_value(heap, global, "Object", Value::Object(function));
+
+    for (name, length, native) in [
+        ("toString", 0, to_string as crate::heap::Native),
+        ("valueOf", 0, value_of),
+        ("hasOwnProperty", 1, has_own_property),
+        ("isPrototypeOf", 1, is_prototype_of),
+        ("propertyIsEnumerable", 1, property_is_enumerable),
+    ] {
+        define_method(heap, realm, prototype, name, length, native);
+    }
+    for (name, length, native) in [
+        ("create", 2, create as crate::heap::Native),
+        ("defineProperties", 2, define_properties),
+        ("defineProperty", 3, define_property),
+        ("getOwnPropertyDescriptor", 2, get_own_property_descriptor),
+        ("getOwnPropertyNames", 1, get_own_property_names),
+        ("getPrototypeOf", 1, get_prototype_of),
+        ("hasOwn", 2, has_own),
+        ("isExtensible", 1, is_extensible),
+        ("keys", 1, keys),
+        ("preventExtensions", 1, prevent_extensions),
+    ] {
+        define_method(heap, realm, function, name, length, native);
+    }
+}
+
+/// §20.1.2.3.1 `ObjectDefineProperties` — every own enumerable key of `properties`, in order.
+///
+/// The descriptors are all read *before* any is applied, which §20.1.2.3.1 step 4 is explicit
+/// about: a second descriptor that is malformed must not leave the first one applied.
+fn define_each(
+    heap: &mut Heap,
+    _realm: &Realm,
+    object: ObjectId,
+    properties: Value,
+) -> Completion<()> {
+    let source = to_object(properties, "a property-descriptor list must be an object")?;
+    let keys = heap
+        .object(source)
+        .map_or_else(Vec::new, |found| found.own_property_keys(heap));
+    let mut pending = Vec::new();
+    for key in keys {
+        let Some(property) = own_property(heap, source, key) else {
+            continue;
+        };
+        if !property.enumerable {
+            continue;
+        }
+        let PropertyKind::Data { value, .. } = property.kind else {
+            return Err(TypeError(
+                "a getter on a property-descriptor list is not supported yet",
+            ));
+        };
+        pending.push((key, to_property_descriptor(heap, value)?));
+    }
+    for (key, descriptor) in pending {
+        if !heap.define_own_property(object, key, &descriptor) {
+            return Err(TypeError("this property cannot be redefined"));
+        }
+    }
+    Ok(())
+}
+
+/// §20.1.2.17 and §20.1.2.10, which differ in one filter.
+fn own_keys(
+    heap: &mut Heap,
+    realm: &Realm,
+    call: &NativeCall<'_>,
+    enumerable_only: bool,
+) -> Completion<Value> {
+    let object = to_object(call.argument(0), "this function requires an object")?;
+    let keys = heap
+        .object(object)
+        .map_or_else(Vec::new, |found| found.own_property_keys(heap));
+    let mut names = Vec::new();
+    for key in keys {
+        let Some(property) = own_property(heap, object, key) else {
+            continue;
+        };
+        if enumerable_only && !property.enumerable {
+            continue;
+        }
+        names.push(Value::String(key.as_string()));
+    }
+    // §20.1.2.17 answers an Array, and there are none yet. An object with the names under
+    // ascending integer keys and a `length` is what an Array *is* in every respect this can
+    // reach; what it is not is an instance of `Array`, and a test that asks will say so.
+    let list = heap.new_object(Some(realm.object_prototype()));
+    for (at, name) in names.iter().enumerate() {
+        let key = self::key(heap, &at.to_string());
+        let descriptor = PropertyDescriptor {
+            value: Some(*name),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(list, key, &descriptor);
+    }
+    define_value(heap, list, "length", Value::Number(names.len() as f64));
+    Ok(Value::Object(list))
+}
+
+/// §6.2.6.5 `ToPropertyDescriptor` — an object read as a descriptor.
+///
+/// Every field is optional and *absence is not `undefined`*: `{value: undefined}` sets the value
+/// to `undefined`, and `{}` sets nothing at all. That distinction is the whole reason
+/// [`PropertyDescriptor`]'s fields are `Option`, and it is what makes
+/// `Object.defineProperty(o, "k", {})` leave an existing property alone.
+fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyDescriptor> {
+    let Value::Object(source) = value else {
+        return Err(TypeError("a property descriptor must be an object"));
+    };
+    let mut descriptor = PropertyDescriptor::EMPTY;
+    for (name, at) in [
+        ("enumerable", 0),
+        ("configurable", 1),
+        ("writable", 2),
+        ("value", 3),
+        ("get", 4),
+        ("set", 5),
+    ] {
+        let key = self::key(heap, name);
+        // Inherited counts: §6.2.6.5 asks `HasProperty`, so a descriptor may be made by
+        // `Object.create({writable: true})` and the field is found on the prototype.
+        let Some((_, property)) = heap.find_own(source, key) else {
+            continue;
+        };
+        let PropertyKind::Data { value, .. } = property.kind else {
+            return Err(TypeError(
+                "a getter on a property descriptor is not supported yet",
+            ));
+        };
+        match at {
+            0 => descriptor.enumerable = Some(value.to_boolean(heap)),
+            1 => descriptor.configurable = Some(value.to_boolean(heap)),
+            2 => descriptor.writable = Some(value.to_boolean(heap)),
+            3 => descriptor.value = Some(value),
+            4 => descriptor.getter = Some(value),
+            // §6.2.6.5 steps 17 and 20 — `get` and `set` must be callable or `undefined`, and
+            // the check is here rather than in the heap because it is about what a *descriptor*
+            // may say rather than about what an object may hold.
+            _ => descriptor.setter = Some(value),
+        }
+    }
+    for accessor in [descriptor.getter, descriptor.setter] {
+        let Some(accessor) = accessor else { continue };
+        let callable = matches!(accessor, Value::Undefined)
+            || matches!(accessor, Value::Object(object)
+                if heap.object(object).is_some_and(|found| found.call().is_some()));
+        if !callable {
+            return Err(TypeError(
+                "a getter or setter must be callable or undefined",
+            ));
+        }
+    }
+    // §6.2.6.5 step 21 — a descriptor may not be both, and saying so here means the heap never
+    // has to answer what `{value: 1, get: f}` would mean.
+    let data = descriptor.value.is_some() || descriptor.writable.is_some();
+    let accessor = descriptor.getter.is_some() || descriptor.setter.is_some();
+    if data && accessor {
+        return Err(TypeError(
+            "a property descriptor may not have both a value and an accessor",
+        ));
+    }
+    Ok(descriptor)
+}
+
+/// §6.2.6.4 `FromPropertyDescriptor` — a property written back out as an object.
+///
+/// A *complete* descriptor, which is why every field is present: this is the one place a
+/// partial descriptor is filled in, and it is what makes `getOwnPropertyDescriptor` answer
+/// `{value: 1, writable: false, enumerable: false, configurable: false}` for a property that was
+/// defined with `{value: 1}` alone.
+fn from_property_descriptor(heap: &mut Heap, realm: &Realm, property: Property) -> Value {
+    let object = heap.new_object(Some(realm.object_prototype()));
+    let put = |heap: &mut Heap, name: &str, value: Value| {
+        let key = self::key(heap, name);
+        let descriptor = PropertyDescriptor {
+            value: Some(value),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(object, key, &descriptor);
+    };
+    match property.kind {
+        PropertyKind::Data { value, writable } => {
+            put(heap, "value", value);
+            put(heap, "writable", Value::Boolean(writable));
+        }
+        PropertyKind::Accessor { getter, setter } => {
+            put(heap, "get", getter);
+            put(heap, "set", setter);
+        }
+    }
+    put(heap, "enumerable", Value::Boolean(property.enumerable));
+    put(heap, "configurable", Value::Boolean(property.configurable));
+    Value::Object(object)
+}
+
+/// `this` as an object, or the TypeError carrying `wanted`.
+fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Completion<ObjectId> {
+    to_object(call.this_value, wanted)
+}
+
+/// §7.1.18 `ToObject`, in the part that does not need a wrapper.
+///
+/// §7.1.18 wraps a primitive and refuses only `undefined` and `null`. There is nothing to wrap
+/// one in yet, so the two cases share a message — and the message is passed in, because "requires
+/// an object" is useless without saying what did.
+fn to_object(value: Value, wanted: &'static str) -> Completion<ObjectId> {
+    match value {
+        Value::Object(object) => Ok(object),
+        _ => Err(TypeError(wanted)),
+    }
+}
+
+/// An argument §20.1 requires to be an object outright rather than coercing.
+///
+/// `defineProperty` and `defineProperties` are the two that refuse rather than wrap, because
+/// defining a property on a throwaway wrapper would silently do nothing.
+fn object_argument(value: Value, wanted: &'static str) -> Completion<ObjectId> {
+    to_object(value, wanted)
+}
+
+/// An object's own property under `key`, if it has one.
+fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> Option<Property> {
+    heap.object(object)?.get_own_property(key).copied()
+}
+
+/// §7.1.19 `ToPropertyKey`.
+fn property_key(heap: &mut Heap, value: Value) -> Completion<PropertyKey> {
+    let id = value.to_string(heap)?;
+    Ok(PropertyKey::from_string(heap, id))
+}

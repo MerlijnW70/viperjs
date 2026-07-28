@@ -15,6 +15,7 @@
 //! method that also serves object literals.
 
 pub mod error;
+pub mod object;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::realm::Realm;
@@ -23,6 +24,9 @@ use crate::value::Value;
 /// Build every built-in into `heap`, on the realm's global object.
 pub fn install(heap: &mut Heap, realm: &Realm) {
     let global = realm.global();
+    // `Object` first: `Object.prototype` is where every chain ends, so a built-in installed
+    // before it would inherit from a prototype with no methods on it yet.
+    object::install(heap, realm, global);
     error::install(heap, realm, global);
 }
 
