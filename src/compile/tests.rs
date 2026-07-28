@@ -1,0 +1,281 @@
+//! What the compiler refuses, and where it says so.
+//!
+//! Two kinds of test. Most run source and check the refusal it earns — the list of what praxis
+//! cannot do yet, kept honest by being asserted rather than written in a comment. The rest build
+//! a syntax tree *by hand*, because the parser will not produce one: a private name outside a
+//! class, an optional chain as a bare member, an expression nested past the limit. A guard for a
+//! state the tree can hold and no source can reach is still worth having, and this is the only
+//! way to reach it.
+
+use super::*;
+use crate::ast::{BinaryOperator, UnaryOperator};
+use crate::ast::{ExprKind, Stmt, StmtKind};
+use crate::parser::parse_expression;
+use crate::parser::parse_script;
+use crate::value::Value;
+
+fn compile(source: &str) -> Result<Chunk, CompileError> {
+    let mut heap = Heap::new();
+    let expression = parse_expression(source).expect("the source parses"); // a compiler test needs a tree
+    compile_expression(&expression, &mut heap)
+}
+
+#[test]
+fn an_operator_is_emitted_after_both_of_its_operands() {
+    // The one structural claim worth making about the output: the order is the order §13.15.1
+    // guarantees, and it is what makes `f() + g()` call `f` first. Everything else about the
+    // compiler is checked by running it — see the VM's tests.
+    let chunk = compile("1 + 2").expect("compiles"); // the test is about the output
+    assert_eq!(
+        chunk.code(),
+        [
+            Instruction::Constant(0),
+            Instruction::Constant(1),
+            Instruction::Binary(BinaryOperator::Add),
+            // …and then the value becomes the chunk's completion value, which is what makes
+            // an expression and a script the same kind of thing to run.
+            Instruction::SetCompletion,
+        ]
+    );
+    assert!(matches!(chunk.constant(0), Some(Value::Number(value)) if value == 1.0));
+    assert!(matches!(chunk.constant(1), Some(Value::Number(value)) if value == 2.0));
+    assert!(chunk.constant(2).is_none());
+}
+
+#[test]
+fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
+    // The parser accepted every one of these. Refusing with a span is the difference between
+    // "praxis cannot do this yet" and a wrong answer nobody notices.
+    let cases = [
+        ("x", "a reference to an undeclared name"),
+        ("f?.()", "optional chaining"),
+        ("[1]", "an array literal"),
+        (
+            "({a})",
+            "a shorthand, spread or method in an object literal",
+        ),
+        ("1n", "a BigInt literal"),
+        ("delete x", "deleting a name"),
+        ("1 instanceof 2", "the instanceof operator"),
+        ("`a`", "a template literal"),
+        ("1 ? b : c", "a reference to an undeclared name"),
+        ("/re/", "a regular expression literal"),
+    ];
+    for (source, what) in cases {
+        let error = compile(source).expect_err("not implemented yet"); // the test is about the error
+        assert_eq!(
+            error.kind,
+            ErrorKind::Unsupported(what),
+            "compiling {source:?}"
+        );
+        assert!(error.message().contains(what));
+        // The span points at the construct rather than at the whole program.
+        assert!(
+            error.span.end <= source.len() as u32,
+            "the span of {source:?} is inside it"
+        );
+    }
+}
+
+/// An expression nested `depth` levels deep, built rather than parsed.
+///
+/// `!!!…1`, which is the cheapest shape that costs one level of tree per character. The
+/// parser refuses one this deep long before the compiler would see it (DR-0006), which is
+/// exactly why it is built here: a guard nothing can reach is a guard nothing can check.
+fn nested(depth: u32) -> Expr {
+    let mut expression = Expr::new(ExprKind::Number(1.0), Span::new(0, 1));
+    for _ in 0..depth {
+        expression = Expr::new(
+            ExprKind::Unary {
+                operator: UnaryOperator::LogicalNot,
+                argument: Box::new(expression),
+            },
+            Span::new(0, 1),
+        );
+    }
+    expression
+}
+
+#[test]
+fn an_expression_is_refused_one_level_past_the_limit_and_not_one_before() {
+    let mut heap = Heap::new();
+    // `nested(n)` is `n` operators over one literal, so it is `n + 1` levels deep. The limit
+    // is on the levels, so `MAX - 1` operators is the deepest that compiles.
+    let deepest = nested(MAX_EXPRESSION_DEPTH - 1);
+    assert!(compile_expression(&deepest, &mut heap).is_ok());
+
+    let one_too_deep = nested(MAX_EXPRESSION_DEPTH);
+    let error = compile_expression(&one_too_deep, &mut heap).expect_err("one level too deep"); // the test is about the error
+    assert_eq!(error.kind, ErrorKind::TooDeep);
+    assert!(error.message().contains("nested too deeply"));
+
+    // …and the counter comes back down, so a compiler that refused once can compile again.
+    // Written with an early return this leaked a level per refusal, which nothing observes
+    // today and would observe the moment one compiler compiled two things.
+    let mut compiler = Compiler::new(&mut heap);
+    assert!(compiler.expression(&one_too_deep).is_err());
+    assert_eq!(compiler.depth, 0);
+    assert!(compiler.expression(&nested(1)).is_ok());
+}
+
+#[test]
+fn a_property_reference_the_parser_cannot_build_is_still_refused() {
+    // The parser wraps an optional chain in `OptionalChain` and refuses `#x` outside a class,
+    // so neither flag reaches the compiler from source. The *tree* can hold them, and a
+    // compiler that ignored them would read `o?.a` as `o.a` — a wrong answer rather than a
+    // refusal — the day the wrapper is handled. So the guards are checked where they can be
+    // reached, which is here.
+    let mut heap = Heap::new();
+    let object = || Box::new(Expr::new(ExprKind::Number(1.0), Span::new(0, 1)));
+    let cases = [
+        (
+            ExprKind::Member {
+                private: true,
+                optional: false,
+                object: object(),
+                property: "x".into(),
+            },
+            "a private name",
+        ),
+        (
+            ExprKind::Member {
+                private: false,
+                optional: true,
+                object: object(),
+                property: "x".into(),
+            },
+            "optional chaining",
+        ),
+        (
+            ExprKind::ComputedMember {
+                optional: true,
+                object: object(),
+                property: object(),
+            },
+            "optional chaining",
+        ),
+    ];
+    for (kind, what) in cases {
+        let expression = Expr::new(kind, Span::new(0, 4));
+        let error = compile_expression(&expression, &mut heap).expect_err("refused"); // the test is about the error
+        assert_eq!(error.kind, ErrorKind::Unsupported(what));
+    }
+
+    // A reference that is neither kind of member is refused too — the arm that catches a
+    // tree nobody should have built.
+    let not_a_reference = Expr::new(ExprKind::Number(1.0), Span::new(0, 1));
+    let mut compiler = Compiler::new(&mut heap);
+    let error = compiler
+        .property_reference(&not_a_reference, crate::compile::function::Keep::Nothing)
+        .expect_err("not a property reference"); // same
+    assert_eq!(
+        error.kind,
+        ErrorKind::Unsupported("a reference to something that is not a property")
+    );
+}
+
+#[test]
+fn a_return_at_the_top_level_is_refused_by_the_compiler_too() {
+    // The parser refuses it (§14.10's early error), so no source reaches this. A `Return` in
+    // the script's own chunk would be a `ReturnWithNoCall` at run time — a fault, which is to
+    // say a bug in this compiler — so the guard is worth having and is checked against a tree
+    // built by hand.
+    let mut heap = Heap::new();
+    let script = Script {
+        body: Box::new([Stmt {
+            kind: StmtKind::Return(None),
+            span: Span::new(0, 7),
+        }]),
+        span: Span::new(0, 7),
+    };
+    let error = compile_script(&script, &mut heap).expect_err("no function to return from"); // the test is about the error
+    assert_eq!(
+        error.kind,
+        ErrorKind::Unsupported("return outside a function")
+    );
+    assert!(crate::parser::parse_script("return 1;").is_err());
+}
+
+#[test]
+fn a_name_no_scope_declares_is_refused_however_deeply_it_is_nested() {
+    // Reading outwards stops at the script, and a name that is nowhere on the chain is a
+    // mistake rather than a feature that is missing. The enclosing function has a local of
+    // its own, so the walk has something to look at and still answers correctly.
+    let mut heap = Heap::new();
+    let cases = [
+        (
+            "function outer() { var x; function inner() { return nowhere; } }",
+            "a reference to an undeclared name",
+        ),
+        (
+            "function outer() { var x; function inner() { nowhere = 1; } }",
+            "an assignment to an undeclared name",
+        ),
+    ];
+    for (source, what) in cases {
+        let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
+        let error = compile_script(&script, &mut heap).expect_err("refused"); // same
+        assert_eq!(
+            error.kind,
+            ErrorKind::Unsupported(what),
+            "compiling {source:?}"
+        );
+    }
+}
+
+#[test]
+fn an_optional_call_the_parser_cannot_build_is_still_refused() {
+    // As with `o?.a`, the parser wraps `f?.()` in an `OptionalChain` and the inner flag never
+    // arrives on its own. The tree can hold it, and a compiler that ignored it would call
+    // through a `null` callee the day the wrapper is handled.
+    let mut heap = Heap::new();
+    let callee = Box::new(Expr::new(ExprKind::Number(1.0), Span::new(0, 1)));
+    let expression = Expr::new(
+        ExprKind::Call {
+            optional: true,
+            callee,
+            arguments: Box::new([]),
+        },
+        Span::new(0, 5),
+    );
+    let error = compile_expression(&expression, &mut heap).expect_err("refused"); // the test is about the error
+    assert_eq!(error.kind, ErrorKind::Unsupported("optional chaining"));
+}
+
+#[test]
+fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
+    // The parser refuses this, so no source reaches it — but the syntax tree can be *built*,
+    // the same way a malformed chunk can be built for the VM. Without the check, the jump
+    // would be emitted and never patched, and a script would leap somewhere at run time
+    // because of a bug in the compiler rather than anything in the source.
+    let mut heap = Heap::new();
+    for kind in [StmtKind::Break(None), StmtKind::Continue(None)] {
+        let script = Script {
+            body: Box::new([Stmt {
+                kind,
+                span: Span::new(0, 5),
+            }]),
+            span: Span::new(0, 5),
+        };
+        let error = compile_script(&script, &mut heap).expect_err("no loop to leave"); // the test is about the error
+        assert_eq!(
+            error.kind,
+            ErrorKind::Unsupported("break or continue outside a loop")
+        );
+    }
+    // …and the parser does refuse it, which is why nothing but a hand-built tree gets here.
+    assert!(crate::parser::parse_script("break;").is_err());
+    assert!(crate::parser::parse_script("continue;").is_err());
+}
+
+#[test]
+fn a_refusal_deep_inside_an_expression_carries_the_inner_span() {
+    // The refusal comes from where the trouble is, not from the top: an engine that reported
+    // the whole line would be useless on a long one.
+    let error = compile("1 + 2 * (3 - x)").expect_err("x is not implemented yet"); // same
+    assert_eq!(
+        error.kind,
+        ErrorKind::Unsupported("a reference to an undeclared name")
+    );
+    assert_eq!(error.span, Span::new(13, 14));
+}
