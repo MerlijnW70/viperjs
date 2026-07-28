@@ -45,12 +45,17 @@ fn evaluate(source: &str) -> String {
     };
     // A thrown outcome is marked rather than printed bare, so that a sweep comparing this
     // against another engine cannot read `throw 1` and `1` as the same answer.
-    let (prefix, value) = match Vm::new().run(&chunk, &mut heap) {
+    let mut vm = Vm::new(&mut heap);
+    let (prefix, value) = match vm.run(&chunk, &mut heap) {
         Ok(Outcome::Value(value)) => ("", value),
         Ok(Outcome::Thrown(value)) => ("!thrown: ", value),
         Err(fault) => return format!("!fault: {fault:?}"),
     };
-    let id = value.to_string(&mut heap);
+    // An object has no `toString` to call yet, so writing one down throws again. Naming it by its
+    // type says which it was without the description itself failing.
+    let Ok(id) = value.to_string(&mut heap) else {
+        return format!("{prefix}[{}]", value.type_of());
+    };
     format!(
         "{prefix}{}",
         String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))

@@ -37,13 +37,19 @@
 //! quietly make the coincidence false. Each relation is a named method instead, and the name
 //! says which question is being asked.
 //!
-//! # Where the conversions stop
+//! # Which conversions can fail, and what they fail with
 //!
-//! [`Value::to_number`] is total here and will not stay that way: §7.1.4 throws a **TypeError**
-//! for a Symbol and for a BigInt, and reaches user code through `ToPrimitive` for an Object. All
-//! three arrive with the types that need them, and the signature changes then. It is not fallible
-//! *now* because a `Result` whose `Err` no input can produce is a branch no test could ever
-//! reach — the same argument `src/span.rs` makes for `end.max(start)`.
+//! [`Value::to_number`] and [`Value::to_string`] are fallible because an Object has to be turned
+//! into a primitive first, and §7.1.1 throws a **TypeError** when it cannot be. [`Value::to_boolean`]
+//! is not: §7.1.2's table has no row that throws, which is what makes `if (x)` unable to fail
+//! however strange `x` is. The three equality relations are not either — they compare, and never
+//! convert.
+//!
+//! What a failure carries is a [`TypeError`] and not an Error *object*. An object needs a
+//! prototype, a prototype belongs to a realm, and a realm is a thing the interpreter has and the
+//! value representation should not. So this layer says which error and why, and
+//! [`crate::realm`] decides what object stands for it — which is also where the message will
+//! acquire a stack trace it cannot have here.
 //!
 //! # How this module is laid out
 //!
@@ -65,7 +71,7 @@ pub use self::operators::{apply_binary, is_loosely_equal};
 
 use self::number_to_string::number_to_string;
 use self::string_to_number::string_to_number;
-use crate::heap::{Heap, StringId};
+use crate::heap::{Heap, ObjectId, StringId};
 
 /// An ECMAScript language value (§6.1).
 ///
@@ -85,6 +91,12 @@ pub enum Value {
     /// the argument for why a heap value is an index. Two Strings with the same contents are
     /// two Strings — nothing is interned — so every comparison here reads the heap.
     String(StringId),
+    /// An Object — §6.1.7, a collection of properties with a prototype.
+    ///
+    /// The only type here whose identity is not its contents: two objects with the same
+    /// properties are two objects, and `{} === {}` is false. That is why every equality relation
+    /// compares the handle for this variant and the code units for a String.
+    Object(ObjectId),
     /// A Number — §6.1.6.1, an IEEE 754-2019 binary64 value.
     ///
     /// Every `f64` is a Number and every Number is an `f64`, with one wrinkle that costs work
@@ -107,6 +119,10 @@ impl Value {
             Self::Boolean(_) => "boolean",
             Self::Number(_) => "number",
             Self::String(_) => "string",
+            // §13.5.3's table again: an Object is `"object"` unless it is callable, in which case
+            // it is `"function"`. Nothing is callable yet, so nothing here asks — and when
+            // something is, this is the line that has to.
+            Self::Object(_) => "object",
         }
     }
 
@@ -126,6 +142,10 @@ impl Value {
             // String gets. See [`Heap::string`] for why that situation is bounded rather than
             // detected, and why no script can produce it.
             Self::String(id) => heap.string(*id).is_some_and(|units| !units.is_empty()),
+            // Every object is truthy, without exception and without asking the object. The one
+            // famous counter-example — `document.all` — is a host object with an [[IsHTMLDDA]]
+            // slot, which §7.1.2 mentions and which no engine outside a browser has.
+            Self::Object(_) => true,
             // "If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true." One
             // comparison covers both zeroes, since `-0.0 == 0.0`, and NaN fails every comparison
             // including this one — so `!= 0.0` would be wrong and `== 0.0 || is_nan` is not.
@@ -138,18 +158,39 @@ impl Value {
     /// `null` is `+0` and `undefined` is `NaN`, which is the difference behind `null + 1 === 1`
     /// and `undefined + 1` being `NaN`. See the module documentation for why this cannot fail
     /// yet and will.
-    pub fn to_number(&self, heap: &Heap) -> f64 {
-        match self {
+    pub fn to_number(&self, heap: &Heap) -> Completion<f64> {
+        Ok(match self {
             Self::Undefined => f64::NAN,
             Self::Null => 0.0,
             Self::Boolean(true) => 1.0,
             Self::Boolean(false) => 0.0,
             Self::Number(number) => *number,
+            // §7.1.4 step 1 — an Object is converted to a primitive first, and that is what can
+            // fail. `ToPrimitive` of the result is never an Object, so this cannot recur.
+            Self::Object(_) => return self.to_primitive(heap, Hint::Number)?.to_number(heap),
             // §7.1.4.1, which is a grammar and not a parse of convenience — see
             // [`string_to_number`] for the four ways it differs from the one the lexer reads.
             // A handle this heap does not know is NaN, which is what the operation says about
             // text that is not a `StrNumericLiteral`.
             Self::String(id) => heap.string(*id).map_or(f64::NAN, string_to_number),
+        })
+    }
+
+    /// `ToPrimitive` (§7.1.1) — the value as something that is not an Object.
+    ///
+    /// A primitive is already one, which is every case that succeeds today. For an Object,
+    /// §7.1.1 looks for a `Symbol.toPrimitive` method and then §7.1.1.1 for `valueOf` and
+    /// `toString`, calls whichever is callable, and throws a **TypeError** if none is.
+    ///
+    /// Nothing is callable yet — there are no functions — so no property lookup could find a
+    /// method to call, and the answer for every Object is the TypeError at the end. Writing the
+    /// lookup now would be writing three branches no input could take. It arrives with `[[Call]]`,
+    /// and the answer for `{}` changes on its own once `Object.prototype` has a `toString`.
+    pub fn to_primitive(&self, heap: &Heap, hint: Hint) -> Completion<Self> {
+        let _ = (heap, hint);
+        match self {
+            Self::Object(_) => Err(TypeError("cannot convert an object to a primitive value")),
+            primitive => Ok(*primitive),
         }
     }
 
@@ -163,7 +204,7 @@ impl Value {
     /// Total for the types that are here, and it will not stay that way for the same reason
     /// [`Value::to_number`] will not: §7.1.17 throws a **TypeError** for a Symbol, and reaches
     /// user code for an Object.
-    pub fn to_string(&self, heap: &mut Heap) -> StringId {
+    pub fn to_string(&self, heap: &mut Heap) -> Completion<StringId> {
         // The four constants are spelled out rather than shared, because §7.1.17's table is a
         // table: `String(null)` is `"null"` and not `typeof null`, which is `"object"`.
         let text = match self {
@@ -172,10 +213,13 @@ impl Value {
             Self::Boolean(true) => "true".to_string(),
             Self::Boolean(false) => "false".to_string(),
             Self::Number(number) => number_to_string(*number),
-            Self::String(id) => return *id,
+            Self::String(id) => return Ok(*id),
+            // §7.1.17 step 1 — the same conversion `ToNumber` does, with the other hint. `"" + x`
+            // and `1 * x` therefore ask an object two different questions.
+            Self::Object(_) => return self.to_primitive(heap, Hint::String)?.to_string(heap),
         };
         // Every one of those is ASCII, so the UTF-16 encoding is a widening and cannot fail.
-        heap.new_string(text.encode_utf16().collect())
+        Ok(heap.new_string(text.encode_utf16().collect()))
     }
 
     /// `ToIntegerOrInfinity` (§7.1.5) — the value truncated towards zero, or ±∞.
@@ -186,10 +230,10 @@ impl Value {
     ///
     /// The three values that collapse to `+0` are stated as one step in §7.1.5 and are worth
     /// naming: `NaN`, `+0` and `-0`. That is why `-0.5` gives `+0` and not `-0`.
-    pub fn to_integer_or_infinity(&self, heap: &Heap) -> f64 {
-        let number = self.to_number(heap);
+    pub fn to_integer_or_infinity(&self, heap: &Heap) -> Completion<f64> {
+        let number = self.to_number(heap)?;
         if number.is_nan() {
-            return 0.0;
+            return Ok(0.0);
         }
         // §7.1.5's steps 3 and 4 return the infinities as themselves, and are not written out:
         // `trunc` returns an infinity unchanged, so they leave by the last line already. NaN
@@ -200,18 +244,18 @@ impl Value {
         // truncates to 0 and not to `-0`, where Rust's `trunc` keeps the sign. Step 2's `+0` and
         // `-0` reach here truncating to zero and leave by the same door, so writing step 2 out
         // as well would be a branch no input could tell from its absence.
-        if truncated == 0.0 { 0.0 } else { truncated }
+        Ok(if truncated == 0.0 { 0.0 } else { truncated })
     }
 
     /// `ToInt32` (§7.1.6) — the value as a signed 32-bit integer, wrapping.
     ///
     /// This is what every bitwise operator does to its operands, so `2147483648 | 0` is
     /// `-2147483648` and `4294967296 | 0` is `0`.
-    pub fn to_int32(&self, heap: &Heap) -> i32 {
+    pub fn to_int32(&self, heap: &Heap) -> Completion<i32> {
         // §7.1.6 step 5: an `int32bit` at or above 2^31 comes back 2^32 lower. `as i32` on a
         // `u32` is that reinterpretation exactly, and is the one Rust cast that is defined to
         // wrap rather than saturate.
-        self.to_uint32(heap) as i32
+        Ok(self.to_uint32(heap)? as i32)
     }
 
     /// `ToUint32` (§7.1.7) — the value as an unsigned 32-bit integer, wrapping.
@@ -232,7 +276,7 @@ impl Value {
     ///
     /// So the remainder is the mathematical one, and it lands in `(-2^32, 2^32)` where a single
     /// addition brings it into range and `as u32` is a lossless conversion of an integral `f64`.
-    pub fn to_uint32(&self, heap: &Heap) -> u32 {
+    pub fn to_uint32(&self, heap: &Heap) -> Completion<u32> {
         const MODULUS: f64 = 4_294_967_296.0; // 2^32
 
         // §7.1.7 step 2 sends every non-finite value and both zeroes to `+0`, and is not written
@@ -241,7 +285,7 @@ impl Value {
         // luck — `±∞ % y` and `NaN % y` are both NaN, and a float-to-integer `as` in Rust
         // saturates, which sends NaN to `0`. The behaviour is pinned by tests even though the
         // branch that would have stated it is gone.
-        let remainder = self.to_number(heap).trunc() % MODULUS;
+        let remainder = self.to_number(heap)?.trunc() % MODULUS;
         // The specification's `modulo` takes the sign of the divisor and is therefore never
         // negative; `%` in Rust takes the sign of the dividend and so can be. One addition is
         // the whole difference between the two, and it is exact for the same reason `%` is.
@@ -250,7 +294,7 @@ impl Value {
         } else {
             remainder
         };
-        in_range as u32
+        Ok(in_range as u32)
     }
 
     /// `IsStrictlyEqual` (§7.2.14) — the `===` operator.
@@ -312,10 +356,46 @@ impl Value {
                     _ => false,
                 }
             }
+            // §7.2.12 again, and the other way about: an Object is the same value as itself and
+            // as nothing else. Two objects with identical properties are two objects, which is
+            // why `{} === {}` is false — so this compares the handle where the String arm above
+            // compares contents, and that difference *is* the difference between the two types.
+            (Self::Object(left), Self::Object(right)) => left == right,
             _ => false,
         }
     }
 }
+
+/// Which primitive an object is being asked for — §7.1.1's `preferredType`.
+///
+/// Only ever a preference: an object answers with whatever its methods return, and the hint
+/// merely decides which method is tried first. `Date` is the one built-in that treats the absence
+/// of a hint as `String` rather than `Number`, which is why `date + 1` concatenates.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Hint {
+    /// Prefer a Number — what every arithmetic operator asks for.
+    Number,
+    /// Prefer a String — what `ToString` and `ToPropertyKey` ask for.
+    String,
+}
+
+/// A **TypeError** that has happened, named by what it was.
+///
+/// Not an Error object: an object needs a prototype, a prototype belongs to a realm, and a realm
+/// is not something the value representation should know about. [`crate::realm::Realm`] turns one
+/// of these into the object a `catch` block receives.
+///
+/// The message is `&'static str` because every message this layer produces is written in it.
+/// Anything that needs to name a value — "x is not a function" — is produced where the value is,
+/// which is the interpreter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TypeError(pub &'static str);
+
+/// The result of an operation that may throw — §6.2.4's normal and throw completions.
+///
+/// `break`, `continue` and `return` are not here: a bytecode compiler turns those into jumps,
+/// because it knows at compile time where they go. Only a throw has to travel.
+pub type Completion<T> = Result<T, TypeError>;
 
 /// `CanonicalNumericIndexString` (§7.1.21) — the Number `units` spells, if it spells one exactly.
 ///
@@ -373,6 +453,7 @@ fn same_value_number(left: f64, right: f64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::value::apply_binary;
 
     /// The four values that every table in this module has a row for.
     const UNDEFINED: Value = Value::Undefined;
@@ -419,95 +500,273 @@ mod tests {
         let heap = Heap::new();
         // The pair behind `null + 1 === 1` and `undefined + 1` being NaN, which is the whole of
         // why the two are not interchangeable in arithmetic.
-        assert_eq!(NULL.to_number(&heap), 0.0);
-        assert!(UNDEFINED.to_number(&heap).is_nan());
-        assert_eq!(boolean(true).to_number(&heap), 1.0);
-        assert_eq!(boolean(false).to_number(&heap), 0.0);
+        assert_eq!(NULL.to_number(&heap).expect("a primitive converts"), 0.0);
+        assert!(
+            UNDEFINED
+                .to_number(&heap)
+                .expect("a primitive converts")
+                .is_nan()
+        );
+        assert_eq!(
+            boolean(true)
+                .to_number(&heap)
+                .expect("a primitive converts"),
+            1.0
+        );
+        assert_eq!(
+            boolean(false)
+                .to_number(&heap)
+                .expect("a primitive converts"),
+            0.0
+        );
         // A Number is returned unchanged, including the one that is not equal to itself.
-        assert_eq!(number(1.5).to_number(&heap), 1.5);
-        assert!(number(f64::NAN).to_number(&heap).is_nan());
+        assert_eq!(
+            number(1.5).to_number(&heap).expect("a primitive converts"),
+            1.5
+        );
+        assert!(
+            number(f64::NAN)
+                .to_number(&heap)
+                .expect("a primitive converts")
+                .is_nan()
+        );
         // …and including the sign of zero, which `to_integer_or_infinity` then discards.
-        assert!(number(-0.0).to_number(&heap).is_sign_negative());
+        assert!(
+            number(-0.0)
+                .to_number(&heap)
+                .expect("a primitive converts")
+                .is_sign_negative()
+        );
     }
 
     #[test]
     fn to_integer_or_infinity_truncates_towards_zero_and_keeps_the_infinities() {
         let heap = Heap::new();
-        assert_eq!(number(3.9).to_integer_or_infinity(&heap), 3.0);
-        assert_eq!(number(-3.9).to_integer_or_infinity(&heap), -3.0);
-        assert_eq!(number(3.0).to_integer_or_infinity(&heap), 3.0);
+        assert_eq!(
+            number(3.9)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
+            3.0
+        );
+        assert_eq!(
+            number(-3.9)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
+            -3.0
+        );
+        assert_eq!(
+            number(3.0)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
+            3.0
+        );
         // §7.1.5 collapses NaN and both zeroes to `+0`, so a fraction that truncates to zero
         // comes back *positive* zero however it was signed.
         assert!(
             !number(-0.5)
                 .to_integer_or_infinity(&heap)
+                .expect("a primitive converts")
                 .is_sign_negative()
         );
         assert!(
             !number(-0.0)
                 .to_integer_or_infinity(&heap)
+                .expect("a primitive converts")
                 .is_sign_negative()
         );
-        assert_eq!(number(f64::NAN).to_integer_or_infinity(&heap), 0.0);
-        assert!(!number(f64::NAN).to_integer_or_infinity(&heap).is_nan());
+        assert_eq!(
+            number(f64::NAN)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
+            0.0
+        );
+        assert!(
+            !number(f64::NAN)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts")
+                .is_nan()
+        );
         // The infinities are returned as themselves — the operation is named for it.
         assert_eq!(
-            number(f64::INFINITY).to_integer_or_infinity(&heap),
+            number(f64::INFINITY)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
             f64::INFINITY
         );
         assert_eq!(
-            number(f64::NEG_INFINITY).to_integer_or_infinity(&heap),
+            number(f64::NEG_INFINITY)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
             f64::NEG_INFINITY
         );
         // The other types go through `ToNumber` first.
-        assert_eq!(boolean(true).to_integer_or_infinity(&heap), 1.0);
-        assert_eq!(UNDEFINED.to_integer_or_infinity(&heap), 0.0);
+        assert_eq!(
+            boolean(true)
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
+            1.0
+        );
+        assert_eq!(
+            UNDEFINED
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts"),
+            0.0
+        );
     }
 
     #[test]
     fn to_uint32_wraps_by_the_mathematical_modulo_at_every_magnitude() {
         let heap = Heap::new();
-        assert_eq!(number(0.0).to_uint32(&heap), 0);
-        assert_eq!(number(1.0).to_uint32(&heap), 1);
-        assert_eq!(number(4_294_967_295.0).to_uint32(&heap), 4_294_967_295);
+        assert_eq!(
+            number(0.0).to_uint32(&heap).expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(1.0).to_uint32(&heap).expect("a primitive converts"),
+            1
+        );
+        assert_eq!(
+            number(4_294_967_295.0)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            4_294_967_295
+        );
         // One past the modulus wraps to zero, which is the whole of the operation.
-        assert_eq!(number(4_294_967_296.0).to_uint32(&heap), 0);
-        assert_eq!(number(4_294_967_297.0).to_uint32(&heap), 1);
+        assert_eq!(
+            number(4_294_967_296.0)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(4_294_967_297.0)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            1
+        );
         // A negative comes back as its positive residue: the specification's `modulo` takes the
         // sign of the divisor where Rust's `%` takes the sign of the dividend.
-        assert_eq!(number(-1.0).to_uint32(&heap), 4_294_967_295);
-        assert_eq!(number(-4_294_967_296.0).to_uint32(&heap), 0);
+        assert_eq!(
+            number(-1.0).to_uint32(&heap).expect("a primitive converts"),
+            4_294_967_295
+        );
+        assert_eq!(
+            number(-4_294_967_296.0)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
         // The fraction goes before the modulo, not after.
-        assert_eq!(number(-1.5).to_uint32(&heap), 4_294_967_295);
-        assert_eq!(number(1.9).to_uint32(&heap), 1);
+        assert_eq!(
+            number(-1.5).to_uint32(&heap).expect("a primitive converts"),
+            4_294_967_295
+        );
+        assert_eq!(
+            number(1.9).to_uint32(&heap).expect("a primitive converts"),
+            1
+        );
         // §7.1.7 step 2 sends every non-finite value to zero rather than to a saturated bound,
         // which is what a cast through an integer type would have produced.
-        assert_eq!(number(f64::NAN).to_uint32(&heap), 0);
-        assert_eq!(number(f64::INFINITY).to_uint32(&heap), 0);
-        assert_eq!(number(f64::NEG_INFINITY).to_uint32(&heap), 0);
+        assert_eq!(
+            number(f64::NAN)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(f64::INFINITY)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(f64::NEG_INFINITY)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
         // Far past anything an integer type could hold, where the exactness argument is the
         // only thing keeping the answer right. 1e300 is a multiple of 2^32 and so is zero;
         // `1e300 as u32` in Rust is `u32::MAX`.
-        assert_eq!(number(1e300).to_uint32(&heap), 0);
-        assert_eq!(number(f64::MAX).to_uint32(&heap), 0);
+        assert_eq!(
+            number(1e300)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(f64::MAX)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
         // 2^53 is the last integer with a neighbour, and 2^53 + 2 the next one representable.
-        assert_eq!(number(9_007_199_254_740_992.0).to_uint32(&heap), 0);
-        assert_eq!(number(9_007_199_254_740_994.0).to_uint32(&heap), 2);
+        assert_eq!(
+            number(9_007_199_254_740_992.0)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(9_007_199_254_740_994.0)
+                .to_uint32(&heap)
+                .expect("a primitive converts"),
+            2
+        );
     }
 
     #[test]
     fn to_int32_is_to_uint32_read_as_signed() {
         let heap = Heap::new();
-        assert_eq!(number(1.0).to_int32(&heap), 1);
-        assert_eq!(number(-1.0).to_int32(&heap), -1);
+        assert_eq!(
+            number(1.0).to_int32(&heap).expect("a primitive converts"),
+            1
+        );
+        assert_eq!(
+            number(-1.0).to_int32(&heap).expect("a primitive converts"),
+            -1
+        );
         // The boundary the two operations differ at, and the reason `2147483648 | 0` is negative.
-        assert_eq!(number(2_147_483_647.0).to_int32(&heap), 2_147_483_647);
-        assert_eq!(number(2_147_483_648.0).to_int32(&heap), -2_147_483_648);
-        assert_eq!(number(4_294_967_295.0).to_int32(&heap), -1);
-        assert_eq!(number(4_294_967_296.0).to_int32(&heap), 0);
-        assert_eq!(number(f64::NAN).to_int32(&heap), 0);
-        assert_eq!(number(f64::INFINITY).to_int32(&heap), 0);
-        assert_eq!(number(1e300).to_int32(&heap), 0);
+        assert_eq!(
+            number(2_147_483_647.0)
+                .to_int32(&heap)
+                .expect("a primitive converts"),
+            2_147_483_647
+        );
+        assert_eq!(
+            number(2_147_483_648.0)
+                .to_int32(&heap)
+                .expect("a primitive converts"),
+            -2_147_483_648
+        );
+        assert_eq!(
+            number(4_294_967_295.0)
+                .to_int32(&heap)
+                .expect("a primitive converts"),
+            -1
+        );
+        assert_eq!(
+            number(4_294_967_296.0)
+                .to_int32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(f64::NAN)
+                .to_int32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(f64::INFINITY)
+                .to_int32(&heap)
+                .expect("a primitive converts"),
+            0
+        );
+        assert_eq!(
+            number(1e300).to_int32(&heap).expect("a primitive converts"),
+            0
+        );
     }
 
     #[test]
@@ -643,7 +902,7 @@ mod tests {
             (number(1e21), "1e+21"),
         ];
         for (value, expected) in table {
-            let id = value.to_string(&mut heap);
+            let id = value.to_string(&mut heap).expect("a primitive converts");
             let units: Vec<u16> = expected.encode_utf16().collect();
             assert_eq!(heap.string(id), Some(units.as_slice()), "String({value:?})");
         }
@@ -658,11 +917,13 @@ mod tests {
         let mut heap = Heap::new();
         let original = heap.new_string("abc".encode_utf16().collect());
         let before = heap.string_count();
-        let returned = Value::String(original).to_string(&mut heap);
+        let returned = Value::String(original)
+            .to_string(&mut heap)
+            .expect("a primitive converts");
         assert_eq!(returned, original);
         assert_eq!(heap.string_count(), before);
         // …while every other type does allocate, since its text has to live somewhere.
-        let _ = NULL.to_string(&mut heap);
+        let _ = NULL.to_string(&mut heap).expect("a primitive converts");
         assert_eq!(heap.string_count(), before + 1);
     }
 
@@ -678,7 +939,7 @@ mod tests {
         assert!(!empty.to_boolean(&heap));
         assert!(zero.to_boolean(&heap));
         assert!(space.to_boolean(&heap));
-        assert_eq!(zero.to_number(&heap), 0.0);
+        assert_eq!(zero.to_number(&heap).expect("a primitive converts"), 0.0);
     }
 
     #[test]
@@ -691,8 +952,16 @@ mod tests {
         ];
         for (text, as_int32, as_uint32) in cases {
             let value = Value::String(heap.new_string(text.encode_utf16().collect()));
-            assert_eq!(value.to_int32(&heap), as_int32, "ToInt32 of {text:?}");
-            assert_eq!(value.to_uint32(&heap), as_uint32, "ToUint32 of {text:?}");
+            assert_eq!(
+                value.to_int32(&heap).expect("a primitive converts"),
+                as_int32,
+                "ToInt32 of {text:?}"
+            );
+            assert_eq!(
+                value.to_uint32(&heap).expect("a primitive converts"),
+                as_uint32,
+                "ToUint32 of {text:?}"
+            );
         }
     }
 
@@ -732,7 +1001,7 @@ mod tests {
         let foreign = Value::String(theirs.new_string("b".encode_utf16().collect()));
         let known = Value::String(mine.new_string("b".encode_utf16().collect()));
         assert!(!foreign.to_boolean(&mine));
-        assert!(foreign.to_number(&mine).is_nan());
+        assert!(foreign.to_number(&mine).is_ok_and(f64::is_nan));
         assert_eq!(foreign.type_of(), "string");
         assert!(!foreign.same_value(&foreign, &mine));
         assert!(!foreign.same_value(&known, &mine));
@@ -763,15 +1032,113 @@ mod tests {
         for units in awkward {
             let value = Value::String(heap.new_string(units));
             let _ = value.to_boolean(&heap);
-            let _ = value.to_number(&heap);
-            let _ = value.to_integer_or_infinity(&heap);
-            let _ = value.to_int32(&heap);
-            let _ = value.to_uint32(&heap);
+            let _ = value.to_number(&heap).expect("a primitive converts");
+            let _ = value
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts");
+            let _ = value.to_int32(&heap).expect("a primitive converts");
+            let _ = value.to_uint32(&heap).expect("a primitive converts");
             let _ = value.type_of();
             let _ = value.same_value(&value, &heap);
             let _ = value.same_value_zero(&value, &heap);
             let _ = value.is_strictly_equal(&value, &heap);
         }
+    }
+
+    #[test]
+    fn an_object_is_truthy_and_is_typeof_object_and_is_equal_only_to_itself() {
+        let mut heap = Heap::new();
+        let first = Value::Object(heap.new_object(None));
+        let second = Value::Object(heap.new_object(None));
+        assert_eq!(first.type_of(), "object");
+        // Every object is truthy — an empty one, one with a null prototype, any of them. The
+        // famous counter-example is a host object with an [[IsHTMLDDA]] slot, which is a browser
+        // thing and not a language thing.
+        assert!(first.to_boolean(&heap));
+        // Identity, not contents: two objects with the same properties are two objects.
+        assert!(first.is_strictly_equal(&first, &heap));
+        assert!(!first.is_strictly_equal(&second, &heap));
+        assert!(first.same_value(&first, &heap));
+        assert!(!first.same_value(&second, &heap));
+        assert!(!first.is_strictly_equal(&NULL, &heap));
+        assert!(!first.is_strictly_equal(&UNDEFINED, &heap));
+    }
+
+    #[test]
+    fn an_object_that_cannot_be_made_primitive_throws_rather_than_answering() {
+        // §7.1.1.1 — `valueOf` and `toString` are looked for and neither is callable, because
+        // nothing is callable yet. The end of that algorithm is a TypeError, so that is the
+        // answer for every object today. It changes on its own when `Object.prototype` has
+        // methods; what will not change is that the answer is a *throw* and not a guess.
+        let mut heap = Heap::new();
+        let object = Value::Object(heap.new_object(None));
+        assert_eq!(
+            object.to_number(&heap),
+            Err(TypeError("cannot convert an object to a primitive value"))
+        );
+        assert!(object.to_string(&mut heap).is_err());
+        assert!(object.to_int32(&heap).is_err());
+        assert!(object.to_uint32(&heap).is_err());
+        assert!(object.to_integer_or_infinity(&heap).is_err());
+        // …while the operations that do not convert still answer, which is the line §7.1.2 draws.
+        assert!(object.to_boolean(&heap));
+        assert_eq!(object.type_of(), "object");
+        // `ToPrimitive` of anything that is already primitive is itself, under either hint.
+        assert!(matches!(
+            Value::Number(1.0).to_primitive(&heap, Hint::Number),
+            Ok(Value::Number(value)) if value == 1.0
+        ));
+        assert!(matches!(
+            NULL.to_primitive(&heap, Hint::String),
+            Ok(Value::Null)
+        ));
+    }
+
+    #[test]
+    fn an_operator_with_an_object_operand_throws_from_wherever_the_conversion_was() {
+        let mut heap = Heap::new();
+        let object = Value::Object(heap.new_object(None));
+        let one = Value::Number(1.0);
+        // Arithmetic converts, so it throws…
+        for operator in [
+            crate::ast::BinaryOperator::Add,
+            crate::ast::BinaryOperator::Subtract,
+            crate::ast::BinaryOperator::Multiply,
+            crate::ast::BinaryOperator::LessThan,
+            crate::ast::BinaryOperator::BitwiseAnd,
+            crate::ast::BinaryOperator::ShiftLeft,
+        ] {
+            assert!(
+                apply_binary(operator, object, one, &mut heap).is_err(),
+                "{} should throw",
+                operator.as_str()
+            );
+            assert!(apply_binary(operator, one, object, &mut heap).is_err());
+        }
+        // …and `===` does not, because it compares rather than converting. Neither does `==`
+        // against `null`, which §7.2.13 answers before it reaches any conversion.
+        assert!(matches!(
+            apply_binary(
+                crate::ast::BinaryOperator::StrictEqual,
+                object,
+                one,
+                &mut heap
+            ),
+            Ok(Value::Boolean(false))
+        ));
+        assert!(matches!(
+            apply_binary(
+                crate::ast::BinaryOperator::Equal,
+                object,
+                Value::Null,
+                &mut heap
+            ),
+            Ok(Value::Boolean(false))
+        ));
+        assert!(matches!(
+            apply_binary(crate::ast::BinaryOperator::Equal, object, object, &mut heap),
+            Ok(Value::Boolean(true))
+        ));
     }
 
     #[test]
@@ -800,10 +1167,12 @@ mod tests {
         for value in awkward {
             let value = number(value);
             let _ = value.to_boolean(&heap);
-            let _ = value.to_number(&heap);
-            let _ = value.to_integer_or_infinity(&heap);
-            let _ = value.to_int32(&heap);
-            let _ = value.to_uint32(&heap);
+            let _ = value.to_number(&heap).expect("a primitive converts");
+            let _ = value
+                .to_integer_or_infinity(&heap)
+                .expect("a primitive converts");
+            let _ = value.to_int32(&heap).expect("a primitive converts");
+            let _ = value.to_uint32(&heap).expect("a primitive converts");
             let _ = value.type_of();
             let _ = value.same_value(&value, &heap);
             let _ = value.same_value_zero(&value, &heap);

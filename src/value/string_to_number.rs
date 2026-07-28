@@ -254,7 +254,9 @@ mod tests {
         ];
         for (text, expected) in table {
             let id = heap.new_string(text.encode_utf16().collect());
-            let actual = Value::String(id).to_number(&heap);
+            let actual = Value::String(id)
+                .to_number(&heap)
+                .expect("a primitive converts");
             match expected {
                 Some(expected) => assert_eq!(actual, *expected, "ToNumber of {text:?}"),
                 None => assert!(actual.is_nan(), "ToNumber of {text:?} should be NaN"),
@@ -348,7 +350,9 @@ mod tests {
         let negative = ["-0", "-0.0", "-0e5", " -0 ", "-.0", "-1e-400"];
         for text in negative {
             let id = heap.new_string(text.encode_utf16().collect());
-            let value = Value::String(id).to_number(&heap);
+            let value = Value::String(id)
+                .to_number(&heap)
+                .expect("a primitive converts");
             assert!(
                 value == 0.0 && value.is_sign_negative(),
                 "ToNumber of {text:?} should be -0, was {value}"
@@ -359,13 +363,20 @@ mod tests {
         // NaN rather than either zero — a sign has no derivation before a non-decimal literal.
         for text in ["0", "+0", "0.0", "0x0"] {
             let id = heap.new_string(text.encode_utf16().collect());
-            let value = Value::String(id).to_number(&heap);
+            let value = Value::String(id)
+                .to_number(&heap)
+                .expect("a primitive converts");
             assert!(
                 value == 0.0 && value.is_sign_positive(),
                 "ToNumber of {text:?} should be +0, was {value}"
             );
         }
         let id = heap.new_string("-0x0".encode_utf16().collect());
-        assert!(Value::String(id).to_number(&heap).is_nan());
+        assert!(
+            Value::String(id)
+                .to_number(&heap)
+                .expect("a primitive converts")
+                .is_nan()
+        );
     }
 }

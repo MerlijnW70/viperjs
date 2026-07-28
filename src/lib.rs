@@ -19,6 +19,7 @@ pub mod compile;
 pub mod heap;
 pub mod lexer;
 pub mod parser;
+pub mod realm;
 pub mod span;
 pub mod static_semantics;
 mod unicode_id;

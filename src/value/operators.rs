@@ -6,16 +6,18 @@
 //! written out here against its clause, because each is a place where the obvious implementation
 //! is subtly wrong and stays wrong for years.
 //!
-//! # What is not here yet
+//! # What can fail here
 //!
-//! Anything that can reach user code. `ToPrimitive` on an Object calls `valueOf`, `instanceof`
-//! calls a method, and `in` needs an object to ask — all three wait for the interpreter that can
-//! call things. Every operation here is total over the values that exist, which is why none of
-//! them returns a completion yet; §13.15.3 and §7.2.13 both can throw, and both will.
+//! Anything that has to turn an Object into a primitive, which is most of it: §13.15.3 converts
+//! both operands, and §7.2.13 converts one when the other is not an Object. That conversion is
+//! the only thing in this module that throws, and everything else is arithmetic.
+//!
+//! `instanceof` and `in` are still absent. Both ask an *object* a question rather than converting
+//! it, and both need the interpreter — `instanceof` calls a method, `in` looks a key up.
 
 use crate::ast::BinaryOperator;
 use crate::heap::Heap;
-use crate::value::Value;
+use crate::value::{Completion, Hint, Value};
 
 /// `ApplyStringOrNumericBinaryOperator` (§13.15.3) and the relational and equality operators.
 ///
@@ -23,22 +25,27 @@ use crate::value::Value;
 /// is how the VM meets them: the operands are already evaluated and on the stack. The operators
 /// that are *not* here — `instanceof`, `in` — are the two that need an object, and the compiler
 /// refuses them until there is one.
-pub fn apply_binary(operator: BinaryOperator, left: Value, right: Value, heap: &mut Heap) -> Value {
-    match operator {
+pub fn apply_binary(
+    operator: BinaryOperator,
+    left: Value,
+    right: Value,
+    heap: &mut Heap,
+) -> Completion<Value> {
+    Ok(match operator {
         // §13.15.3 step 1 — `+` is the operator that is two operators. Every other one coerces
         // to a number first; this one asks whether either side is a String and concatenates if
         // so, which is why `1 + "1"` is `"11"` and `1 - "1"` is `0`.
-        BinaryOperator::Add => add(left, right, heap),
-        BinaryOperator::Subtract => Value::Number(left.to_number(heap) - right.to_number(heap)),
-        BinaryOperator::Multiply => Value::Number(left.to_number(heap) * right.to_number(heap)),
+        BinaryOperator::Add => return add(left, right, heap),
+        BinaryOperator::Subtract => Value::Number(left.to_number(heap)? - right.to_number(heap)?),
+        BinaryOperator::Multiply => Value::Number(left.to_number(heap)? * right.to_number(heap)?),
         // IEEE division, with no special case: `1/0` is `Infinity` and `0/0` is NaN, and neither
         // is an error. §6.1.6.1.5 says exactly this and nothing more.
-        BinaryOperator::Divide => Value::Number(left.to_number(heap) / right.to_number(heap)),
+        BinaryOperator::Divide => Value::Number(left.to_number(heap)? / right.to_number(heap)?),
         // §6.1.6.1.6 — the *remainder*, which keeps the sign of the dividend: `-1 % 2` is `-1`
         // and not `1`. Rust's `%` on `f64` is C's `fmod` and agrees exactly.
-        BinaryOperator::Remainder => Value::Number(left.to_number(heap) % right.to_number(heap)),
+        BinaryOperator::Remainder => Value::Number(left.to_number(heap)? % right.to_number(heap)?),
         BinaryOperator::Exponent => {
-            Value::Number(exponentiate(left.to_number(heap), right.to_number(heap)))
+            Value::Number(exponentiate(left.to_number(heap)?, right.to_number(heap)?))
         }
         // §6.1.6.1.9 to §6.1.6.1.11 — "let shiftCount be ℝ(rnum) modulo 32", which is what makes
         // `1 << 32` be `1` and not `0`. Written as `wrapping_shl` rather than `% 32` before a
@@ -48,52 +55,52 @@ pub fn apply_binary(operator: BinaryOperator, left: Value, right: Value, heap: &
         // The left operand of `>>>` is read as *unsigned*, which is the whole of the difference
         // between it and `>>`.
         BinaryOperator::ShiftLeft => {
-            let count = right.to_uint32(heap);
-            Value::Number(f64::from(left.to_int32(heap).wrapping_shl(count)))
+            let count = right.to_uint32(heap)?;
+            Value::Number(f64::from(left.to_int32(heap)?.wrapping_shl(count)))
         }
         BinaryOperator::ShiftRight => {
-            let count = right.to_uint32(heap);
-            Value::Number(f64::from(left.to_int32(heap).wrapping_shr(count)))
+            let count = right.to_uint32(heap)?;
+            Value::Number(f64::from(left.to_int32(heap)?.wrapping_shr(count)))
         }
         BinaryOperator::ShiftRightUnsigned => {
-            let count = right.to_uint32(heap);
-            Value::Number(f64::from(left.to_uint32(heap).wrapping_shr(count)))
+            let count = right.to_uint32(heap)?;
+            Value::Number(f64::from(left.to_uint32(heap)?.wrapping_shr(count)))
         }
         // §6.1.6.1.17 to §6.1.6.1.19 — through `ToInt32`, which is why `2147483648 | 0` is
         // `-2147483648` and why every bitwise operator throws away anything past 32 bits.
         BinaryOperator::BitwiseAnd => {
-            Value::Number(f64::from(left.to_int32(heap) & right.to_int32(heap)))
+            Value::Number(f64::from(left.to_int32(heap)? & right.to_int32(heap)?))
         }
         BinaryOperator::BitwiseXor => {
-            Value::Number(f64::from(left.to_int32(heap) ^ right.to_int32(heap)))
+            Value::Number(f64::from(left.to_int32(heap)? ^ right.to_int32(heap)?))
         }
         BinaryOperator::BitwiseOr => {
-            Value::Number(f64::from(left.to_int32(heap) | right.to_int32(heap)))
+            Value::Number(f64::from(left.to_int32(heap)? | right.to_int32(heap)?))
         }
         // §13.10.1 — all four relational operators are `IsLessThan` with the operands in one
         // order or the other, and `undefined` — "not comparable" — folded to `false`. That fold
         // is why `NaN < 1`, `NaN > 1` and `NaN <= 1` are all false at once.
-        BinaryOperator::LessThan => Value::Boolean(is_less_than(left, right, heap) == Some(true)),
+        BinaryOperator::LessThan => Value::Boolean(is_less_than(left, right, heap)? == Some(true)),
         BinaryOperator::GreaterThan => {
-            Value::Boolean(is_less_than(right, left, heap) == Some(true))
+            Value::Boolean(is_less_than(right, left, heap)? == Some(true))
         }
         // …and the two that negate: `<=` is "not greater", which is `IsLessThan` the other way
         // about with both `true` and `undefined` answering `false`.
         BinaryOperator::LessThanOrEqual => {
-            Value::Boolean(is_less_than(right, left, heap) == Some(false))
+            Value::Boolean(is_less_than(right, left, heap)? == Some(false))
         }
         BinaryOperator::GreaterThanOrEqual => {
-            Value::Boolean(is_less_than(left, right, heap) == Some(false))
+            Value::Boolean(is_less_than(left, right, heap)? == Some(false))
         }
-        BinaryOperator::Equal => Value::Boolean(is_loosely_equal(left, right, heap)),
-        BinaryOperator::NotEqual => Value::Boolean(!is_loosely_equal(left, right, heap)),
+        BinaryOperator::Equal => Value::Boolean(is_loosely_equal(left, right, heap)?),
+        BinaryOperator::NotEqual => Value::Boolean(!is_loosely_equal(left, right, heap)?),
         BinaryOperator::StrictEqual => Value::Boolean(left.is_strictly_equal(&right, heap)),
         BinaryOperator::StrictNotEqual => Value::Boolean(!left.is_strictly_equal(&right, heap)),
         // Unreachable from a compiled chunk: the compiler refuses both until there is an object
         // to ask. Answering `undefined` rather than guessing means a mistake shows up as a wrong
         // value in a test rather than as a plausible one.
         BinaryOperator::Instanceof | BinaryOperator::In => Value::Undefined,
-    }
+    })
 }
 
 /// `+` — §13.15.3 steps 1 to 3, for operands that are already primitive.
@@ -101,18 +108,24 @@ pub fn apply_binary(operator: BinaryOperator, left: Value, right: Value, heap: &
 /// `ToPrimitive` of a primitive is the primitive, so those steps are the identity here and the
 /// String test is all that remains. When Objects arrive, the two conversions go back in front and
 /// this becomes fallible — the order matters and is observable, because both may run user code.
-fn add(left: Value, right: Value, heap: &mut Heap) -> Value {
+fn add(left: Value, right: Value, heap: &mut Heap) -> Completion<Value> {
+    // Steps 1.a and 1.b — *both* operands become primitives before either is looked at, and in
+    // this order. Both may run user code, so the order is observable and is not an accident.
+    let left = left.to_primitive(heap, Hint::Number)?;
+    let right = right.to_primitive(heap, Hint::Number)?;
     let either_is_a_string = matches!(left, Value::String(_)) || matches!(right, Value::String(_));
     if !either_is_a_string {
-        return Value::Number(left.to_number(heap) + right.to_number(heap));
+        return Ok(Value::Number(
+            left.to_number(heap)? + right.to_number(heap)?,
+        ));
     }
     // Step 1.c — *both* are converted to Strings, not just the one that was not: `1 + "a"` is
     // `"1a"` because `ToString(1)` is `"1"`, which is where §6.1.6.1.20 earns its place.
-    let left = left.to_string(heap);
-    let right = right.to_string(heap);
+    let left = left.to_string(heap)?;
+    let right = right.to_string(heap)?;
     let mut units = heap.string(left).unwrap_or(&[]).to_vec();
     units.extend_from_slice(heap.string(right).unwrap_or(&[]));
-    Value::String(heap.new_string(units))
+    Ok(Value::String(heap.new_string(units)))
 }
 
 /// `Number::exponentiate` (§6.1.6.1.3), which is not `f64::powf`.
@@ -168,22 +181,29 @@ fn exponentiate(base: f64, exponent: f64) -> f64 {
 ///
 /// Takes no `leftFirst` flag. It exists to control the order of two `ToPrimitive` calls, both of
 /// which may run user code, and neither of which can yet — see the module documentation.
-fn is_less_than(left: Value, right: Value, heap: &Heap) -> Option<bool> {
+fn is_less_than(left: Value, right: Value, heap: &Heap) -> Completion<Option<bool>> {
     // Step 3 — two Strings compare by code unit, not by character and not by locale. A lone
     // surrogate is a code unit like any other, and `"\u{FF3A}" < "\u{1D400}"` is `false` even
     // though the second character has the larger code *point*: it is stored as a surrogate pair
     // beginning with 0xD835.
+    // Steps 1 and 2 — both operands become primitives, left first unless the caller reversed
+    // them, which is what `IsLessThan`'s `leftFirst` flag controls and why `>` passes them the
+    // other way about.
+    let left = left.to_primitive(heap, Hint::Number)?;
+    let right = right.to_primitive(heap, Hint::Number)?;
     if let (Value::String(left), Value::String(right)) = (left, right) {
-        let (left, right) = (heap.string(left)?, heap.string(right)?);
-        return Some(left < right);
+        let (Some(left), Some(right)) = (heap.string(left), heap.string(right)) else {
+            return Ok(None);
+        };
+        return Ok(Some(left < right));
     }
     // Steps 8 to 10 — everything else through `ToNumber`, and NaN is not less than, greater
     // than, or equal to anything.
-    let (left, right) = (left.to_number(heap), right.to_number(heap));
+    let (left, right) = (left.to_number(heap)?, right.to_number(heap)?);
     if left.is_nan() || right.is_nan() {
-        return None;
+        return Ok(None);
     }
-    Some(left < right)
+    Ok(Some(left < right))
 }
 
 /// `IsLooselyEqual` (§7.2.13) — the `==` operator.
@@ -193,40 +213,68 @@ fn is_less_than(left: Value, right: Value, heap: &Heap) -> Option<bool> {
 /// Boolean is converted to a Number *first*, which is the step behind `"1" == true` being true
 /// and `"true" == true` being false. Everything else is a Number-and-String pair, and the String
 /// is converted.
-pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> bool {
-    match (left, right) {
+pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> Completion<bool> {
+    Ok(match (left, right) {
         // Step 1 — same type, so `===` decides, NaN and the signed zeroes included.
         (Value::Undefined, Value::Undefined)
         | (Value::Null, Value::Null)
         | (Value::Boolean(_), Value::Boolean(_))
         | (Value::Number(_), Value::Number(_))
-        | (Value::String(_), Value::String(_)) => left.is_strictly_equal(&right, heap),
+        | (Value::String(_), Value::String(_))
+        | (Value::Object(_), Value::Object(_)) => left.is_strictly_equal(&right, heap),
         // Steps 2 and 3 — the pair that is equal without being the same, and the reason
         // `x == null` is the idiomatic test for "either of them".
         (Value::Undefined, Value::Null) | (Value::Null, Value::Undefined) => true,
         // Steps 6 and 7 — a String against a Number is read as a Number, so `"" == 0` is true:
         // `ToNumber("")` is `+0`, which surprises everyone exactly once.
         (Value::Number(_), Value::String(_)) | (Value::String(_), Value::Number(_)) => {
-            left.to_number(heap) == right.to_number(heap)
+            left.to_number(heap)? == right.to_number(heap)?
         }
         // Steps 10 and 11 — a Boolean becomes a Number and the comparison starts again. That is
         // why `"1" == true` is true and `"true" == true` is false: the Boolean became `1`, and
         // then `"true"` became NaN.
         (Value::Boolean(_), _) => {
-            is_loosely_equal(Value::Number(left.to_number(heap)), right, heap)
+            let left = Value::Number(left.to_number(heap)?);
+            return is_loosely_equal(left, right, heap);
         }
         (_, Value::Boolean(_)) => {
-            is_loosely_equal(left, Value::Number(right.to_number(heap)), heap)
+            let right = Value::Number(right.to_number(heap)?);
+            return is_loosely_equal(left, right, heap);
+        }
+        // Steps 13 and 14 — an Object against a String or a Number is converted and compared
+        // again. That is why `[] == 0` is true once arrays have a `toString`: the object becomes
+        // `""`, which becomes `+0`.
+        //
+        // The list of what it may be compared against is exact, and `null` and `undefined` are
+        // *not* on it. So `{} == null` reaches step 15 and is false without converting anything —
+        // which is also why it cannot throw, and why `x == null` stays the safe idiom even when
+        // `x` is an object whose `valueOf` would blow up.
+        (Value::Object(_), Value::String(_) | Value::Number(_)) => {
+            let left = left.to_primitive(heap, Hint::Number)?;
+            return is_loosely_equal(left, right, heap);
+        }
+        (Value::String(_) | Value::Number(_), Value::Object(_)) => {
+            let right = right.to_primitive(heap, Hint::Number)?;
+            return is_loosely_equal(left, right, heap);
         }
         // Step 15 — `null` and `undefined` are equal to nothing else at all, not even to `0` or
         // to `""`, which is the one place `==` is stricter than people expect.
         _ => false,
-    }
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The value an operator gave, when the row is about the value rather than about failing.
+    ///
+    /// Every row in this module works on primitives, and converting a primitive never throws — so
+    /// an `Err` here would be the operator being wrong about something other than what the row is
+    /// checking, and it should be loud rather than quietly compared.
+    fn ok<T>(outcome: Completion<T>) -> T {
+        outcome.expect("an operator on primitives does not throw") // an Err is the bug this would hide
+    }
 
     fn string(heap: &mut Heap, text: &str) -> Value {
         Value::String(heap.new_string(text.encode_utf16().collect()))
@@ -246,23 +294,33 @@ mod tests {
         let a = string(&mut heap, "a");
         // Either side being a String makes it concatenation, and *both* sides are then written
         // out — which is what makes this the first operator that needs §6.1.6.1.20.
-        let joined = apply_binary(BinaryOperator::Add, one, a, &mut heap);
+        let joined = ok(apply_binary(BinaryOperator::Add, one, a, &mut heap));
         assert_eq!(text(&heap, joined), "1a");
-        let joined = apply_binary(BinaryOperator::Add, a, one, &mut heap);
+        let joined = ok(apply_binary(BinaryOperator::Add, a, one, &mut heap));
         assert_eq!(text(&heap, joined), "a1");
         // …and every other operator reads the String as a Number instead, which is the whole of
         // why `+` is the one that catches people.
-        let result = apply_binary(
+        let result = ok(apply_binary(
             BinaryOperator::Subtract,
             one,
             string(&mut heap, "1"),
             &mut heap,
-        );
+        ));
         assert!(matches!(result, Value::Number(value) if value == 0.0));
         // `null` is `+0` and `undefined` is NaN, so the two behave completely differently here.
-        let with_null = apply_binary(BinaryOperator::Add, one, Value::Null, &mut heap);
+        let with_null = ok(apply_binary(
+            BinaryOperator::Add,
+            one,
+            Value::Null,
+            &mut heap,
+        ));
         assert!(matches!(with_null, Value::Number(value) if value == 1.0));
-        let with_undefined = apply_binary(BinaryOperator::Add, one, Value::Undefined, &mut heap);
+        let with_undefined = ok(apply_binary(
+            BinaryOperator::Add,
+            one,
+            Value::Undefined,
+            &mut heap,
+        ));
         assert!(matches!(with_undefined, Value::Number(value) if value.is_nan()));
     }
 
@@ -316,12 +374,12 @@ mod tests {
     #[test]
     fn shifting_takes_the_count_modulo_thirty_two() {
         let mut heap = Heap::new();
-        let shift = |left: f64, right: f64, operator, heap: &mut Heap| match apply_binary(
+        let shift = |left: f64, right: f64, operator, heap: &mut Heap| match ok(apply_binary(
             operator,
             Value::Number(left),
             Value::Number(right),
             heap,
-        ) {
+        )) {
             Value::Number(value) => value,
             other => panic!("a shift is a Number, not {other:?}"),
         };
@@ -356,7 +414,7 @@ mod tests {
         let less = |left: &str, right: &str, heap: &mut Heap| {
             let (left, right) = (string(heap, left), string(heap, right));
             matches!(
-                apply_binary(BinaryOperator::LessThan, left, right, heap),
+                ok(apply_binary(BinaryOperator::LessThan, left, right, heap)),
                 Value::Boolean(true)
             )
         };
@@ -375,7 +433,7 @@ mod tests {
         let ten = string(&mut heap, "10");
         let nine = Value::Number(9.0);
         assert!(matches!(
-            apply_binary(BinaryOperator::LessThan, ten, nine, &mut heap),
+            ok(apply_binary(BinaryOperator::LessThan, ten, nine, &mut heap)),
             Value::Boolean(false)
         ));
     }
@@ -396,7 +454,7 @@ mod tests {
         ] {
             assert!(
                 matches!(
-                    apply_binary(operator, nan, one, &mut heap),
+                    ok(apply_binary(operator, nan, one, &mut heap)),
                     Value::Boolean(false)
                 ),
                 "NaN {} 1",
@@ -404,7 +462,7 @@ mod tests {
             );
             assert!(
                 matches!(
-                    apply_binary(operator, one, nan, &mut heap),
+                    ok(apply_binary(operator, one, nan, &mut heap)),
                     Value::Boolean(false)
                 ),
                 "1 {} NaN",
@@ -414,15 +472,25 @@ mod tests {
         // …and the boundary the negations exist for: equal values are `<=` and `>=` and neither
         // `<` nor `>`.
         assert!(matches!(
-            apply_binary(BinaryOperator::LessThanOrEqual, one, one, &mut heap),
+            ok(apply_binary(
+                BinaryOperator::LessThanOrEqual,
+                one,
+                one,
+                &mut heap
+            )),
             Value::Boolean(true)
         ));
         assert!(matches!(
-            apply_binary(BinaryOperator::GreaterThanOrEqual, one, one, &mut heap),
+            ok(apply_binary(
+                BinaryOperator::GreaterThanOrEqual,
+                one,
+                one,
+                &mut heap
+            )),
             Value::Boolean(true)
         ));
         assert!(matches!(
-            apply_binary(BinaryOperator::LessThan, one, one, &mut heap),
+            ok(apply_binary(BinaryOperator::LessThan, one, one, &mut heap)),
             Value::Boolean(false)
         ));
     }
@@ -465,7 +533,7 @@ mod tests {
         ];
         for (left, right, expected) in table {
             assert_eq!(
-                is_loosely_equal(left, right, &heap),
+                ok(is_loosely_equal(left, right, &heap)),
                 expected,
                 "{} == {}",
                 text(&heap, left),
@@ -473,7 +541,7 @@ mod tests {
             );
             // `==` is symmetric, and an implementation that converts only one side is not.
             assert_eq!(
-                is_loosely_equal(right, left, &heap),
+                ok(is_loosely_equal(right, left, &heap)),
                 expected,
                 "{} == {}",
                 text(&heap, right),
@@ -526,7 +594,7 @@ mod tests {
         for operator in operators {
             for left in values {
                 for right in values {
-                    let _ = apply_binary(operator, left, right, &mut heap);
+                    let _ = ok(apply_binary(operator, left, right, &mut heap));
                 }
             }
         }

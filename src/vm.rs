@@ -24,7 +24,8 @@
 use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
 use crate::heap::Heap;
-use crate::value::{Value, apply_binary};
+use crate::realm::{NativeError, Realm};
+use crate::value::{Completion, TypeError, Value, apply_binary};
 
 /// A chunk that does not make sense.
 ///
@@ -89,6 +90,13 @@ struct Handler {
 #[derive(Debug)]
 pub struct Vm {
     stack: Vec<Value>,
+    /// The intrinsics a thrown error is built from.
+    realm: Realm,
+    /// A throw that nothing caught, kept until the loop can stop.
+    ///
+    /// The loop cannot return from inside the `match` — an operation that throws has to leave the
+    /// program counter somewhere legal so that `while let` ends — so the value waits here.
+    escaped: Option<Value>,
     /// The handlers a throw would look at, innermost last.
     handlers: Vec<Handler>,
     /// One slot per local variable, all starting as `undefined`.
@@ -101,16 +109,15 @@ pub struct Vm {
     completion: Value,
 }
 
-impl Default for Vm {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Vm {
-    /// A machine with an empty stack.
-    pub fn new() -> Self {
+    /// A machine with an empty stack, belonging to a realm built into `heap`.
+    ///
+    /// Takes the heap because a machine cannot run without intrinsics: the first TypeError it
+    /// throws needs a prototype to be an instance of.
+    pub fn new(heap: &mut Heap) -> Self {
         Self {
+            realm: Realm::new(heap),
+            escaped: None,
             stack: Vec::new(),
             handlers: Vec::new(),
             locals: Vec::new(),
@@ -125,6 +132,7 @@ impl Vm {
     pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
         self.stack.clear();
         self.handlers.clear();
+        self.escaped = None;
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
@@ -144,14 +152,22 @@ impl Vm {
                 }
                 Instruction::Unary(operator) => {
                     let operand = self.pop()?;
-                    self.stack.push(apply_unary(operator, operand, heap));
+                    let value = apply_unary(operator, operand, heap);
+                    match self.settle(value, heap, &mut at, code.len())? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
                 }
                 Instruction::Binary(operator) => {
                     // Right first: it was pushed second, so it is on top. Getting this backwards
                     // would make every subtraction and comparison silently mirror itself.
                     let right = self.pop()?;
                     let left = self.pop()?;
-                    self.stack.push(apply_binary(operator, left, right, heap));
+                    let value = apply_binary(operator, left, right, heap);
+                    match self.settle(value, heap, &mut at, code.len())? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
                 }
                 Instruction::Jump(target) => at = jump_to(target, code.len())?,
                 Instruction::JumpIfFalse(target) => {
@@ -204,17 +220,10 @@ impl Vm {
                     self.completion = self.pop()?;
                 }
                 Instruction::Throw => {
-                    let thrown = self.pop()?;
                     // §6.2.4 — a throw completion travels up until something wants it. Here that
                     // is the innermost handler; with nothing to want it, it leaves the script.
-                    let Some(handler) = self.handlers.pop() else {
-                        return Ok(Outcome::Thrown(thrown));
-                    };
-                    // Back to the depth the protected region began at, throwing away whatever the
-                    // interrupted expression had half-built, and then the value the handler wants.
-                    self.stack.truncate(handler.depth);
-                    self.stack.push(thrown);
-                    at = jump_to(handler.target, code.len())?;
+                    let thrown = self.pop()?;
+                    self.unwind(thrown, &mut at, code.len())?;
                 }
                 Instruction::PushHandler(target) => self.handlers.push(Handler {
                     target,
@@ -229,10 +238,56 @@ impl Vm {
         }
         // Nothing should be left. Anything else means the chunk and the compiler disagree about
         // what the instructions do, and saying so here is cheaper than finding out later.
+        if let Some(thrown) = self.escaped {
+            return Ok(Outcome::Thrown(thrown));
+        }
         if !self.stack.is_empty() {
             return Err(Fault::UnbalancedStack);
         }
         Ok(Outcome::Value(self.completion))
+    }
+
+    /// What to do with an operation that may have thrown.
+    ///
+    /// `Ok(Some(value))` is the ordinary answer. `Ok(None)` means a handler took the throw and
+    /// `at` has been moved to it, so the caller should go round the loop again rather than push
+    /// anything. `Err` is a chunk that does not make sense, which is a different thing entirely.
+    ///
+    /// One place rather than one per instruction, because every operation that converts a value
+    /// can now throw and they should all unwind the same way.
+    fn settle(
+        &mut self,
+        outcome: Completion<Value>,
+        heap: &mut Heap,
+        at: &mut usize,
+        length: usize,
+    ) -> Result<Option<Value>, Fault> {
+        let TypeError(message) = match outcome {
+            Ok(value) => return Ok(Some(value)),
+            Err(error) => error,
+        };
+        // The value layer said which error; the realm decides what object stands for it. This is
+        // the seam described in [`crate::realm`].
+        let thrown = self.realm.error(heap, NativeError::Type, message);
+        self.unwind(thrown, at, length)
+    }
+
+    /// Hand `thrown` to the innermost handler, or answer that nothing wanted it.
+    fn unwind(
+        &mut self,
+        thrown: Value,
+        at: &mut usize,
+        length: usize,
+    ) -> Result<Option<Value>, Fault> {
+        let Some(handler) = self.handlers.pop() else {
+            self.escaped = Some(thrown);
+            *at = length;
+            return Ok(None);
+        };
+        self.stack.truncate(handler.depth);
+        self.stack.push(thrown);
+        *at = jump_to(handler.target, length)?;
+        Ok(None)
     }
 
     /// Take the top of the stack.
@@ -259,8 +314,8 @@ fn jump_to(target: u32, length: usize) -> Result<usize, Fault> {
 ///
 /// `delete` is absent because it takes a reference rather than a value, and the compiler refuses
 /// it; the rest are one conversion each, and each of those conversions is already written down.
-fn apply_unary(operator: UnaryOperator, operand: Value, heap: &mut Heap) -> Value {
-    match operator {
+fn apply_unary(operator: UnaryOperator, operand: Value, heap: &mut Heap) -> Completion<Value> {
+    Ok(match operator {
         // §13.5.2 — `void` evaluates its operand and throws the value away. That it evaluates it
         // at all is the point: `void f()` calls `f`.
         UnaryOperator::Void => Value::Undefined,
@@ -272,19 +327,19 @@ fn apply_unary(operator: UnaryOperator, operand: Value, heap: &mut Heap) -> Valu
         }
         // §13.5.4 — unary `+` is `ToNumber` and nothing else, which is why `+x` is the shortest
         // spelling of it and why `+"1"` is `1` while `+"a"` is NaN.
-        UnaryOperator::Plus => Value::Number(operand.to_number(heap)),
+        UnaryOperator::Plus => Value::Number(operand.to_number(heap)?),
         // §13.5.5 — `ToNumber` and then negate. Negation is not subtraction from zero: `-0` is
         // `-0` where `0 - 0` is `+0`.
-        UnaryOperator::Minus => Value::Number(-operand.to_number(heap)),
+        UnaryOperator::Minus => Value::Number(-operand.to_number(heap)?),
         // §13.5.6 — `ToInt32` and then complement, so `~x` is `-(x + 1)` for a 32-bit `x`, and
         // `~"abc"` is `-1` because NaN becomes `+0` on the way through.
-        UnaryOperator::BitwiseNot => Value::Number(f64::from(!operand.to_int32(heap))),
+        UnaryOperator::BitwiseNot => Value::Number(f64::from(!operand.to_int32(heap)?)),
         // §13.5.7 — `ToBoolean` and then negate, which is why `!!x` is the shortest cast.
         UnaryOperator::LogicalNot => Value::Boolean(!operand.to_boolean(heap)),
         // Refused by the compiler, which is where the message with a span comes from. Answering
         // `undefined` here means a mistake shows up as a wrong value rather than a plausible one.
         UnaryOperator::Delete => Value::Undefined,
-    }
+    })
 }
 
 #[cfg(test)]
@@ -300,7 +355,7 @@ mod tests {
         let mut heap = Heap::new();
         let expression = parse_expression(source).expect("the source parses"); // a VM test needs a chunk
         let chunk = compile_expression(&expression, &mut heap).expect("the source compiles"); // same
-        let outcome = Vm::new()
+        let outcome = Vm::new(&mut heap)
             .run(&chunk, &mut heap)
             .expect("the chunk is well formed"); // same
         describe(outcome, &mut heap)
@@ -311,7 +366,7 @@ mod tests {
         let mut heap = Heap::new();
         let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
         let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
-        let outcome = Vm::new()
+        let outcome = Vm::new(&mut heap)
             .run(&chunk, &mut heap)
             .expect("the chunk is well formed"); // same
         describe(outcome, &mut heap)
@@ -324,7 +379,12 @@ mod tests {
             Outcome::Value(value) => ("", value),
             Outcome::Thrown(value) => ("thrown ", value),
         };
-        let id = value.to_string(heap);
+        // A thrown *object* has no `toString` to call yet, so writing it down would throw again.
+        // Naming it by its type is enough for a test row to say which error it was, and it stops
+        // one describing failure from failing.
+        let Ok(id) = value.to_string(heap) else {
+            return format!("{prefix}[{}]", value.type_of());
+        };
         format!(
             "{prefix}{}",
             String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
@@ -748,7 +808,7 @@ mod tests {
         // inside an expression until an operation can — so the chunk is written by hand, the way
         // a malformed one is.
         let mut heap = Heap::new();
-        let mut vm = Vm::new();
+        let mut vm = Vm::new(&mut heap);
         let chunk = Chunk::from_parts(
             vec![
                 // try {
@@ -888,7 +948,7 @@ mod tests {
         // would produce. A script cannot get here; a compiler bug can, and DR-0002 is a promise
         // about *any* input rather than about correct ones.
         let mut heap = Heap::new();
-        let mut vm = Vm::new();
+        let mut vm = Vm::new(&mut heap);
 
         let underflow =
             Chunk::from_parts(vec![Instruction::Binary(BinaryOperator::Add)], Vec::new());
