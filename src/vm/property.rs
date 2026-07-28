@@ -14,9 +14,8 @@ impl Vm {
     ///
     /// A Symbol is a key as it stands; everything else becomes the String `ToString` writes, which
     /// is why `o[1]` and `o["1"]` are one property and `o[1.0]` is the same one again.
-    pub(super) fn property_key(&self, key: Value, heap: &mut Heap) -> Completion<PropertyKey> {
-        let id = key.to_string(heap)?;
-        Ok(PropertyKey::from_string(heap, id))
+    pub(super) fn property_key(&mut self, key: Value, heap: &mut Heap) -> Completion<PropertyKey> {
+        self.to_property_key(key, heap)
     }
     /// `[[Get]]` (§10.1.8) — the value of `base`'s `key`, its prototypes included.
     ///
@@ -26,7 +25,7 @@ impl Vm {
     /// yet. The message says "an object" rather than naming the type, so it does not have to
     /// change when that arrives.
     pub(crate) fn get_property(
-        &self,
+        &mut self,
         base: Value,
         key: Value,
         heap: &mut Heap,
@@ -72,7 +71,7 @@ impl Vm {
     /// The Boolean is thrown away by sloppy code and turned into a TypeError by strict code, which
     /// is why this answers rather than throwing: the caller knows which it is and this does not.
     pub(crate) fn set_property(
-        &self,
+        &mut self,
         base: Value,
         key: Value,
         value: Value,
@@ -163,7 +162,7 @@ impl Vm {
     /// class say what `instanceof` means for it. There are no Symbols yet, so every object takes
     /// the ordinary path; when they arrive this gains a step in front rather than changing.
     pub(crate) fn instance_of(
-        &self,
+        &mut self,
         value: Value,
         target: Value,
         heap: &mut Heap,
@@ -186,7 +185,8 @@ impl Vm {
         let Value::Object(mut walk) = value else {
             return Ok(Value::Boolean(false));
         };
-        let prototype = self.get_property(target, self.well_known("prototype", heap), heap)?;
+        let name = self.well_known("prototype", heap);
+        let prototype = self.get_property(target, name, heap)?;
         let Value::Object(prototype) = prototype else {
             return Err(Abrupt::type_error(
                 "the prototype of the right operand of instanceof is not an object",
@@ -206,13 +206,13 @@ impl Vm {
     }
 
     /// A String value for a name the engine itself knows, for asking an object about it.
-    fn well_known(&self, name: &str, heap: &mut Heap) -> Value {
+    fn well_known(&mut self, name: &str, heap: &mut Heap) -> Value {
         Value::String(heap.intern(&name.encode_utf16().collect::<Vec<_>>()))
     }
 
     /// `[[Delete]]` (§10.1.10) through §13.5.1's operator.
     pub(crate) fn delete_property(
-        &self,
+        &mut self,
         base: Value,
         key: Value,
         heap: &mut Heap,
@@ -232,7 +232,7 @@ impl Vm {
     }
     /// `[[HasProperty]]` (§10.1.7) through §13.10.1's `in`.
     pub(crate) fn has_property(
-        &self,
+        &mut self,
         base: Value,
         key: Value,
         heap: &mut Heap,

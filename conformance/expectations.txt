@@ -5522,24 +5522,24 @@ built-ins/Function/S15.3.1_A1_T1.js :: it threw ReferenceError: Function is not 
 built-ins/Function/S15.3.1_A1_T1.js (strict) :: it threw ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A1_T1.js :: it threw ReferenceError: String is not defined
 built-ins/Function/S15.3.2.1_A1_T1.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/Function/S15.3.2.1_A1_T10.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T10.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T12.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T12.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/S15.3.2.1_A1_T10.js :: it threw an object with no name: #1: test fails with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T10.js (strict) :: it threw an object with no name: #1: test fails with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T11.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T11.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T12.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T12.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A1_T13.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
 built-ins/Function/S15.3.2.1_A1_T13.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A1_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/S15.3.2.1_A1_T2.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T2.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T3.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T3.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T4.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T4.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A1_T5.js :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/Function/S15.3.2.1_A1_T5.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T6.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A1_T6.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/S15.3.2.1_A1_T6.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A1_T6.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A1_T7.js :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/Function/S15.3.2.1_A1_T7.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/Function/S15.3.2.1_A1_T8.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
@@ -5562,30 +5562,30 @@ built-ins/Function/S15.3.2.1_A3_T1.js :: it threw ReferenceError: String is not 
 built-ins/Function/S15.3.2.1_A3_T1.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/Function/S15.3.2.1_A3_T10.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
 built-ins/Function/S15.3.2.1_A3_T10.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A3_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T12.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T12.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T13.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T13.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T14.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T14.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T15.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T15.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/S15.3.2.1_A3_T11.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T11.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T12.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T12.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T13.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T13.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T14.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T14.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T15.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T15.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T2.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T2.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A3_T3.js :: it threw ReferenceError: String is not defined
 built-ins/Function/S15.3.2.1_A3_T3.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/Function/S15.3.2.1_A3_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/S15.3.2.1_A3_T4.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T4.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T5.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T5.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A3_T6.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
 built-ins/Function/S15.3.2.1_A3_T6.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
 built-ins/Function/S15.3.2.1_A3_T7.js :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/Function/S15.3.2.1_A3_T7.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T8.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/S15.3.2.1_A3_T8.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/S15.3.2.1_A3_T8.js :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
+built-ins/Function/S15.3.2.1_A3_T8.js (strict) :: it threw an object with no name: #1: test failed with error ReferenceError: Function is not defined
 built-ins/Function/S15.3.2.1_A3_T9.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
 built-ins/Function/S15.3.2.1_A3_T9.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
 built-ins/Function/S15.3.2_A1.js :: it threw ReferenceError: Function is not defined
@@ -5661,10 +5661,10 @@ built-ins/Function/property-order.js :: it threw ReferenceError: Function is not
 built-ins/Function/property-order.js (strict) :: it threw ReferenceError: Function is not defined
 built-ins/Function/prototype/S15.3.4_A1.js :: it threw ReferenceError: Function is not defined
 built-ins/Function/prototype/S15.3.4_A1.js (strict) :: it threw ReferenceError: Function is not defined
-built-ins/Function/prototype/S15.3.4_A2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/prototype/S15.3.4_A2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/prototype/S15.3.4_A2_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Function/prototype/S15.3.4_A2_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Function/prototype/S15.3.4_A2_T1.js :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: ReferenceError: Function is not defined
+built-ins/Function/prototype/S15.3.4_A2_T1.js (strict) :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: ReferenceError: Function is not defined
+built-ins/Function/prototype/S15.3.4_A2_T2.js :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: ReferenceError: Function is not defined
+built-ins/Function/prototype/S15.3.4_A2_T2.js (strict) :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: ReferenceError: Function is not defined
 built-ins/Function/prototype/S15.3.4_A2_T3.js :: it threw ReferenceError: Function is not defined
 built-ins/Function/prototype/S15.3.4_A2_T3.js (strict) :: it threw ReferenceError: Function is not defined
 built-ins/Function/prototype/S15.3.4_A3_T1.js :: it threw ReferenceError: Function is not defined
@@ -6759,8 +6759,8 @@ built-ins/Number/S15.7.5_A1_T06.js :: it threw ReferenceError: Number is not def
 built-ins/Number/S15.7.5_A1_T06.js (strict) :: it threw ReferenceError: Number is not defined
 built-ins/Number/S15.7.5_A1_T07.js :: it threw ReferenceError: Number is not defined
 built-ins/Number/S15.7.5_A1_T07.js (strict) :: it threw ReferenceError: Number is not defined
-built-ins/Number/S8.12.8_A3.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/S8.12.8_A3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/Number/S8.12.8_A3.js :: it threw an object with no name: #1.2: var __obj = {toNumber: function() {return "1"}, valueOf: function() {return new Object();}}; Number(__obj) === 1. Actual: ReferenceError: Number is not defined
+built-ins/Number/S8.12.8_A3.js (strict) :: it threw an object with no name: #1.2: var __obj = {toNumber: function() {return "1"}, valueOf: function() {return new Object();}}; Number(__obj) === 1. Actual: ReferenceError: Number is not defined
 built-ins/Number/S8.12.8_A4.js :: it threw ReferenceError: String is not defined
 built-ins/Number/S8.12.8_A4.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/Number/S9.1_A1_T1.js :: it threw ReferenceError: Number is not defined
@@ -11385,10 +11385,10 @@ built-ins/String/S15.5.2.1_A1_T10.js :: it threw ReferenceError: String is not d
 built-ins/String/S15.5.2.1_A1_T10.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/S15.5.2.1_A1_T11.js :: it threw ReferenceError: String is not defined
 built-ins/String/S15.5.2.1_A1_T11.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/String/S15.5.2.1_A1_T12.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S15.5.2.1_A1_T12.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S15.5.2.1_A1_T13.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S15.5.2.1_A1_T13.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/S15.5.2.1_A1_T12.js :: it threw an object with no name: #1.1: e==="intostr". Actual: e===ReferenceError: String is not defined
+built-ins/String/S15.5.2.1_A1_T12.js (strict) :: it threw an object with no name: #1.1: e==="intostr". Actual: e===ReferenceError: String is not defined
+built-ins/String/S15.5.2.1_A1_T13.js :: it threw an object with no name: #1.1: e==="invalueof". Actual: e===ReferenceError: String is not defined
+built-ins/String/S15.5.2.1_A1_T13.js (strict) :: it threw an object with no name: #1.1: e==="invalueof". Actual: e===ReferenceError: String is not defined
 built-ins/String/S15.5.2.1_A1_T16.js :: it threw ReferenceError: String is not defined
 built-ins/String/S15.5.2.1_A1_T16.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/S15.5.2.1_A1_T17.js :: it threw ReferenceError: String is not defined
@@ -11429,16 +11429,16 @@ built-ins/String/S15.5.5.1_A5.js :: it threw ReferenceError: String is not defin
 built-ins/String/S15.5.5.1_A5.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/S15.5.5_A1_T1.js :: it threw ReferenceError: String is not defined
 built-ins/String/S15.5.5_A1_T1.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/String/S15.5.5_A1_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S15.5.5_A1_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/S15.5.5_A1_T2.js :: it threw an object with no name: #1.1: Exception is instance of TypeError. Actual: exception is ReferenceError: String is not defined
+built-ins/String/S15.5.5_A1_T2.js (strict) :: it threw an object with no name: #1.1: Exception is instance of TypeError. Actual: exception is ReferenceError: String is not defined
 built-ins/String/S15.5.5_A2_T1.js :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/String/S15.5.5_A2_T1.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
-built-ins/String/S15.5.5_A2_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S15.5.5_A2_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S8.12.8_A1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S8.12.8_A1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S8.12.8_A2.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/S8.12.8_A2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/S15.5.5_A2_T2.js :: it threw an object with no name: #1.1: Exception is instance of TypeError. Actual: exception is ReferenceError: String is not defined
+built-ins/String/S15.5.5_A2_T2.js (strict) :: it threw an object with no name: #1.1: Exception is instance of TypeError. Actual: exception is ReferenceError: String is not defined
+built-ins/String/S8.12.8_A1.js :: it threw an object with no name: #1.2: var __obj = {toString: function() {return new Object();}}; String(__obj) throw TypeError. Actual: ReferenceError: String is not defined
+built-ins/String/S8.12.8_A1.js (strict) :: it threw an object with no name: #1.2: var __obj = {toString: function() {return new Object();}}; String(__obj) throw TypeError. Actual: ReferenceError: String is not defined
+built-ins/String/S8.12.8_A2.js :: it threw an object with no name: #1.2: var __obj = {toString: function() {return new Object();}, valueOf: function() {return 1;}}; String(__obj) === "1". Actual: ReferenceError: String is not defined
+built-ins/String/S8.12.8_A2.js (strict) :: it threw an object with no name: #1.2: var __obj = {toString: function() {return new Object();}, valueOf: function() {return 1;}}; String(__obj) === "1". Actual: ReferenceError: String is not defined
 built-ins/String/S9.1_A1_T2.js :: it threw ReferenceError: String is not defined
 built-ins/String/S9.1_A1_T2.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/S9.8.1_A1.js :: it threw ReferenceError: String is not defined
@@ -11797,8 +11797,8 @@ built-ins/String/prototype/indexOf/S15.5.4.7_A3_T2.js :: it threw TypeError: can
 built-ins/String/prototype/indexOf/S15.5.4.7_A3_T2.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/indexOf/S15.5.4.7_A3_T3.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/indexOf/S15.5.4.7_A3_T3.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/indexOf/S15.5.4.7_A4_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/indexOf/S15.5.4.7_A4_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/indexOf/S15.5.4.7_A4_T1.js :: it threw an object with no name: #1.1: Exception === "intointeger". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/indexOf/S15.5.4.7_A4_T1.js (strict) :: it threw an object with no name: #1.1: Exception === "intointeger". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/indexOf/S15.5.4.7_A4_T2.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/indexOf/S15.5.4.7_A4_T2.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/indexOf/S15.5.4.7_A4_T3.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -11863,8 +11863,8 @@ built-ins/String/prototype/lastIndexOf/S15.5.4.8_A1_T8.js :: it threw ReferenceE
 built-ins/String/prototype/lastIndexOf/S15.5.4.8_A1_T8.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/lastIndexOf/S15.5.4.8_A1_T9.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/lastIndexOf/S15.5.4.8_A1_T9.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T1.js :: it threw an object with no name: #1.1: Exception === "intointeger". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T1.js (strict) :: it threw an object with no name: #1.1: Exception === "intointeger". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T2.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T2.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/lastIndexOf/S15.5.4.8_A4_T3.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -11899,8 +11899,8 @@ built-ins/String/prototype/localeCompare/this-value-not-obj-coercible.js :: it t
 built-ins/String/prototype/localeCompare/this-value-not-obj-coercible.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/match/S15.5.4.10_A1_T10.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/match/S15.5.4.10_A1_T10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A1_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/match/S15.5.4.10_A1_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/match/S15.5.4.10_A1_T11.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/match/S15.5.4.10_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/match/S15.5.4.10_A1_T12.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/match/S15.5.4.10_A1_T12.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/match/S15.5.4.10_A1_T13.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -12021,12 +12021,12 @@ built-ins/String/prototype/replace/S15.5.4.11_A1_T1.js :: it threw TypeError: Ob
 built-ins/String/prototype/replace/S15.5.4.11_A1_T1.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/String/prototype/replace/S15.5.4.11_A1_T10.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/replace/S15.5.4.11_A1_T10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/replace/S15.5.4.11_A1_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/replace/S15.5.4.11_A1_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/replace/S15.5.4.11_A1_T11.js :: it threw an object with no name: #1.1: Exception === "insearchValue". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/replace/S15.5.4.11_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "insearchValue". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/replace/S15.5.4.11_A1_T12.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/replace/S15.5.4.11_A1_T12.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/String/prototype/replace/S15.5.4.11_A1_T13.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/replace/S15.5.4.11_A1_T13.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/replace/S15.5.4.11_A1_T13.js :: it threw an object with no name: #1.1: Exception === "inreplaceValue". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/replace/S15.5.4.11_A1_T13.js (strict) :: it threw an object with no name: #1.1: Exception === "inreplaceValue". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/replace/S15.5.4.11_A1_T14.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replace/S15.5.4.11_A1_T14.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replace/S15.5.4.11_A1_T17.js :: it threw ReferenceError: RegExp is not defined
@@ -12097,8 +12097,8 @@ built-ins/String/prototype/search/S15.5.4.12_A1_T1.js :: it threw TypeError: Obj
 built-ins/String/prototype/search/S15.5.4.12_A1_T1.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/String/prototype/search/S15.5.4.12_A1_T10.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/search/S15.5.4.12_A1_T10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A1_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/search/S15.5.4.12_A1_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/search/S15.5.4.12_A1_T11.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/search/S15.5.4.12_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/search/S15.5.4.12_A1_T12.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/search/S15.5.4.12_A1_T12.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/search/S15.5.4.12_A1_T13.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -12149,12 +12149,12 @@ built-ins/String/prototype/slice/S15.5.4.13_A1_T1.js :: it threw TypeError: Obje
 built-ins/String/prototype/slice/S15.5.4.13_A1_T1.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/String/prototype/slice/S15.5.4.13_A1_T10.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/slice/S15.5.4.13_A1_T10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/slice/S15.5.4.13_A1_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/slice/S15.5.4.13_A1_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/slice/S15.5.4.13_A1_T11.js :: it threw an object with no name: #1.1: Exception === "instart". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/slice/S15.5.4.13_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "instart". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/slice/S15.5.4.13_A1_T12.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/slice/S15.5.4.13_A1_T12.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/String/prototype/slice/S15.5.4.13_A1_T13.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/slice/S15.5.4.13_A1_T13.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/slice/S15.5.4.13_A1_T13.js :: it threw an object with no name: #1.1: Exception === "inend". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/slice/S15.5.4.13_A1_T13.js (strict) :: it threw an object with no name: #1.1: Exception === "inend". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/slice/S15.5.4.13_A1_T14.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/slice/S15.5.4.13_A1_T14.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/slice/S15.5.4.13_A1_T15.js :: it threw ReferenceError: Number is not defined
@@ -12363,12 +12363,12 @@ built-ins/String/prototype/substring/S15.5.4.15_A1_T1.js :: it threw TypeError: 
 built-ins/String/prototype/substring/S15.5.4.15_A1_T1.js (strict) :: it threw TypeError: Object() of a primitive needs a wrapper object, which is not implemented yet
 built-ins/String/prototype/substring/S15.5.4.15_A1_T10.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/substring/S15.5.4.15_A1_T10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/substring/S15.5.4.15_A1_T11.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/substring/S15.5.4.15_A1_T11.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/substring/S15.5.4.15_A1_T11.js :: it threw an object with no name: #1.1: Exception === "instart". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/substring/S15.5.4.15_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "instart". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/substring/S15.5.4.15_A1_T12.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/substring/S15.5.4.15_A1_T12.js (strict) :: it threw ReferenceError: String is not defined
-built-ins/String/prototype/substring/S15.5.4.15_A1_T13.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/substring/S15.5.4.15_A1_T13.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/substring/S15.5.4.15_A1_T13.js :: it threw an object with no name: #1.1: Exception === "inend". Actual: TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/substring/S15.5.4.15_A1_T13.js (strict) :: it threw an object with no name: #1.1: Exception === "inend". Actual: TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/substring/S15.5.4.15_A1_T14.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/substring/S15.5.4.15_A1_T14.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/substring/S15.5.4.15_A1_T15.js :: it threw ReferenceError: Number is not defined
@@ -12737,8 +12737,8 @@ built-ins/String/prototype/trim/15.5.4.20-2-43.js :: it threw ReferenceError: St
 built-ins/String/prototype/trim/15.5.4.20-2-43.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/trim/15.5.4.20-2-44.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/trim/15.5.4.20-2-44.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/trim/15.5.4.20-2-45.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/String/prototype/trim/15.5.4.20-2-45.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/String/prototype/trim/15.5.4.20-2-45.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/trim/15.5.4.20-2-45.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/trim/15.5.4.20-2-46.js :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/trim/15.5.4.20-2-46.js (strict) :: it threw ReferenceError: String is not defined
 built-ins/String/prototype/trim/15.5.4.20-2-47.js :: it threw ReferenceError: String is not defined
@@ -13838,8 +13838,8 @@ built-ins/decodeURI/S15.1.3.1_A5.4.js :: it threw ReferenceError: decodeURI is n
 built-ins/decodeURI/S15.1.3.1_A5.4.js (strict) :: it threw ReferenceError: decodeURI is not defined
 built-ins/decodeURI/S15.1.3.1_A5.6.js :: it threw ReferenceError: decodeURI is not defined
 built-ins/decodeURI/S15.1.3.1_A5.6.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.7.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/decodeURI/S15.1.3.1_A5.7.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/decodeURI/S15.1.3.1_A5.7.js :: it threw an object with no name: #1.2: new decodeURI() throw TypeError. Actual: ReferenceError: decodeURI is not defined
+built-ins/decodeURI/S15.1.3.1_A5.7.js (strict) :: it threw an object with no name: #1.2: new decodeURI() throw TypeError. Actual: ReferenceError: decodeURI is not defined
 built-ins/decodeURI/S15.1.3.1_A6_T1.js :: it threw ReferenceError: decodeURI is not defined
 built-ins/decodeURI/S15.1.3.1_A6_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
 built-ins/decodeURIComponent/S15.1.3.2_A1.13_T1.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -13920,8 +13920,8 @@ built-ins/decodeURIComponent/S15.1.3.2_A5.4.js :: it threw ReferenceError: decod
 built-ins/decodeURIComponent/S15.1.3.2_A5.4.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
 built-ins/decodeURIComponent/S15.1.3.2_A5.6.js :: it threw ReferenceError: decodeURIComponent is not defined
 built-ins/decodeURIComponent/S15.1.3.2_A5.6.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.7.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/decodeURIComponent/S15.1.3.2_A5.7.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/decodeURIComponent/S15.1.3.2_A5.7.js :: it threw an object with no name: #1.2: new decodeURIComponent() throw TypeError. Actual: ReferenceError: decodeURIComponent is not defined
+built-ins/decodeURIComponent/S15.1.3.2_A5.7.js (strict) :: it threw an object with no name: #1.2: new decodeURIComponent() throw TypeError. Actual: ReferenceError: decodeURIComponent is not defined
 built-ins/decodeURIComponent/S15.1.3.2_A6_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
 built-ins/decodeURIComponent/S15.1.3.2_A6_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
 built-ins/decodeURIComponent/throw-URIError.js :: it threw an object with no name: #1: %ED%BF%BF (surrogate pair) should throw URIError Expected a URIError but got a ReferenceError
@@ -13956,8 +13956,8 @@ built-ins/encodeURI/S15.1.3.3_A5.4.js :: it threw ReferenceError: encodeURI is n
 built-ins/encodeURI/S15.1.3.3_A5.4.js (strict) :: it threw ReferenceError: encodeURI is not defined
 built-ins/encodeURI/S15.1.3.3_A5.6.js :: it threw ReferenceError: encodeURI is not defined
 built-ins/encodeURI/S15.1.3.3_A5.6.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.7.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/encodeURI/S15.1.3.3_A5.7.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/encodeURI/S15.1.3.3_A5.7.js :: it threw an object with no name: #1.2: new encodeURI() throw TypeError. Actual: ReferenceError: encodeURI is not defined
+built-ins/encodeURI/S15.1.3.3_A5.7.js (strict) :: it threw an object with no name: #1.2: new encodeURI() throw TypeError. Actual: ReferenceError: encodeURI is not defined
 built-ins/encodeURI/S15.1.3.3_A6_T1.js :: it threw ReferenceError: encodeURI is not defined
 built-ins/encodeURI/S15.1.3.3_A6_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
 built-ins/encodeURIComponent/S15.1.3.4_A1.1_T1.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -13990,16 +13990,16 @@ built-ins/encodeURIComponent/S15.1.3.4_A5.4.js :: it threw ReferenceError: encod
 built-ins/encodeURIComponent/S15.1.3.4_A5.4.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
 built-ins/encodeURIComponent/S15.1.3.4_A5.6.js :: it threw ReferenceError: encodeURIComponent is not defined
 built-ins/encodeURIComponent/S15.1.3.4_A5.6.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.7.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/encodeURIComponent/S15.1.3.4_A5.7.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/encodeURIComponent/S15.1.3.4_A5.7.js :: it threw an object with no name: #1.2: new encodeURIComponent() throw TypeError. Actual: ReferenceError: encodeURIComponent is not defined
+built-ins/encodeURIComponent/S15.1.3.4_A5.7.js (strict) :: it threw an object with no name: #1.2: new encodeURIComponent() throw TypeError. Actual: ReferenceError: encodeURIComponent is not defined
 built-ins/encodeURIComponent/S15.1.3.4_A6_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
 built-ins/encodeURIComponent/S15.1.3.4_A6_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
 built-ins/eval/length-non-configurable.js :: it threw ReferenceError: eval is not defined
 built-ins/eval/length-non-configurable.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/eval/length-value.js :: it threw ReferenceError: eval is not defined
 built-ins/eval/length-value.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/eval/no-construct.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/eval/no-construct.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/eval/no-construct.js :: it threw an object with no name: #1.2: new eval() throw TypeError. Actual: ReferenceError: eval is not defined
+built-ins/eval/no-construct.js (strict) :: it threw an object with no name: #1.2: new eval() throw TypeError. Actual: ReferenceError: eval is not defined
 built-ins/eval/no-proto.js :: it threw ReferenceError: eval is not defined
 built-ins/eval/no-proto.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/global/10.2.1.1.3-4-16-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14142,8 +14142,8 @@ built-ins/parseFloat/S15.1.2.3_A6.js :: it threw ReferenceError: parseFloat is n
 built-ins/parseFloat/S15.1.2.3_A6.js (strict) :: it threw ReferenceError: parseFloat is not defined
 built-ins/parseFloat/S15.1.2.3_A7.6.js :: it threw ReferenceError: parseFloat is not defined
 built-ins/parseFloat/S15.1.2.3_A7.6.js (strict) :: it threw ReferenceError: parseFloat is not defined
-built-ins/parseFloat/S15.1.2.3_A7.7.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/parseFloat/S15.1.2.3_A7.7.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/parseFloat/S15.1.2.3_A7.7.js :: it threw an object with no name: #1.2: new parseFloat() throw TypeError. Actual: ReferenceError: parseFloat is not defined
+built-ins/parseFloat/S15.1.2.3_A7.7.js (strict) :: it threw an object with no name: #1.2: new parseFloat() throw TypeError. Actual: ReferenceError: parseFloat is not defined
 built-ins/parseFloat/tonumber-numeric-separator-literal-dd-dot-dd-ep-sign-minus-dd-nsl-dd.js :: it threw ReferenceError: parseFloat is not defined
 built-ins/parseFloat/tonumber-numeric-separator-literal-dd-dot-dd-ep-sign-minus-dd-nsl-dd.js (strict) :: it threw ReferenceError: parseFloat is not defined
 built-ins/parseFloat/tonumber-numeric-separator-literal-dd-dot-dd-ep-sign-minus-dds-nsl-dd.js :: it threw ReferenceError: parseFloat is not defined
@@ -14382,12 +14382,6 @@ language/arguments-object/mapped/mapped-arguments-nonwritable-nonconfigurable-3.
 language/arguments-object/mapped/mapped-arguments-nonwritable-nonconfigurable-4.js :: it threw ReferenceError: arguments is not defined
 language/arguments-object/mapped/writable-enumerable-configurable-descriptor.js :: it threw ReferenceError: arguments is not defined
 language/arguments-object/unmapped/via-strict.js (strict) :: it threw ReferenceError: arguments is not defined
-language/asi/S7.9_A10_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/asi/S7.9_A10_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/asi/S7.9_A10_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/asi/S7.9_A10_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/asi/S7.9_A10_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/asi/S7.9_A10_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/comments/S7.4_A1_T1.js :: it threw ReferenceError: isNaN is not defined
 language/comments/S7.4_A1_T1.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/comments/S7.4_A2_T1.js :: it threw ReferenceError: isNaN is not defined
@@ -14465,8 +14459,8 @@ language/eval-code/direct/cptn-nrml-expr-obj.js :: it threw ReferenceError: eval
 language/eval-code/direct/cptn-nrml-expr-obj.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/cptn-nrml-expr-prim.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/cptn-nrml-expr-prim.js (strict) :: it threw ReferenceError: eval is not defined
-language/eval-code/direct/cptn-thrw-prim.js :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/cptn-thrw-prim.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/eval-code/direct/cptn-thrw-prim.js :: it threw an object with no name: #1.2: throw 1 must throw SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/direct/cptn-thrw-prim.js (strict) :: it threw an object with no name: #1.2: throw 1 must throw SyntaxError. Actual: ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec-catch.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec-catch.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec-eval.js :: it threw ReferenceError: eval is not defined
@@ -14486,16 +14480,16 @@ language/eval-code/direct/non-string-object.js :: it threw ReferenceError: eval 
 language/eval-code/direct/non-string-object.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/non-string-primitive.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/non-string-primitive.js (strict) :: it threw ReferenceError: eval is not defined
-language/eval-code/direct/parse-failure-1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/parse-failure-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/eval-code/direct/parse-failure-1.js :: it threw an object with no name: #1.2: eval("x = 1; x\u000A++") must throw a SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/direct/parse-failure-1.js (strict) :: it threw an object with no name: #1.2: eval("x = 1; x\u000A++") must throw a SyntaxError. Actual: ReferenceError: eval is not defined
 language/eval-code/direct/parse-failure-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/direct/parse-failure-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/eval-code/direct/parse-failure-3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/parse-failure-3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/parse-failure-4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/parse-failure-4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/parse-failure-5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/direct/parse-failure-5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/eval-code/direct/parse-failure-3.js :: it threw an object with no name: #1.2: continue must throw SyntaxError. Actual ReferenceError: eval is not defined
+language/eval-code/direct/parse-failure-3.js (strict) :: it threw an object with no name: #1.2: continue must throw SyntaxError. Actual ReferenceError: eval is not defined
+language/eval-code/direct/parse-failure-4.js :: it threw an object with no name: #1.2: break must throw SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/direct/parse-failure-4.js (strict) :: it threw an object with no name: #1.2: break must throw SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/direct/parse-failure-5.js :: it threw an object with no name: #1.2: return must throw SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/direct/parse-failure-5.js (strict) :: it threw an object with no name: #1.2: return must throw SyntaxError. Actual: ReferenceError: eval is not defined
 language/eval-code/direct/parse-failure-6.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/direct/parse-failure-6.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/direct/strict-caller-function-context.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -14591,8 +14585,8 @@ language/eval-code/indirect/parse-failure-3.js :: it threw an object with no nam
 language/eval-code/indirect/parse-failure-3.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/indirect/parse-failure-4.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/indirect/parse-failure-4.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/eval-code/indirect/parse-failure-5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/eval-code/indirect/parse-failure-5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/eval-code/indirect/parse-failure-5.js :: it threw an object with no name: #1.2: return must throw SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/indirect/parse-failure-5.js (strict) :: it threw an object with no name: #1.2: return must throw SyntaxError. Actual: ReferenceError: eval is not defined
 language/eval-code/indirect/parse-failure-6.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/indirect/parse-failure-6.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/indirect/realm.js :: it threw ReferenceError: $262 is not defined
@@ -14617,14 +14611,8 @@ language/eval-code/indirect/var-env-var-strict.js :: it threw ReferenceError: ev
 language/eval-code/indirect/var-env-var-strict.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/addition/S11.6.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/addition/S11.6.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/addition/S11.6.1_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/addition/S11.6.1_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/addition/S11.6.1_A2.2_T2.js :: it threw ReferenceError: Date is not defined
 language/expressions/addition/S11.6.1_A2.2_T2.js (strict) :: it threw ReferenceError: Date is not defined
-language/expressions/addition/S11.6.1_A2.2_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/addition/S11.6.1_A2.2_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/addition/S11.6.1_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/addition/S11.6.1_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/addition/S11.6.1_A3.1_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/addition/S11.6.1_A3.1_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/addition/S11.6.1_A3.1_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -14643,8 +14631,6 @@ language/expressions/addition/S11.6.1_A3.1_T2.5.js :: it threw ReferenceError: B
 language/expressions/addition/S11.6.1_A3.1_T2.5.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/addition/S11.6.1_A3.2_T1.1.js :: it threw ReferenceError: String is not defined
 language/expressions/addition/S11.6.1_A3.2_T1.1.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/addition/S11.6.1_A3.2_T1.2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/addition/S11.6.1_A3.2_T1.2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/addition/S11.6.1_A3.2_T2.1.js :: it threw ReferenceError: String is not defined
 language/expressions/addition/S11.6.1_A3.2_T2.1.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/addition/S11.6.1_A3.2_T2.2.js :: it threw ReferenceError: Boolean is not defined
@@ -14681,8 +14667,8 @@ language/expressions/addition/coerce-symbol-to-prim-return-prim.js :: it threw R
 language/expressions/addition/coerce-symbol-to-prim-return-prim.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/addition/get-symbol-to-prim-err.js :: it threw ReferenceError: Symbol is not defined
 language/expressions/addition/get-symbol-to-prim-err.js (strict) :: it threw ReferenceError: Symbol is not defined
-language/expressions/addition/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/addition/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/addition/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(rhs) is called before ?ToNumeric(lhs). Expected a undefined but got a ReferenceError
+language/expressions/addition/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(rhs) is called before ?ToNumeric(lhs). Expected a undefined but got a ReferenceError
 language/expressions/addition/symbol-to-string.js :: it threw ReferenceError: Symbol is not defined
 language/expressions/addition/symbol-to-string.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/arrow-function/arrow/binding-tests-1.js :: it threw ReferenceError: eval is not defined
@@ -14699,25 +14685,17 @@ language/expressions/assignment/11.13.1-4-6-s.js (strict) :: it threw an object 
 language/expressions/assignment/8.14.4-8-b_2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/S11.13.1_A6_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/assignment/S11.13.1_A6_T2.js :: it threw ReferenceError: eval is not defined
-language/expressions/assignment/S11.13.1_A7_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/assignment/S11.13.1_A7_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/assignment/S8.12.4_A1.js :: it threw ReferenceError: Math is not defined
 language/expressions/async-generator/eval-body-proto-realm.js :: it threw ReferenceError: $262 is not defined
 language/expressions/async-generator/eval-body-proto-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 language/expressions/bitwise-and/S11.10.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-and/S11.10.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-and/S11.10.1_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-and/S11.10.1_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-and/S11.10.1_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-and/S11.10.1_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-and/S11.10.1_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T1.2.js :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T1.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T1.3.js :: it threw ReferenceError: String is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T1.3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/bitwise-and/S11.10.1_A3_T1.5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-and/S11.10.1_A3_T1.5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-and/S11.10.1_A3_T2.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T2.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T2.2.js :: it threw ReferenceError: String is not defined
@@ -14736,36 +14714,24 @@ language/expressions/bitwise-and/S11.10.1_A3_T2.8.js :: it threw ReferenceError:
 language/expressions/bitwise-and/S11.10.1_A3_T2.8.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T2.9.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-and/S11.10.1_A3_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
-language/expressions/bitwise-and/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/bitwise-and/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/bitwise-and/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/bitwise-and/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/bitwise-not/S11.4.8_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-not/S11.4.8_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-not/S11.4.8_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-not/S11.4.8_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-not/S11.4.8_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-not/S11.4.8_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-not/S11.4.8_A3_T2.js :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-not/S11.4.8_A3_T2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-not/S11.4.8_A3_T3.js :: it threw ReferenceError: String is not defined
 language/expressions/bitwise-not/S11.4.8_A3_T3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/bitwise-not/S11.4.8_A3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-not/S11.4.8_A3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-not/S9.5_A3.1_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-not/S9.5_A3.1_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-or/S11.10.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-or/S11.10.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-or/S11.10.3_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-or/S11.10.3_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-or/S11.10.3_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-or/S11.10.3_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-or/S11.10.3_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T1.2.js :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T1.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T1.3.js :: it threw ReferenceError: String is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T1.3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/bitwise-or/S11.10.3_A3_T1.5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-or/S11.10.3_A3_T1.5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-or/S11.10.3_A3_T2.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T2.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T2.2.js :: it threw ReferenceError: String is not defined
@@ -14784,22 +14750,16 @@ language/expressions/bitwise-or/S11.10.3_A3_T2.8.js :: it threw ReferenceError: 
 language/expressions/bitwise-or/S11.10.3_A3_T2.8.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T2.9.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-or/S11.10.3_A3_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
-language/expressions/bitwise-or/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/bitwise-or/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/bitwise-or/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/bitwise-or/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/bitwise-xor/S11.10.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-xor/S11.10.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-xor/S11.10.2_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-xor/S11.10.2_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-xor/S11.10.2_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-xor/S11.10.2_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-xor/S11.10.2_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T1.2.js :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T1.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T1.3.js :: it threw ReferenceError: String is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T1.3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/bitwise-xor/S11.10.2_A3_T1.5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/bitwise-xor/S11.10.2_A3_T1.5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/bitwise-xor/S11.10.2_A3_T2.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T2.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T2.2.js :: it threw ReferenceError: String is not defined
@@ -14818,8 +14778,8 @@ language/expressions/bitwise-xor/S11.10.2_A3_T2.8.js :: it threw ReferenceError:
 language/expressions/bitwise-xor/S11.10.2_A3_T2.8.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T2.9.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/bitwise-xor/S11.10.2_A3_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
-language/expressions/bitwise-xor/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/bitwise-xor/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/bitwise-xor/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/bitwise-xor/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/call/11.2.3-3_4.js :: it threw ReferenceError: String is not defined
 language/expressions/call/11.2.3-3_4.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/call/11.2.3-3_5.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -14830,14 +14790,14 @@ language/expressions/call/11.2.3-3_7.js :: it threw ReferenceError: String is no
 language/expressions/call/11.2.3-3_7.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/call/S11.2.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/call/S11.2.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/call/S11.2.3_A4_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/call/S11.2.3_A4_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/call/S11.2.3_A4_T1.js :: it threw an object with no name: #1.2: new Boolean(true)() throw TypeError. Actual: ReferenceError: Boolean is not defined
+language/expressions/call/S11.2.3_A4_T1.js (strict) :: it threw an object with no name: #1.2: new Boolean(true)() throw TypeError. Actual: ReferenceError: Boolean is not defined
+language/expressions/call/S11.2.3_A4_T2.js :: it threw an object with no name: #1.2: new Number(1)() throw TypeError. Actual: ReferenceError: Number is not defined
+language/expressions/call/S11.2.3_A4_T2.js (strict) :: it threw an object with no name: #1.2: new Number(1)() throw TypeError. Actual: ReferenceError: Number is not defined
+language/expressions/call/S11.2.3_A4_T3.js :: it threw an object with no name: #1.2: new String("1")() throw TypeError. Actual: ReferenceError: String is not defined
+language/expressions/call/S11.2.3_A4_T3.js (strict) :: it threw an object with no name: #1.2: new String("1")() throw TypeError. Actual: ReferenceError: String is not defined
+language/expressions/call/S11.2.3_A4_T5.js :: it threw an object with no name: #1.2: Math() throw TypeError. Actual: ReferenceError: Math is not defined
+language/expressions/call/S11.2.3_A4_T5.js (strict) :: it threw an object with no name: #1.2: Math() throw TypeError. Actual: ReferenceError: Math is not defined
 language/expressions/call/S11.2.4_A1.1_T1.js :: it threw ReferenceError: arguments is not defined
 language/expressions/call/S11.2.4_A1.1_T1.js (strict) :: it threw ReferenceError: arguments is not defined
 language/expressions/call/S11.2.4_A1.1_T2.js :: it threw ReferenceError: arguments is not defined
@@ -15198,50 +15158,72 @@ language/expressions/compound-assignment/S11.13.2_A6.6_T1.js :: it threw Referen
 language/expressions/compound-assignment/S11.13.2_A6.7_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/compound-assignment/S11.13.2_A6.8_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/compound-assignment/S11.13.2_A6.9_T1.js :: it threw ReferenceError: eval is not defined
-language/expressions/compound-assignment/S11.13.2_A7.10_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.10_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.10_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.10_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.11_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.11_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.11_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.11_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.1_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.1_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.1_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.1_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.2_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.2_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.2_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.2_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.3_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.3_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.3_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.3_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.4_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.4_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.4_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.4_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.5_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.5_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.5_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.5_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.6_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.6_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.6_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.6_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.7_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.7_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.7_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.7_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.8_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.8_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.8_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.8_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.9_T3.js :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.9_T3.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
-language/expressions/compound-assignment/S11.13.2_A7.9_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/compound-assignment/S11.13.2_A7.9_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/compound-assignment/S11.13.2_A7.10_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.10_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.10_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.10_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.10_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.10_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.11_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.11_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.11_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.11_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.11_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.11_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.1_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.1_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.1_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.1_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.1_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.1_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.2_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.2_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.2_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.2_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.2_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.2_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.3_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.3_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.3_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.3_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.3_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.3_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.4_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.4_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.4_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.4_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.4_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.4_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.5_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.5_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.5_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.5_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.5_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.5_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.6_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.6_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.6_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.6_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.7_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.7_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.7_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.7_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.7_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.7_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.8_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.8_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.8_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.8_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.8_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.8_T4.js (strict) :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.9_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.9_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.9_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.9_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/compound-assignment/S11.13.2_A7.9_T4.js :: it threw ReferenceError: String is not defined
+language/expressions/compound-assignment/S11.13.2_A7.9_T4.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/concatenation/S9.8_A1_T2.js :: it threw ReferenceError: eval is not defined
 language/expressions/concatenation/S9.8_A1_T2.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/concatenation/S9.8_A5_T2.js :: it threw ReferenceError: Number is not defined
@@ -15289,10 +15271,6 @@ language/expressions/delete/non-reference-return-true.js :: it threw TypeError: 
 language/expressions/delete/non-reference-return-true.js (strict) :: it threw TypeError: cannot delete a property of something that is not an object
 language/expressions/division/S11.5.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/division/S11.5.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/division/S11.5.2_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/division/S11.5.2_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/division/S11.5.2_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/division/S11.5.2_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/division/S11.5.2_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/division/S11.5.2_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/division/S11.5.2_A3_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -15343,8 +15321,8 @@ language/expressions/division/S11.5.2_A4_T9.js :: it threw ReferenceError: Numbe
 language/expressions/division/S11.5.2_A4_T9.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/division/no-magic-asi-from-block-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/division/no-magic-asi-from-block-eval.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/division/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/division/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/division/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/division/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/does-not-equals/S11.9.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/does-not-equals/S11.9.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/does-not-equals/S11.9.2_A3.2.js :: it threw ReferenceError: Boolean is not defined
@@ -15375,10 +15353,6 @@ language/expressions/does-not-equals/S11.9.2_A7.6.js :: it threw ReferenceError:
 language/expressions/does-not-equals/S11.9.2_A7.6.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/does-not-equals/S11.9.2_A7.7.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/does-not-equals/S11.9.2_A7.7.js (strict) :: it threw ReferenceError: Boolean is not defined
-language/expressions/does-not-equals/S11.9.2_A7.8.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/does-not-equals/S11.9.2_A7.8.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/does-not-equals/S11.9.2_A7.9.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/does-not-equals/S11.9.2_A7.9.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
@@ -15565,12 +15539,6 @@ language/expressions/equals/S11.9.1_A7.6.js :: it threw ReferenceError: Boolean 
 language/expressions/equals/S11.9.1_A7.6.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/equals/S11.9.1_A7.7.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/equals/S11.9.1_A7.7.js (strict) :: it threw ReferenceError: Boolean is not defined
-language/expressions/equals/S11.9.1_A7.8.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/equals/S11.9.1_A7.8.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/equals/S11.9.1_A7.9.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/equals/S11.9.1_A7.9.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/equals/S9.1_A1_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/equals/S9.1_A1_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/equals/coerce-symbol-to-prim-err.js :: it threw ReferenceError: Symbol is not defined
 language/expressions/equals/coerce-symbol-to-prim-err.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/equals/coerce-symbol-to-prim-invocation.js :: it threw ReferenceError: Symbol is not defined
@@ -15587,8 +15555,8 @@ language/expressions/equals/symbol-strict-equality-comparison.js :: it threw Ref
 language/expressions/equals/symbol-strict-equality-comparison.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/exponentiation/exp-operator-precedence-update-expression-semantics.js :: it threw ReferenceError: Math is not defined
 language/expressions/exponentiation/exp-operator-precedence-update-expression-semantics.js (strict) :: it threw ReferenceError: Math is not defined
-language/expressions/exponentiation/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/exponentiation/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/exponentiation/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/exponentiation/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/name-eval-stricteval.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -15603,10 +15571,6 @@ language/expressions/generators/eval-body-proto-realm.js :: it threw ReferenceEr
 language/expressions/generators/eval-body-proto-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/greater-than-or-equal/S11.8.4_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than-or-equal/S11.8.4_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than-or-equal/S11.8.4_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than-or-equal/S11.8.4_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/greater-than-or-equal/S11.8.4_A3.1_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A3.1_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A3.1_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -15631,8 +15595,6 @@ language/expressions/greater-than-or-equal/S11.8.4_A3.1_T2.9.js :: it threw Refe
 language/expressions/greater-than-or-equal/S11.8.4_A3.1_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.1.js :: it threw ReferenceError: String is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.1.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than-or-equal/S11.8.4_A3.2_T1.2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/greater-than-or-equal/S11.8.4_A4.1.js :: it threw ReferenceError: Number is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A4.1.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A4.2.js :: it threw ReferenceError: Number is not defined
@@ -15649,20 +15611,8 @@ language/expressions/greater-than-or-equal/S11.8.4_A4.8.js :: it threw Reference
 language/expressions/greater-than-or-equal/S11.8.4_A4.8.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A4.9.js :: it threw ReferenceError: Number is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A4.9.js (strict) :: it threw ReferenceError: Number is not defined
-language/expressions/greater-than/11.8.2-1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/11.8.2-4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/greater-than/S11.8.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/greater-than/S11.8.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/greater-than/S11.8.2_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/S11.8.2_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/S11.8.2_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/S11.8.2_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/greater-than/S11.8.2_A3.1_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/greater-than/S11.8.2_A3.1_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/greater-than/S11.8.2_A3.1_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -15687,8 +15637,6 @@ language/expressions/greater-than/S11.8.2_A3.1_T2.9.js :: it threw ReferenceErro
 language/expressions/greater-than/S11.8.2_A3.1_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/greater-than/S11.8.2_A3.2_T1.1.js :: it threw ReferenceError: String is not defined
 language/expressions/greater-than/S11.8.2_A3.2_T1.1.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/greater-than/S11.8.2_A3.2_T1.2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/greater-than/S11.8.2_A3.2_T1.2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/greater-than/S11.8.2_A4.1.js :: it threw ReferenceError: Number is not defined
 language/expressions/greater-than/S11.8.2_A4.1.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/greater-than/S11.8.2_A4.2.js :: it threw ReferenceError: Number is not defined
@@ -15778,18 +15726,12 @@ language/expressions/instanceof/symbol-hasinstance-to-boolean.js :: it threw Ref
 language/expressions/instanceof/symbol-hasinstance-to-boolean.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/left-shift/S11.7.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/left-shift/S11.7.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/left-shift/S11.7.1_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/left-shift/S11.7.1_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/left-shift/S11.7.1_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/left-shift/S11.7.1_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/left-shift/S11.7.1_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/left-shift/S11.7.1_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/left-shift/S11.7.1_A3_T1.2.js :: it threw ReferenceError: Number is not defined
 language/expressions/left-shift/S11.7.1_A3_T1.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/left-shift/S11.7.1_A3_T1.3.js :: it threw ReferenceError: String is not defined
 language/expressions/left-shift/S11.7.1_A3_T1.3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/left-shift/S11.7.1_A3_T1.5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/left-shift/S11.7.1_A3_T1.5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/left-shift/S11.7.1_A3_T2.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/left-shift/S11.7.1_A3_T2.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/left-shift/S11.7.1_A3_T2.2.js :: it threw ReferenceError: String is not defined
@@ -15816,22 +15758,10 @@ language/expressions/left-shift/S9.5_A3.1_T2.js :: it threw ReferenceError: Numb
 language/expressions/left-shift/S9.5_A3.1_T2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/left-shift/S9.5_A3.1_T3.js :: it threw ReferenceError: String is not defined
 language/expressions/left-shift/S9.5_A3.1_T3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/left-shift/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/left-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/less-than-or-equal/11.8.3-1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/11.8.3-4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/left-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/left-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/less-than-or-equal/S11.8.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/less-than-or-equal/S11.8.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/less-than-or-equal/S11.8.3_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/S11.8.3_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/S11.8.3_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/S11.8.3_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/less-than-or-equal/S11.8.3_A3.1_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/less-than-or-equal/S11.8.3_A3.1_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/less-than-or-equal/S11.8.3_A3.1_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -15856,8 +15786,6 @@ language/expressions/less-than-or-equal/S11.8.3_A3.1_T2.9.js :: it threw Referen
 language/expressions/less-than-or-equal/S11.8.3_A3.1_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/less-than-or-equal/S11.8.3_A3.2_T1.1.js :: it threw ReferenceError: String is not defined
 language/expressions/less-than-or-equal/S11.8.3_A3.2_T1.1.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/less-than-or-equal/S11.8.3_A3.2_T1.2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than-or-equal/S11.8.3_A3.2_T1.2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/less-than-or-equal/S11.8.3_A4.1.js :: it threw ReferenceError: Number is not defined
 language/expressions/less-than-or-equal/S11.8.3_A4.1.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/less-than-or-equal/S11.8.3_A4.2.js :: it threw ReferenceError: Number is not defined
@@ -15876,10 +15804,6 @@ language/expressions/less-than-or-equal/S11.8.3_A4.9.js :: it threw ReferenceErr
 language/expressions/less-than-or-equal/S11.8.3_A4.9.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/less-than/S11.8.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/less-than/S11.8.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/less-than/S11.8.1_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than/S11.8.1_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than/S11.8.1_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than/S11.8.1_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/less-than/S11.8.1_A3.1_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/less-than/S11.8.1_A3.1_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/less-than/S11.8.1_A3.1_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -15904,8 +15828,6 @@ language/expressions/less-than/S11.8.1_A3.1_T2.9.js :: it threw ReferenceError: 
 language/expressions/less-than/S11.8.1_A3.1_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/less-than/S11.8.1_A3.2_T1.1.js :: it threw ReferenceError: String is not defined
 language/expressions/less-than/S11.8.1_A3.2_T1.1.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/less-than/S11.8.1_A3.2_T1.2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/less-than/S11.8.1_A3.2_T1.2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/less-than/S11.8.1_A4.1.js :: it threw ReferenceError: Number is not defined
 language/expressions/less-than/S11.8.1_A4.1.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/less-than/S11.8.1_A4.2.js :: it threw ReferenceError: Number is not defined
@@ -15974,12 +15896,10 @@ language/expressions/logical-or/S11.11.2_A4_T3.js (strict) :: it threw Reference
 language/expressions/logical-or/symbol-logical-or-evaluation.js :: it threw ReferenceError: Symbol is not defined
 language/expressions/logical-or/symbol-logical-or-evaluation.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/logical-or/tco-right.js (strict) :: it threw ReferenceError: f is not defined
+language/expressions/member-expression/computed-reference-null-or-undefined.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/member-expression/computed-reference-null-or-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
 language/expressions/modulus/S11.5.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/modulus/S11.5.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/modulus/S11.5.3_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/modulus/S11.5.3_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/modulus/S11.5.3_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/modulus/S11.5.3_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/modulus/S11.5.3_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/modulus/S11.5.3_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/modulus/S11.5.3_A3_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -16024,14 +15944,10 @@ language/expressions/modulus/S11.5.3_A4_T6.js :: it threw ReferenceError: Number
 language/expressions/modulus/S11.5.3_A4_T6.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/modulus/S11.5.3_A4_T7.js :: it threw ReferenceError: Math is not defined
 language/expressions/modulus/S11.5.3_A4_T7.js (strict) :: it threw ReferenceError: Math is not defined
-language/expressions/modulus/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/modulus/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/modulus/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/modulus/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/multiplication/S11.5.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/multiplication/S11.5.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/multiplication/S11.5.1_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/multiplication/S11.5.1_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/multiplication/S11.5.1_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/multiplication/S11.5.1_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/multiplication/S11.5.1_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/multiplication/S11.5.1_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/multiplication/S11.5.1_A3_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -16078,8 +15994,8 @@ language/expressions/multiplication/S11.5.1_A4_T7.js :: it threw ReferenceError:
 language/expressions/multiplication/S11.5.1_A4_T7.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/multiplication/S11.5.1_A4_T8.js :: it threw ReferenceError: Number is not defined
 language/expressions/multiplication/S11.5.1_A4_T8.js (strict) :: it threw ReferenceError: Number is not defined
-language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/new/S11.2.2_A1.1.js :: it threw ReferenceError: eval is not defined
 language/expressions/new/S11.2.2_A1.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/new/S11.2.2_A1.2.js :: it threw ReferenceError: eval is not defined
@@ -16126,8 +16042,6 @@ language/expressions/object/computed-__proto__.js :: it threw ReferenceError: Sy
 language/expressions/object/computed-__proto__.js (strict) :: it threw ReferenceError: Symbol is not defined
 language/expressions/postfix-decrement/11.3.2-2-3-s.js :: it threw ReferenceError: arguments is not defined
 language/expressions/postfix-decrement/11.3.2-2-3-s.js (strict) :: it threw ReferenceError: arguments is not defined
-language/expressions/postfix-decrement/S11.3.2_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-decrement/S11.3.2_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/postfix-decrement/S11.3.2_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-decrement/S11.3.2_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-decrement/S11.3.2_A3_T2.js :: it threw ReferenceError: Number is not defined
@@ -16136,8 +16050,8 @@ language/expressions/postfix-decrement/S11.3.2_A3_T3.js :: it threw ReferenceErr
 language/expressions/postfix-decrement/S11.3.2_A3_T3.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-decrement/S11.3.2_A3_T4.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-decrement/S11.3.2_A3_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/postfix-decrement/S11.3.2_A3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-decrement/S11.3.2_A3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/postfix-decrement/S11.3.2_A3_T5.js :: it threw ReferenceError: isNaN is not defined
+language/expressions/postfix-decrement/S11.3.2_A3_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-decrement/S11.3.2_A4_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-decrement/S11.3.2_A4_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-decrement/S11.3.2_A4_T2.js :: it threw ReferenceError: Number is not defined
@@ -16146,18 +16060,20 @@ language/expressions/postfix-decrement/S11.3.2_A4_T3.js :: it threw ReferenceErr
 language/expressions/postfix-decrement/S11.3.2_A4_T3.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-decrement/S11.3.2_A4_T4.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-decrement/S11.3.2_A4_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/postfix-decrement/S11.3.2_A4_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-decrement/S11.3.2_A4_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-decrement/S11.3.2_A6_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-decrement/S11.3.2_A6_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/postfix-decrement/S11.3.2_A4_T5.js :: it threw ReferenceError: isNaN is not defined
+language/expressions/postfix-decrement/S11.3.2_A4_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
+language/expressions/postfix-decrement/S11.3.2_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-decrement/S11.3.2_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-decrement/S11.3.2_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-decrement/S11.3.2_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-decrement/S11.3.2_A6_T3.js :: it threw ReferenceError: String is not defined
+language/expressions/postfix-decrement/S11.3.2_A6_T3.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/postfix-decrement/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-decrement/eval-nostrict.js :: it threw ReferenceError: eval is not defined
 language/expressions/postfix-decrement/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-increment/11.3.1-2-1gs.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-increment/11.3.1-2-3.js :: it threw ReferenceError: arguments is not defined
 language/expressions/postfix-increment/11.3.1-2-3.js (strict) :: it threw ReferenceError: arguments is not defined
-language/expressions/postfix-increment/S11.3.1_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-increment/S11.3.1_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/postfix-increment/S11.3.1_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-increment/S11.3.1_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-increment/S11.3.1_A3_T2.js :: it threw ReferenceError: Number is not defined
@@ -16166,8 +16082,8 @@ language/expressions/postfix-increment/S11.3.1_A3_T3.js :: it threw ReferenceErr
 language/expressions/postfix-increment/S11.3.1_A3_T3.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-increment/S11.3.1_A3_T4.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-increment/S11.3.1_A3_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/postfix-increment/S11.3.1_A3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-increment/S11.3.1_A3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/postfix-increment/S11.3.1_A3_T5.js :: it threw ReferenceError: isNaN is not defined
+language/expressions/postfix-increment/S11.3.1_A3_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-increment/S11.3.1_A4_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-increment/S11.3.1_A4_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/postfix-increment/S11.3.1_A4_T2.js :: it threw ReferenceError: Number is not defined
@@ -16176,18 +16092,20 @@ language/expressions/postfix-increment/S11.3.1_A4_T3.js :: it threw ReferenceErr
 language/expressions/postfix-increment/S11.3.1_A4_T3.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-increment/S11.3.1_A4_T4.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/postfix-increment/S11.3.1_A4_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/postfix-increment/S11.3.1_A4_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-increment/S11.3.1_A4_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-increment/S11.3.1_A6_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/postfix-increment/S11.3.1_A6_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/postfix-increment/S11.3.1_A4_T5.js :: it threw ReferenceError: isNaN is not defined
+language/expressions/postfix-increment/S11.3.1_A4_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
+language/expressions/postfix-increment/S11.3.1_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-increment/S11.3.1_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-increment/S11.3.1_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-increment/S11.3.1_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/postfix-increment/S11.3.1_A6_T3.js :: it threw ReferenceError: String is not defined
+language/expressions/postfix-increment/S11.3.1_A6_T3.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/postfix-increment/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-increment/eval-nostrict.js :: it threw ReferenceError: eval is not defined
 language/expressions/postfix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-decrement/11.4.5-2-2gs.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-decrement/11.4.5-2-3-s.js :: it threw ReferenceError: arguments is not defined
 language/expressions/prefix-decrement/11.4.5-2-3-s.js (strict) :: it threw ReferenceError: arguments is not defined
-language/expressions/prefix-decrement/S11.4.5_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/prefix-decrement/S11.4.5_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/prefix-decrement/S11.4.5_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-decrement/S11.4.5_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-decrement/S11.4.5_A3_T2.js :: it threw ReferenceError: Number is not defined
@@ -16196,8 +16114,8 @@ language/expressions/prefix-decrement/S11.4.5_A3_T3.js :: it threw ReferenceErro
 language/expressions/prefix-decrement/S11.4.5_A3_T3.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-decrement/S11.4.5_A3_T4.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-decrement/S11.4.5_A3_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/prefix-decrement/S11.4.5_A3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/prefix-decrement/S11.4.5_A3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/prefix-decrement/S11.4.5_A3_T5.js :: it threw ReferenceError: isNaN is not defined
+language/expressions/prefix-decrement/S11.4.5_A3_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-decrement/S11.4.5_A4_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-decrement/S11.4.5_A4_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-decrement/S11.4.5_A4_T2.js :: it threw ReferenceError: Number is not defined
@@ -16208,15 +16126,17 @@ language/expressions/prefix-decrement/S11.4.5_A4_T4.js :: it threw ReferenceErro
 language/expressions/prefix-decrement/S11.4.5_A4_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-decrement/S11.4.5_A4_T5.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-decrement/S11.4.5_A4_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/prefix-decrement/S11.4.5_A6_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/prefix-decrement/S11.4.5_A6_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/prefix-decrement/S11.4.5_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-decrement/S11.4.5_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-decrement/S11.4.5_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-decrement/S11.4.5_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-decrement/S11.4.5_A6_T3.js :: it threw ReferenceError: String is not defined
+language/expressions/prefix-decrement/S11.4.5_A6_T3.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/prefix-decrement/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-decrement/eval-nostrict.js :: it threw ReferenceError: eval is not defined
 language/expressions/prefix-decrement/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-increment/11.4.4-2-3-s.js :: it threw ReferenceError: arguments is not defined
 language/expressions/prefix-increment/11.4.4-2-3-s.js (strict) :: it threw ReferenceError: arguments is not defined
-language/expressions/prefix-increment/S11.4.4_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/prefix-increment/S11.4.4_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/prefix-increment/S11.4.4_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-increment/S11.4.4_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-increment/S11.4.4_A3_T2.js :: it threw ReferenceError: Number is not defined
@@ -16225,8 +16145,8 @@ language/expressions/prefix-increment/S11.4.4_A3_T3.js :: it threw ReferenceErro
 language/expressions/prefix-increment/S11.4.4_A3_T3.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-increment/S11.4.4_A3_T4.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-increment/S11.4.4_A3_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/prefix-increment/S11.4.4_A3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/prefix-increment/S11.4.4_A3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/prefix-increment/S11.4.4_A3_T5.js :: it threw ReferenceError: isNaN is not defined
+language/expressions/prefix-increment/S11.4.4_A3_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-increment/S11.4.4_A4_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-increment/S11.4.4_A4_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/prefix-increment/S11.4.4_A4_T2.js :: it threw ReferenceError: Number is not defined
@@ -16237,8 +16157,12 @@ language/expressions/prefix-increment/S11.4.4_A4_T4.js :: it threw ReferenceErro
 language/expressions/prefix-increment/S11.4.4_A4_T4.js (strict) :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-increment/S11.4.4_A4_T5.js :: it threw ReferenceError: isNaN is not defined
 language/expressions/prefix-increment/S11.4.4_A4_T5.js (strict) :: it threw ReferenceError: isNaN is not defined
-language/expressions/prefix-increment/S11.4.4_A6_T3.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/prefix-increment/S11.4.4_A6_T3.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/expressions/prefix-increment/S11.4.4_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-increment/S11.4.4_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-increment/S11.4.4_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-increment/S11.4.4_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/prefix-increment/S11.4.4_A6_T3.js :: it threw ReferenceError: String is not defined
+language/expressions/prefix-increment/S11.4.4_A6_T3.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/prefix-increment/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-increment/eval-nostrict.js :: it threw ReferenceError: eval is not defined
 language/expressions/prefix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -16268,22 +16192,14 @@ language/expressions/property-accessors/S11.2.1_A4_T8.js :: it threw ReferenceEr
 language/expressions/property-accessors/S11.2.1_A4_T8.js (strict) :: it threw ReferenceError: Math is not defined
 language/expressions/property-accessors/S11.2.1_A4_T9.js :: it threw ReferenceError: Date is not defined
 language/expressions/property-accessors/S11.2.1_A4_T9.js (strict) :: it threw ReferenceError: Date is not defined
-language/expressions/relational/S9.1_A1_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/relational/S9.1_A1_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/right-shift/S11.7.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/right-shift/S11.7.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/right-shift/S11.7.2_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/right-shift/S11.7.2_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/right-shift/S11.7.2_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/right-shift/S11.7.2_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/right-shift/S11.7.2_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/right-shift/S11.7.2_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/right-shift/S11.7.2_A3_T1.2.js :: it threw ReferenceError: Number is not defined
 language/expressions/right-shift/S11.7.2_A3_T1.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/right-shift/S11.7.2_A3_T1.3.js :: it threw ReferenceError: String is not defined
 language/expressions/right-shift/S11.7.2_A3_T1.3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/right-shift/S11.7.2_A3_T1.5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/right-shift/S11.7.2_A3_T1.5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/right-shift/S11.7.2_A3_T2.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/right-shift/S11.7.2_A3_T2.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/right-shift/S11.7.2_A3_T2.2.js :: it threw ReferenceError: String is not defined
@@ -16302,8 +16218,8 @@ language/expressions/right-shift/S11.7.2_A3_T2.8.js :: it threw ReferenceError: 
 language/expressions/right-shift/S11.7.2_A3_T2.8.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/right-shift/S11.7.2_A3_T2.9.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/right-shift/S11.7.2_A3_T2.9.js (strict) :: it threw ReferenceError: Boolean is not defined
-language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/strict-does-not-equals/S11.9.5_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/strict-does-not-equals/S11.9.5_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/strict-does-not-equals/S11.9.5_A4.1_T1.js :: it threw ReferenceError: Number is not defined
@@ -16342,10 +16258,6 @@ language/expressions/strict-equals/S11.9.4_A8_T3.js :: it threw ReferenceError: 
 language/expressions/strict-equals/S11.9.4_A8_T3.js (strict) :: it threw ReferenceError: String is not defined
 language/expressions/subtraction/S11.6.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/subtraction/S11.6.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/subtraction/S11.6.2_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/subtraction/S11.6.2_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/subtraction/S11.6.2_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/subtraction/S11.6.2_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/subtraction/S11.6.2_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/subtraction/S11.6.2_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/subtraction/S11.6.2_A3_T1.2.js :: it threw ReferenceError: Number is not defined
@@ -16390,8 +16302,8 @@ language/expressions/subtraction/S11.6.2_A4_T7.js :: it threw ReferenceError: Nu
 language/expressions/subtraction/S11.6.2_A4_T7.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/subtraction/S11.6.2_A4_T8.js :: it threw ReferenceError: Number is not defined
 language/expressions/subtraction/S11.6.2_A4_T8.js (strict) :: it threw ReferenceError: Number is not defined
-language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/tco-pos.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/template-literal/mongolian-vowel-separator-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/template-literal/mongolian-vowel-separator-eval.js (strict) :: it threw ReferenceError: eval is not defined
@@ -16422,8 +16334,6 @@ language/expressions/typeof/syntax.js :: it threw ReferenceError: eval is not de
 language/expressions/typeof/syntax.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/unary-minus/S11.4.7_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unary-minus/S11.4.7_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/unary-minus/S11.4.7_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/unary-minus/S11.4.7_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/unary-minus/S11.4.7_A3_T2.js :: it threw ReferenceError: Number is not defined
@@ -16440,8 +16350,6 @@ language/expressions/unary-minus/S11.4.7_A4.2.js :: it threw ReferenceError: Num
 language/expressions/unary-minus/S11.4.7_A4.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/unary-plus/S11.4.6_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/unary-plus/S11.4.6_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/unary-plus/S11.4.6_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unary-plus/S11.4.6_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/unary-plus/S11.4.6_A3_T1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/unary-plus/S11.4.6_A3_T1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/unary-plus/S11.4.6_A3_T2.js :: it threw ReferenceError: Number is not defined
@@ -16464,18 +16372,12 @@ language/expressions/unary-plus/S9.3_A5_T2.js :: it threw ReferenceError: Number
 language/expressions/unary-plus/S9.3_A5_T2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/unsigned-right-shift/S11.7.3_A2.2_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unsigned-right-shift/S11.7.3_A2.2_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unsigned-right-shift/S11.7.3_A2.3_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unsigned-right-shift/S11.7.3_A2.3_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/unsigned-right-shift/S11.7.3_A3_T1.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T1.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T1.2.js :: it threw ReferenceError: Number is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T1.2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T1.3.js :: it threw ReferenceError: String is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T1.3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/unsigned-right-shift/S11.7.3_A3_T1.5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unsigned-right-shift/S11.7.3_A3_T1.5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 language/expressions/unsigned-right-shift/S11.7.3_A3_T2.1.js :: it threw ReferenceError: Boolean is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T2.1.js (strict) :: it threw ReferenceError: Boolean is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A3_T2.2.js :: it threw ReferenceError: String is not defined
@@ -16502,10 +16404,8 @@ language/expressions/unsigned-right-shift/S9.6_A3.1_T2.js :: it threw ReferenceE
 language/expressions/unsigned-right-shift/S9.6_A3.1_T2.js (strict) :: it threw ReferenceError: Number is not defined
 language/expressions/unsigned-right-shift/S9.6_A3.1_T3.js :: it threw ReferenceError: String is not defined
 language/expressions/unsigned-right-shift/S9.6_A3.1_T3.js (strict) :: it threw ReferenceError: String is not defined
-language/expressions/unsigned-right-shift/S9.6_A3.1_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unsigned-right-shift/S9.6_A3.1_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
-language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToPrimive(lhs) throws. Expected a undefined but got a TypeError
+language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
+language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a ReferenceError
 language/expressions/void/S11.4.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A4_T1.js :: it threw ReferenceError: Boolean is not defined
@@ -16751,7 +16651,7 @@ language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(
 language/function-code/S10.2.1_A4_T1.js :: it threw ReferenceError: Function is not defined
 language/function-code/S10.2.1_A4_T2.js :: it threw ReferenceError: Function is not defined
 language/function-code/S10.2.1_A4_T2.js (strict) :: it threw ReferenceError: Function is not defined
-language/function-code/S10.4.3_A1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/function-code/S10.4.3_A1.js (strict) :: it threw an object with no name: #1: "this" leaked as: [object Object]
 language/global-code/script-decl-func-dups.js :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-func-dups.js (strict) :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-func-err-non-configurable.js :: it threw an object with no name: writable, non-enumerable data property Expected a TypeError but got a ReferenceError
@@ -16826,44 +16726,44 @@ language/literals/regexp/7.8.5-2gs.js :: it threw ReferenceError: RegExp is not 
 language/literals/regexp/7.8.5-2gs.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/literals/regexp/S7.8.5_A1.1_T2.js :: it threw ReferenceError: String is not defined
 language/literals/regexp/S7.8.5_A1.1_T2.js (strict) :: it threw ReferenceError: String is not defined
-language/literals/regexp/S7.8.5_A1.3_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T6.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.3_T6.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/literals/regexp/S7.8.5_A1.3_T2.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T2.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T4.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Carriage Return is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T4.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Carriage Return is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T5.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T5.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T6.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.3_T6.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
 language/literals/regexp/S7.8.5_A1.4_T2.js :: it threw ReferenceError: String is not defined
 language/literals/regexp/S7.8.5_A1.4_T2.js (strict) :: it threw ReferenceError: String is not defined
-language/literals/regexp/S7.8.5_A1.5_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T6.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A1.5_T6.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/literals/regexp/S7.8.5_A1.5_T2.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T2.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T4.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Carriage Return is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T4.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Carriage Return is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T5.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T5.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T6.js :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A1.5_T6.js (strict) :: it threw an object with no name: #1.2: RegularExpressionFirstChar :: BackslashSequence :: \Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
 language/literals/regexp/S7.8.5_A2.1_T2.js :: it threw ReferenceError: String is not defined
 language/literals/regexp/S7.8.5_A2.1_T2.js (strict) :: it threw ReferenceError: String is not defined
-language/literals/regexp/S7.8.5_A2.3_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T6.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.3_T6.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/literals/regexp/S7.8.5_A2.3_T2.js :: it threw an object with no name: #1.2: RegularExpressionChar :: Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T2.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T4.js :: it threw an object with no name: #1.2: RegularExpressionChar :: Carriage Retur is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T4.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: Carriage Retur is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T5.js :: it threw an object with no name: #1.2: RegularExpressionChar :: Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T5.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T6.js :: it threw an object with no name: #1.2: RegularExpressionChar :: Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.3_T6.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
 language/literals/regexp/S7.8.5_A2.4_T2.js :: it threw ReferenceError: String is not defined
 language/literals/regexp/S7.8.5_A2.4_T2.js (strict) :: it threw ReferenceError: String is not defined
-language/literals/regexp/S7.8.5_A2.5_T2.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T2.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T4.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T4.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T5.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T5.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T6.js :: it threw TypeError: cannot convert an object to a primitive value
-language/literals/regexp/S7.8.5_A2.5_T6.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+language/literals/regexp/S7.8.5_A2.5_T2.js :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T2.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Line Feed is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T4.js :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Carriage Return is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T4.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Carriage Return is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T5.js :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T5.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Line separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T6.js :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
+language/literals/regexp/S7.8.5_A2.5_T6.js (strict) :: it threw an object with no name: #1.2: RegularExpressionChar :: BackslashSequence :: \Paragraph separator is incorrect. Actual: ReferenceError: eval is not defined
 language/literals/regexp/mongolian-vowel-separator-eval.js :: it threw ReferenceError: eval is not defined
 language/literals/regexp/mongolian-vowel-separator-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/literals/string/S7.8.4_A4.1_T1.js :: it threw ReferenceError: String is not defined

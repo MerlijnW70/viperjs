@@ -8,10 +8,12 @@
 //! - `statements` — control flow, and what a script evaluates to.
 //! - `objects` — literals, properties, attributes.
 //! - `builtins` — the objects a script can reach without making them.
+//! - `coercion` — what an operator does when an operand is an object.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 
 mod builtins;
+mod coercion;
 mod functions;
 mod objects;
 mod objects_builtin;

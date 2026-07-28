@@ -85,8 +85,12 @@ fn reading_a_property_of_something_that_is_not_an_object_is_a_type_error() {
     // The error is an object with a message of its own and a name from its prototype, which
     // is the seam between the value layer and the realm made visible.
     assert_eq!(run("try { null.a; } catch (e) { typeof e; }"), "object");
+    // An ordinary object *does* convert now — §7.1.1 asks it, and `Object.prototype.toString`
+    // answers. The failure needs an object with nothing to ask, which is what
+    // `Object.create(null)` is: no prototype, so no `valueOf` and no `toString`.
+    assert_eq!(run("({}) + 1"), "[object Object]1");
     assert_eq!(
-        run("try { ({}) + 1; } catch (e) { e.name + ': ' + e.message; }"),
+        run("try { Object.create(null) + 1; } catch (e) { e.name + ': ' + e.message; }"),
         "TypeError: cannot convert an object to a primitive value"
     );
 }
@@ -141,7 +145,7 @@ fn assignment_and_a_literal_both_make_an_ordinary_property() {
     // Nothing in the language can see this yet — that needs `for...in` and
     // `getOwnPropertyDescriptor` — so it is checked where it is decided.
     let mut heap = Heap::new();
-    let vm = Vm::new(&mut heap);
+    let mut vm = Vm::new(&mut heap);
     let object = heap.new_object(None);
     let key = key_of(&mut heap, "a");
     let base = Value::Object(object);
@@ -164,7 +168,7 @@ fn assignment_keeps_the_attributes_an_existing_own_property_had() {
     // that was hidden stays hidden, which is why assigning to a built-in does not suddenly
     // make it turn up in `for...in`.
     let mut heap = Heap::new();
-    let vm = Vm::new(&mut heap);
+    let mut vm = Vm::new(&mut heap);
     let object = heap.new_object(None);
     let hidden = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
     let descriptor = PropertyDescriptor {
@@ -196,7 +200,7 @@ fn a_write_is_refused_by_what_it_would_have_to_go_through() {
     // The three ways §10.1.9 answers `false`, and none of them throws: a plain assignment in
     // sloppy code swallows the answer, which is why `o.frozen = 1` is silent.
     let mut heap = Heap::new();
-    let vm = Vm::new(&mut heap);
+    let mut vm = Vm::new(&mut heap);
     let prototype = heap.new_object(None);
     let object = heap.new_object(Some(prototype));
     let name = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
@@ -249,7 +253,7 @@ fn a_writable_inherited_property_is_shadowed_rather_than_changed() {
     // §10.1.9.2 again, and the case that makes prototypes useful: writing a name the
     // prototype has puts an *own* property on the receiver and leaves the prototype's alone.
     let mut heap = Heap::new();
-    let vm = Vm::new(&mut heap);
+    let mut vm = Vm::new(&mut heap);
     let prototype = heap.new_object(None);
     let object = heap.new_object(Some(prototype));
     let name = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
@@ -284,7 +288,7 @@ fn an_accessor_answers_undefined_without_a_getter_and_throws_with_one() {
     // whatever was put there — and both are reachable by defining the property directly,
     // which is why neither is a branch nothing can take.
     let mut heap = Heap::new();
-    let vm = Vm::new(&mut heap);
+    let mut vm = Vm::new(&mut heap);
     let object = heap.new_object(None);
     let getterless = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());
     let accessor = PropertyDescriptor {
@@ -312,7 +316,7 @@ fn an_accessor_answers_undefined_without_a_getter_and_throws_with_one() {
 #[test]
 fn delete_reaches_only_own_properties_and_a_non_reference_is_always_gone() {
     let mut heap = Heap::new();
-    let vm = Vm::new(&mut heap);
+    let mut vm = Vm::new(&mut heap);
     let prototype = heap.new_object(None);
     let object = heap.new_object(Some(prototype));
     let name = PropertyKey::from_units(&mut heap, &"a".encode_utf16().collect::<Vec<_>>());

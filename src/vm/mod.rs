@@ -29,6 +29,7 @@
 //! §6.2.4 lives in [`crate::compile`].
 
 mod call;
+mod coerce;
 mod global;
 mod property;
 
@@ -38,7 +39,7 @@ use crate::ast::UnaryOperator;
 use crate::compile::{Chunk, Instruction, ShortCircuit};
 use crate::heap::{EnvironmentId, Heap, PropertyDescriptor};
 use crate::realm::{NativeError, Realm};
-use crate::value::{Abrupt, Completion, Value, apply_binary};
+use crate::value::{Abrupt, Completion, Value};
 use std::rc::Rc;
 
 /// A chunk that does not make sense.
@@ -139,6 +140,33 @@ pub struct Vm {
     environment: EnvironmentId,
     /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
     completion: Value,
+    /// Where a nested execution stops — see [`Floor`].
+    floor: Floor,
+    /// How many nested executions are running, which is how much Rust stack they are using.
+    ///
+    /// The main loop does not recurse: ten thousand nested JavaScript calls cost ten thousand
+    /// small structs and no Rust frames at all. A *coercion* is the exception, because the answer
+    /// is needed in the middle of an instruction — so each one is a real Rust call, counted here
+    /// and bounded far lower than [`crate::vm::call::MAX_CALL_DEPTH`].
+    reentries: usize,
+}
+
+/// Where a nested execution stops, and how far a throw inside it may travel.
+///
+/// §7.1.1's `ToPrimitive` calls a method, and that method may throw. The throw has to come back
+/// to whatever asked for the conversion — an operator, half-way through evaluating — rather than
+/// jumping into a `try` in the *caller*, because the Rust call that started the nested execution
+/// is still on the stack waiting for an answer. Jumping past it would leave that call stranded.
+///
+/// So a nested execution has a floor. A handler below it belongs to the code that started the
+/// execution and is not this one's to use; a throw that reaches the floor stops and travels the
+/// rest of the way as a return value instead.
+#[derive(Debug, Clone, Copy, Default)]
+struct Floor {
+    /// Handlers below this index belong to the code that started the nested execution.
+    handlers: usize,
+    /// Frames below this index likewise.
+    frames: usize,
 }
 
 impl Vm {
@@ -158,6 +186,8 @@ impl Vm {
             environment: heap.new_environment(None, 0),
             this_value: Value::Undefined,
             completion: Value::Undefined,
+            floor: Floor::default(),
+            reentries: 0,
         }
     }
 
@@ -188,13 +218,37 @@ impl Vm {
         // A counter rather than an iterator, because a jump moves it. Nothing bounds how long
         // this runs: a backward jump is how a loop will be built, and a script that loops forever
         // is a script that loops forever. DR-0002 is about panics, not about halting.
+        self.execute(chunk, heap, &mut current, &mut at)?;
+        // Nothing should be left. Anything else means the chunk and the compiler disagree about
+        // what the instructions do, and saying so here is cheaper than finding out later.
+        if let Some(thrown) = self.escaped {
+            return Ok(Outcome::Thrown(thrown));
+        }
+        if !self.stack.is_empty() {
+            return Err(Fault::UnbalancedStack);
+        }
+        Ok(Outcome::Value(self.completion))
+    }
+
+    /// Run instructions until the code runs out, or until a nested call has returned.
+    ///
+    /// One loop rather than two, so the two paths into it can never disagree about what an
+    /// instruction does. A nested execution stops without being told to: its root chunk is empty,
+    /// so the moment `Return` points the program counter back at it there is nothing to read.
+    fn execute(
+        &mut self,
+        root: &Chunk,
+        heap: &mut Heap,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
         loop {
-            let running: &Chunk = current.as_deref().unwrap_or(chunk);
+            let running: &Chunk = current.as_deref().unwrap_or(root);
             let code = running.code();
-            let Some(instruction) = code.get(at).copied() else {
-                break;
+            let Some(instruction) = code.get(*at).copied() else {
+                return Ok(());
             };
-            at += 1;
+            *at += 1;
             match instruction {
                 Instruction::Constant(index) => {
                     // The *running* chunk's table, not the root's. A callee has its own
@@ -205,8 +259,8 @@ impl Vm {
                 }
                 Instruction::Unary(operator) => {
                     let operand = self.pop()?;
-                    let value = apply_unary(operator, operand, heap);
-                    match self.settle(value, heap, chunk, &mut current, &mut at)? {
+                    let value = self.unary(operator, operand, heap);
+                    match self.settle(value, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -216,18 +270,18 @@ impl Vm {
                     // would make every subtraction and comparison silently mirror itself.
                     let right = self.pop()?;
                     let left = self.pop()?;
-                    let value = apply_binary(operator, left, right, heap);
-                    match self.settle(value, heap, chunk, &mut current, &mut at)? {
+                    let value = self.binary(operator, left, right, heap);
+                    match self.settle(value, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
                 }
-                Instruction::Jump(target) => at = jump_to(target, code.len())?,
+                Instruction::Jump(target) => *at = jump_to(target, code.len())?,
                 Instruction::JumpIfFalse(target) => {
                     // The test is consumed either way — this is the conditional operator's jump,
                     // and `a ? b : c` evaluates to `b` or `c` and never to `a`.
                     if !self.pop()?.to_boolean(heap) {
-                        at = jump_to(target, code.len())?;
+                        *at = jump_to(target, code.len())?;
                     }
                 }
                 Instruction::JumpKeeping(condition, target) => {
@@ -241,7 +295,7 @@ impl Vm {
                         }
                     };
                     if stop {
-                        at = jump_to(target, code.len())?;
+                        *at = jump_to(target, code.len())?;
                     } else {
                         // It did not decide, so it is not the answer and the right operand's
                         // value will take its place.
@@ -250,7 +304,7 @@ impl Vm {
                 }
                 Instruction::JumpIfTrue(target) => {
                     if self.pop()?.to_boolean(heap) {
-                        at = jump_to(target, code.len())?;
+                        *at = jump_to(target, code.len())?;
                     }
                 }
                 Instruction::Pop => {
@@ -281,10 +335,10 @@ impl Vm {
                     let Some(read) = self.global_binding(key, heap) else {
                         let message = self.missing_global(key, heap);
                         let thrown = self.realm.error(heap, NativeError::Reference, &message);
-                        self.unwind(thrown, chunk, &mut current, &mut at)?;
+                        self.unwind(thrown, root, current, at)?;
                         continue;
                     };
-                    match self.settle(read, heap, chunk, &mut current, &mut at)? {
+                    match self.settle(read, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -299,12 +353,9 @@ impl Vm {
                     // ReferenceError instead — and this engine does not yet carry a strictness
                     // through to here, so it gives the one that is right for a Script's default.
                     let stored = self.set_property_key(global, key, value, heap);
-                    if self
-                        .settle(stored, heap, chunk, &mut current, &mut at)?
-                        .is_none()
-                    {
-                        continue;
-                    }
+                    // No `continue`: this is the end of the arm either way, so a handled throw
+                    // and an ordinary store leave the loop in the same place.
+                    self.settle(stored, heap, root, current, at)?;
                 }
                 Instruction::TypeofGlobal(index) => {
                     let key = self.global_name(running, index, heap)?;
@@ -313,7 +364,7 @@ impl Vm {
                         Some(read) => read,
                         None => Ok(Value::Undefined),
                     };
-                    let answer = match self.settle(read, heap, chunk, &mut current, &mut at)? {
+                    let answer = match self.settle(read, heap, root, current, at)? {
                         Some(value) => value.type_of(heap),
                         None => continue,
                     };
@@ -360,10 +411,10 @@ impl Vm {
                 Instruction::Call(count) | Instruction::CallMethod(count) => {
                     let method = matches!(instruction, Instruction::CallMethod(_));
                     let how = if method { Entry::Method } else { Entry::Plain };
-                    self.enter(how, count, heap, chunk, &mut current, &mut at)?;
+                    self.enter(how, count, heap, root, current, at)?;
                 }
                 Instruction::Construct(count) => {
-                    self.enter(Entry::Construct, count, heap, chunk, &mut current, &mut at)?;
+                    self.enter(Entry::Construct, count, heap, root, current, at)?;
                 }
                 Instruction::Return => {
                     let value = self.pop()?;
@@ -384,8 +435,8 @@ impl Vm {
                     self.stack.push(answer);
                     self.environment = frame.environment;
                     self.this_value = frame.this_value;
-                    current = frame.code;
-                    at = frame.at;
+                    *current = frame.code;
+                    *at = frame.at;
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::Duplicate => {
@@ -422,7 +473,7 @@ impl Vm {
                     let key = match self.property_key(key, heap) {
                         Ok(key) => key,
                         Err(error) => {
-                            self.throw_type_error(error, heap, chunk, &mut current, &mut at)?;
+                            self.throw_type_error(error, heap, root, current, at)?;
                             continue;
                         }
                     };
@@ -440,7 +491,7 @@ impl Vm {
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let got = self.get_property(base, key, heap);
-                    match self.settle(got, heap, chunk, &mut current, &mut at)? {
+                    match self.settle(got, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -450,7 +501,7 @@ impl Vm {
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let done = self.set_property(base, key, value, heap);
-                    match self.settle(done, heap, chunk, &mut current, &mut at)? {
+                    match self.settle(done, heap, root, current, at)? {
                         // §13.15.2 — the value of an assignment is the value assigned, whether or
                         // not the object took it. A silent refusal is what sloppy mode is.
                         Some(_) => self.stack.push(value),
@@ -461,7 +512,7 @@ impl Vm {
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let done = self.delete_property(base, key, heap);
-                    match self.settle(done, heap, chunk, &mut current, &mut at)? {
+                    match self.settle(done, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -470,7 +521,7 @@ impl Vm {
                     let base = self.pop()?;
                     let key = self.pop()?;
                     let has = self.has_property(base, key, heap);
-                    match self.settle(has, heap, chunk, &mut current, &mut at)? {
+                    match self.settle(has, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -481,7 +532,7 @@ impl Vm {
                     let target = self.pop()?;
                     let value = self.pop()?;
                     let answer = self.instance_of(value, target, heap);
-                    match self.settle(answer, heap, chunk, &mut current, &mut at)? {
+                    match self.settle(answer, heap, root, current, at)? {
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }
@@ -490,7 +541,7 @@ impl Vm {
                     // §6.2.4 — a throw completion travels up until something wants it. Here that
                     // is the innermost handler; with nothing to want it, it leaves the script.
                     let thrown = self.pop()?;
-                    self.unwind(thrown, chunk, &mut current, &mut at)?;
+                    self.unwind(thrown, root, current, at)?;
                 }
                 Instruction::PushHandler(target) => self.handlers.push(Handler {
                     target,
@@ -504,15 +555,6 @@ impl Vm {
                 }
             }
         }
-        // Nothing should be left. Anything else means the chunk and the compiler disagree about
-        // what the instructions do, and saying so here is cheaper than finding out later.
-        if let Some(thrown) = self.escaped {
-            return Ok(Outcome::Thrown(thrown));
-        }
-        if !self.stack.is_empty() {
-            return Err(Fault::UnbalancedStack);
-        }
-        Ok(Outcome::Value(self.completion))
     }
 
     /// Throw, from a place that has no completion to settle.
@@ -575,11 +617,18 @@ impl Vm {
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<Option<Value>, Fault> {
-        let Some(handler) = self.handlers.pop() else {
-            // Nothing wanted it anywhere, in this call or in any that is waiting. The script
-            // ends with a throw completion, and the frames go with it.
+        // A handler below the floor belongs to the code that started this nested execution, and
+        // reaching into it would jump out of a Rust call that is still waiting for an answer. The
+        // throw stops here instead and travels the rest of the way as a return value.
+        let found = match self.handlers.len() > self.floor.handlers {
+            true => self.handlers.pop(),
+            false => None,
+        };
+        let Some(handler) = found else {
+            // Nothing wanted it anywhere this execution can reach. For a script that is the end
+            // of it; for a nested one it is an abrupt completion for whoever asked.
             self.escaped = Some(thrown);
-            self.frames.clear();
+            self.frames.truncate(self.floor.frames);
             *current = None;
             *at = root.code().len();
             return Ok(None);
