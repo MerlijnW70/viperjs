@@ -53,9 +53,11 @@ impl Parser<'_> {
     /// Consumes the literal, because what it produces replaces it: keeping both would be keeping
     /// a tree that means two things.
     pub(super) fn refine_to_pattern(&mut self, expr: Expr) -> Result<Pattern, ParseError> {
-        // Whatever the literal parser recorded about this literal is now the pattern's business,
-        // and a `{a = 1}` inside it has found the `=` that makes it legal.
+        // Whatever the literal parser recorded about this literal is now the pattern's business:
+        // a `{a = 1}` inside it has found the `=` that makes it legal, and a duplicate
+        // `__proto__` was never against a rule, §13.2.5.1 being about `ObjectLiteral` alone.
         self.cover_initialized_name = None;
+        self.duplicate_proto = None;
         let pattern = self.refine_pattern(expr)?;
 
         Ok(pattern)
@@ -312,11 +314,15 @@ impl Parser<'_> {
         if self.open_covers > 0 {
             return Ok(());
         }
-        match self.cover_initialized_name.take() {
-            Some(span) => Err(ParseError {
+        if let Some(span) = self.cover_initialized_name.take() {
+            self.duplicate_proto = None;
+            return Err(ParseError {
                 kind: ParseErrorKind::ShorthandPropertyWithInitializer,
                 span,
-            }),
+            });
+        }
+        match self.duplicate_proto.take() {
+            Some(error) => Err(error),
             None => Ok(()),
         }
     }

@@ -263,6 +263,19 @@ struct Parser<'a> {
     /// and an expression that reaches the end of an `AssignmentExpression` still carrying one is
     /// the Syntax Error §13.2.5.1 describes.
     pub(super) cover_initialized_name: Option<Span>,
+    /// The error a duplicate `__proto__` owes, if a literal carrying one has not been refined.
+    ///
+    /// §13.2.5.1's rule is on `ObjectLiteral`, and a literal that turns out to be an
+    /// `ObjectAssignmentPattern` never matched that production — so the rule never applied to
+    /// it. `({__proto__: a, __proto__: b} = c)` is ordinary destructuring and only
+    /// `({__proto__: a, __proto__: b})` is the Syntax Error.
+    ///
+    /// So it is recorded rather than raised, exactly as [`Parser::cover_initialized_name`] is,
+    /// and settles the same way: refinement clears it, and reaching the end of an
+    /// `AssignmentExpression` still carrying one is the error. It holds the finished error
+    /// rather than a span because the span it wants is the second entry's, which is known where
+    /// the record is made and nowhere else.
+    pub(super) duplicate_proto: Option<ParseError>,
     /// Whether this is strict mode code (§11.2.1).
     ///
     /// Not a grammar parameter — the specification threads strictness through `IsStrict`, which
@@ -355,6 +368,7 @@ impl<'a> Parser<'a> {
             current,
             depth: 0,
             cover_initialized_name: None,
+            duplicate_proto: None,
             open_covers: 0,
             inside_function: false,
             body_context: self::body::BodyContext::SCRIPT,

@@ -38,7 +38,6 @@ use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Expr, ExprKind, PropertyDefinition, PropertyKey};
 use crate::lexer::{Goal, TokenKind, identifier_value, numeric_value, string_value};
-use crate::span::Span;
 
 impl Parser<'_> {
     /// `ObjectLiteral` (§13.2.5), with the cursor on the `{`.
@@ -51,7 +50,14 @@ impl Parser<'_> {
         self.leave();
         let properties = properties?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
-        check_single_proto(&properties)?;
+        // Recorded, not raised: this literal may still turn out to be a pattern, and §13.2.5.1
+        // is a rule about `ObjectLiteral` alone. See [`Parser::duplicate_proto`].
+        //
+        // `get_or_insert_with` rather than an assignment, so the *first* unrefined duplicate in
+        // an expression is the one reported — which is the one a reader will find first.
+        if let Some(error) = check_single_proto(&properties) {
+            self.duplicate_proto.get_or_insert(error);
+        }
         Ok(Expr::new(
             ExprKind::Object(properties),
             open.span.to(close.span),
@@ -232,8 +238,11 @@ impl Parser<'_> {
 /// The rule counts entries from that production alone, so a computed key and a shorthand are both
 /// invisible to it — and a numeric key cannot spell the name at all, `PropName` of a
 /// `NumericLiteral` being the number written out.
-fn check_single_proto(properties: &[PropertyDefinition]) -> Result<(), ParseError> {
-    let mut seen: Option<Span> = None;
+///
+/// Returns the error rather than raising it, because whether it is one is not yet known: the
+/// caller may still refine this literal into a pattern, which §13.2.5.1 does not speak about.
+fn check_single_proto(properties: &[PropertyDefinition]) -> Option<ParseError> {
+    let mut seen = false;
     for property in properties {
         let PropertyDefinition::KeyValue { key, value } = property else {
             continue;
@@ -241,15 +250,15 @@ fn check_single_proto(properties: &[PropertyDefinition]) -> Result<(), ParseErro
         if !key.is_proto() {
             continue;
         }
-        if seen.is_some() {
-            return Err(ParseError {
+        if seen {
+            return Some(ParseError {
                 kind: ParseErrorKind::DuplicateProto,
                 span: value.span,
             });
         }
-        seen = Some(value.span);
+        seen = true;
     }
-    Ok(())
+    None
 }
 
 #[cfg(test)]
@@ -263,6 +272,74 @@ mod tests {
             Err(err) => err.kind,
             Ok(expr) => panic!("{source:?} should not parse, got {expr:?}"), // a test about an error needs one
         }
+    }
+
+    #[test]
+    fn a_duplicate_proto_is_refused_in_a_literal_and_allowed_in_the_pattern_one_covers() {
+        // §13.2.5.1's rule is on `ObjectLiteral`. A literal that turns out to be an
+        // `ObjectAssignmentPattern` never matched that production, so the rule never reached it:
+        // `({__proto__: a, __proto__: b} = c)` sets the same target twice and is ordinary.
+        assert_eq!(
+            error_kind("({ __proto__: x, __proto__: y })"),
+            ParseErrorKind::DuplicateProto
+        );
+        assert!(parse_script("({ __proto__: x, __proto__: y } = {});").is_ok());
+        assert!(parse_script("[{ __proto__: x, __proto__: y }] = [];").is_ok());
+        assert!(parse_script("({ a: { __proto__: x, __proto__: y } } = {});").is_ok());
+        // An arrow's parameters are the same refinement reached by a different route.
+        assert!(parse_script("({ __proto__: x, __proto__: y }) => 0;").is_ok());
+        // A binding pattern never went through a literal at all, and was always allowed.
+        assert!(parse_script("var { __proto__: x, __proto__: y } = {};").is_ok());
+        assert!(parse_script("function f({ __proto__: x, __proto__: y }) {}").is_ok());
+        // Nothing refines these, so the record settles as the error it was recorded as.
+        assert_eq!(
+            error_kind("f({ __proto__: 1, __proto__: 2 })"),
+            ParseErrorKind::DuplicateProto
+        );
+        assert_eq!(
+            error_kind("[{ __proto__: 1, __proto__: 2 }]"),
+            ParseErrorKind::DuplicateProto
+        );
+        // A record left by one statement may not be spent by the next, in either direction.
+        assert!(
+            parse_script(
+                "({ __proto__: x, __proto__: y } = {}); ({ __proto__: 1, __proto__: 2 });"
+            )
+            .is_err()
+        );
+        assert!(
+            parse_script(
+                "({ __proto__: 1, __proto__: 2 }); ({ __proto__: a, __proto__: b } = {});"
+            )
+            .is_err()
+        );
+        // The rule counts one production and no other, so these three stay legal.
+        assert!(parse_script("({ __proto__: x, ...__proto__ });").is_ok());
+        assert!(parse_script("({ __proto__: x, [__proto__]: y });").is_ok());
+        assert!(parse_script("({ __proto__, __proto__: y });").is_ok());
+        // …while a string literal is a `PropertyName` like any other and does count.
+        assert_eq!(
+            error_kind("({ \"__proto__\": x, __proto__: y })"),
+            ParseErrorKind::DuplicateProto
+        );
+    }
+
+    #[test]
+    fn a_literal_nested_in_a_refined_one_keeps_a_rule_this_parser_does_not_yet_apply() {
+        // A known divergence, written down rather than left to be rediscovered. Both of these
+        // are Syntax Errors and this parser accepts them.
+        //
+        // The record lives on the parser, so refining the *outer* literal into a pattern clears
+        // what the *inner* one recorded — and the inner one is a default value, which stays an
+        // expression and keeps its rule. Telling them apart needs the record to say which
+        // literal it belongs to, which is what `ArrayElement::Spread::followed_by_comma` had to
+        // be moved onto the tree for.
+        //
+        // `cover_initialized_name` has the identical hole, from the identical cause, so this is
+        // one fix and not two. Neither is a false *rejection*: both accept too much rather than
+        // too little, which is why they are recorded here instead of held up for a design.
+        assert!(parse_script("({ a = { __proto__: 1, __proto__: 2 } } = {});").is_ok());
+        assert!(parse_script("({ a = { b = 1 } } = x);").is_ok());
     }
 
     #[test]

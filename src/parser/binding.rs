@@ -255,6 +255,7 @@ impl Parser<'_> {
         // `AssignmentExpression` unrefined is the Syntax Error §13.2.5.1 describes — which is why
         // `f({a = 1})` and `async({a = 1})` still are one.
         self.cover_initialized_name = None;
+        self.duplicate_proto = None;
         let span = expr.span;
         match expr.into_kind() {
             ExprKind::Identifier(name) => Ok(Binding::Identifier(crate::ast::BindingName {
