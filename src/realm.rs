@@ -28,10 +28,27 @@ pub struct Realm {
     global: ObjectId,
     function_prototype: ObjectId,
     error_prototype: ObjectId,
-    type_error_prototype: ObjectId,
-    range_error_prototype: ObjectId,
-    reference_error_prototype: ObjectId,
+    /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
+    ///
+    /// An array rather than six fields because nothing here treats one differently from another:
+    /// they are made the same way, they differ only in a `name`, and the code that installs them
+    /// wants to walk them. [`NativeError`] indexes into it for the three the engine itself
+    /// throws; the other three exist because a *script* can reach them.
+    native_error_prototypes: [ObjectId; NATIVE_ERRORS.len()],
 }
+
+/// §20.5.5's native error types, in the order their prototypes are stored.
+///
+/// Alphabetical, which is also the order §20.5.5 lists them in, so a reader checking this against
+/// the specification is reading down one column rather than hunting.
+const NATIVE_ERRORS: [&str; 6] = [
+    "EvalError",
+    "RangeError",
+    "ReferenceError",
+    "SyntaxError",
+    "TypeError",
+    "URIError",
+];
 
 /// Which of §20.5.5's five native error types this is.
 ///
@@ -45,15 +62,26 @@ pub enum NativeError {
     Range,
     /// A name has no binding, or is used before it has one — §20.5.5.3.
     Reference,
+    /// The source could not be parsed — §20.5.5.4. Thrown by `eval` and by `Function`.
+    Syntax,
+    /// Reserved by §20.5.5.1 and thrown by nothing in the language itself.
+    ///
+    /// It exists because a *script* can throw one, and because the suite checks that it does.
+    Eval,
+    /// A URI-handling function was given something it cannot encode — §20.5.5.6.
+    Uri,
 }
 
 impl NativeError {
-    /// The `name` property of the prototype, which is what `e.name` answers.
-    fn name(self) -> &'static str {
+    /// Where this kind's prototype sits in [`NATIVE_ERRORS`].
+    fn at(self) -> usize {
         match self {
-            Self::Type => "TypeError",
-            Self::Range => "RangeError",
-            Self::Reference => "ReferenceError",
+            Self::Eval => 0,
+            Self::Range => 1,
+            Self::Reference => 2,
+            Self::Syntax => 3,
+            Self::Type => 4,
+            Self::Uri => 5,
         }
     }
 }
@@ -86,15 +114,15 @@ impl Realm {
         let empty = text(heap, "");
         define(heap, error_prototype, "message", empty);
 
-        let mut native = |kind: NativeError| {
+        // §20.5.6.3 — each native error's prototype inherits from `Error.prototype` and differs
+        // from it in one property: its `name`. The `message` it does *not* override, which is why
+        // `new TypeError().message` is the empty string that `Error.prototype` carries.
+        let native_error_prototypes = NATIVE_ERRORS.map(|kind| {
             let prototype = heap.new_object(Some(error_prototype));
-            let name = text(heap, kind.name());
+            let name = text(heap, kind);
             define(heap, prototype, "name", name);
             prototype
-        };
-        let type_error_prototype = native(NativeError::Type);
-        let range_error_prototype = native(NativeError::Range);
-        let reference_error_prototype = native(NativeError::Reference);
+        });
 
         // §19.1's value properties of the global object — the four that are values rather than
         // functions, and so the four that can exist before anything is callable.
@@ -120,15 +148,26 @@ impl Realm {
             let _ = heap.define_own_property(global, key, &descriptor);
         }
 
-        Self {
+        let realm = Self {
             object_prototype,
             global,
             function_prototype,
             error_prototype,
-            type_error_prototype,
-            range_error_prototype,
-            reference_error_prototype,
-        }
+            native_error_prototypes,
+        };
+        // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
+        // here rather than at the first call is what makes `typeof Error` answer `"function"` in
+        // a script that never mentions it.
+        crate::builtins::install(heap, &realm);
+        realm
+    }
+
+    /// §20.5.5's native error prototypes, each with the name its `name` property carries.
+    ///
+    /// The pairing is what the built-ins need: a constructor is made per prototype, and the name
+    /// is both the constructor's `name` and the global it is installed under.
+    pub fn native_error_prototypes(&self) -> impl Iterator<Item = (&'static str, ObjectId)> + '_ {
+        NATIVE_ERRORS.into_iter().zip(self.native_error_prototypes)
     }
 
     /// `%Object.prototype%` — what an object literal inherits from.
@@ -200,11 +239,7 @@ impl Realm {
     /// An empty message leaves the property off entirely, which is what §20.5.1.1 step 4 says —
     /// `new TypeError()` has no own `message` and inherits the empty one.
     pub fn error(&self, heap: &mut Heap, kind: NativeError, message: &str) -> Value {
-        let prototype = match kind {
-            NativeError::Type => self.type_error_prototype,
-            NativeError::Range => self.range_error_prototype,
-            NativeError::Reference => self.reference_error_prototype,
-        };
+        let prototype = self.native_error_prototypes[kind.at()];
         let object = heap.new_object(Some(prototype));
         if !message.is_empty() {
             let message = text(heap, message);
@@ -320,10 +355,11 @@ mod tests {
         let Value::Object(error) = realm.error(&mut heap, NativeError::Type, "") else {
             panic!("an error is an object")
         };
+        let type_error_prototype = realm.native_error_prototypes[NativeError::Type.at()];
         let prototype = heap.object(error).and_then(crate::heap::Object::prototype);
-        assert_eq!(prototype, Some(realm.type_error_prototype));
+        assert_eq!(prototype, Some(type_error_prototype));
         let grandparent = heap
-            .object(realm.type_error_prototype)
+            .object(type_error_prototype)
             .and_then(crate::heap::Object::prototype);
         assert_eq!(grandparent, Some(realm.error_prototype()));
         let root = heap
@@ -387,7 +423,14 @@ mod tests {
         let keys = heap
             .object(prototype)
             .map_or_else(Vec::new, |found| found.own_property_keys(&heap));
-        assert_eq!(keys.len(), 2);
+        // §20.5.3's four: the `name` and `message` an error inherits, the `toString` that prints
+        // it, and the `constructor` that points back at `Error`. Named rather than counted, so
+        // that adding a fifth is a decision rather than a number going up.
+        let names: Vec<String> = keys
+            .iter()
+            .map(|key| String::from_utf16_lossy(heap.string(key.as_string()).unwrap_or(&[])))
+            .collect();
+        assert_eq!(names, ["name", "message", "constructor", "toString"]);
         for key in keys {
             let property = heap
                 .object(prototype)

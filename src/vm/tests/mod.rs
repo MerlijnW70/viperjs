@@ -7,8 +7,10 @@
 //! - `values` — the operators.
 //! - `statements` — control flow, and what a script evaluates to.
 //! - `objects` — literals, properties, attributes.
+//! - `builtins` — the objects a script can reach without making them.
 //! - `functions` — calls, closures, `this`.
 
+mod builtins;
 mod functions;
 mod objects;
 mod statements;
@@ -42,6 +44,15 @@ fn run(source: &str) -> String {
         .run(&chunk, &mut heap)
         .expect("the chunk is well formed"); // same
     describe(outcome, &mut heap)
+}
+
+/// The property `object` files under `name`, if it has one of its own.
+///
+/// Own rather than inherited, and a whole `Property` rather than a value, because several of
+/// §17's rules are about *attributes* and nothing in the language can read one yet.
+fn own(heap: &mut Heap, object: ObjectId, name: &str) -> Option<crate::heap::Property> {
+    let key = PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
+    heap.object(object)?.get_own_property(key).copied()
 }
 
 /// The outcome, written the way `String(x)` would write it — with a thrown one marked, so

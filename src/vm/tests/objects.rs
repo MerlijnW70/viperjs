@@ -5,12 +5,6 @@
 
 use super::*;
 
-/// The property `object` files under `name`, if it has one of its own.
-fn own(heap: &mut Heap, object: ObjectId, name: &str) -> Option<crate::heap::Property> {
-    let key = PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
-    heap.object(object)?.get_own_property(key).copied()
-}
-
 fn key_of(heap: &mut Heap, name: &str) -> Value {
     Value::String(heap.new_string(name.encode_utf16().collect()))
 }

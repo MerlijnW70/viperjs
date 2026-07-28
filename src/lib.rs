@@ -15,6 +15,7 @@
 #![deny(missing_docs)]
 
 pub mod ast;
+pub mod builtins;
 pub mod compile;
 pub mod heap;
 pub mod lexer;

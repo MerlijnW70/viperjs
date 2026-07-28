@@ -7,7 +7,7 @@
 
 use super::{Fault, Vm};
 use crate::compile::Chunk;
-use crate::heap::{EnvironmentId, Heap, Object};
+use crate::heap::{Callable, EnvironmentId, Heap, Object};
 use crate::realm::NativeError;
 use crate::value::{TypeError, Value};
 use std::rc::Rc;
@@ -54,7 +54,7 @@ impl Vm {
             )?;
             return Ok(());
         };
-        let Some(body) = heap.object(object).and_then(Object::call) else {
+        let Some(callable) = heap.object(object).and_then(Object::call).cloned() else {
             self.throw_type_error(
                 TypeError("what was called is not a function"),
                 heap,
@@ -64,7 +64,26 @@ impl Vm {
             )?;
             return Ok(());
         };
-        let body = body.clone();
+        // §10.3.1 — a built-in's `[[Call]]` does no receiver substitution and pushes no frame.
+        // It runs to completion and leaves one value where the callee and its arguments were,
+        // which is why it is answered here rather than joining the machinery below.
+        let body = match callable {
+            Callable::Native(native) => {
+                return self.enter_native(
+                    native,
+                    object,
+                    how,
+                    callee_at,
+                    receiver_at,
+                    count,
+                    heap,
+                    chunk,
+                    current,
+                    at,
+                );
+            }
+            Callable::Bytecode(body) => body,
+        };
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
         // different in each of the three ways in.
         let receiver = match how {
@@ -126,6 +145,55 @@ impl Vm {
         *at = 0;
         Ok(())
     }
+    /// Run a built-in and leave its answer where the call was — §10.3.1 and §10.3.2.
+    ///
+    /// Nothing is suspended. A built-in is Rust: it runs, it answers, and the interpreter carries
+    /// on at the next instruction, so there is no frame to push and none to come back to. That is
+    /// also why the recursion limit does not apply — a built-in cannot recurse into the
+    /// interpreter, because it has no way to reach it.
+    #[allow(clippy::too_many_arguments)] // the call's shape, threaded rather than shared
+    fn enter_native(
+        &mut self,
+        native: crate::heap::Native,
+        function: crate::heap::ObjectId,
+        how: Entry,
+        callee_at: usize,
+        receiver_at: usize,
+        count: usize,
+        heap: &mut Heap,
+        chunk: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        // §10.3.1 step 3 passes `thisArgument` straight through — no global-object substitution,
+        // which is why `Error.prototype.toString.call(undefined)` throws where a sloppy-mode
+        // JavaScript function would have been handed the global object instead.
+        //
+        // §10.3.2's `[[Construct]]` does not make the receiver either: a built-in constructor
+        // makes its own object, out of its own `prototype`, which is the whole reason
+        // `Error("x")` and `new Error("x")` come to the same thing.
+        let this_value = match how {
+            Entry::Method => self.stack[receiver_at],
+            Entry::Plain | Entry::Construct => Value::Undefined,
+        };
+        let arguments = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
+        let call = crate::heap::NativeCall {
+            function,
+            this_value,
+            arguments: &arguments,
+        };
+        let answer = native(heap, &self.realm, &call);
+        // The callee, its receiver and its arguments all go, and the answer takes their place —
+        // exactly what a return from a JavaScript function leaves behind.
+        self.stack.truncate(receiver_at);
+        // `None` is a throw a handler took, and it has already moved the program counter — so
+        // there is nothing to push and nothing else to do.
+        if let Some(value) = self.settle(answer, heap, chunk, current, at)? {
+            self.stack.push(value);
+        }
+        Ok(())
+    }
+
     /// The object a constructor's instances inherit from — §10.2.2 step 5.
     ///
     /// A function's `prototype` is an ordinary writable property, so a script may put anything

@@ -21,7 +21,9 @@
 
 use crate::compile::Chunk;
 use crate::heap::define::{Validation, apply, validate};
-use crate::heap::{EnvironmentId, Heap, Property, PropertyDescriptor, PropertyKey};
+use crate::heap::{
+    Callable, EnvironmentId, Heap, Native, Property, PropertyDescriptor, PropertyKey,
+};
 use std::rc::Rc;
 
 /// An object on the heap.
@@ -54,7 +56,7 @@ pub struct Object {
     /// is the thing that owns its body, and the `Rc` is what lets a closure outlive the call that
     /// made it. See [`Chunk`] for why reference counting is safe for code where DR-0010 rejects
     /// it for values.
-    call: Option<Rc<Chunk>>,
+    call: Option<Callable>,
     /// The environment this function was *written* in — §10.2's `[[Environment]]`.
     ///
     /// A closure is this field. The call that made the function is long gone by the time the
@@ -89,8 +91,11 @@ impl Object {
         self.prototype
     }
 
-    /// The body this object runs when called, if it is callable at all.
-    pub fn call(&self) -> Option<&Rc<Chunk>> {
+    /// What this object runs when it is called, if it is callable at all.
+    ///
+    /// `None` is what `typeof` reads to answer anything but `"function"`, and what a call
+    /// expression checks before it does anything else.
+    pub fn call(&self) -> Option<&Callable> {
         self.call.as_ref()
     }
 
@@ -211,8 +216,24 @@ impl Heap {
     ) -> ObjectId {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
-        object.call = Some(body);
+        object.call = Some(Callable::Bytecode(body));
         object.environment = Some(environment);
+        self.objects.push(Some(object));
+        id
+    }
+
+    /// Put a built-in function object on the heap — `CreateBuiltinFunction` (§10.3.4).
+    ///
+    /// No environment, because there is nothing lexical about it: a built-in's behaviour is Rust
+    /// and closes over nothing. That is the field a JavaScript function needs and this one does
+    /// not, and leaving it empty is what says so.
+    ///
+    /// The `name` and `length` §10.3.3 requires are properties like any others and are given by
+    /// the caller, because only the caller knows them.
+    pub fn new_native_function(&mut self, prototype: ObjectId, native: Native) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(Some(prototype));
+        object.call = Some(Callable::Native(native));
         self.objects.push(Some(object));
         id
     }

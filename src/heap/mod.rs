@@ -33,12 +33,14 @@
 //! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
+mod callable;
 mod collect;
 mod define;
 mod environment;
 mod object;
 mod property;
 
+pub use self::callable::{Callable, Native, NativeCall};
 pub use self::collect::{Collected, Roots};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Object, ObjectId};
