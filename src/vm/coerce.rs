@@ -83,6 +83,16 @@ impl Vm {
         ))
     }
 
+    /// §7.1.3 `ToNumber` of anything, including an object.
+    ///
+    /// The value layer answers for every primitive; an object is made primitive first and asked
+    /// again. `ToNumber` uses the **Number** hint, which is why `({valueOf: () => 1}) * 2` is 2.
+    #[allow(clippy::wrong_self_convention)] // a conversion runs code, so it needs the machine
+    pub(crate) fn to_number(&mut self, value: Value, heap: &mut Heap) -> Completion<f64> {
+        let primitive = self.to_primitive(value, Hint::Number, heap)?;
+        primitive.to_number(heap)
+    }
+
     /// §7.1.17 `ToString` of anything, including an object.
     ///
     /// The **String** hint, so `toString` is tried before `valueOf` — which is what makes

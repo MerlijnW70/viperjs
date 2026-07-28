@@ -1,0 +1,363 @@
+//! §23.1.3 — the methods on `Array.prototype`.
+//!
+//! # Why almost none of them mention Arrays
+//!
+//! §23.1.3 is written against an *array-like*: an object with a `length` and some indices. Not one
+//! of these methods asks whether it was given an Array, which is why
+//! `Array.prototype.join.call({0: "a", 1: "b", length: 2})` works and why `arguments` and a DOM
+//! node list have always been usable with them. The generic reading is the specified one; a check
+//! for a real Array would be an engine inventing a restriction.
+//!
+//! So they read `length` through `LengthOfArrayLike` and the elements through ordinary `[[Get]]`,
+//! and the exotic behaviour in [`crate::heap`] only shows up when the *result* is an Array.
+//!
+//! # Holes
+//!
+//! An index that is absent is not the same as one holding `undefined`, and the methods disagree
+//! about which they care about. `join` reads a hole as the empty string, `forEach` and `map` skip
+//! it entirely, `indexOf` never matches one. Each of those is a `HasProperty` the specification
+//! writes explicitly, and each is a row in the tests.
+
+use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, PropertyKey};
+use crate::value::{Abrupt, Completion, Value};
+use crate::vm::Vm;
+
+use super::{define_method, key};
+
+/// §7.3.18 `LengthOfArrayLike` — the `length` of anything, as a count.
+///
+/// `ToLength` clamps to `[0, 2^53 - 1]`: a negative length reads as zero and an enormous one as
+/// the largest a Number can index exactly. That is why `{length: -1}` iterates nothing rather
+/// than failing, and why these methods can be handed anything at all without checking first.
+fn length_of(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<u64> {
+    let name = key(heap, "length");
+    let value = vm.get_property_key(Value::Object(object), name, heap)?;
+    let number = vm.to_number(value, heap)?;
+    Ok(to_length(number))
+}
+
+/// §7.1.20 `ToLength`.
+///
+/// Written as two clamps rather than a guard and a clamp, because `f64::max` answers the *other*
+/// operand when one is NaN — so `max(0.0)` turns NaN into zero and a negative into zero at once,
+/// which is §7.1.20 steps 2 and 3 exactly. A guard in front of it would be a branch no input
+/// could tell from its absence.
+#[allow(clippy::manual_clamp)] // see the note below
+fn to_length(number: f64) -> u64 {
+    const MAX: f64 = 9_007_199_254_740_991.0;
+    // Not `clamp`: its own documentation says it answers NaN for a NaN input, and §7.1.20
+    // step 2 says a NaN length is zero. `max` then `min` is the pair that gets that right,
+    // because `f64::max` answers the *other* operand when one is NaN.
+    number.max(0.0).min(MAX) as u64
+}
+
+/// The key an index is filed under — the decimal spelling, which is what a property key is.
+fn index_key(heap: &mut Heap, index: u64) -> PropertyKey {
+    PropertyKey::from_units(heap, &index.to_string().encode_utf16().collect::<Vec<_>>())
+}
+
+/// Whether `object` or its prototypes have this index — §7.3.11 `HasProperty`.
+///
+/// The question that tells a hole from an `undefined`, and the one that makes `[, 1]` and
+/// `[undefined, 1]` behave differently in half of §23.1.3.
+fn has_index(vm: &mut Vm, heap: &mut Heap, object: ObjectId, index: u64) -> Completion<bool> {
+    let name = index_key(heap, index);
+    let found = vm.has_property_key(Value::Object(object), name, heap)?;
+    Ok(found)
+}
+
+/// The value at this index — §7.3.2 `Get`.
+fn get_index(vm: &mut Vm, heap: &mut Heap, object: ObjectId, index: u64) -> Completion<Value> {
+    let name = index_key(heap, index);
+    vm.get_property_key(Value::Object(object), name, heap)
+}
+
+/// Put a value at this index of an object being built — §7.3.5 `CreateDataPropertyOrThrow`.
+fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Value) {
+    let name = index_key(heap, index);
+    let descriptor = PropertyDescriptor {
+        value: Some(value),
+        writable: Some(true),
+        enumerable: Some(true),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(object, name, &descriptor);
+}
+
+/// `this` as an object — §7.1.18, in the part that does not need a wrapper.
+fn this_object(call: &NativeCall<'_>) -> Completion<ObjectId> {
+    match call.this_value {
+        Value::Object(object) => Ok(object),
+        _ => Err(Abrupt::type_error(
+            "an Array.prototype method requires an object",
+        )),
+    }
+}
+
+/// The callback a method was given, which §23.1.3 requires to be callable *before* anything runs.
+///
+/// Checked up front rather than at the first element, because §23.1.3.15 step 3 says so: an empty
+/// array with a callback that is not a function still throws, and a program that relied on the
+/// check being skipped would be relying on the array being empty.
+fn callback(call: &NativeCall<'_>, heap: &Heap) -> Completion<Value> {
+    let function = call.argument(0);
+    let callable = matches!(function, Value::Object(object)
+        if heap.object(object).is_some_and(|found| found.call().is_some()));
+    match callable {
+        true => Ok(function),
+        false => Err(Abrupt::type_error("the callback is not a function")),
+    }
+}
+
+/// §23.1.3.18 `Array.prototype.join`.
+///
+/// A hole and `undefined` and `null` all read as the empty string — step 4.b's
+/// "If element is undefined or null, let next be the empty String" — which is why
+/// `[1, , 3].join("-")` is `"1--3"` and not `"1-undefined-3"`.
+pub fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let separator = match call.argument(0) {
+        Value::Undefined => ",".to_string(),
+        value => {
+            let id = vm.to_string(value, heap)?;
+            String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+        }
+    };
+    let mut joined = String::new();
+    for index in 0..length {
+        if index > 0 {
+            joined.push_str(&separator);
+        }
+        let element = get_index(vm, heap, object, index)?;
+        if matches!(element, Value::Undefined | Value::Null) {
+            continue;
+        }
+        let id = vm.to_string(element, heap)?;
+        joined.push_str(&String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
+    }
+    Ok(super::text(heap, &joined))
+}
+
+/// §23.1.3.31 `Array.prototype.toString` — `join` with no separator, or the object's own `join`.
+///
+/// Step 3 calls whatever `join` the object has rather than the intrinsic one, so replacing
+/// `Array.prototype.join` changes what an array prints. That is not a quirk to tidy away: it is
+/// what makes `join` the single place an array's text is decided.
+pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let name = key(heap, "join");
+    let found = vm.get_property_key(Value::Object(object), name, heap)?;
+    let callable = matches!(found, Value::Object(id)
+        if heap.object(id).is_some_and(|it| it.call().is_some()));
+    match callable {
+        // Step 4 — an object whose `join` is not callable falls back to
+        // `Object.prototype.toString`, which is how `[object Array]` can still be reached.
+        false => super::object::to_string(vm, heap, call),
+        true => vm.call_value(found, call.this_value, &[], heap),
+    }
+}
+
+/// §23.1.3.23 `Array.prototype.push`.
+pub fn push(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let mut length = length_of(vm, heap, object)?;
+    for value in call.arguments {
+        let name = index_key(heap, length);
+        vm.set_property_key(Value::Object(object), name, *value, heap)?;
+        length += 1;
+    }
+    // §23.1.3.23 step 5 sets `length` even on a plain object, which is what makes `push` work on
+    // an array-like and leave a `length` behind that was not there before.
+    let name = key(heap, "length");
+    let count = Value::Number(length as f64);
+    vm.set_property_key(Value::Object(object), name, count, heap)?;
+    Ok(count)
+}
+
+/// §23.1.3.22 `Array.prototype.pop`.
+pub fn pop(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let name = key(heap, "length");
+    // Step 3 — an empty array's `length` is still *written*, which matters for an array-like
+    // whose `length` was a string: `pop` leaves it a number.
+    let Some(last) = length.checked_sub(1) else {
+        vm.set_property_key(Value::Object(object), name, Value::Number(0.0), heap)?;
+        return Ok(Value::Undefined);
+    };
+    let element = get_index(vm, heap, object, last)?;
+    let index = index_key(heap, last);
+    vm.delete_property_key(Value::Object(object), index, heap)?;
+    vm.set_property_key(
+        Value::Object(object),
+        name,
+        Value::Number(last as f64),
+        heap,
+    )?;
+    Ok(element)
+}
+
+/// §23.1.3.17 `Array.prototype.indexOf`.
+///
+/// Strict equality, so `NaN` is never found — which is the whole reason `includes` exists and
+/// uses `SameValueZero` instead.
+pub fn index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let wanted = call.argument(0);
+    let from = start_index(vm, heap, call.argument(1), length)?;
+    for index in from..length {
+        // Step 9.a — a hole is skipped rather than compared, so `[, 1].indexOf(undefined)` is -1
+        // where `[undefined, 1].indexOf(undefined)` is 0.
+        if !has_index(vm, heap, object, index)? {
+            continue;
+        }
+        let element = get_index(vm, heap, object, index)?;
+        if element.is_strictly_equal(&wanted, heap) {
+            return Ok(Value::Number(index as f64));
+        }
+    }
+    Ok(Value::Number(-1.0))
+}
+
+/// Where a search starts, out of the argument §23.1.3.17 step 6 describes.
+///
+/// A negative index counts from the end, and one past the start is clamped to zero rather than
+/// wrapping — `[1, 2].indexOf(1, -5)` searches the whole array.
+fn start_index(vm: &mut Vm, heap: &mut Heap, value: Value, length: u64) -> Completion<u64> {
+    // No special case for an absent argument: `ToNumber(undefined)` is NaN, and §23.1.3.17 step 6
+    // reads NaN as zero — so the ordinary path already answers what "from the beginning" means.
+    let number = vm.to_number(value, heap)?;
+    let integer = if number.is_nan() { 0.0 } else { number.trunc() };
+    Ok(match integer < 0.0 {
+        true => (length as f64 + integer).max(0.0) as u64,
+        false => (integer as u64).min(length),
+    })
+}
+
+/// §23.1.3.15 `Array.prototype.forEach`.
+pub fn for_each(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let function = callback(call, heap)?;
+    let receiver = call.argument(1);
+    for index in 0..length {
+        // Step 6.b — a hole is skipped, so the callback is not run for one and `length` is not
+        // the number of times it is called.
+        if !has_index(vm, heap, object, index)? {
+            continue;
+        }
+        let element = get_index(vm, heap, object, index)?;
+        let arguments = [element, Value::Number(index as f64), Value::Object(object)];
+        vm.call_value(function, receiver, &arguments, heap)?;
+    }
+    Ok(Value::Undefined)
+}
+
+/// §23.1.3.21 `Array.prototype.map`.
+///
+/// The result has the same `length` as the original **including its holes**, and a hole in maps to
+/// a hole out: the callback is not run and no property is made. `[, 1].map(f)` calls `f` once and
+/// answers an array of length 2 whose first index is still absent.
+pub fn map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let function = callback(call, heap)?;
+    let receiver = call.argument(1);
+    let prototype = vm.realm().array_prototype();
+    let mapped = heap.new_array(prototype, to_index(length));
+    for index in 0..length {
+        if !has_index(vm, heap, object, index)? {
+            continue;
+        }
+        let element = get_index(vm, heap, object, index)?;
+        let arguments = [element, Value::Number(index as f64), Value::Object(object)];
+        let answer = vm.call_value(function, receiver, &arguments, heap)?;
+        set_index(heap, mapped, index, answer);
+    }
+    Ok(Value::Object(mapped))
+}
+
+/// §23.1.3.13 `Array.prototype.filter`.
+pub fn filter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let function = callback(call, heap)?;
+    let receiver = call.argument(1);
+    let prototype = vm.realm().array_prototype();
+    let kept = heap.new_array(prototype, 0);
+    let mut at = 0_u64;
+    for index in 0..length {
+        if !has_index(vm, heap, object, index)? {
+            continue;
+        }
+        let element = get_index(vm, heap, object, index)?;
+        let arguments = [element, Value::Number(index as f64), Value::Object(object)];
+        let answer = vm.call_value(function, receiver, &arguments, heap)?;
+        if answer.to_boolean(heap) {
+            // The result is packed: the indices of what was kept are consecutive, whatever they
+            // were in the original. That is why `filter` cannot answer with holes.
+            set_index(heap, kept, at, element);
+            at += 1;
+        }
+    }
+    Ok(Value::Object(kept))
+}
+
+/// §23.1.3.25 `Array.prototype.slice`.
+pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let from = start_index(vm, heap, call.argument(0), length)?;
+    let to = match call.argument(1) {
+        Value::Undefined => length,
+        value => start_index(vm, heap, value, length)?,
+    };
+    let prototype = vm.realm().array_prototype();
+    let taken = heap.new_array(prototype, 0);
+    let mut at = 0_u64;
+    for index in from..to.max(from) {
+        // §23.1.3.25 step 9.b — a hole stays a hole, so `slice` is one of the few that can
+        // answer with one.
+        if has_index(vm, heap, object, index)? {
+            let element = get_index(vm, heap, object, index)?;
+            set_index(heap, taken, at, element);
+        }
+        at += 1;
+    }
+    // The length is written even when the last elements were holes, which `set_index` alone
+    // would not do.
+    let name = key(heap, "length");
+    let count = Value::Number(at as f64);
+    vm.set_property_key(Value::Object(taken), name, count, heap)?;
+    Ok(Value::Object(taken))
+}
+
+/// A length as the count an Array's `length` property can hold.
+///
+/// `LengthOfArrayLike` allows up to `2^53 - 1` and an Array's `length` stops at `2^32 - 1`, so an
+/// array-like longer than an Array can be is clamped rather than refused — the methods that build
+/// a result would otherwise fail on an object no Array could have been.
+fn to_index(length: u64) -> u32 {
+    u32::try_from(length).unwrap_or(u32::MAX - 1)
+}
+
+/// Build `Array.prototype`'s methods into `heap`.
+pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
+    let prototype = realm.array_prototype();
+    for (name, length, native) in [
+        ("filter", 1, filter as crate::heap::Native),
+        ("forEach", 1, for_each),
+        ("indexOf", 1, index_of),
+        ("join", 1, join),
+        ("map", 1, map),
+        ("pop", 0, pop),
+        ("push", 1, push),
+        ("slice", 2, slice),
+        ("toString", 0, to_string),
+    ] {
+        define_method(heap, realm, prototype, name, length, native);
+    }
+}

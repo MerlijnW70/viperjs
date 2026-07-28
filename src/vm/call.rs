@@ -87,12 +87,22 @@ impl Vm {
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
         // different in each of the three ways in.
         let receiver = match how {
-            // A method's receiver is the object it was found on.
-            Entry::Method => self.stack[receiver_at],
-            // A plain call has none, so a sloppy-mode function gets the global object rather
-            // than `undefined`. Strict mode keeps the `undefined`, and telling the two apart
-            // needs the flag the parser already computes.
+            // §10.2.1.2 `OrdinaryCallBindThis` — the substitution belongs to the **function**
+            // rather than to the shape of the call: a non-strict function is given the global
+            // object whenever the receiver is `undefined` or `null`, however it was called. So
+            // `f()` and `f.call()` and `f.call(null)` all agree, and a method call only differs
+            // because its receiver is an object already.
+            //
+            // Strict mode keeps the `undefined`, and telling the two apart needs the flag the
+            // parser already computes. §7.1.18 also says a *primitive* receiver is wrapped,
+            // which waits for wrapper objects.
+            // A plain call has no receiver slot at all — `receiver_at` is the callee — so what
+            // it passes is `undefined`, and the substitution then applies to that.
             Entry::Plain => Value::Object(self.realm.global()),
+            Entry::Method => match self.stack[receiver_at] {
+                Value::Undefined | Value::Null => Value::Object(self.realm.global()),
+                given => given,
+            },
             // §10.2.2 step 5's `OrdinaryCreateFromConstructor`: `new` *makes* the receiver, out
             // of the constructor's own `prototype` property. A `prototype` that is not an object
             // — a script may assign anything to it — falls back to `Object.prototype`, which is

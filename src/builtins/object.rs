@@ -15,10 +15,9 @@
 //! there are no wrapper objects yet, so it refuses with a message saying so rather than answering
 //! something that is not what the specification says.
 //!
-//! §20.1.3.6's `toString` reads a *builtin tag* out of internal slots, so `[object Error]` and
-//! `[object Array]` need slots this heap does not keep. It answers `[object Object]` for every
-//! ordinary object and `[object Function]` for a callable, which is right for everything praxis
-//! can currently make except an error.
+//! §20.1.3.6's `toString` reads a *builtin tag*, and most of that table is internal slots this
+//! heap does not keep — so `[object Error]` and `[object Date]` are not distinguished. `Array`,
+//! `Function` and the two that are not objects at all are, because those are answerable.
 
 use crate::heap::{
     DefineOutcome, Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKey,
@@ -55,11 +54,15 @@ pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
     let tag = match call.this_value {
         Value::Undefined => "Undefined",
         Value::Null => "Null",
-        Value::Object(object) => match heap.object(object).is_some_and(|it| it.call().is_some()) {
-            // Step 6. The rest of §20.1.3.6's table reads internal slots this heap does not
-            // keep, so `[object Error]` and `[object Array]` are not distinguished yet.
-            true => "Function",
-            false => "Object",
+        // Steps 4 to 14's table, in the rows this heap keeps enough state to answer. `IsArray`
+        // is step 4 and is a real question about the object rather than about its prototype, so
+        // `Object.prototype.toString.call([])` says `[object Array]` and one on an object merely
+        // *given* `Array.prototype` does not. The rest of the table — `Error`, `Date`, `RegExp`
+        // — reads internal slots that do not exist yet.
+        Value::Object(object) => match heap.object(object) {
+            Some(found) if found.is_array() => "Array",
+            Some(found) if found.call().is_some() => "Function",
+            _ => "Object",
         },
         // §7.1.18 again: a primitive would be wrapped and its wrapper's tag used.
         _ => {

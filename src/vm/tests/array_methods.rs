@@ -1,0 +1,297 @@
+//! §23.1.3 and §20.2.3 as a script sees them.
+
+use super::*;
+
+#[test]
+fn a_method_is_written_against_a_shape_rather_than_against_an_array() {
+    // §23.1.3 never asks whether it was given an Array — it reads a `length` and some indices.
+    // That is the specified reading and not a trick, and `Function.prototype.call` is what makes
+    // it sayable from a script at all.
+    let like = "{0: 'a', 1: 'b', length: 2}";
+    assert_eq!(
+        run(&format!("Array.prototype.join.call({like}, '-')")),
+        "a-b"
+    );
+    assert_eq!(
+        run(&format!("Array.prototype.indexOf.call({like}, 'b')")),
+        "1"
+    );
+    assert_eq!(
+        run(&format!(
+            "Array.prototype.map.call({like}, function (x) {{ return x + x }}).join(',')"
+        )),
+        "aa,bb"
+    );
+    // §7.1.20's clamp is what lets a `length` of anything at all be handed over: negative reads
+    // as zero rather than failing, and so does one that is not a number.
+    assert_eq!(
+        run("Array.prototype.join.call({length: -1, 0: 'a'}, '-')"),
+        ""
+    );
+    assert_eq!(run("Array.prototype.join.call({length: 'x'}, '-')"), "");
+}
+
+#[test]
+fn join_reads_a_hole_and_a_null_and_an_undefined_all_as_nothing() {
+    // §23.1.3.18 step 4.b. Three different things in the array and one answer out, which is why
+    // `[1, , 3].join('-')` is `1--3` rather than `1-undefined-3`.
+    assert_eq!(run("[1, 2, 3].join('-')"), "1-2-3");
+    assert_eq!(run("[1, , 3].join('-')"), "1--3");
+    assert_eq!(run("[1, undefined, 3].join('-')"), "1--3");
+    assert_eq!(run("[1, null, 3].join('-')"), "1--3");
+    // The separator is `","` when absent, and coerced when it is not a string.
+    assert_eq!(run("[1, 2].join()"), "1,2");
+    assert_eq!(run("[1, 2].join(0)"), "102");
+    assert_eq!(run("[].join('-')"), "");
+    // An element is coerced with `ToString`, so an object reaches its own `toString`.
+    assert_eq!(
+        run("[{toString: function () { return 'x' }}, 1].join('-')"),
+        "x-1"
+    );
+}
+
+#[test]
+fn to_string_calls_whatever_join_the_object_has() {
+    // §23.1.3.31 step 3 reaches for the object's *own* `join`, not the intrinsic one — so
+    // replacing `Array.prototype.join` changes what every array prints. That is what makes `join`
+    // the single place an array's text is decided.
+    assert_eq!(run("[1, 2].toString()"), "1,2");
+    assert_eq!(run("'' + [1, 2]"), "1,2");
+    assert_eq!(
+        run("var a = [1, 2]; a.join = function () { return 'mine' }; '' + a"),
+        "mine"
+    );
+    // Step 4 — an object whose `join` is not callable falls back to
+    // `Object.prototype.toString`, which is the only way to see an array's own tag.
+    assert_eq!(
+        run("var a = [1]; a.join = 1; Array.prototype.toString.call(a)"),
+        "[object Array]"
+    );
+}
+
+#[test]
+fn push_and_pop_move_the_length_and_answer_different_things() {
+    assert_eq!(
+        run("var a = [1]; a.push(2, 3); a.length + '|' + a[2]"),
+        "3|3"
+    );
+    // `push` answers the *new length* and `pop` answers the element, which is the asymmetry
+    // people write bugs about.
+    assert_eq!(run("[1].push(2)"), "2");
+    assert_eq!(run("[1, 2].pop()"), "2");
+    assert_eq!(run("var a = [1, 2]; a.pop(); a.length"), "1");
+    // An empty array pops `undefined` and stays empty.
+    assert_eq!(run("[].pop() + '|' + [].length"), "undefined|0");
+    // …and on an array-like, both write a `length` that was not a number before.
+    assert_eq!(
+        run("var o = {length: '0'}; Array.prototype.push.call(o, 'a'); o.length + '|' + o[0]"),
+        "1|a"
+    );
+    assert_eq!(
+        run("var o = {length: '0'}; Array.prototype.pop.call(o); o.length"),
+        "0"
+    );
+}
+
+#[test]
+fn index_of_compares_strictly_and_never_matches_a_hole() {
+    assert_eq!(run("[1, 2, 3].indexOf(2)"), "1");
+    assert_eq!(run("[1, 2, 3].indexOf(9)"), "-1");
+    // Strict equality, so no coercion and no NaN — which is the whole reason `includes` exists.
+    assert_eq!(run("[1, 2].indexOf('1')"), "-1");
+    assert_eq!(run("[NaN].indexOf(NaN)"), "-1");
+    assert_eq!(run("[0].indexOf(-0)"), "0");
+    // §23.1.3.17 step 9.a skips a hole rather than comparing it, so the two shapes differ.
+    assert_eq!(run("[, 1].indexOf(undefined)"), "-1");
+    assert_eq!(run("[undefined, 1].indexOf(undefined)"), "0");
+    // A negative start counts from the end and is clamped rather than wrapping.
+    assert_eq!(run("[1, 2, 1].indexOf(1, 1)"), "2");
+    assert_eq!(run("[1, 2, 1].indexOf(1, -2)"), "2");
+    assert_eq!(run("[1, 2, 1].indexOf(1, -99)"), "0");
+    assert_eq!(run("[1, 2, 1].indexOf(1, 99)"), "-1");
+}
+
+#[test]
+fn a_callback_is_checked_before_anything_runs_and_is_given_three_arguments() {
+    // §23.1.3.15 step 3 — an *empty* array with a callback that is not a function still throws,
+    // so the check cannot be left until the first element.
+    for method in ["forEach", "map", "filter"] {
+        assert_eq!(
+            run(&format!("try {{ [].{method}(1) }} catch (e) {{ e.name }}")),
+            "TypeError",
+            "{method} with no callback"
+        );
+    }
+    // The element, its index, and the object itself — in that order.
+    assert_eq!(
+        run("[7, 8].map(function (x, i, a) { return x + ':' + i + ':' + a.length }).join(',')"),
+        "7:0:2,8:1:2"
+    );
+    // The second argument is the receiver.
+    assert_eq!(
+        run("[1].map(function () { return this.x }, {x: 'here'})[0]"),
+        "here"
+    );
+}
+
+#[test]
+fn a_hole_is_skipped_by_the_callback_methods_and_kept_by_map() {
+    // §23.1.3.15 step 6.b — the callback is not run for a hole, so `length` is not the number of
+    // times it is called.
+    assert_eq!(
+        run("var n = 0; [1, , 3].forEach(function () { n = n + 1 }); n"),
+        "2"
+    );
+    // A hole in maps to a hole *out*: the result has the same length and the index is still
+    // absent, which is what makes `map` length-preserving where `filter` is not.
+    let mapped = "var a = [1, , 3].map(function (x) { return x }); \
+                  a.length + '|' + (1 in a) + '|' + a[2]";
+    assert_eq!(run(mapped), "3|false|3");
+    // `filter` packs what it keeps, so its indices are consecutive whatever they were.
+    assert_eq!(
+        run("var a = [1, , 3].filter(function () { return true }); a.length + '|' + a[1]"),
+        "2|3"
+    );
+    assert_eq!(
+        run("[1, 2, 3].filter(function (x) { return x > 1 }).join(',')"),
+        "2,3"
+    );
+    // `forEach` answers `undefined` whatever the callback returns.
+    assert_eq!(
+        run("typeof [1].forEach(function () { return 1 })"),
+        "undefined"
+    );
+}
+
+#[test]
+fn slice_keeps_a_hole_where_filter_and_map_would_not() {
+    assert_eq!(run("[1, 2, 3].slice(1).join(',')"), "2,3");
+    assert_eq!(run("[1, 2, 3, 4].slice(1, 3).join(',')"), "2,3");
+    assert_eq!(run("[1, 2, 3].slice(-2).join(',')"), "2,3");
+    assert_eq!(run("[1, 2, 3].slice().length"), "3");
+    // A start past the end, and an end before the start, both answer an empty array rather than
+    // counting backwards.
+    assert_eq!(run("[1, 2].slice(5).length"), "0");
+    assert_eq!(run("[1, 2, 3].slice(2, 1).length"), "0");
+    // §23.1.3.25 step 9.b — a hole stays a hole, and the length is still written.
+    let holes = "var a = [1, , 3].slice(0); a.length + '|' + (1 in a)";
+    assert_eq!(run(holes), "3|false");
+    assert_eq!(run("var a = [1, ,].slice(0); a.length"), "2");
+    // The result is a real Array whatever it was sliced from.
+    assert_eq!(
+        run("Array.isArray(Array.prototype.slice.call({0: 'a', length: 1}))"),
+        "true"
+    );
+}
+
+#[test]
+fn call_and_apply_differ_only_in_how_the_arguments_arrive() {
+    let f = "function f(a, b) { return this.x + ':' + a + ':' + b } ";
+    assert_eq!(run(&format!("{f} f.call({{x: 1}}, 2, 3)")), "1:2:3");
+    assert_eq!(run(&format!("{f} f.apply({{x: 1}}, [2, 3])")), "1:2:3");
+    // §10.2.1.2 belongs to the *function*, not to the shape of the call: a non-strict one is
+    // given the global object whenever the receiver is `undefined` or `null`, so `f()`,
+    // `f.call()` and `f.call(null)` all agree.
+    let same = "function f() { return this === globalThis } ";
+    assert_eq!(
+        run(&format!("{same} f() + '|' + f.call() + '|' + f.call(null)")),
+        "true|true|true"
+    );
+    // A *built-in* is the one that keeps the `undefined`, because §10.3.1 substitutes nothing —
+    // which is the difference the two call paths exist to keep.
+    assert_eq!(
+        run("var t = Error.prototype.toString; try { t.call(undefined) } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // §20.2.3.1 step 3 — `null` and `undefined` mean *no* arguments rather than one.
+    assert_eq!(
+        run("function f(a) { return typeof a } f.apply(null) + '|' + f.apply(null, null)"),
+        "undefined|undefined"
+    );
+    // A hole in the argument list is an ordinary `Get`, so it arrives as `undefined` — unlike in
+    // most of §23.1.3, where it is skipped.
+    assert_eq!(
+        run("function f(a, b) { return typeof a + ':' + b } f.apply(null, [, 1])"),
+        "undefined:1"
+    );
+    // Anything that is not an object is refused, because there is nothing to read a length from.
+    assert_eq!(
+        run("function f() {} try { f.apply(null, 1) } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // …and so is a receiver that is not callable. `Function` is not a global yet, so the method
+    // is reached through a function that has it rather than by name.
+    assert_eq!(
+        run("var f = function () {}; try { f.call.call(1) } catch (e) { e.name }"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn object_prototype_to_string_can_tell_an_array_from_an_object_that_borrowed_its_prototype() {
+    // §20.1.3.6 step 4's `IsArray` is a question about the object, not about its chain — the same
+    // difference `Array.isArray` exists for, showing up in the other place it can be seen.
+    assert_eq!(run("Object.prototype.toString.call([])"), "[object Array]");
+    assert_eq!(run("Object.prototype.toString.call({})"), "[object Object]");
+    assert_eq!(
+        run("Object.prototype.toString.call(Object.create(Array.prototype))"),
+        "[object Object]"
+    );
+    assert_eq!(
+        run("Object.prototype.toString.call(function () {})"),
+        "[object Function]"
+    );
+    assert_eq!(run("Object.prototype.toString.call(null)"), "[object Null]");
+}
+
+#[test]
+fn what_a_method_builds_is_made_of_ordinary_properties() {
+    // §7.3.5 `CreateDataPropertyOrThrow` is §6.1.7.1's three defaults, so an element a method
+    // made is indistinguishable from one written by assignment. Nothing in the language can see
+    // that except `getOwnPropertyDescriptor`, which is why it is asked here.
+    let of = |source: &str| {
+        format!(
+            "var d = Object.getOwnPropertyDescriptor({source}, '0'); \
+                 d.writable + '|' + d.enumerable + '|' + d.configurable"
+        )
+    };
+    assert_eq!(
+        run(&of("[1].map(function (x) { return x })")),
+        "true|true|true"
+    );
+    assert_eq!(
+        run(&of("[1].filter(function () { return true })")),
+        "true|true|true"
+    );
+    assert_eq!(run(&of("[1, 2].slice(0)")), "true|true|true");
+    // …and the `length` they leave behind is the array's own exotic one, not a plain property.
+    let length = "var d = Object.getOwnPropertyDescriptor([1].slice(0), 'length'); \
+                  d.writable + '|' + d.enumerable + '|' + d.configurable";
+    assert_eq!(run(length), "true|false|false");
+}
+
+#[test]
+fn a_length_that_is_not_a_number_reads_as_none_at_all() {
+    // §7.1.20 steps 2 and 3 — NaN and every negative are zero, and nothing throws. That is what
+    // lets these methods be handed any object at all without asking first, and it is the same
+    // clamp `apply` uses to decide how many arguments there are.
+    for length in ["undefined", "NaN", "-1", "-0", "'x'", "null", "{}"] {
+        let source = format!("Array.prototype.join.call({{length: {length}, 0: 'a'}}, '-')");
+        assert_eq!(run(&source), "", "a length of {length}");
+    }
+    // …and a fractional one is truncated rather than rounded up.
+    assert_eq!(
+        run("Array.prototype.join.call({length: 1.9, 0: 'a', 1: 'b'}, '-')"),
+        "a"
+    );
+    assert_eq!(
+        run(
+            "function f(a, b) { return typeof a + ':' + typeof b } f.apply(null, {length: 1.9, 0: 1, 1: 2})"
+        ),
+        "number:undefined"
+    );
+    assert_eq!(
+        run("function f(a) { return typeof a } f.apply(null, {length: -1, 0: 1})"),
+        "undefined"
+    );
+}

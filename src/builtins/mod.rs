@@ -15,7 +15,9 @@
 //! method that also serves object literals.
 
 pub mod array;
+pub mod array_methods;
 pub mod error;
+pub mod function;
 pub mod object;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
@@ -30,6 +32,8 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     object::install(heap, realm, global);
     error::install(heap, realm, global);
     array::install(heap, realm, global);
+    array_methods::install(heap, realm);
+    function::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.

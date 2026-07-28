@@ -232,6 +232,21 @@ impl Vm {
             ));
         };
         let key = self.property_key(key, heap)?;
+        self.delete_property_key(Value::Object(object), key, heap)
+    }
+
+    /// `[[Delete]]` when the key is already a key — see [`Vm::get_property_key`].
+    pub(crate) fn delete_property_key(
+        &mut self,
+        base: Value,
+        key: PropertyKey,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let Value::Object(object) = base else {
+            return Err(Abrupt::type_error(
+                "cannot delete a property of something that is not an object",
+            ));
+        };
         // Own only: `delete` never reaches through a prototype, which is why deleting an
         // inherited property answers `true` and leaves it exactly where it was.
         let gone = heap
@@ -254,6 +269,25 @@ impl Vm {
             ));
         };
         let key = self.property_key(key, heap)?;
-        Ok(Value::Boolean(heap.has_property(object, key)))
+        let found = self.has_property_key(Value::Object(object), key, heap)?;
+        Ok(Value::Boolean(found))
+    }
+
+    /// `[[HasProperty]]` when the key is already a key — see [`Vm::get_property_key`].
+    ///
+    /// Answers a Rust `bool` rather than a `Value`, because every caller with a key in hand is
+    /// asking a question about the chain rather than evaluating `in`.
+    pub(crate) fn has_property_key(
+        &mut self,
+        base: Value,
+        key: PropertyKey,
+        heap: &mut Heap,
+    ) -> Completion<bool> {
+        let Value::Object(object) = base else {
+            return Err(Abrupt::type_error(
+                "the right operand of in must be an object",
+            ));
+        };
+        Ok(heap.has_property(object, key))
     }
 }
