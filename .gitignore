@@ -12,3 +12,9 @@ Thumbs.db
 # test262 is VENDORED, never committed: ~50k files maintained by TC39. Pinning it by commit
 # in conformance/README.md is smaller and more honest than a copy that rots.
 /conformance/test262/
+
+# corpora for the sweep tool live outside the repository, in H:\sweep — this is a guard
+# against a mistyped clone landing here, which happened once and reached a commit
+/sweep/
+/webkit/
+/spidermonkey/
