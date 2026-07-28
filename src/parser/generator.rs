@@ -45,7 +45,7 @@
 //! `Contains` stops at every function boundary — `function* g(a = function*() { yield; }) {}` is
 //! fine — which is exactly the shape of a field saved and restored at those boundaries. So the
 //! parser records where it read a `YieldExpression` ([`super::Parser::forbidden_in_parameters`]) and the
-//! parameter list asks afterwards, the same deferral as `cover_initialized_name`. Walking the
+//! parameter list asks afterwards, the same deferral as `unrefined_covers`. Walking the
 //! finished parameter tree would have to re-derive the boundary rule that the save already knows.
 
 use super::expression::AllowIn;

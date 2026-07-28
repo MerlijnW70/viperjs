@@ -254,8 +254,7 @@ impl Parser<'_> {
         // as ordinary as `({a = 1} = b)`. Only a literal that reaches the end of an
         // `AssignmentExpression` unrefined is the Syntax Error §13.2.5.1 describes — which is why
         // `f({a = 1})` and `async({a = 1})` still are one.
-        self.cover_initialized_name = None;
-        self.duplicate_proto = None;
+        self.discard_refined_covers(expr.span);
         let span = expr.span;
         match expr.into_kind() {
             ExprKind::Identifier(name) => Ok(Binding::Identifier(crate::ast::BindingName {

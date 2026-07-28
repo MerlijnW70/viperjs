@@ -11,7 +11,7 @@
 //! worth knowing: `{a = 1}` is a valid *pattern* and not a valid *literal*, so by the time the `=`
 //! arrives the literal parse would already have failed. The literal parser therefore accepts it
 //! and records the position, and this is what either consumes the record or lets it become the
-//! Syntax Error §13.2.5.1 says it is. See [`super::Parser::cover_initialized_name`].
+//! Syntax Error §13.2.5.1 says it is. See [`super::Parser::unrefined_covers`].
 //!
 //! # Where the two grammars differ, in both directions
 //!
@@ -31,11 +31,12 @@
 //! other, on every host.
 
 use super::operator::is_simple_assignment_target;
-use super::{ParseError, ParseErrorKind, Parser};
+use super::{CoverRecord, ParseError, ParseErrorKind, Parser};
 use crate::ast::{
     ArrayElement, ArrayPattern, AssignmentTarget, Expr, ExprKind, ObjectPattern, Pattern,
     PatternElement, PatternProperty, PropertyDefinition,
 };
+use crate::span::Span;
 
 impl Parser<'_> {
     /// Whether `expr` is a literal that could be refined into a pattern.
@@ -53,11 +54,11 @@ impl Parser<'_> {
     /// Consumes the literal, because what it produces replaces it: keeping both would be keeping
     /// a tree that means two things.
     pub(super) fn refine_to_pattern(&mut self, expr: Expr) -> Result<Pattern, ParseError> {
-        // Whatever the literal parser recorded about this literal is now the pattern's business:
-        // a `{a = 1}` inside it has found the `=` that makes it legal, and a duplicate
-        // `__proto__` was never against a rule, §13.2.5.1 being about `ObjectLiteral` alone.
-        self.cover_initialized_name = None;
-        self.duplicate_proto = None;
+        // What this literal recorded is now the pattern's business: a `{a = 1}` inside it has
+        // found the `=` that makes it legal, and a duplicate `__proto__` was never against a
+        // rule, §13.2.5.1 being about `ObjectLiteral` alone. Only what this literal covers,
+        // though — see [`Parser::discard_refined_covers`].
+        self.discard_refined_covers(expr.span);
         let pattern = self.refine_pattern(expr)?;
 
         Ok(pattern)
@@ -297,34 +298,97 @@ impl Parser<'_> {
 }
 
 impl Parser<'_> {
-    /// Settle both of the literal parser's records, an expression having stopped being a
-    /// candidate for refinement.
+    /// Record a rule this `ObjectLiteral` owes, to be settled when something says what it is.
     ///
-    /// Called where no `=` followed, or one did and the target was not a literal. A bracket still
-    /// open around it means the question is not settled — `[{a = 1}] = b` and `({a = 1}) => b`
-    /// are both legal, and the enclosing bracket is what makes them so.
+    /// Every record is stamped with the sub-expression it sits inside, if any, because that is
+    /// what a later refinement needs in order to know whether the rule is its to discard.
+    pub(super) fn record_cover(&mut self, error: ParseError, literal: Span) {
+        self.unrefined_covers.push(CoverRecord {
+            error,
+            literal,
+            protected_from: self.protecting_from,
+        });
+    }
+
+    /// Parse a sub-expression that survives being refined — an assignment's right operand, a
+    /// `CoverInitializedName`'s default, a computed key.
     ///
-    /// The two records settle in opposite directions, which is why they are cleared here rather
-    /// than where they are made. A `{a = 1}` that never became a pattern or a binding is the
-    /// Syntax Error §13.2.5.1 describes; a `[...a, ]` that never became a pattern is an ordinary
-    /// array literal, so its record is simply dropped. Dropping it is the point: the record lives
-    /// on the parser, so a literal that keeps it would hand it to the next destructuring in the
-    /// file — `[...a,]; [b] = c;` is two unrelated statements and used to be an error.
+    /// What such a sub-expression records is not the enclosing literal's to discard: refining
+    /// `{a = <here>}` leaves `<here>` an expression, still owing every rule an expression owes.
+    /// Nesting is why this saves and restores rather than sets and clears — the innermost region
+    /// is the one that answers, and an inner refinement inside this one is still entitled to
+    /// discard what *it* covers.
+    pub(super) fn protecting<T>(
+        &mut self,
+        parse: impl FnOnce(&mut Self) -> Result<T, ParseError>,
+    ) -> Result<T, ParseError> {
+        let enclosing = self.protecting_from.replace(self.current.span.start);
+        let parsed = parse(self);
+        self.protecting_from = enclosing;
+        parsed
+    }
+
+    /// Drop the rules that refining `refined` has just made moot.
+    ///
+    /// A rule goes away when the literal that owed it *became* the pattern, and survives when
+    /// the text that owed it is still an expression afterwards. Two questions separate them,
+    /// and both are needed:
+    ///
+    /// - **Is it inside what was refined?** A record made elsewhere in the same expression is
+    ///   nothing to do with this refinement. Without this, `(f({b = 1}), ({a} = x))` loses the
+    ///   first operand's rule to the second operand's refinement.
+    /// - **Is it inside a sub-expression that survived?** A default and a computed key are still
+    ///   expressions after the literal around them becomes a pattern. Without this,
+    ///   `({a = {b = 1}} = x)` loses the inner literal's rule to the outer literal's refinement
+    ///   — and `{b = 1}` is a default, so it stays a literal and stays an error.
+    ///
+    /// The second is asked by comparing the record's region against the one *this refinement*
+    /// stands in, not by asking where the region lies. Position cannot answer it: in
+    /// `x = {a = c} = d` the surviving region is the whole right operand, which begins at the
+    /// very same character as the literal being refined. It encloses the refinement rather than
+    /// sitting inside it, and a start offset cannot tell those two apart — which is what V8's
+    /// own `regress-crbug-807096` turns on, and what caught this.
+    ///
+    /// So: a record stamped with the refinement's own region belongs to it, and one stamped
+    /// with a region opened deeper does not. Offsets serve as a region's identity because two
+    /// nested regions can never begin at the same character — each starts strictly after the
+    /// one enclosing it.
+    pub(super) fn discard_refined_covers(&mut self, refined: Span) {
+        let here = self.protecting_from;
+        self.unrefined_covers.retain(|record| {
+            // Both ends matter and both are reachable: the literal being refined *is* one of
+            // these records, and its span is `refined` exactly.
+            let inside = record.literal.start >= refined.start && record.literal.end <= refined.end;
+            let deeper = record.protected_from != here;
+            !inside || deeper
+        });
+    }
+
+    /// The rule a finished expression still owes, if it owes one.
+    ///
+    /// Called where nothing can refine what was just read. A literal still open around it can,
+    /// so the count is asked first — `({a = 1} = b)` reaches here while reading the literal and
+    /// is settled by the `=` several tokens later.
+    ///
+    /// The earliest record is the one reported, which is the one a reader meets first. They are
+    /// made in source order except where a literal's own rule is recorded after its contents',
+    /// so this asks rather than assumes.
     pub(super) fn report_unrefined_cover_grammar(&mut self) -> Result<(), ParseError> {
         if self.open_covers > 0 {
             return Ok(());
         }
-        if let Some(span) = self.cover_initialized_name.take() {
-            self.duplicate_proto = None;
-            return Err(ParseError {
-                kind: ParseErrorKind::ShorthandPropertyWithInitializer,
-                span,
-            });
-        }
-        match self.duplicate_proto.take() {
-            Some(error) => Err(error),
-            None => Ok(()),
-        }
+        let earliest = self
+            .unrefined_covers
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, record)| record.error.span.start)
+            .map(|(index, _)| index);
+        let Some(earliest) = earliest else {
+            return Ok(());
+        };
+        let record = self.unrefined_covers.swap_remove(earliest);
+        self.unrefined_covers.clear();
+        Err(record.error)
     }
 }
 

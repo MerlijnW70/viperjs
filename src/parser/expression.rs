@@ -140,7 +140,7 @@ impl Parser<'_> {
             // Nothing will refine this now, so a `{a = 1}` inside it is the Syntax Error
             // §13.2.5.1 says it is — unless a literal is still open around it, in which case the
             // literal may yet become a pattern and nothing is settled. See
-            // [`Parser::cover_initialized_name`].
+            // [`Parser::unrefined_covers`].
             self.report_unrefined_cover_grammar()?;
             return Ok(left);
         };
@@ -174,7 +174,11 @@ impl Parser<'_> {
         self.enter()?;
         // `LeftHandSideExpression = AssignmentExpression` — the recursion is on the right, so
         // `a = b = c` is `a = (b = c)`.
-        let value = self.parse_assignment(allow_in);
+        //
+        // The right operand survives a refinement of anything around it: refining `[a = <rhs>]`
+        // makes `<rhs>` the element's initializer, still an expression. So a rule recorded in
+        // here is not that refinement's to discard.
+        let value = self.protecting(|parser| parser.parse_assignment(allow_in));
         self.leave();
         let value = value?;
         let span = target.span().to(value.span);

@@ -50,18 +50,16 @@ impl Parser<'_> {
         self.leave();
         let properties = properties?;
         let close = self.eat(TokenKind::RBrace, Goal::Div, "`}`")?;
-        // Recorded, not raised: this literal may still turn out to be a pattern, and §13.2.5.1
-        // is a rule about `ObjectLiteral` alone. See [`Parser::duplicate_proto`].
+        // Recorded, not raised: this literal may still turn out to be a pattern, and both rules
+        // are about `ObjectLiteral` alone. See [`Parser::unrefined_covers`].
         //
-        // `get_or_insert_with` rather than an assignment, so the *first* unrefined duplicate in
-        // an expression is the one reported — which is the one a reader will find first.
-        if let Some(error) = check_single_proto(&properties) {
-            self.duplicate_proto.get_or_insert(error);
+        // Both are recorded here rather than where each is noticed, because a record is asked
+        // about by the span of *its literal* and that is not known until the brace closes.
+        let span = open.span.to(close.span);
+        for error in literal_only_rules(&properties) {
+            self.record_cover(error, span);
         }
-        Ok(Expr::new(
-            ExprKind::Object(properties),
-            open.span.to(close.span),
-        ))
+        Ok(Expr::new(ExprKind::Object(properties), span))
     }
 
     /// `PropertyDefinitionList` (§13.2.5), and the optional trailing comma.
@@ -172,8 +170,11 @@ impl Parser<'_> {
         // what becomes that error when no refinement claims it.
         if self.current.kind == TokenKind::Eq {
             self.advance(Goal::RegExp)?;
-            let default = self.parse_assignment(AllowIn::Yes)?;
-            self.cover_initialized_name.get_or_insert(token.span);
+            // The default survives any refinement of the literal around it — refining
+            // `{a = <default>}` makes this an `AssignmentElement` whose *initializer* is still
+            // an expression. So a rule recorded in here is not the enclosing literal's to
+            // discard. See [`super::CoverRecord::protected_from`].
+            let default = self.protecting(|parser| parser.parse_assignment(AllowIn::Yes))?;
             return Ok(PropertyDefinition::ShorthandWithDefault {
                 name,
                 default: Box::new(default),
@@ -195,7 +196,9 @@ impl Parser<'_> {
             TokenKind::LBracket => {
                 self.advance(Goal::RegExp)?;
                 self.enter()?;
-                let key = self.parse_assignment(AllowIn::Yes);
+                // A computed key is still an expression after the literal around it becomes a
+                // pattern, so what it records is not that refinement's to discard either.
+                let key = self.protecting(|parser| parser.parse_assignment(AllowIn::Yes));
                 self.leave();
                 let key = key?;
                 self.eat(TokenKind::RBracket, Goal::Div, "`]`")?;
@@ -233,14 +236,33 @@ impl Parser<'_> {
     }
 }
 
+/// The rules these properties break if they stay an `ObjectLiteral`, in source order.
+///
+/// Both are §13.2.5.1's and neither survives refinement into a pattern, which is why they are
+/// returned rather than raised: whether they are errors is not known here. See
+/// [`Parser::unrefined_covers`].
+fn literal_only_rules(properties: &[PropertyDefinition]) -> Vec<ParseError> {
+    let mut errors: Vec<ParseError> = properties
+        .iter()
+        .filter_map(|property| match property {
+            // `CoverInitializedName` — `{a = 1}`. Legal as a pattern and never as a literal, and
+            // the reason the literal parser accepts one at all.
+            PropertyDefinition::ShorthandWithDefault { span, .. } => Some(ParseError {
+                kind: ParseErrorKind::ShorthandPropertyWithInitializer,
+                span: *span,
+            }),
+            _ => None,
+        })
+        .collect();
+    errors.extend(check_single_proto(properties));
+    errors
+}
+
 /// §13.2.5.1: at most one `PropertyName : AssignmentExpression` may be named `__proto__`.
 ///
 /// The rule counts entries from that production alone, so a computed key and a shorthand are both
 /// invisible to it — and a numeric key cannot spell the name at all, `PropName` of a
 /// `NumericLiteral` being the number written out.
-///
-/// Returns the error rather than raising it, because whether it is one is not yet known: the
-/// caller may still refine this literal into a pattern, which §13.2.5.1 does not speak about.
 fn check_single_proto(properties: &[PropertyDefinition]) -> Option<ParseError> {
     let mut seen = false;
     for property in properties {
@@ -265,6 +287,12 @@ fn check_single_proto(properties: &[PropertyDefinition]) -> Option<ParseError> {
 mod tests {
     use crate::parser::test_support::*;
     use crate::parser::{ParseErrorKind, parse_expression, parse_script};
+
+    /// Where `text` first appears in `source`, as the span a token there would have.
+    fn span_of(source: &str, text: &str) -> crate::span::Span {
+        let at = source.find(text).expect("the text is in the source") as u32; // a test that cannot locate its own subject has nothing to assert
+        crate::span::Span::new(at, at + text.len() as u32)
+    }
 
     /// The kind of error `source` fails with, as an expression.
     fn error_kind(source: &str) -> ParseErrorKind {
@@ -325,21 +353,74 @@ mod tests {
     }
 
     #[test]
-    fn a_literal_nested_in_a_refined_one_keeps_a_rule_this_parser_does_not_yet_apply() {
-        // A known divergence, written down rather than left to be rediscovered. Both of these
-        // are Syntax Errors and this parser accepts them.
-        //
-        // The record lives on the parser, so refining the *outer* literal into a pattern clears
-        // what the *inner* one recorded — and the inner one is a default value, which stays an
-        // expression and keeps its rule. Telling them apart needs the record to say which
-        // literal it belongs to, which is what `ArrayElement::Spread::followed_by_comma` had to
-        // be moved onto the tree for.
-        //
-        // `cover_initialized_name` has the identical hole, from the identical cause, so this is
-        // one fix and not two. Neither is a false *rejection*: both accept too much rather than
-        // too little, which is why they are recorded here instead of held up for a design.
-        assert!(parse_script("({ a = { __proto__: 1, __proto__: 2 } } = {});").is_ok());
-        assert!(parse_script("({ a = { b = 1 } } = x);").is_ok());
+    fn a_refinement_discards_the_rules_it_covers_and_no_others() {
+        // Refining a literal into a pattern takes away the rules that belonged to it *as a
+        // literal*. Which rules those are is not "everything recorded so far", and the three
+        // shapes below are what the difference costs.
+
+        // The literal itself, and a nested one that is also a target: both became the pattern.
+        assert!(parse_script("({ b = 1 } = x);").is_ok());
+        assert!(parse_script("({ a: { b = 1 } } = x);").is_ok());
+        assert!(parse_script("[{ b = 1 }] = x;").is_ok());
+        assert!(parse_script("({ __proto__: x, __proto__: y } = {});").is_ok());
+
+        // A *default* is still an expression after the refinement, so it keeps its rules.
+        // `{b = 1}` here never becomes a pattern and is the Syntax Error §13.2.5.1 describes.
+        assert!(parse_script("({ a = { b = 1 } } = x);").is_err());
+        assert!(parse_script("({ a: q = { b = 1 } } = x);").is_err());
+        assert!(parse_script("[a = { b = 1 }] = x;").is_err());
+        assert!(parse_script("({ a = { __proto__: 1, __proto__: 2 } } = x);").is_err());
+        // …and so is a computed key.
+        assert!(parse_script("({ [{ b = 1 }.c]: q } = x);").is_err());
+
+        // A record made elsewhere in the same expression is nothing to do with the refinement.
+        // The first operand of the comma is never refined, so its rule stands.
+        assert!(parse_script("(f({ b = 1 }), ({ a } = x));").is_err());
+        assert!(parse_script("[{ b = 1 }] = x, ({ c = 2 });").is_err());
+
+        // Both refinements here are real: the inner one discards what *it* covers even though
+        // it sits inside a default, which is why a record is compared against the region the
+        // refinement stands in rather than against where the region lies.
+        assert!(parse_script("({ a = ({ b = 1 } = y) } = x);").is_ok());
+        // The shape that caught the first attempt at this, from V8's own regression suite
+        // (regress-crbug-807096). The surviving region — the whole right operand — begins at
+        // the same character as the literal being refined, so no comparison of positions can
+        // tell it from a region nested inside.
+        assert!(parse_script("x = { a = c } = d;").is_ok());
+        assert!(parse_script("({ b = { a = c } = d } = e);").is_ok());
+        assert!(parse_script("[b = { a = c } = d] = e;").is_ok());
+        assert!(parse_script("({ b = { a = c } = d }) => 1;").is_ok());
+        assert!(
+            parse_script("let f = ({ a = (({ b = { a = c } = { a: 1 } }) => 1)({}) }, c) => 1;")
+                .is_ok()
+        );
+
+        // An arrow's parameters are the same refinement by another route, and a binding pattern
+        // never went through a literal — both were already right and stay right.
+        assert!(parse_script("({ a = 1 }) => b;").is_ok());
+        assert!(parse_script("({ a = { b = 1 } }) => 0;").is_err());
+        assert!(parse_script("var { a = { b = 1 } } = x;").is_err());
+        assert!(parse_script("function f({ a = { b = 1 } }) {}").is_err());
+
+        // Nothing refines these, so the rules settle as the errors they were recorded as.
+        assert_eq!(
+            error_kind("f({ a = 1 })"),
+            ParseErrorKind::ShorthandPropertyWithInitializer
+        );
+        assert_eq!(
+            error_kind("({ b = 1 })"),
+            ParseErrorKind::ShorthandPropertyWithInitializer
+        );
+        // A record must not outlive the statement that made it, in either direction.
+        assert!(parse_script("[...a,]; [b] = c;").is_ok());
+
+        // With more than one rule outstanding, the earliest is the one reported — which is the
+        // one a reader meets first. They are not made in source order: a literal's rules are
+        // recorded when its brace closes, so an inner literal's come before an outer's.
+        let source = "f({ b = 1 }, { c = 2 })";
+        assert_eq!(error(source).span, span_of(source, "b"));
+        let nested = "({ q: { c = 2 }, r: 0 }, { b = 1 })";
+        assert_eq!(error(nested).span, span_of(nested, "c"));
     }
 
     #[test]

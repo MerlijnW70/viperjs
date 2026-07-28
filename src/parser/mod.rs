@@ -246,6 +246,36 @@ pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     Ok(expr)
 }
 
+/// A rule an `ObjectLiteral` owes, held until something says whether it is still a literal.
+///
+/// See [`Parser::unrefined_covers`] for what is recorded and [`Parser::discard_refined_covers`]
+/// for how one settles.
+pub(super) struct CoverRecord {
+    /// The error this becomes if it is never refined away.
+    pub(super) error: ParseError,
+    /// The literal that owes the rule, which is what a refinement asks about.
+    ///
+    /// Not the error's span: that points at the offending property, because that is what a
+    /// reader needs to see. A refinement needs to know whether *the literal* is inside what it
+    /// refined, and asking with the error's span would make the two boundaries unreachable — a
+    /// property always lies strictly within its own braces, so neither end could ever be tested.
+    pub(super) literal: Span,
+    /// The start of the innermost sub-expression that would survive a refinement enclosing this
+    /// record — an assignment's right operand, a `CoverInitializedName`'s default, a computed
+    /// key — or `None` when there is no such sub-expression.
+    ///
+    /// This is what makes the difference between `({a: {b = 1}} = x)`, where the inner literal
+    /// *is* a target and the rule goes away with it, and `({a = {b = 1}} = x)`, where the inner
+    /// literal is a default: it stays an expression, so it keeps the rule and the whole thing is
+    /// a Syntax Error. Both look identical to a refinement that only asks "was this inside the
+    /// literal I refined".
+    ///
+    /// A start offset and not a span, because a region's extent is not known until it has been
+    /// parsed and the records inside it are made before then. Spans nest, so a region that
+    /// *starts* inside the refined literal is contained in it, which is the only question asked.
+    pub(super) protected_from: Option<u32>,
+}
+
 /// A recursive-descent parser over one source text.
 struct Parser<'a> {
     pub(super) source: &'a str,
@@ -255,27 +285,26 @@ struct Parser<'a> {
     pub(super) current: Token,
     /// How many recursive entries are open. See [`Parser::enter`].
     depth: u32,
-    /// Where the first `{a = 1}` was written, if one has been parsed and not yet refined away.
+    /// Rules an `ObjectLiteral` owes that a *pattern* does not, and that nothing has yet
+    /// refined away.
     ///
-    /// The first half of the cover grammar's bookkeeping (§13.2.5.1, §13.15.5). A
-    /// `CoverInitializedName` is a legal *pattern* and never a legal *literal*, so the literal
-    /// parser accepts it and leaves this behind; refining the literal into a pattern clears it,
-    /// and an expression that reaches the end of an `AssignmentExpression` still carrying one is
-    /// the Syntax Error §13.2.5.1 describes.
-    pub(super) cover_initialized_name: Option<Span>,
-    /// The error a duplicate `__proto__` owes, if a literal carrying one has not been refined.
+    /// The cover grammar's bookkeeping (§13.2.5.1, §13.15.5). Two rules are recorded here and
+    /// both for the same reason: they belong to `ObjectLiteral`, and a literal that turns out to
+    /// be an `ObjectAssignmentPattern` never matched that production, so neither rule ever
+    /// reached it.
     ///
-    /// §13.2.5.1's rule is on `ObjectLiteral`, and a literal that turns out to be an
-    /// `ObjectAssignmentPattern` never matched that production — so the rule never applied to
-    /// it. `({__proto__: a, __proto__: b} = c)` is ordinary destructuring and only
-    /// `({__proto__: a, __proto__: b})` is the Syntax Error.
+    /// - A `CoverInitializedName` — `{a = 1}` — is a legal *pattern* and never a legal literal.
+    /// - A duplicate `__proto__` is refused in a literal and ordinary in a pattern, which sets
+    ///   the same target twice.
     ///
-    /// So it is recorded rather than raised, exactly as [`Parser::cover_initialized_name`] is,
-    /// and settles the same way: refinement clears it, and reaching the end of an
-    /// `AssignmentExpression` still carrying one is the error. It holds the finished error
-    /// rather than a span because the span it wants is the second entry's, which is known where
-    /// the record is made and nowhere else.
-    pub(super) duplicate_proto: Option<ParseError>,
+    /// A list rather than one slot, because refinement has to be able to drop *some* of them:
+    /// see [`Parser::discard_refined_covers`] for the rule and for what went wrong when it was
+    /// a single record cleared wholesale.
+    pub(super) unrefined_covers: Vec<CoverRecord>,
+    /// Where the innermost sub-expression that survives refinement begins, if one is open.
+    ///
+    /// Stamped onto every record made while it is set — see [`CoverRecord::protected_from`].
+    pub(super) protecting_from: Option<u32>,
     /// Whether this is strict mode code (§11.2.1).
     ///
     /// Not a grammar parameter — the specification threads strictness through `IsStrict`, which
@@ -313,7 +342,7 @@ struct Parser<'a> {
     /// `Contains YieldExpression` (§15.5.1) and `Contains AwaitExpression` (§15.8.1) asked as a
     /// record rather than as a walk, because `Contains` stops at a function boundary and so does
     /// this — it is saved and restored by [`Parser::parse_function_body`] and by the parameter
-    /// list. The same deferral as `cover_initialized_name`, for the same reason: the question is
+    /// list. The same deferral as `unrefined_covers`, for the same reason: the question is
     /// asked later than the answer is known.
     ///
     /// One field and not two: whichever of the two expressions a given parameter list can contain
@@ -367,8 +396,8 @@ impl<'a> Parser<'a> {
             lexer,
             current,
             depth: 0,
-            cover_initialized_name: None,
-            duplicate_proto: None,
+            unrefined_covers: Vec::new(),
+            protecting_from: None,
             open_covers: 0,
             inside_function: false,
             body_context: self::body::BodyContext::SCRIPT,
