@@ -69,5 +69,6 @@ proposing the ninth — they are short.
 
 ## Licence
 
-By contributing you agree that your work is dual-licensed under
-[MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE), matching the project.
+praxis is copyright MerlijnW70 and dual-licensed under [MIT](LICENSE-MIT) OR
+[Apache-2.0](LICENSE-APACHE); [COPYRIGHT](COPYRIGHT) states it for both halves. By contributing
+you agree that your work is dual-licensed on the same terms.

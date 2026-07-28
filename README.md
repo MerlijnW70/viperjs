@@ -90,11 +90,11 @@ short, and are the fastest way to understand why the engine is shaped as it is.
 
 ## Licence
 
-Dual-licensed, at your option, under either of
+Copyright © 2026 MerlijnW70. Dual-licensed, at your option, under either of
 
 - Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
 - MIT licence ([LICENSE-MIT](LICENSE-MIT))
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
-this work, as defined in the Apache-2.0 licence, shall be dual-licensed as above, without any
-additional terms or conditions.
+See [COPYRIGHT](COPYRIGHT) for the whole of it. Unless you explicitly state otherwise, any
+contribution intentionally submitted for inclusion in this work, as defined in the Apache-2.0
+licence, shall be dual-licensed as above, without any additional terms or conditions.
