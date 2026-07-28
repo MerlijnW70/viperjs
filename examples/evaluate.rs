@@ -1,6 +1,6 @@
 //! Evaluate expressions and print what they came to — the tool the differential sweep drives.
 //!
-//! Reads one expression per line from standard input and writes one answer per line: the result
+//! Reads one script per line from standard input and writes one answer per line: the result
 //! written the way `String(x)` writes it, or a line beginning `!` for source praxis cannot yet
 //! read. Printing the refusals rather than skipping them is the point — a sweep that quietly
 //! dropped what the engine could not do would report agreement it had not earned.
@@ -9,9 +9,9 @@
 //! echo "1 + '1'" | cargo run --example evaluate
 //! ```
 
-use praxis::compile::compile_expression;
+use praxis::compile::compile_script;
 use praxis::heap::Heap;
-use praxis::parser::parse_expression;
+use praxis::parser::parse_script;
 use praxis::vm::Vm;
 use std::io::{self, BufRead, Write};
 
@@ -35,11 +35,11 @@ fn main() {
 /// What `source` evaluates to, or why it could not be evaluated.
 fn evaluate(source: &str) -> String {
     let mut heap = Heap::new();
-    let expression = match parse_expression(source) {
-        Ok(expression) => expression,
+    let script = match parse_script(source) {
+        Ok(script) => script,
         Err(error) => return format!("!parse: {}", error.kind),
     };
-    let chunk = match compile_expression(&expression, &mut heap) {
+    let chunk = match compile_script(&script, &mut heap) {
         Ok(chunk) => chunk,
         Err(error) => return format!("!compile: {}", error.message()),
     };

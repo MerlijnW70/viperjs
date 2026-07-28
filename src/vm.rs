@@ -39,10 +39,12 @@ pub enum Fault {
     /// Includes the placeholder an unpatched forward jump carries, which is `u32::MAX` precisely
     /// so that forgetting to patch one is loud rather than a jump to somewhere plausible.
     JumpOutOfRange,
-    /// The chunk finished without leaving exactly one value behind.
+    /// A `LoadLocal` or `StoreLocal` named a slot the frame does not have.
+    MissingLocal,
+    /// The chunk finished with something still on the stack.
     ///
-    /// An expression evaluates to one value. Zero means the chunk did nothing; more than one
-    /// means something was pushed and never consumed, which is a compiler bug that would
+    /// Every statement is stack-neutral and every expression consumes its operands, so a chunk
+    /// that has run to the end has nothing left over. Anything else is a compiler bug that would
     /// otherwise show up much later as the wrong value.
     UnbalancedStack,
 }
@@ -51,15 +53,33 @@ pub enum Fault {
 ///
 /// Holds the operand stack and nothing else so far. Call frames, the environment and the job
 /// queue join it as the things that need them arrive.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Vm {
     stack: Vec<Value>,
+    /// One slot per local variable, all starting as `undefined`.
+    ///
+    /// Resolved to indices at compile time, so nothing here searches for a name. That is what
+    /// makes hoisting free: the slot exists before the first instruction runs, which is exactly
+    /// what a `var` read before its declaration is asking for.
+    locals: Vec<Value>,
+    /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
+    completion: Value,
+}
+
+impl Default for Vm {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Vm {
     /// A machine with an empty stack.
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            stack: Vec::new(),
+            locals: Vec::new(),
+            completion: Value::Undefined,
+        }
     }
 
     /// Run `chunk` to the end and answer the single value it leaves behind.
@@ -68,6 +88,11 @@ impl Vm {
     /// the chunk was wrong, not that the interpreter is now untrustworthy.
     pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Value, Fault> {
         self.stack.clear();
+        // §14.2.2 — a statement list whose statements all produce nothing has the value
+        // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
+        self.completion = Value::Undefined;
+        self.locals.clear();
+        self.locals.resize(chunk.locals(), Value::Undefined);
         let code = chunk.code();
         let mut at = 0_usize;
         // A counter rather than an iterator, because a jump moves it. Nothing bounds how long
@@ -117,17 +142,38 @@ impl Vm {
                         self.pop()?;
                     }
                 }
+                Instruction::JumpIfTrue(target) => {
+                    if self.pop()?.to_boolean(heap) {
+                        at = jump_to(target, code.len())?;
+                    }
+                }
                 Instruction::Pop => {
                     self.pop()?;
                 }
+                Instruction::LoadLocal(slot) => {
+                    let value = *self.locals.get(slot as usize).ok_or(Fault::MissingLocal)?;
+                    self.stack.push(value);
+                }
+                Instruction::StoreLocal(slot) => {
+                    // Peeked, not popped: assignment is an expression, and `a = (b = 1)` needs
+                    // the inner one to leave its value behind.
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    *self
+                        .locals
+                        .get_mut(slot as usize)
+                        .ok_or(Fault::MissingLocal)? = value;
+                }
+                Instruction::SetCompletion => {
+                    self.completion = self.pop()?;
+                }
             }
         }
-        // An expression is one value. Anything else means the chunk and the compiler disagree
-        // about what the instructions do, and saying so here is cheaper than finding out later.
-        if self.stack.len() != 1 {
+        // Nothing should be left. Anything else means the chunk and the compiler disagree about
+        // what the instructions do, and saying so here is cheaper than finding out later.
+        if !self.stack.is_empty() {
             return Err(Fault::UnbalancedStack);
         }
-        self.pop()
+        Ok(self.completion)
     }
 
     /// Take the top of the stack.
@@ -186,8 +232,8 @@ fn apply_unary(operator: UnaryOperator, operand: Value, heap: &mut Heap) -> Valu
 mod tests {
     use super::*;
     use crate::ast::BinaryOperator;
-    use crate::compile::compile_expression;
-    use crate::parser::parse_expression;
+    use crate::compile::{compile_expression, compile_script};
+    use crate::parser::{parse_expression, parse_script};
 
     /// Evaluate `source` and describe the result the way `String(x)` would, so that a row of a
     /// test reads as the JavaScript it is about.
@@ -200,6 +246,177 @@ mod tests {
             .expect("the chunk is well formed"); // same
         let id = value.to_string(&mut heap);
         String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+    }
+
+    /// Run a whole script and describe its completion value the way `String(x)` would.
+    fn run(source: &str) -> String {
+        let mut heap = Heap::new();
+        let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
+        let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+        let value = Vm::new()
+            .run(&chunk, &mut heap)
+            .expect("the chunk is well formed"); // same
+        let id = value.to_string(&mut heap);
+        String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+    }
+
+    #[test]
+    fn a_script_evaluates_to_its_last_value_producing_statement() {
+        // §14.2.2's `UpdateEmpty`. A declaration produces nothing, so it does not replace what
+        // came before — which is why the third row is 1 and not `undefined`.
+        assert_eq!(run("1;"), "1");
+        assert_eq!(run("1; 2;"), "2");
+        assert_eq!(run("1; var x = 2;"), "1");
+        assert_eq!(run("var x = 2;"), "undefined");
+        assert_eq!(run(""), "undefined");
+        assert_eq!(run(";;;"), "undefined");
+        assert_eq!(run("1; ;"), "1");
+        assert_eq!(run("{ 1; }"), "1");
+        assert_eq!(run("{ } 1; { }"), "1");
+    }
+
+    #[test]
+    fn a_var_is_hoisted_so_it_exists_before_its_declaration_and_holds_nothing() {
+        // The whole of what hoisting is: the binding is made before the first statement runs and
+        // the initializer is not. `x` is readable and `undefined` on the first line.
+        assert_eq!(run("var seen = typeof x; var x = 1; seen;"), "undefined");
+        assert_eq!(run("var before = x; var x = 1; before;"), "undefined");
+        assert_eq!(run("var x = 1; x;"), "1");
+        // …including from inside a block or a loop, because `var` belongs to the script rather
+        // than to where it was written. That is the difference `let` was introduced to fix.
+        assert_eq!(run("{ var inner = 5; } inner;"), "5");
+        assert_eq!(
+            run("var i = 0; while (i < 1) { var loop_var = 9; i = i + 1; } loop_var;"),
+            "9"
+        );
+        // A second `var` with no initializer does not wipe the first one's value.
+        assert_eq!(run("var x = 1; var x; x;"), "1");
+        assert_eq!(run("var x = 1; var x = 2; x;"), "2");
+    }
+
+    #[test]
+    fn assignment_is_an_expression_whose_value_is_what_was_assigned() {
+        assert_eq!(run("var a; a = 5;"), "5");
+        assert_eq!(run("var a; var b; a = b = 3; a;"), "3");
+        assert_eq!(run("var a = 1; a += 2; a;"), "3");
+        assert_eq!(run("var a = 1; (a += 2);"), "3");
+        assert_eq!(run("var a = 'x'; a += 1; a;"), "x1");
+        assert_eq!(run("var a = 8; a /= 2; a;"), "4");
+        assert_eq!(run("var a = 5; a **= 2; a;"), "25");
+        assert_eq!(run("var a = 12; a &= 10; a;"), "8");
+        assert_eq!(run("var a = 1; a <<= 3; a;"), "8");
+    }
+
+    #[test]
+    fn an_if_runs_one_branch_and_a_missing_else_runs_none() {
+        assert_eq!(run("var r = 'none'; if (1) r = 'then'; r;"), "then");
+        assert_eq!(run("var r = 'none'; if (0) r = 'then'; r;"), "none");
+        assert_eq!(run("var r; if (0) r = 'then'; else r = 'else'; r;"), "else");
+        assert_eq!(run("var r; if (1) r = 'then'; else r = 'else'; r;"), "then");
+        // Truthiness rather than equality with `true`, and nesting.
+        assert_eq!(run("var r = 0; if ('0') r = 1; r;"), "1");
+        assert_eq!(run("var r = 0; if ('') r = 1; r;"), "0");
+        assert_eq!(run("var r; if (1) if (0) r = 'a'; else r = 'b'; r;"), "b");
+    }
+
+    #[test]
+    fn the_three_loops_agree_about_when_they_test() {
+        // `while` tests first, `do` tests last — so a false condition runs the body once in one
+        // of them and never in the other.
+        assert_eq!(run("var n = 0; while (0) n = n + 1; n;"), "0");
+        assert_eq!(run("var n = 0; do n = n + 1; while (0) n;"), "1");
+        assert_eq!(run("var n = 0; while (n < 5) n = n + 1; n;"), "5");
+        assert_eq!(run("var n = 0; do n = n + 1; while (n < 5) n;"), "5");
+        assert_eq!(
+            run("var n = 0; for (var i = 0; i < 5; i = i + 1) n = n + i; n;"),
+            "10"
+        );
+        // A `for` with parts missing: no init, no update, and no test at all.
+        assert_eq!(run("var i = 0; for (; i < 3; ) i = i + 1; i;"), "3");
+        assert_eq!(
+            run("var i = 0; for (;;) { i = i + 1; if (i > 3) break; } i;"),
+            "4"
+        );
+    }
+
+    #[test]
+    fn break_leaves_the_loop_and_continue_goes_round_again() {
+        assert_eq!(
+            run("var n = 0; while (1) { n = n + 1; if (n > 2) break; } n;"),
+            "3"
+        );
+        assert_eq!(
+            run(
+                "var n = 0; var i = 0; while (i < 5) { i = i + 1; if (i < 3) continue; n = n + 1; } n;"
+            ),
+            "3"
+        );
+        // In a `for` loop, `continue` still runs the update — which is the whole reason the third
+        // part exists, and the thing a `while` translation gets wrong.
+        assert_eq!(
+            run(
+                "var n = 0; for (var i = 0; i < 5; i = i + 1) { if (i < 3) continue; n = n + 1; } n;"
+            ),
+            "2"
+        );
+        assert_eq!(
+            run("var i = 0; for (i = 0; i < 5; i = i + 1) { continue; } i;"),
+            "5"
+        );
+        // In a `do` loop, `continue` goes to the *test*, so a loop whose test then fails stops.
+        assert_eq!(
+            run("var n = 0; do { n = n + 1; continue; } while (n < 3) n;"),
+            "3"
+        );
+        // The innermost loop is the one that is left, and the outer one carries on.
+        assert_eq!(
+            run(
+                "var n = 0; var i = 0; while (i < 3) { i = i + 1; var j = 0; while (1) { j = j + 1; if (j > 1) break; n = n + 1; } } n;"
+            ),
+            "3"
+        );
+    }
+
+    #[test]
+    fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
+        // The stack-neutrality every statement promises, checked where it is easiest to break: a
+        // loop whose body pushes and pops, taken zero times and many times.
+        assert_eq!(run("7; while (0) { 1; 2; 3; }"), "7");
+        // …and a body that *does* run replaces the completion value, once per iteration.
+        assert_eq!(
+            run("7; var i = 0; while (i < 3) { i = i + 1; i * 10; }"),
+            "30"
+        );
+        assert_eq!(run("7; for (var i = 0; i < 2; i = i + 1) i;"), "1");
+    }
+
+    #[test]
+    fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
+        let cases = [
+            ("let x = 1;", "let and const"),
+            ("const x = 1;", "let and const"),
+            ("function f() {}", "a function declaration"),
+            ("throw 1;", "throw"),
+            ("try { } catch (e) { }", "try"),
+            ("switch (1) { }", "switch"),
+            ("for (var k in 1) ;", "for-in and for-of"),
+            ("var [a] = 1;", "a destructuring binding"),
+            ("outer: while (1) break outer;", "a labelled statement"),
+            ("x;", "a reference to an undeclared name"),
+            ("var a; a.b = 1;", "an assignment to a property"),
+            ("undeclared = 1;", "an assignment to an undeclared name"),
+            ("var a; a ||= 1;", "a logical assignment"),
+        ];
+        for (source, what) in cases {
+            let mut heap = Heap::new();
+            let script = parse_script(source).expect("the source parses"); // the test is about compiling
+            let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+            assert_eq!(
+                error.kind,
+                crate::compile::ErrorKind::Unsupported(what),
+                "compiling {source:?}"
+            );
+        }
     }
 
     #[test]
@@ -462,13 +679,18 @@ mod tests {
             ],
             vec![Value::Boolean(true)],
         );
+        let _ = &unpatched;
         assert!(matches!(
             vm.run(&unpatched, &mut heap),
             Err(Fault::JumpOutOfRange)
         ));
         // …while a jump to exactly the end is how every short circuit finishes, and is fine.
         let to_the_end = Chunk::from_parts(
-            vec![Instruction::Constant(0), Instruction::Jump(2)],
+            vec![
+                Instruction::Constant(0),
+                Instruction::SetCompletion,
+                Instruction::Jump(3),
+            ],
             vec![Value::Boolean(true)],
         );
         assert!(matches!(
@@ -504,15 +726,42 @@ mod tests {
             vm.run(&leftover, &mut heap),
             Err(Fault::UnbalancedStack)
         ));
+        // An *empty* chunk is not a fault — it is an empty script, whose completion value is
+        // `undefined`.
         let empty = Chunk::from_parts(Vec::new(), Vec::new());
+        assert!(matches!(vm.run(&empty, &mut heap), Ok(Value::Undefined)));
+
+        // A slot the frame does not have, in both directions.
+        let no_such_slot = Chunk::from_parts(vec![Instruction::LoadLocal(3)], Vec::new());
         assert!(matches!(
-            vm.run(&empty, &mut heap),
-            Err(Fault::UnbalancedStack)
+            vm.run(&no_such_slot, &mut heap),
+            Err(Fault::MissingLocal)
+        ));
+        let nowhere_to_store = Chunk::from_parts(
+            vec![Instruction::Constant(0), Instruction::StoreLocal(3)],
+            vec![Value::Null],
+        );
+        assert!(matches!(
+            vm.run(&nowhere_to_store, &mut heap),
+            Err(Fault::MissingLocal)
+        ));
+        let nothing_to_store = Chunk::from_parts(vec![Instruction::StoreLocal(0)], Vec::new());
+        assert!(matches!(
+            vm.run(&nothing_to_store, &mut heap),
+            Err(Fault::StackUnderflow)
+        ));
+        let nothing_to_complete = Chunk::from_parts(vec![Instruction::SetCompletion], Vec::new());
+        assert!(matches!(
+            vm.run(&nothing_to_complete, &mut heap),
+            Err(Fault::StackUnderflow)
         ));
 
         // …and the machine still works afterwards, which is the other half of the claim: a fault
         // is about the chunk, not about the interpreter.
-        let sound = Chunk::from_parts(vec![Instruction::Constant(0)], vec![Value::Null]);
+        let sound = Chunk::from_parts(
+            vec![Instruction::Constant(0), Instruction::SetCompletion],
+            vec![Value::Null],
+        );
         assert!(matches!(vm.run(&sound, &mut heap), Ok(Value::Null)));
     }
 
