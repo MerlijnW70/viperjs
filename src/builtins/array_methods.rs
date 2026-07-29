@@ -419,7 +419,10 @@ pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
         ("lastIndexOf", 1, edit::last_index_of),
         ("map", 1, map),
         ("pop", 0, pop),
+        ("entries", 0, entries),
+        ("keys", 0, keys),
         ("push", 1, push),
+        ("values", 0, values),
         ("reduce", 1, iterate::reduce),
         ("reduceRight", 1, iterate::reduce_right),
         ("reverse", 0, edit::reverse),
@@ -432,6 +435,29 @@ pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
     ] {
         define_method(heap, realm, prototype, name, length, native);
     }
+    // §23.1.3.38 — `[@@iterator]` **is** `values`, the same function object rather than a second
+    // one that behaves alike. A script comparing them with `===` finds them equal, and that is
+    // what the clause says.
+    super::alias_to_symbol(heap, realm, prototype, "values", "iterator");
+}
+
+/// §23.1.3.34 `Array.prototype.values`, and `[@@iterator]` — which is the same function object.
+///
+/// §23.1.3.38 says so outright: `Array.prototype[@@iterator]` **is** `Array.prototype.values`, so
+/// a script comparing them with `===` finds them equal. Installing two natives with the same body
+/// would not satisfy that.
+pub(super) fn values(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    super::iterator::over_array(vm, heap, call, crate::heap::Iterated::Values)
+}
+
+/// §23.1.3.17 `Array.prototype.keys`.
+pub(super) fn keys(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    super::iterator::over_array(vm, heap, call, crate::heap::Iterated::Keys)
+}
+
+/// §23.1.3.7 `Array.prototype.entries`.
+pub(super) fn entries(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    super::iterator::over_array(vm, heap, call, crate::heap::Iterated::Entries)
 }
 
 #[cfg(test)]

@@ -1271,10 +1271,6 @@ built-ins/Array/proto-from-ctor-realm-two.js :: it threw ReferenceError: $262 is
 built-ins/Array/proto-from-ctor-realm-two.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Array/proto-from-ctor-realm-zero.js :: it threw ReferenceError: $262 is not defined
 built-ins/Array/proto-from-ctor-realm-zero.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/Array/prototype/Symbol.iterator.js :: it threw an object with no name: Symbol(Symbol.iterator) should be an own property
-built-ins/Array/prototype/Symbol.iterator.js (strict) :: it threw an object with no name: Symbol(Symbol.iterator) should be an own property
-built-ins/Array/prototype/Symbol.iterator/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/Symbol.iterator/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Array/prototype/Symbol.unscopables/array-find-from-last.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/prototype/Symbol.unscopables/array-find-from-last.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/prototype/Symbol.unscopables/prop-desc.js :: it threw an object with no name: Symbol(Symbol.unscopables) should be an own property
@@ -1436,22 +1432,6 @@ built-ins/Array/prototype/copyWithin/return-this.js :: it threw TypeError: what 
 built-ins/Array/prototype/copyWithin/return-this.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/copyWithin/undefined-end.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/copyWithin/undefined-end.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/iteration-mutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/iteration-mutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/iteration.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/iteration.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/entries/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/entries/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/entries/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/entries/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/entries/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/entries/prop-desc.js :: it threw an object with no name: `typeof Array.prototype.entries` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/entries/prop-desc.js (strict) :: it threw an object with no name: `typeof Array.prototype.entries` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/entries/returns-iterator-from-object.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/entries/returns-iterator-from-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/entries/returns-iterator.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/returns-iterator.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-10.js (strict) :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-11.js :: it threw ReferenceError: Date is not defined
@@ -1694,22 +1674,6 @@ built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw a
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/join/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/join/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/keys/iteration-mutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/keys/iteration-mutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/keys/iteration.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/keys/iteration.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/keys/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/keys/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/keys/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/keys/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/keys/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/keys/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/keys/prop-desc.js :: it threw an object with no name: `typeof Array.prototype.keys` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/keys/prop-desc.js (strict) :: it threw an object with no name: `typeof Array.prototype.keys` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/keys/returns-iterator-from-object.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/keys/returns-iterator-from-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/keys/returns-iterator.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/keys/returns-iterator.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-11.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-11.js (strict) :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-12.js :: it threw ReferenceError: RegExp is not defined
@@ -2195,22 +2159,6 @@ built-ins/Array/prototype/toString/call-with-boolean.js :: it threw TypeError: a
 built-ins/Array/prototype/toString/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/unshift/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/unshift/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/values/iteration-mutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/values/iteration-mutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/values/iteration.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/values/iteration.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/values/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/values/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/values/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/values/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/values/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/values/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/values/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/values/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/values/returns-iterator-from-object.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/values/returns-iterator-from-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/values/returns-iterator.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/values/returns-iterator.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/with/frozen-this-value.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/with/frozen-this-value.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/with/holes-not-preserved.js :: it threw TypeError: what was called is not a function
@@ -2679,12 +2627,6 @@ built-ins/ArrayBuffer/undefined-newtarget-throws.js :: it threw an object with n
 built-ins/ArrayBuffer/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/ArrayBuffer/zero-length.js :: it threw ReferenceError: ArrayBuffer is not defined
 built-ins/ArrayBuffer/zero-length.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
-built-ins/ArrayIteratorPrototype/Symbol.toStringTag/property-descriptor.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/Symbol.toStringTag/property-descriptor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/Symbol.toStringTag/value-direct.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/Symbol.toStringTag/value-direct.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/Symbol.toStringTag/value-from-to-string.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/Symbol.toStringTag/value-from-to-string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayIteratorPrototype/next/Float32Array.js :: it threw ReferenceError: Float32Array is not defined
 built-ins/ArrayIteratorPrototype/next/Float32Array.js (strict) :: it threw ReferenceError: Float32Array is not defined
 built-ins/ArrayIteratorPrototype/next/Float64Array.js :: it threw ReferenceError: Float64Array is not defined
@@ -2711,18 +2653,6 @@ built-ins/ArrayIteratorPrototype/next/args-unmapped-expansion-after-exhaustion.j
 built-ins/ArrayIteratorPrototype/next/args-unmapped-expansion-before-exhaustion.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayIteratorPrototype/next/args-unmapped-iteration.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayIteratorPrototype/next/args-unmapped-truncation-before-exhaustion.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/iteration-mutable.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/iteration-mutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/iteration.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/iteration.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/length.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/name.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/name.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/non-own-slots.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/non-own-slots.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/property-descriptor.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/property-descriptor.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/AsyncDisposableStack/constructor.js :: it threw an object with no name: typeof AsyncDisposableStack is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AsyncDisposableStack/constructor.js (strict) :: it threw an object with no name: typeof AsyncDisposableStack is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AsyncDisposableStack/instance-extensible.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -6360,24 +6290,16 @@ built-ins/Iterator/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/Symbol.dispose/invokes-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/invokes-return.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/is-function.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/is-function.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/length.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/name.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/name.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/Symbol.dispose/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/Symbol.dispose/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/Symbol.dispose/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/Symbol.dispose/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/Symbol.dispose/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/Symbol.dispose/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js :: it threw an object with no name: undefined should be an own property
+built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js (strict) :: it threw an object with no name: undefined should be an own property
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/is-function.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/is-function.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/length.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/name.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/name.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/prop-desc.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.iterator/prop-desc.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/constructor/prop-desc.js :: it threw ReferenceError: Iterator is not defined
@@ -8971,8 +8893,8 @@ built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js :: it threw
 built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/symbol-tag-array-builtin.js :: it threw TypeError: what was called is not a function
-built-ins/Object/prototype/toString/symbol-tag-array-builtin.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Object/prototype/toString/symbol-tag-array-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
+built-ins/Object/prototype/toString/symbol-tag-array-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-map-builtin.js :: it threw ReferenceError: Map is not defined
 built-ins/Object/prototype/toString/symbol-tag-map-builtin.js (strict) :: it threw ReferenceError: Map is not defined
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js :: it threw ReferenceError: BigInt is not defined
@@ -8985,8 +8907,8 @@ built-ins/Object/prototype/toString/symbol-tag-promise-builtin.js :: it threw Re
 built-ins/Object/prototype/toString/symbol-tag-promise-builtin.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Object/prototype/toString/symbol-tag-set-builtin.js :: it threw ReferenceError: Set is not defined
 built-ins/Object/prototype/toString/symbol-tag-set-builtin.js (strict) :: it threw ReferenceError: Set is not defined
-built-ins/Object/prototype/toString/symbol-tag-string-builtin.js :: it threw TypeError: what was called is not a function
-built-ins/Object/prototype/toString/symbol-tag-string-builtin.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Object/prototype/toString/symbol-tag-string-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
+built-ins/Object/prototype/toString/symbol-tag-string-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-weakmap-builtin.js :: it threw ReferenceError: WeakMap is not defined
 built-ins/Object/prototype/toString/symbol-tag-weakmap-builtin.js (strict) :: it threw ReferenceError: WeakMap is not defined
 built-ins/Object/prototype/toString/symbol-tag-weakset-builtin.js :: it threw ReferenceError: WeakSet is not defined
@@ -12305,16 +12227,6 @@ built-ins/String/is-a-constructor.js :: it threw an object with no name: isConst
 built-ins/String/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(String) must return true Expected SameValue(«false», «true») to be true
 built-ins/String/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/String/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/String/prototype/Symbol.iterator/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/Symbol.iterator/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/Symbol.iterator/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/Symbol.iterator/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/Symbol.iterator/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/Symbol.iterator/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/Symbol.iterator/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/Symbol.iterator/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/Symbol.iterator/this-val-to-str-err.js :: it threw an object with no name: Expected a undefined but got a TypeError
-built-ins/String/prototype/Symbol.iterator/this-val-to-str-err.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
 built-ins/String/prototype/charAt/S15.5.4.4_A1.1.js :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/charAt/S15.5.4.4_A1.1.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/charCodeAt/S15.5.4.5_A1.1.js :: it threw ReferenceError: eval is not defined
@@ -12737,20 +12649,6 @@ built-ins/String/prototype/trimStart/this-value-object-valueof-meth-priority.js 
 built-ins/String/prototype/trimStart/this-value-object-valueof-meth-priority.js (strict) :: it threw an object with no name: thisVal[Symbol.toPrimitive should have been accessed. Expected SameValue(«0», «1») to be true
 built-ins/String/prototype/valueOf/non-generic-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/String/prototype/valueOf/non-generic-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/StringIteratorPrototype/Symbol.toStringTag.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/Symbol.toStringTag.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/ancestry.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/ancestry.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/length.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/name.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/name.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/next-iteration-surrogate-pairs.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/next-iteration-surrogate-pairs.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/next-iteration.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/next-iteration.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/next-missing-internal-slots.js :: it threw TypeError: what was called is not a function
-built-ins/StringIteratorPrototype/next/next-missing-internal-slots.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/SuppressedError/is-a-constructor.js :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/is-a-constructor.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/length.js :: it threw ReferenceError: SuppressedError is not defined

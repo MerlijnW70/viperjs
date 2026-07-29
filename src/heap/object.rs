@@ -37,7 +37,7 @@ use crate::heap::arguments::Incoming;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::string_object;
 use crate::heap::{
-    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Native, Property,
+    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Property,
     PropertyDescriptor, PropertyKey, StringId,
 };
 use crate::value::Value;
@@ -98,6 +98,11 @@ pub struct Object {
     /// so that an object without one pays a pointer rather than a `Vec`: an `Object` sits inline
     /// in the arena, so its size is charged to every object ever made.
     pub(super) arguments: Option<Box<ArgumentsMap>>,
+    /// Where this object has got to, if it is an iterator — §23.1.5.1 and §22.1.5.1.
+    ///
+    /// `None` for everything else. Boxed for the reason the parameter map is: an `Object` sits
+    /// inline in the arena, so its size is charged to every object ever made.
+    pub(super) iteration: Option<Box<Iteration>>,
     /// The primitive this object *is* a wrapper for — §20.3's `[[BooleanData]]`, §21.1's
     /// `[[NumberData]]` and §22.1's `[[StringData]]`.
     ///
@@ -152,6 +157,7 @@ impl Object {
             extensible: true,
             array: false,
             arguments: None,
+            iteration: None,
             primitive: None,
             call: None,
             environment: None,
@@ -164,6 +170,16 @@ impl Object {
     /// The parameter map this object joins, if it is an arguments object.
     pub(crate) fn arguments_map(&self) -> Option<&ArgumentsMap> {
         self.arguments.as_deref()
+    }
+
+    /// Where this object has got to, if it is an iterator.
+    pub fn iteration(&self) -> Option<&Iteration> {
+        self.iteration.as_deref()
+    }
+
+    /// The same, to be moved on by a step.
+    pub fn iteration_mut(&mut self) -> Option<&mut Iteration> {
+        self.iteration.as_deref_mut()
     }
 
     /// The primitive this object wraps, if it wraps one.
@@ -527,6 +543,18 @@ impl Heap {
     /// so has nowhere the characters were interned from.
     pub fn intern_character(&mut self, data: StringId, index: u32) -> Option<StringId> {
         string_object::intern_character(self, data, index)
+    }
+
+    /// §23.1.5.1 `CreateArrayIterator` and §22.1.5.1 `CreateStringIterator` — an iterator object.
+    ///
+    /// Ordinary but for the position it remembers, which is a slot rather than a property so that
+    /// nothing in the language can move it. See [`crate::heap::Iteration`].
+    pub fn new_iterator(&mut self, prototype: ObjectId, iteration: Iteration) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(Some(prototype));
+        object.iteration = Some(Box::new(iteration));
+        self.objects.push(Some(object));
+        id
     }
 
     /// Put an ordinary object on the heap — `OrdinaryObjectCreate` (§10.1.12).

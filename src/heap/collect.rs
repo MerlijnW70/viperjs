@@ -173,6 +173,14 @@ impl Heap {
                 Some(other) => self.mark_value(other, marked),
                 None => {}
             }
+            // What an iterator is walking, which nothing else need be holding: after
+            // `var i = [1, 2].values()` the array has no other name, and collecting it would
+            // leave an iterator that steps into a slot something else has since been given.
+            match object.iteration().map(|found| found.over) {
+                Some(Value::Object(reached)) => pending.push(reached),
+                Some(other) => self.mark_value(other, marked),
+                None => {}
+            }
             for key in object.own_property_keys(self) {
                 // A key is reachable *because* it is a key: a property nothing else names still
                 // has its name. Both kinds — a Symbol key is the only reference to that Symbol
@@ -371,6 +379,33 @@ mod tests {
         // same narrow promise a handle from another heap already makes.
         assert!(heap.object(dropped).is_none());
         assert_eq!(heap.object_count(), 1);
+    }
+
+    #[test]
+    fn an_iterator_keeps_what_it_is_walking() {
+        // The array has no other name once the expression that made it is gone, so the iterator
+        // is the only thing reaching it. Collecting it would leave the iterator stepping into a
+        // slot that something else has since been given.
+        let mut heap = Heap::new();
+        let walked = heap.new_object(None);
+        let iterator = heap.new_iterator(
+            walked,
+            crate::heap::Iteration {
+                over: Value::Object(walked),
+                at: 0,
+                kind: crate::heap::Iterated::Values,
+                done: false,
+            },
+        );
+        let elsewhere = heap.new_object(None);
+        let roots = Roots {
+            values: vec![Value::Object(iterator)],
+            ..Roots::default()
+        };
+        let freed = heap.collect(&roots);
+        assert_eq!(freed.objects, 1);
+        assert!(heap.object(walked).is_some());
+        assert!(heap.object(elsewhere).is_none());
     }
 
     #[test]

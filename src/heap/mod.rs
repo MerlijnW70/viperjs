@@ -42,6 +42,7 @@ mod collect;
 mod define;
 mod enumerate;
 mod environment;
+mod iteration;
 mod object;
 mod property;
 mod string_object;
@@ -49,6 +50,7 @@ mod symbol;
 
 pub use self::arguments::{ArgumentsMap, Incoming};
 pub use self::callable::{Bound, Callable, Native, NativeCall};
+pub use self::iteration::{Iterated, Iteration};
 pub use self::symbol::{Symbol, SymbolId};
 
 /// What `[[DefineOwnProperty]]` came to.

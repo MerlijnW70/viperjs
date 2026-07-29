@@ -53,6 +53,18 @@ pub struct Realm {
     /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
     /// property on the constructor would be the script's to move; this is not.
     well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
+    /// %IteratorPrototype% — §27.1.2, where `[@@iterator]` answers the receiver.
+    ///
+    /// Every iterator in the language inherits from this, however it was made, which is what makes
+    /// one iterable and so usable wherever an iterable is wanted.
+    iterator_prototype: ObjectId,
+    /// %ArrayIteratorPrototype% — §23.1.5.2.
+    array_iterator_prototype: ObjectId,
+    /// %StringIteratorPrototype% — §22.1.5.2.
+    ///
+    /// Separate from the Array one because a script may replace either `next` without touching
+    /// the other, and because §22.1.5.2.2 tags them differently.
+    string_iterator_prototype: ObjectId,
     /// %ThrowTypeError% — §10.2.4.1, the function that exists only to refuse.
     ///
     /// One per realm and shared by every use, which the specification is explicit about: the same
@@ -128,6 +140,9 @@ impl Realm {
         let boolean_prototype = heap.new_object(Some(object_prototype));
         let number_prototype = heap.new_object(Some(object_prototype));
         let symbol_prototype = heap.new_object(Some(object_prototype));
+        let iterator_prototype = heap.new_object(Some(object_prototype));
+        let array_iterator_prototype = heap.new_object(Some(iterator_prototype));
+        let string_iterator_prototype = heap.new_object(Some(iterator_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
         // rather than in a builtin module because it is not reachable by name from any script:
         // its only appearances are as an accessor pair the specification puts in place.
@@ -195,6 +210,9 @@ impl Realm {
             string_prototype,
             symbol_prototype,
             well_known,
+            iterator_prototype,
+            array_iterator_prototype,
+            string_iterator_prototype,
             thrower,
             native_error_prototypes,
         };
@@ -267,6 +285,21 @@ impl Realm {
     /// %ThrowTypeError% — the function that throws whatever it is asked.
     pub fn thrower(&self) -> ObjectId {
         self.thrower
+    }
+
+    /// %IteratorPrototype% — what every iterator in the realm inherits from.
+    pub fn iterator_prototype(&self) -> ObjectId {
+        self.iterator_prototype
+    }
+
+    /// %ArrayIteratorPrototype% — §23.1.5.2.
+    pub fn array_iterator_prototype(&self) -> ObjectId {
+        self.array_iterator_prototype
+    }
+
+    /// %StringIteratorPrototype% — §22.1.5.2.
+    pub fn string_iterator_prototype(&self) -> ObjectId {
+        self.string_iterator_prototype
     }
 
     /// The well-known Symbol at this position in [`crate::builtins::WELL_KNOWN`].

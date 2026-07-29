@@ -20,8 +20,9 @@ pub mod array_iterate;
 pub mod array_methods;
 pub mod error;
 pub mod function;
+pub mod iterator;
 mod math;
-pub mod object;
+mod object;
 mod object_state;
 mod symbol;
 pub use self::symbol::WELL_KNOWN;
@@ -61,6 +62,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     function::install(heap, realm, global);
     math::install(heap, realm, global);
     wrapper::install(heap, realm, global);
+    iterator::install(heap, realm);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }
@@ -219,4 +221,74 @@ pub(crate) fn delete_or_throw(
         )),
         _ => Ok(()),
     }
+}
+
+/// Give an already-installed method a well-known Symbol as a second name.
+///
+/// §23.1.3.38 and its like say that `Array.prototype[@@iterator]` *is* `Array.prototype.values` —
+/// the same function object, so `===` finds them equal. Installing a second native with the same
+/// body would not satisfy that, which is why this copies the value across rather than defining
+/// another function.
+pub(crate) fn alias_to_symbol(
+    heap: &mut Heap,
+    realm: &Realm,
+    object: ObjectId,
+    from: &str,
+    symbol: &str,
+) {
+    let Some(value) = read_method(heap, object, from) else {
+        return;
+    };
+    define_under_symbol(heap, realm, object, symbol, value);
+}
+
+/// The same, but the String name is *removed* — the method only ever had a Symbol key.
+///
+/// §22.1.3.34's method has no String name at all: it is installed under one here because that is
+/// how [`define_method`] gives a function its `name` and `length`, and then the name is taken
+/// away. `String.prototype["[Symbol.iterator]"]` must not exist.
+pub(crate) fn move_to_symbol(
+    heap: &mut Heap,
+    realm: &Realm,
+    object: ObjectId,
+    from: &str,
+    symbol: &str,
+) {
+    alias_to_symbol(heap, realm, object, from, symbol);
+    let name = key(heap, from);
+    heap.delete_own_property(object, name);
+}
+
+/// The value of a method already installed under a String name.
+fn read_method(heap: &mut Heap, object: ObjectId, name: &str) -> Option<Value> {
+    let name = key(heap, name);
+    match heap.own_property(object, name)?.kind {
+        PropertyKind::Data { value, .. } => Some(value),
+        PropertyKind::Accessor { .. } => None,
+    }
+}
+
+/// Define `value` under a well-known Symbol, with §17's attributes for a method.
+fn define_under_symbol(
+    heap: &mut Heap,
+    realm: &Realm,
+    object: ObjectId,
+    symbol: &str,
+    value: Value,
+) {
+    let Some(found) = realm.well_known(well_known_at(symbol)) else {
+        return;
+    };
+    let name = PropertyKey::from_symbol(found);
+    let _ = heap.define_own_property(
+        object,
+        name,
+        &PropertyDescriptor {
+            value: Some(value),
+            writable: Some(true),
+            enumerable: Some(false),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        },
+    );
 }

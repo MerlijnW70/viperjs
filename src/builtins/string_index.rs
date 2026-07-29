@@ -261,3 +261,8 @@ pub(super) const METHODS: [(&str, u32, crate::heap::Native); 10] = [
     ("localeCompare", 1, locale_compare),
     ("startsWith", 1, starts_with),
 ];
+
+/// §22.1.3.34 `String.prototype[@@iterator]` — an iterator over the String's code points.
+pub(super) fn iterate(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    super::iterator::over_string(vm, heap, call)
+}
