@@ -103,6 +103,19 @@ pub enum Instruction {
     JumpIfTrue(u32),
     /// Discard the top value.
     Pop,
+    /// Push one of §6.1.5.1's well-known Symbols, by its position in the table.
+    ///
+    /// Not a constant, because a chunk outlives the realm it was compiled against: the same code
+    /// may run in two realms, and each has its own `Symbol.iterator`. Reading it from the realm at
+    /// the moment it is needed is what makes `for`-`of` reach the right one — and reading it from
+    /// the *realm* rather than from the `Symbol` object is what stops a script moving it.
+    LoadWellKnown(u32),
+    /// Throw a **TypeError** unless the value on top is an Object, and leave it there.
+    ///
+    /// §7.4.4 step 3 and §7.4.9 step 6. An iterator whose `next` answers a primitive would
+    /// otherwise have its `done` read off that primitive's prototype as `undefined` — falsy — and
+    /// the loop would never end. A check that turns a hang into an error.
+    RequireObject,
     /// §7.1.17 `ToString` of the value on top, replacing it.
     ///
     /// Not `+ ""`, and the difference is observable. Addition takes `ToPrimitive` with the
@@ -486,6 +499,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Binary(_)
         | Instruction::Pop
         | Instruction::Stringify
+        | Instruction::LoadWellKnown(_)
+        | Instruction::RequireObject
         | Instruction::LoadVariable(_, _)
         | Instruction::StoreVariable(_, _)
         | Instruction::Uninitialise(_)

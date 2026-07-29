@@ -237,6 +237,16 @@ struct Compiler<'a> {
     /// A `break` may not jump past a `finally`, and this is what tells the two cases apart: a
     /// loop opened inside the `try` has a greater depth than the number recorded here.
     finally_guards: Vec<usize>,
+    /// The iterator slot of each `for`-`of` currently being compiled, innermost last.
+    ///
+    /// §7.4.9 `IteratorClose` has to run on every way out of the loop that is not the iterator
+    /// saying it is done — a `break`, a `return`, a labelled break crossing this loop. The
+    /// compiler is the only thing that knows where those jumps are, so it emits the closing
+    /// before each of them, and this is how it knows which iterators are still open.
+    ///
+    /// Parallel to `breaks`, so a labelled break can tell how many loops it crosses and close
+    /// exactly those.
+    closes: Vec<u32>,
 }
 
 impl<'a> Compiler<'a> {
@@ -254,6 +264,7 @@ impl<'a> Compiler<'a> {
             hoisted: Vec::new(),
             labels: Vec::new(),
             finally_guards: Vec::new(),
+            closes: Vec::new(),
             high_water: 0,
             depth: 0,
             outer: Vec::new(),

@@ -111,7 +111,7 @@ impl Compiler<'_> {
                 // §14.7.5.7 drives an iterator, which needs `Symbol.iterator` and the protocol
                 // around it. Named apart from `for`-`in` so the conformance buckets say which of
                 // the two is being waited on.
-                ForInOfKind::Of => Err(unsupported("for-of", span)),
+                ForInOfKind::Of => self.for_of_statement(statement, span),
             },
             // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
             StmtKind::Labelled(statement) => self.labelled_statement(statement, span),
@@ -136,6 +136,14 @@ impl Compiler<'_> {
                 match argument {
                     Some(argument) => self.expression(argument)?,
                     None => self.constant(Value::Undefined)?,
+                }
+                // §7.4.9 — a `return` leaves *every* enclosing `for`-`of`, so each of their
+                // iterators is told, innermost first. The value is already on the stack and the
+                // closing is stack-balanced, so it is still there afterwards — and if a `return`
+                // method throws, that throw wins over the return, which is step 7.
+                for at in (0..self.closes.len()).rev() {
+                    let iterator = self.closes[at];
+                    self.emit_close(iterator, Check::Yes)?;
                 }
                 self.chunk.emit(Instruction::Return);
                 Ok(())
@@ -348,6 +356,165 @@ impl Compiler<'_> {
             Ok(top)
         })?;
         self.chunk.patch(out)
+    }
+
+    /// §14.7.5.7 — `for`-`of`, which drives an iterator rather than walking a list of keys.
+    ///
+    /// The difference from `for`-`in` is not the shape of the loop; it is that every step runs
+    /// user code. `next` may throw, may answer something that is not an object, and may have side
+    /// effects — so the loop is compiled out of ordinary calls and property reads rather than out
+    /// of an instruction that walks something the engine already holds.
+    fn for_of_statement(
+        &mut self,
+        statement: &ForInOfStatement,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let mark = self.enter_scope();
+        self.loop_marks.push(mark);
+        let compiled = self.for_of_parts(statement, span);
+        self.loop_marks.pop();
+        self.leave_scope(mark);
+        compiled
+    }
+
+    /// The rest of `for`-`of`, once its scope has been opened.
+    fn for_of_parts(
+        &mut self,
+        statement: &ForInOfStatement,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let iterator = self.declare_hidden("iterator");
+        let next = self.declare_hidden("next");
+        let current = self.declare_hidden("current");
+
+        // §7.4.2 `GetIterator` — ask the iterable for its iterator, then read `next` **once**.
+        // The handler goes on *after* the iterator exists, because a throw from the head has no
+        // iterator to close — and comes off at every deliberate way out, which is why `break`
+        // lands past it and `return` unwinds the frame that holds it.
+        // Reading it once is observable: a `next` replaced on the iterator part-way through the
+        // loop is not the one the rest of the loop calls.
+        self.expression(&statement.right)?;
+        self.chunk.emit(Instruction::Duplicate);
+        self.chunk
+            .emit(Instruction::LoadWellKnown(well_known("iterator")));
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::CallMethod(0));
+        // Step 5 — what came back must be an object, or the loop would read `next` off a
+        // primitive's prototype and call something that was never there.
+        self.chunk.emit(Instruction::RequireObject);
+        self.chunk.emit(Instruction::StoreVariable(0, iterator));
+        let name = self.name_of("next");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::StoreVariable(0, next));
+        self.chunk.emit(Instruction::Pop);
+
+        let binding = self.for_in_binding(&statement.left, span)?;
+
+        // §7.4.9 again, for the way out nothing can jump to: a throw from the body, or from
+        // `next` itself. The handler closes the iterator and throws the same thing onward — and
+        // does not look at what `return` answered, because step 5 has already decided.
+        let unwind = self.chunk.emit_jump(Instruction::PushHandler);
+
+        let top = self.here()?;
+        // §7.4.5 `IteratorStep` — `next.call(iterator)`, and the result must be an object.
+        self.chunk.emit(Instruction::LoadVariable(0, iterator));
+        self.chunk.emit(Instruction::LoadVariable(0, next));
+        self.chunk.emit(Instruction::CallMethod(0));
+        self.chunk.emit(Instruction::RequireObject);
+        self.chunk.emit(Instruction::Duplicate);
+        let name = self.name_of("done");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        // `ToBoolean` of it, which is what the jump already does — §7.4.5 step 4 asks whether it
+        // is truthy and not whether it is `true`.
+        //
+        // Jumping on *false* rather than on true, so that the result object is dropped before the
+        // loop can be left. A `break` lands where the done path lands, and the two have to agree
+        // about what is on the stack — leaving the result there for the done path to pop made a
+        // `break` pop something that was never pushed.
+        let going = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.chunk.emit(Instruction::Pop);
+        let out = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(going)?;
+        let name = self.name_of("value");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::StoreVariable(0, current));
+        self.chunk.emit(Instruction::Pop);
+
+        self.assign_enumerated(&statement.left, binding, current, span)?;
+        self.closes.push(iterator);
+        let body = self.loop_body(&statement.body, |compiler| {
+            compiler.chunk.emit(Instruction::Jump(top));
+            Ok(top)
+        });
+        self.closes.pop();
+        body?;
+        // Every `break` arrives here having already taken the handler down and closed for itself,
+        // so this is the *done* path's business alone.
+        let past = self.chunk.emit_jump(Instruction::Jump);
+
+        // An iterator that has said it is done needs no closing — §7.4.5 is explicit that a done
+        // iterator is already finished with, and this is where both ways out arrive.
+        self.chunk.patch(out)?;
+        self.chunk.emit(Instruction::PopHandler);
+        let leaving = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(unwind)?;
+        let thrown = self.declare_hidden("thrown");
+        self.chunk.emit(Instruction::StoreVariable(0, thrown));
+        self.chunk.emit(Instruction::Pop);
+        self.emit_close(iterator, Check::No)?;
+        self.chunk.emit(Instruction::LoadVariable(0, thrown));
+        self.chunk.emit(Instruction::Throw);
+        self.chunk.patch(past)?;
+        self.chunk.patch(leaving)
+    }
+
+    /// §7.4.9 `IteratorClose` — tell an iterator the loop is leaving early.
+    ///
+    /// Emitted before every jump that leaves a `for`-`of` from inside it: a `break`, a labelled
+    /// one crossing this loop, and a `return`. Not before a `continue`, which stays in the loop
+    /// and has nothing to tell it.
+    ///
+    /// An iterator with no `return` is simply left; one that has it gets it called and the answer
+    /// checked. §7.4.9 step 6 makes a non-object answer a **TypeError**, which is the one way
+    /// closing an iterator can fail for a reason of its own.
+    fn emit_close(&mut self, iterator: u32, check: Check) -> Result<(), CompileError> {
+        // A deliberate exit is leaving the loop, so its handler comes down *first*. Left armed,
+        // it would catch a `return` method that threw and close the same iterator a second time —
+        // which is one call too many and is observable.
+        if check == Check::Yes {
+            self.chunk.emit(Instruction::PopHandler);
+        }
+        self.chunk.emit(Instruction::LoadVariable(0, iterator));
+        self.chunk.emit(Instruction::Duplicate);
+        let name = self.name_of("return");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::Duplicate);
+        // `undefined` and `null` are both falsy and both mean "there is nothing to call", which
+        // is exactly the pair step 4 tests for.
+        let absent = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.chunk.emit(Instruction::CallMethod(0));
+        // §7.4.9 step 5 answers a throw completion *before* it looks at what `return` gave back,
+        // so on the way out of a throw the answer is not examined at all. Only a deliberate exit
+        // checks it.
+        if check == Check::Yes {
+            self.chunk.emit(Instruction::RequireObject);
+        }
+        self.chunk.emit(Instruction::Pop);
+        let done = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(absent)?;
+        // The receiver and the absent method are still there; neither is wanted.
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.patch(done)
+    }
+
+    /// The interned name of a property this compiler emits for itself.
+    fn name_of(&mut self, name: &str) -> crate::heap::StringId {
+        self.heap.intern(&name.encode_utf16().collect::<Vec<_>>())
     }
 
     /// Make the head's binding, if the head declares one, and answer where it lives.
@@ -591,7 +758,7 @@ impl Compiler<'_> {
         // one when the names differ.
         let breakable = matches!(
             statement.body.kind,
-            StmtKind::While(_) | StmtKind::DoWhile(_) | StmtKind::For(_)
+            StmtKind::While(_) | StmtKind::DoWhile(_) | StmtKind::For(_) | StmtKind::ForInOf(_)
         );
         if !breakable {
             // `outer: { break outer; }` is legal and needs a break target with no loop under it.
@@ -634,6 +801,15 @@ impl Compiler<'_> {
                 "break or continue out of a try with a finally",
                 span,
             ));
+        }
+        // §7.4.9 — a labelled jump may cross several loops, and every `for`-`of` it leaves has
+        // to be told, innermost first. `depth` is the index of the target loop's break list, so
+        // the loops being left are the ones at that index and above — and a `continue` stays
+        // inside the target, so it leaves one fewer.
+        let staying = usize::from(!leaving);
+        for at in (depth + staying..self.closes.len()).rev() {
+            let iterator = self.closes[at];
+            self.emit_close(iterator, Check::Yes)?;
         }
         // No "is there a list" check, because there always is: [`Compiler::labelled_statement`]
         // records a label only for a loop, and a loop pushes both lists before its body is
@@ -680,6 +856,12 @@ impl Compiler<'_> {
                 "break or continue out of a try with a finally",
                 span,
             ));
+        }
+        // §7.4.9 — a `break` leaves the innermost loop, so an iterator it was driving has to be
+        // told. A `continue` stays in the loop and has nothing to tell it.
+        if leaving && self.closes.len() == self.breaks.len() {
+            let iterator = self.closes[self.closes.len() - 1];
+            self.emit_close(iterator, Check::Yes)?;
         }
         let jump = self.chunk.emit_jump(Instruction::Jump);
         let pending = if leaving {
@@ -865,4 +1047,18 @@ impl Compiler<'_> {
         }
         Ok(())
     }
+}
+
+/// Where a well-known Symbol sits in the realm's table — see `crate::builtins::well_known_at`.
+fn well_known(name: &str) -> u32 {
+    u32::try_from(crate::builtins::well_known_at(name)).unwrap_or(u32::MAX)
+}
+
+/// Whether an `IteratorClose` looks at what `return` answered — §7.4.9 steps 5 and 6.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Check {
+    /// A deliberate exit: a non-object answer is a TypeError.
+    Yes,
+    /// On the way out of a throw, where step 5 has already decided what the answer is.
+    No,
 }

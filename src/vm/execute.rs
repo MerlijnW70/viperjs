@@ -127,6 +127,22 @@ impl Vm {
                 Instruction::Pop => {
                     self.pop()?;
                 }
+                Instruction::LoadWellKnown(at) => {
+                    let Some(symbol) = self.realm.well_known(at as usize) else {
+                        return Err(Fault::MissingConstant);
+                    };
+                    self.stack.push(Value::Symbol(symbol));
+                }
+                Instruction::RequireObject => {
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    if !matches!(value, Value::Object(_)) {
+                        let thrown = Err(Abrupt::type_error("an iterator must answer an object"));
+                        match self.settle(thrown, heap, root, current, at)? {
+                            Some(value) => self.stack.push(value),
+                            None => continue,
+                        }
+                    }
+                }
                 Instruction::Stringify => {
                     let value = self.pop()?;
                     // May run user code — a `toString` on the value — and so may throw or unwind,

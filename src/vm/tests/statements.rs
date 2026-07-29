@@ -146,7 +146,7 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
         ),
         ("function* g() {}", "an async function or a generator"),
         ("try { } catch ([a]) { }", "a destructuring catch parameter"),
-        ("for (var k of []) ;", "for-of"),
+        ("for (var [a] of []) ;", "a destructuring binding"),
         ("var [a] = 1;", "a destructuring binding"),
         (
             "outer: { break outer; }",
