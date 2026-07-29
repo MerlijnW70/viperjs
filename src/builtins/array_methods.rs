@@ -22,7 +22,7 @@ use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
-use super::{define_method, key};
+use super::{define_method, delete_or_throw, key, set_or_throw};
 
 /// §7.3.18 `LengthOfArrayLike` — the `length` of anything, as a count.
 ///
@@ -219,14 +219,14 @@ pub fn push(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     let mut length = length_of(vm, heap, object)?;
     for value in call.arguments {
         let name = index_key(heap, length);
-        vm.set_property_key(Value::Object(object), name, *value, heap)?;
+        set_or_throw(vm, heap, object, name, *value)?;
         length += 1;
     }
     // §23.1.3.23 step 5 sets `length` even on a plain object, which is what makes `push` work on
     // an array-like and leave a `length` behind that was not there before.
     let name = key(heap, "length");
     let count = Value::Number(length as f64);
-    vm.set_property_key(Value::Object(object), name, count, heap)?;
+    set_or_throw(vm, heap, object, name, count)?;
     Ok(count)
 }
 
@@ -238,18 +238,13 @@ pub fn pop(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     // Step 3 — an empty array's `length` is still *written*, which matters for an array-like
     // whose `length` was a string: `pop` leaves it a number.
     let Some(last) = length.checked_sub(1) else {
-        vm.set_property_key(Value::Object(object), name, Value::Number(0.0), heap)?;
+        set_or_throw(vm, heap, object, name, Value::Number(0.0))?;
         return Ok(Value::Undefined);
     };
     let element = get_index(vm, heap, object, last)?;
     let index = index_key(heap, last);
-    vm.delete_property_key(Value::Object(object), index, heap)?;
-    vm.set_property_key(
-        Value::Object(object),
-        name,
-        Value::Number(last as f64),
-        heap,
-    )?;
+    delete_or_throw(vm, heap, object, index)?;
+    set_or_throw(vm, heap, object, name, Value::Number(last as f64))?;
     Ok(element)
 }
 
@@ -390,7 +385,7 @@ pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     // would not do.
     let name = key(heap, "length");
     let count = Value::Number(at as f64);
-    vm.set_property_key(Value::Object(taken), name, count, heap)?;
+    set_or_throw(vm, heap, taken, name, count)?;
     Ok(Value::Object(taken))
 }
 

@@ -11,21 +11,20 @@
 //! has one after `reverse`, in the mirrored place. Filling them in would be easier and would make
 //! `1 in a` answer differently, which is exactly the difference a hole exists to record.
 
-use crate::heap::{Heap, NativeCall, ObjectId};
-use crate::value::{Abrupt, Completion, Value};
-use crate::vm::Vm;
-
 use super::array_methods::{
     fits, get_index, has_index, index_key, length_of, set_index, spliced_length, start_index,
     this_object,
 };
-use super::key;
+use super::{delete_or_throw, key, set_or_throw};
+use crate::heap::{Heap, NativeCall, ObjectId};
+use crate::value::{Abrupt, Completion, Value};
+use crate::vm::Vm;
 
 /// Write `length` back, which every method here does for itself.
 fn write_length(vm: &mut Vm, heap: &mut Heap, object: ObjectId, length: u64) -> Completion<()> {
     let name = key(heap, "length");
     let count = Value::Number(length as f64);
-    vm.set_property_key(Value::Object(object), name, count, heap)?;
+    set_or_throw(vm, heap, object, name, count)?;
     Ok(())
 }
 
@@ -41,12 +40,12 @@ fn move_index(
     match has_index(vm, heap, object, from)? {
         true => {
             let element = get_index(vm, heap, object, from)?;
-            vm.set_property_key(Value::Object(object), target, element, heap)?;
+            set_or_throw(vm, heap, object, target, element)?;
         }
         // The hole travels with the element, which is what keeps `1 in a` answering the same
         // thing before and after.
         false => {
-            vm.delete_property_key(Value::Object(object), target, heap)?;
+            delete_or_throw(vm, heap, object, target)?;
         }
     }
     Ok(())
@@ -65,7 +64,7 @@ pub fn shift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         move_index(vm, heap, object, index, index - 1)?;
     }
     let end = index_key(heap, last);
-    vm.delete_property_key(Value::Object(object), end, heap)?;
+    delete_or_throw(vm, heap, object, end)?;
     write_length(vm, heap, object, last)?;
     Ok(first)
 }
@@ -96,7 +95,7 @@ pub fn unshift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
         }
         for (at, value) in call.arguments.iter().enumerate() {
             let name = index_key(heap, at as u64);
-            vm.set_property_key(Value::Object(object), name, *value, heap)?;
+            set_or_throw(vm, heap, object, name, *value)?;
         }
     }
     let grown = length + added;
@@ -201,14 +200,14 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     }
     for (at, value) in call.arguments.iter().skip(2).enumerate() {
         let name = index_key(heap, start + at as u64);
-        vm.set_property_key(Value::Object(object), name, *value, heap)?;
+        set_or_throw(vm, heap, object, name, *value)?;
     }
     // A shortening leaves indices past the new end and a lengthening leaves none, so the range is
     // empty in the second case rather than needing to be guarded.
     let shortened = length - removed_count + inserted;
     for index in (shortened..length).rev() {
         let name = index_key(heap, index);
-        vm.delete_property_key(Value::Object(object), name, heap)?;
+        delete_or_throw(vm, heap, object, name)?;
     }
     write_length(vm, heap, object, shortened)?;
     Ok(Value::Object(removed))
@@ -266,7 +265,7 @@ pub fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     };
     for index in from..to.max(from) {
         let name = index_key(heap, index);
-        vm.set_property_key(Value::Object(object), name, value, heap)?;
+        set_or_throw(vm, heap, object, name, value)?;
     }
     Ok(Value::Object(object))
 }

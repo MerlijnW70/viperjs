@@ -22,6 +22,7 @@ pub mod error;
 pub mod function;
 mod math;
 pub mod object;
+mod object_state;
 mod string;
 mod string_edit;
 mod string_index;
@@ -29,7 +30,8 @@ mod wrapper;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::realm::Realm;
-use crate::value::Value;
+use crate::value::{Abrupt, Completion, Value};
+use crate::vm::Vm;
 
 /// Build every built-in into `heap`, on the realm's global object.
 pub fn install(heap: &mut Heap, realm: &Realm) {
@@ -163,5 +165,41 @@ pub(crate) fn own_value(heap: &Heap, object: ObjectId, name: &str) -> Option<Val
     match heap.object(object)?.get_own_property(key)?.kind {
         PropertyKind::Data { value, .. } => Some(value),
         PropertyKind::Accessor { .. } => None,
+    }
+}
+
+/// `Set(O, key, value, true)` (§7.3.4) — the throwing form, which is the one §23.1.3 uses.
+///
+/// `[[Set]]` answers whether it was allowed and sloppy code throws that answer away; every Array
+/// method instead passes `true` for `Throw`, so a refusal becomes a TypeError. It is the whole
+/// difference between `Object.freeze(a); a[0] = 1` (silent) and `Object.freeze(a); a.push(1)`
+/// (an error), and the reason it is a function is that there are twenty places to get it right.
+pub(crate) fn set_or_throw(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    key: PropertyKey,
+    value: Value,
+) -> Completion<()> {
+    match vm.set_property_key(Value::Object(object), key, value, heap)? {
+        Value::Boolean(false) => Err(Abrupt::type_error(
+            "this property cannot be set on this object",
+        )),
+        _ => Ok(()),
+    }
+}
+
+/// `DeletePropertyOrThrow` (§7.3.9) — the same rule for a delete.
+pub(crate) fn delete_or_throw(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    key: PropertyKey,
+) -> Completion<()> {
+    match vm.delete_property_key(Value::Object(object), key, heap)? {
+        Value::Boolean(false) => Err(Abrupt::type_error(
+            "this property cannot be deleted from this object",
+        )),
+        _ => Ok(()),
     }
 }

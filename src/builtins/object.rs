@@ -102,8 +102,8 @@ pub fn has_own_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) ->
 }
 
 /// §20.1.2.13 `Object.hasOwn(o, key)` — the same question without borrowing a method.
-pub fn has_own(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = to_object(call.argument(0), "Object.hasOwn requires an object")?;
+pub fn has_own(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = coerced(vm, heap, call.argument(0))?;
     let key = property_key(heap, call.argument(1))?;
     Ok(Value::Boolean(own_property(heap, object, key).is_some()))
 }
@@ -146,8 +146,8 @@ pub fn is_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
 }
 
 /// §20.1.2.12 `Object.getPrototypeOf`.
-pub fn get_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = to_object(call.argument(0), "Object.getPrototypeOf requires an object")?;
+pub fn get_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = coerced(vm, heap, call.argument(0))?;
     Ok(
         match heap.object(object).and_then(|found| found.prototype()) {
             Some(prototype) => Value::Object(prototype),
@@ -207,17 +207,14 @@ pub fn get_own_property_descriptor(
     heap: &mut Heap,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
-    let object = to_object(
-        call.argument(0),
-        "Object.getOwnPropertyDescriptor requires an object",
-    )?;
+    let object = coerced(vm, heap, call.argument(0))?;
     let key = property_key(heap, call.argument(1))?;
     // §6.2.6.4 — a property that is not there is `undefined`, not an empty descriptor, which is
     // how a caller tells "absent" from "present and undefined".
     let Some(property) = own_property(heap, object, key) else {
         return Ok(Value::Undefined);
     };
-    Ok(from_property_descriptor(heap, &vm.realm(), property))
+    Ok(describe(heap, &vm.realm(), property))
 }
 
 /// §20.1.2.17 `Object.keys` — own, enumerable, string-keyed, in creation order.
@@ -307,6 +304,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     ] {
         define_method(heap, realm, function, name, length, native);
     }
+    super::object_state::install(heap, realm, function);
 }
 
 /// §20.1.2.3.1 `ObjectDefineProperties` — every own enumerable key of `properties`, in order.
@@ -349,7 +347,7 @@ fn own_keys(
     call: &NativeCall<'_>,
     enumerable_only: bool,
 ) -> Completion<Value> {
-    let object = to_object(call.argument(0), "this function requires an object")?;
+    let object = coerced(vm, heap, call.argument(0))?;
     let keys = heap.own_property_keys(object);
     let mut names = Vec::new();
     for key in keys {
@@ -450,7 +448,7 @@ fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyD
 /// partial descriptor is filled in, and it is what makes `getOwnPropertyDescriptor` answer
 /// `{value: 1, writable: false, enumerable: false, configurable: false}` for a property that was
 /// defined with `{value: 1}` alone.
-fn from_property_descriptor(heap: &mut Heap, realm: &Realm, property: Property) -> Value {
+pub(super) fn describe(heap: &mut Heap, realm: &Realm, property: Property) -> Value {
     let object = heap.new_object(Some(realm.object_prototype()));
     let put = |heap: &mut Heap, name: &str, value: Value| {
         let key = self::key(heap, name);
@@ -488,7 +486,23 @@ fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Completion<Object
 /// §7.1.18 wraps a primitive and refuses only `undefined` and `null`. There is nothing to wrap
 /// one in yet, so the two cases share a message — and the message is passed in, because "requires
 /// an object" is useless without saying what did.
-fn to_object(value: Value, wanted: &'static str) -> Completion<ObjectId> {
+pub(super) fn coerced(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<ObjectId> {
+    // §7.1.18 proper, which is not the same question as "is this an object". Most of §20.1.2's
+    // statics begin with `ToObject` and so answer about a *primitive* rather than refusing it:
+    // `Object.keys("ab")` is `["0", "1"]`, because the String object it stands for has those keys.
+    // Only `undefined` and `null` have no object, and that is where the TypeError comes from.
+    match vm.object_for(value, heap)? {
+        Value::Object(object) => Ok(object),
+        _ => Err(Abrupt::type_error("this value has no object to read")),
+    }
+}
+
+/// The object a static was handed, refusing anything that is not one already.
+///
+/// For the statics that say "if Type(O) is not Object, throw" rather than `ToObject` — the ones
+/// that would otherwise silently change a wrapper nobody else can see. `Object.defineProperty(1,
+/// …)` is a TypeError for that reason and `Object.keys(1)` is not.
+pub(super) fn to_object(value: Value, wanted: &'static str) -> Completion<ObjectId> {
     match value {
         Value::Object(object) => Ok(object),
         _ => Err(Abrupt::Raised(ErrorKind::Type, wanted)),
@@ -520,7 +534,7 @@ fn defined(outcome: DefineOutcome) -> Completion<()> {
 }
 
 /// An object's own property under `key`, if it has one.
-fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> Option<Property> {
+pub(super) fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> Option<Property> {
     // Through the heap rather than the object's own table, so that §10.4.4.1's substitution
     // happens: a joined argument index reports the *parameter's* value, which is what makes
     // `Object.getOwnPropertyDescriptor(arguments, '0')` follow an assignment to `a`.
@@ -531,4 +545,12 @@ fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> Option<Prope
 fn property_key(heap: &mut Heap, value: Value) -> Completion<PropertyKey> {
     let id = value.to_string(heap)?;
     Ok(PropertyKey::from_string(heap, id))
+}
+
+/// The own keys of `object`, as a list that borrows nothing.
+///
+/// Every listing needs this, and each would otherwise hold a borrow across the `[[Get]]` that
+/// follows — which can run a getter, which can change the object being listed.
+pub(super) fn keys_of(heap: &mut Heap, object: ObjectId) -> Vec<PropertyKey> {
+    heap.own_property_keys(object)
 }
