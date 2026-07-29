@@ -95,10 +95,17 @@ pub(crate) fn define_function_metadata(
     length: u32,
 ) {
     let named = text(heap, name);
-    for (key_name, value) in [
-        ("length", Value::Number(f64::from(length))),
-        ("name", named),
-    ] {
+    define_metadata(heap, function, Value::Number(f64::from(length)), named);
+}
+
+/// The same two properties, for a function whose length is arithmetic rather than a count.
+///
+/// §20.2.3.2 makes a bound function's `length` what is *left* after the arguments it was given,
+/// which is a computed Number and not one the specification writes down. The attributes are the
+/// same, and are written here once rather than beside each caller — three booleans repeated are
+/// three booleans that can disagree, and the copy nothing reads is the one that will.
+pub(crate) fn define_metadata(heap: &mut Heap, function: ObjectId, length: Value, name: Value) {
+    for (key_name, value) in [("length", length), ("name", name)] {
         let key = key(heap, key_name);
         let descriptor = PropertyDescriptor {
             value: Some(value),

@@ -11,12 +11,12 @@
 //! `bind` makes a *new function object* with its own internal slots, which is a different thing
 //! and belongs with whatever else needs one.
 
-use crate::heap::{Heap, NativeCall, ObjectId, PropertyKey};
+use crate::heap::{Bound, Heap, NativeCall, Object, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
-use super::{define_method, key};
+use super::{define_method, define_value, key};
 
 /// §20.2.3.3 `Function.prototype.call`.
 ///
@@ -66,9 +66,112 @@ fn list_from(vm: &mut Vm, heap: &mut Heap, list: Value) -> Completion<Vec<Value>
     Ok(arguments)
 }
 
-/// Build `Function.prototype`'s methods into `heap`.
-pub fn install(heap: &mut Heap, realm: &Realm, _global: ObjectId) {
+/// §20.2.3.2 `Function.prototype.bind`.
+///
+/// Answers a *new* function that calls this one with a receiver and some arguments already
+/// decided — §10.4.1's bound function exotic object, which is not a function of its own but a
+/// thing standing in front of one.
+///
+/// `length` and `name` are computed here rather than left off, because they are what a program
+/// reads to tell a bound function from what it was bound to: §20.2.3.2 steps 5 to 8 make the
+/// length what is *left* after the bound arguments, and the name the target's with `bound `
+/// written in front of it.
+pub fn bind(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::Object(target) = call.this_value else {
+        return Err(Abrupt::type_error("bind must be called on a function"));
+    };
+    if heap.object(target).and_then(Object::call).is_none() {
+        return Err(Abrupt::type_error("bind must be called on a function"));
+    }
+    let this_value = call.argument(0);
+    let arguments: Vec<Value> = call.arguments.iter().skip(1).copied().collect();
+    let taken = arguments.len();
+
+    let prototype = heap.object(target).and_then(Object::prototype);
+    let bound = heap.new_bound_function(
+        prototype,
+        Bound {
+            target,
+            this_value,
+            arguments,
+        },
+    );
+
+    // §20.2.3.2 steps 5 and 6 — the length is what a caller still has to supply, and it is only
+    // asked for when the target has one of its own. A target without `length` gives 0, which is
+    // what step 6.a says rather than a guess.
+    let length_key = key(heap, "length");
+    let remaining = match heap
+        .object(target)
+        .and_then(|found| found.get_own_property(length_key))
+    {
+        Some(property) => match property.kind {
+            crate::heap::PropertyKind::Data {
+                value: Value::Number(length),
+                ..
+            } => (length - taken as f64).max(0.0),
+            _ => 0.0,
+        },
+        None => 0.0,
+    };
+    // §20.2.3.2 step 8 — `bound ` in front of the target's name, and in front of nothing when the
+    // target has no name to speak of.
+    let name_key = key(heap, "name");
+    let target_name = match heap
+        .object(target)
+        .and_then(|found| found.get_own_property(name_key))
+    {
+        Some(property) => match property.kind {
+            crate::heap::PropertyKind::Data {
+                value: Value::String(name),
+                ..
+            } => String::from_utf16_lossy(heap.string(name).unwrap_or(&[])),
+            _ => String::new(),
+        },
+        None => String::new(),
+    };
+    let name = crate::builtins::text(heap, &format!("bound {target_name}"));
+    crate::builtins::define_metadata(heap, bound, Value::Number(remaining), name);
+    let _ = vm;
+    Ok(Value::Object(bound))
+}
+
+/// §20.2.1.1 `Function(...)` — building a function out of source text at run time.
+///
+/// Refused, and deliberately loudly. Everything else about `Function` is here: the object exists,
+/// `Function.prototype` is reachable through it, and `instanceof Function` works. What is missing
+/// is the part that compiles a String, which needs the parser and the compiler run from inside a
+/// built-in and a global scope to compile against — a slice of its own.
+///
+/// A TypeError rather than nothing, because the alternative to saying so is answering with a
+/// function that does not do what its source says.
+fn construct(_vm: &mut Vm, _heap: &mut Heap, _call: &NativeCall<'_>) -> Completion<Value> {
+    Err(Abrupt::type_error(
+        "building a function from source text is not implemented yet",
+    ))
+}
+
+/// Build `Function`, and `Function.prototype`'s methods, into `heap`.
+pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.function_prototype();
     define_method(heap, realm, prototype, "apply", 2, apply);
     define_method(heap, realm, prototype, "call", 1, call);
+    define_method(heap, realm, prototype, "bind", 1, bind);
+
+    // §20.2.2 — the constructor, and the `prototype` that every function in the realm already
+    // inherits from. Not writable, not enumerable and not configurable, for the reason
+    // `Object.prototype` is not: everything callable points at it.
+    let function = heap.new_native_function(prototype, construct);
+    crate::builtins::define_function_metadata(heap, function, "Function", 1);
+    let prototype_key = key(heap, "prototype");
+    let descriptor = PropertyDescriptor {
+        value: Some(Value::Object(prototype)),
+        writable: Some(false),
+        enumerable: Some(false),
+        configurable: Some(false),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(function, prototype_key, &descriptor);
+    define_value(heap, prototype, "constructor", Value::Object(function));
+    define_value(heap, global, "Function", Value::Object(function));
 }

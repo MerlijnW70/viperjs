@@ -38,6 +38,28 @@ pub enum Callable {
     Bytecode(Rc<Chunk>),
     /// A function written in Rust — §10.3's built-in function objects.
     Native(Native),
+    /// What `bind` made — §10.4.1's bound function exotic objects.
+    ///
+    /// Not a function of its own: it holds another one and calls it with a `this` and a list of
+    /// arguments decided when `bind` ran rather than when the call is made. §10.4.1.1's
+    /// `[[Call]]` prepends the arguments and *replaces* the receiver; §10.4.1.2's `[[Construct]]`
+    /// prepends the same arguments and does **not** replace anything, because `new` makes its own
+    /// receiver and a bound `this` has nothing to say about it.
+    ///
+    /// A third variant rather than a Rust closure, because a [`Native`] is a plain `fn` pointer
+    /// and has nowhere to keep the three things this needs.
+    Bound(Bound),
+}
+
+/// What a bound function was bound to — §10.4.1's three internal slots.
+#[derive(Debug, Clone)]
+pub struct Bound {
+    /// `[[BoundTargetFunction]]` — what is actually called.
+    pub target: ObjectId,
+    /// `[[BoundThis]]` — the receiver a call uses, and that `new` ignores.
+    pub this_value: Value,
+    /// `[[BoundArguments]]` — put in front of whatever the call supplies.
+    pub arguments: Vec<Value>,
 }
 
 /// A built-in's body.

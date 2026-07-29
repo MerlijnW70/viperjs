@@ -18,12 +18,14 @@
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
 //! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
 //! - `for_in` — §14.7.5's enumeration, and the shadowing that decides what it visits.
+//! - `bound` — §20.2's `Function`, and §10.4.1's bound functions.
 
 mod accessors;
 mod array_methods;
 mod array_more;
 mod arrays;
 mod arrows;
+mod bound;
 mod builtins;
 mod coercion;
 mod for_in;

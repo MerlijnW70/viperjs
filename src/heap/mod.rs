@@ -43,7 +43,7 @@ mod environment;
 mod object;
 mod property;
 
-pub use self::callable::{Callable, Native, NativeCall};
+pub use self::callable::{Bound, Callable, Native, NativeCall};
 
 /// What `[[DefineOwnProperty]]` came to.
 ///

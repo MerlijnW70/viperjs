@@ -65,10 +65,28 @@ impl Vm {
             )?;
             return Ok(());
         };
+        // §10.4.1 — a bound function is not a function of its own: it stands in front of another
+        // one with a receiver and some arguments already decided. Resolved here, before anything
+        // else, because what is actually being entered is the target.
+        if matches!(callable, Callable::Bound(_)) {
+            return self.enter_bound(
+                object,
+                how,
+                callee_at,
+                receiver_at,
+                count,
+                heap,
+                chunk,
+                current,
+                at,
+            );
+        }
         // §10.3.1 — a built-in's `[[Call]]` does no receiver substitution and pushes no frame.
         // It runs to completion and leaves one value where the callee and its arguments were,
         // which is why it is answered here rather than joining the machinery below.
         let body = match callable {
+            // Answered above; listed so that a third kind cannot arrive here unnoticed.
+            Callable::Bound(_) => return Err(Fault::MissingFunction),
             Callable::Native(native) => {
                 return self.enter_native(
                     native,
@@ -176,6 +194,104 @@ impl Vm {
         *at = 0;
         Ok(())
     }
+    /// Enter what a bound function stands in front of — §10.4.1.1 and §10.4.1.2.
+    ///
+    /// The chain is flattened rather than followed by recursing. `f.bind(a).bind(b)` is a bound
+    /// function whose target is a bound function, and a program may write as many of those as it
+    /// likes — so recursing here would put a Rust frame on the stack per `bind`, and DR-0002 does
+    /// not allow a script to decide how deep the Rust stack goes.
+    ///
+    /// Walking outwards, each binding's arguments go in *front* of the ones collected so far,
+    /// because the outermost `bind` is the one nearest the call. The receiver is the innermost
+    /// binding's, for the same reason in reverse: `f.bind(a).bind(b)` calls `f` with `a`, since
+    /// the second `bind` binds the already-bound function and §10.4.1.1 never looks past its own
+    /// target.
+    #[allow(clippy::too_many_arguments)] // the call's shape, threaded rather than shared
+    fn enter_bound(
+        &mut self,
+        bound: crate::heap::ObjectId,
+        how: Entry,
+        callee_at: usize,
+        receiver_at: usize,
+        count: usize,
+        heap: &mut Heap,
+        chunk: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let given: Vec<Value> = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
+        let mut prefix: Vec<Value> = Vec::new();
+        let mut receiver = Value::Undefined;
+        let mut target = bound;
+        // Bounded because a hand-built heap could point a bound function at itself; no `bind` can
+        // make such a cycle, since it binds a function that already exists.
+        for _ in 0..MAX_CALL_DEPTH {
+            let Some(Callable::Bound(binding)) =
+                heap.object(target).and_then(Object::call).cloned()
+            else {
+                let mut arguments = prefix;
+                arguments.extend_from_slice(&given);
+                return self.enter_flattened(
+                    target,
+                    receiver,
+                    &arguments,
+                    how,
+                    receiver_at,
+                    heap,
+                    chunk,
+                    current,
+                    at,
+                );
+            };
+            let mut ahead = binding.arguments;
+            ahead.extend_from_slice(&prefix);
+            prefix = ahead;
+            receiver = binding.this_value;
+            target = binding.target;
+        }
+        let thrown = self
+            .realm
+            .error(heap, NativeError::Range, "too much recursion");
+        self.unwind(thrown, chunk, current, at)?;
+        Ok(())
+    }
+
+    /// Call `target` with the receiver and arguments a chain of bindings settled on.
+    #[allow(clippy::too_many_arguments)] // as above
+    fn enter_flattened(
+        &mut self,
+        target: crate::heap::ObjectId,
+        receiver: Value,
+        arguments: &[Value],
+        how: Entry,
+        receiver_at: usize,
+        heap: &mut Heap,
+        chunk: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let Ok(count) = u32::try_from(arguments.len()) else {
+            let thrown = self
+                .realm
+                .error(heap, NativeError::Range, "too many arguments");
+            self.unwind(thrown, chunk, current, at)?;
+            return Ok(());
+        };
+        self.stack.truncate(receiver_at);
+        // §10.4.1.2 — `new` on a bound function constructs the *target*, and the bound `this` is
+        // not consulted at all: `new` makes its own receiver, so there is nothing for it to say.
+        let how = match how {
+            Entry::Construct => Entry::Construct,
+            _ => {
+                self.stack.push(receiver);
+                Entry::Method
+            }
+        };
+        self.stack.push(Value::Object(target));
+        self.stack.extend_from_slice(arguments);
+        self.enter(how, count, heap, chunk, current, at)
+    }
+
     /// Run a built-in and leave its answer where the call was — §10.3.1 and §10.3.2.
     ///
     /// Nothing is suspended. A built-in is Rust: it runs, it answers, and the interpreter carries

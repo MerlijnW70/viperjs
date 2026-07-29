@@ -33,7 +33,8 @@
 use crate::compile::Chunk;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::{
-    Callable, DefineOutcome, EnvironmentId, Heap, Native, Property, PropertyDescriptor, PropertyKey,
+    Bound, Callable, DefineOutcome, EnvironmentId, Heap, Native, Property, PropertyDescriptor,
+    PropertyKey,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -343,6 +344,21 @@ impl Heap {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Native(native));
+        self.objects.push(Some(object));
+        id
+    }
+
+    /// Put a bound function on the heap — `BoundFunctionCreate` (§10.4.1.3).
+    ///
+    /// Its prototype is the *target's*, not `Function.prototype`: §10.4.1.3 step 1 takes it from
+    /// the function being bound, so `f.bind(o)` inherits from whatever `f` did.
+    ///
+    /// No environment and no code of its own. A bound function has nothing to close over — what
+    /// it holds is another function and the two things a call to it is already decided about.
+    pub fn new_bound_function(&mut self, prototype: Option<ObjectId>, bound: Bound) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(prototype);
+        object.call = Some(Callable::Bound(bound));
         self.objects.push(Some(object));
         id
     }
