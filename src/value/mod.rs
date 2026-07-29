@@ -73,6 +73,7 @@ mod operators;
 mod relations;
 mod string_to_number;
 
+pub(crate) use self::operators::exponentiate;
 pub use self::operators::{apply_binary, is_loosely_equal};
 
 use self::number_to_string::number_to_string;

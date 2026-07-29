@@ -19,6 +19,7 @@
 //! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
 //! - `for_in` — §14.7.5's enumeration, and the shadowing that decides what it visits.
 //! - `bound` — §20.2's `Function`, and §10.4.1's bound functions.
+//! - `math` — §21.3, and the four places it is not what a CPU does.
 
 mod accessors;
 mod array_methods;
@@ -31,6 +32,7 @@ mod coercion;
 mod for_in;
 mod functions;
 mod lexical;
+mod math;
 mod objects;
 mod objects_builtin;
 mod statements;

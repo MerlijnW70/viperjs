@@ -20,6 +20,7 @@ pub mod array_iterate;
 pub mod array_methods;
 pub mod error;
 pub mod function;
+mod math;
 pub mod object;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
@@ -36,6 +37,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     array::install(heap, realm, global);
     array_methods::install(heap, realm);
     function::install(heap, realm, global);
+    math::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.

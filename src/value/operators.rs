@@ -154,7 +154,7 @@ fn add(left: Value, right: Value, heap: &mut Heap) -> Completion<Value> {
 /// by one representable step each: `1e21 ** 10` and `1e-7 ** 9`. Both are conformant. Chasing
 /// the last bit would mean writing a correctly rounded `pow`, which is a large piece of numerical
 /// work in exchange for agreeing with one engine about a value the language leaves open.
-fn exponentiate(base: f64, exponent: f64) -> f64 {
+pub(crate) fn exponentiate(base: f64, exponent: f64) -> f64 {
     // Step 1 — a NaN exponent is NaN, before the base is looked at. This is the guard that makes
     // `1 ** NaN` NaN.
     if exponent.is_nan() {
