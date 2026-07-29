@@ -103,6 +103,14 @@ pub enum Instruction {
     JumpIfTrue(u32),
     /// Discard the top value.
     Pop,
+    /// §7.1.17 `ToString` of the value on top, replacing it.
+    ///
+    /// Not `+ ""`, and the difference is observable. Addition takes `ToPrimitive` with the
+    /// *default* hint, so an object with a `valueOf` answers through that; `ToString` uses the
+    /// **string** hint and reaches `toString` first. A template substitution is specified as
+    /// `ToString` (§13.2.8.6), so an object with both methods stringifies differently inside a
+    /// template than beside a `+`, and no arrangement of existing instructions says that.
+    Stringify,
     /// Push the value of a variable: this many environments out, at this index.
     ///
     /// One instruction rather than one per scope kind. The compiler built the chain of scopes, so
@@ -477,6 +485,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Unary(_)
         | Instruction::Binary(_)
         | Instruction::Pop
+        | Instruction::Stringify
         | Instruction::LoadVariable(_, _)
         | Instruction::StoreVariable(_, _)
         | Instruction::Uninitialise(_)

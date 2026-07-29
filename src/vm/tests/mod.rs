@@ -22,6 +22,7 @@
 //! - `parameters` — §15.1, and the three things a list that is not simple decides.
 //! - `strings` — §22.1 and §10.4.3, and the object with a property per character.
 //! - `symbols` — §6.1.5 and §20.4, and the one primitive whose identity is itself.
+//! - `templates` — §13.2.8, and the conversion a substitution gets that `+` does not.
 //! - `string_methods` — the rest of §22.1.3, and the four rules for taking a piece of a string.
 //! - `arguments` — §10.4.4, and the map that makes an index and a parameter one variable.
 //! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
@@ -51,6 +52,7 @@ mod statements;
 mod string_methods;
 mod strings;
 mod symbols;
+mod templates;
 mod values;
 mod wrapper;
 

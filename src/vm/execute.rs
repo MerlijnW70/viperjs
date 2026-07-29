@@ -127,6 +127,17 @@ impl Vm {
                 Instruction::Pop => {
                     self.pop()?;
                 }
+                Instruction::Stringify => {
+                    let value = self.pop()?;
+                    // May run user code — a `toString` on the value — and so may throw or unwind,
+                    // which is why it goes through `settle` like a call rather than being a
+                    // conversion done in place.
+                    let text = self.to_string(value, heap).map(Value::String);
+                    match self.settle(text, heap, root, current, at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
                 Instruction::LoadVariable(depth, index) => {
                     let slot = heap
                         .environment_at(self.environment, depth)

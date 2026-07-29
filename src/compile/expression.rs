@@ -13,7 +13,8 @@ use crate::ast::MethodKind;
 use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
     Argument, AssignmentOperator, AssignmentTarget, BinaryOperator, Expr, ExprKind,
-    LogicalOperator, PropertyDefinition, UnaryOperator, UpdateOperator,
+    LogicalOperator, PropertyDefinition, TemplateElement, TemplateLiteral, UnaryOperator,
+    UpdateOperator,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -299,7 +300,7 @@ impl Compiler<'_> {
             // §15.3 — an arrow, which is a function expression that keeps the `this` around it.
             ExprKind::Arrow(arrow) => self.make_arrow(arrow, span),
             ExprKind::Class(_) => Err(unsupported("a class expression", span)),
-            ExprKind::Template(_) => Err(unsupported("a template literal", span)),
+            ExprKind::Template(template) => self.template(template),
             ExprKind::TaggedTemplate { .. } => Err(unsupported("a tagged template", span)),
             ExprKind::RegExp(_) => Err(unsupported("a regular expression literal", span)),
             ExprKind::Await(_) => Err(unsupported("await", span)),
@@ -574,6 +575,48 @@ impl Compiler<'_> {
     }
 
     /// Emit a constant and the instruction that pushes it.
+    /// §13.2.8.6 — a template literal, which is its pieces joined in the order they are written.
+    ///
+    /// Each substitution is `ToString`ed the moment it is evaluated, not at the end. That ordering
+    /// is observable: a `toString` that throws must do so before the *next* substitution is
+    /// evaluated, and one with a side effect must see only what came before it.
+    ///
+    /// `ToString` and not `+ ""`, which is the other thing that looks like it would work. Addition
+    /// asks an object with the default hint and reaches `valueOf`; a template asks with the string
+    /// hint and reaches `toString`. An object with both answers differently in the two places, and
+    /// that is a difference the specification means.
+    ///
+    /// The cooked strings are joined with `+` rather than through a second `ToString`, because
+    /// they are Strings already and adding two Strings is exact concatenation.
+    fn template(&mut self, template: &TemplateLiteral) -> Result<(), CompileError> {
+        let mut quasis = template.quasis.iter();
+        // A template always has one more component than it has substitutions, so the first is
+        // there even when the template is empty — `` is one empty component and no substitutions.
+        self.cooked(quasis.next())?;
+        for expression in template.expressions.iter() {
+            self.expression(expression)?;
+            self.chunk.emit(Instruction::Stringify);
+            self.chunk.emit(Instruction::Binary(BinaryOperator::Add));
+            self.cooked(quasis.next())?;
+            self.chunk.emit(Instruction::Binary(BinaryOperator::Add));
+        }
+        Ok(())
+    }
+
+    /// Push one cooked component of a template, or the empty String if it has none.
+    ///
+    /// A component with no cooked value holds a `NotEscapeSequence`, which §13.2.8.1 permits only
+    /// in a *tagged* template — where the tag may read the raw text instead. An untagged one with
+    /// such a component is a SyntaxError the parser raises, so reaching here with `None` would
+    /// mean a tree no source can produce; the empty String is what that would have joined to.
+    fn cooked(&mut self, element: Option<&TemplateElement>) -> Result<(), CompileError> {
+        let units = element
+            .and_then(|found| found.cooked.as_deref())
+            .unwrap_or(&[]);
+        let id = self.heap.intern(units);
+        self.constant(Value::String(id))
+    }
+
     pub(super) fn constant(&mut self, value: Value) -> Result<(), CompileError> {
         let index = self.chunk.add_constant(value)?;
         self.chunk.emit(Instruction::Constant(index));
