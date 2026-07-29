@@ -121,10 +121,28 @@ a commit, and none may cost a single conformance test.
 
 ## Start here
 
-M1 is complete and M2 is most of the way there: the lexer handles every token form, and the
-parser covers the grammar through classes, generators, `async`/`await` and modules. There is no
-interpreter, so there is no conformance number yet — M3 is what changes that.
+M1, M2, M3 and M5 are done: the lexer, the parser, the value and object model, a bytecode compiler
+and an interpreter that runs code — and the conformance harness that measures it, which from here is
+what says what to build next. **M4 is what is in progress.** `Object`, `Function`, `Array`, `String`,
+`Number`, `Boolean`, `Math`, `JSON` and the `Error` hierarchy are in; **`Date` and `RegExp` are what
+remain**, and the regular expression engine is ours to write — no dependency.
 
-Read [`GOAL.md`](GOAL.md) first, then `src/span.rs` to calibrate on the bar, then pick up the
-milestone in progress. `cargo run --release --example parse -- --commonjs <dir>` over a real
-repository is the fastest way to find something worth fixing.
+Conformance as of this commit is **33.15% of test262** — 30,879 of 93,161 runs. Treat that number as
+perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
+Let the failure buckets choose the next slice, not intuition. The largest right now:
+
+| Runs | What stops them |
+| --- | --- |
+| 10,737 | an async test reports through `$DONE`, which needs a host function |
+| 10,505 | `class` declarations and expressions |
+| 6,866 | regular expression literals |
+| 4,432 | generators and `async` functions |
+| 3,107 | `BigInt` literals |
+
+Note what that list says about order: the parser already accepts classes, generators and `async`, so
+those buckets are compiler and runtime work rather than grammar. A bucket with ten thousand runs
+behind it is the next slice; one with four is not.
+
+Read [`GOAL.md`](GOAL.md) first — it is binding and it outranks this file — then `src/span.rs` to
+calibrate on the bar. `cargo run --release --example parse -- --commonjs <dir>` over a real
+repository is the fastest way to find something worth fixing; `examples/evaluate.rs` runs code.
