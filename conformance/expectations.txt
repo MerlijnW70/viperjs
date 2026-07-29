@@ -6952,6 +6952,8 @@ built-ins/JSON/parse/reviver-array-non-configurable-prop-create.js :: it threw R
 built-ins/JSON/parse/reviver-array-non-configurable-prop-create.js (strict) :: it threw ReferenceError: JSON is not defined
 built-ins/JSON/parse/reviver-array-non-configurable-prop-delete.js :: it threw ReferenceError: JSON is not defined
 built-ins/JSON/parse/reviver-array-non-configurable-prop-delete.js (strict) :: it threw ReferenceError: JSON is not defined
+built-ins/JSON/parse/reviver-call-args-after-forward-modification.js :: it threw ReferenceError: JSON is not defined
+built-ins/JSON/parse/reviver-call-args-after-forward-modification.js (strict) :: it threw ReferenceError: JSON is not defined
 built-ins/JSON/parse/reviver-call-err.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/JSON/parse/reviver-call-err.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/JSON/parse/reviver-call-order.js :: it threw ReferenceError: JSON is not defined
@@ -13007,8 +13009,12 @@ built-ins/Temporal/Duration/compare/relativeto-propertybag-timezone-string-year-
 built-ins/Temporal/Duration/compare/relativeto-propertybag-timezone-string-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Duration/compare/relativeto-propertybag-timezone-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/relativeto-propertybag-timezone-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/relativeto-string-invalid.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/relativeto-string-invalid.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/relativeto-string-wrong-offset.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/relativeto-string-wrong-offset.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/relativeto-string.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/relativeto-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/relativeto-sub-minute-offset.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/relativeto-sub-minute-offset.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/relativeto-undefined-throw-on-calendar-units.js :: it threw ReferenceError: Temporal is not defined
@@ -13215,6 +13221,8 @@ built-ins/Temporal/Duration/prototype/round/relativeto-required-properties.js ::
 built-ins/Temporal/Duration/prototype/round/relativeto-required-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/round/relativeto-required-to-round-calendar-units.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/round/relativeto-required-to-round-calendar-units.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/round/relativeto-string-invalid.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/round/relativeto-string-invalid.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/round/relativeto-string-wrong-offset.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/round/relativeto-string-wrong-offset.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/round/result-out-of-range.js :: it threw ReferenceError: Temporal is not defined
@@ -13431,8 +13439,12 @@ built-ins/Temporal/Duration/prototype/total/relativeto-propertybag-timezone-stri
 built-ins/Temporal/Duration/prototype/total/relativeto-propertybag-timezone-string-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-propertybag-timezone-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-propertybag-timezone-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/relativeto-string-invalid.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/relativeto-string-invalid.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-string-wrong-offset.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-string-wrong-offset.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/relativeto-string.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/relativeto-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-sub-minute-offset.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-sub-minute-offset.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-undefined-throw-on-calendar-units.js :: it threw ReferenceError: Temporal is not defined
@@ -13521,6 +13533,12 @@ built-ins/Temporal/Instant/argument.js :: it threw an object with no name: undef
 built-ins/Temporal/Instant/argument.js (strict) :: it threw an object with no name: undefined Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Instant/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/compare/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/compare/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/compare/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/compare/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/compare/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/compare/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/compare/argument-string-with-offset-not-valid-epoch-nanoseconds.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Instant/compare/argument-string-with-offset-not-valid-epoch-nanoseconds.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Instant/compare/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -13535,6 +13553,8 @@ built-ins/Temporal/Instant/compare/not-a-constructor.js :: it threw an object wi
 built-ins/Temporal/Instant/compare/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Instant/compare/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/compare/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/from/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00Z[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
+built-ins/Temporal/Instant/from/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00Z[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Instant/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00Z[!foo=bar] Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Instant/from/argument-string-critical-unknown-annotation.js (strict) :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00Z[!foo=bar] Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Instant/from/argument-string-minus-sign.js :: it threw an object with no name: variant minus sign: 1976-11-18T15:23:30.12−02:00 Expected a RangeError but got a ReferenceError
@@ -13889,6 +13909,10 @@ built-ins/Temporal/PlainDate/compare/argument-propertybag-calendar-string.js :: 
 built-ins/Temporal/PlainDate/compare/argument-propertybag-calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-propertybag-calendar-year-zero.js :: it threw an object with no name: reject minus zero as extended year (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/compare/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/compare/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01[U-CA=iso8601] - invalid capitalized key (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/compare/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01[U-CA=iso8601] - invalid capitalized key (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/compare/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/compare/argument-string-critical-unknown-annotation.js (strict) :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/compare/argument-string-minus-sign.js :: it threw an object with no name: variant minus sign: 1976-11-18T15:23:30.12−02:00 (first argument) Expected a RangeError but got a ReferenceError
@@ -13897,8 +13921,14 @@ built-ins/Temporal/PlainDate/compare/argument-string-multiple-calendar.js :: it 
 built-ins/Temporal/PlainDate/compare/argument-string-multiple-calendar.js (strict) :: it threw an object with no name: reject more than one calendar annotation if any critical: 1970-01-01[u-ca=iso8601][!u-ca=iso8601] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/compare/argument-string-multiple-time-zone.js :: it threw an object with no name: reject more than one time zone annotation: 1970-01-01[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/compare/argument-string-multiple-time-zone.js (strict) :: it threw an object with no name: reject more than one time zone annotation: 1970-01-01[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/compare/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-string-too-many-decimals.js :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/compare/argument-string-too-many-decimals.js (strict) :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/compare/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-string.js :: it threw ReferenceError: Temporal is not defined
@@ -13925,6 +13955,8 @@ built-ins/Temporal/PlainDate/constructor.js :: it threw an object with no name: 
 built-ins/Temporal/PlainDate/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainDate/from/argument-propertybag-calendar-year-zero.js :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/from/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/from/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/from/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/from/argument-string-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/from/argument-string-calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01[!foo=bar] Expected a RangeError but got a ReferenceError
@@ -14065,6 +14097,10 @@ built-ins/Temporal/PlainDate/prototype/equals/argument-propertybag-calendar-stri
 built-ins/Temporal/PlainDate/prototype/equals/argument-propertybag-calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14073,8 +14109,14 @@ built-ins/Temporal/PlainDate/prototype/equals/argument-string-multiple-calendar.
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-multiple-calendar.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-multiple-time-zone.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-multiple-time-zone.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-too-many-decimals.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-too-many-decimals.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/equals/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/equals/argument-string.js :: it threw ReferenceError: Temporal is not defined
@@ -14137,6 +14179,8 @@ built-ins/Temporal/PlainDate/prototype/prop-desc.js :: it threw ReferenceError: 
 built-ins/Temporal/PlainDate/prototype/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/since/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/since/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/since/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/since/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/since/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/since/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/since/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14233,6 +14277,8 @@ built-ins/Temporal/PlainDate/prototype/toLocaleString/return-string.js :: it thr
 built-ins/Temporal/PlainDate/prototype/toLocaleString/return-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toPlainDateTime/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14323,6 +14369,8 @@ built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-object-get-timez
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-object-get-timezone-throws.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14375,6 +14423,8 @@ built-ins/Temporal/PlainDate/prototype/toZonedDateTime/year-zero.js :: it threw 
 built-ins/Temporal/PlainDate/prototype/toZonedDateTime/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/until/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/until/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/until/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/until/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/until/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/until/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/until/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14497,6 +14547,10 @@ built-ins/Temporal/PlainDateTime/compare/argument-propertybag-calendar-year-zero
 built-ins/Temporal/PlainDateTime/compare/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/compare/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/compare/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/argument-string-critical-unknown-annotation.js (strict) :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/argument-string-invalid.js :: it threw ReferenceError: Temporal is not defined
@@ -14507,8 +14561,14 @@ built-ins/Temporal/PlainDateTime/compare/argument-string-multiple-calendar.js ::
 built-ins/Temporal/PlainDateTime/compare/argument-string-multiple-calendar.js (strict) :: it threw an object with no name: reject more than one calendar annotation if any critical: 1970-01-01[u-ca=iso8601][!u-ca=iso8601] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/argument-string-multiple-time-zone.js :: it threw an object with no name: reject more than one time zone annotation: 1970-01-01T00:00[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/argument-string-multiple-time-zone.js (strict) :: it threw an object with no name: reject more than one time zone annotation: 1970-01-01T00:00[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/compare/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-string-too-many-decimals.js :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/argument-string-too-many-decimals.js (strict) :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/compare/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/basic.js :: it threw ReferenceError: Temporal is not defined
@@ -14539,6 +14599,8 @@ built-ins/Temporal/PlainDateTime/from/argument-propertybag-calendar-year-zero.js
 built-ins/Temporal/PlainDateTime/from/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/from/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/from/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/from/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/from/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/from/argument-string-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/from/argument-string-calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] Expected a RangeError but got a ReferenceError
@@ -14677,6 +14739,10 @@ built-ins/Temporal/PlainDateTime/prototype/equals/argument-propertybag-calendar-
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14685,8 +14751,14 @@ built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-multiple-calen
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-multiple-calendar.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-multiple-time-zone.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-multiple-time-zone.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-too-many-decimals.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-too-many-decimals.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/equals/basic.js :: it threw ReferenceError: Temporal is not defined
@@ -14793,6 +14865,8 @@ built-ins/Temporal/PlainDateTime/prototype/round/not-a-constructor.js :: it thre
 built-ins/Temporal/PlainDateTime/prototype/round/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/prototype/round/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/round/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/round/roundingincrement-divides.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/round/roundingincrement-divides.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/round/roundingincrement-does-not-divide.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/round/roundingincrement-does-not-divide.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/round/roundingincrement-nan.js :: it threw ReferenceError: Temporal is not defined
@@ -14815,6 +14889,8 @@ built-ins/Temporal/PlainDateTime/prototype/second/prop-desc.js :: it threw Refer
 built-ins/Temporal/PlainDateTime/prototype/second/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/since/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/since/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -14845,6 +14921,8 @@ built-ins/Temporal/PlainDateTime/prototype/since/prop-desc.js :: it threw Refere
 built-ins/Temporal/PlainDateTime/prototype/since/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-cleanly-divides.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-cleanly-divides.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-does-not-divide.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-does-not-divide.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-nan.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-nan.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/since/roundingincrement-out-of-range.js :: it threw ReferenceError: Temporal is not defined
@@ -15041,6 +15119,8 @@ built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/timezone-string.js ::
 built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/timezone-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/until/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/until/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15071,6 +15151,8 @@ built-ins/Temporal/PlainDateTime/prototype/until/prop-desc.js :: it threw Refere
 built-ins/Temporal/PlainDateTime/prototype/until/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-cleanly-divides.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-cleanly-divides.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-does-not-divide.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-does-not-divide.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-nan.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-nan.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/until/roundingincrement-out-of-range.js :: it threw ReferenceError: Temporal is not defined
@@ -15149,6 +15231,8 @@ built-ins/Temporal/PlainDateTime/prototype/withCalendar/prop-desc.js :: it threw
 built-ins/Temporal/PlainDateTime/prototype/withCalendar/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/withPlainTime/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15205,6 +15289,8 @@ built-ins/Temporal/PlainMonthDay/constructor.js :: it threw an object with no na
 built-ins/Temporal/PlainMonthDay/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/from/argument-propertybag-calendar-year-zero.js :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/from/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainMonthDay/from/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainMonthDay/from/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/from/argument-string-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/from/argument-string-calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] Expected a RangeError but got a ReferenceError
@@ -15273,6 +15359,10 @@ built-ins/Temporal/PlainMonthDay/prototype/equals/argument-propertybag-calendar-
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-propertybag-calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15281,8 +15371,14 @@ built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-multiple-calen
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-multiple-calendar.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-multiple-time-zone.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-multiple-time-zone.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-too-many-decimals.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-too-many-decimals.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/equals/basic.js :: it threw ReferenceError: Temporal is not defined
@@ -15411,6 +15507,10 @@ built-ins/Temporal/PlainTime/compare/argument-cast.js :: it threw ReferenceError
 built-ins/Temporal/PlainTime/compare/argument-cast.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 00:00[U-CA=iso8601] - invalid capitalized key, time-only (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainTime/compare/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 00:00[U-CA=iso8601] - invalid capitalized key, time-only (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainTime/compare/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 00:00[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/compare/argument-string-critical-unknown-annotation.js (strict) :: it threw an object with no name: reject unknown annotation with critical flag: 00:00[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/compare/argument-string-minus-sign.js :: it threw an object with no name: variant minus sign: 1976-11-18T15:23:30.12−02:00 (first argument) Expected a RangeError but got a ReferenceError
@@ -15421,8 +15521,14 @@ built-ins/Temporal/PlainTime/compare/argument-string-multiple-time-zone.js :: it
 built-ins/Temporal/PlainTime/compare/argument-string-multiple-time-zone.js (strict) :: it threw an object with no name: reject more than one time zone annotation: 00:00[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/compare/argument-string-no-implicit-midnight.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-string-no-implicit-midnight.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-string-too-many-decimals.js :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/compare/argument-string-too-many-decimals.js (strict) :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainTime/compare/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-string-with-time-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-string-with-time-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
@@ -15451,6 +15557,8 @@ built-ins/Temporal/PlainTime/constructor.js :: it threw an object with no name: 
 built-ins/Temporal/PlainTime/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainTime/from/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/from/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/from/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 00:00[U-CA=iso8601] - invalid capitalized key, time-only Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainTime/from/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 00:00[U-CA=iso8601] - invalid capitalized key, time-only Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 00:00[!foo=bar] Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/from/argument-string-critical-unknown-annotation.js (strict) :: it threw an object with no name: reject unknown annotation with critical flag: 00:00[!foo=bar] Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainTime/from/argument-string-minus-sign.js :: it threw an object with no name: variant minus sign: 1976-11-18T15:23:30.12−02:00 Expected a RangeError but got a ReferenceError
@@ -15523,6 +15631,10 @@ built-ins/Temporal/PlainTime/prototype/equals/argument-cast.js :: it threw Refer
 built-ins/Temporal/PlainTime/prototype/equals/argument-cast.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15533,8 +15645,14 @@ built-ins/Temporal/PlainTime/prototype/equals/argument-string-multiple-time-zone
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-multiple-time-zone.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-no-implicit-midnight.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-no-implicit-midnight.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-too-many-decimals.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-too-many-decimals.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/equals/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-with-time-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-with-time-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/equals/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
@@ -15603,6 +15721,8 @@ built-ins/Temporal/PlainTime/prototype/round/not-a-constructor.js :: it threw an
 built-ins/Temporal/PlainTime/prototype/round/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainTime/prototype/round/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/round/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/round/roundingincrement-divides.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/round/roundingincrement-divides.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/round/roundingincrement-invalid.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/round/roundingincrement-invalid.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/round/roundingincrement-nan.js :: it threw ReferenceError: Temporal is not defined
@@ -15617,6 +15737,8 @@ built-ins/Temporal/PlainTime/prototype/second/branding.js :: it threw ReferenceE
 built-ins/Temporal/PlainTime/prototype/second/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/second/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/second/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/since/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/since/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/since/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/since/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/since/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15757,6 +15879,8 @@ built-ins/Temporal/PlainTime/prototype/toString/smallestunit-undefined.js :: it 
 built-ins/Temporal/PlainTime/prototype/toString/smallestunit-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toStringTag/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/until/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/until/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/until/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/until/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/until/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15841,6 +15965,10 @@ built-ins/Temporal/PlainYearMonth/compare/argument-propertybag-calendar-string.j
 built-ins/Temporal/PlainYearMonth/compare/argument-propertybag-calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-propertybag-calendar-year-zero.js :: it threw an object with no name: reject minus zero as extended year (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/compare/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/compare/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/compare/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/argument-string-critical-unknown-annotation.js (strict) :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/argument-string-minus-sign.js :: it threw an object with no name: variant minus sign: 1976-11-18T15:23:30.12−02:00 (first argument) Expected a RangeError but got a ReferenceError
@@ -15849,8 +15977,14 @@ built-ins/Temporal/PlainYearMonth/compare/argument-string-multiple-calendar.js :
 built-ins/Temporal/PlainYearMonth/compare/argument-string-multiple-calendar.js (strict) :: it threw an object with no name: reject more than one calendar annotation if any critical: 1970-01-01[u-ca=iso8601][!u-ca=iso8601] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/argument-string-multiple-time-zone.js :: it threw an object with no name: reject more than one time zone annotation: 1970-01-01T00:00[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/argument-string-multiple-time-zone.js (strict) :: it threw an object with no name: reject more than one time zone annotation: 1970-01-01T00:00[UTC][UTC] (first argument) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/compare/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-string-too-many-decimals.js :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/argument-string-too-many-decimals.js (strict) :: it threw an object with no name: no more than 9 decimal places are allowed (first arg) Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/compare/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/basic.js :: it threw ReferenceError: Temporal is not defined
@@ -15875,6 +16009,8 @@ built-ins/Temporal/PlainYearMonth/constructor.js :: it threw an object with no n
 built-ins/Temporal/PlainYearMonth/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/from/argument-propertybag-calendar-year-zero.js :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/from/argument-propertybag-calendar-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/from/argument-string-calendar-annotation-invalid-key.js :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/from/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw an object with no name: annotation keys must be lowercase: 1970-01-01T00:00[U-CA=iso8601] - invalid capitalized key Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/from/argument-string-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/from/argument-string-calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[!foo=bar] Expected a RangeError but got a ReferenceError
@@ -15989,6 +16125,10 @@ built-ins/Temporal/PlainYearMonth/prototype/equals/argument-propertybag-calendar
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-propertybag-calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15997,8 +16137,14 @@ built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-multiple-cale
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-multiple-calendar.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-multiple-time-zone.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-multiple-time-zone.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-too-many-decimals.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-too-many-decimals.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-with-utc-designator.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/argument-string-with-utc-designator.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/basic.js :: it threw ReferenceError: Temporal is not defined
@@ -16063,6 +16209,8 @@ built-ins/Temporal/PlainYearMonth/prototype/prop-desc.js :: it threw ReferenceEr
 built-ins/Temporal/PlainYearMonth/prototype/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/since/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/since/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/since/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/since/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/since/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/since/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/since/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -16207,6 +16355,8 @@ built-ins/Temporal/PlainYearMonth/prototype/toStringTag/prop-desc.js :: it threw
 built-ins/Temporal/PlainYearMonth/prototype/toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/until/argument-propertybag-calendar-year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/until/argument-propertybag-calendar-year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/until/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/until/argument-string-calendar-annotation-invalid-key.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/until/argument-string-critical-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/until/argument-string-critical-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/until/argument-string-minus-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -16287,6 +16437,12 @@ built-ins/Temporal/ZonedDateTime/builtin.js :: it threw ReferenceError: Temporal
 built-ins/Temporal/ZonedDateTime/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/compare/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/compare/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/compare/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/compare/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/compare/argument-string-unknown-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/compare/argument-string-unknown-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/length.js :: it threw ReferenceError: Temporal is not defined
@@ -16327,6 +16483,8 @@ built-ins/Temporal/ZonedDateTime/from/argument-propertybag-timezone-string-year-
 built-ins/Temporal/ZonedDateTime/from/argument-propertybag-timezone-string-year-zero.js (strict) :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/from/argument-propertybag-timezone-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/from/argument-propertybag-timezone-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/from/argument-string-calendar-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/from/argument-string-calendar-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/from/argument-string-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/from/argument-string-calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/from/argument-string-critical-unknown-annotation.js :: it threw an object with no name: reject unknown annotation with critical flag: 1970-01-01T00:00[UTC][!foo=bar] Expected a RangeError but got a ReferenceError
@@ -16345,6 +16503,10 @@ built-ins/Temporal/ZonedDateTime/from/argument-string-start-of-day-not-valid-epo
 built-ins/Temporal/ZonedDateTime/from/argument-string-start-of-day-not-valid-epoch-nanoseconds.js (strict) :: it threw an object with no name: From '-271821-04-20[+01]' Expected a RangeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/from/argument-string-sub-minute-offset.js :: it threw an object with no name: 2021-08-19T17:30:45.123456789-12:12:59.9[-12:12:59.9] is not a valid ISO string Expected a RangeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/from/argument-string-sub-minute-offset.js (strict) :: it threw an object with no name: 2021-08-19T17:30:45.123456789-12:12:59.9[-12:12:59.9] is not a valid ISO string Expected a RangeError but got a ReferenceError
+built-ins/Temporal/ZonedDateTime/from/argument-string-time-separators.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/from/argument-string-time-separators.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/from/argument-string-time-zone-annotation.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/from/argument-string-time-zone-annotation.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/from/argument-string-too-many-decimals.js :: it threw an object with no name: no more than 9 decimal places are allowed Expected a RangeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/from/argument-string-too-many-decimals.js (strict) :: it threw an object with no name: no more than 9 decimal places are allowed Expected a RangeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/from/bad-disambiguation.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
@@ -21910,6 +22072,30 @@ language/expressions/arrow-function/dflt-params-ref-later.js :: it threw an obje
 language/expressions/arrow-function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/arrow-function/name.js :: it threw an object with no name: name should be an own property
 language/expressions/arrow-function/name.js (strict) :: it threw an object with no name: name should be an own property
@@ -21917,6 +22103,9 @@ language/expressions/arrow-function/scope-body-lex-distinct.js :: it threw an ob
 language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
 language/expressions/arrow-function/scope-param-elem-var-open.js :: it threw ReferenceError: eval is not defined
 language/expressions/arrow-function/strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-array-3.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-4.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-5.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-rest.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/assignment/11.13.1-1-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/11.13.1-2-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -22450,6 +22639,30 @@ language/expressions/function/dflt-params-ref-later.js :: it threw an object wit
 language/expressions/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -22642,6 +22855,30 @@ language/expressions/object/__proto__-value-obj.js :: it threw an object with no
 language/expressions/object/__proto__-value-obj.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name should be an own property
@@ -23038,6 +23275,8 @@ language/function-code/10.4.3-1-9gs.js (strict) :: it threw the string 'this' ha
 language/function-code/S10.2.1_A2.js :: it threw an object with no name: #1: f1(1, 2) === 2
 language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(1, 2) === undefined
 language/function-code/S10.4.3_A1.js (strict) :: it threw an object with no name: #1: "this" leaked as: [object Object]
+language/function-code/eval-param-env-with-computed-key.js :: it threw ReferenceError: eval is not defined
+language/function-code/eval-param-env-with-prop-initializer.js :: it threw ReferenceError: eval is not defined
 language/global-code/decl-lex-restricted-global.js :: expected a SyntaxError at runtime time, and nothing was thrown
 language/global-code/decl-lex-restricted-global.js (strict) :: expected a SyntaxError at runtime time, and nothing was thrown
 language/global-code/script-decl-func-dups.js :: it threw ReferenceError: $262 is not defined
@@ -23608,6 +23847,30 @@ language/statements/function/dflt-params-ref-later.js :: it threw an object with
 language/statements/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running

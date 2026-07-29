@@ -196,13 +196,16 @@ fn compile_body(
     compiler.chunk.simple_parameters = parameters.is_simple();
 
     // §10.2.11 — the parameters are the first slots, in order, so an argument can be put in place
-    // without the callee being consulted. A pattern would need the binding machinery destructuring
-    // brings, and is a slice of its own.
+    // without the callee being consulted.
+    //
+    // A *pattern* takes a slot too, and an unnamed one: the argument has to land somewhere before
+    // it can be taken apart, and the names inside the pattern are separate bindings that the body
+    // shares with its `var`s. So the slot is hidden and the pattern reads from it below.
     for parameter in parameters.items.iter() {
-        let Binding::Identifier(name) = &parameter.target else {
-            return Err(unsupported("a destructuring parameter", span));
+        match &parameter.target {
+            Binding::Identifier(name) => compiler.declare(&name.name),
+            Binding::Pattern(_) => compiler.declare_hidden("argument"),
         };
-        compiler.declare(&name.name);
     }
     compiler.chunk.parameters = compiler.locals.len();
     // §10.2.3 — `length` stops at the first parameter that has a default, and a rest parameter is
@@ -248,22 +251,34 @@ fn compile_body(
     // §10.2.11 applies the default when the parameter *is* `undefined`, so passing one explicitly
     // takes it too. `f(undefined)` and `f()` agree, and that is the rule rather than a shortcut.
     for (at, parameter) in parameters.items.iter().enumerate() {
-        let Some(default) = &parameter.default else {
-            continue;
-        };
         let slot = u32::try_from(at).unwrap_or(u32::MAX);
-        compiler.chunk.emit(Instruction::LoadVariable(0, slot));
-        compiler.constant(Value::Undefined)?;
-        compiler
-            .chunk
-            .emit(Instruction::Binary(crate::ast::BinaryOperator::StrictEqual));
-        let given = compiler.chunk.emit_jump(Instruction::JumpIfFalse);
-        compiler.expression(default)?;
-        compiler.chunk.emit(Instruction::StoreVariable(0, slot));
-        // The store leaves its value behind, because an assignment is an expression. Here nothing
-        // wants it.
-        compiler.chunk.emit(Instruction::Pop);
-        compiler.chunk.patch(given)?;
+        if let Some(default) = &parameter.default {
+            compiler.chunk.emit(Instruction::LoadVariable(0, slot));
+            compiler.constant(Value::Undefined)?;
+            compiler
+                .chunk
+                .emit(Instruction::Binary(crate::ast::BinaryOperator::StrictEqual));
+            let given = compiler.chunk.emit_jump(Instruction::JumpIfFalse);
+            compiler.expression(default)?;
+            compiler.chunk.emit(Instruction::StoreVariable(0, slot));
+            // The store leaves its value behind, because an assignment is an expression. Here
+            // nothing wants it.
+            compiler.chunk.emit(Instruction::Pop);
+            compiler.chunk.patch(given)?;
+        }
+        // …and *then* the pattern is taken apart, if it is one. The order is §10.2.11 step 24's:
+        // the default stands in for a missing argument first, and what the pattern reads is
+        // whichever of the two arrived. `function f({a} = {a: 1})` binds `a` to 1 when called
+        // with nothing.
+        match &parameter.target {
+            // A name is already in its slot; there is nothing to take apart, and asking anyway
+            // would store the slot back into itself.
+            Binding::Identifier(_) => {}
+            target => {
+                compiler.chunk.emit(Instruction::LoadVariable(0, slot));
+                compiler.destructure_parameter(target, span)?;
+            }
+        }
     }
 
     match body {

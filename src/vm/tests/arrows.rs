@@ -163,7 +163,6 @@ fn the_arrow_forms_that_are_not_built_yet_are_refused_rather_than_guessed() {
     // need the binding machinery destructuring brings.
     for (source, what) in [
         ("var f = async x => x;", "an async arrow function"),
-        ("var f = ([a]) => a;", "a destructuring parameter"),
         ("var f = (...[a]) => a;", "a destructuring rest parameter"),
     ] {
         let script = crate::parser::parse_script(source).expect("the source parses"); // the test is about the refusal

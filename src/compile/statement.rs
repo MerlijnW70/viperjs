@@ -291,6 +291,20 @@ impl Compiler<'_> {
         }
     }
 
+    /// Take a parameter's pattern apart, from the value on top of the stack.
+    ///
+    /// A parameter's names are the function's own bindings, made where its `var`s are made — so
+    /// they are assigned rather than initialised, which is what [`Bind::Var`] means. The
+    /// difference from a `let` is the dead zone, and a parameter has none: it holds `undefined`
+    /// from the moment the call begins.
+    pub(super) fn destructure_parameter(
+        &mut self,
+        binding: &Binding,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        self.destructure(binding, Bind::Var, span)
+    }
+
     /// §8.6.2 `IteratorBindingInitialization` — take an array pattern apart, one step per element.
     ///
     /// An array pattern is not a shorter object pattern. It drives an *iterator*, so the source

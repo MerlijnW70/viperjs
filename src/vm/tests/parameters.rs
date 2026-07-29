@@ -198,3 +198,83 @@ fn a_list_that_is_not_simple_gets_an_arguments_object_that_joins_nothing() {
         "true"
     );
 }
+
+#[test]
+fn a_parameter_may_be_a_pattern_and_is_taken_apart_after_its_default() {
+    assert_eq!(run("(function ({a}) { return a; })({a: 1})"), "1");
+    assert_eq!(
+        run("(function ({a, b}) { return a + b; })({a: 1, b: 2})"),
+        "3"
+    );
+    assert_eq!(run("(function ([a, b]) { return a + b; })([1, 2])"), "3");
+    assert_eq!(run("(function ({a: x}) { return x; })({a: 5})"), "5");
+    assert_eq!(run("(function ({a = 7}) { return a; })({})"), "7");
+    assert_eq!(run("(function ({a: {b}}) { return b; })({a: {b: 9}})"), "9");
+    assert_eq!(run("(function ([{a}]) { return a; })([{a: 6}])"), "6");
+    assert_eq!(
+        run("(function ([a, ...r]) { return a + ':' + r.join(','); })([1, 2, 3])"),
+        "1:2,3"
+    );
+    assert_eq!(run("(function (x, {a}) { return x + a; })(1, {a: 2})"), "3");
+    assert_eq!(
+        run("(function ({a}, [b]) { return a + b; })({a: 1}, [2])"),
+        "3"
+    );
+    assert_eq!(
+        run("(function () { var f = ({a}) => a; return f({a: 4}); })()"),
+        "4"
+    );
+    assert_eq!(
+        run("(function () { var f = ([a]) => a; return f([5]); })()"),
+        "5"
+    );
+    // §10.2.11 step 24 — the *default* stands in for a missing argument first, and the pattern
+    // reads whichever of the two arrived. Written the other way round, a call with nothing would
+    // try to take `undefined` apart.
+    assert_eq!(run("(function ({a} = {a: 3}) { return a; })()"), "3");
+    assert_eq!(run("(function ([a] = [4]) { return a; })()"), "4");
+    // …and with no default there is nothing to stand in, so `undefined` is what it refuses.
+    for call in ["(null)", "()"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ return (function ({{a}}) {{ return a; }}){call}; }} \
+                 catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError"
+        );
+    }
+    assert_eq!(
+        run(
+            "(function () { try { return (function ([a]) { return a; })(5); } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    // The names are the function's own bindings, so the body's `var`s and its closures share them.
+    assert_eq!(
+        run("(function ({a}) { var b = 2; return a + b; })({a: 1})"),
+        "3"
+    );
+    assert_eq!(
+        run("(function ({a}) { function g() { return a; } return g(); })({a: 8})"),
+        "8"
+    );
+    assert_eq!(
+        run("(function ({a}) { return typeof a; })({})"),
+        "undefined"
+    );
+    // §20.2.4.1 — a pattern with no default still counts towards `length`, because `length` stops
+    // at the first *default* and not at the first thing that is not a name.
+    assert_eq!(run("(function ({a}) { return a; }).length"), "1");
+    assert_eq!(run("(function ({a} = {}) { return a; }).length"), "0");
+    assert_eq!(run("(function ([a], b) { return b; }).length"), "2");
+    // §15.1.4 — a pattern makes the list not simple, so the arguments object joins nothing.
+    assert_eq!(
+        run("(function ({a}) { arguments[0] = {a: 9}; return a; })({a: 1})"),
+        "1"
+    );
+    assert_eq!(
+        run("(function ({a}) { return arguments.length; })({a: 1})"),
+        "1"
+    );
+}
