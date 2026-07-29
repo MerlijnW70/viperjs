@@ -281,6 +281,16 @@ impl Compiler<'_> {
             // a hole is: `[, 1]` has a length of 2 and one property, and `0 in [, 1]` is false
             // where `0 in [undefined, 1]` is true.
             ExprKind::Array(elements) => {
+                // A spread makes the length unknowable here — `[...a]` is as long as `a` turns out
+                // to be — so the count moves into a slot and the whole literal is built by
+                // running rather than by placing. Kept apart from the ordinary path because that
+                // one knows its length and should go on saying so.
+                if elements
+                    .iter()
+                    .any(|element| matches!(element, ArrayElement::Spread { .. }))
+                {
+                    return self.spread_array(elements, span);
+                }
                 let count = u32::try_from(elements.len()).map_err(|_| CompileError {
                     kind: ErrorKind::TooLong,
                     span,
@@ -607,6 +617,106 @@ impl Compiler<'_> {
     }
 
     /// Emit a constant and the instruction that pushes it.
+    /// §13.2.4.1 — an array literal with a spread in it, built one element at a time.
+    ///
+    /// The ordinary path knows its length before it starts and defines each element at a written
+    /// index. A spread has no such number: `[...a]` is as long as `a` turns out to be, and the
+    /// elements after it sit wherever that left off. So the index is a slot the loop moves, and
+    /// `length` is written at the end — which is also what makes a trailing hole count.
+    ///
+    /// §13.2.4.1 spreads by *iterating*, not by reading indices, so `[..."ab"]` is two one-character
+    /// strings and `[...someSet]` works. That is the same `@@iterator` a `for`-`of` asks for, and
+    /// an object without one is a TypeError here as it is there.
+    fn spread_array(&mut self, elements: &[ArrayElement], span: Span) -> Result<(), CompileError> {
+        let at = self.declare_hidden("at");
+        self.chunk.emit(Instruction::NewArray(0));
+        self.constant(Value::Number(0.0))?;
+        self.chunk.emit(Instruction::StoreVariable(0, at));
+        self.chunk.emit(Instruction::Pop);
+        for element in elements {
+            match element {
+                // A hole defines nothing and still takes a place, which is what makes `[, 1]` two
+                // long with one property.
+                ArrayElement::Hole => self.bump(at)?,
+                ArrayElement::Value(value) => {
+                    // No copy of the array: `DefineField` takes the key and the value and leaves
+                    // the object it defined on, which is what lets the whole literal be built
+                    // with one of them on the stack throughout.
+                    self.chunk.emit(Instruction::LoadVariable(0, at));
+                    self.expression(value)?;
+                    self.chunk.emit(Instruction::DefineField);
+                    self.bump(at)?;
+                }
+                ArrayElement::Spread { value, .. } => {
+                    self.expression(value)?;
+                    self.spread_into(at)?;
+                }
+            }
+        }
+        // §13.2.4.1 sets the length from the count, which matters when the last element was a
+        // hole: nothing was defined there, so nothing grew the array to reach it.
+        self.chunk.emit(Instruction::Duplicate);
+        let name = self.name_of("length");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::LoadVariable(0, at));
+        self.chunk.emit(Instruction::SetProperty);
+        self.chunk.emit(Instruction::Pop);
+        let _ = span;
+        Ok(())
+    }
+
+    /// Move the running index on by one.
+    fn bump(&mut self, at: u32) -> Result<(), CompileError> {
+        self.chunk.emit(Instruction::LoadVariable(0, at));
+        self.constant(Value::Number(1.0))?;
+        self.chunk.emit(Instruction::Binary(BinaryOperator::Add));
+        self.chunk.emit(Instruction::StoreVariable(0, at));
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
+    }
+
+    /// Iterate whatever is on top of the stack into the array beneath it.
+    ///
+    /// Leaves the array where it found it. Nothing is closed on the way out because there is no
+    /// way out until the iterator says it is done — §13.2.4.1 spreads to exhaustion, so the only
+    /// abrupt end is one the iterator itself raised, and §7.4.9 has nothing to add to that.
+    fn spread_into(&mut self, at: u32) -> Result<(), CompileError> {
+        let iterator = self.declare_hidden("iterator");
+        let next = self.declare_hidden("next");
+        let done = self.declare_hidden("done");
+        self.chunk.emit(Instruction::Duplicate);
+        self.chunk
+            .emit(Instruction::LoadWellKnown(super::statement::well_known(
+                "iterator",
+            )));
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::CallMethod(0));
+        self.chunk.emit(Instruction::RequireObject);
+        self.chunk.emit(Instruction::StoreVariable(0, iterator));
+        let name = self.name_of("next");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::StoreVariable(0, next));
+        self.chunk.emit(Instruction::Pop);
+        self.constant(Value::Boolean(false))?;
+        self.chunk.emit(Instruction::StoreVariable(0, done));
+        self.chunk.emit(Instruction::Pop);
+
+        let top = self.here()?;
+        self.emit_step(iterator, next, done)?;
+        let current = self.declare_hidden("current");
+        self.chunk.emit(Instruction::StoreVariable(0, current));
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::LoadVariable(0, done));
+        let out = self.chunk.emit_jump(Instruction::JumpIfTrue);
+        self.chunk.emit(Instruction::LoadVariable(0, at));
+        self.chunk.emit(Instruction::LoadVariable(0, current));
+        self.chunk.emit(Instruction::DefineField);
+        self.bump(at)?;
+        self.chunk.emit(Instruction::Jump(top));
+        self.chunk.patch(out)
+    }
+
     /// §13.2.8.6 — a template literal, which is its pieces joined in the order they are written.
     ///
     /// Each substitution is `ToString`ed the moment it is evaluated, not at the end. That ordering

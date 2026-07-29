@@ -11701,10 +11701,24 @@ built-ins/Set/prototype/delete/this-not-object-throw-symbol.js :: it threw an ob
 built-ins/Set/prototype/delete/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/delete/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/delete/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Set/prototype/difference/add-not-called.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/add-not-called.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/builtins.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/builtins.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-Map.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-Map.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-empty-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-empty-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-itself.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-itself.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-same-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-same-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/combines-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/converts-negative-zero.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/converts-negative-zero.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/difference.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/difference.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/keys-is-callable.js :: it threw ReferenceError: Set is not defined
@@ -11715,6 +11729,12 @@ built-ins/Set/prototype/difference/name.js :: it threw ReferenceError: Set is no
 built-ins/Set/prototype/difference/name.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/not-a-constructor.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/result-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/result-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/set-like-array.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -11873,10 +11893,24 @@ built-ins/Set/prototype/has/this-not-object-throw-symbol.js :: it threw an objec
 built-ins/Set/prototype/has/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/has/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/has/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Set/prototype/intersection/add-not-called.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/add-not-called.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/builtins.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/builtins.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-Map.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-Map.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-empty-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-empty-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-itself.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-itself.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-same-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-same-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/combines-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/converts-negative-zero.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/converts-negative-zero.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/intersection.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/intersection.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/keys-is-callable.js :: it threw ReferenceError: Set is not defined
@@ -11887,6 +11921,12 @@ built-ins/Set/prototype/intersection/name.js :: it threw ReferenceError: Set is 
 built-ins/Set/prototype/intersection/name.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/not-a-constructor.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/result-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/result-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/set-like-array.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/builtins.js :: it threw ReferenceError: Set is not defined
@@ -11987,10 +12027,24 @@ built-ins/Set/prototype/size/returns-count-of-present-values-by-iterable.js :: i
 built-ins/Set/prototype/size/returns-count-of-present-values-by-iterable.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/size/size.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/size/size.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/add-not-called.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/add-not-called.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/builtins.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/builtins.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-Map.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-Map.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-empty-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-empty-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-itself.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-itself.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-same-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-same-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/combines-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/converts-negative-zero.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/converts-negative-zero.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/keys-is-callable.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/keys-is-callable.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/length.js :: it threw ReferenceError: Set is not defined
@@ -11999,12 +12053,34 @@ built-ins/Set/prototype/symmetricDifference/name.js :: it threw ReferenceError: 
 built-ins/Set/prototype/symmetricDifference/name.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/not-a-constructor.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/result-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/result-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/set-like-array.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/symmetricDifference.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/symmetricDifference.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/add-not-called.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/add-not-called.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/appends-new-values.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/appends-new-values.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/builtins.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/builtins.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-Map.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-Map.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-empty-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-empty-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-itself.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-itself.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-same-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-same-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-sets.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/combines-sets.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/converts-negative-zero.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/converts-negative-zero.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/keys-is-callable.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/keys-is-callable.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/length.js :: it threw ReferenceError: Set is not defined
@@ -12013,6 +12089,12 @@ built-ins/Set/prototype/union/name.js :: it threw ReferenceError: Set is not def
 built-ins/Set/prototype/union/name.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/not-a-constructor.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/result-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/result-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/set-like-array.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/union.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/union.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -12643,6 +12725,10 @@ built-ins/String/prototype/replaceAll/replaceAll.js :: it threw an object with n
 built-ins/String/prototype/replaceAll/replaceAll.js (strict) :: it threw an object with no name: `typeof String.prototype.replaceAll` is `function` Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/String/prototype/replaceAll/replaceValue-call-abrupt.js :: it threw an object with no name: Expected a undefined but got a TypeError
 built-ins/String/prototype/replaceAll/replaceValue-call-abrupt.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
+built-ins/String/prototype/replaceAll/replaceValue-call-each-match-position.js :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/replaceAll/replaceValue-call-each-match-position.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/replaceAll/replaceValue-call-matching-empty.js :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/replaceAll/replaceValue-call-matching-empty.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/replaceAll/replaceValue-call-skip-no-match.js :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/replaceAll/replaceValue-call-skip-no-match.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/replaceAll/replaceValue-call-tostring-abrupt.js :: it threw an object with no name: Expected a undefined but got a TypeError
@@ -23015,6 +23101,10 @@ language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js :: it th
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/object-rest-proxy-get-not-called-on-dontenum-keys.js :: it threw ReferenceError: Proxy is not defined
+language/expressions/object/dstr/object-rest-proxy-get-not-called-on-dontenum-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
+language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js :: it threw ReferenceError: Proxy is not defined
+language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/dstr/object-rest-proxy-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/dstr/object-rest-proxy-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name should be an own property

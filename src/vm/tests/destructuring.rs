@@ -616,3 +616,63 @@ fn a_rest_property_collects_what_the_pattern_did_not_name() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_spread_element_iterates_rather_than_reading_indices() {
+    assert_eq!(run("[...[1, 2]].join(',')"), "1,2");
+    assert_eq!(run("[0, ...[1, 2], 3].join(',')"), "0,1,2,3");
+    assert_eq!(run("[...[1], ...[2, 3]].join(',')"), "1,2,3");
+    assert_eq!(run("[...[]].length"), "0");
+    assert_eq!(run("Array.isArray([...[1]])"), "true");
+    // A copy, not a window: the two arrays are separate afterwards.
+    assert_eq!(
+        run("(function () { var a = [1]; var b = [...a]; b.push(2); \
+             return a.length + ',' + b.length; })()"),
+        "1,2"
+    );
+    // §13.2.4.1 spreads by *iterating*, so anything iterable works and a String comes apart by
+    // code point — which is the whole difference from copying indices.
+    assert_eq!(run("[...'ab'].join('|')"), "a|b");
+    assert_eq!(run("[...'\\ud83d\\ude00'].length"), "1");
+    assert_eq!(run("[...[1, 2].keys()].join(',')"), "0,1");
+    assert_eq!(run("[...[1, 2], ...'ab'].join('')"), "12ab");
+    assert_eq!(
+        run(
+            "(function () { var o = {}; o[Symbol.iterator] = function () { var n = 0; \
+             return {next: function () { n++; return {value: n, done: n > 3}; }}; }; \
+             return [...o].join(','); })()"
+        ),
+        "1,2,3"
+    );
+    // …and what is not iterable is refused, a plain object included.
+    for source in ["5", "{}", "null"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ return [...{source}]; }} \
+                 catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError"
+        );
+    }
+    // Holes still count where they are written, which is why `length` is set from the running
+    // index at the end rather than left to whatever the last element happened to grow it to.
+    assert_eq!(run("[...[1], , 2].length"), "3");
+    assert_eq!(
+        run("(function () { var a = [...[1], , 2]; return (1 in a) + ',' + a.length; })()"),
+        "false,3"
+    );
+    assert_eq!(
+        run("(function () { var a = [, ...[1]]; return (0 in a) + ',' + a[1]; })()"),
+        "false,1"
+    );
+    // The spread expression is evaluated once, where it is written.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var a = [...(function () { n++; return [1]; })()]; \
+             return n + ':' + a[0]; })()"
+        ),
+        "1:1"
+    );
+    // The ordinary path is unchanged — a literal with no spread still knows its own length.
+    assert_eq!(run("[1, , 2].length"), "3");
+}

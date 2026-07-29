@@ -633,7 +633,12 @@ impl Compiler<'_> {
     /// The `done` slot latches. §8.6.2 asks a spent iterator nothing further, so `[a, b]` over a
     /// one-element iterable calls `next` twice and not three times — which a `next` that counts
     /// its own calls can see.
-    fn emit_step(&mut self, iterator: u32, next: u32, done: u32) -> Result<(), CompileError> {
+    pub(super) fn emit_step(
+        &mut self,
+        iterator: u32,
+        next: u32,
+        done: u32,
+    ) -> Result<(), CompileError> {
         self.chunk.emit(Instruction::LoadVariable(0, done));
         let spent = self.chunk.emit_jump(Instruction::JumpIfTrue);
         self.chunk.emit(Instruction::LoadVariable(0, iterator));
@@ -1025,7 +1030,7 @@ impl Compiler<'_> {
     }
 
     /// The interned name of a property this compiler emits for itself.
-    fn name_of(&mut self, name: &str) -> crate::heap::StringId {
+    pub(super) fn name_of(&mut self, name: &str) -> crate::heap::StringId {
         self.heap.intern(&name.encode_utf16().collect::<Vec<_>>())
     }
 
@@ -1595,7 +1600,7 @@ impl Compiler<'_> {
 }
 
 /// Where a well-known Symbol sits in the realm's table — see `crate::builtins::well_known_at`.
-fn well_known(name: &str) -> u32 {
+pub(super) fn well_known(name: &str) -> u32 {
     u32::try_from(crate::builtins::well_known_at(name)).unwrap_or(u32::MAX)
 }
 
