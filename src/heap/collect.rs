@@ -206,6 +206,11 @@ impl Heap {
             if *marked || string.is_none() {
                 continue;
             }
+            // The units go back to the budget DR-0013 keeps, because they are genuinely given
+            // back: the `Box` is dropped here. The *slot* is not — it stays as a `None` for as
+            // long as the arena does, which is the cost DR-0010 accepted in exchange for a handle
+            // that can never dangle, and which `Heap::footprint` therefore goes on counting.
+            self.string_units -= string.as_ref().map_or(0, |units| units.len());
             *string = None;
             freed.strings += 1;
         }
@@ -454,6 +459,36 @@ mod tests {
         };
         assert_eq!(heap.collect(&roots).strings, 0);
         assert!(heap.string(text).is_some());
+    }
+
+    #[test]
+    fn sweeping_gives_back_a_freed_strings_units_but_not_its_slot() {
+        // The two halves of DR-0010's bargain, told apart by DR-0013's number. A swept String's
+        // units are genuinely returned — the `Box` is dropped here — so the budget must see them
+        // come back, or a program that collects would be charged forever for memory it no longer
+        // holds. Its *slot* is not returned and never will be, which is the price of a handle
+        // that cannot dangle, and the footprint goes on counting it.
+        let mut heap = Heap::new();
+        let kept = heap.new_string("kept".encode_utf16().collect());
+        heap.new_string("gone".encode_utf16().collect());
+        let both = heap.footprint();
+
+        let roots = Roots {
+            values: vec![Value::String(kept)],
+            ..Roots::default()
+        };
+        assert_eq!(heap.collect(&roots).strings, 1);
+        // Four units at two bytes each, and the slot left behind — so the drop is exactly the
+        // units and nothing more.
+        assert_eq!(heap.footprint(), both - 4 * size_of::<u16>());
+        assert_eq!(
+            heap.string(kept),
+            Some(&"kept".encode_utf16().collect::<Vec<_>>()[..])
+        );
+        // Collecting again frees nothing, so the number does not move — a decrement applied to an
+        // already-empty slot would take the budget below what is really held.
+        assert_eq!(heap.collect(&roots).strings, 0);
+        assert_eq!(heap.footprint(), both - 4 * size_of::<u16>());
     }
 
     #[test]

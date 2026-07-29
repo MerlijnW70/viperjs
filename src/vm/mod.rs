@@ -142,6 +142,13 @@ pub struct Vm {
     completion: Value,
     /// Where a nested execution stops — see [`Floor`].
     floor: Floor,
+    /// Instructions still to run before the heap budget is looked at again — DR-0013.
+    ///
+    /// A countdown rather than a modulus on an instruction count: the check is rare and the
+    /// decrement is what every instruction pays, so the cheap operation is the one in the hot
+    /// path. It starts at zero so that a script which allocates before its first jump is still
+    /// asked about.
+    until_heap_check: usize,
     /// How many nested executions are running, which is how much Rust stack they are using.
     ///
     /// The main loop does not recurse: ten thousand nested JavaScript calls cost ten thousand
@@ -150,6 +157,14 @@ pub struct Vm {
     /// and bounded far lower than [`crate::vm::call::MAX_CALL_DEPTH`].
     reentries: usize,
 }
+
+/// How many instructions run between two looks at the heap budget — DR-0013.
+///
+/// A thousand is chosen from both ends. Small enough that a loop allocating on every pass cannot
+/// get far past the budget before it is stopped — a thousand objects is under a hundred kilobytes,
+/// which is nothing beside a 256 MiB limit — and large enough that the check is lost in the noise
+/// of the instructions around it.
+const HEAP_CHECK_INTERVAL: usize = 1_000;
 
 /// Where a nested execution stops, and how far a throw inside it may travel.
 ///
@@ -187,6 +202,7 @@ impl Vm {
             this_value: Value::Undefined,
             completion: Value::Undefined,
             floor: Floor::default(),
+            until_heap_check: 0,
             reentries: 0,
         }
     }
@@ -251,6 +267,37 @@ impl Vm {
         at: &mut usize,
     ) -> Result<(), Fault> {
         loop {
+            // DR-0013 — the heap has a budget, and this is where a script that has spent it finds
+            // out. Between instructions rather than at each allocation: the allocating functions
+            // answer handles rather than completions, and making forty of them fallible for a
+            // condition the loop can see from here would put a refusal on every one of their
+            // callers. It is the shape `MAX_CALL_DEPTH` already uses.
+            //
+            // Counted down rather than asked every time. `Heap::footprint` is cheap but it is not
+            // free, and a loop body of three instructions should not pay for it three times.
+            //
+            // The counter is reset *before* the throw rather than after it. Written the other way
+            // round — as one assignment whose `None` arm throws — the `continue` leaves the
+            // expression before the assignment happens, the counter stays at zero, and every pass
+            // through the loop raises the error again. Each of those raises allocates the Error
+            // object it is about to throw, so the check meant to stop a runaway becomes one.
+            if self.until_heap_check > 0 {
+                self.until_heap_check -= 1;
+            } else {
+                self.until_heap_check = HEAP_CHECK_INTERVAL;
+                if heap.is_exhausted() {
+                    let thrown = self.realm.error(
+                        heap,
+                        NativeError::Range,
+                        "the heap has grown past what this engine will allocate",
+                    );
+                    // Nothing catches it in the usual case, and then `unwind` points the program
+                    // counter past the end of the code — so the loop reads no instruction and
+                    // stops, which is what makes this a refusal rather than a spin.
+                    self.unwind(thrown, root, current, at)?;
+                    continue;
+                }
+            }
             let running: &Chunk = current.as_deref().unwrap_or(root);
             let code = running.code();
             let Some(instruction) = code.get(*at).copied() else {

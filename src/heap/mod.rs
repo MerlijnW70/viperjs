@@ -103,6 +103,25 @@ const fn string_fits(left: usize, right: usize) -> bool {
     left.saturating_add(right) <= MAX_STRING_LENGTH
 }
 
+/// The most memory a heap may hand out before the engine refuses — DR-0013.
+///
+/// Not a number about machines: it is a number about *scripts*. `while (true) { ({}); }` allocates
+/// forever, and until a collection policy exists (see [`Heap::collect`], which has the operation
+/// and no caller) forever means until the process dies. An abort is the one failure DR-0002 has no
+/// answer for, so the engine stops first and says so.
+///
+/// 64 MiB, and the number is chosen from a measurement rather than from taste. [`Heap::footprint`]
+/// is an *estimate* that leaves out the storage an object's own properties take, and the gap is
+/// widest for element-heavy programs: `while (true) { []; }` was measured at four times its
+/// reported footprint. So the budget carries that factor as headroom, and what a runaway actually
+/// costs before it is stopped is a few hundred megabytes rather than a few hundred gigabytes.
+///
+/// Generous for what praxis can currently run — an engine with no collection policy cannot execute
+/// a long program under any budget — and the number to raise first when there is one. When there
+/// is an embedding API this becomes something the host sets; a constant is what it can be while
+/// there is nobody to ask.
+pub const MAX_HEAP_BYTES: usize = 1 << 26;
+
 /// A String on the heap — a sequence of UTF-16 code units (DR-0004).
 ///
 /// Not a `String` and not a `str`: `"\u{d800}"` is a legal ECMAScript string of one code unit,
@@ -149,6 +168,12 @@ pub struct Heap {
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
     /// frame is gone and the variables are not. See [`Environment`].
     environments: Vec<Option<Environment>>,
+    /// How many code units every String on this heap holds between them.
+    ///
+    /// Tracked rather than summed because [`Heap::footprint`] is asked in the interpreter's loop
+    /// and walking every String to answer it would make the check cost more than the work it
+    /// guards. The arenas' own lengths are already `O(1)`; this is the one part that is not.
+    string_units: usize,
 }
 
 impl Heap {
@@ -167,8 +192,35 @@ impl Heap {
     /// something narrower that would need one.
     pub fn new_string(&mut self, units: Vec<u16>) -> StringId {
         let id = StringId(self.strings.len());
+        self.string_units += units.len();
         self.strings.push(Some(units.into_boxed_slice()));
         id
+    }
+
+    /// Roughly how many bytes this heap has taken, and the number DR-0013's budget is against.
+    ///
+    /// An estimate, and deliberately a cheap one: three arena lengths and a running total of code
+    /// units, all `O(1)`, because the interpreter asks this between instructions. What it counts
+    /// is what a runaway loop actually grows — a slot per allocation, which DR-0010 never gives
+    /// back, plus the contents of every String.
+    ///
+    /// What it does not count is the storage an object's own properties take. A program can
+    /// therefore hold more than this says, and the budget is a bound on the shape of failure
+    /// rather than a precise ceiling: a loop that allocates is stopped, which is the case that
+    /// ends in an abort.
+    pub fn footprint(&self) -> usize {
+        // Slots rather than live values. A swept slot still costs its place in the arena — DR-0010
+        // trades that for handles that never dangle — so what has been *allocated* is the honest
+        // measure of what the heap has cost, not what is still reachable.
+        self.objects.len() * size_of::<Option<Object>>()
+            + self.environments.len() * size_of::<Option<Environment>>()
+            + self.strings.len() * size_of::<Option<Box<[u16]>>>()
+            + self.string_units * size_of::<u16>()
+    }
+
+    /// Whether this heap has taken more than DR-0013 allows.
+    pub fn is_exhausted(&self) -> bool {
+        self.footprint() > MAX_HEAP_BYTES
     }
 
     /// Join two Strings, or refuse because the result would be longer than one may be.
@@ -364,6 +416,50 @@ mod tests {
         // therefore made — the refusal is about the length, not about the operand being large.
         let empty = heap.new_string(Vec::new());
         assert!(heap.concat(half, empty).is_some());
+    }
+
+    #[test]
+    fn the_footprint_counts_a_slot_for_every_allocation_and_the_units_of_every_string() {
+        // DR-0013's estimate, term by term. Each row allocates one thing and asks what the number
+        // moved by, so a term that was dropped, doubled or divided is a different answer rather
+        // than a smaller one — a test that only checked "it went up" would agree with all three.
+        let mut heap = Heap::new();
+        assert_eq!(heap.footprint(), 0);
+
+        heap.new_string(units("hello"));
+        let a_string = size_of::<Option<Box<[u16]>>>() + 5 * size_of::<u16>();
+        assert_eq!(heap.footprint(), a_string);
+
+        heap.new_object(None);
+        assert_eq!(heap.footprint(), a_string + size_of::<Option<Object>>());
+
+        // An environment's slots are not counted, only its place in the arena — so two
+        // environments of very different sizes cost the same here, which is what makes the
+        // estimate an estimate.
+        heap.new_environment(None, 0);
+        let so_far = a_string + size_of::<Option<Object>>() + size_of::<Option<Environment>>();
+        assert_eq!(heap.footprint(), so_far);
+        heap.new_environment(None, 64);
+        assert_eq!(heap.footprint(), so_far + size_of::<Option<Environment>>());
+    }
+
+    #[test]
+    fn the_budget_is_spent_only_once_it_is_passed() {
+        // Both sides of DR-0013's comparison, hit exactly. A heap whose footprint is precisely the
+        // budget has not exceeded it; one unit more has. Written as an exact landing rather than
+        // an approach, because `>` and `>=` differ on this one value and nowhere else.
+        //
+        // One String does it: the slot plus two bytes a unit, solved for the unit count. Nothing
+        // reads the units, so the allocation may never be backed.
+        let mut heap = Heap::new();
+        let units = (MAX_HEAP_BYTES - size_of::<Option<Box<[u16]>>>()) / size_of::<u16>();
+        heap.new_string(vec![0; units]);
+        assert_eq!(heap.footprint(), MAX_HEAP_BYTES);
+        assert!(!heap.is_exhausted());
+
+        heap.new_string(vec![0; 1]);
+        assert!(heap.footprint() > MAX_HEAP_BYTES);
+        assert!(heap.is_exhausted());
     }
 
     #[test]

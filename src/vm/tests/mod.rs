@@ -237,3 +237,82 @@ fn a_deeply_nested_expression_does_not_grow_the_rust_stack() {
         .join(" + ");
     assert_eq!(eval(&sum), "500");
 }
+
+/// Run `source` on a heap that has already been given `filled` bytes of DR-0013's budget.
+///
+/// The filling is one String of the right length rather than a million objects: nothing ever reads
+/// its units, so the operating system may never have to back them, and a test about a 64 MiB
+/// budget costs neither 64 MiB of writing nor a second of allocating.
+fn run_with_heap_filled_to(filled: usize, source: &str) -> String {
+    let mut heap = Heap::new();
+    heap.new_string(vec![0; filled / size_of::<u16>()]);
+    let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+    let outcome = Vm::new(&mut heap)
+        .run(&chunk, &mut heap)
+        .expect("the chunk is well formed"); // same
+    describe(outcome, &mut heap)
+}
+
+#[test]
+fn a_script_that_allocates_without_end_is_stopped_rather_than_allowed_to_exhaust_the_machine() {
+    // DR-0013. Before this, `while (true) { ({}); }` was an input that took the *process* down —
+    // an allocation failure in Rust aborts, so nothing catches it and nothing gets to report it.
+    // DR-0002 has no answer for an abort, which is why the engine stops first.
+    //
+    // Started just under the budget so the loop only needs a few thousand objects to cross it.
+    // A test that began from an empty heap would allocate the whole 64 MiB to prove the same
+    // thing, and would take a second to do it.
+    let nearly = crate::heap::MAX_HEAP_BYTES - (1 << 20);
+    assert_eq!(
+        run_with_heap_filled_to(
+            nearly,
+            "try { while (true) { ({}); } } catch (e) { e.name; }"
+        ),
+        "RangeError"
+    );
+    // The other three shapes a runaway takes, because each grows a different arena: an object per
+    // pass, a String per pass, and an environment per pass.
+    for body in [
+        "'' + i;",
+        "var o = {}; o.a = 1;",
+        "(function () { var v = 1; return v; })();",
+    ] {
+        let source = format!(
+            "var i = 0; try {{ while (true) {{ i = i + 1; {body} }} }} catch (e) {{ e.name; }}"
+        );
+        assert_eq!(
+            run_with_heap_filled_to(nearly, &source),
+            "RangeError",
+            "running {body:?}"
+        );
+    }
+    // A loop that allocates *nothing* is not stopped — it is not the thing the budget is about,
+    // and stopping it would be an engine that gave up on `while (true) { i = i + 1; }`.
+    assert_eq!(
+        run_with_heap_filled_to(nearly, "var i = 0; while (i < 100000) { i = i + 1; } i;"),
+        "100000"
+    );
+}
+
+#[test]
+fn the_heap_budget_is_checked_again_after_it_is_caught() {
+    // The bug this pins, which the first implementation had: resetting the countdown *after* the
+    // throw rather than before it left it at zero, so every following pass raised the error again
+    // — and raising it allocates the Error object, so the guard against a runaway became one.
+    //
+    // A script that catches and carries on must therefore still make progress, and must be told
+    // again when it keeps allocating rather than either spinning or falling silent.
+    let nearly = crate::heap::MAX_HEAP_BYTES - (1 << 20);
+    assert_eq!(
+        run_with_heap_filled_to(
+            nearly,
+            "var caught = 0;
+             for (var round = 0; round < 3; round = round + 1) {
+                 try { while (true) { ({}); } } catch (e) { caught = caught + 1; }
+             }
+             caught;"
+        ),
+        "3"
+    );
+}
