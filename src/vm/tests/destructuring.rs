@@ -5,8 +5,9 @@
 //! property that is present and `undefined` takes the default, and one that is present and
 //! anything else never runs it.
 //!
-//! Array patterns are refused for now. They need `GetIterator` and a step per element, and the
-//! sequencing that takes is a slice of its own; `statements` has the row that says so.
+//! An array pattern is not a shorter object one: it drives an *iterator*, so the source need not
+//! be an Array and need not have a `length`. What that buys, and what it costs in closing, is the
+//! second half of this file.
 
 use super::*;
 
@@ -154,4 +155,124 @@ fn undefined_and_null_are_refused_before_anything_is_read() {
     assert_eq!(run("(function () { var {} = 5; return 'ok'; })()"), "ok");
     assert_eq!(run("(function () { var {} = 'a'; return 'ok'; })()"), "ok");
     assert_eq!(run("(function () { var {} = true; return 'ok'; })()"), "ok");
+}
+
+#[test]
+fn an_array_pattern_drives_an_iterator_rather_than_reading_indices() {
+    assert_eq!(
+        run("(function () { var [a, b] = [1, 2]; return a + ',' + b; })()"),
+        "1,2"
+    );
+    assert_eq!(
+        run("(function () { var [a] = [1, 2, 3]; return a; })()"),
+        "1"
+    );
+    // An iterator that runs out leaves the rest `undefined` rather than failing.
+    assert_eq!(
+        run("(function () { var [a, b, c] = [1]; return a + ',' + typeof b + ',' + typeof c; })()"),
+        "1,undefined,undefined"
+    );
+    // An elision takes a turn and binds nothing — not the same as a name that gets `undefined`.
+    assert_eq!(
+        run("(function () { var [, b] = [1, 2]; return b; })()"),
+        "2"
+    );
+    assert_eq!(run("(function () { var [a = 9] = []; return a; })()"), "9");
+    assert_eq!(
+        run("(function () { var [a = 9] = [undefined]; return a; })()"),
+        "9"
+    );
+    assert_eq!(
+        run("(function () { var [a = 9] = [null]; return a; })()"),
+        "null"
+    );
+    assert_eq!(run("(function () { let [a] = [3]; return a; })()"), "3");
+    assert_eq!(run("(function () { const [a] = [4]; return a; })()"), "4");
+    assert_eq!(run("var [a] = [1]; a"), "1");
+    // Any iterable, which is the whole difference from reading `0`, `1`, `2`: a String iterates
+    // by code point and has no elements at all.
+    assert_eq!(
+        run("(function () { var [a, b] = 'xy'; return a + b; })()"),
+        "xy"
+    );
+    // A rest element collects what is left, as an ordinary Array.
+    assert_eq!(
+        run("(function () { var [a, ...r] = [1, 2, 3]; return a + ':' + r.join(','); })()"),
+        "1:2,3"
+    );
+    assert_eq!(
+        run("(function () { var [...r] = [1, 2]; return Array.isArray(r) + ',' + r.length; })()"),
+        "true,2"
+    );
+    assert_eq!(
+        run("(function () { var [a, ...r] = [1]; return r.length; })()"),
+        "0"
+    );
+    // …and patterns nest through each other in both directions.
+    assert_eq!(
+        run("(function () { var [[a], [b]] = [[1], [2]]; return a + b; })()"),
+        "3"
+    );
+    assert_eq!(
+        run("(function () { var [{a}] = [{a: 5}]; return a; })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { var {a: [b]} = {a: [7]}; return b; })()"),
+        "7"
+    );
+}
+
+#[test]
+fn an_array_pattern_stops_asking_a_spent_iterator_and_closes_one_it_abandons() {
+    // §8.6.2 — the `done` latches, so two names over a one-element iterable call `next` twice and
+    // not three times. A counter in `next` is the only thing that can see it.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var o = {}; o[Symbol.iterator] = function () { \
+             return {next: function () { n++; return {value: n, done: n > 1}; }}; }; \
+             var [a, b] = o; return n + ':' + a + ',' + typeof b; })()"
+        ),
+        "2:1,undefined"
+    );
+    // §8.6.2 step 4 — a pattern that finishes while the iterator has not abandons it, and says
+    // so. This is the case an object pattern has no equivalent of.
+    let endless = "var o = {}; o[Symbol.iterator] = function () { return {\
+                   next: function () { return {value: 1, done: false}; }, \
+                   return: function () { c = true; return {}; }}; };";
+    assert_eq!(
+        run(&format!(
+            "(function () {{ var c = false; {endless} var [a] = o; return c; }})()"
+        )),
+        "true"
+    );
+    // …and one that ran out on its own is already finished with.
+    assert_eq!(
+        run(
+            "(function () { var c = false; var o = {}; o[Symbol.iterator] = function () { \
+             return {next: function () { return {value: 1, done: true}; }, \
+             return: function () { c = true; return {}; }}; }; var [a] = o; return c; })()"
+        ),
+        "false"
+    );
+    // An error while binding abandons it too — a default that throws is the easiest way in.
+    assert_eq!(
+        run(&format!(
+            "(function () {{ var c = false; {endless} \
+             try {{ var [a = (function () {{ throw new Error('x'); }})()] = o; }} catch (e) {{}} \
+             return c; }})()"
+        )),
+        "true"
+    );
+    // What is not iterable says so, and that includes a plain object — which an object pattern
+    // would have taken apart happily.
+    for source in ["5", "null", "{}"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ var [a] = {source}; return 'ok'; }} \
+                 catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError"
+        );
+    }
 }

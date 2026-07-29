@@ -144,7 +144,7 @@ impl Compiler<'_> {
                 // method throws, that throw wins over the return, which is step 7.
                 for at in (0..self.closes.len()).rev() {
                     let iterator = self.closes[at];
-                    self.emit_close(iterator, Check::Yes)?;
+                    self.emit_close(iterator, Check::Loop)?;
                 }
                 self.chunk.emit(Instruction::Return);
                 Ok(())
@@ -285,10 +285,168 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::Pop);
                 Ok(())
             }
-            Binding::Pattern(BindingPattern::Array(_)) => {
-                Err(unsupported("an array binding pattern", span))
+            Binding::Pattern(BindingPattern::Array(pattern)) => {
+                self.destructure_array(pattern, how, span)
             }
         }
+    }
+
+    /// §8.6.2 `IteratorBindingInitialization` — take an array pattern apart, one step per element.
+    ///
+    /// An array pattern is not a shorter object pattern. It drives an *iterator*, so the source
+    /// need not be an Array and need not have a `length`: anything with an `@@iterator` works, and
+    /// the elements come in the order that iterator gives them.
+    ///
+    /// Three things follow from that and none is optional. An iterator that runs out leaves the
+    /// remaining names `undefined` rather than failing — and must not be asked again, which is
+    /// what the latching `done` is for. A pattern that finishes while the iterator has not is a
+    /// §7.4.9 `IteratorClose`, because the iterator was told to produce and is being abandoned.
+    /// And an error while binding abandons it too, which is what the handler is for.
+    fn destructure_array(
+        &mut self,
+        pattern: &crate::ast::ArrayBindingPattern,
+        how: Bind,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let iterator = self.declare_hidden("iterator");
+        let next = self.declare_hidden("next");
+        let done = self.declare_hidden("done");
+        let current = self.declare_hidden("current");
+
+        // §7.4.2 `GetIterator`, on the value already on the stack.
+        self.chunk.emit(Instruction::Duplicate);
+        self.chunk
+            .emit(Instruction::LoadWellKnown(well_known("iterator")));
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::CallMethod(0));
+        self.chunk.emit(Instruction::RequireObject);
+        self.chunk.emit(Instruction::StoreVariable(0, iterator));
+        let name = self.name_of("next");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::StoreVariable(0, next));
+        // One `Pop` and not two: the source was the *receiver* of the `@@iterator` call, so the
+        // call consumed it. Only `next` is left to drop.
+        self.chunk.emit(Instruction::Pop);
+        self.constant(Value::Boolean(false))?;
+        self.chunk.emit(Instruction::StoreVariable(0, done));
+        self.chunk.emit(Instruction::Pop);
+
+        let unwind = self.chunk.emit_jump(Instruction::PushHandler);
+        let bound = self.destructure_elements(pattern, how, span, [iterator, next, done, current]);
+        self.chunk.emit(Instruction::PopHandler);
+        bound?;
+
+        // §8.6.2 step 4 — the pattern is finished and the iterator may not be.
+        self.chunk.emit(Instruction::LoadVariable(0, done));
+        let already = self.chunk.emit_jump(Instruction::JumpIfTrue);
+        self.emit_close(iterator, Check::Plain)?;
+        self.chunk.patch(already)?;
+        let past = self.chunk.emit_jump(Instruction::Jump);
+
+        // …and an error while binding abandons it too, which step 4 covers with the same call.
+        self.chunk.patch(unwind)?;
+        let thrown = self.declare_hidden("thrown");
+        self.chunk.emit(Instruction::StoreVariable(0, thrown));
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::LoadVariable(0, done));
+        let spent = self.chunk.emit_jump(Instruction::JumpIfTrue);
+        self.emit_close(iterator, Check::Unwind)?;
+        self.chunk.patch(spent)?;
+        self.chunk.emit(Instruction::LoadVariable(0, thrown));
+        self.chunk.emit(Instruction::Throw);
+        self.chunk.patch(past)
+    }
+
+    /// The elements of an array pattern, and its rest, once the iterator is in hand.
+    ///
+    /// The four slots travel together because they are one iterator record spelled out: which
+    /// iterator, its `next`, whether it has run out, and where the last step put its value.
+    fn destructure_elements(
+        &mut self,
+        pattern: &crate::ast::ArrayBindingPattern,
+        how: Bind,
+        span: Span,
+        [iterator, next, done, current]: [u32; 4],
+    ) -> Result<(), CompileError> {
+        for element in &pattern.elements {
+            self.emit_step(iterator, next, done)?;
+            let Some(element) = element else {
+                // An elision — `[, a]` — takes a turn of the iterator and binds nothing. That is
+                // not the same as a name that gets `undefined`: the step happens either way.
+                self.chunk.emit(Instruction::Pop);
+                continue;
+            };
+            self.apply_default(element.default.as_deref())?;
+            self.destructure(&element.target, how, span)?;
+        }
+        let Some(rest) = &pattern.rest else {
+            return Ok(());
+        };
+        // §8.6.2's `BindingRestElement` — every remaining step, as an Array. The count is a slot
+        // rather than the array's `length`, because reading the length back each turn would ask
+        // the array a question the loop already knows the answer to.
+        let collected = self.declare_hidden("rest");
+        let at = self.declare_hidden("at");
+        self.chunk.emit(Instruction::NewArray(0));
+        self.chunk.emit(Instruction::StoreVariable(0, collected));
+        self.chunk.emit(Instruction::Pop);
+        self.constant(Value::Number(0.0))?;
+        self.chunk.emit(Instruction::StoreVariable(0, at));
+        self.chunk.emit(Instruction::Pop);
+        let top = self.here()?;
+        self.emit_step(iterator, next, done)?;
+        self.chunk.emit(Instruction::StoreVariable(0, current));
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::LoadVariable(0, done));
+        let out = self.chunk.emit_jump(Instruction::JumpIfTrue);
+        self.chunk.emit(Instruction::LoadVariable(0, collected));
+        self.chunk.emit(Instruction::LoadVariable(0, at));
+        self.chunk.emit(Instruction::LoadVariable(0, current));
+        self.chunk.emit(Instruction::SetProperty);
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::LoadVariable(0, at));
+        self.constant(Value::Number(1.0))?;
+        self.chunk.emit(Instruction::Binary(BinaryOperator::Add));
+        self.chunk.emit(Instruction::StoreVariable(0, at));
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::Jump(top));
+        self.chunk.patch(out)?;
+        self.chunk.emit(Instruction::LoadVariable(0, collected));
+        self.destructure(rest, how, span)
+    }
+
+    /// One turn of the iterator: the value it gave, or `undefined` once it has run out.
+    ///
+    /// The `done` slot latches. §8.6.2 asks a spent iterator nothing further, so `[a, b]` over a
+    /// one-element iterable calls `next` twice and not three times — which a `next` that counts
+    /// its own calls can see.
+    fn emit_step(&mut self, iterator: u32, next: u32, done: u32) -> Result<(), CompileError> {
+        self.chunk.emit(Instruction::LoadVariable(0, done));
+        let spent = self.chunk.emit_jump(Instruction::JumpIfTrue);
+        self.chunk.emit(Instruction::LoadVariable(0, iterator));
+        self.chunk.emit(Instruction::LoadVariable(0, next));
+        self.chunk.emit(Instruction::CallMethod(0));
+        self.chunk.emit(Instruction::RequireObject);
+        self.chunk.emit(Instruction::Duplicate);
+        let name = self.name_of("done");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        let going = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.chunk.emit(Instruction::Pop);
+        self.constant(Value::Boolean(true))?;
+        self.chunk.emit(Instruction::StoreVariable(0, done));
+        self.chunk.emit(Instruction::Pop);
+        let ran_out = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(going)?;
+        let name = self.name_of("value");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        let got = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(spent)?;
+        self.chunk.patch(ran_out)?;
+        self.constant(Value::Undefined)?;
+        self.chunk.patch(got)
     }
 
     /// Push the key a binding property reads, computed or written down.
@@ -555,7 +713,7 @@ impl Compiler<'_> {
         let thrown = self.declare_hidden("thrown");
         self.chunk.emit(Instruction::StoreVariable(0, thrown));
         self.chunk.emit(Instruction::Pop);
-        self.emit_close(iterator, Check::No)?;
+        self.emit_close(iterator, Check::Unwind)?;
         self.chunk.emit(Instruction::LoadVariable(0, thrown));
         self.chunk.emit(Instruction::Throw);
         self.chunk.patch(past)?;
@@ -575,7 +733,7 @@ impl Compiler<'_> {
         // A deliberate exit is leaving the loop, so its handler comes down *first*. Left armed,
         // it would catch a `return` method that threw and close the same iterator a second time —
         // which is one call too many and is observable.
-        if check == Check::Yes {
+        if check == Check::Loop {
             self.chunk.emit(Instruction::PopHandler);
         }
         self.chunk.emit(Instruction::LoadVariable(0, iterator));
@@ -591,7 +749,7 @@ impl Compiler<'_> {
         // §7.4.9 step 5 answers a throw completion *before* it looks at what `return` gave back,
         // so on the way out of a throw the answer is not examined at all. Only a deliberate exit
         // checks it.
-        if check == Check::Yes {
+        if check != Check::Unwind {
             self.chunk.emit(Instruction::RequireObject);
         }
         self.chunk.emit(Instruction::Pop);
@@ -900,7 +1058,7 @@ impl Compiler<'_> {
         let staying = usize::from(!leaving);
         for at in (depth + staying..self.closes.len()).rev() {
             let iterator = self.closes[at];
-            self.emit_close(iterator, Check::Yes)?;
+            self.emit_close(iterator, Check::Loop)?;
         }
         // No "is there a list" check, because there always is: [`Compiler::labelled_statement`]
         // records a label only for a loop, and a loop pushes both lists before its body is
@@ -952,7 +1110,7 @@ impl Compiler<'_> {
         // told. A `continue` stays in the loop and has nothing to tell it.
         if leaving && self.closes.len() == self.breaks.len() {
             let iterator = self.closes[self.closes.len() - 1];
-            self.emit_close(iterator, Check::Yes)?;
+            self.emit_close(iterator, Check::Loop)?;
         }
         let jump = self.chunk.emit_jump(Instruction::Jump);
         let pending = if leaving {
@@ -1145,13 +1303,18 @@ fn well_known(name: &str) -> u32 {
     u32::try_from(crate::builtins::well_known_at(name)).unwrap_or(u32::MAX)
 }
 
-/// Whether an `IteratorClose` looks at what `return` answered — §7.4.9 steps 5 and 6.
+/// What an `IteratorClose` has to do besides closing — §7.4.9 steps 5 and 6.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Check {
-    /// A deliberate exit: a non-object answer is a TypeError.
-    Yes,
-    /// On the way out of a throw, where step 5 has already decided what the answer is.
-    No,
+    /// Leaving a `for`-`of` deliberately: the loop's handler comes down first, and a non-object
+    /// answer is a TypeError.
+    Loop,
+    /// Leaving one on the way out of a throw: no handler to take down, because the throw already
+    /// consumed it, and step 5 has already decided what the answer is.
+    Unwind,
+    /// Closing an iterator a pattern is finished with, where there is no handler in the way and
+    /// the answer is examined as step 6 asks.
+    Plain,
 }
 
 /// Which kind of binding a pattern's names are being given — §14.3.

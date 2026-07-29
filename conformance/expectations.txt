@@ -1045,6 +1045,8 @@ annexB/language/global-code/switch-case-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/for-in/nonstrict-initializer.js :: it did not parse: a `for`-`in` or `for`-`of` binding may not have an initializer
@@ -23285,6 +23287,12 @@ language/statements/class/static-init-arguments-methods.js :: it did not parse: 
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/const/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/const/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
@@ -23496,10 +23504,20 @@ language/statements/for/cptn-expr-expr-iter.js :: it threw ReferenceError: eval 
 language/statements/for/cptn-expr-expr-iter.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for/cptn-expr-expr-no-iter.js :: it threw ReferenceError: eval is not defined
 language/statements/for/cptn-expr-expr-no-iter.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/for/dstr/const-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/const-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/const-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/const-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/let-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/let-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/let-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/let-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
@@ -23631,6 +23649,12 @@ language/statements/labeled/cptn-nrml.js :: it threw ReferenceError: eval is not
 language/statements/labeled/cptn-nrml.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/let/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/let/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
@@ -23849,6 +23873,12 @@ language/statements/variable/12.2.1-9-s.js (strict) :: it threw ReferenceError: 
 language/statements/variable/S12.2_A5.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
