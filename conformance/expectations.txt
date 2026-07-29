@@ -1045,6 +1045,8 @@ annexB/language/global-code/switch-case-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/for-in/nonstrict-initializer.js :: it did not parse: a `for`-`in` or `for`-`of` binding may not have an initializer
 annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js (strict) :: it threw ReferenceError: $262 is not defined
@@ -3209,6 +3211,10 @@ built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js :: it threw Re
 built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/symbol-for-index-throws.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/symbol-for-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js :: it threw ReferenceError: Atomics is not defined
@@ -6430,8 +6436,12 @@ built-ins/Iterator/prototype/Symbol.dispose/return-val.js :: it threw TypeError:
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/Symbol.toStringTag/weird-setter.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/Symbol.toStringTag/weird-setter.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/constructor/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/constructor/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/constructor/weird-setter.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/constructor/weird-setter.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/argument-effect-order.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/is-function.js :: it threw ReferenceError: Iterator is not defined
@@ -6448,6 +6458,8 @@ built-ins/Iterator/prototype/drop/this-non-callable-next.js :: it threw Referenc
 built-ins/Iterator/prototype/drop/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/drop/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/prototype/drop/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/every/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
@@ -6660,6 +6672,8 @@ built-ins/Iterator/prototype/take/this-non-callable-next.js :: it threw Referenc
 built-ins/Iterator/prototype/take/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/take/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/prototype/take/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/length.js :: it threw ReferenceError: Iterator is not defined
@@ -12125,6 +12139,8 @@ built-ins/ShadowRealm/prototype/evaluate/returns-primitive-values.js :: it threw
 built-ins/ShadowRealm/prototype/evaluate/returns-primitive-values.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/evaluate/returns-proxy-callable-object.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/evaluate/returns-proxy-callable-object.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
+built-ins/ShadowRealm/prototype/evaluate/returns-symbol-values.js :: it threw ReferenceError: ShadowRealm is not defined
+built-ins/ShadowRealm/prototype/evaluate/returns-symbol-values.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/evaluate/throws-error-from-ctor-realm.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/evaluate/throws-error-from-ctor-realm.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/evaluate/throws-syntaxerror-on-bad-syntax.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -13335,6 +13351,8 @@ built-ins/Temporal/Duration/prototype/toString/options-object.js :: it threw Ref
 built-ins/Temporal/Duration/prototype/toString/options-object.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/options-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/options-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/precision.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/precision.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/round-cross-unit-boundary.js :: it threw ReferenceError: Temporal is not defined
@@ -13585,6 +13603,8 @@ built-ins/Temporal/Instant/prototype/add/not-a-constructor.js :: it threw an obj
 built-ins/Temporal/Instant/prototype/add/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Instant/prototype/add/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/add/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/prototype/builtin.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/prototype/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/constructor.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/constructor.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/epochMilliseconds/branding.js :: it threw ReferenceError: Temporal is not defined
@@ -13689,6 +13709,8 @@ built-ins/Temporal/Instant/prototype/toString/not-a-constructor.js :: it threw a
 built-ins/Temporal/Instant/prototype/toString/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Instant/prototype/toString/options-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/toString/options-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/prototype/toString/precision.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Instant/prototype/toString/precision.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/toString/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/toString/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Instant/prototype/toStringTag/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -23263,6 +23285,12 @@ language/statements/class/static-init-arguments-methods.js :: it did not parse: 
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/const/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/const/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/const/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/const/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/const/fn-name-cover.js :: it threw an object with no name: name should be an own property
@@ -23468,6 +23496,16 @@ language/statements/for/cptn-expr-expr-iter.js :: it threw ReferenceError: eval 
 language/statements/for/cptn-expr-expr-iter.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for/cptn-expr-expr-no-iter.js :: it threw ReferenceError: eval is not defined
 language/statements/for/cptn-expr-expr-no-iter.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/for/dstr/const-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/const-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/let-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/let-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for/head-init-expr-check-empty-inc-empty-completion.js :: it threw ReferenceError: eval is not defined
 language/statements/for/head-init-expr-check-empty-inc-empty-completion.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for/head-init-var-check-empty-inc-empty-completion.js :: it threw ReferenceError: eval is not defined
@@ -23593,6 +23631,12 @@ language/statements/labeled/cptn-nrml.js :: it threw ReferenceError: eval is not
 language/statements/labeled/cptn-nrml.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/let/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/let/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/let/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/let/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/let/fn-name-cover.js :: it threw an object with no name: name should be an own property
@@ -23805,6 +23849,12 @@ language/statements/variable/12.2.1-9-s.js (strict) :: it threw ReferenceError: 
 language/statements/variable/S12.2_A5.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/variable/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/variable/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/variable/fn-name-cover.js :: it threw an object with no name: name should be an own property

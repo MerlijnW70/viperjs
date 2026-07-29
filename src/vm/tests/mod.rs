@@ -18,6 +18,7 @@
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
 //! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
+//! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
 //! - `for_of` — §14.7.5.7, and the four ways out of a loop that have to close its iterator.
 //! - `iterators` — §27.1, and where an iterator has got to that no script can reach.
 //! - `object_state` — §20.1.2's whole-object statics, and the coercion they start with.
@@ -42,6 +43,7 @@ mod bound;
 mod builtins;
 mod coercion;
 mod constructors;
+mod destructuring;
 mod for_in;
 mod for_of;
 mod functions;

@@ -116,6 +116,18 @@ pub enum Instruction {
     /// otherwise have its `done` read off that primitive's prototype as `undefined` — falsy — and
     /// the loop would never end. A check that turns a hang into an error.
     RequireObject,
+    /// §7.1.2 `RequireObjectCoercible` — throw a **TypeError** for `undefined` or `null`, and
+    /// leave anything else where it is.
+    ///
+    /// Not [`Instruction::RequireObject`], which is stricter: a primitive *is* coercible, so
+    /// `var {length: n} = "ab"` reads through the String's object and works. The two are only
+    /// both needed because destructuring asks the weaker question and the iterator protocol asks
+    /// the stronger one.
+    ///
+    /// A pattern with properties in it would raise this at its first read anyway. An empty one —
+    /// `var {} = null` — would not, and is a TypeError all the same, which is the case this exists
+    /// for.
+    RequireCoercible,
     /// §7.1.17 `ToString` of the value on top, replacing it.
     ///
     /// Not `+ ""`, and the difference is observable. Addition takes `ToPrimitive` with the
@@ -501,6 +513,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Stringify
         | Instruction::LoadWellKnown(_)
         | Instruction::RequireObject
+        | Instruction::RequireCoercible
         | Instruction::LoadVariable(_, _)
         | Instruction::StoreVariable(_, _)
         | Instruction::Uninitialise(_)

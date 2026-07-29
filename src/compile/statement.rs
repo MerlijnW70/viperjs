@@ -6,10 +6,11 @@
 
 use super::function::Keep;
 use super::{CompileError, Compiler, Instruction, Unpatched, unsupported};
+use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
-    AssignmentTarget, BinaryOperator, Binding, Declaration, DeclarationKind, ExprKind, ForInOfKind,
-    ForInOfStatement, ForInOfTarget, ForInit, ForStatement, LabelledStatement, Stmt, StmtKind,
-    SwitchStatement, TryStatement,
+    AssignmentTarget, BinaryOperator, Binding, BindingPattern, Declaration, DeclarationKind, Expr,
+    ExprKind, ForInOfKind, ForInOfStatement, ForInOfTarget, ForInit, ForStatement,
+    LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -182,11 +183,14 @@ impl Compiler<'_> {
             }
             let immutable = declaration.kind == DeclarationKind::Const;
             for declarator in &declaration.declarators {
-                let Binding::Identifier(name) = &declarator.binding else {
-                    return Err(unsupported("a destructuring binding", declarator.span));
-                };
-                let slot = self.declare_lexical(&name.name, immutable);
-                self.chunk.emit(Instruction::Uninitialise(slot));
+                // §8.2.1 `BoundNames` of the binding, which for a pattern is every name inside it
+                // — `let {a, b: [c]} = x` puts three in the dead zone, not one. The walk is the
+                // static-semantics one rather than a second copy here, because a name it missed
+                // would be a binding that never existed and a `ReferenceError` no source explains.
+                for name in crate::static_semantics::bound_names(&declarator.binding) {
+                    let slot = self.declare_lexical(name.name, immutable);
+                    self.chunk.emit(Instruction::Uninitialise(slot));
+                }
             }
         }
         Ok(())
@@ -202,32 +206,20 @@ impl Compiler<'_> {
             return self.lexical_declaration(declaration);
         }
         for declarator in &declaration.declarators {
-            let Binding::Identifier(name) = &declarator.binding else {
-                return Err(unsupported("a destructuring binding", declarator.span));
-            };
             // A `var` with no initializer does nothing at all. The slot already holds `undefined`
             // from hoisting, and assigning it again would overwrite what an earlier `var x = 1`
             // put there: `var x = 1; var x;` leaves `x` as 1, which surprises people once.
+            //
+            // A *pattern* with no initializer cannot happen: §14.3.2.1 makes it a Syntax Error,
+            // because there would be nothing to take apart.
             let Some(initializer) = &declarator.initializer else {
                 continue;
             };
-            // A `var` belongs to whatever it is written in, and at the top level of a script that
-            // is the *global object* rather than a scope — §9.1.1.4 again. The binding itself was
-            // made before anything ran, either way; this is only the initializer running where it
-            // was written, which is why `x` is `undefined` above its `var x = 1` and 1 below it.
-            match self.at_global_scope() {
-                true => {
-                    let index = self.name(&name.name)?;
-                    self.expression(initializer)?;
-                    self.chunk.emit(Instruction::StoreGlobal(index));
-                }
-                false => {
-                    let slot = self.declare(&name.name);
-                    self.expression(initializer)?;
-                    self.chunk.emit(Instruction::StoreVariable(0, slot));
-                }
-            }
-            self.chunk.emit(Instruction::Pop);
+            // The value is evaluated first and the binding takes it apart — which is what makes
+            // a `var` at the top level of a script a property of the global object rather than a
+            // slot, decided per name inside [`Compiler::bind_name`] rather than here.
+            self.expression(initializer)?;
+            self.destructure(&declarator.binding, Bind::Var, declarator.span)?;
         }
         Ok(())
     }
@@ -241,32 +233,131 @@ impl Compiler<'_> {
     /// being left alone: `let x; x` is `undefined` where `x; let x;` is a ReferenceError, and the
     /// difference is exactly this instruction having run or not.
     fn lexical_declaration(&mut self, declaration: &Declaration) -> Result<(), CompileError> {
+        let immutable = declaration.kind == DeclarationKind::Const;
         for declarator in &declaration.declarators {
-            let Binding::Identifier(name) = &declarator.binding else {
-                return Err(unsupported("a destructuring binding", declarator.span));
-            };
             // §14.3.1.1 — `const` without an initializer is a Syntax Error the parser has already
             // refused, so anything here without one is a `let`.
-            // Ordinarily the binding is already there: the block, body or case-block prologue
-            // made it uninitialised on the way in. A `for` head has no prologue — §14.7.4.4 gives
-            // the loop its own environment and this declaration is what creates the binding in it
-            // — so one is made here if there is not one.
-            let slot = match self.resolve_in_scope(&name.name) {
-                Some(slot) => slot,
-                None => {
-                    let immutable = declaration.kind == DeclarationKind::Const;
-                    let slot = self.declare_lexical(&name.name, immutable);
-                    self.chunk.emit(Instruction::Uninitialise(slot));
-                    slot
-                }
-            };
             match &declarator.initializer {
                 Some(initializer) => self.expression(initializer)?,
                 None => self.constant(Value::Undefined)?,
             }
-            self.chunk.emit(Instruction::Initialise(slot));
-            self.chunk.emit(Instruction::Pop);
+            self.destructure(
+                &declarator.binding,
+                Bind::Lexical(immutable),
+                declarator.span,
+            )?;
         }
+        Ok(())
+    }
+
+    /// §14.3.3 — bind a pattern to the value on top of the stack, consuming it.
+    ///
+    /// Recursive, because a pattern nests: `{a: {b}}` reads `a` and then takes *that* apart the
+    /// same way. Every level leaves the stack as it found it, which is what lets the recursion be
+    /// written without a count of what is on it.
+    ///
+    /// Only object patterns so far. An array one is `GetIterator` and a step per element, and the
+    /// sequencing that needs — a `done` that latches, a rest element that collects the remainder,
+    /// an `IteratorClose` when the pattern ran out before the iterator did — is a slice of its own.
+    fn destructure(
+        &mut self,
+        binding: &Binding,
+        how: Bind,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        match binding {
+            Binding::Identifier(name) => self.bind_name(&name.name, how),
+            Binding::Pattern(BindingPattern::Object(pattern)) => {
+                if pattern.rest.is_some() {
+                    return Err(unsupported("a rest property in a binding pattern", span));
+                }
+                // §14.3.3.7 step 1 — `undefined` and `null` are refused before any property is
+                // read, which is why `var {} = null` throws despite reading nothing.
+                self.chunk.emit(Instruction::RequireCoercible);
+                for property in &pattern.properties {
+                    self.chunk.emit(Instruction::Duplicate);
+                    self.property_key(&property.key)?;
+                    self.chunk.emit(Instruction::GetProperty);
+                    self.apply_default(property.value.default.as_deref())?;
+                    self.destructure(&property.value.target, how, span)?;
+                }
+                // The source, which every property was read from and nothing wants now.
+                self.chunk.emit(Instruction::Pop);
+                Ok(())
+            }
+            Binding::Pattern(BindingPattern::Array(_)) => {
+                Err(unsupported("an array binding pattern", span))
+            }
+        }
+    }
+
+    /// Push the key a binding property reads, computed or written down.
+    fn property_key(&mut self, key: &AstPropertyKey) -> Result<(), CompileError> {
+        match key {
+            AstPropertyKey::Identifier(name) => {
+                let id = self.name_of(name);
+                self.constant(Value::String(id))
+            }
+            AstPropertyKey::String(text) => {
+                // Already code units, and already the key: a String literal key is not re-cooked.
+                let id = self.heap.intern(text);
+                self.constant(Value::String(id))
+            }
+            AstPropertyKey::Number(number) => {
+                let text = crate::value::number_to_string(*number);
+                let id = self.name_of(&text);
+                self.constant(Value::String(id))
+            }
+            AstPropertyKey::Computed(expression) => self.expression(expression),
+            AstPropertyKey::BigInt(_) => Err(unsupported("a BigInt literal", Span::new(0, 0))),
+            AstPropertyKey::Private(_) => Err(unsupported("a private name", Span::new(0, 0))),
+        }
+    }
+
+    /// §14.3.3 — replace the value on top with `default` when it is `undefined`.
+    ///
+    /// The default is evaluated only when it is needed, which is observable: `{a = f()}` does not
+    /// call `f` when `a` was there. Compared against `undefined` and not against absence, so a
+    /// property that is present and `undefined` takes the default too.
+    fn apply_default(&mut self, default: Option<&Expr>) -> Result<(), CompileError> {
+        let Some(default) = default else {
+            return Ok(());
+        };
+        self.chunk.emit(Instruction::Duplicate);
+        self.constant(Value::Undefined)?;
+        self.chunk
+            .emit(Instruction::Binary(BinaryOperator::StrictEqual));
+        let given = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.chunk.emit(Instruction::Pop);
+        self.expression(default)?;
+        self.chunk.patch(given)
+    }
+
+    /// Give one name the value on top of the stack, consuming it.
+    fn bind_name(&mut self, name: &str, how: Bind) -> Result<(), CompileError> {
+        match how {
+            // A `var` at the top level of a script is a property of the global object, not a slot.
+            Bind::Var if self.at_global_scope() => {
+                let index = self.name(name)?;
+                self.chunk.emit(Instruction::StoreGlobal(index));
+            }
+            Bind::Var => {
+                let slot = self.declare(name);
+                self.chunk.emit(Instruction::StoreVariable(0, slot));
+            }
+            Bind::Lexical(immutable) => {
+                let slot = match self.resolve_in_scope(name) {
+                    Some(slot) => slot,
+                    None => {
+                        let slot = self.declare_lexical(name, immutable);
+                        self.chunk.emit(Instruction::Uninitialise(slot));
+                        slot
+                    }
+                };
+                self.chunk.emit(Instruction::Initialise(slot));
+            }
+        }
+        self.chunk.emit(Instruction::Pop);
         Ok(())
     }
 
@@ -1061,4 +1152,14 @@ enum Check {
     Yes,
     /// On the way out of a throw, where step 5 has already decided what the answer is.
     No,
+}
+
+/// Which kind of binding a pattern's names are being given — §14.3.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Bind {
+    /// A `var`, which was hoisted and is being assigned.
+    Var,
+    /// A `let` or `const`, which exists uninitialised and is being initialised. The flag is
+    /// whether it is a `const`, for the case where the binding has to be made here.
+    Lexical(bool),
 }

@@ -133,6 +133,18 @@ impl Vm {
                     };
                     self.stack.push(Value::Symbol(symbol));
                 }
+                Instruction::RequireCoercible => {
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    if matches!(value, Value::Undefined | Value::Null) {
+                        let thrown = Err(Abrupt::type_error(
+                            "undefined and null cannot be destructured",
+                        ));
+                        match self.settle(thrown, heap, root, current, at)? {
+                            Some(value) => self.stack.push(value),
+                            None => continue,
+                        }
+                    }
+                }
                 Instruction::RequireObject => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     if !matches!(value, Value::Object(_)) {
