@@ -820,6 +820,10 @@ annexB/language/eval-code/indirect/global-switch-dflt-eval-global-skip-early-err
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-skip-early-err-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-skip-early-err.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/assignment/dstr/object-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/assignment/dstr/object-pattern-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/expressions/assignmenttargettype/callexpression-as-for-in-lhs.js :: it did not parse: this expression cannot be assigned to
 annexB/language/expressions/assignmenttargettype/callexpression-as-for-of-lhs.js :: it did not parse: this expression cannot be assigned to
 annexB/language/expressions/assignmenttargettype/callexpression-in-compound-assignment.js :: it did not parse: this expression cannot be assigned to
@@ -6468,6 +6472,8 @@ built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying
 built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/every/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/every/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/name.js :: it threw ReferenceError: Iterator is not defined
@@ -6508,6 +6514,8 @@ built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.
 built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/find/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/find/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/name.js :: it threw ReferenceError: Iterator is not defined
@@ -6644,6 +6652,8 @@ built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.
 built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/some/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/some/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/name.js :: it threw ReferenceError: Iterator is not defined
@@ -22184,6 +22194,68 @@ language/expressions/assignment/8.14.4-8-b_2.js (strict) :: it threw an object w
 language/expressions/assignment/S11.13.1_A6_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/assignment/S11.13.1_A6_T2.js :: it threw ReferenceError: eval is not defined
 language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/assignment/destructuring/default-expr-throws-iterator-return-get-throws.js :: it threw an object with no name: Thrown value was not an object!
+language/expressions/assignment/destructuring/default-expr-throws-iterator-return-get-throws.js (strict) :: it threw an object with no name: Thrown value was not an object!
+language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js :: it threw an object with no name: Actual [source, iterator, iterator-step, iterator-done, target, target-key, target-key-tostring, set] and expected [source, iterator, target, target-key, iterator-step, iterator-done, target-key-tostring, set] should have the same contents.
+language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js (strict) :: it threw an object with no name: Actual [source, iterator, iterator-step, iterator-done, target, target-key, target-key-tostring, set] and expected [source, iterator, target, target-key, iterator-step, iterator-done, target-key-tostring, set] should have the same contents.
+language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js :: it threw an object with no name: Actual [source, source-key, source-key-tostring, get, target, target-key, target-key-tostring, set] and expected [source, source-key, source-key-tostring, target, target-key, get, target-key-tostring, set] should have the same contents.
+language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js (strict) :: it threw an object with no name: Actual [source, source-key, source-key-tostring, get, target, target-key, target-key-tostring, set] and expected [source, source-key, source-key-tostring, target, target-key, get, target-key-tostring, set] should have the same contents.
+language/expressions/assignment/destructuring/target-assign-throws-iterator-return-get-throws.js :: it threw an object with no name: Thrown value was not an object!
+language/expressions/assignment/destructuring/target-assign-throws-iterator-return-get-throws.js (strict) :: it threw an object with no name: Thrown value was not an object!
+language/expressions/assignment/dstr/array-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/expressions/assignment/dstr/array-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/expressions/assignment/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-lref-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/obj-id-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/fn-name-cover.js :: it threw an object with no name: name should be an own property
@@ -23681,8 +23753,48 @@ language/statements/for-of/cptn-expr-itr.js :: it threw ReferenceError: eval is 
 language/statements/for-of/cptn-expr-itr.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-of/cptn-expr-no-itr.js :: it threw ReferenceError: eval is not defined
 language/statements/for-of/cptn-expr-no-itr.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/for-of/dstr/array-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-of/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/statements/for-of/dstr/array-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
+language/statements/for-of/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-lref-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-of/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
@@ -23711,7 +23823,15 @@ language/statements/for-of/dstr/obj-id-init-order.js :: it did not parse: a shor
 language/statements/for-of/dstr/obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true

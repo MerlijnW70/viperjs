@@ -147,6 +147,10 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
         ("function* g() {}", "an async function or a generator"),
         ("var {...r} = {};", "a rest property in a binding pattern"),
         (
+            "var r; ({...r} = {});",
+            "a rest property in an assignment pattern",
+        ),
+        (
             "outer: { break outer; }",
             "a label on something that is not a loop",
         ),

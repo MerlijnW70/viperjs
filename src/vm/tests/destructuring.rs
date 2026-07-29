@@ -382,3 +382,122 @@ fn a_pattern_binds_in_every_other_place_a_binding_may_be_written() {
         "outer"
     );
 }
+
+#[test]
+fn an_assignment_pattern_writes_to_references_and_not_only_to_names() {
+    assert_eq!(
+        run("(function () { var a, b; [a, b] = [1, 2]; return a + ',' + b; })()"),
+        "1,2"
+    );
+    assert_eq!(
+        run("(function () { var a; ({a} = {a: 5}); return a; })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { var x; ({a: x} = {a: 6}); return x; })()"),
+        "6"
+    );
+    // The idiom the form exists for, and the one that needs both sides read before either is
+    // written.
+    assert_eq!(
+        run("(function () { var a = 1, b = 2; [a, b] = [b, a]; return a + ',' + b; })()"),
+        "2,1"
+    );
+    // §13.15.5.3 — the target is a *reference*, so a property or a computed one is as ordinary
+    // here as a name. This is the whole difference from a binding pattern, which makes names.
+    assert_eq!(
+        run("(function () { var o = {}; [o.x] = [7]; return o.x; })()"),
+        "7"
+    );
+    assert_eq!(
+        run("(function () { var o = {}; ({a: o.y} = {a: 8}); return o.y; })()"),
+        "8"
+    );
+    assert_eq!(
+        run("(function () { var a = [0]; [a[0]] = [9]; return a[0]; })()"),
+        "9"
+    );
+    // The reference is evaluated where the element is taken, not before the pattern begins — so
+    // a side effect in it happens once, in that order.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var o = {get k() { n++; return {}; }}; \
+             var a; [o.k] = [1]; return n; })()"
+        ),
+        "0"
+    );
+    assert_eq!(
+        run(
+            "(function () { var i = 0; var t = [{}, {}]; [t[i++].v] = [5]; \
+             return t[0].v + ',' + i; })()"
+        ),
+        "5,1"
+    );
+    // Everything a binding pattern does, it does too: defaults, elisions, rest, nesting, and any
+    // iterable as the source.
+    assert_eq!(
+        run("(function () { var a; [a = 3] = []; return a; })()"),
+        "3"
+    );
+    assert_eq!(
+        run("(function () { var a; ({a = 4} = {}); return a; })()"),
+        "4"
+    );
+    assert_eq!(
+        run("(function () { var a, b; [a, , b] = [1, 2, 3]; return a + ',' + b; })()"),
+        "1,3"
+    );
+    assert_eq!(
+        run("(function () { var a, r; [a, ...r] = [1, 2, 3]; return a + ':' + r.join(','); })()"),
+        "1:2,3"
+    );
+    assert_eq!(
+        run("(function () { var a, b; [[a], [b]] = [[1], [2]]; return a + b; })()"),
+        "3"
+    );
+    assert_eq!(
+        run("(function () { var a; [{a}] = [{a: 5}]; return a; })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { var a; ({x: [a]} = {x: [6]}); return a; })()"),
+        "6"
+    );
+    assert_eq!(
+        run("(function () { var a, b; [a, b] = 'xy'; return a + b; })()"),
+        "xy"
+    );
+    // §13.15.2 — the *value* of the assignment is what was assigned, not what was bound. A
+    // pattern consumes the value, so a copy is kept for whatever wanted the expression.
+    assert_eq!(
+        run("(function () { var a; return ([a] = [1]).length; })()"),
+        "1"
+    );
+    assert_eq!(
+        run("(function () { var a; var v = ([a] = [7]); return v[0]; })()"),
+        "7"
+    );
+    assert_eq!(
+        run("(function () { var a; var v = ({a} = {a: 2}); return v.a; })()"),
+        "2"
+    );
+    // …and the same refusals a binding pattern makes.
+    assert_eq!(
+        run("(function () { var a; try { [a] = 5; return 'ok'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("(function () { var a; try { ({a} = null); return 'ok'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // §14.7.5.5 — and a `for` head may be a pattern rather than a declaration.
+    assert_eq!(
+        run(
+            "(function () { var r = ''; var a, b; for ([a, b] of [[1, 2], [3, 4]]) { \
+             r += a + '' + b; } return r; })()"
+        ),
+        "1234"
+    );
+}

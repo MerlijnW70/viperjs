@@ -232,7 +232,18 @@ impl Compiler<'_> {
                 value,
             } => {
                 let AssignmentTarget::Simple(target) = &**target else {
-                    return Err(unsupported("a destructuring assignment", span));
+                    // §13.15.5 — a destructuring assignment. Only `=` has one: `[a] += b` is a
+                    // Syntax Error the parser has already refused, so there is no operator to
+                    // apply and the value is simply taken apart.
+                    let AssignmentTarget::Pattern(pattern) = &**target else {
+                        return Err(unsupported("a destructuring assignment", span));
+                    };
+                    self.expression(value)?;
+                    // §13.15.2 — the *value* of the assignment is what was assigned, and a
+                    // pattern consumes it. So a copy is kept underneath for whatever wanted the
+                    // expression's value.
+                    self.chunk.emit(Instruction::Duplicate);
+                    return self.assign_pattern(pattern, span);
                 };
                 if let ExprKind::Member { .. } | ExprKind::ComputedMember { .. } = &target.kind {
                     return self.assign_to_property(*operator, target, value, span);
