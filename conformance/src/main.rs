@@ -1,6 +1,6 @@
 //! `cargo run -p conformance` — run test262 and check the ratchet.
 
-use conformance::drive::{Report, find_tests, run_all, suite_revision};
+use conformance::drive::{Report, WORKER_FLAG, find_tests, run_all, suite_revision, work};
 use conformance::expectations::{Expectations, Judgement};
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -18,10 +18,14 @@ fn main() -> ExitCode {
     let mut expectations_path = PathBuf::from("conformance/expectations.txt");
     let mut bless = false;
     let mut filter = None;
+    let mut worker = false;
     let mut arguments = std::env::args().skip(1);
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--bless" => bless = true,
+            // How the run talks to its own child processes — see `drive::work`. Deliberately
+            // absent from the usage text, because nobody should be typing it.
+            WORKER_FLAG => worker = true,
             "--test262" => root = arguments.next().map(PathBuf::from),
             "--expectations" => match arguments.next() {
                 Some(path) => expectations_path = PathBuf::from(path),
@@ -42,6 +46,12 @@ fn main() -> ExitCode {
             "no test262 checkout: pass --test262 <path> or set the TEST262 environment variable",
         );
     };
+    // A worker answers on standard output and judges nothing: the ratchet, the tally and the
+    // expectations file all belong to the run that started it.
+    if worker {
+        work(&root);
+        return ExitCode::SUCCESS;
+    }
 
     let mut files = find_tests(&root);
     if files.is_empty() {

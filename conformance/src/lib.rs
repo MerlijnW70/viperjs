@@ -28,6 +28,7 @@ pub mod drive;
 pub mod expectations;
 pub mod frontmatter;
 pub mod runner;
+pub mod wire;
 
 pub use self::expectations::{Expectations, Judgement};
 pub use self::frontmatter::{Frontmatter, Negative};

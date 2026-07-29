@@ -1,19 +1,27 @@
 //! Finding the tests, and running them all at once.
 //!
-//! # Why a test that hangs does not hang the run
+//! # Why a test that hangs does not hang the run, and why a worker is a process
 //!
 //! `while (true);` is a legal program and test262 contains loops that a slow engine takes a long
-//! time over. Rust cannot stop a thread that will not stop, so a worker that runs past its budget
-//! is *abandoned*: its test is recorded as having timed out, a replacement worker takes over the
-//! queue, and the old thread is left to run until the process ends. That is why the run finishes
-//! with `exit` rather than by joining — there may be threads that never join, and waiting for them
-//! would be waiting forever for an answer already recorded.
+//! time over. Rust cannot stop a thread that will not stop, so the first version of this ran
+//! workers as threads and *abandoned* one that outran its budget: its test was recorded as timed
+//! out and a replacement took over the queue.
+//!
+//! Abandoning does not scale, and the cost was measured rather than reasoned about. An abandoned
+//! worker goes on running for the rest of the run — holding its heap and its core — and its
+//! replacement can be abandoned in turn. One run reached **60 GB across roughly 250 abandoned
+//! workers** and died of an allocation failure without producing a report at all, so a handful of
+//! unbounded tests took the whole conformance number with them.
+//!
+//! So a worker is a child process. A process can be killed, killing one gives back its memory and
+//! its core, and nothing is left running afterwards to accumulate. The cost is that an outcome has
+//! to cross a pipe, which is what [`crate::wire`] is for.
 
 use crate::runner::{Outcome, Runner, Verdict};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, mpsc};
-use std::time::{Duration, Instant};
+use std::sync::{Arc, mpsc};
+use std::time::Duration;
 
 /// Everything a run came to.
 #[derive(Debug, Default)]
@@ -123,121 +131,208 @@ pub fn suite_revision(root: &Path) -> Option<String> {
     })
 }
 
-/// What a worker is doing, so that the main thread can notice it has stopped doing it.
-type Watch = Arc<Mutex<Option<(usize, Instant)>>>;
-
-/// Run every file, `workers` at a time, giving each `budget` before it is abandoned.
+/// Run every file, `workers` at a time, killing any worker that outruns `budget`.
 pub fn run_all(root: &Path, files: &[PathBuf], workers: usize, budget: Duration) -> Report {
     let files: Arc<Vec<PathBuf>> = Arc::new(files.to_vec());
     let next = Arc::new(AtomicUsize::new(0));
-    let (sender, receiver) = mpsc::channel::<(usize, Vec<Outcome>)>();
+    let (sender, receiver) = mpsc::channel::<Vec<Outcome>>();
 
-    let mut watches: Vec<Watch> = Vec::new();
+    let mut supervisors = Vec::new();
     for _ in 0..workers.max(1) {
-        watches.push(spawn(root, &files, &next, &sender));
+        let (root, files, next) = (root.to_path_buf(), Arc::clone(&files), Arc::clone(&next));
+        let sender = sender.clone();
+        // Joinable, unlike what came before. A supervisor never waits without a deadline — every
+        // wait it makes is a `recv_timeout`, and the answer to running out of time is to kill the
+        // child rather than to wait longer. So it always ends, and the run can join it.
+        supervisors.push(std::thread::spawn(move || {
+            supervise(&root, &files, &next, &sender, budget);
+        }));
     }
-    // The main thread's own sender would keep the channel open forever if a worker's copy were
-    // the only other one; dropping it is what lets a `recv_timeout` mean what it says.
+    // The loop below ends when every sender is gone, so the one held here has to go first.
     drop(sender);
 
     let mut report = Report::default();
-    let mut accounted = vec![false; files.len()];
-    let mut done = 0;
-    while done < files.len() {
-        // Short enough that an abandoned worker is replaced promptly, long enough that the main
-        // thread is not spinning while thousands of tests run.
-        match receiver.recv_timeout(Duration::from_millis(100)) {
-            Ok((index, outcomes)) => {
-                // An abandoned worker may still finish and report. Its test already has an
-                // answer, and a second one would be counted twice.
-                if !std::mem::replace(&mut accounted[index], true) {
-                    report.outcomes.extend(outcomes);
-                    done += 1;
+    for outcomes in receiver {
+        report.outcomes.extend(outcomes);
+    }
+    for supervisor in supervisors {
+        // A supervisor that panicked loses its share of the queue and nothing else — the report
+        // says what was collected. Joining is what makes sure no child outlives the run.
+        let _ = supervisor.join();
+    }
+    report
+}
+
+/// Take tests from the queue and put them through a child, replacing the child when it stops.
+fn supervise(
+    root: &Path,
+    files: &Arc<Vec<PathBuf>>,
+    next: &Arc<AtomicUsize>,
+    sender: &mpsc::Sender<Vec<Outcome>>,
+    budget: Duration,
+) {
+    let Some(mut worker) = Worker::start(root) else {
+        return;
+    };
+    loop {
+        let index = next.fetch_add(1, Ordering::Relaxed);
+        let Some(file) = files.get(index) else {
+            return;
+        };
+        let outcomes = match worker.run(file, budget) {
+            Some(outcomes) => outcomes,
+            // The child did not answer in time, or lost the protocol. Either way it has been
+            // killed, and the test it was on is recorded as the failure it is: a test that does
+            // not finish has not passed, and saying so is what keeps one hang from quietly
+            // shrinking the suite.
+            None => {
+                let name = name_of(root, file);
+                match Worker::start(root) {
+                    Some(fresh) => worker = fresh,
+                    None => return,
                 }
-            }
-            // Nothing arrived, which is the normal case while long tests run and also exactly
-            // what a hung worker looks like. Which it is, is what the watches say.
-            Err(mpsc::RecvTimeoutError::Timeout) => {}
-            // Every sender is gone with work outstanding: every worker died. Nothing more will
-            // arrive, so reporting what there is beats waiting for what there is not.
-            Err(mpsc::RecvTimeoutError::Disconnected) => break,
-        }
-        for watch in &mut watches {
-            let overdue = watch
-                .lock()
-                .ok()
-                .and_then(|slot| *slot)
-                .filter(|(_, since)| since.elapsed() > budget);
-            let Some((index, _)) = overdue else {
-                continue;
-            };
-            if !std::mem::replace(&mut accounted[index], true) {
-                report.outcomes.push(Outcome {
-                    name: name_of(root, &files[index]),
+                vec![Outcome {
+                    name,
                     strict: false,
                     verdict: Verdict::Failed(format!(
                         "it did not finish within {} seconds",
                         budget.as_secs()
                     )),
-                });
-                done += 1;
+                }]
             }
-            // The thread is still running and cannot be stopped. Replacing it keeps the queue
-            // moving; the old one is left to end when the process does.
-            let (again, sender) = respawn(root, &files, &next);
-            *watch = again;
-            drop(sender);
+        };
+        if sender.send(outcomes).is_err() {
+            return;
         }
     }
-    report
 }
 
-/// The queue plus a fresh worker on it.
-fn spawn(
-    root: &Path,
-    files: &Arc<Vec<PathBuf>>,
-    next: &Arc<AtomicUsize>,
-    sender: &mpsc::Sender<(usize, Vec<Outcome>)>,
-) -> Watch {
-    let watch: Watch = Arc::new(Mutex::new(None));
-    let (root, files, next) = (root.to_path_buf(), Arc::clone(files), Arc::clone(next));
-    let (mine, sender) = (Arc::clone(&watch), sender.clone());
-    // Detached deliberately — see the module comment. A worker that hangs is never joined.
-    std::thread::spawn(move || {
-        let mut runner = Runner::new(&root);
+/// One child process, and the thread reading what it says.
+struct Worker {
+    child: std::process::Child,
+    /// Lines the child has written, as they arrive.
+    ///
+    /// A channel rather than reading the pipe directly, because a read from a pipe has no
+    /// deadline: a child that says nothing would block its supervisor exactly as a hung thread
+    /// used to block the run. The reader ends when the pipe closes, which killing the child does.
+    lines: mpsc::Receiver<String>,
+}
+
+impl Worker {
+    /// Start a child of this same program, in the mode that runs tests and says what happened.
+    fn start(root: &Path) -> Option<Self> {
+        use std::io::{BufRead, BufReader};
+        use std::process::{Command, Stdio};
+        let mut child = Command::new(std::env::current_exe().ok()?)
+            .arg(WORKER_FLAG)
+            .arg("--test262")
+            .arg(root)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            // Inherited deliberately: a panic message from a child belongs on the run's stderr,
+            // where whoever is watching can see it, rather than mixed into the protocol.
+            .stderr(Stdio::inherit())
+            .spawn()
+            .ok()?;
+        let stdout = child.stdout.take()?;
+        let (sender, lines) = mpsc::channel();
+        std::thread::spawn(move || {
+            for line in BufReader::new(stdout).lines().map_while(Result::ok) {
+                if sender.send(line).is_err() {
+                    return;
+                }
+            }
+        });
+        Some(Self { child, lines })
+    }
+
+    /// Put one file through the child, or answer `None` if it did not come back in time.
+    ///
+    /// `None` leaves the child killed. There is no half-way state worth recovering: a worker that
+    /// missed its deadline may be in a loop that never ends, and the only thing to do with one of
+    /// those is stop it.
+    fn run(&mut self, file: &Path, budget: Duration) -> Option<Vec<Outcome>> {
+        use std::io::Write;
+        // A path with a newline in it would be two paths by the time it arrived. No checkout has
+        // one, which is exactly why it is worth refusing rather than trusting.
+        let path = file.to_string_lossy().replace(['\n', '\r'], "");
+        let asked = self.child.stdin.as_mut().map(|input| {
+            writeln!(input, "{path}")?;
+            input.flush()
+        });
+        if !matches!(asked, Some(Ok(()))) {
+            self.kill();
+            return None;
+        }
+        let mut outcomes = Vec::new();
         loop {
-            let index = next.fetch_add(1, Ordering::Relaxed);
-            let Some(file) = files.get(index) else {
-                return;
+            // The budget is against each *line*, and so against the test: a child that is
+            // answering is a child that is working, and one that has stopped answering is the
+            // case this exists for.
+            let Ok(line) = self.lines.recv_timeout(budget) else {
+                self.kill();
+                return None;
             };
-            if let Ok(mut slot) = mine.lock() {
-                *slot = Some((index, Instant::now()));
+            if line == crate::wire::END_OF_BLOCK {
+                return Some(outcomes);
             }
-            let outcomes = runner.run_file(file);
-            if let Ok(mut slot) = mine.lock() {
-                *slot = None;
+            match crate::wire::decode(&line) {
+                Some(outcome) => outcomes.push(outcome),
+                // Anything else on stdout is not a verdict and must not become one — a corrupt
+                // line decoded as a pass would raise the number with a test that never ran.
+                None => {
+                    self.kill();
+                    return None;
+                }
             }
-            if sender.send((index, outcomes)).is_err() {
+        }
+    }
+
+    /// Stop the child and wait for it, so that nothing of it outlives this call.
+    fn kill(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
+    }
+}
+
+impl Drop for Worker {
+    /// A supervisor that ends — because the queue is empty, or because it panicked — takes its
+    /// child with it. Without this, finishing the run would leave one child per worker alive.
+    fn drop(&mut self) {
+        self.kill();
+    }
+}
+
+/// The argument that puts this program in the mode [`Worker`] drives.
+///
+/// Not in the usage text: it is how the program talks to itself, and an option nobody should pass
+/// is an option nobody needs to be told about.
+pub const WORKER_FLAG: &str = "--worker";
+
+/// Run what arrives on standard input, a path to a line, and say what happened.
+///
+/// The other half of [`Worker`]. Reading paths rather than taking one and exiting keeps a process
+/// per *worker* rather than per test — forty-eight thousand spawns would cost minutes of nothing
+/// but starting up — while still leaving each one killable at any moment.
+pub fn work(root: &Path) {
+    use std::io::{BufRead, Write};
+    let mut runner = Runner::new(root);
+    let input = std::io::stdin();
+    let output = std::io::stdout();
+    let mut writer = std::io::BufWriter::new(output.lock());
+    for line in input.lock().lines().map_while(Result::ok) {
+        for outcome in runner.run_file(Path::new(&line)) {
+            if writeln!(writer, "{}", crate::wire::encode(&outcome)).is_err() {
                 return;
             }
         }
-    });
-    watch
-}
-
-/// A replacement worker, which needs its own sender because the original was dropped.
-///
-/// The sender is handed back rather than kept so that the count of live senders still falls to
-/// zero when the last worker ends — which is what makes a disconnected channel mean "everyone is
-/// gone" rather than "everyone but the spare".
-fn respawn(
-    root: &Path,
-    files: &Arc<Vec<PathBuf>>,
-    next: &Arc<AtomicUsize>,
-) -> (Watch, mpsc::Sender<(usize, Vec<Outcome>)>) {
-    let (sender, _) = mpsc::channel();
-    let watch = spawn(root, files, next, &sender);
-    (watch, sender)
+        // Flushed here rather than left to the buffer: the parent is waiting on lines, and a
+        // finished block still sitting in this writer is a worker that looks hung while it is in
+        // fact done.
+        if writeln!(writer, "{}", crate::wire::END_OF_BLOCK).is_err() || writer.flush().is_err() {
+            return;
+        }
+    }
 }
 
 /// A file's name as the expectations file writes it.
