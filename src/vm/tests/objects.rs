@@ -499,3 +499,73 @@ fn set_answers_whether_the_write_was_allowed_even_though_nothing_reads_it_yet() 
         "1"
     );
 }
+
+#[test]
+fn an_object_with_many_properties_answers_the_same_as_one_with_few() {
+    // An object stops scanning its properties and starts indexing them once there are enough of
+    // them (see `heap::object`), and §10.1.11's answers must not notice. Every row here is over
+    // that threshold and asks something the index could get wrong while the scan got it right.
+    let many = "var o = {}; var i = 0; while (i < 30) { o['k' + i] = i; i = i + 1; } ";
+
+    // Creation order, all thirty of them, with nothing lost and nothing repeated.
+    assert_eq!(
+        run(&format!("{many} Object.getOwnPropertyNames(o).length")),
+        "30"
+    );
+    assert_eq!(
+        run(&format!(
+            "{many} Object.getOwnPropertyNames(o).slice(0, 4).join(',')"
+        )),
+        "k0,k1,k2,k3"
+    );
+    assert_eq!(run(&format!("{many} o.k0 + ',' + o.k29")), "0,29");
+
+    // Writing to a key that is already there keeps its place — §10.1.11 is *creation* order, so a
+    // second write must not move it to the end.
+    assert_eq!(
+        run(&format!(
+            "{many} o.k1 = 'again'; Object.getOwnPropertyNames(o).slice(0, 3).join(',') + '|' + o.k1"
+        )),
+        "k0,k1,k2|again"
+    );
+
+    // A delete shifts every property after it. An index that recorded the old positions and was
+    // not rebuilt would answer a *neighbouring* property here rather than none, which reads as a
+    // plausible value rather than as a bug.
+    let after_delete = format!("{many} delete o.k10; ");
+    assert_eq!(run(&format!("{after_delete} typeof o.k10")), "undefined");
+    assert_eq!(
+        run(&format!("{after_delete} o.k9 + ',' + o.k11 + ',' + o.k29")),
+        "9,11,29"
+    );
+    assert_eq!(
+        run(&format!(
+            "{after_delete} Object.getOwnPropertyNames(o).length"
+        )),
+        "29"
+    );
+    // …and the object still works afterwards: a key added after a delete goes on the end, and a
+    // key deleted twice is still gone.
+    assert_eq!(
+        run(&format!(
+            "{after_delete} o.later = 1; delete o.k10; o.later + ',' + o.k11"
+        )),
+        "1,11"
+    );
+
+    // §10.1.11's two-part order survives the crossing too: indices ascending first, then strings
+    // in creation order, however many of each there are.
+    let mixed = "var o = {}; o.z = 1; var i = 20; while (i > 0) { o[i] = i; i = i - 1; } o.a = 2; ";
+    assert_eq!(
+        run(&format!(
+            "{mixed} Object.getOwnPropertyNames(o).slice(0, 3).join(',')"
+        )),
+        "1,2,3"
+    );
+    assert_eq!(
+        run(&format!(
+            "{mixed} Object.getOwnPropertyNames(o).slice(-2).join(',')"
+        )),
+        "z,a"
+    );
+}

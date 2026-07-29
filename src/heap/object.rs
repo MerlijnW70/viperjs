@@ -11,13 +11,24 @@
 //! `[[DefineOwnProperty]]`, `[[OwnPropertyKeys]]` and the prototype and extensibility methods are
 //! all here, and between them they are what the object model *is*.
 //!
-//! # Why the properties are a `Vec`
+//! # Why the properties are a `Vec`, and what sits beside it
 //!
-//! Because §10.1.11 asks for insertion order and a `Vec` has it. Lookup is linear, which is the
-//! boring implementation and is wrong for an object with a thousand properties — the fix is a map
-//! beside the order, or shapes, and both are M8 experiments that need a benchmark first. Nothing
-//! in the specification's behaviour depends on which is used, which is exactly why the choice can
-//! wait for evidence.
+//! Because §10.1.11 asks for insertion order and a `Vec` has it. Lookup was linear, which this
+//! comment used to call the boring implementation and "wrong for an object with a thousand
+//! properties — the fix is a map beside the order, or shapes, and both are M8 experiments that
+//! need a benchmark first".
+//!
+//! The benchmark arrived. A linear scan makes *insertion* linear too, so filling an array element
+//! by element is quadratic: `a[i] = 1` measured 270 ms for twenty thousand elements, 967 ms for
+//! forty, and 3743 ms for eighty — four times the work for twice the elements. That is not a
+//! slow engine, it is the wrong shape, and it was bad enough that such a test could not finish
+//! inside the conformance harness's budget at all.
+//!
+//! So there is now a map beside the order, and the `Vec` still *is* the order. The map is not
+//! built until an object has more properties than [`INDEXED_ABOVE`], because most objects never
+//! do: a hash table on every one of them would cost an allocation each and buy nothing, and
+//! DR-0013 counts those allocations. Shapes remain the other answer and remain an M8 experiment —
+//! this one is smaller and needed no new representation to get the exponent right.
 
 use crate::compile::Chunk;
 use crate::heap::define::{Validation, apply, validate};
@@ -25,6 +36,7 @@ use crate::heap::{
     Callable, DefineOutcome, EnvironmentId, Heap, Native, Property, PropertyDescriptor, PropertyKey,
 };
 use crate::value::Value;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 /// An object on the heap.
@@ -80,7 +92,33 @@ pub struct Object {
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
     /// order of property creation", so this `Vec` *is* that answer for part of the result.
     properties: Vec<(PropertyKey, Property)>,
+    /// Where each key sits in `properties`, once there are enough of them to be worth it.
+    ///
+    /// `None` means "few enough to scan", which is the common case and costs nothing. `Some` is
+    /// an exact index: every key in `properties` is in it, mapped to its position. Anything that
+    /// disturbs the positions — a delete, which shifts everything after it — either updates this
+    /// or rebuilds it, because a stale index would find the wrong property rather than none.
+    ///
+    /// Boxed so that an object without one pays a pointer rather than a whole hash table. An
+    /// `Object` sits inline in the heap's arena, so its size is charged to every object ever
+    /// made, live or swept — see [`Heap::footprint`] and DR-0010.
+    ///
+    /// Measured, because clippy is right to ask: a `HashMap` here makes `Option<Object>` 144 bytes
+    /// and a `Box` makes it 104. Most objects never build one, so the forty bytes would be paid by
+    /// every object in the program to save a pointer hop for a few.
+    #[allow(clippy::box_collection)] // 40 bytes an object, and every object pays — see above
+    index: Option<Box<HashMap<PropertyKey, usize>>>,
 }
+
+/// How many properties an object may hold before its keys are worth indexing.
+///
+/// Below this a scan of a short `Vec` beats a hash: the keys are interned, so comparing two is
+/// comparing two integers, and eight of those cost less than hashing one. Above it the scan is
+/// what makes filling an array quadratic.
+///
+/// The exact number is not delicate — anything in this region trades the same way, and the cases
+/// that hurt have thousands of properties rather than nine.
+const INDEXED_ABOVE: usize = 8;
 
 impl Object {
     /// An ordinary object with the given prototype, no properties, and extensible.
@@ -98,6 +136,7 @@ impl Object {
             environment: None,
             lexical_this: None,
             properties: Vec::new(),
+            index: None,
         }
     }
 
@@ -151,10 +190,33 @@ impl Object {
     /// Own only: nothing here walks the prototype chain, which is the difference between this and
     /// `[[Get]]`, and the difference `Object.hasOwn` exists to expose.
     pub fn get_own_property(&self, key: PropertyKey) -> Option<&Property> {
-        self.properties
-            .iter()
-            .find(|(stored, _)| *stored == key)
-            .map(|(_, property)| property)
+        let at = self.position(key)?;
+        self.properties.get(at).map(|(_, property)| property)
+    }
+
+    /// Where `key` sits in `properties`, by whichever means this object has.
+    ///
+    /// The one place that decides how a key is found. Written twice — once for the scan and once
+    /// for the map — the two could disagree about a key and only one of them would be right.
+    fn position(&self, key: PropertyKey) -> Option<usize> {
+        match &self.index {
+            Some(index) => index.get(&key).copied(),
+            None => self
+                .properties
+                .iter()
+                .position(|(stored, _)| *stored == key),
+        }
+    }
+
+    /// Build the index of every key's position, or rebuild one whose positions have moved.
+    fn reindex(&mut self) {
+        self.index = Some(Box::new(
+            self.properties
+                .iter()
+                .enumerate()
+                .map(|(at, (key, _))| (*key, at))
+                .collect(),
+        ));
     }
 
     /// File `property` under `key`, replacing whatever was there.
@@ -163,13 +225,23 @@ impl Object {
     /// [`validate`] has agreed. A new key goes on the end, which is what makes the `Vec` the
     /// creation order §10.1.11 asks for.
     fn insert(&mut self, key: PropertyKey, property: Property) {
-        match self
-            .properties
-            .iter_mut()
-            .find(|(stored, _)| *stored == key)
-        {
-            Some((_, existing)) => *existing = property,
-            None => self.properties.push((key, property)),
+        if let Some(at) = self.position(key) {
+            // A key that is already here keeps its place: §10.1.11's order is *creation* order,
+            // so writing to a property again must not move it to the end.
+            if let Some((_, existing)) = self.properties.get_mut(at) {
+                *existing = property;
+            }
+            return;
+        }
+        let at = self.properties.len();
+        self.properties.push((key, property));
+        match &mut self.index {
+            // Appending disturbs no existing position, so the index only gains an entry.
+            Some(index) => {
+                index.insert(key, at);
+            }
+            None if self.properties.len() > INDEXED_ABOVE => self.reindex(),
+            None => {}
         }
     }
 
@@ -178,17 +250,20 @@ impl Object {
     /// A key that is not there answers `true`: deleting nothing succeeds, which is why
     /// `delete o.nothing` is `true` and says nothing about whether `o.nothing` existed.
     pub fn delete(&mut self, key: PropertyKey) -> bool {
-        let Some(index) = self
-            .properties
-            .iter()
-            .position(|(stored, _)| *stored == key)
-        else {
+        let Some(at) = self.position(key) else {
             return true;
         };
-        if !self.properties[index].1.configurable {
+        if !self.properties[at].1.configurable {
             return false;
         }
-        self.properties.remove(index);
+        self.properties.remove(at);
+        // Removing shifts every position after it, so the index is now wrong about all of them —
+        // and wrong here means finding a *neighbouring* property rather than finding none, which
+        // is the kind of error that reads as a plausible value. Rebuilding costs what the removal
+        // already cost.
+        if self.index.is_some() {
+            self.reindex();
+        }
         true
     }
 
@@ -461,3 +536,110 @@ const MAX_PROTOTYPE_CHAIN: usize = 100_000;
 #[cfg(test)]
 #[path = "tests.rs"]
 mod object_tests;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::heap::PropertyKind;
+
+    fn key(heap: &mut Heap, text: &str) -> PropertyKey {
+        PropertyKey::from_units(heap, &text.encode_utf16().collect::<Vec<_>>())
+    }
+
+    fn data(value: f64) -> PropertyDescriptor {
+        PropertyDescriptor {
+            value: Some(Value::Number(value)),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        }
+    }
+
+    /// Whether `object` is keeping an index of its keys.
+    fn indexed(heap: &Heap, object: ObjectId) -> bool {
+        heap.object(object)
+            .is_some_and(|found| found.index.is_some())
+    }
+
+    #[test]
+    fn keys_are_indexed_only_once_there_are_more_of_them_than_it_costs_to_scan() {
+        // This test looks at a private field, which the rest of this file's tests are careful not
+        // to do — and the reason is the point. The index changes no answer: every question about
+        // a property has the same answer whether it was found by a scan or by a hash. So no test
+        // written in JavaScript can say when one is built, and a policy nothing can observe is a
+        // policy nothing is holding in place.
+        let mut heap = Heap::new();
+        let object = heap.new_object(None);
+        for at in 0..INDEXED_ABOVE {
+            let key = key(&mut heap, &format!("k{at}"));
+            heap.define_own_property(object, key, &data(at as f64));
+            assert!(
+                !indexed(&heap, object),
+                "{} properties is still few enough to scan",
+                at + 1
+            );
+        }
+        // One more than the threshold, and not one fewer: an object holding exactly
+        // `INDEXED_ABOVE` is on the cheap side of the trade.
+        let over = key(&mut heap, "one-too-many");
+        heap.define_own_property(object, over, &data(99.0));
+        assert!(indexed(&heap, object));
+
+        // A small object that has something deleted does not acquire one on the way past — the
+        // rebuild after a delete is for an index that already exists, not a reason to build one.
+        let small = heap.new_object(None);
+        let only = key(&mut heap, "only");
+        heap.define_own_property(small, only, &data(1.0));
+        assert!(
+            heap.object_mut(small)
+                .is_some_and(|found| found.delete(only))
+        );
+        assert!(!indexed(&heap, small));
+    }
+
+    #[test]
+    fn an_indexed_object_finds_every_key_it_still_has_after_a_delete() {
+        // The failure this guards against is not "cannot find it" — it is finding the *wrong*
+        // one. Removing a property shifts every position after it, so an index left unrebuilt
+        // answers each of those keys with its neighbour: a plausible value, not a crash.
+        let mut heap = Heap::new();
+        let object = heap.new_object(None);
+        let count = INDEXED_ABOVE * 3;
+        let keys: Vec<_> = (0..count)
+            .map(|at| {
+                let key = key(&mut heap, &format!("k{at}"));
+                heap.define_own_property(object, key, &data(at as f64));
+                key
+            })
+            .collect();
+        assert!(indexed(&heap, object));
+
+        // Delete from the front, where the most positions move.
+        assert!(
+            heap.object_mut(object)
+                .is_some_and(|found| found.delete(keys[0]))
+        );
+        for (at, key) in keys.iter().enumerate().skip(1) {
+            let found = heap
+                .object(object)
+                .and_then(|found| found.get_own_property(*key))
+                .map(|property| property.kind);
+            assert!(
+                matches!(
+                    found,
+                    Some(PropertyKind::Data {
+                        value: Value::Number(number),
+                        ..
+                    }) if number == at as f64
+                ),
+                "k{at} answered with the wrong property after a delete shifted it"
+            );
+        }
+        assert!(
+            heap.object(object)
+                .and_then(|found| found.get_own_property(keys[0]))
+                .is_none()
+        );
+    }
+}
