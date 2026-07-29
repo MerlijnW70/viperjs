@@ -22,6 +22,8 @@ pub mod error;
 pub mod function;
 pub mod global;
 mod iterator;
+mod json;
+mod json_write;
 mod math;
 mod object;
 mod object_state;
@@ -65,6 +67,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     math::install(heap, realm, global);
     wrapper::install(heap, realm, global);
     iterator::install(heap, realm);
+    json::install(heap, realm, global);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }

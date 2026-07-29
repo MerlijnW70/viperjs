@@ -22,6 +22,7 @@
 //! - `for_of` — §14.7.5.7, and the four ways out of a loop that have to close its iterator.
 //! - `globals` — §19.2, and why `parseInt` is not `Number`.
 //! - `iterators` — §27.1, and where an iterator has got to that no script can reach.
+//! - `json` — §25.5, and the promise that what `stringify` wrote will parse back.
 //! - `object_state` — §20.1.2's whole-object statics, and the coercion they start with.
 //! - `parameters` — §15.1, and the three things a list that is not simple decides.
 //! - `strings` — §22.1 and §10.4.3, and the object with a property per character.
@@ -50,6 +51,7 @@ mod for_of;
 mod functions;
 mod globals;
 mod iterators;
+mod json;
 mod lexical;
 mod math;
 mod object_state;
