@@ -329,10 +329,15 @@ impl Object {
     pub fn own_property_keys(&self, heap: &Heap) -> Vec<PropertyKey> {
         let mut indices: Vec<(u32, PropertyKey)> = Vec::new();
         let mut names: Vec<PropertyKey> = Vec::new();
+        // §10.1.11 step 4 — every Symbol key comes after every String one, in the order they were
+        // added. A third list rather than a sort, because the order *within* each group is
+        // insertion order and a sort would have to be told not to disturb it.
+        let mut symbols: Vec<PropertyKey> = Vec::new();
         for (key, _) in &self.properties {
-            match key.as_array_index(heap) {
-                Some(index) => indices.push((index, *key)),
-                None => names.push(*key),
+            match (key.as_symbol(), key.as_array_index(heap)) {
+                (Some(_), _) => symbols.push(*key),
+                (None, Some(index)) => indices.push((index, *key)),
+                (None, None) => names.push(*key),
             }
         }
         // Ascending *numeric* order, which is why the index came back as a number: sorting the
@@ -342,6 +347,7 @@ impl Object {
             .into_iter()
             .map(|(_, key)| key)
             .chain(names)
+            .chain(symbols)
             .collect()
     }
 

@@ -95,8 +95,9 @@ impl Vm {
     /// The name is the whole diagnosis — there is no span at run time and no other context — so
     /// it is worth the allocation to say which one, in the words every other engine uses.
     pub(super) fn missing_global(&self, key: PropertyKey, heap: &Heap) -> String {
-        let name = heap
-            .string(key.as_string())
+        let name = key
+            .as_string()
+            .and_then(|id| heap.string(id))
             .map(String::from_utf16_lossy)
             // A key with no string behind it cannot come from a compiled name; saying so beats
             // an empty message that reads like the name was blank.

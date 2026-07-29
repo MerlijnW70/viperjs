@@ -19,7 +19,7 @@
 //! the compiler keeps them apart and the conversion between them is [`Property::to_descriptor`]
 //! and — arriving with the object — `ValidateAndApplyPropertyDescriptor`.
 
-use crate::heap::{Heap, StringId};
+use crate::heap::{Heap, StringId, SymbolId};
 use crate::value::{Value, canonical_numeric_index};
 
 /// A property key — §6.1.7, "either a String or a Symbol".
@@ -32,14 +32,21 @@ use crate::value::{Value, canonical_numeric_index};
 /// [`Heap::intern`] guarantees is the same for every String with the same code units — and that
 /// guarantee is why the field is private and the constructors are the only way in.
 ///
-/// # Why it is not an enum yet
+/// # Why it is an enum
 ///
-/// Symbols. A key is a String *or a Symbol*, and a Symbol needs somewhere on the heap to live and
-/// an operation that can throw before it can be reached from script. When it arrives this becomes
-/// an enum, and because nothing outside this module can take a key apart, that is a change to
-/// this file and to whatever wants to ask which kind it is.
+/// §6.1.7 says a key is a String **or a Symbol**, and the two behave differently at nearly every
+/// turn: a Symbol key is invisible to `for`-`in`, to `Object.keys` and to
+/// `getOwnPropertyNames`, it sorts after every String in `[[OwnPropertyKeys]]`, and it cannot be
+/// spelled. Every caller that takes a key apart therefore has to say what it does about a Symbol,
+/// which is what the enum is for — [`PropertyKey::as_string`] answers `None` rather than a String
+/// that is not there.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PropertyKey(StringId);
+pub enum PropertyKey {
+    /// An interned String — the ordinary kind, and every key that can be written down.
+    String(StringId),
+    /// A Symbol, which is its own identity and equal to nothing else.
+    Symbol(SymbolId),
+}
 
 impl PropertyKey {
     /// The key `units` spells.
@@ -48,7 +55,15 @@ impl PropertyKey {
     /// key, the empty one included — §6.1.7 says so in as many words, and `o[""]` is a property
     /// like any other.
     pub fn from_units(heap: &mut Heap, units: &[u16]) -> Self {
-        Self(heap.intern(units))
+        Self::String(heap.intern(units))
+    }
+
+    /// The key a Symbol is used as — the other half of `ToPropertyKey` (§7.1.19 step 3).
+    ///
+    /// No interning: a Symbol is already its own identity, which is the property that makes it
+    /// usable as a key at all.
+    pub fn from_symbol(id: SymbolId) -> Self {
+        Self::Symbol(id)
     }
 
     /// The key a String value is used as — most of `ToPropertyKey` (§7.1.19).
@@ -58,16 +73,27 @@ impl PropertyKey {
     /// operations that reach user code; this is the step underneath, and it is the only one that
     /// concerns the heap.
     pub fn from_string(heap: &mut Heap, id: StringId) -> Self {
-        Self(heap.intern_id(id))
+        Self::String(heap.intern_id(id))
     }
 
-    /// The String this key is, as a value.
+    /// The String this key is, if it is one.
     ///
-    /// Every key can answer this while every key is a String. When Symbols arrive it becomes the
-    /// question "is this key a String, and if so which", and every caller has to say what it does
-    /// about the other answer — which is the point of making them ask.
-    pub fn as_string(self) -> StringId {
-        self.0
+    /// `None` for a Symbol, and every caller has to say what it does about that — which is the
+    /// point. A key that cannot be spelled is not a key `for`-`in` yields, nor one `Object.keys`
+    /// lists, nor one a message can name.
+    pub fn as_string(self) -> Option<StringId> {
+        match self {
+            Self::String(id) => Some(id),
+            Self::Symbol(_) => None,
+        }
+    }
+
+    /// The Symbol this key is, if it is one.
+    pub fn as_symbol(self) -> Option<SymbolId> {
+        match self {
+            Self::Symbol(id) => Some(id),
+            Self::String(_) => None,
+        }
     }
 
     /// The array index this key is, if it is one — §6.1.7, "an integer index in `[+0, 2^32 - 2]`".
@@ -80,6 +106,7 @@ impl PropertyKey {
     /// own — and it is still not an index, because the interval starts at `+0` and `-0` is not in
     /// it. `a["-0"]` is a named property, and that is observable.
     pub fn as_array_index(self, heap: &Heap) -> Option<u32> {
+        // A Symbol is no index and never will be, and falls out through `as_integer_index`.
         let index = self.as_integer_index(heap)?;
         // `2^32 - 2` is the last index; `as` cannot lose anything after the comparison, since the
         // value is an integer already inside `u32`'s range.
@@ -93,7 +120,7 @@ impl PropertyKey {
     /// exactly representable and the next integer is not, which is the whole reason the bound is
     /// there.
     pub fn as_integer_index(self, heap: &Heap) -> Option<f64> {
-        let units = heap.string(self.0)?;
+        let units = heap.string(self.as_string()?)?;
         let index = canonical_numeric_index(units)?;
         // "an integral Number in the inclusive interval from +0 to 2^53 - 1", in three tests.
         //
@@ -306,7 +333,7 @@ mod tests {
         // …and a key made from a String a script computed is the same key again, even though
         // that String is its own allocation.
         let computed = heap.new_string("a".encode_utf16().collect());
-        assert_ne!(computed, written.as_string());
+        assert_ne!(Some(computed), written.as_string());
         assert_eq!(PropertyKey::from_string(&mut heap, computed), written);
     }
 
@@ -317,7 +344,10 @@ mod tests {
         let surrogate = PropertyKey::from_units(&mut heap, &[0xd800]);
         assert_ne!(empty, surrogate);
         assert_eq!(empty, PropertyKey::from_units(&mut heap, &[]));
-        assert_eq!(heap.string(empty.as_string()), Some(&[][..]));
+        assert_eq!(
+            empty.as_string().and_then(|id| heap.string(id)),
+            Some(&[][..])
+        );
         // Neither is an index, and neither may be turned into one by accident.
         assert_eq!(empty.as_array_index(&heap), None);
         assert_eq!(surrogate.as_integer_index(&heap), None);

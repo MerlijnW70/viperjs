@@ -23,6 +23,22 @@ pub mod function;
 mod math;
 pub mod object;
 mod object_state;
+mod symbol;
+pub use self::symbol::WELL_KNOWN;
+
+/// Where a well-known Symbol sits in [`WELL_KNOWN`], by name.
+///
+/// A linear search over thirteen short strings, done once per call to whatever needs it. The
+/// alternative is a constant per Symbol, which is thirteen names to keep in step with the table
+/// instead of one; when a benchmark says this is on a hot path it becomes those constants and not
+/// before.
+#[must_use]
+pub fn well_known_at(name: &str) -> usize {
+    WELL_KNOWN
+        .iter()
+        .position(|known| *known == name)
+        .unwrap_or(usize::MAX)
+}
 mod string;
 mod string_edit;
 mod string_index;
@@ -46,6 +62,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     math::install(heap, realm, global);
     wrapper::install(heap, realm, global);
     string::install(heap, realm, global);
+    symbol::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.
@@ -161,7 +178,7 @@ pub(crate) fn own_value(heap: &Heap, object: ObjectId, name: &str) -> Option<Val
         .object(object)?
         .own_property_keys(heap)
         .into_iter()
-        .find(|key| heap.string(key.as_string()) == Some(&units[..]))?;
+        .find(|key| key.as_string().and_then(|id| heap.string(id)) == Some(&units[..]))?;
     match heap.object(object)?.get_own_property(key)?.kind {
         PropertyKind::Data { value, .. } => Some(value),
         PropertyKind::Accessor { .. } => None,

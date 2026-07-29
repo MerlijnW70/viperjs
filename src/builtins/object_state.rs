@@ -36,6 +36,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, function: ObjectId) {
         ("isSealed", 1, is_sealed),
         ("seal", 1, seal),
         ("setPrototypeOf", 2, set_prototype_of),
+        ("getOwnPropertySymbols", 1, get_own_property_symbols),
         ("values", 1, values),
     ] {
         define_method(heap, realm, function, name, length, native);
@@ -235,19 +236,44 @@ fn listed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Co
     let object = coerced(vm, heap, call.argument(0))?;
     let mut listed = Vec::new();
     for key in keys_of(heap, object) {
-        if !own_property(heap, object, key).is_some_and(|property| property.enumerable) {
+        // §7.3.24 step 4 — String keys only, so a Symbol-keyed property is not among the values
+        // either. Filtered before the `[[Get]]`, because that would run a getter for something
+        // the answer will not hold.
+        if key.as_string().is_none()
+            || !own_property(heap, object, key).is_some_and(|property| property.enumerable)
+        {
             continue;
         }
         let value = vm.get_property_key(Value::Object(object), key, heap)?;
         listed.push(match half {
             Half::Values => value,
             Half::Entries => {
-                let name = Value::String(key.as_string());
-                super::array::from_values(vm, heap, &[name, value])?
+                let Some(name) = key.as_string() else {
+                    continue;
+                };
+                super::array::from_values(vm, heap, &[Value::String(name), value])?
             }
         });
     }
     super::array::from_values(vm, heap, &listed)
+}
+
+/// §20.1.2.11 `Object.getOwnPropertySymbols`.
+///
+/// The other half of `getOwnPropertyNames`, and the reason there are two: a Symbol key is not
+/// hidden, but it is not listed with the names either. Every operation in the language that walks
+/// an object's keys picks one of these two lists, and none of them picks both.
+fn get_own_property_symbols(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let object = coerced(vm, heap, call.argument(0))?;
+    let found: Vec<Value> = keys_of(heap, object)
+        .into_iter()
+        .filter_map(|key| key.as_symbol().map(Value::Symbol))
+        .collect();
+    super::array::from_values(vm, heap, &found)
 }
 
 /// §20.1.2.23 `Object.values`.

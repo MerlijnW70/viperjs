@@ -225,6 +225,7 @@ pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> Completion<bo
         | (Value::Boolean(_), Value::Boolean(_))
         | (Value::Number(_), Value::Number(_))
         | (Value::String(_), Value::String(_))
+        | (Value::Symbol(_), Value::Symbol(_))
         | (Value::Object(_), Value::Object(_)) => left.is_strictly_equal(&right, heap),
         // Steps 2 and 3 — the pair that is equal without being the same, and the reason
         // `x == null` is the idiomatic test for "either of them".
@@ -253,11 +254,11 @@ pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> Completion<bo
         // *not* on it. So `{} == null` reaches step 15 and is false without converting anything —
         // which is also why it cannot throw, and why `x == null` stays the safe idiom even when
         // `x` is an object whose `valueOf` would blow up.
-        (Value::Object(_), Value::String(_) | Value::Number(_)) => {
+        (Value::Object(_), Value::String(_) | Value::Number(_) | Value::Symbol(_)) => {
             let left = left.to_primitive(heap, Hint::Number)?;
             return is_loosely_equal(left, right, heap);
         }
-        (Value::String(_) | Value::Number(_), Value::Object(_)) => {
+        (Value::String(_) | Value::Number(_) | Value::Symbol(_), Value::Object(_)) => {
             let right = right.to_primitive(heap, Hint::Number)?;
             return is_loosely_equal(left, right, heap);
         }

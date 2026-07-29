@@ -85,6 +85,12 @@ fn read(heap: &mut Heap, object: ObjectId, name: &str) -> Option<Value> {
 /// only place in the language where they do, and it is worth the check.
 fn make_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let data = match call.arguments.first() {
+        // §22.1.1.1 step 2 — a Symbol is spelled rather than refused, and *only* here. `ToString`
+        // of one throws, so this is the single door out of the type into text, and it is closed
+        // to `new String(sym)`: step 2 applies when `NewTarget` is `undefined` and no other time.
+        Some(Value::Symbol(symbol)) if !call.constructing => {
+            return Ok(Value::String(super::symbol::descriptive(heap, *symbol)));
+        }
         Some(value) => vm.to_string(*value, heap)?,
         None => heap.intern(&[]),
     };

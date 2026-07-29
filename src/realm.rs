@@ -17,7 +17,7 @@
 //! else — `Array`, `String`, `Number`, `Function.prototype`'s methods — is not, and the
 //! conformance expectations name every test that notices.
 
-use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey};
+use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey, SymbolId};
 use crate::value::Value;
 
 /// The intrinsic objects, and the prototypes everything else is given.
@@ -42,6 +42,17 @@ pub struct Realm {
     /// `undefined` because there is no character there rather than because it is not that kind of
     /// object. That is the difference from `Number.prototype`, which is deliberately ordinary.
     string_prototype: ObjectId,
+    /// What every Symbol finds its three methods on.
+    ///
+    /// An ordinary object, like `Number.prototype` and unlike `String.prototype`: there is nothing
+    /// a Symbol wrapper has of its own, so §20.4.3 needs no exotic object to hold it.
+    symbol_prototype: ObjectId,
+    /// §6.1.5.1's well-known Symbols, in the order [`crate::builtins::WELL_KNOWN`] names them.
+    ///
+    /// Held by the realm because the *engine* consults them by identity: `for`-`of` reaches for
+    /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
+    /// property on the constructor would be the script's to move; this is not.
+    well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
     /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
     ///
     /// An array rather than six fields because nothing here treats one differently from another:
@@ -110,6 +121,14 @@ impl Realm {
         let array_prototype = heap.new_array(object_prototype, 0);
         let boolean_prototype = heap.new_object(Some(object_prototype));
         let number_prototype = heap.new_object(Some(object_prototype));
+        let symbol_prototype = heap.new_object(Some(object_prototype));
+        // §6.1.5.1 — each is described as `Symbol.iterator` and so on, which is what makes
+        // `String(Symbol.iterator)` answer `"Symbol(Symbol.iterator)"`.
+        let well_known = crate::builtins::WELL_KNOWN.map(|name| {
+            let units: Vec<u16> = format!("Symbol.{name}").encode_utf16().collect();
+            let description = heap.intern(&units);
+            heap.new_symbol(Some(description))
+        });
         let empty = heap.intern(&[]);
         let string_prototype = heap.new_string_object(object_prototype, empty);
         // §20.5.3 — `Error.prototype` has a `name` of `"Error"` and an empty `message`, and both
@@ -164,6 +183,8 @@ impl Realm {
             boolean_prototype,
             number_prototype,
             string_prototype,
+            symbol_prototype,
+            well_known,
             native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
@@ -225,6 +246,21 @@ impl Realm {
     /// What every String object and every String primitive finds its methods on.
     pub fn string_prototype(&self) -> ObjectId {
         self.string_prototype
+    }
+
+    /// What every Symbol finds its methods on.
+    pub fn symbol_prototype(&self) -> ObjectId {
+        self.symbol_prototype
+    }
+
+    /// The well-known Symbol at this position in [`crate::builtins::WELL_KNOWN`].
+    ///
+    /// By index rather than by name because the engine's uses are compile-time constants and a
+    /// name lookup would be a string comparison on a path that has none. The names those indices
+    /// have are the `WELL_KNOWN` table in `crate::builtins`, and `well_known_at` beside it turns
+    /// one into the other for the callers that have a name and not a position.
+    pub fn well_known(&self, at: usize) -> Option<SymbolId> {
+        self.well_known.get(at).copied()
     }
 
     /// Give a function the `prototype` object its instances will inherit from — §10.2.5.
@@ -315,7 +351,7 @@ mod tests {
             .object(object)?
             .own_property_keys(heap)
             .into_iter()
-            .find(|key| heap.string(key.as_string()) == Some(&units[..]))?;
+            .find(|key| key.as_string().and_then(|id| heap.string(id)) == Some(&units[..]))?;
         match heap.object(object)?.get_own_property(key)?.kind {
             PropertyKind::Data { value, .. } => Some(value),
             PropertyKind::Accessor { .. } => None,
@@ -368,7 +404,7 @@ mod tests {
             .object(object)?
             .own_property_keys(heap)
             .into_iter()
-            .find(|key| heap.string(key.as_string()) == Some(&units[..]))?;
+            .find(|key| key.as_string().and_then(|id| heap.string(id)) == Some(&units[..]))?;
         let found = heap.object(object)?.get_own_property(key)?;
         let PropertyKind::Data { writable, .. } = found.kind else {
             return None;
@@ -459,7 +495,13 @@ mod tests {
         // that adding a fifth is a decision rather than a number going up.
         let names: Vec<String> = keys
             .iter()
-            .map(|key| String::from_utf16_lossy(heap.string(key.as_string()).unwrap_or(&[])))
+            .map(|key| {
+                String::from_utf16_lossy(
+                    key.as_string()
+                        .and_then(|id| heap.string(id))
+                        .unwrap_or(&[]),
+                )
+            })
             .collect();
         assert_eq!(names, ["name", "message", "constructor", "toString"]);
         for key in keys {

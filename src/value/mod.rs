@@ -78,7 +78,7 @@ pub use self::operators::{apply_binary, is_loosely_equal};
 
 pub(crate) use self::number_to_string::number_to_string;
 use self::string_to_number::string_to_number;
-use crate::heap::{Heap, ObjectId, StringId};
+use crate::heap::{Heap, ObjectId, StringId, SymbolId};
 
 /// An ECMAScript language value (§6.1).
 ///
@@ -98,6 +98,12 @@ pub enum Value {
     /// the argument for why a heap value is an index. Two Strings with the same contents are
     /// two Strings — nothing is interned — so every comparison here reads the heap.
     String(StringId),
+    /// A Symbol — §6.1.5, a value whose identity is itself.
+    ///
+    /// The one primitive that is not its contents. Two Symbols with the same description are two
+    /// Symbols and are never equal, which is exactly what makes one usable as a property key that
+    /// nothing else can collide with. See [`crate::heap::Symbol`].
+    Symbol(SymbolId),
     /// An Object — §6.1.7, a collection of properties with a prototype.
     ///
     /// The only type here whose identity is not its contents: two objects with the same
@@ -126,6 +132,7 @@ impl Value {
             Self::Boolean(_) => "boolean",
             Self::Number(_) => "number",
             Self::String(_) => "string",
+            Self::Symbol(_) => "symbol",
             // §13.5.3's table again, and the one row that has to look inside: an Object is
             // `"object"` unless it has a `[[Call]]`, in which case it is `"function"`. A handle
             // this heap does not know is `"object"`, which is what an object with nothing
@@ -145,6 +152,9 @@ impl Value {
         match self {
             Self::Undefined | Self::Null => false,
             Self::Boolean(value) => *value,
+            // §7.1.2's table again — a Symbol is always true, description or not. There is no
+            // "empty Symbol" for the String rule's counterpart to be about.
+            Self::Symbol(_) => true,
             // "If argument is the empty String, return false; otherwise return true." Only the
             // length is asked about, so `"0"` and `"false"` are both true — the two strings
             // every list of JavaScript surprises begins with.
@@ -176,6 +186,13 @@ impl Value {
             Self::Boolean(true) => 1.0,
             Self::Boolean(false) => 0.0,
             Self::Number(number) => *number,
+            // §7.1.4 step 3 — a Symbol has no numeric value and asking for one is a **TypeError**,
+            // not a NaN. That is what makes `Symbol() + 1` an error where `undefined + 1` is
+            // merely `NaN`: arithmetic on a Symbol is always a mistake, and the specification
+            // would rather say so than produce a number nobody meant.
+            Self::Symbol(_) => {
+                return Err(Abrupt::type_error("a Symbol has no numeric value"));
+            }
             // §7.1.4 step 1 — an Object is converted to a primitive first, and that is what can
             // fail. `ToPrimitive` of the result is never an Object, so this cannot recur.
             Self::Object(_) => return self.to_primitive(heap, Hint::Number)?.to_number(heap),
@@ -227,6 +244,15 @@ impl Value {
             Self::Boolean(false) => "false".to_string(),
             Self::Number(number) => number_to_string(*number),
             Self::String(id) => return Ok(*id),
+            // §7.1.17 step 2 — and this one is the reason the type is useful. A Symbol will not
+            // turn into text by accident, so `"key: " + Symbol()` is an error rather than a
+            // string with something unhelpful in the middle of it. `String(sym)` still works:
+            // §22.1.1.1 has a step of its own for exactly this, and it is the only way through.
+            Self::Symbol(_) => {
+                return Err(Abrupt::type_error(
+                    "a Symbol cannot be converted to a string",
+                ));
+            }
             // §7.1.17 step 1 — the same conversion `ToNumber` does, with the other hint. `"" + x`
             // and `1 * x` therefore ask an object two different questions.
             Self::Object(_) => return self.to_primitive(heap, Hint::String)?.to_string(heap),

@@ -45,9 +45,11 @@ mod environment;
 mod object;
 mod property;
 mod string_object;
+mod symbol;
 
 pub use self::arguments::ArgumentsMap;
 pub use self::callable::{Bound, Callable, Native, NativeCall};
+pub use self::symbol::{Symbol, SymbolId};
 
 /// What `[[DefineOwnProperty]]` came to.
 ///
@@ -187,6 +189,18 @@ pub struct Heap {
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
     /// frame is gone and the variables are not. See [`Environment`].
     environments: Vec<Option<Environment>>,
+    /// Every Symbol ever made — §6.1.5, where a handle is the value rather than a name for one.
+    ///
+    /// Its own arena for the reason the others have theirs: a [`SymbolId`] cannot address a String
+    /// and the compiler says so. Nothing is ever removed while the collector does not reach here,
+    /// on the same terms as the rest.
+    symbols: Vec<Option<Symbol>>,
+    /// §20.4.2.2's global Symbol registry — what `Symbol.for` has already handed out.
+    ///
+    /// Keyed by the *interned* String, so `Symbol.for("a")` twice is one Symbol. The registry
+    /// outlives every realm by design: the specification says so in as many words, and it is the
+    /// reason two frames can agree on a key without sharing an object.
+    registry: HashMap<StringId, SymbolId>,
     /// How many code units every String on this heap holds between them.
     ///
     /// Tracked rather than summed because [`Heap::footprint`] is asked in the interpreter's loop
@@ -326,6 +340,58 @@ impl Heap {
         let id = self.new_string(units.to_vec());
         self.interned.insert(units.into(), id);
         id
+    }
+
+    /// Put a Symbol on the heap — §20.4.1.1 `SymbolDescriptiveString`'s subject, and §6.1.5's value.
+    ///
+    /// A fresh Symbol every time, which is the entire contract: `Symbol("a") === Symbol("a")` is
+    /// false, and there is no way to ask for one that already exists except through the registry.
+    pub fn new_symbol(&mut self, description: Option<StringId>) -> SymbolId {
+        let id = SymbolId(self.symbols.len());
+        self.symbols.push(Some(Symbol {
+            description,
+            registered: None,
+        }));
+        id
+    }
+
+    /// The Symbol `key` names in §20.4.2.2's registry, made and filed if it is not there yet.
+    ///
+    /// The half of `Symbol.for` that concerns the heap. `key` must already be interned, which
+    /// [`PropertyKey`] guarantees and every caller here goes through.
+    pub fn registered_symbol(&mut self, key: StringId) -> SymbolId {
+        let key = self.intern_id(key);
+        if let Some(found) = self.registry.get(&key) {
+            return *found;
+        }
+        let id = self.new_symbol(Some(key));
+        if let Some(Some(symbol)) = self.symbols.get_mut(id.index()) {
+            symbol.registered = Some(key);
+        }
+        self.registry.insert(key, id);
+        id
+    }
+
+    /// The Symbol `id` refers to, or `None` if this heap has nothing there.
+    ///
+    /// The same narrow promise [`Heap::string`] makes about a foreign handle, for the same reason.
+    pub fn symbol(&self, id: SymbolId) -> Option<&Symbol> {
+        self.symbols.get(id.index())?.as_ref()
+    }
+
+    /// What a Symbol was described as, if anything — §20.4.3.2's `[[Description]]`.
+    pub fn symbol_description(&self, id: SymbolId) -> Option<StringId> {
+        self.symbol(id)?.description
+    }
+
+    /// The registry key a Symbol was made under — §20.4.2.7 `Symbol.keyFor`.
+    pub fn symbol_registry_key(&self, id: SymbolId) -> Option<StringId> {
+        self.symbol(id)?.registered
+    }
+
+    /// How many Symbols this heap holds.
+    pub fn symbol_count(&self) -> usize {
+        self.symbols.iter().filter(|slot| slot.is_some()).count()
     }
 
     /// The interned String with these contents, if this heap has already interned one.

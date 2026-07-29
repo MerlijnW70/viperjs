@@ -66,7 +66,12 @@ impl Heap {
             // memory — and `u32::MAX` names would have exhausted DR-0013's budget long before.
             let index = u32::try_from(at).unwrap_or(u32::MAX);
             let slot = self.index_key(index);
-            let value = Value::String(key.as_string());
+            // Every key here is a String: §14.7.5.10 says so, and `enumerable_keys` filtered
+            // the Symbols out before this list was built.
+            let Some(name) = key.as_string() else {
+                continue;
+            };
+            let value = Value::String(name);
             self.define_own_property(array, slot, &PropertyDescriptor::data(value));
         }
         array
@@ -103,7 +108,13 @@ mod tests {
     fn names(heap: &mut Heap, object: ObjectId) -> Vec<String> {
         heap.enumerable_keys(object)
             .into_iter()
-            .map(|key| String::from_utf16_lossy(heap.string(key.as_string()).unwrap_or(&[])))
+            .map(|key| {
+                String::from_utf16_lossy(
+                    key.as_string()
+                        .and_then(|id| heap.string(id))
+                        .unwrap_or(&[]),
+                )
+            })
             .collect()
     }
 

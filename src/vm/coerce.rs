@@ -114,7 +114,15 @@ impl Vm {
         value: Value,
         heap: &mut Heap,
     ) -> Completion<PropertyKey> {
-        let id = self.to_string(value, heap)?;
+        // §7.1.19 step 3 — a Symbol *is* a key and is taken as one. Checked after `ToPrimitive`,
+        // which is what lets an object with a `Symbol.toPrimitive` answer a Symbol and have it
+        // used as the key rather than converted — and it has to be before `ToString`, which
+        // throws for a Symbol.
+        let primitive = self.to_primitive(value, crate::value::Hint::String, heap)?;
+        if let Value::Symbol(symbol) = primitive {
+            return Ok(PropertyKey::from_symbol(symbol));
+        }
+        let id = primitive.to_string(heap)?;
         Ok(PropertyKey::from_string(heap, id))
     }
 
@@ -298,7 +306,10 @@ impl Vm {
                     matches!(one, Value::Object(_))
                         && matches!(
                             other,
-                            Value::String(_) | Value::Number(_) | Value::Boolean(_)
+                            Value::String(_)
+                                | Value::Number(_)
+                                | Value::Boolean(_)
+                                | Value::Symbol(_)
                         )
                 };
                 match (convert(left, right), convert(right, left)) {

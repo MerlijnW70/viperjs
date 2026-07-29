@@ -46,12 +46,17 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 }
 
 /// §20.1.3.6 `Object.prototype.toString`.
-pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Steps 1 and 2 — the two values that have no object to ask, and the reason this method is
     // the idiomatic type test: it answers for `undefined` and `null` rather than throwing.
     let tag = match call.this_value {
         Value::Undefined => "Undefined",
         Value::Null => "Null",
+        // Step 14's `Object` for a Symbol: a Symbol wrapper is an ordinary object with a
+        // primitive inside and has no row of its own here. `[object Symbol]` comes from step 15
+        // instead, out of the `@@toStringTag` §20.4.3.5 puts on `Symbol.prototype` — which is
+        // why deleting that property makes a Symbol tag as an ordinary object again.
+        Value::Symbol(_) => "Object",
         // Steps 4 to 14's table, in the rows this heap keeps enough state to answer. `IsArray`
         // is step 4 and is a real question about the object rather than about its prototype, so
         // `Object.prototype.toString.call([])` says `[object Array]` and one on an object merely
@@ -81,7 +86,46 @@ pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
         Value::Number(_) => "Number",
         Value::String(_) => "String",
     };
+    // Step 15 — `@@toStringTag` wins over the whole table above when it is a String, and is
+    // ignored when it is anything else. It is why `Symbol()` says `[object Symbol]` despite its
+    // wrapper being an ordinary object with no row of its own, and it is the supported way for a
+    // script to name its own type here.
+    if let Some(found) = tagged(vm, heap, call.this_value)? {
+        return Ok(Value::String(found));
+    }
     Ok(text(heap, &format!("[object {tag}]")))
+}
+
+/// §20.1.3.6 step 15 — what `@@toStringTag` says this object should be called, if it says a String.
+///
+/// A get and not an own-property read, so a tag inherited from a prototype counts — which is how
+/// `Symbol.prototype[@@toStringTag]` tags every Symbol without anything being put on each one.
+/// A primitive receiver reaches its prototype the same way any property read would.
+fn tagged(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    receiver: Value,
+) -> Completion<Option<crate::heap::StringId>> {
+    if matches!(receiver, Value::Undefined | Value::Null) {
+        return Ok(None);
+    }
+    let Some(symbol) = vm.realm().well_known(super::well_known_at("toStringTag")) else {
+        return Ok(None);
+    };
+    let key = PropertyKey::from_symbol(symbol);
+    let found = vm.get_property_key(receiver, key, heap)?;
+    Ok(match found {
+        Value::String(id) => Some(text_of(heap, id)),
+        _ => None,
+    })
+}
+
+/// `"[object " + tag + "]"`, for a tag that is already a String on the heap.
+fn text_of(heap: &mut Heap, tag: crate::heap::StringId) -> crate::heap::StringId {
+    let mut units: Vec<u16> = "[object ".encode_utf16().collect();
+    units.extend_from_slice(heap.string(tag).unwrap_or(&[]));
+    units.push(u16::from(b']'));
+    heap.intern(&units)
 }
 
 /// §20.1.3.7 `Object.prototype.valueOf` — `ToObject(this)`, which for an object is itself.
@@ -357,7 +401,13 @@ fn own_keys(
         if enumerable_only && !property.enumerable {
             continue;
         }
-        names.push(Value::String(key.as_string()));
+        // §20.1.2.10 step 3 and §20.1.2.17 step 3 — String keys only. A Symbol key is not
+        // *hidden* from the language, but it is not listed here: `getOwnPropertySymbols` is the
+        // one that answers those, and keeping them apart is the whole reason for two functions.
+        let Some(name) = key.as_string() else {
+            continue;
+        };
+        names.push(Value::String(name));
     }
     // §20.1.2.17 answers an Array, and now there are some.
     let list = heap.new_array(vm.realm().array_prototype(), 0);
@@ -543,6 +593,12 @@ pub(super) fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> O
 
 /// §7.1.19 `ToPropertyKey`.
 fn property_key(heap: &mut Heap, value: Value) -> Completion<PropertyKey> {
+    // §7.1.19 step 3 — a Symbol is a key already and must not be spelled: `ToString` of one
+    // throws, so without this `Object.getOwnPropertyDescriptor(o, sym)` would be an error rather
+    // than an answer about a property that is really there.
+    if let Value::Symbol(symbol) = value {
+        return Ok(PropertyKey::from_symbol(symbol));
+    }
     let id = value.to_string(heap)?;
     Ok(PropertyKey::from_string(heap, id))
 }

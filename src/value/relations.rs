@@ -80,6 +80,11 @@ impl Value {
             // why `{} === {}` is false — so this compares the handle where the String arm above
             // compares contents, and that difference *is* the difference between the two types.
             (Self::Object(left), Self::Object(right)) => left == right,
+            // …and a Symbol is compared the same way, for the same reason and to a different end.
+            // §7.2.12 says two Symbols are the same value when they *are* the same Symbol, which
+            // is what makes `Symbol("a") === Symbol("a")` false and what makes a Symbol usable as
+            // a key nothing else can collide with. The description takes no part.
+            (Self::Symbol(left), Self::Symbol(right)) => left == right,
             _ => false,
         }
     }

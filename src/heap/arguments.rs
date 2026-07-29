@@ -84,7 +84,8 @@ impl ArgumentsMap {
 /// M8 measures before it changes: the callers all check for a parameter map first, so no ordinary
 /// object pays this.
 pub(super) fn index_of(heap: &Heap, key: PropertyKey) -> Option<u32> {
-    let units = heap.string(key.as_string())?;
+    // A Symbol is no index and has no digits — `as_string` answering `None` is that.
+    let units = heap.string(key.as_string()?)?;
     let text: String = char::decode_utf16(units.iter().copied())
         .map(|character| character.unwrap_or(char::REPLACEMENT_CHARACTER))
         .collect();

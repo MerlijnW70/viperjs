@@ -58,6 +58,8 @@ pub struct Collected {
     pub environments: usize,
     /// How many Strings were unreachable.
     pub strings: usize,
+    /// How many Symbols were unreachable.
+    pub symbols: usize,
 }
 
 impl Heap {
@@ -79,9 +81,21 @@ impl Heap {
             objects: vec![false; self.objects.len()],
             environments: vec![false; self.environments.len()],
             strings: vec![false; self.strings.len()],
+            symbols: vec![false; self.symbols.len()],
         };
         for value in &roots.values {
             self.mark_value(*value, &mut marked);
+        }
+        // §20.4.2.2's registry holds its Symbols for as long as the process runs, so it is a root
+        // and not a table to be pruned: `Symbol.for("a")` must answer the same Symbol however long
+        // ago the last other holder of it went away.
+        for (key, symbol) in &self.registry {
+            if let Some(seen) = marked.symbols.get_mut(symbol.index()) {
+                *seen = true;
+            }
+            if let Some(seen) = marked.strings.get_mut(key.index()) {
+                *seen = true;
+            }
         }
         for environment in &roots.environments {
             self.mark_environment(*environment, &mut marked);
@@ -97,8 +111,19 @@ impl Heap {
                     *seen = true;
                 }
             }
+            Value::Symbol(id) => {
+                if let Some(seen) = marked.symbols.get_mut(id.index()) {
+                    *seen = true;
+                }
+                // …and its description, which is a String nothing else may be holding.
+                if let Some(description) = self.symbol_description(id)
+                    && let Some(seen) = marked.strings.get_mut(description.index())
+                {
+                    *seen = true;
+                }
+            }
             Value::Object(id) => self.mark_object(id, marked),
-            // A primitive that is not a String leads nowhere: it *is* its value.
+            // A primitive that is neither a String nor a Symbol leads nowhere: it *is* its value.
             Value::Undefined | Value::Null | Value::Boolean(_) | Value::Number(_) => {}
         }
     }
@@ -149,9 +174,18 @@ impl Heap {
                 None => {}
             }
             for key in object.own_property_keys(self) {
-                // A key is a String and is reachable *because* it is a key: a property nothing
-                // else names still has its name.
-                if let Some(seen) = marked.strings.get_mut(key.as_string().index()) {
+                // A key is reachable *because* it is a key: a property nothing else names still
+                // has its name. Both kinds — a Symbol key is the only reference to that Symbol
+                // once the code that made it has gone, and collecting it would leave a property
+                // nothing could ever ask for again.
+                if let Some(id) = key.as_string()
+                    && let Some(seen) = marked.strings.get_mut(id.index())
+                {
+                    *seen = true;
+                }
+                if let Some(id) = key.as_symbol()
+                    && let Some(seen) = marked.symbols.get_mut(id.index())
+                {
                     *seen = true;
                 }
                 let Some(property) = object.get_own_property(key) else {
@@ -197,6 +231,7 @@ impl Heap {
             objects: 0,
             environments: 0,
             strings: 0,
+            symbols: 0,
         };
         // Zipped rather than indexed. The marks were sized from the arenas and nothing allocates
         // between, so the two are the same length — and `zip` says that rather than an index with
@@ -227,6 +262,18 @@ impl Heap {
             *string = None;
             freed.strings += 1;
         }
+        for (symbol, marked) in self.symbols.iter_mut().zip(&marked.symbols) {
+            if *marked || symbol.is_none() {
+                continue;
+            }
+            *symbol = None;
+            freed.symbols += 1;
+        }
+        // §20.4.2.2's registry is a **strong** reference and is deliberately not swept: a
+        // registered Symbol outlives every realm, because `Symbol.for("a")` must answer the same
+        // Symbol however long ago the last holder of it was collected. It was marked as a root
+        // above rather than pruned here.
+        //
         // The intern table would otherwise keep pointing at freed Strings, and a later `intern`
         // of the same text would hand back a handle to nothing.
         let strings = &self.strings;
@@ -264,6 +311,7 @@ struct Marked {
     objects: Vec<bool>,
     environments: Vec<bool>,
     strings: Vec<bool>,
+    symbols: Vec<bool>,
 }
 
 /// The index inside a handle, for the collector's own use.
@@ -323,6 +371,67 @@ mod tests {
         // same narrow promise a handle from another heap already makes.
         assert!(heap.object(dropped).is_none());
         assert_eq!(heap.object_count(), 1);
+    }
+
+    #[test]
+    fn a_symbol_is_kept_by_whatever_can_still_reach_it() {
+        let mut heap = Heap::new();
+        let described = heap.intern(&"kept".encode_utf16().collect::<Vec<_>>());
+        let kept = heap.new_symbol(Some(described));
+        let dropped = heap.new_symbol(None);
+        let roots = Roots {
+            values: vec![Value::Symbol(kept)],
+            ..Roots::default()
+        };
+        let freed = heap.collect(&roots);
+        assert_eq!(freed.symbols, 1);
+        assert!(heap.symbol(kept).is_some());
+        assert!(heap.symbol(dropped).is_none());
+        assert_eq!(heap.symbol_count(), 1);
+        // …and its description with it. A Symbol's description is a String nothing else may be
+        // holding, so a collector that marked the Symbol and not its text would leave
+        // `sym.description` reading from a freed slot.
+        assert_eq!(heap.symbol_description(kept), Some(described));
+        assert!(heap.string(described).is_some());
+    }
+
+    #[test]
+    fn a_symbol_used_as_a_key_is_reached_through_the_object_it_keys() {
+        // The case that makes this worth marking at all: nothing holds the Symbol except the
+        // property it names. Collecting it would leave a property no operation could ever ask
+        // for again — reachable in the heap and unreachable in the language.
+        let mut heap = Heap::new();
+        let object = heap.new_object(None);
+        let symbol = heap.new_symbol(None);
+        let key = PropertyKey::from_symbol(symbol);
+        let descriptor = PropertyDescriptor::data(Value::Number(1.0));
+        assert!(heap.define_own_property(object, key, &descriptor));
+        let roots = Roots {
+            values: vec![Value::Object(object)],
+            ..Roots::default()
+        };
+        let freed = heap.collect(&roots);
+        assert_eq!(freed.symbols, 0);
+        assert!(heap.symbol(symbol).is_some());
+    }
+
+    #[test]
+    fn a_registered_symbol_outlives_everything_that_was_holding_it() {
+        // §20.4.2.2 — the registry is a *strong* reference and deliberately not swept.
+        // `Symbol.for("a")` must answer the same Symbol however long ago the last other holder of
+        // it went away, so this is a root and not a table to be pruned after the fact.
+        let mut heap = Heap::new();
+        let key = heap.intern(&"a".encode_utf16().collect::<Vec<_>>());
+        let registered = heap.registered_symbol(key);
+        let ordinary = heap.new_symbol(None);
+        let freed = heap.collect(&Roots::default());
+        assert_eq!(freed.symbols, 1);
+        assert!(heap.symbol(registered).is_some());
+        assert!(heap.symbol(ordinary).is_none());
+        // …and it is still the one the registry answers with, which is the property the strong
+        // reference exists to keep.
+        assert_eq!(heap.registered_symbol(key), registered);
+        assert_eq!(heap.symbol_registry_key(registered), Some(key));
     }
 
     #[test]
@@ -393,7 +502,13 @@ mod tests {
             .object(object)
             .map_or_else(Vec::new, |found| found.own_property_keys(&heap))
             .into_iter()
-            .map(|key| String::from_utf16_lossy(heap.string(key.as_string()).unwrap_or(&[])))
+            .map(|key| {
+                String::from_utf16_lossy(
+                    key.as_string()
+                        .and_then(|id| heap.string(id))
+                        .unwrap_or(&[]),
+                )
+            })
             .collect();
         assert_eq!(names, ["child", "text"]);
     }

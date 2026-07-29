@@ -39,7 +39,8 @@ const MAX_INDEX: u32 = u32::MAX - 1;
 /// [`crate::value::canonical_numeric_index`] answers, and asking it here rather than parsing the
 /// digits is what keeps the two definitions from drifting.
 pub(super) fn array_index(heap: &Heap, key: PropertyKey) -> Option<u32> {
-    let units = heap.string(key.as_string())?;
+    // A Symbol is no index and has no digits — `as_string` answering `None` is that.
+    let units = heap.string(key.as_string()?)?;
     let number = crate::value::canonical_numeric_index(units)?;
     // `is_sign_negative` rather than `< 0.0`, because **`-0.0 < 0.0` is false**. `"-0"` is a
     // canonical numeric index string — §7.1.21 says so outright — and it is *not* an array index,
