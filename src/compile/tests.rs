@@ -13,6 +13,7 @@ use crate::ast::{ExprKind, Stmt, StmtKind};
 use crate::parser::parse_expression;
 use crate::parser::parse_script;
 use crate::value::Value;
+use std::rc::Rc;
 
 fn compile(source: &str) -> Result<Chunk, CompileError> {
     let mut heap = Heap::new();
@@ -263,4 +264,75 @@ fn a_refusal_deep_inside_an_expression_carries_the_inner_span() {
     let error = compile("1 + 2 * (3 - 4n)").expect_err("a BigInt is not implemented yet"); // same
     assert_eq!(error.kind, ErrorKind::Unsupported("a BigInt literal"));
     assert_eq!(error.span, Span::new(13, 15));
+}
+
+/// The body of the first function written in `source`.
+fn inner(source: &str) -> Rc<Chunk> {
+    let mut heap = Heap::new();
+    let script = parse_script(source).expect("the source parses"); // a compiler test needs a tree
+    let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
+    Rc::clone(chunk.function(0).expect("the script declares a function")) // likewise
+}
+
+#[test]
+fn a_function_is_given_an_arguments_object_only_if_it_reaches_for_one() {
+    // §10.2.11 step 19 makes an arguments object for every non-arrow function, and a program can
+    // only tell by *reading* the name. So this is asked of the chunk rather than of a running
+    // program: whether the object is built is the compiler's answer, and the difference between
+    // the two answers is an allocation per call and nothing observable at all.
+    assert!(
+        inner("function f() { return arguments[0]; }")
+            .arguments()
+            .is_some()
+    );
+    assert!(
+        inner("function f(a) { return arguments; }")
+            .arguments()
+            .is_some()
+    );
+    assert!(inner("function f() { return 1; }").arguments().is_none());
+    assert!(
+        inner("function f(a, b) { return a + b; }")
+            .arguments()
+            .is_none()
+    );
+    // A name that merely looks like it: the compiler compares the whole string, not a prefix.
+    assert!(
+        inner("function f() { var argument = 1; return argument; }")
+            .arguments()
+            .is_none()
+    );
+    // §10.2.11 step 18 — a *parameter* of that name takes it, and then the object is not built
+    // even though the name is read.
+    assert!(
+        inner("function f(arguments) { return arguments; }")
+            .arguments()
+            .is_none()
+    );
+    // A `var` of that name does not, which is step 19's least obvious half: it names the
+    // parameters, the hoisted functions and the lexical declarations, and `var` is none of the
+    // three. `function f() { var arguments; return typeof arguments; }` answers `"object"`.
+    assert!(
+        inner("function f() { var arguments = 1; return arguments; }")
+            .arguments()
+            .is_some()
+    );
+    // An arrow has none of its own, so the name it reads belongs to the function around it — and
+    // that function is the one that has to build it.
+    assert!(
+        inner("function f(a) { var g = () => arguments[0]; return g(); }")
+            .arguments()
+            .is_some()
+    );
+    // …but a *function* written inside asks for its own, and leaves the outer one alone.
+    assert!(
+        inner("function f(a) { return (function () { return arguments[0]; })(); }")
+            .arguments()
+            .is_none()
+    );
+    // A script is not a call, so an `arguments` at the top level is an ordinary global read.
+    let mut heap = Heap::new();
+    let script = parse_script("var x = arguments;").expect("parses"); // a compiler test needs a tree
+    let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
+    assert!(chunk.arguments().is_none());
 }

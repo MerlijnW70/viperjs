@@ -26,6 +26,7 @@
 //!
 //! # How this module is laid out
 //!
+//! - `arguments` — §10.4.4's parameter map, which makes `arguments[0]` and `a` one variable.
 //! - `property` — [`PropertyKey`], and what an object files under one.
 //! - `object` — the ordinary object (§10.1) and its internal methods.
 //! - `define` — §10.1.6.3, which decides whether a property may change and then changes it.
@@ -34,6 +35,7 @@
 //! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
+mod arguments;
 mod array;
 mod callable;
 mod collect;
@@ -43,6 +45,7 @@ mod environment;
 mod object;
 mod property;
 
+pub use self::arguments::ArgumentsMap;
 pub use self::callable::{Bound, Callable, Native, NativeCall};
 
 /// What `[[DefineOwnProperty]]` came to.

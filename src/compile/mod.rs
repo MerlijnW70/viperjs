@@ -160,6 +160,15 @@ struct Compiler<'a> {
     /// One list per enclosing loop. `break` in a loop inside a loop leaves the inner one, which
     /// is what the stack is for.
     breaks: Vec<Vec<Unpatched>>,
+    /// The slot this body's `arguments` object would go in, if it has one to fill.
+    ///
+    /// Given to every non-arrow body, before anything is compiled, so that the name resolves to
+    /// it rather than walking out to a global. Whether it is ever *used* is a separate question —
+    /// see [`Compiler::uses_arguments`] — because a slot costs nothing and an object costs an
+    /// allocation per call.
+    arguments_slot: Option<u32>,
+    /// Whether anything actually read it.
+    uses_arguments: bool,
     /// How many locals existed when each enclosing *scope* began, innermost last.
     ///
     /// What a declaration needs and [`Compiler::resolve`] cannot give it. Resolving a name walks
@@ -237,6 +246,8 @@ impl<'a> Compiler<'a> {
             heap,
             locals: Vec::new(),
             breaks: Vec::new(),
+            arguments_slot: None,
+            uses_arguments: false,
             scope_marks: Vec::new(),
             loop_marks: Vec::new(),
             continues: Vec::new(),
@@ -421,6 +432,30 @@ impl<'a> Compiler<'a> {
         self.chunk.add_constant(Value::String(interned))
     }
 
+    /// Note that `arguments` was reached for, so that the call will build one.
+    ///
+    /// Asked on every name because the alternative is asking the parser for a list of the names a
+    /// body mentions, which is a second walk over the tree that could disagree with this one.
+    /// Comparing a string here costs a length check for every name that is not eight characters
+    /// long.
+    fn note_arguments(&mut self, name: &str, binding: Option<Where>) {
+        if name != "arguments" {
+            return;
+        }
+        match binding {
+            // The body's own — the slot given below, or a parameter or `var` that took the name
+            // first, in which case §10.2.11 step 19 makes no object and this is that.
+            Some(found) if found.depth == 0 => {
+                self.uses_arguments = Some(found.index) == self.arguments_slot;
+            }
+            // An enclosing function's, which only an arrow can reach. The chunk carries it out to
+            // whoever is building this body.
+            Some(_) => self.chunk.outer_arguments = true,
+            // Nowhere at all: an `arguments` at the top level of a script is an ordinary global.
+            None => {}
+        }
+    }
+
     /// Emit a read of `name`, from a scope if it has one and from the global object if not.
     ///
     /// §9.4.2 `ResolveBinding` walks the environment chain outwards and ends at the Global
@@ -428,7 +463,9 @@ impl<'a> Compiler<'a> {
     /// name whose binding, if any, is a property of the global object. Whether it is there is a
     /// question for run time, because a script can create one at any moment.
     pub(super) fn load_name(&mut self, name: &str) -> Result<(), CompileError> {
-        match self.binding(name) {
+        let binding = self.binding(name);
+        self.note_arguments(name, binding);
+        match binding {
             Some(binding) => {
                 self.load(binding);
                 Ok(())
@@ -443,7 +480,9 @@ impl<'a> Compiler<'a> {
 
     /// Emit a write of `name`, leaving the value on the stack.
     pub(super) fn store_name(&mut self, name: &str) -> Result<(), CompileError> {
-        match self.binding(name) {
+        let binding = self.binding(name);
+        self.note_arguments(name, binding);
+        match binding {
             // §9.1.1.1.5 step 3 — a `const` refuses every assignment, and the compiler already
             // knows which binding this is. What is left for run time is the throw, which happens
             // *after* the right-hand side has run because §13.15.2 evaluates it first.

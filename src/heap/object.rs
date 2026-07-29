@@ -31,10 +31,12 @@
 //! this one is smaller and needed no new representation to get the exponent right.
 
 use crate::compile::Chunk;
+use crate::heap::PropertyKind;
+use crate::heap::arguments;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::{
-    Bound, Callable, DefineOutcome, EnvironmentId, Heap, Native, Property, PropertyDescriptor,
-    PropertyKey,
+    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Native, Property,
+    PropertyDescriptor, PropertyKey,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -88,6 +90,12 @@ pub struct Object {
     lexical_this: Option<Value>,
     /// Whether this is §10.4.2's exotic Array, whose `length` and indices move each other.
     pub(super) array: bool,
+    /// §10.4.4's parameter map, if this is an arguments object.
+    ///
+    /// `None` for every other object, which is all but one per call that mentions the name. Boxed
+    /// so that an object without one pays a pointer rather than a `Vec`: an `Object` sits inline
+    /// in the arena, so its size is charged to every object ever made.
+    pub(super) arguments: Option<Box<ArgumentsMap>>,
     /// The primitive this object *is* a wrapper for — §20.3's `[[BooleanData]]`, §21.1's
     /// `[[NumberData]]` and §22.1's `[[StringData]]`.
     ///
@@ -141,6 +149,7 @@ impl Object {
             prototype,
             extensible: true,
             array: false,
+            arguments: None,
             primitive: None,
             call: None,
             environment: None,
@@ -148,6 +157,11 @@ impl Object {
             properties: Vec::new(),
             index: None,
         }
+    }
+
+    /// The parameter map this object joins, if it is an arguments object.
+    pub(crate) fn arguments_map(&self) -> Option<&ArgumentsMap> {
+        self.arguments.as_deref()
     }
 
     /// The primitive this object wraps, if it wraps one.
@@ -441,6 +455,39 @@ impl Heap {
         self.define_property_outcome(object, key, descriptor) == DefineOutcome::Defined
     }
 
+    /// §10.4.4.2 — what a define does to an argument index that is joined to a parameter.
+    ///
+    /// Three rules, and each is about the link rather than about the property. A value written to
+    /// a joined index goes to the *parameter*. Making the index an accessor breaks the link,
+    /// because a parameter is not an accessor and could not stand in for one. Making it
+    /// non-writable breaks the link too, and §10.4.4.2 is careful about the order: the value is
+    /// written first, so `Object.defineProperty(arguments, '0', {value: 2, writable: false})`
+    /// leaves the parameter at 2 and *then* stops following it.
+    fn settle_argument(
+        &mut self,
+        object: ObjectId,
+        key: PropertyKey,
+        descriptor: &PropertyDescriptor,
+    ) {
+        if self
+            .object(object)
+            .and_then(Object::arguments_map)
+            .is_none()
+        {
+            return;
+        }
+        if descriptor.is_accessor_descriptor() {
+            self.unmap_argument(object, key);
+            return;
+        }
+        if let Some(value) = descriptor.value {
+            self.write_through(object, key, value);
+        }
+        if descriptor.writable == Some(false) {
+            self.unmap_argument(object, key);
+        }
+    }
+
     /// `[[DefineOwnProperty]]`, with the one answer a Boolean cannot carry.
     ///
     /// §10.4.2.4 step 2's bad array length is a **RangeError** and every other refusal is a
@@ -458,7 +505,13 @@ impl Heap {
         if self.object(object).is_some_and(Object::is_array) {
             return self.define_array_property(object, key, descriptor);
         }
-        DefineOutcome::from(self.define_ordinary_property(object, key, descriptor))
+        let defined = self.define_ordinary_property(object, key, descriptor);
+        // §10.4.4.2 steps 3 to 5 — only when the define was allowed. A refused define changes
+        // nothing, and must not break a link either.
+        if defined {
+            self.settle_argument(object, key, descriptor);
+        }
+        DefineOutcome::from(defined)
     }
 
     /// §10.1.6.3 `OrdinaryDefineOwnProperty` — the rules every object but an Array uses whole,
@@ -509,17 +562,135 @@ impl Heap {
     ///
     /// What `[[Get]]` will need once calling exists: the property *and* which object it came
     /// from, since an accessor's getter is called with that object as its receiver.
+    /// An object's own property, with §10.4.4's map consulted — `[[GetOwnProperty]]`.
+    ///
+    /// The same answer as the object's own table for everything but a joined argument index,
+    /// where the *value* comes from the parameter instead. §10.4.4.1 says exactly this: the
+    /// descriptor is the ordinary one with its value replaced, which is why
+    /// `Object.getOwnPropertyDescriptor(arguments, 0)` reports a data property and not the
+    /// accessor the specification's own note implements the map with.
+    pub fn own_property(&self, object: ObjectId, key: PropertyKey) -> Option<Property> {
+        let found = self.object(object)?;
+        let property = *found.get_own_property(key)?;
+        let Some(map) = found.arguments_map() else {
+            return Some(property);
+        };
+        let Some(slot) = arguments::index_of(self, key).and_then(|index| map.slot(index)) else {
+            return Some(property);
+        };
+        // A joined index is never uninitialised: a parameter is given its value when the call
+        // begins, and nothing can put one back into the dead zone.
+        let Some(Some(value)) = self.variable(map.environment, slot) else {
+            return Some(property);
+        };
+        Some(Property {
+            kind: match property.kind {
+                PropertyKind::Data { writable, .. } => PropertyKind::Data { value, writable },
+                accessor => accessor,
+            },
+            ..property
+        })
+    }
+
+    /// Break the link between an argument index and its parameter — §10.4.4.2 and §10.4.4.5.
+    ///
+    /// Answers whether there was one, so that a caller which has just changed a property can say
+    /// what it did without asking twice.
+    pub(crate) fn unmap_argument(&mut self, object: ObjectId, key: PropertyKey) {
+        let Some(index) = arguments::index_of(self, key) else {
+            return;
+        };
+        if let Some(map) = self
+            .object_mut(object)
+            .and_then(|found| found.arguments.as_deref_mut())
+        {
+            map.unmap(index);
+        }
+    }
+
+    /// Write through to the parameter an argument index is joined to, if it is joined to one.
+    ///
+    /// Answers nothing. Whether it wrote is not a question anyone asks — the caller has just been
+    /// told the define was allowed, and a key that is not a joined index simply has no parameter
+    /// behind it. A return value nobody reads is one no test could be wrong about.
+    fn write_through(&mut self, object: ObjectId, key: PropertyKey, value: Value) {
+        let Some(index) = arguments::index_of(self, key) else {
+            return;
+        };
+        let Some(map) = self.object(object).and_then(Object::arguments_map) else {
+            return;
+        };
+        let (Some(slot), environment) = (map.slot(index), map.environment) else {
+            return;
+        };
+        self.set_variable(environment, slot, value);
+    }
+
+    /// Put an arguments object on the heap — §10.4.4.4 `CreateMappedArgumentsObject`.
+    ///
+    /// The values are the arguments the call was given, all of them; the map joins the first
+    /// `parameters` of them to the slots of `environment`. `callee` is the function itself, which
+    /// §10.4.4.4 step 15 gives a mapped arguments object and an unmapped one refuses to.
+    pub fn new_arguments(
+        &mut self,
+        prototype: ObjectId,
+        environment: EnvironmentId,
+        values: &[Value],
+        parameters: usize,
+        callee: ObjectId,
+    ) -> ObjectId {
+        let object = self.new_object(Some(prototype));
+        for (at, value) in values.iter().enumerate() {
+            let index = u32::try_from(at).unwrap_or(u32::MAX);
+            let key = self.index_key(index);
+            self.define_own_property(object, key, &PropertyDescriptor::data(*value));
+        }
+        // §10.4.4.4 steps 14 and 15 — `length` and `callee` are ordinary §17 properties: writable
+        // and configurable, and never enumerable, so `for`-`in` over `arguments` walks the
+        // indices and nothing else.
+        for (name, value) in [
+            ("length", Value::Number(values.len() as f64)),
+            ("callee", Value::Object(callee)),
+        ] {
+            let key = PropertyKey::from_units(self, &name.encode_utf16().collect::<Vec<_>>());
+            self.define_own_property(
+                object,
+                key,
+                &PropertyDescriptor {
+                    enumerable: Some(false),
+                    ..PropertyDescriptor::data(value)
+                },
+            );
+        }
+        // Joined *after* the properties are made, because making them goes through the define
+        // below — and a define on a joined index writes through to a parameter instead.
+        if let Some(found) = self.object_mut(object) {
+            found.arguments = Some(Box::new(ArgumentsMap::new(
+                environment,
+                parameters.min(values.len()),
+            )));
+        }
+        object
+    }
+
+    /// The object along `object`'s prototype chain that owns `key`, if any.
+    ///
+    /// The property *and* which object it came from, since an accessor's getter is called with
+    /// that object as its receiver.
+    ///
+    /// Asked through [`Heap::own_property`] rather than the object's own table, so that a joined
+    /// argument index answers with its parameter's value however the read arrived.
     pub fn find_own(&self, object: ObjectId, key: PropertyKey) -> Option<(ObjectId, Property)> {
         let mut cursor = Some(object);
         // The chain cannot be a cycle — nothing can build one — and this counts anyway. DR-0002
         // is not a claim about the code being right; it is a claim that being wrong does not
         // hang. See [`Heap::set_prototype_of`] for the check that makes the count unreachable.
         for _ in 0..MAX_PROTOTYPE_CHAIN {
-            let current = self.object(cursor?)?;
-            if let Some(property) = current.get_own_property(key) {
-                return Some((cursor?, *property));
+            let at = cursor?;
+            if let Some(property) = self.own_property(at, key) {
+                return Some((at, property));
             }
-            cursor = current.prototype();
+            cursor = self.object(at)?.prototype();
         }
         None
     }

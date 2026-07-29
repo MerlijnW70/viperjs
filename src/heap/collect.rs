@@ -130,6 +130,12 @@ impl Heap {
             // An arrow's captured `this` is reachable *through the arrow*, and nothing else may
             // be holding it: `function F() { return () => this; }` leaves the constructed object
             // alive only because the arrow it returned points at it.
+            // An arguments object is the one thing that can outlive its call and still be reading
+            // its variables: `function f(a) { return arguments; }` hands back an object whose
+            // `[0]` *is* `a`, so the environment has to survive as long as the object does.
+            if let Some(map) = object.arguments_map() {
+                self.mark_environment(map.environment(), marked);
+            }
             // A wrapper's primitive can be a String, and nothing else need be holding it: the
             // only reference to `new String('x')`'s contents is the wrapper itself.
             match object.primitive() {

@@ -163,6 +163,17 @@ impl Vm {
             let index = u32::try_from(offset).unwrap_or(u32::MAX);
             heap.set_variable(environment, index, argument);
         }
+        // §10.2.11 step 22 `CreateMappedArgumentsObject`, and only when the body reads the name.
+        // The values are every argument the call was given, and the map joins the first
+        // `parameters` of them to the slots filled just above — which is what makes
+        // `arguments[0]` and the first parameter one variable rather than two with equal values.
+        if let Some(slot) = body.arguments() {
+            let values: Vec<Value> = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
+            let prototype = self.realm.object_prototype();
+            let arguments =
+                heap.new_arguments(prototype, environment, &values, body.parameters(), object);
+            heap.set_variable(environment, slot, Value::Object(arguments));
+        }
         self.stack.truncate(receiver_at);
         self.frames.push(Frame {
             code: (*current).take(),

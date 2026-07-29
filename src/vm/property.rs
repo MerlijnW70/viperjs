@@ -286,6 +286,10 @@ impl Vm {
         };
         // Own only: `delete` never reaches through a prototype, which is why deleting an
         // inherited property answers `true` and leaves it exactly where it was.
+        // §10.4.4.5 step 4 — a deleted index stops being the parameter it was, whatever happens
+        // to the property itself. Broken *before* the delete, because the delete may refuse and
+        // the link is about the index rather than about what is at it.
+        heap.unmap_argument(object, key);
         let gone = heap
             .object_mut(object)
             .is_some_and(|found| found.delete(key));

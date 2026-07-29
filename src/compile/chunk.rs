@@ -28,6 +28,19 @@ pub struct Chunk {
     /// from the same fact: §15.3 makes it a function *expression* over the scope it was written
     /// in rather than a thing you can be inside of, so `this` is whatever it was one line above.
     pub(super) arrow: bool,
+    /// The slot §10.4.4's arguments object goes in, if this body reaches for the name.
+    ///
+    /// `None` when it does not, and then no object is made: §10.2.11 makes one for every
+    /// non-arrow function, and one nothing can read is one nothing can tell was never there. A
+    /// call that made one anyway would allocate an object and its properties on every call in the
+    /// program, which DR-0013 counts and a benchmark would notice.
+    pub(super) arguments: Option<u32>,
+    /// Whether this body reads the `arguments` of the function it is written *inside*.
+    ///
+    /// Only an arrow can: §15.3 gives it no `arguments` of its own, so the name resolves outward
+    /// exactly as `this` does. The function around it has to know, because it is the one that has
+    /// to build the object — and it finds out from here when the arrow's body comes back compiled.
+    pub(super) outer_arguments: bool,
     /// The bodies of the functions written inside this one, in the order they were met.
     ///
     /// An `Rc` because a function object has to outlive the code that made it — `var f = g()`
@@ -345,6 +358,11 @@ impl Chunk {
     /// Whether this body is an arrow's, and so has no `this` of its own.
     pub fn is_arrow(&self) -> bool {
         self.arrow
+    }
+
+    /// The slot a call should put §10.4.4's arguments object in, if this body reads the name.
+    pub fn arguments(&self) -> Option<u32> {
+        self.arguments
     }
 
     /// Point a jump at a target that is already known, which a backward jump's is.

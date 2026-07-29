@@ -100,6 +100,9 @@ impl Compiler<'_> {
             kind: ErrorKind::TooLong,
             span,
         })?;
+        // §15.3 again — an arrow's `arguments` is the enclosing function's, so a body that
+        // reached outward for it is what tells this one to build the object.
+        self.uses_arguments |= body.outer_arguments;
         self.chunk.functions.push(Rc::new(body));
         self.chunk.emit(Instruction::MakeFunction(index));
         Ok(())
@@ -207,6 +210,22 @@ fn compile_body(
         compiler.declare(&name.name);
     }
     compiler.chunk.parameters = compiler.locals.len();
+    // §10.2.11 steps 19 to 22 — the binding is made after the parameters and before the body, and
+    // *not* when a parameter already took the name: `function f(arguments) { … }` has a parameter
+    // called that and no arguments object at all.
+    //
+    // An arrow gets none either, for the same reason it gets no `this` (§15.3): the name reaches
+    // outward to the function it is written inside, and `Chunk::outer_arguments` is how that
+    // function hears about it.
+    //
+    // Step 19's other two halves — a hoisted `function arguments` and a `let arguments` — are not
+    // consulted. They would suppress the object; here it is built and then written over by the
+    // declaration that shares its slot, which no program can tell apart from its never having
+    // existed. What it costs is one allocation in a function that has just said it will not look,
+    // and reading the body twice to save it is the more expensive of the two.
+    if lexical == Lexical::No && compiler.resolve("arguments").is_none() {
+        compiler.arguments_slot = Some(compiler.declare_shadowing("arguments"));
+    }
 
     match body {
         Body::Statements(statements) => {
@@ -230,6 +249,12 @@ fn compile_body(
         Body::Expression(expression) => compiler.expression(expression)?,
     }
     compiler.chunk.emit(Instruction::Return);
+    // Only now is it known whether anything read the name — including an arrow written inside,
+    // which says so on the chunk it hands back.
+    compiler.chunk.arguments = match compiler.uses_arguments {
+        true => compiler.arguments_slot,
+        false => None,
+    };
     Ok(compiler.finish())
 }
 

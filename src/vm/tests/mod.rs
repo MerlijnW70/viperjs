@@ -17,12 +17,14 @@
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
+//! - `arguments` — §10.4.4, and the map that makes an index and a parameter one variable.
 //! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
 //! - `for_in` — §14.7.5's enumeration, and the shadowing that decides what it visits.
 //! - `bound` — §20.2's `Function`, and §10.4.1's bound functions.
 //! - `math` — §21.3, and the four places it is not what a CPU does.
 
 mod accessors;
+mod arguments;
 mod array_methods;
 mod array_more;
 mod arrays;

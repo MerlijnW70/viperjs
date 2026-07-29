@@ -58,6 +58,9 @@ pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
         // *given* `Array.prototype` does not. The rest of the table — `Error`, `Date`, `RegExp`
         // — reads internal slots that do not exist yet.
         Value::Object(object) => match heap.object(object) {
+            // Step 8 — an arguments object is tagged by its parameter map, which is the only
+            // thing that tells it from an ordinary object with numeric keys.
+            Some(found) if found.arguments_map().is_some() => "Arguments",
             Some(found) if found.is_array() => "Array",
             Some(found) if found.call().is_some() => "Function",
             // Steps 9 and 10 — a wrapper is tagged by what it wraps, which is why
@@ -522,7 +525,10 @@ fn defined(outcome: DefineOutcome) -> Completion<()> {
 
 /// An object's own property under `key`, if it has one.
 fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> Option<Property> {
-    heap.object(object)?.get_own_property(key).copied()
+    // Through the heap rather than the object's own table, so that §10.4.4.1's substitution
+    // happens: a joined argument index reports the *parameter's* value, which is what makes
+    // `Object.getOwnPropertyDescriptor(arguments, '0')` follow an assignment to `a`.
+    heap.own_property(object, key)
 }
 
 /// §7.1.19 `ToPropertyKey`.
