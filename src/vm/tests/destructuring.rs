@@ -276,3 +276,109 @@ fn an_array_pattern_stops_asking_a_spent_iterator_and_closes_one_it_abandons() {
         );
     }
 }
+
+#[test]
+fn a_pattern_binds_in_every_other_place_a_binding_may_be_written() {
+    // §14.7.5 — a `for`-`of` or `for`-`in` head, which is the idiom the whole feature exists for.
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (var [a, b] of [[1, 2], [3, 4]]) { r += a + '' + b; } \
+             return r; })()"
+        ),
+        "1234"
+    );
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (const [k, v] of [['x', 1]]) { r += k + v; } return r; })()"
+        ),
+        "x1"
+    );
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (let {x} of [{x: 'p'}, {x: 'q'}]) { r += x; } return r; })()"
+        ),
+        "pq"
+    );
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (const {a: {b}} of [{a: {b: 7}}]) { r += b; } return r; })()"
+        ),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (const [a, ...rest] of [[1, 2, 3]]) { \
+             r += a + ':' + rest.join(','); } return r; })()"
+        ),
+        "1:2,3"
+    );
+    assert_eq!(
+        run(
+            "(function () { var r = 0; for (const {x = 5} of [{}, {x: 2}]) { r += x; } return r; })()"
+        ),
+        "7"
+    );
+    // …and the names a head declares are the head's kind, which only an assignment to them shows:
+    // a `const` pattern binds constants and a `let` one does not.
+    assert_eq!(
+        run(
+            "(function () { for (const [a] of [[1]]) { try { a = 2; return 'ok'; }              catch (e) { return e.constructor.name; } } })()"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "(function () { for (const {a} of [{a: 1}]) { try { a = 2; return 'ok'; }              catch (e) { return e.constructor.name; } } })()"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run("(function () { for (let [a] of [[1]]) { a = 2; return a; } })()"),
+        "2"
+    );
+    assert_eq!(
+        run("(function () { for (let {a} of [{a: 1}]) { a = 5; return a; } })()"),
+        "5"
+    );
+    // A `for`-`in` head yields Strings, and a pattern takes one apart by its characters.
+    assert_eq!(
+        run("(function () { var r = ''; for (var [a] in {ab: 1}) { r += a; } return r; })()"),
+        "a"
+    );
+    // §14.15.3 — a catch parameter, whose names are bindings of the catch block and nothing wider.
+    assert_eq!(
+        run("(function () { try { throw [1, 2]; } catch ([a, b]) { return a + b; } })()"),
+        "3"
+    );
+    assert_eq!(
+        run("(function () { try { throw {a: 5}; } catch ({a}) { return a; } })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { try { throw {a: 1}; } catch ({a: x}) { return x; } })()"),
+        "1"
+    );
+    assert_eq!(
+        run("(function () { try { throw {}; } catch ({a = 9}) { return a; } })()"),
+        "9"
+    );
+    assert_eq!(
+        run("(function () { try { throw [[1]]; } catch ([[a]]) { return a; } })()"),
+        "1"
+    );
+    // The catch's names hide an outer one for the block and give it back afterwards, which is
+    // what makes them the block's own rather than an assignment to whatever was there.
+    assert_eq!(
+        run(
+            "(function () { var a = 'outer'; try { throw {a: 'inner'}; } catch ({a}) { return a; } \
+             finally {} })()"
+        ),
+        "inner"
+    );
+    assert_eq!(
+        run(
+            "(function () { var a = 'outer'; try { throw {a: 'inner'}; } catch ({a}) {} return a; })()"
+        ),
+        "outer"
+    );
+}

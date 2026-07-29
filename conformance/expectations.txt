@@ -12961,6 +12961,10 @@ built-ins/Temporal/Duration/builtin.js :: it threw ReferenceError: Temporal is n
 built-ins/Temporal/Duration/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/argument-cast.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/argument-cast.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/argument-duration-max.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/argument-duration-max.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/argument-duration-precision-exact-numerical-values.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/compare/argument-duration-precision-exact-numerical-values.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/argument-propertybag-optional-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/compare/argument-string-fractional-units-rounding-mode.js :: it threw ReferenceError: Temporal is not defined
@@ -13027,6 +13031,10 @@ built-ins/Temporal/Duration/constructor.js :: it threw an object with no name: E
 built-ins/Temporal/Duration/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Duration/fractional-throws-rangeerror.js :: it threw an object with no name: Duration constructor throws RangeError with fractional value in the years position Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Duration/fractional-throws-rangeerror.js (strict) :: it threw an object with no name: Duration constructor throws RangeError with fractional value in the years position Expected a RangeError but got a ReferenceError
+built-ins/Temporal/Duration/from/argument-duration-max.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/from/argument-duration-max.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/from/argument-duration-precision-exact-numerical-values.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/from/argument-duration-precision-exact-numerical-values.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/from/argument-string-is-infinity.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Duration/from/argument-string-is-infinity.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/Duration/from/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -13075,6 +13083,8 @@ built-ins/Temporal/Duration/prototype/abs/not-a-constructor.js :: it threw an ob
 built-ins/Temporal/Duration/prototype/abs/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Duration/prototype/abs/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/abs/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/add/argument-duration-max.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/add/argument-duration-max.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/add/argument-invalid-property.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/add/argument-invalid-property.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/add/argument-mixed-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -13253,6 +13263,8 @@ built-ins/Temporal/Duration/prototype/sign/branding.js :: it threw ReferenceErro
 built-ins/Temporal/Duration/prototype/sign/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/sign/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/sign/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/subtract/argument-duration-max.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/subtract/argument-duration-max.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/subtract/argument-invalid-property.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/subtract/argument-invalid-property.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/subtract/argument-mixed-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -13333,6 +13345,8 @@ built-ins/Temporal/Duration/prototype/toString/branding.js :: it threw Reference
 built-ins/Temporal/Duration/prototype/toString/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/fractionalseconddigits-auto.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/fractionalseconddigits-auto.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/fractionalseconddigits-exact-number-of-digits.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/fractionalseconddigits-exact-number-of-digits.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/fractionalseconddigits-nan.js :: it threw ReferenceError: Temporal is not defined
@@ -13377,8 +13391,12 @@ built-ins/Temporal/Duration/prototype/toString/roundingmode-trunc.js :: it threw
 built-ins/Temporal/Duration/prototype/toString/roundingmode-trunc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/roundingmode-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/roundingmode-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/smallestunit-fractionalseconddigits.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/smallestunit-fractionalseconddigits.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/smallestunit-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/smallestunit-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/smallestunit-valid-units.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toString/smallestunit-valid-units.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/throws-when-rounded-duration-is-invalid.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/throws-when-rounded-duration-is-invalid.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toString/total-of-duration-time-units-out-of-range.js :: it threw ReferenceError: Temporal is not defined
@@ -13465,6 +13483,8 @@ built-ins/Temporal/Duration/prototype/total/throws-on-disallowed-or-invalid-unit
 built-ins/Temporal/Duration/prototype/total/throws-on-disallowed-or-invalid-unit.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/throws-on-wrong-offset-for-zoneddatetime-relativeto.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/throws-on-wrong-offset-for-zoneddatetime-relativeto.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/total-of-each-unit.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/total-of-each-unit.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/unit-disallowed-units-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/unit-disallowed-units-string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/unit-invalid-string.js :: it threw ReferenceError: Temporal is not defined
@@ -14067,6 +14087,8 @@ built-ins/Temporal/PlainDate/prototype/dayOfYear/branding.js :: it threw Referen
 built-ins/Temporal/PlainDate/prototype/dayOfYear/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/dayOfYear/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/dayOfYear/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/daysInMonth/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/daysInMonth/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/daysInMonth/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/daysInMonth/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/daysInMonth/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -14247,6 +14269,8 @@ built-ins/Temporal/PlainDate/prototype/subtract/overflow-subtracting-months-from
 built-ins/Temporal/PlainDate/prototype/subtract/overflow-subtracting-months-from-min-year.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/subtract/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/subtract/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/toJSON/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/prototype/toJSON/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toJSON/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toJSON/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prototype/toJSON/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -14709,6 +14733,8 @@ built-ins/Temporal/PlainDateTime/prototype/dayOfYear/branding.js :: it threw Ref
 built-ins/Temporal/PlainDateTime/prototype/dayOfYear/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/dayOfYear/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/dayOfYear/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/daysInMonth/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/daysInMonth/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/daysInMonth/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/daysInMonth/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/daysInMonth/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -14965,6 +14991,8 @@ built-ins/Temporal/PlainDateTime/prototype/subtract/prop-desc.js :: it threw Ref
 built-ins/Temporal/PlainDateTime/prototype/subtract/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/subtract/throws-if-duration-days-too-large.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/subtract/throws-if-duration-days-too-large.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toJSON/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toJSON/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toJSON/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toJSON/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toJSON/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -15033,6 +15061,8 @@ built-ins/Temporal/PlainDateTime/prototype/toString/calendarname-never.js :: it 
 built-ins/Temporal/PlainDateTime/prototype/toString/calendarname-never.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/calendarname-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/calendarname-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toString/fractionalseconddigits-auto.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toString/fractionalseconddigits-auto.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/fractionalseconddigits-nan.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/fractionalseconddigits-nan.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/fractionalseconddigits-negative.js :: it threw ReferenceError: Temporal is not defined
@@ -15079,8 +15109,12 @@ built-ins/Temporal/PlainDateTime/prototype/toString/roundingmode-trunc.js :: it 
 built-ins/Temporal/PlainDateTime/prototype/toString/roundingmode-trunc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/roundingmode-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/roundingmode-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toString/smallestunit-fractionalseconddigits.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toString/smallestunit-fractionalseconddigits.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/smallestunit-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/smallestunit-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toString/smallestunit-valid-units.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/prototype/toString/smallestunit-valid-units.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/year-format.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toString/year-format.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/toStringTag/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -15407,6 +15441,8 @@ built-ins/Temporal/PlainMonthDay/prototype/monthCode/prop-desc.js :: it threw Re
 built-ins/Temporal/PlainMonthDay/prototype/monthCode/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/toJSON/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/prototype/toJSON/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/toJSON/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/toJSON/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/prototype/toJSON/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -15597,6 +15633,8 @@ built-ins/Temporal/PlainTime/name.js :: it threw ReferenceError: Temporal is not
 built-ins/Temporal/PlainTime/name.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/add/argument-duration-precision-exact-numerical-values.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/add/argument-duration-precision-exact-numerical-values.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/add/argument-invalid-property.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/add/argument-invalid-property.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/add/argument-mixed-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15775,6 +15813,8 @@ built-ins/Temporal/PlainTime/prototype/since/roundingincrement-out-of-range.js :
 built-ins/Temporal/PlainTime/prototype/since/roundingincrement-out-of-range.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/since/year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/since/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/subtract/argument-duration-precision-exact-numerical-values.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/subtract/argument-duration-precision-exact-numerical-values.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/subtract/argument-invalid-property.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/subtract/argument-invalid-property.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/subtract/argument-mixed-sign.js :: it threw ReferenceError: Temporal is not defined
@@ -15803,6 +15843,8 @@ built-ins/Temporal/PlainTime/prototype/subtract/not-a-constructor.js :: it threw
 built-ins/Temporal/PlainTime/prototype/subtract/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainTime/prototype/subtract/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/subtract/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toJSON/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toJSON/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toJSON/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toJSON/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toJSON/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -15835,6 +15877,8 @@ built-ins/Temporal/PlainTime/prototype/toString/branding.js :: it threw Referenc
 built-ins/Temporal/PlainTime/prototype/toString/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toString/fractionalseconddigits-auto.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toString/fractionalseconddigits-auto.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/fractionalseconddigits-nan.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/fractionalseconddigits-nan.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/fractionalseconddigits-non-integer.js :: it threw ReferenceError: Temporal is not defined
@@ -15875,8 +15919,12 @@ built-ins/Temporal/PlainTime/prototype/toString/roundingmode-trunc.js :: it thre
 built-ins/Temporal/PlainTime/prototype/toString/roundingmode-trunc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/roundingmode-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/roundingmode-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toString/smallestunit-fractionalseconddigits.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toString/smallestunit-fractionalseconddigits.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/smallestunit-undefined.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toString/smallestunit-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toString/smallestunit-valid-units.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/prototype/toString/smallestunit-valid-units.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toStringTag/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/until/argument-string-calendar-annotation-invalid-key.js :: it threw ReferenceError: Temporal is not defined
@@ -16103,6 +16151,8 @@ built-ins/Temporal/PlainYearMonth/prototype/calendarId/prop-desc.js :: it threw 
 built-ins/Temporal/PlainYearMonth/prototype/calendarId/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/constructor.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/constructor.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/daysInMonth/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/daysInMonth/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/daysInMonth/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/daysInMonth/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/daysInMonth/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -16285,6 +16335,8 @@ built-ins/Temporal/PlainYearMonth/prototype/subtract/prop-desc.js :: it threw Re
 built-ins/Temporal/PlainYearMonth/prototype/subtract/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/subtract/throws-if-year-outside-valid-iso-range.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/subtract/throws-if-year-outside-valid-iso-range.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/toJSON/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/toJSON/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/toJSON/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/toJSON/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/toJSON/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -16581,6 +16633,8 @@ built-ins/Temporal/ZonedDateTime/prototype/dayOfYear/branding.js :: it threw Ref
 built-ins/Temporal/ZonedDateTime/prototype/dayOfYear/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/prototype/dayOfYear/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/prototype/dayOfYear/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/prototype/daysInMonth/basic.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/prototype/daysInMonth/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/prototype/daysInMonth/branding.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/prototype/daysInMonth/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/prototype/daysInMonth/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -17145,6 +17199,10 @@ built-ins/TypedArray/prototype/byteLength/resizable-array-buffer-fixed.js :: it 
 built-ins/TypedArray/prototype/byteLength/resizable-array-buffer-fixed.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteLength/resizable-buffer-assorted.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/TypedArray/prototype/byteLength/resizable-buffer-assorted.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-1.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-1.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-2.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-2.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/TypedArray/prototype/byteLength/return-bytelength.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteLength/return-bytelength.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteLength/this-has-no-typedarrayname-internal.js :: it threw ReferenceError: Float64Array is not defined
@@ -17175,6 +17233,8 @@ built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-auto.js :: it t
 built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-auto.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-fixed.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-fixed.js (strict) :: it threw ReferenceError: Float64Array is not defined
+built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/TypedArray/prototype/byteOffset/return-byteoffset.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteOffset/return-byteoffset.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/byteOffset/this-has-no-typedarrayname-internal.js :: it threw ReferenceError: Float64Array is not defined
@@ -18151,6 +18211,10 @@ built-ins/TypedArray/prototype/length/resizable-array-buffer-fixed.js :: it thre
 built-ins/TypedArray/prototype/length/resizable-array-buffer-fixed.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/length/resizable-buffer-assorted.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/TypedArray/prototype/length/resizable-buffer-assorted.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-1.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-1.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-2.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-2.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/TypedArray/prototype/length/return-length.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/length/return-length.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/prototype/length/this-has-no-typedarrayname-internal.js :: it threw ReferenceError: Float64Array is not defined
@@ -23648,6 +23712,18 @@ language/statements/for-of/dstr/obj-id-init-order.js (strict) :: it did not pars
 language/statements/for-of/dstr/obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for-of/float32array-mutate.js :: it threw ReferenceError: Float32Array is not defined
 language/statements/for-of/float32array-mutate.js (strict) :: it threw ReferenceError: Float32Array is not defined
 language/statements/for-of/float32array.js :: it threw ReferenceError: Float32Array is not defined
@@ -24018,6 +24094,19 @@ language/statements/try/cptn-finally-wo-catch.js :: it threw ReferenceError: eva
 language/statements/try/cptn-finally-wo-catch.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/try/cptn-try.js :: it threw ReferenceError: eval is not defined
 language/statements/try/cptn-try.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/try/scope-catch-param-var-none.js :: it threw ReferenceError: eval is not defined
 language/statements/try/tco-catch-finally.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/try/tco-catch.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/try/tco-finally.js (strict) :: it threw ReferenceError: f is not defined

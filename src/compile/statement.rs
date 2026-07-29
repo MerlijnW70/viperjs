@@ -305,6 +305,16 @@ impl Compiler<'_> {
         self.destructure(binding, Bind::Var, span)
     }
 
+    /// Take a catch parameter apart, from the thrown value on top of the stack.
+    ///
+    /// [`Bind::Local`] and not [`Bind::Var`]: a catch binding is the block's own wherever the
+    /// block is written, and a `var` at the top level of a script is a property of the global
+    /// object. Asking for the wrong one there put the thrown value on the global object and left
+    /// the catch block reading a slot nothing had filled.
+    fn destructure_catch(&mut self, binding: &Binding, span: Span) -> Result<(), CompileError> {
+        self.destructure(binding, Bind::Local, span)
+    }
+
     /// §8.6.2 `IteratorBindingInitialization` — take an array pattern apart, one step per element.
     ///
     /// An array pattern is not a shorter object pattern. It drives an *iterator*, so the source
@@ -515,6 +525,24 @@ impl Compiler<'_> {
             }
             Bind::Var => {
                 let slot = self.declare(name);
+                self.chunk.emit(Instruction::StoreVariable(0, slot));
+            }
+            Bind::Made => {
+                let Some(slot) = self.resolve_in_scope(name) else {
+                    // The head declared it a moment ago, so this is a compiler that has lost
+                    // track of its own scope rather than anything a program can write.
+                    return Err(unsupported(
+                        "a binding the head declared and the body cannot find",
+                        Span::new(0, 0),
+                    ));
+                };
+                self.chunk.emit(Instruction::Initialise(slot));
+            }
+            Bind::Local => {
+                let slot = match self.resolve_in_scope(name) {
+                    Some(slot) => slot,
+                    None => self.declare_shadowing(name),
+                };
                 self.chunk.emit(Instruction::StoreVariable(0, slot));
             }
             Bind::Lexical(immutable) => {
@@ -794,9 +822,6 @@ impl Compiler<'_> {
             // nobody can write.
             return Err(unsupported("a `for`-`in` head with no binding", span));
         };
-        let Binding::Identifier(name) = &declarator.binding else {
-            return Err(unsupported("a destructuring binding", declarator.span));
-        };
         if !declaration.kind.is_lexical() {
             // A `var` in the head is *not* the loop's. §14.7.5.5 gives it no per-iteration
             // binding and no scope of its own: it was hoisted with the rest of the body's, it
@@ -805,9 +830,16 @@ impl Compiler<'_> {
             // goes by name, which is the one path that knows all of that.
             return Ok(None);
         }
+        // §8.2.1 `BoundNames` — a pattern in the head declares every name inside it, and each
+        // starts in the dead zone exactly as a single name does.
         let immutable = declaration.kind == DeclarationKind::Const;
-        let slot = self.declare_lexical(&name.name, immutable);
-        self.chunk.emit(Instruction::Uninitialise(slot));
+        let mut first = None;
+        for name in crate::static_semantics::bound_names(&declarator.binding) {
+            let slot = self.declare_lexical(name.name, immutable);
+            self.chunk.emit(Instruction::Uninitialise(slot));
+            first.get_or_insert(slot);
+        }
+        let slot = first.unwrap_or_default();
         Ok(Some(slot))
     }
 
@@ -820,6 +852,26 @@ impl Compiler<'_> {
         span: Span,
     ) -> Result<(), CompileError> {
         match (target, binding) {
+            // A pattern head, lexical or not: the value this pass is visiting is taken apart the
+            // same way a declaration's initializer would be. Which kind of binding its names get
+            // is the only thing the two cases differ in — a `let` initialises bindings the head
+            // made, a `var` assigns ones the body already hoisted.
+            (ForInOfTarget::Declaration(declaration), held)
+                if matches!(
+                    declaration.declarators.first().map(|first| &first.binding),
+                    Some(Binding::Pattern(_))
+                ) =>
+            {
+                let Some(declarator) = declaration.declarators.first() else {
+                    return Err(unsupported("a `for` head with no binding", span));
+                };
+                let how = match held {
+                    Some(_) => Bind::Made,
+                    None => Bind::Var,
+                };
+                self.chunk.emit(Instruction::LoadVariable(0, current));
+                self.destructure(&declarator.binding, how, span)
+            }
             // A head that declares: the binding is the loop's own, so this initialises it — which
             // for a `const` is the one write it ever gets.
             (ForInOfTarget::Declaration(_), Some(slot)) => {
@@ -1244,12 +1296,14 @@ impl Compiler<'_> {
         let outer_locals = self.enter_scope();
         match &handler.parameter {
             Some(parameter) => {
-                let Binding::Identifier(name) = &parameter.binding else {
-                    return Err(unsupported("a destructuring catch parameter", handler.span));
-                };
-                let slot = self.declare_shadowing(&name.name);
-                self.chunk.emit(Instruction::StoreVariable(0, slot));
-                self.chunk.emit(Instruction::Pop);
+                // §14.15.3 makes every name in the parameter a binding of the catch block, so a
+                // pattern declares all of them and then takes the thrown value apart. Declared
+                // with `declare_shadowing` for the same reason a name is: the catch's binding is
+                // its own, and an outer one of the same name is hidden rather than written to.
+                for name in crate::static_semantics::bound_names(&parameter.binding) {
+                    self.declare_shadowing(name.name);
+                }
+                self.destructure_catch(&parameter.binding, handler.span)?;
             }
             None => self.chunk.emit(Instruction::Pop),
         }
@@ -1334,8 +1388,22 @@ enum Check {
 /// Which kind of binding a pattern's names are being given — §14.3.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Bind {
-    /// A `var`, which was hoisted and is being assigned.
+    /// A `var`, which was hoisted and is being assigned — and which at the top level of a script
+    /// is a property of the global object rather than a slot.
     Var,
+    /// A `let` or `const` binding that already exists — initialise it and nothing else.
+    ///
+    /// A `for`-`of` head's pattern is the case: [`Compiler::for_in_binding`] declared every name
+    /// in it, with the head's own mutability, before the loop began. Carrying the mutability here
+    /// as well would be a second copy of an answer already given, and one nothing could tell was
+    /// wrong.
+    Made,
+    /// A binding that is always a slot in the current scope, whatever the scope is.
+    ///
+    /// §14.15.3's catch parameter is the one of these: it belongs to the catch block and to
+    /// nothing wider, so a `catch ({a})` written at the top level of a script must *not* reach
+    /// the global object the way a `var` there would.
+    Local,
     /// A `let` or `const`, which exists uninitialised and is being initialised. The flag is
     /// whether it is a `const`, for the case where the binding has to be made here.
     Lexical(bool),
