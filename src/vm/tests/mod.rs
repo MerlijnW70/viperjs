@@ -33,8 +33,8 @@ mod values;
 use super::call::MAX_CALL_DEPTH;
 use super::*;
 use crate::ast::BinaryOperator;
-use crate::compile::{compile_expression, compile_script};
-use crate::heap::{ObjectId, PropertyKey, PropertyKind};
+use crate::compile::{Instruction, ShortCircuit, compile_expression, compile_script};
+use crate::heap::{ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::parser::{parse_expression, parse_script};
 
 /// Evaluate `source` and describe the result the way `String(x)` would, so that a row of a
