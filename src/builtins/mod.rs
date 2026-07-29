@@ -22,6 +22,7 @@ pub mod error;
 pub mod function;
 mod math;
 pub mod object;
+mod string;
 mod wrapper;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
@@ -40,6 +41,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     function::install(heap, realm, global);
     math::install(heap, realm, global);
     wrapper::install(heap, realm, global);
+    string::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.

@@ -13,7 +13,7 @@
 //! That is the whole reason this cannot be written as "collect the enumerable keys of each object
 //! and concatenate". Every name met has to be remembered, whether or not it was yielded.
 
-use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey};
+use crate::heap::{Heap, Object, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::value::Value;
 use std::collections::HashSet;
 
@@ -27,28 +27,27 @@ impl Heap {
     ///
     /// String keys only. §14.7.5.10 says so outright, and it is why `for`-`in` cannot be used to
     /// find a Symbol-keyed property.
-    pub fn enumerable_keys(&self, object: ObjectId) -> Vec<PropertyKey> {
+    pub fn enumerable_keys(&mut self, object: ObjectId) -> Vec<PropertyKey> {
         let mut visited: HashSet<PropertyKey> = HashSet::new();
         let mut keys = Vec::new();
         let mut next = Some(object);
         while let Some(id) = next {
-            let Some(found) = self.object(id) else {
-                break;
-            };
-            for key in found.own_property_keys(self) {
+            // No guard for an id this heap has not got: its keys come back empty and its
+            // prototype comes back `None`, so the walk ends on the next turn of its own accord.
+            for key in self.own_property_keys(id) {
                 // Met before, so it belongs to a nearer object and this one is shadowed —
                 // whether or not the nearer one was yielded. See the module comment.
                 if !visited.insert(key) {
                     continue;
                 }
-                if found
-                    .get_own_property(key)
+                if self
+                    .own_property(id, key)
                     .is_some_and(|found| found.enumerable)
                 {
                     keys.push(key);
                 }
             }
-            next = found.prototype();
+            next = self.object(id).and_then(Object::prototype);
         }
         keys
     }

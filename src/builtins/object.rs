@@ -320,9 +320,7 @@ fn define_each(
     properties: Value,
 ) -> Completion<()> {
     let source = to_object(properties, "a property-descriptor list must be an object")?;
-    let keys = heap
-        .object(source)
-        .map_or_else(Vec::new, |found| found.own_property_keys(heap));
+    let keys = heap.own_property_keys(source);
     let mut pending = Vec::new();
     for key in keys {
         let Some(property) = own_property(heap, source, key) else {
@@ -352,9 +350,7 @@ fn own_keys(
     enumerable_only: bool,
 ) -> Completion<Value> {
     let object = to_object(call.argument(0), "this function requires an object")?;
-    let keys = heap
-        .object(object)
-        .map_or_else(Vec::new, |found| found.own_property_keys(heap));
+    let keys = heap.own_property_keys(object);
     let mut names = Vec::new();
     for key in keys {
         let Some(property) = own_property(heap, object, key) else {

@@ -34,9 +34,10 @@ use crate::compile::Chunk;
 use crate::heap::PropertyKind;
 use crate::heap::arguments;
 use crate::heap::define::{Validation, apply, validate};
+use crate::heap::string_object;
 use crate::heap::{
     ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Native, Property,
-    PropertyDescriptor, PropertyKey,
+    PropertyDescriptor, PropertyKey, StringId,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -171,6 +172,17 @@ impl Object {
     /// asking a flag.
     pub fn primitive(&self) -> Option<Value> {
         self.primitive
+    }
+
+    /// The characters this object *is*, if it is a String exotic object — `[[StringData]]`.
+    ///
+    /// A wrapper around any other primitive answers `None`, which is what keeps `new Number(1)`
+    /// from growing a property per digit.
+    pub fn string_data(&self) -> Option<StringId> {
+        match self.primitive {
+            Some(Value::String(data)) => Some(data),
+            _ => None,
+        }
     }
 
     /// Whether this is an Array — §10.4.2's exotic object, and the only one there is.
@@ -310,6 +322,10 @@ impl Object {
     /// Note *array* index, not integer index. `"4294967295"` is one too large to be an array
     /// index, so it sorts with the strings — the same boundary [`PropertyKey::as_array_index`]
     /// draws, and observable through this.
+    /// A String object's characters are *not* among these, because they are not stored and this
+    /// cannot make the keys that would name them. [`Heap::own_property_keys`] is the whole answer;
+    /// this is the part of it the collector and the engine's own walks need, and neither of those
+    /// cares about a character.
     pub fn own_property_keys(&self, heap: &Heap) -> Vec<PropertyKey> {
         let mut indices: Vec<(u32, PropertyKey)> = Vec::new();
         let mut names: Vec<PropertyKey> = Vec::new();
@@ -409,6 +425,88 @@ impl Heap {
         id
     }
 
+    /// §10.4.3.4 `StringCreate` — a String exotic object over `data`.
+    ///
+    /// `length` is put there for real, because it is an ordinary property that never changes; the
+    /// characters are not: those are answered from `data` itself, every time they are asked for.
+    ///
+    /// Every character is interned on the way past. That is what lets a *read* of `s[0]` be a read:
+    /// the one-character String it must answer with already exists, so no shared borrow ever has to
+    /// make one. There are at most 65,536 distinct one-unit Strings, so what this can add to the
+    /// heap over a whole program is bounded however many String objects are made.
+    pub fn new_string_object(&mut self, prototype: ObjectId, data: StringId) -> ObjectId {
+        let units = self.string(data).unwrap_or(&[]).to_vec();
+        for unit in &units {
+            self.intern(&[*unit]);
+        }
+        let id = self.new_wrapper(prototype, Value::String(data));
+        let units16: Vec<u16> = "length".encode_utf16().collect();
+        let length = PropertyKey::from_units(self, &units16);
+        let count = f64::from(u32::try_from(units.len()).unwrap_or(u32::MAX));
+        // §10.4.3.4 step 5 — all three attributes false, which is why `s.length = 9` is refused
+        // and `delete s.length` answers false. The define cannot be refused on an object made a
+        // moment ago, so its answer is not worth asking about.
+        self.define_own_property(
+            id,
+            length,
+            &PropertyDescriptor {
+                value: Some(Value::Number(count)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(false),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+        id
+    }
+
+    /// `[[OwnPropertyKeys]]` — §10.1.11, and §10.4.3.1 when the object is a String.
+    ///
+    /// Everything a program can see, which is more than [`Object::own_property_keys`] can answer:
+    /// a String object's characters are own keys and naming one means making the String `"0"`, so
+    /// this is where the question is asked from and why it needs the heap by exclusive reference.
+    pub fn own_property_keys(&mut self, object: ObjectId) -> Vec<PropertyKey> {
+        let stored = self
+            .object(object)
+            .map_or_else(Vec::new, |found| found.own_property_keys(self));
+        let Some(data) = self.object(object).and_then(Object::string_data) else {
+            return stored;
+        };
+        // Ahead of the stored keys and in order, which is §10.1.11's ascending run of indices: a
+        // String object's own stored indices are all past its last character, because a define
+        // *at* a character is refused, so nothing stored can sort in among these.
+        let count = u32::try_from(string_object::length(self, data)).unwrap_or(u32::MAX);
+        let mut keys = Vec::with_capacity(count as usize + stored.len());
+        for index in 0..count {
+            keys.push(self.index_key(index));
+        }
+        keys.extend(stored);
+        keys
+    }
+
+    /// `[[Delete]]` — §10.1.10, and §10.4.3.6 when the object is a String.
+    ///
+    /// A String object's characters are not configurable, so deleting one answers `false` and
+    /// removes nothing. [`Object::delete`] cannot tell: it looks for a stored property, finds none,
+    /// and says `true` on the grounds that what is not there cannot be in the way.
+    pub fn delete_own_property(&mut self, object: ObjectId, key: PropertyKey) -> bool {
+        if let Some(data) = self.object(object).and_then(Object::string_data)
+            && string_object::character(self, data, key).is_some()
+        {
+            return false;
+        }
+        self.object_mut(object)
+            .is_some_and(|found| found.delete(key))
+    }
+
+    /// The one-character String at `index` of `data`, interned so a later read can find it.
+    ///
+    /// §10.4.3.5's value, for the reader that has a String *primitive* rather than an object and
+    /// so has nowhere the characters were interned from.
+    pub fn intern_character(&mut self, data: StringId, index: u32) -> Option<StringId> {
+        string_object::intern_character(self, data, index)
+    }
+
     /// Put an ordinary object on the heap — `OrdinaryObjectCreate` (§10.1.12).
     pub fn new_object(&mut self, prototype: Option<ObjectId>) -> ObjectId {
         let id = ObjectId(self.objects.len());
@@ -505,6 +603,16 @@ impl Heap {
         if self.object(object).is_some_and(Object::is_array) {
             return self.define_array_property(object, key, descriptor);
         }
+        // §10.4.3.3 — a define at one of a String object's characters never stores anything. It
+        // is allowed only when it describes the property that is already there, and refused
+        // otherwise, which is what makes `s[0] = "z"` do nothing at all.
+        if let Some(data) = self.object(object).and_then(Object::string_data)
+            && let Some(current) = string_object::character(self, data, key)
+        {
+            return DefineOutcome::from(string_object::define_is_allowed(
+                self, &current, descriptor,
+            ));
+        }
         let defined = self.define_ordinary_property(object, key, descriptor);
         // §10.4.4.2 steps 3 to 5 — only when the define was allowed. A refused define changes
         // nothing, and must not break a link either.
@@ -571,7 +679,10 @@ impl Heap {
     /// accessor the specification's own note implements the map with.
     pub fn own_property(&self, object: ObjectId, key: PropertyKey) -> Option<Property> {
         let found = self.object(object)?;
-        let property = *found.get_own_property(key)?;
+        let Some(property) = found.get_own_property(key).copied() else {
+            // §10.4.3.5 — nothing stored, which for a String object is where its characters are.
+            return string_object::character(self, found.string_data()?, key);
+        };
         let Some(map) = found.arguments_map() else {
             return Some(property);
         };

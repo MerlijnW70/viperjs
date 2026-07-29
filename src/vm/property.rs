@@ -6,7 +6,7 @@
 //! `define_own_property` answers a Boolean and needs none of that.
 
 use super::Vm;
-use crate::heap::{DefineOutcome, Heap, PropertyDescriptor, PropertyKey, PropertyKind};
+use crate::heap::{DefineOutcome, Heap, PropertyDescriptor, PropertyKey, PropertyKind, StringId};
 use crate::value::{Abrupt, Completion, ErrorKind, Value};
 
 /// What `[[Set]]` answers, out of what the define came to.
@@ -51,6 +51,32 @@ impl Vm {
         self.get_property_key(base, key, heap)
     }
 
+    /// What a String primitive has of its own — §10.4.3.5's characters and §10.4.3.4's `length`.
+    ///
+    /// `None` when the key is neither, and then the read goes on to `String.prototype` as any
+    /// other would. The object §7.3.2 says to make is never made: it would have exactly these
+    /// properties and be thrown away, and `"abc".length` is common enough that building one each
+    /// time would be a cost paid by every program that touches a string.
+    fn string_own_property(
+        &mut self,
+        data: StringId,
+        key: PropertyKey,
+        heap: &mut Heap,
+    ) -> Option<Value> {
+        let units = heap.string(data)?.len();
+        if key == self.length_key(heap) {
+            return Some(Value::Number(f64::from(u32::try_from(units).ok()?))); // DR-0012 caps a String far below `u32`
+        }
+        let index = key.as_array_index(heap)?;
+        let character = heap.intern_character(data, index)?;
+        Some(Value::String(character))
+    }
+
+    /// The key `"length"`, interned.
+    fn length_key(&mut self, heap: &mut Heap) -> PropertyKey {
+        PropertyKey::from_units(heap, &"length".encode_utf16().collect::<Vec<_>>())
+    }
+
     /// `ToObject` (§7.1.18) — the object a primitive stands for.
     ///
     /// Named `object_for` rather than `to_object`: a `to_*` method that takes `self` by value
@@ -64,11 +90,7 @@ impl Vm {
             Value::Object(_) => return Ok(value),
             Value::Boolean(_) => heap.new_wrapper(self.realm.boolean_prototype(), value),
             Value::Number(_) => heap.new_wrapper(self.realm.number_prototype(), value),
-            Value::String(_) => {
-                return Err(Abrupt::type_error(
-                    "a String wrapper object is not implemented yet",
-                ));
-            }
+            Value::String(data) => heap.new_string_object(self.realm.string_prototype(), data),
             Value::Undefined | Value::Null => {
                 return Err(Abrupt::type_error(
                     "undefined and null cannot be converted to an object",
@@ -98,7 +120,16 @@ impl Vm {
             Value::Object(object) => object,
             Value::Number(_) => self.realm.number_prototype(),
             Value::Boolean(_) => self.realm.boolean_prototype(),
-            Value::Undefined | Value::Null | Value::String(_) => {
+            // A String is the one primitive whose wrapper has own properties, so the shortcut has
+            // to answer them itself before falling through to the prototype: §10.4.3.5's
+            // characters, and the `length` §10.4.3.4 puts beside them.
+            Value::String(data) => {
+                if let Some(value) = self.string_own_property(data, key, heap) {
+                    return Ok(value);
+                }
+                self.realm.string_prototype()
+            }
+            Value::Undefined | Value::Null => {
                 return Err(Abrupt::type_error(
                     "cannot read a property of something that is not an object",
                 ));
@@ -290,9 +321,7 @@ impl Vm {
         // to the property itself. Broken *before* the delete, because the delete may refuse and
         // the link is about the index rather than about what is at it.
         heap.unmap_argument(object, key);
-        let gone = heap
-            .object_mut(object)
-            .is_some_and(|found| found.delete(key));
+        let gone = heap.delete_own_property(object, key);
         Ok(Value::Boolean(gone))
     }
     /// `[[HasProperty]]` (§10.1.7) through §13.10.1's `in`.

@@ -44,6 +44,7 @@ mod enumerate;
 mod environment;
 mod object;
 mod property;
+mod string_object;
 
 pub use self::arguments::ArgumentsMap;
 pub use self::callable::{Bound, Callable, Native, NativeCall};
@@ -228,6 +229,14 @@ impl Heap {
         self.footprint() > MAX_HEAP_BYTES
     }
 
+    /// A new String from `units`, or `None` if there are more of them than a String may hold.
+    ///
+    /// The check [`Heap::concat`] makes, for the callers that build their units themselves rather
+    /// than by joining two Strings — `String.fromCharCode` and the methods that assemble one.
+    pub fn new_string_checked(&mut self, units: Vec<u16>) -> Option<StringId> {
+        string_fits(units.len(), 0).then(|| self.new_string(units))
+    }
+
     /// Join two Strings, or refuse because the result would be longer than one may be.
     ///
     /// §6.1.4 puts the String type's maximum at 2^53-1 elements and says nothing about what an
@@ -304,6 +313,15 @@ impl Heap {
         let id = self.new_string(units.to_vec());
         self.interned.insert(units.into(), id);
         id
+    }
+
+    /// The interned String with these contents, if this heap has already interned one.
+    ///
+    /// The read-only half of [`Heap::intern`], and the only half a shared borrow can use. Answers
+    /// `None` for contents that are on the heap but were never interned: this is a question about
+    /// the intern table, not about what strings exist.
+    pub fn find_string(&self, units: &[u16]) -> Option<StringId> {
+        self.interned.get(units).copied()
     }
 
     /// The interned String with the same contents as `id`, which may be `id` itself.

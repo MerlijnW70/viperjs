@@ -35,6 +35,13 @@ pub struct Realm {
     /// An ordinary object and *not* a Number wrapper, so that
     /// `Number.prototype.valueOf.call(Number.prototype)` is a TypeError rather than zero.
     number_prototype: ObjectId,
+    /// What `new String("a")` inherits from.
+    ///
+    /// A String exotic object over the empty String, and §22.1.3 is explicit that it is one — so
+    /// `String.prototype.length` is `0` rather than absent, and `String.prototype[0]` is
+    /// `undefined` because there is no character there rather than because it is not that kind of
+    /// object. That is the difference from `Number.prototype`, which is deliberately ordinary.
+    string_prototype: ObjectId,
     /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
     ///
     /// An array rather than six fields because nothing here treats one differently from another:
@@ -103,6 +110,8 @@ impl Realm {
         let array_prototype = heap.new_array(object_prototype, 0);
         let boolean_prototype = heap.new_object(Some(object_prototype));
         let number_prototype = heap.new_object(Some(object_prototype));
+        let empty = heap.intern(&[]);
+        let string_prototype = heap.new_string_object(object_prototype, empty);
         // §20.5.3 — `Error.prototype` has a `name` of `"Error"` and an empty `message`, and both
         // are ordinary writable properties rather than anything special. That an error's message
         // usually comes from the *instance* and its name from the *prototype* is why
@@ -154,6 +163,7 @@ impl Realm {
             array_prototype,
             boolean_prototype,
             number_prototype,
+            string_prototype,
             native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
@@ -210,6 +220,11 @@ impl Realm {
     /// `%Number.prototype%`.
     pub fn number_prototype(&self) -> ObjectId {
         self.number_prototype
+    }
+
+    /// What every String object and every String primitive finds its methods on.
+    pub fn string_prototype(&self) -> ObjectId {
+        self.string_prototype
     }
 
     /// Give a function the `prototype` object its instances will inherit from — §10.2.5.
