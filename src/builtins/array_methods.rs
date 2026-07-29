@@ -36,6 +36,32 @@ pub(super) fn length_of(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Compl
     Ok(to_length(number))
 }
 
+/// The largest length an array-like may have — §7.1.20's clamp, and §23.1's TypeError.
+///
+/// Two rules meet at this number and they are not the same rule. `ToLength` **clamps** to it, so
+/// an object claiming a `length` of `2 ** 60` is read as having this many. But a method that would
+/// *grow* an array past it throws a **TypeError** instead of clamping, because the elements it
+/// would have to move have nowhere to go.
+pub(super) const MAX_LENGTH: u64 = 9_007_199_254_740_991;
+
+/// Whether an array-like may be this long — §23.1.3.34 step 4.a and §23.1.3.28 step 8.
+///
+/// Separated from the methods that ask it so that the boundary can be *asked* at lengths that
+/// cannot be *walked*. Proving from JavaScript that a length one short of the maximum may grow by
+/// one means letting it grow and then walking 2^53 indices, which is not a test, it is a wait.
+pub(super) const fn fits(length: u64) -> bool {
+    length <= MAX_LENGTH
+}
+
+/// How long an array-like is after a splice — §23.1.3.28 step 8's arithmetic.
+///
+/// Its own function for the same reason as [`fits`]: what it computes is checked against the
+/// maximum, and every case where the check is interesting is a case too large to reach by running
+/// anything.
+pub(super) const fn spliced_length(length: u64, removed: u64, inserted: u64) -> u64 {
+    length - removed + inserted
+}
+
 /// §7.1.20 `ToLength`.
 ///
 /// Written as two clamps rather than a guard and a clamp, because `f64::max` answers the *other*
@@ -66,6 +92,7 @@ pub(super) fn has_index(
     object: ObjectId,
     index: u64,
 ) -> Completion<bool> {
+    within_budget(heap)?;
     let name = index_key(heap, index);
     let found = vm.has_property_key(Value::Object(object), name, heap)?;
     Ok(found)
@@ -78,8 +105,25 @@ pub(super) fn get_index(
     object: ObjectId,
     index: u64,
 ) -> Completion<Value> {
+    within_budget(heap)?;
     let name = index_key(heap, index);
     vm.get_property_key(Value::Object(object), name, heap)
+}
+
+/// Stop if DR-0013's budget has been spent — the check a built-in has to make for itself.
+///
+/// The interpreter asks between instructions, and a built-in walking a length never gets back to
+/// it: `Array.prototype.reduceRight` over an object whose `length` is `2 ** 53 - 1` is a loop
+/// inside Rust with no instruction boundary in it. Asked here because this is the one place every
+/// such walk passes through, once per index, and because each pass interns a key — so a walk that
+/// is going nowhere is also a walk that is spending the budget.
+fn within_budget(heap: &Heap) -> Completion<()> {
+    if heap.is_exhausted() {
+        return Err(Abrupt::range_error(
+            "the heap has grown past what this engine will allocate",
+        ));
+    }
+    Ok(())
 }
 
 /// Put a value at this index of an object being built — §7.3.5 `CreateDataPropertyOrThrow`.
@@ -392,5 +436,37 @@ pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
         ("unshift", 1, edit::unshift),
     ] {
         define_method(heap, realm, prototype, name, length, native);
+    }
+}
+
+#[cfg(test)]
+mod length_tests {
+    use super::{MAX_LENGTH, fits, spliced_length};
+
+    #[test]
+    fn the_maximum_length_is_a_length_and_one_past_it_is_not() {
+        // Both sides of the boundary, and the boundary itself. A comparison written one notch out
+        // would agree with every array a test could actually build.
+        assert!(fits(0));
+        assert!(fits(MAX_LENGTH - 1));
+        assert!(fits(MAX_LENGTH));
+        assert!(!fits(MAX_LENGTH + 1));
+        assert!(!fits(u64::MAX));
+        // 2^53 - 1, written out: the number is what §7.1.20 clamps to and what §23.1 refuses to
+        // grow past, and the two must be the same number.
+        assert_eq!(MAX_LENGTH, 9_007_199_254_740_991);
+    }
+
+    #[test]
+    fn a_splice_that_removes_as_much_as_it_inserts_leaves_the_length_alone() {
+        assert_eq!(spliced_length(10, 0, 0), 10);
+        assert_eq!(spliced_length(10, 3, 3), 10);
+        assert_eq!(spliced_length(10, 3, 0), 7);
+        assert_eq!(spliced_length(10, 0, 3), 13);
+        // The rows that matter, at the top of the range: removing one and inserting one is
+        // allowed where inserting one alone is not.
+        assert!(fits(spliced_length(MAX_LENGTH, 1, 1)));
+        assert!(!fits(spliced_length(MAX_LENGTH, 0, 1)));
+        assert!(fits(spliced_length(MAX_LENGTH, 1, 0)));
     }
 }

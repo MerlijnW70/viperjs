@@ -12,11 +12,12 @@
 //! `1 in a` answer differently, which is exactly the difference a hole exists to record.
 
 use crate::heap::{Heap, NativeCall, ObjectId};
-use crate::value::{Completion, Value};
+use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
 use super::array_methods::{
-    get_index, has_index, index_key, length_of, set_index, start_index, this_object,
+    fits, get_index, has_index, index_key, length_of, set_index, spliced_length, start_index,
+    this_object,
 };
 use super::key;
 
@@ -74,18 +75,29 @@ pub fn unshift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
     let object = this_object(call)?;
     let length = length_of(vm, heap, object)?;
     let added = call.arguments.len() as u64;
-    // No `if added > 0` in front of this: with nothing to insert, moving each index to itself is
-    // a no-op and the write loop has nothing to write. A guard no input can tell from its
-    // absence is one to leave out.
-    //
-    // Downwards, because moving up would overwrite what has not been read yet — the same reason
-    // `memmove` exists and `memcpy` would be wrong.
-    for index in (0..length).rev() {
-        move_index(vm, heap, object, index, index + added)?;
-    }
-    for (at, value) in call.arguments.iter().enumerate() {
-        let name = index_key(heap, at as u64);
-        vm.set_property_key(Value::Object(object), name, *value, heap)?;
+    // §23.1.3.34 step 4 — *only* when there is something to insert. This used to say that a guard
+    // here was one no input could tell from its absence, on the grounds that moving each index
+    // onto itself changes nothing. It changes nothing and it takes for ever: an array-like whose
+    // `length` is 2^53-1 spends the rest of the day doing it, and the specification skips the
+    // step rather than performing it emptily.
+    if added > 0 {
+        // Step 4.a — the one length rule in §23.1 that throws instead of clamping. `ToLength`
+        // has already clamped what was *read*; this is about what would be *written*, and there
+        // is no index past this to write to.
+        if !fits(length + added) {
+            return Err(Abrupt::type_error(
+                "the resulting array would be longer than 2^53 - 1",
+            ));
+        }
+        // Downwards, because moving up would overwrite what has not been read yet — the same
+        // reason `memmove` exists and `memcpy` would be wrong.
+        for index in (0..length).rev() {
+            move_index(vm, heap, object, index, index + added)?;
+        }
+        for (at, value) in call.arguments.iter().enumerate() {
+            let name = index_key(heap, at as u64);
+            vm.set_property_key(Value::Object(object), name, *value, heap)?;
+        }
     }
     let grown = length + added;
     write_length(vm, heap, object, grown)?;
@@ -151,6 +163,14 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     write_length(vm, heap, removed, removed_count)?;
 
     let inserted = call.arguments.len().saturating_sub(2) as u64;
+    // §23.1.3.28 step 8 — the same rule as `unshift`'s, for the same reason: what is being asked
+    // for is a length no index could reach. Checked after the removed elements are collected,
+    // because the specification checks it there and the collection can run user code.
+    if !fits(spliced_length(length, removed_count, inserted)) {
+        return Err(Abrupt::type_error(
+            "the resulting array would be longer than 2^53 - 1",
+        ));
+    }
     // The tail is read out **before** any of it is written back. Moving it in place would work
     // too, and would need the direction to depend on whether the array is growing or shrinking —
     // and the case where it is doing neither moves every element onto itself, so no input could
@@ -158,19 +178,26 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     //
     // `None` is a hole, and it stays one: a hole that travelled would otherwise arrive as
     // `undefined` and `1 in a` would start answering differently.
-    let mut tail = Vec::new();
-    for index in start + removed_count..length {
-        tail.push(match has_index(vm, heap, object, index)? {
-            true => Some(get_index(vm, heap, object, index)?),
-            false => None,
-        });
-    }
-    for (offset, element) in tail.into_iter().enumerate() {
-        let name = index_key(heap, start + inserted + offset as u64);
-        match element {
-            Some(value) => vm.set_property_key(Value::Object(object), name, value, heap)?,
-            None => vm.delete_property_key(Value::Object(object), name, heap)?,
-        };
+    //
+    // …and only when there is a move to make. §23.1.3.28's steps 14 and 15 are an `if` and an
+    // `else if` on whether more is going in than is coming out; when the two are equal *neither*
+    // runs. Moving every element onto itself instead is unobservable only in the sense that the
+    // values do not change: on an array-like whose `length` is 2^53 it is the rest of the day.
+    if inserted != removed_count {
+        let mut tail = Vec::new();
+        for index in start + removed_count..length {
+            tail.push(match has_index(vm, heap, object, index)? {
+                true => Some(get_index(vm, heap, object, index)?),
+                false => None,
+            });
+        }
+        for (offset, element) in tail.into_iter().enumerate() {
+            let name = index_key(heap, start + inserted + offset as u64);
+            match element {
+                Some(value) => vm.set_property_key(Value::Object(object), name, value, heap)?,
+                None => vm.delete_property_key(Value::Object(object), name, heap)?,
+            };
+        }
     }
     for (at, value) in call.arguments.iter().skip(2).enumerate() {
         let name = index_key(heap, start + at as u64);

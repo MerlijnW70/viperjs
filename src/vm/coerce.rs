@@ -165,6 +165,9 @@ impl Vm {
                 function,
                 this_value,
                 arguments,
+                // `Vm::call_value` is how a built-in calls a function — a callback, a `valueOf`,
+                // a `toString`. None of those is a construction.
+                constructing: false,
             };
             return native(self, heap, &call);
         }

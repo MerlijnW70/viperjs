@@ -51,6 +51,33 @@ impl Vm {
         self.get_property_key(base, key, heap)
     }
 
+    /// `ToObject` (§7.1.18) — the object a primitive stands for.
+    ///
+    /// Named `object_for` rather than `to_object`: a `to_*` method that takes `self` by value
+    /// is a conversion, and this converts its *argument* while borrowing the machine.
+    ///
+    /// `undefined` and `null` have none, which is step 1 and 2's TypeError. A String has one and
+    /// praxis cannot make it yet: §10.4.3's String exotic object has an own property per index,
+    /// which is a second exotic object and a slice of its own.
+    pub(crate) fn object_for(&mut self, value: Value, heap: &mut Heap) -> Completion<Value> {
+        let wrapped = match value {
+            Value::Object(_) => return Ok(value),
+            Value::Boolean(_) => heap.new_wrapper(self.realm.boolean_prototype(), value),
+            Value::Number(_) => heap.new_wrapper(self.realm.number_prototype(), value),
+            Value::String(_) => {
+                return Err(Abrupt::type_error(
+                    "a String wrapper object is not implemented yet",
+                ));
+            }
+            Value::Undefined | Value::Null => {
+                return Err(Abrupt::type_error(
+                    "undefined and null cannot be converted to an object",
+                ));
+            }
+        };
+        Ok(Value::Object(wrapped))
+    }
+
     /// `[[Get]]` when the key is already a key.
     ///
     /// A global reference names its property in the bytecode, so it never had a *value* to
@@ -61,10 +88,21 @@ impl Vm {
         key: PropertyKey,
         heap: &mut Heap,
     ) -> Completion<Value> {
-        let Value::Object(object) = base else {
-            return Err(Abrupt::type_error(
-                "cannot read a property of something that is not an object",
-            ));
+        // §7.3.2 `GetV` — a primitive is not an error to read from. It is wrapped, and the read
+        // goes to the wrapper. A wrapper's *own* properties are only ever the ones its kind gives
+        // it, and Number and Boolean give none — so the prototype is consulted directly rather
+        // than an object being made and thrown away on every `(1).toString()`.
+        //
+        // `undefined` and `null` are the two that really are errors, and §7.3.2 step 2 says so.
+        let object = match base {
+            Value::Object(object) => object,
+            Value::Number(_) => self.realm.number_prototype(),
+            Value::Boolean(_) => self.realm.boolean_prototype(),
+            Value::Undefined | Value::Null | Value::String(_) => {
+                return Err(Abrupt::type_error(
+                    "cannot read a property of something that is not an object",
+                ));
+            }
         };
         // §10.1.8.1 step 3 — a property that is nowhere on the chain is `undefined`, not an
         // error. That is the whole reason `o.missing` is a value and `missing` is a ReferenceError.

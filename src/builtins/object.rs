@@ -40,10 +40,8 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
         Value::Undefined | Value::Null => Ok(Value::Object(
             heap.new_object(Some(vm.realm().object_prototype())),
         )),
-        // §7.1.18 `ToObject` wraps a primitive, and there is nothing to wrap it in yet.
-        _ => Err(Abrupt::type_error(
-            "Object() of a primitive needs a wrapper object, which is not implemented yet",
-        )),
+        // §20.1.1.1 step 3 — anything else is `ToObject` of it, which is a wrapper.
+        primitive => vm.object_for(primitive, heap),
     }
 }
 
@@ -62,14 +60,23 @@ pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
         Value::Object(object) => match heap.object(object) {
             Some(found) if found.is_array() => "Array",
             Some(found) if found.call().is_some() => "Function",
-            _ => "Object",
+            // Steps 9 and 10 — a wrapper is tagged by what it wraps, which is why
+            // `Object.prototype.toString.call(new Number(1))` is `[object Number]` and not
+            // `[object Object]`.
+            Some(found) => match found.primitive() {
+                Some(Value::Boolean(_)) => "Boolean",
+                Some(Value::Number(_)) => "Number",
+                Some(Value::String(_)) => "String",
+                _ => "Object",
+            },
+            None => "Object",
         },
-        // §7.1.18 again: a primitive would be wrapped and its wrapper's tag used.
-        _ => {
-            return Err(Abrupt::type_error(
-                "Object.prototype.toString of a primitive needs a wrapper object",
-            ));
-        }
+        // §7.1.18 — a primitive is wrapped first, and the wrapper's tag is what a wrapper of that
+        // primitive would have. Read from the value directly rather than by making the object:
+        // the tag is a question about the *kind*, and nothing else about the wrapper is used.
+        Value::Boolean(_) => "Boolean",
+        Value::Number(_) => "Number",
+        Value::String(_) => "String",
     };
     Ok(text(heap, &format!("[object {tag}]")))
 }

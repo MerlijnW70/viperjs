@@ -38,7 +38,7 @@
 /// takes the general path, which shares steps 1 to 4 and almost nothing else.
 ///
 /// Total: every `f64` has an answer, NaN and both infinities included.
-pub(super) fn number_to_string(number: f64) -> String {
+pub(crate) fn number_to_string(number: f64) -> String {
     // Steps 1 to 4, in the spec's order, which matters: `-0` is caught by step 2 and so never
     // reaches step 3 to acquire a sign. `String(-0)` is `"0"`, and that is the whole reason
     // anyone ever writes `Object.is` — see [`super::Value::same_value`].

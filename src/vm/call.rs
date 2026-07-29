@@ -328,6 +328,7 @@ impl Vm {
             function,
             this_value,
             arguments: &arguments,
+            constructing: how == Entry::Construct,
         };
         let answer = native(self, heap, &call);
         // The callee, its receiver and its arguments all go, and the answer takes their place —

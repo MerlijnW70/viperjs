@@ -11,7 +11,7 @@
 //! `bind` makes a *new function object* with its own internal slots, which is a different thing
 //! and belongs with whatever else needs one.
 
-use crate::heap::{Bound, Heap, NativeCall, Object, ObjectId, PropertyDescriptor, PropertyKey};
+use crate::heap::{Bound, Heap, NativeCall, Object, ObjectId, PropertyKey};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -163,15 +163,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `Object.prototype` is not: everything callable points at it.
     let function = heap.new_native_function(prototype, construct);
     crate::builtins::define_function_metadata(heap, function, "Function", 1);
-    let prototype_key = key(heap, "prototype");
-    let descriptor = PropertyDescriptor {
-        value: Some(Value::Object(prototype)),
-        writable: Some(false),
-        enumerable: Some(false),
-        configurable: Some(false),
-        ..PropertyDescriptor::EMPTY
-    };
-    let _ = heap.define_own_property(function, prototype_key, &descriptor);
+    crate::builtins::define_fixed(heap, function, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(function));
     define_value(heap, global, "Function", Value::Object(function));
 }

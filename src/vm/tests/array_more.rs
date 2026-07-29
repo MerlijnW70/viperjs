@@ -443,3 +443,85 @@ fn a_fold_skips_a_hole_in_the_middle_as_well_as_at_the_start() {
         "2"
     );
 }
+
+#[test]
+fn a_length_nothing_could_index_is_refused_rather_than_walked() {
+    // §23.1.3.34 step 4.a and §23.1.3.28 step 8 — the one length rule in §23.1 that throws
+    // instead of clamping. `ToLength` clamps what is *read*; this is about what would be
+    // *written*, and past 2^53-1 there is no index to write to.
+    let huge = "var a = {length: 9007199254740991}; ";
+    assert_eq!(
+        run(&format!(
+            "{huge} try {{ Array.prototype.unshift.call(a, null); }} catch (e) {{ e.name }}"
+        )),
+        "TypeError"
+    );
+    assert_eq!(
+        run(&format!(
+            "{huge} try {{ Array.prototype.splice.call(a, 0, 0, 1); }} catch (e) {{ e.name }}"
+        )),
+        "TypeError"
+    );
+    // …while with nothing to insert there is no step 4 at all, so this does not walk 2^53 indices
+    // moving each onto itself. It used to, on the grounds that a no-op is unobservable — which it
+    // is, except in the time it takes.
+    assert_eq!(
+        run(&format!("{huge} Array.prototype.unshift.call(a); a.length")),
+        "9007199254740991"
+    );
+    // …and a length past the maximum is *clamped* when read, which is the other rule.
+    assert_eq!(
+        run("var a = {length: 9007199254740992}; Array.prototype.unshift.call(a); a.length"),
+        "9007199254740991"
+    );
+    // A walk that really does have that far to go meets DR-0013's budget instead of running for
+    // ever. The interpreter asks between instructions and a built-in never gets back to it, so
+    // the question is asked once per index, where the keys are being interned.
+    assert_eq!(
+        run(&format!(
+            "{huge} try {{ Array.prototype.reduceRight.call(a, function () {{}}); }}              catch (e) {{ e.name }}"
+        )),
+        "RangeError"
+    );
+    // The boundary itself is asked in Rust rather than here — see `array_methods`'s
+    // `length_tests`. Every interesting case is a length too large to walk, so a test written in
+    // JavaScript would be a wait rather than a test.
+    //
+    // Inserting one without removing one is a length past the end, and that is the rule.
+    assert_eq!(
+        run(&format!(
+            "{huge} try {{ Array.prototype.splice.call(a, 0, 0, 'x'); }} catch (e) {{ e.name }}"
+        )),
+        "TypeError"
+    );
+    // §23.1.3.28 steps 14 and 15 are an `if` and an `else if`: when a splice puts back exactly as
+    // many as it takes out, *neither* runs and no element moves. Doing it anyway changes no value
+    // and takes 2^53 steps to change none.
+    assert_eq!(
+        run("var a = {length: 9007199254740992}; Array.prototype.splice.call(a); a.length"),
+        "9007199254740991"
+    );
+    // …and a splice that really does move the tail still moves it, in both directions.
+    assert_eq!(run("var a = [1, 2, 3]; a.splice(1, 1); a.join(',')"), "1,3");
+    assert_eq!(
+        run("var a = [1, 2, 3]; a.splice(1, 0, 'x'); a.join(',')"),
+        "1,x,2,3"
+    );
+    assert_eq!(
+        run("var a = [1, 2, 3]; a.splice(1, 2, 'x', 'y'); a.join(',')"),
+        "1,x,y"
+    );
+    // The ordinary cases are untouched by any of it.
+    assert_eq!(
+        run("var a = [1, 2, 3]; a.unshift(0); a.join(',')"),
+        "0,1,2,3"
+    );
+    assert_eq!(
+        run("var a = [1, 2, 3]; a.splice(1, 1, 'x'); a.join(',')"),
+        "1,x,3"
+    );
+    assert_eq!(
+        run("['a', 'b', 'c'].reduceRight(function (l, r) { return l + r; })"),
+        "cba"
+    );
+}

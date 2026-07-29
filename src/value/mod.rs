@@ -76,7 +76,7 @@ mod string_to_number;
 pub(crate) use self::operators::exponentiate;
 pub use self::operators::{apply_binary, is_loosely_equal};
 
-use self::number_to_string::number_to_string;
+pub(crate) use self::number_to_string::number_to_string;
 use self::string_to_number::string_to_number;
 use crate::heap::{Heap, ObjectId, StringId};
 

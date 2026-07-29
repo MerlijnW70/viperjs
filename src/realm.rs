@@ -28,6 +28,13 @@ pub struct Realm {
     function_prototype: ObjectId,
     error_prototype: ObjectId,
     array_prototype: ObjectId,
+    /// What `new Boolean(true)` inherits from.
+    boolean_prototype: ObjectId,
+    /// What `new Number(1)` inherits from.
+    ///
+    /// An ordinary object and *not* a Number wrapper, so that
+    /// `Number.prototype.valueOf.call(Number.prototype)` is a TypeError rather than zero.
+    number_prototype: ObjectId,
     /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
     ///
     /// An array rather than six fields because nothing here treats one differently from another:
@@ -94,6 +101,8 @@ impl Realm {
         // it is why `Array.prototype.length` is 0 rather than absent, and why `Array.isArray` of
         // it is true.
         let array_prototype = heap.new_array(object_prototype, 0);
+        let boolean_prototype = heap.new_object(Some(object_prototype));
+        let number_prototype = heap.new_object(Some(object_prototype));
         // §20.5.3 — `Error.prototype` has a `name` of `"Error"` and an empty `message`, and both
         // are ordinary writable properties rather than anything special. That an error's message
         // usually comes from the *instance* and its name from the *prototype* is why
@@ -143,6 +152,8 @@ impl Realm {
             function_prototype,
             error_prototype,
             array_prototype,
+            boolean_prototype,
+            number_prototype,
             native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
@@ -189,6 +200,16 @@ impl Realm {
     /// `%Array.prototype%` — itself an Array, per §23.1.3.
     pub fn array_prototype(&self) -> ObjectId {
         self.array_prototype
+    }
+
+    /// `%Boolean.prototype%`.
+    pub fn boolean_prototype(&self) -> ObjectId {
+        self.boolean_prototype
+    }
+
+    /// `%Number.prototype%`.
+    pub fn number_prototype(&self) -> ObjectId {
+        self.number_prototype
     }
 
     /// Give a function the `prototype` object its instances will inherit from — §10.2.5.

@@ -5,6 +5,7 @@
 //! those are built by hand.
 //!
 //! - `values` — the operators.
+//! - `wrapper` — §20.3's `Boolean`, §21.1's `Number`, and `ToObject`.
 //! - `statements` — control flow, and what a script evaluates to.
 //! - `objects` — literals, properties, attributes.
 //! - `builtins` — the objects a script can reach without making them.
@@ -37,6 +38,7 @@ mod objects;
 mod objects_builtin;
 mod statements;
 mod values;
+mod wrapper;
 
 use super::call::MAX_CALL_DEPTH;
 use super::*;

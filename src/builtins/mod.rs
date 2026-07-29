@@ -22,6 +22,7 @@ pub mod error;
 pub mod function;
 mod math;
 pub mod object;
+mod wrapper;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::realm::Realm;
@@ -38,6 +39,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     array_methods::install(heap, realm);
     function::install(heap, realm, global);
     math::install(heap, realm, global);
+    wrapper::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.
@@ -48,6 +50,28 @@ pub(crate) fn key(heap: &mut Heap, name: &str) -> PropertyKey {
 /// A String on the heap, as a value.
 pub(crate) fn text(heap: &mut Heap, contents: &str) -> Value {
     Value::String(heap.new_string(contents.encode_utf16().collect()))
+}
+
+/// Give `object` a property that cannot be written, seen or removed.
+///
+/// What §17 gives a *constant* — `Math.PI`, `Number.MAX_VALUE` — and what §20.2.2.2 gives a
+/// constructor's `prototype`. The two have the same three answers for the same reason: a program
+/// may read them and may not move them, because everything else in the realm is already built on
+/// top of where they are.
+///
+/// Written once because it was written three times: in `Math`, in `Number`, and beside every
+/// constructor. Three copies of three booleans is nine chances to disagree, and the copy nothing
+/// reads is the one that would.
+pub(crate) fn define_fixed(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
+    let key = key(heap, name);
+    let descriptor = PropertyDescriptor {
+        value: Some(value),
+        writable: Some(false),
+        enumerable: Some(false),
+        configurable: Some(false),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(object, key, &descriptor);
 }
 
 /// Give `object` a property with §17's attributes: writable, not enumerable, configurable.

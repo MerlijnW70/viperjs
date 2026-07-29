@@ -130,6 +130,13 @@ impl Heap {
             // An arrow's captured `this` is reachable *through the arrow*, and nothing else may
             // be holding it: `function F() { return () => this; }` leaves the constructed object
             // alive only because the arrow it returned points at it.
+            // A wrapper's primitive can be a String, and nothing else need be holding it: the
+            // only reference to `new String('x')`'s contents is the wrapper itself.
+            match object.primitive() {
+                Some(Value::Object(reached)) => pending.push(reached),
+                Some(other) => self.mark_value(other, marked),
+                None => {}
+            }
             match object.lexical_this() {
                 Some(Value::Object(reached)) => pending.push(reached),
                 Some(other) => self.mark_value(other, marked),

@@ -18,8 +18,8 @@
 //!   `pow` about `1 ** NaN` — so it is the engine's own, shared with the `**` operator rather
 //!   than written a second time here.
 
-use super::{define_method, define_value, key};
-use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor};
+use super::{define_method, define_value};
+use crate::heap::{Heap, NativeCall, ObjectId};
 use crate::realm::Realm;
 use crate::value::{Completion, Value};
 use crate::vm::Vm;
@@ -44,15 +44,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("SQRT1_2", std::f64::consts::FRAC_1_SQRT_2),
         ("SQRT2", std::f64::consts::SQRT_2),
     ] {
-        let key = key(heap, name);
-        let descriptor = PropertyDescriptor {
-            value: Some(Value::Number(value)),
-            writable: Some(false),
-            enumerable: Some(false),
-            configurable: Some(false),
-            ..PropertyDescriptor::EMPTY
-        };
-        let _ = heap.define_own_property(math, key, &descriptor);
+        super::define_fixed(heap, math, name, Value::Number(value));
     }
 
     // §21.3.2, in the order the specification lists them. The `length` beside each is what the

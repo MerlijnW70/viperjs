@@ -95,6 +95,16 @@ pub struct NativeCall<'a> {
     /// reads past the end with [`NativeCall::argument`], because §10.3's built-ins are all
     /// specified in terms of "if `x` is absent" meaning `undefined`.
     pub arguments: &'a [Value],
+    /// Whether this is `new f(...)` rather than `f(...)` — §10.3.2's `[[Construct]]`.
+    ///
+    /// Most built-ins do not care: `Error("x")` and `new Error("x")` are the same object by
+    /// §20.5.1.1, and the clause says so rather than the implementation forgetting to ask. The
+    /// wrapper constructors are the ones that do — `Number(1)` is a Number and `new Number(1)` is
+    /// an object — so the difference has to reach them.
+    ///
+    /// A flag and not §9.4's `[[NewTarget]]`: nothing yet can construct with a target other than
+    /// the function itself, and a flag cannot be mistaken for one that can.
+    pub constructing: bool,
 }
 
 impl NativeCall<'_> {
@@ -122,6 +132,7 @@ mod tests {
             function: heap.new_object(None),
             this_value: Value::Undefined,
             arguments: &arguments,
+            constructing: false,
         };
         assert!(matches!(call.argument(0), Value::Number(value) if value == 1.0));
         assert!(matches!(call.argument(1), Value::Null));

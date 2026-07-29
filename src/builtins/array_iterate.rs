@@ -29,6 +29,24 @@ enum From {
     End,
 }
 
+impl From {
+    /// Which index the `step`th visit is, over an array of this length.
+    ///
+    /// Computed rather than collected. `(0..length)` and `(0..length).rev()` are different types,
+    /// so unifying them by building a `Vec` is the obvious move — and it allocates eight bytes per
+    /// index of an array whose length a *script* chooses. `Array.prototype.reduceRight` on an
+    /// object whose `length` is `2 ** 53 - 1` asked for seventy-two petabytes and aborted the
+    /// process, which is the one failure DR-0002 has no answer for. A length is a number the
+    /// engine must be able to *hear* without believing.
+    const fn index(self, step: u64, length: u64) -> u64 {
+        match self {
+            Self::Start => step,
+            // `length` is at least `step + 1` here, because `step` came from `0..length`.
+            Self::End => length - 1 - step,
+        }
+    }
+}
+
 /// §23.1.3.24 `Array.prototype.reduce` and §23.1.3.25 `reduceRight`.
 ///
 /// The two differ in direction and in nothing else, including the argument order handed to the
@@ -37,11 +55,7 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, from: From) -> Comp
     let object = this_object(call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
-    let order: Vec<u64> = match from {
-        From::Start => (0..length).collect(),
-        From::End => (0..length).rev().collect(),
-    };
-    let mut walk = order.into_iter();
+    let mut walk = 0..length;
     // §23.1.3.24 step 6 — with no initial value the first *present* element becomes one, which is
     // why a leading hole is not it. With none at all the array is empty as far as this is
     // concerned, and step 7's TypeError is the only thing a fold can answer.
@@ -49,7 +63,8 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, from: From) -> Comp
         true => call.argument(1),
         false => {
             let mut found = None;
-            for index in walk.by_ref() {
+            for step in walk.by_ref() {
+                let index = from.index(step, length);
                 if has_index(vm, heap, object, index)? {
                     found = Some(get_index(vm, heap, object, index)?);
                     break;
@@ -65,7 +80,8 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, from: From) -> Comp
             }
         }
     };
-    for index in walk {
+    for step in walk {
+        let index = from.index(step, length);
         if !has_index(vm, heap, object, index)? {
             continue;
         }
@@ -149,11 +165,8 @@ fn search(
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
-    let order: Vec<u64> = match from {
-        From::Start => (0..length).collect(),
-        From::End => (0..length).rev().collect(),
-    };
-    for index in order {
+    for step in 0..length {
+        let index = from.index(step, length);
         let element = get_index(vm, heap, object, index)?;
         let arguments = [element, Value::Number(index as f64), Value::Object(object)];
         let answer = vm.call_value(function, receiver, &arguments, heap)?;

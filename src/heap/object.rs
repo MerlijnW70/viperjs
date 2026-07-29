@@ -88,6 +88,14 @@ pub struct Object {
     lexical_this: Option<Value>,
     /// Whether this is §10.4.2's exotic Array, whose `length` and indices move each other.
     pub(super) array: bool,
+    /// The primitive this object *is* a wrapper for — §20.3's `[[BooleanData]]`, §21.1's
+    /// `[[NumberData]]` and §22.1's `[[StringData]]`.
+    ///
+    /// One slot rather than three, because the value in it already says which: a `Value::Boolean`
+    /// is a `[[BooleanData]]` and nothing else can be. That is what lets
+    /// `Boolean.prototype.valueOf.call(new Number(1))` be the TypeError §20.3.3 asks for without
+    /// three fields to keep apart.
+    primitive: Option<Value>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -133,12 +141,22 @@ impl Object {
             prototype,
             extensible: true,
             array: false,
+            primitive: None,
             call: None,
             environment: None,
             lexical_this: None,
             properties: Vec::new(),
             index: None,
         }
+    }
+
+    /// The primitive this object wraps, if it wraps one.
+    ///
+    /// `None` for an ordinary object, which is most of them. What is in it says which kind of
+    /// wrapper this is, so a method that requires its own kind matches on the value rather than
+    /// asking a flag.
+    pub fn primitive(&self) -> Option<Value> {
+        self.primitive
     }
 
     /// Whether this is an Array — §10.4.2's exotic object, and the only one there is.
@@ -359,6 +377,20 @@ impl Heap {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(prototype);
         object.call = Some(Callable::Bound(bound));
+        self.objects.push(Some(object));
+        id
+    }
+
+    /// Put a wrapper for a primitive on the heap — §20.3.1.1, §21.1.1.1 and §22.1.1.1.
+    ///
+    /// Ordinary in every way but one: it remembers a primitive, and the methods of the matching
+    /// prototype are the only things that read it. Nothing about the *object* changes — a wrapper
+    /// has ordinary properties, an ordinary prototype and no exotic behaviour, which is why
+    /// `new Number(1).x = 2` works exactly as it does on `{}`.
+    pub fn new_wrapper(&mut self, prototype: ObjectId, primitive: Value) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(Some(prototype));
+        object.primitive = Some(primitive);
         self.objects.push(Some(object));
         id
     }
