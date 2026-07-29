@@ -739,3 +739,30 @@ fn no_number_can_make_a_conversion_panic() {
         let _ = value.is_strictly_equal(&value, &heap);
     }
 }
+
+#[test]
+fn adding_two_strings_that_would_be_too_long_throws_a_range_error() {
+    // §6.1.4 puts the String type's maximum at 2^53-1 and says nothing about an implementation
+    // with a smaller one; DR-0012 is praxis's, and this is `+` meeting it. Every engine answers a
+    // `RangeError` here, and the alternative is not a longer String — it is allocating until the
+    // process dies, which is a wrong answer for every program in it.
+    //
+    // Cheap for the reason DR-0012 gives: the operand is one zeroed allocation nothing writes to,
+    // and the join that would have cost half a gigabyte is refused before it is made.
+    let mut heap = Heap::new();
+    let half = Value::String(heap.new_string(vec![0; crate::heap::MAX_STRING_LENGTH / 2 + 1]));
+    assert!(matches!(
+        apply_binary(crate::ast::BinaryOperator::Add, half, half, &mut heap),
+        Err(Abrupt::Raised(
+            ErrorKind::Range,
+            "the string would be longer than a string may be"
+        ))
+    ));
+    // …while a join that stays under the maximum is made, so the refusal is about the length and
+    // not about `+` having stopped concatenating.
+    let empty = Value::String(heap.new_string(Vec::new()));
+    assert!(matches!(
+        apply_binary(crate::ast::BinaryOperator::Add, half, empty, &mut heap),
+        Ok(Value::String(_))
+    ));
+}

@@ -77,6 +77,32 @@ pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind
 use crate::span::Span;
 use std::collections::HashMap;
 
+/// The most 16-bit code units a String on this heap may hold — DR-0012.
+///
+/// §6.1.4 defines the String type as sequences "up to a maximum length of 2^53 - 1 elements", a
+/// figure no implementation can reach: at two bytes an element it names sixteen petabytes. The
+/// specification does not say what an engine with a smaller limit should do, and each of them
+/// picks a different number — so this one is praxis's, and DR-0012 is where it is argued rather
+/// than merely stated.
+///
+/// 2^28-1 units is 512 MiB of `u16` at the limit: past anything a program means to build, and
+/// small enough that the allocation itself is not the next way to fall over.
+pub const MAX_STRING_LENGTH: usize = (1 << 28) - 1;
+
+/// Whether a String of `left` units followed by `right` more is one that may exist — DR-0012.
+///
+/// Separated from [`Heap::concat`] so that the decision can be *asked* at any size while joining
+/// two Strings that big cannot be: proving the boundary is right would otherwise mean allocating
+/// half a gigabyte in a unit test, and a limit nobody can afford to test is a limit nobody has
+/// checked.
+///
+/// Saturating rather than checked: two lengths that overflow a `usize` are past the maximum by an
+/// enormous margin, and answering `false` is what the caller does with that anyway. A `checked_add`
+/// here would add a second way to say no that no input could ever reach.
+const fn string_fits(left: usize, right: usize) -> bool {
+    left.saturating_add(right) <= MAX_STRING_LENGTH
+}
+
 /// A String on the heap — a sequence of UTF-16 code units (DR-0004).
 ///
 /// Not a `String` and not a `str`: `"\u{d800}"` is a legal ECMAScript string of one code unit,
@@ -143,6 +169,32 @@ impl Heap {
         let id = StringId(self.strings.len());
         self.strings.push(Some(units.into_boxed_slice()));
         id
+    }
+
+    /// Join two Strings, or refuse because the result would be longer than one may be.
+    ///
+    /// §6.1.4 puts the String type's maximum at 2^53-1 elements and says nothing about what an
+    /// implementation with a smaller one should do; every engine imposes a smaller one and every
+    /// engine throws a `RangeError`. DR-0012 records praxis's, and this is the door it is enforced
+    /// at — the *only* door, because concatenation is the only operation that makes a String longer
+    /// than the two things it was made from. Every other String on this heap is a piece of the
+    /// source text or a number's spelling, and neither can outgrow the program that asked for it.
+    ///
+    /// The length is checked *before* anything is allocated, so an overlong result is refused
+    /// rather than briefly built. That is the whole point: a `Vec` that grows past what is
+    /// available aborts the process, and DR-0002 does not permit a script to do that.
+    pub fn concat(&mut self, left: StringId, right: StringId) -> Option<StringId> {
+        // A missing handle reads as empty, on the same terms as `Heap::string` — a foreign handle
+        // is a wrong string, never a panic.
+        let left_units = self.string(left).map_or(0, <[u16]>::len);
+        let right_units = self.string(right).map_or(0, <[u16]>::len);
+        if !string_fits(left_units, right_units) {
+            return None;
+        }
+        let mut units = Vec::with_capacity(left_units + right_units);
+        units.extend_from_slice(self.string(left).unwrap_or(&[]));
+        units.extend_from_slice(self.string(right).unwrap_or(&[]));
+        Some(self.new_string(units))
     }
 
     /// Put the source text `span` covers on the heap, as the code units it denotes.
@@ -235,6 +287,83 @@ mod tests {
         let empty = heap.new_string(Vec::new());
         assert_eq!(heap.string(empty), Some(&[][..]));
         assert_eq!(heap.string_count(), 2);
+    }
+
+    #[test]
+    fn joining_two_strings_lays_them_end_to_end() {
+        let mut heap = Heap::new();
+        let left = heap.new_string(units("foo"));
+        let right = heap.new_string(units("bar"));
+        let joined = heap.concat(left, right).expect("well under the maximum"); // the test is about the contents
+        assert_eq!(heap.string(joined), Some(&units("foobar")[..]));
+        // The operands are untouched — a join makes a third String rather than growing the first.
+        assert_eq!(heap.string(left), Some(&units("foo")[..]));
+        assert_eq!(heap.string(right), Some(&units("bar")[..]));
+        // The empty String is an identity on both sides, and joining two of them is still a
+        // String rather than nothing.
+        let empty = heap.new_string(Vec::new());
+        let same = heap.concat(left, empty).expect("no longer than `left`"); // same
+        assert_eq!(heap.string(same), Some(&units("foo")[..]));
+        let nothing = heap.concat(empty, empty).expect("empty fits"); // same
+        assert_eq!(heap.string(nothing), Some(&[][..]));
+        // A handle this heap has nothing at reads as empty rather than refusing — `Heap::string`'s
+        // promise, which a join must not quietly narrow into a panic.
+        //
+        // Out of range, and deliberately not merely foreign: a handle from another heap that
+        // happens to be *in* range names this heap's String at that index, which is a wrong string
+        // and not a missing one. `Heap::string` says so, and a join inherits it rather than fixing
+        // it — there is no realm in which a script can hold two heaps' handles at once.
+        let mut elsewhere = Heap::new();
+        for _ in 0..heap.string_count() + 1 {
+            elsewhere.new_string(units("elsewhere"));
+        }
+        let past_the_end = elsewhere.new_string(units("last"));
+        assert_eq!(heap.string(past_the_end), None);
+        let absent = heap
+            .concat(left, past_the_end)
+            .expect("a missing operand is empty"); // same
+        assert_eq!(heap.string(absent), Some(&units("foo")[..]));
+    }
+
+    #[test]
+    fn a_string_may_not_grow_past_the_maximum() {
+        // The number itself, written out. Every other row here is phrased *relative* to the
+        // constant and would therefore pass whatever it was set to — so without this line the
+        // limit could be changed to anything and the suite would agree, while DR-0012 went on
+        // naming a figure the engine no longer used.
+        assert_eq!(MAX_STRING_LENGTH, 268_435_455);
+        // DR-0012's boundary, asked rather than built: the lengths here name half a gigabyte and
+        // more, and no allocation happens because `string_fits` is a decision about two numbers.
+        assert!(string_fits(0, 0));
+        assert!(string_fits(MAX_STRING_LENGTH, 0));
+        assert!(string_fits(0, MAX_STRING_LENGTH));
+        // Exactly the maximum fits; one past it does not. Both sides of the boundary, because a
+        // limit written with the wrong comparison passes every test that only asks one.
+        assert!(string_fits(MAX_STRING_LENGTH - 1, 1));
+        assert!(!string_fits(MAX_STRING_LENGTH, 1));
+        assert!(!string_fits(1, MAX_STRING_LENGTH));
+        assert!(!string_fits(MAX_STRING_LENGTH, MAX_STRING_LENGTH));
+        // Two lengths that overflow a `usize` are refused rather than wrapping to something small
+        // and being allowed — which is what a plain `+` would do in release.
+        assert!(!string_fits(usize::MAX, 1));
+        assert!(!string_fits(usize::MAX, usize::MAX));
+    }
+
+    #[test]
+    fn joining_past_the_maximum_answers_none_instead_of_allocating() {
+        // The boundary reached through the real operation rather than through the predicate, so
+        // that the wiring between them is a tested thing and not an assumed one.
+        //
+        // Affordable because nothing here is ever *written*: the operand is one zeroed allocation
+        // the operating system may back lazily, `concat` only reads its length, and the join it
+        // refuses is the one that would have cost half a gigabyte.
+        let mut heap = Heap::new();
+        let half = heap.new_string(vec![0; MAX_STRING_LENGTH / 2 + 1]);
+        assert!(heap.concat(half, half).is_none());
+        // …while the same operand joined to an empty String is still under the maximum and is
+        // therefore made — the refusal is about the length, not about the operand being large.
+        let empty = heap.new_string(Vec::new());
+        assert!(heap.concat(half, empty).is_some());
     }
 
     #[test]

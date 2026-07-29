@@ -17,7 +17,7 @@
 
 use crate::ast::BinaryOperator;
 use crate::heap::Heap;
-use crate::value::{Completion, Hint, Value};
+use crate::value::{Abrupt, Completion, Hint, Value};
 
 /// `ApplyStringOrNumericBinaryOperator` (§13.15.3) and the relational and equality operators.
 ///
@@ -123,9 +123,13 @@ fn add(left: Value, right: Value, heap: &mut Heap) -> Completion<Value> {
     // `"1a"` because `ToString(1)` is `"1"`, which is where §6.1.6.1.20 earns its place.
     let left = left.to_string(heap)?;
     let right = right.to_string(heap)?;
-    let mut units = heap.string(left).unwrap_or(&[]).to_vec();
-    units.extend_from_slice(heap.string(right).unwrap_or(&[]));
-    Ok(Value::String(heap.new_string(units)))
+    // Step 1.d is `StringConcat`, which the specification writes as though it always succeeds —
+    // §6.1.4's maximum is 2^53-1 and unreachable. A real engine has a smaller one, and refusing is
+    // the only honest answer left: the alternative is to allocate until the process dies, which is
+    // a wrong answer for every program in it and not only for this one. See DR-0012.
+    heap.concat(left, right)
+        .map(Value::String)
+        .ok_or_else(|| Abrupt::range_error("the string would be longer than a string may be"))
 }
 
 /// `Number::exponentiate` (§6.1.6.1.3), which is not `f64::powf`.
