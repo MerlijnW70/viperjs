@@ -567,11 +567,19 @@ impl Compiler<'_> {
 /// somewhere between 200 and 400 levels. A test thread has eight times that, which is exactly the
 /// trap: a limit checked only under `cargo test` would be four times too large in a real embedder.
 ///
-/// 128 is well inside the smallest of those. It can be that small because the deep shapes are not
-/// nesting: the parser refuses nesting past its own limit (DR-0006), and the one thing it *can*
-/// build arbitrarily deep — a left-leaning operator chain — is compiled with a loop rather than
-/// by recursing. What is left is bounded by the parser before it reaches here.
-const MAX_EXPRESSION_DEPTH: u32 = 128;
+/// 64 is well inside the smallest of those, and it is the parser's number for a reason: the
+/// parser refuses nesting past `MAX_NESTING_DEPTH` before the compiler ever sees it, so a cap
+/// above that one is unreachable from source and measured only by a test that builds the tree by
+/// hand. The one shape the parser *can* build arbitrarily deep — a left-leaning operator chain —
+/// is compiled with a loop rather than by recursing.
+///
+/// It was 128, and that was a measurement that rotted. A level cost about 5.5 KiB when the number
+/// was set; slices since have added frames between one level and the next, and 128 of them came
+/// to roughly 700 KiB — inside a mebibyte, but not inside the smaller stacks a debug build gets on
+/// other platforms, where CI found it by aborting. `compiling_at_the_cap_fits_in_the_stack_it_
+/// claims_to_need` is the guard that was missing: the parser has had one since DR-0006 and the
+/// compiler, which recurses just as deeply, did not.
+const MAX_EXPRESSION_DEPTH: u32 = 64;
 
 /// Where a name lives — §9.1's environment records, resolved at compile time.
 ///

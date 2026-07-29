@@ -115,6 +115,36 @@ fn an_expression_is_refused_one_level_past_the_limit_and_not_one_before() {
 }
 
 #[test]
+fn compiling_at_the_cap_fits_in_the_stack_it_claims_to_need() {
+    // What makes [`MAX_EXPRESSION_DEPTH`] a measurement rather than a hope, and the twin of the
+    // parser's `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need`. A cap the stack cannot
+    // afford is worse than no cap: the compile dies by overflow — which DR-0002 says no `Result`
+    // can rescue and which takes the embedder's process with it — one level before the check that
+    // was supposed to prevent exactly that.
+    //
+    // One mebibyte is the smallest thread stack in common use, and this is a debug build, whose
+    // frames are largest. If a slice adds frames between one level of expression and the next,
+    // this is where it says so — which is what did not happen when the cap was 128, and CI on
+    // another platform found it by aborting instead.
+    let deep = MAX_EXPRESSION_DEPTH;
+    let worker = std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(move || {
+            let mut heap = Heap::new();
+            // At the cap, which must compile, and one past it, which must be refused rather than
+            // overflow — both of them descend the whole way down.
+            let deepest = compile_expression(&nested(deep - 1), &mut heap).is_ok();
+            let refused = compile_expression(&nested(deep), &mut heap).is_err();
+            deepest && refused
+        })
+        .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement
+    assert!(
+        worker.join().unwrap_or(false), // a panic in the thread is the failure being reported
+        "compiling at the cap needs more than the mebibyte it claims"
+    );
+}
+
+#[test]
 fn a_property_reference_the_parser_cannot_build_is_still_refused() {
     // The parser wraps an optional chain in `OptionalChain` and refuses `#x` outside a class,
     // so neither flag reaches the compiler from source. The *tree* can hold them, and a

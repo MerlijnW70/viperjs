@@ -194,7 +194,7 @@ fn a_property_key_is_converted_the_same_way_a_value_is() {
 }
 
 #[test]
-fn a_conversion_may_nest_two_hundred_deep_and_the_two_hundred_and_first_is_refused() {
+fn a_conversion_may_nest_to_the_cap_and_one_past_it_is_refused() {
     // Each nesting is a real Rust frame, because the answer is needed in the middle of an
     // instruction — so the limit is far below the one on JavaScript calls, and it is a catchable
     // RangeError rather than a crash. DR-0002 is about *any* input, including this one.
@@ -207,8 +207,34 @@ fn a_conversion_may_nest_two_hundred_deep_and_the_two_hundred_and_first_is_refus
             "var d = 0; function make() {{ d = d + 1; return {{toString: function () {{              return d < {depth} ? '' + make() : 'end' }}}}; }}              try {{ '' + make() }} catch (e) {{ e.name }}"
         )
     };
-    assert_eq!(run(&nest(200)), "end");
-    assert_eq!(run(&nest(201)), "RangeError");
+    assert_eq!(run(&nest(64)), "end");
+    assert_eq!(run(&nest(65)), "RangeError");
+}
+
+#[test]
+fn a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need() {
+    // The twin of the parser's `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need`, for the
+    // other place in this engine that spends a Rust frame per level of *input*. A cap the stack
+    // cannot afford is worse than no cap: the conversion dies by overflow one level before the
+    // check that exists to prevent exactly that, and DR-0002 says nothing can rescue it.
+    //
+    // One mebibyte is the smallest thread stack in common use, and this is a debug build, whose
+    // frames are largest. The cap was 200 and had never been measured against a stack at all;
+    // this is what would have said so.
+    let worker = std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(|| {
+            // The cap as a literal rather than through the constant, so that raising the
+            // constant without re-measuring makes this fail rather than quietly follow it up.
+            let deep = "var d = 0; function make() { d = d + 1;                  return {toString: function () { return d < 64 ? '' + make() : 'end' }}; }                  '' + make()";
+            run(deep)
+        })
+        .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement
+    assert_eq!(
+        worker.join().unwrap_or_default(), // a panic in the thread is the failure being reported
+        "end",
+        "converting at the cap needs more than the mebibyte it claims"
+    );
 }
 
 #[test]

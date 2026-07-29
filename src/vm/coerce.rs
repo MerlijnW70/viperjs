@@ -31,11 +31,23 @@ use std::rc::Rc;
 
 /// How deeply a coercion may re-enter the interpreter before it is refused.
 ///
-/// Far below `MAX_CALL_DEPTH`, because each one of these is a Rust frame and the host's stack is
-/// not ours to spend. A program that nests conversions two hundred deep is doing something nobody
-/// wrote by hand; a program that nests *calls* ten thousand deep is ordinary. That is why the two
-/// limits are different numbers rather than one.
-const MAX_REENTRY_DEPTH: usize = 200;
+/// Far below `MAX_CALL_DEPTH`, because each one of these is a Rust frame — a whole interpreter
+/// loop and the call machinery under it — and the host's stack is not ours to spend. A program
+/// that nests conversions sixty deep is doing something nobody wrote by hand; a program that
+/// nests *calls* ten thousand deep is ordinary. That is why the two limits are different numbers
+/// rather than one.
+///
+/// It was 200, and that number was never measured against a stack. Each re-entry costs about
+/// 7 KiB in a debug build, so two hundred of them wanted more than a mebibyte — which is the
+/// smallest thread stack in common use and the size DR-0006 measures the parser against. CI on a
+/// platform with larger frames found it by aborting, which is precisely the failure DR-0002 says
+/// no `Result` can rescue.
+///
+/// 64 costs about 450 KiB and leaves better than a 2× margin.
+/// `a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need` is the guard, and it is what
+/// makes this a measurement rather than a hope — the parser has had one since DR-0006, and the
+/// two other places in this engine that recurse per level of input did not.
+const MAX_REENTRY_DEPTH: usize = 64;
 
 impl Vm {
     /// §7.1.1 `ToPrimitive` — a value with no properties, out of one that may have them.

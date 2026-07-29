@@ -320,6 +320,13 @@ impl Compiler<'_> {
     /// because that function recurses once per level of an expression, and every arm's locals are
     /// part of every frame: a long `a + b + c` chain is as deep as it is long, and the frame it
     /// walks with should be no larger than it has to be.
+    /// Kept out of line, deliberately.
+    ///
+    /// [`Compiler::expression_inner`] recurses, so its stack frame is paid once per level of a
+    /// nested expression — and DR-0006's depth limit bounds the levels, not the bytes. A helper
+    /// inlined into it adds its locals to *every* level, which is how a change that touched
+    /// neither the limit nor the recursion overflowed a smaller stack than this machine's.
+    #[inline(never)]
     fn object_literal(
         &mut self,
         properties: &[PropertyDefinition],
@@ -480,6 +487,13 @@ impl Compiler<'_> {
     /// once rather than twice. For a compound operator that means the two have to be on the stack
     /// twice over — once for the read and once for the write — which is what `DuplicateTwo` is
     /// for.
+    /// Kept out of line, deliberately.
+    ///
+    /// [`Compiler::expression_inner`] recurses, so its stack frame is paid once per level of a
+    /// nested expression — and DR-0006's depth limit bounds the levels, not the bytes. A helper
+    /// inlined into it adds its locals to *every* level, which is how a change that touched
+    /// neither the limit nor the recursion overflowed a smaller stack than this machine's.
+    #[inline(never)]
     fn assign_to_property(
         &mut self,
         operator: AssignmentOperator,
@@ -514,6 +528,13 @@ impl Compiler<'_> {
     /// `ToNumeric` rather than `ToNumber` is what the specification says, and the difference is
     /// BigInt: `1n++` is 2n and never becomes a Number. There are no BigInt values yet, so the
     /// two agree on every value that exists, and this changes when they stop agreeing.
+    /// Kept out of line, deliberately.
+    ///
+    /// [`Compiler::expression_inner`] recurses, so its stack frame is paid once per level of a
+    /// nested expression — and DR-0006's depth limit bounds the levels, not the bytes. A helper
+    /// inlined into it adds its locals to *every* level, which is how a change that touched
+    /// neither the limit nor the recursion overflowed a smaller stack than this machine's.
+    #[inline(never)]
     fn update(
         &mut self,
         operator: UpdateOperator,
@@ -588,6 +609,13 @@ impl Compiler<'_> {
     ///
     /// The cooked strings are joined with `+` rather than through a second `ToString`, because
     /// they are Strings already and adding two Strings is exact concatenation.
+    /// Kept out of line, deliberately.
+    ///
+    /// [`Compiler::expression_inner`] recurses, so its stack frame is paid once per level of a
+    /// nested expression — and DR-0006's depth limit bounds the levels, not the bytes. A helper
+    /// inlined into it adds its locals to *every* level, which is how a change that touched
+    /// neither the limit nor the recursion overflowed a smaller stack than this machine's.
+    #[inline(never)]
     fn template(&mut self, template: &TemplateLiteral) -> Result<(), CompileError> {
         let mut quasis = template.quasis.iter();
         // A template always has one more component than it has substitutions, so the first is
