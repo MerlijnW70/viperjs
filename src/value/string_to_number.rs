@@ -34,7 +34,7 @@ use crate::lexer::{is_line_terminator, is_whitespace, power_of_two_value};
 /// which the lexer already implements over the real Unicode sets. Sharing them is not
 /// convenience: `"\u{feff}"` is `+0` and `"\u{85}"` is NaN, and a second copy of that table is
 /// how the two answers drift apart.
-pub(super) fn string_to_number(units: &[u16]) -> f64 {
+pub(crate) fn string_to_number(units: &[u16]) -> f64 {
     let trimmed = trim_str_whitespace(units);
     // `StringNumericLiteral ::: StrWhiteSpace_opt` — a String of nothing but whitespace *is* a
     // literal, and its MV is 0. This is the row that catches everyone: `+[]` is `0`.

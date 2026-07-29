@@ -1,0 +1,93 @@
+//! §19.1 and §19.2 — the properties of the global object that belong to nothing.
+//!
+//! Checked against V8 first. The rows worth reading are the ones where `parseInt` and `Number`
+//! disagree: one asks whether the whole string is a number and the other reads as far as it can.
+
+use super::*;
+
+#[test]
+fn the_two_predicates_ask_about_what_the_argument_becomes() {
+    assert_eq!(run("isNaN(NaN)"), "true");
+    assert_eq!(run("isNaN(12)"), "false");
+    assert_eq!(run("isFinite(1)"), "true");
+    assert_eq!(run("isFinite(Infinity)"), "false");
+    assert_eq!(run("isFinite(NaN)"), "false");
+    // §19.2.2 converts first, so these answer about the *number* the argument becomes — which is
+    // what makes them differ from `Number.isNaN` and `Number.isFinite` on every non-number.
+    assert_eq!(run("isNaN('abc')"), "true");
+    assert_eq!(run("isNaN('12')"), "false");
+    assert_eq!(run("isNaN(undefined)"), "true");
+    assert_eq!(run("isFinite('12')"), "true");
+    assert_eq!(run("Number.isNaN('abc')"), "false");
+    // §19.1 — `undefined`, `NaN` and `Infinity` are *properties* and not keywords, which is why
+    // `typeof undefined` works at all. All three are fixed in place.
+    assert_eq!(run("Infinity"), "Infinity");
+    assert_eq!(run("typeof undefined"), "undefined");
+    assert_eq!(run("isNaN(NaN + 1)"), "true");
+}
+
+#[test]
+fn parse_int_reads_as_far_as_it_can_where_number_asks_about_the_whole_string() {
+    // The distinction the function exists for. A program that reaches for the wrong one is wrong
+    // on odd input only, which is the worst place to be wrong.
+    assert_eq!(run("parseInt('12abc')"), "12");
+    assert_eq!(run("isNaN(Number('12abc'))"), "true");
+    assert_eq!(run("parseInt('12')"), "12");
+    assert_eq!(run("parseInt('  42  ')"), "42");
+    assert_eq!(run("parseInt('-7')"), "-7");
+    assert_eq!(run("parseInt('+7')"), "7");
+    assert_eq!(run("parseInt(15.99)"), "15");
+    // No digits at all is the one failure, and it is a NaN rather than a throw.
+    assert_eq!(run("isNaN(parseInt('abc'))"), "true");
+    assert_eq!(run("isNaN(parseInt(''))"), "true");
+    assert_eq!(run("isNaN(parseInt(null))"), "true");
+    // §19.2.5's radix rules, which are three separate ones. Absent means ten *except* that `0x`
+    // then means sixteen; an explicit sixteen permits the prefix and does not need it; and every
+    // other explicit radix forbids it, which is why `0b11` reads as a single zero.
+    assert_eq!(run("parseInt('0x1f')"), "31");
+    assert_eq!(run("parseInt('0x1f', 16)"), "31");
+    assert_eq!(run("parseInt('1f', 16)"), "31");
+    assert_eq!(run("parseInt('10', 2)"), "2");
+    assert_eq!(run("parseInt('z', 36)"), "35");
+    assert_eq!(run("parseInt('10', 0)"), "10");
+    assert_eq!(run("parseInt('0b11')"), "0");
+    // Out of range is a NaN and not a quiet fallback to ten — a radix of 37 is a mistake, and
+    // answering 10 would hide it.
+    assert_eq!(run("isNaN(parseInt('10', 37))"), "true");
+    assert_eq!(run("isNaN(parseInt('10', 1))"), "true");
+    // …and the radix is `ToInt32`, so one past 2^32 wraps rather than being refused.
+    assert_eq!(run("parseInt('10', 4294967298)"), "2");
+    // §19.2.5 step 19 rounds the mathematical value *once*. Accumulating digit by digit in an
+    // `f64` rounds at every one, and thirty digits is where the two answers part.
+    assert_eq!(
+        run("parseInt('123456789012345678901234567890')"),
+        "1.2345678901234568e+29"
+    );
+}
+
+#[test]
+fn parse_float_takes_the_longest_prefix_that_is_a_decimal_literal() {
+    assert_eq!(run("parseFloat('1.5')"), "1.5");
+    assert_eq!(run("parseFloat('  3.14xyz')"), "3.14");
+    assert_eq!(run("parseFloat('-.5')"), "-0.5");
+    assert_eq!(run("parseFloat('.5e2')"), "50");
+    assert_eq!(run("parseFloat('1e3')"), "1000");
+    // The *longest* prefix, so a second point ends the literal and an `e` with no exponent after
+    // it is not part of one.
+    assert_eq!(run("parseFloat('1.5.2')"), "1.5");
+    assert_eq!(run("parseFloat('1e')"), "1");
+    // `Infinity` is a decimal literal, which is the one word-shaped thing this reads.
+    assert_eq!(run("parseFloat('Infinity')"), "Infinity");
+    assert_eq!(run("parseFloat('-Infinity')"), "-Infinity");
+    // …and `0x10` is *not*: a hex literal is a number to `Number` and is not a decimal literal,
+    // so this reads the leading zero and stops.
+    assert_eq!(run("parseFloat('0x10')"), "0");
+    assert_eq!(run("Number('0x10')"), "16");
+    assert_eq!(run("isNaN(parseFloat('abc'))"), "true");
+    assert_eq!(run("isNaN(parseFloat(''))"), "true");
+    // §17 — the `length` each of these declares, which is what a caller is told to supply.
+    assert_eq!(run("parseInt.length"), "2");
+    assert_eq!(run("parseFloat.length"), "1");
+    assert_eq!(run("isNaN.length"), "1");
+    assert_eq!(run("typeof parseInt"), "function");
+}

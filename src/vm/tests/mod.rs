@@ -20,6 +20,7 @@
 //! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
 //! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
 //! - `for_of` — §14.7.5.7, and the four ways out of a loop that have to close its iterator.
+//! - `globals` — §19.2, and why `parseInt` is not `Number`.
 //! - `iterators` — §27.1, and where an iterator has got to that no script can reach.
 //! - `object_state` — §20.1.2's whole-object statics, and the coercion they start with.
 //! - `parameters` — §15.1, and the three things a list that is not simple decides.
@@ -47,6 +48,7 @@ mod destructuring;
 mod for_in;
 mod for_of;
 mod functions;
+mod globals;
 mod iterators;
 mod lexical;
 mod math;

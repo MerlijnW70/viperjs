@@ -20,7 +20,8 @@ pub mod array_iterate;
 pub mod array_methods;
 pub mod error;
 pub mod function;
-pub mod iterator;
+pub mod global;
+mod iterator;
 mod math;
 mod object;
 mod object_state;
@@ -55,6 +56,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     let global = realm.global();
     // `Object` first: `Object.prototype` is where every chain ends, so a built-in installed
     // before it would inherit from a prototype with no methods on it yet.
+    global::install(heap, realm, global);
     object::install(heap, realm, global);
     error::install(heap, realm, global);
     array::install(heap, realm, global);
