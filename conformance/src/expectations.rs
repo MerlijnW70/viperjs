@@ -84,7 +84,7 @@ impl Expectations {
             // test — so it is kept with an empty reason, which then reads as a changed entry and
             // makes itself visible on the next run.
             .map(|line| match line.split_once(" :: ") {
-                Some((name, reason)) => (name.to_string(), reason.to_string()),
+                Some((name, reason)) => (name.to_string(), canonical(reason)),
                 None => (line.to_string(), String::new()),
             })
             .collect();
@@ -137,7 +137,7 @@ impl Expectations {
                 }
                 Verdict::Failed(why) => match self.entries.get(&key) {
                     None => judgement.regressions.push((key.clone(), why.clone())),
-                    Some(recorded) if recorded != why => {
+                    Some(recorded) if *recorded != canonical(why) => {
                         judgement
                             .changed
                             .push((key.clone(), recorded.clone(), why.clone()));
@@ -165,12 +165,26 @@ impl Expectations {
         let entries = outcomes
             .iter()
             .filter_map(|outcome| match &outcome.verdict {
-                Verdict::Failed(why) => Some((outcome.key(), why.clone())),
+                Verdict::Failed(why) => Some((outcome.key(), canonical(why))),
                 _ => None,
             })
             .collect();
         Self { entries, suite }
     }
+}
+
+/// A reason in the only form this file can hold it.
+///
+/// One line of a text file cannot carry trailing whitespace: reading it back gives the line
+/// without it, whatever was written. So a reason is stored *already* in that form, and comparing
+/// two of them compares like with like.
+///
+/// This is not hypothetical tidiness. `language/comments/S7.4_A5.js` throws `'#' + uu + ' '`, and
+/// with the raw reason on one side and the read-back reason on the other it reported as changed on
+/// every run forever — a line that could never be made green, which is the kind of entry a reader
+/// learns to scroll past.
+fn canonical(reason: &str) -> String {
+    reason.trim_end().to_string()
 }
 
 /// The header line that records which test262 the entries were measured against.
@@ -191,6 +205,48 @@ const HEADER: &str = "\
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// One failing outcome, so a row can say what it is about rather than how to build one.
+    fn failed(name: &str, why: &str) -> Outcome {
+        Outcome {
+            name: name.to_string(),
+            strict: false,
+            verdict: Verdict::Failed(why.to_string()),
+        }
+    }
+
+    #[test]
+    fn a_reason_that_ends_in_a_space_does_not_report_as_changed_for_ever() {
+        // A real entry: `language/comments/S7.4_A5.js` throws `'#' + uu + ' '`, so its reason ends
+        // in a space — and one line of a text file cannot carry that. Written out and read back,
+        // the reason came home shorter than it left, and the run reported it as *changed* against
+        // itself on every run for ever. A ratchet with a line nobody can ever make green is a
+        // ratchet people learn to scroll past.
+        let outcomes = [failed(
+            "comments.js",
+            "it threw an object with no name: #0000 ",
+        )];
+        let blessed = Expectations::from_outcomes(&outcomes, None);
+        // Blessed and judged immediately: nothing changed in between, so nothing may be reported.
+        assert!(blessed.judge(&outcomes).changed.is_empty());
+        // …and again through the file, which is the trip that actually loses it.
+        let reread = Expectations::parse(&blessed.render());
+        let judgement = reread.judge(&outcomes);
+        assert!(
+            judgement.changed.is_empty(),
+            "a written-and-read expectation reported as changed: {:?}",
+            judgement.changed
+        );
+        assert!(judgement.regressions.is_empty());
+        assert!(judgement.fixed.is_empty());
+        // A reason that really is different is still caught — the point is to stop comparing a
+        // string with a trimmed copy of itself, not to stop comparing.
+        let moved_on = [failed(
+            "comments.js",
+            "it threw an object with no name: #0001 ",
+        )];
+        assert_eq!(reread.judge(&moved_on).changed.len(), 1);
+    }
 
     fn outcome(name: &str, verdict: Verdict) -> Outcome {
         Outcome {
