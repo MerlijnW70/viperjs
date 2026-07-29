@@ -12,7 +12,7 @@ use super::{Fault, HEAP_CHECK_INTERVAL, Handler, Vm, jump_to};
 use crate::compile::{Chunk, Instruction, ShortCircuit};
 use crate::heap::{Heap, PropertyDescriptor};
 use crate::realm::NativeError;
-use crate::value::Value;
+use crate::value::{Abrupt, Value};
 use std::rc::Rc;
 
 impl Vm {
@@ -128,11 +128,56 @@ impl Vm {
                     self.pop()?;
                 }
                 Instruction::LoadVariable(depth, index) => {
-                    let value = heap
+                    let slot = heap
                         .environment_at(self.environment, depth)
                         .and_then(|at| heap.variable(at, index))
                         .ok_or(Fault::MissingLocal)?;
-                    self.stack.push(value);
+                    match slot {
+                        Some(value) => self.stack.push(value),
+                        // §9.1.1.1.6 `GetBindingValue` step 3 — the binding is there and is not
+                        // initialised, which is the whole of §14.3.1's temporal dead zone. The
+                        // message does not name the variable because this instruction does not
+                        // carry the name; the span the parser kept is what a diagnostic would use.
+                        None => {
+                            self.raise(
+                                Abrupt::reference_error(
+                                    "a `let` or `const` was read before its declaration ran",
+                                ),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::Uninitialise(index) => {
+                    // Always the running scope's own binding, so no depth: a block puts *its*
+                    // declarations into the dead zone, never somebody else's.
+                    if !heap.uninitialise(self.environment, index) {
+                        return Err(Fault::MissingLocal);
+                    }
+                }
+                Instruction::Initialise(index) => {
+                    // §9.1.1.1.4 `InitializeBinding` — peeked rather than popped, on the same
+                    // terms as a store: `let a = b = 1` leaves the value behind for the `b`.
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    if !heap.set_variable(self.environment, index, value) {
+                        return Err(Fault::MissingLocal);
+                    }
+                }
+                Instruction::ThrowImmutableAssignment => {
+                    // §9.1.1.1.5 step 3. The right-hand side is on the stack and is discarded with
+                    // the rest of the expression when the throw unwinds.
+                    self.raise(
+                        Abrupt::type_error("assignment to a constant"),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )?;
+                    continue;
                 }
                 Instruction::StoreVariable(depth, index) => {
                     // Peeked, not popped: assignment is an expression, and `a = (b = 1)` needs
@@ -141,6 +186,26 @@ impl Vm {
                     let target = heap
                         .environment_at(self.environment, depth)
                         .ok_or(Fault::MissingLocal)?;
+                    // §9.1.1.1.5 `SetMutableBinding` step 2 — assigning to a binding that is not
+                    // initialised yet is a ReferenceError, not a way to initialise it. `let x = x`
+                    // reads the dead zone; `x = 1; let x;` writes to it, and both are errors.
+                    // Only `Initialise` above may fill an empty slot.
+                    if heap
+                        .variable(target, index)
+                        .ok_or(Fault::MissingLocal)?
+                        .is_none()
+                    {
+                        self.raise(
+                            Abrupt::reference_error(
+                                "a `let` or `const` was assigned to before its declaration ran",
+                            ),
+                            heap,
+                            root,
+                            current,
+                            at,
+                        )?;
+                        continue;
+                    }
                     if !heap.set_variable(target, index, value) {
                         return Err(Fault::MissingLocal);
                     }
@@ -307,7 +372,7 @@ impl Vm {
                     let key = match self.property_key(key, heap) {
                         Ok(key) => key,
                         Err(error) => {
-                            self.throw_type_error(error, heap, root, current, at)?;
+                            self.raise(error, heap, root, current, at)?;
                             continue;
                         }
                     };
@@ -331,7 +396,7 @@ impl Vm {
                     let key = match self.property_key(key, heap) {
                         Ok(key) => key,
                         Err(error) => {
-                            self.throw_type_error(error, heap, root, current, at)?;
+                            self.raise(error, heap, root, current, at)?;
                             continue;
                         }
                     };

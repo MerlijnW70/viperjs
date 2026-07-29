@@ -46,7 +46,14 @@ pub struct Environment {
     ///
     /// All `undefined` to begin with, which is what makes a `var` readable before its declaration
     /// and holding nothing — hoisting is this array existing before the first instruction runs.
-    slots: Vec<Value>,
+    ///
+    /// A slot may also hold *nothing*, which is not the same as holding `undefined`. §9.1.1.1
+    /// gives a declarative binding two states, and the second one is what the temporal dead zone
+    /// is made of: `let` creates the binding when its block is entered and leaves it uninitialised
+    /// until the declaration runs, and reading it in between is a ReferenceError rather than
+    /// `undefined`. `Option<Value>` is the same sixteen bytes as `Value` — the enum has spare
+    /// discriminants for the niche — so saying so costs nothing.
+    slots: Vec<Option<Value>>,
     /// The environment this one is written inside, or `None` for the script's.
     ///
     /// §9.1.1's `[[OuterEnv]]`. The chain is the *lexical* nesting and not the call stack: a
@@ -57,7 +64,7 @@ pub struct Environment {
 
 impl Environment {
     /// The variables, for the collector to walk.
-    pub(super) fn slots(&self) -> &[Value] {
+    pub(super) fn slots(&self) -> &[Option<Value>] {
         &self.slots
     }
 
@@ -72,7 +79,7 @@ impl Heap {
     pub fn new_environment(&mut self, parent: Option<EnvironmentId>, size: usize) -> EnvironmentId {
         let id = EnvironmentId(self.environments.len());
         self.environments.push(Some(Environment {
-            slots: vec![Value::Undefined; size],
+            slots: vec![Some(Value::Undefined); size],
             parent,
         }));
         id
@@ -91,8 +98,13 @@ impl Heap {
         Some(at)
     }
 
-    /// The value in a slot of an environment.
-    pub fn variable(&self, environment: EnvironmentId, index: u32) -> Option<Value> {
+    /// What a slot of an environment holds, if there is such a slot at all.
+    ///
+    /// Two layers of absence, and they are different failures. The outer `None` is a slot the
+    /// environment does not have, which no compiled code can ask for and a hand-written chunk can
+    /// — a [`crate::vm::Fault`]. The inner one is §9.1.1.1's uninitialised binding, which a script
+    /// reaches every time it reads a `let` above its declaration — a ReferenceError.
+    pub fn variable(&self, environment: EnvironmentId, index: u32) -> Option<Option<Value>> {
         self.environments
             .get(environment.0)?
             .as_ref()?
@@ -101,17 +113,34 @@ impl Heap {
             .copied()
     }
 
-    /// Put a value in a slot, answering whether there was a slot to put it in.
-    pub fn set_variable(&mut self, environment: EnvironmentId, index: u32, value: Value) -> bool {
-        let Some(slot) = self
-            .environments
+    /// Put a slot back into §9.1.1.1's uninitialised state, answering whether there was one.
+    ///
+    /// What `let` does to its binding when its block is entered. Needed as an operation of its own
+    /// because a slot is not new each time the block is: a loop body's bindings occupy the same
+    /// slots on every pass, and without this the second pass would find the first pass's value
+    /// sitting where the dead zone should be.
+    pub fn uninitialise(&mut self, environment: EnvironmentId, index: u32) -> bool {
+        let Some(slot) = self.slot_mut(environment, index) else {
+            return false;
+        };
+        *slot = None;
+        true
+    }
+
+    /// The slot itself, for the two operations that write one.
+    fn slot_mut(&mut self, environment: EnvironmentId, index: u32) -> Option<&mut Option<Value>> {
+        self.environments
             .get_mut(environment.0)
             .and_then(Option::as_mut)
             .and_then(|found| found.slots.get_mut(index as usize))
-        else {
+    }
+
+    /// Put a value in a slot, answering whether there was a slot to put it in.
+    pub fn set_variable(&mut self, environment: EnvironmentId, index: u32, value: Value) -> bool {
+        let Some(slot) = self.slot_mut(environment, index) else {
             return false;
         };
-        *slot = value;
+        *slot = Some(value);
         true
     }
 
@@ -135,7 +164,7 @@ mod tests {
         for index in 0..3 {
             assert!(matches!(
                 heap.variable(environment, index),
-                Some(Value::Undefined)
+                Some(Some(Value::Undefined))
             ));
         }
         // Hoisting is this: the slots exist before anything runs, so a name is readable above the
@@ -143,7 +172,21 @@ mod tests {
         assert!(heap.variable(environment, 3).is_none());
         assert!(!heap.set_variable(environment, 3, Value::Null));
         assert!(heap.set_variable(environment, 0, Value::Null));
-        assert!(matches!(heap.variable(environment, 0), Some(Value::Null)));
+        assert!(matches!(
+            heap.variable(environment, 0),
+            Some(Some(Value::Null))
+        ));
+        // …and a binding put back into §9.1.1.1's uninitialised state is still a slot — the
+        // outer `Some` says there is one, and the inner `None` is the dead zone.
+        assert!(heap.uninitialise(environment, 0));
+        assert!(matches!(heap.variable(environment, 0), Some(None)));
+        assert!(!heap.uninitialise(environment, 3));
+        // Initialising it again fills it, which is what the declaration finally running does.
+        assert!(heap.set_variable(environment, 0, Value::Null));
+        assert!(matches!(
+            heap.variable(environment, 0),
+            Some(Some(Value::Null))
+        ));
     }
 
     #[test]
@@ -170,7 +213,10 @@ mod tests {
         let first = heap.new_environment(Some(parent), 1);
         let second = heap.new_environment(Some(parent), 1);
         assert!(heap.set_variable(first, 0, Value::Number(1.0)));
-        assert!(matches!(heap.variable(second, 0), Some(Value::Undefined)));
+        assert!(matches!(
+            heap.variable(second, 0),
+            Some(Some(Value::Undefined))
+        ));
         // …while the parent they share is one environment, which is what closing over it means.
         assert!(heap.set_variable(parent, 0, Value::Number(9.0)));
         let from_first = heap
@@ -179,8 +225,8 @@ mod tests {
         let from_second = heap
             .environment_at(second, 1)
             .and_then(|at| heap.variable(at, 0));
-        assert!(matches!(from_first, Some(Value::Number(value)) if value == 9.0));
-        assert!(matches!(from_second, Some(Value::Number(value)) if value == 9.0));
+        assert!(matches!(from_first, Some(Some(Value::Number(value))) if value == 9.0));
+        assert!(matches!(from_second, Some(Some(Value::Number(value))) if value == 9.0));
     }
 
     #[test]

@@ -383,6 +383,11 @@ impl Abrupt {
     pub const fn range_error(message: &'static str) -> Self {
         Self::Raised(ErrorKind::Range, message)
     }
+
+    /// §20.5.5.3, for a binding that is not there or cannot be read yet.
+    pub const fn reference_error(message: &'static str) -> Self {
+        Self::Raised(ErrorKind::Reference, message)
+    }
 }
 
 /// The result of an operation that may throw — §6.2.4's normal and throw completions.

@@ -5,7 +5,7 @@
 //! numberings must not share a table — and the separation is what makes a nested body unable to
 //! reach a slot it has no environment for.
 
-use super::{CompileError, Compiler, ErrorKind, Instruction, unsupported};
+use super::{CompileError, Compiler, ErrorKind, Instruction, Local, unsupported};
 use crate::ast::{
     Argument, ArrowBody, ArrowFunction, Binding, Expr, ExprKind, FormalParameters, Function, Stmt,
 };
@@ -31,6 +31,12 @@ impl Compiler<'_> {
         if function.is_async || function.is_generator {
             return Err(unsupported("an async function or a generator", span));
         }
+        if self.would_capture_a_per_iteration_binding() {
+            return Err(unsupported(
+                "a function that closes over a `let` or `const` declared in a loop",
+                span,
+            ));
+        }
         let body = self.compile_nested(
             &function.parameters,
             Body::Statements(&function.body),
@@ -53,6 +59,12 @@ impl Compiler<'_> {
     ) -> Result<(), CompileError> {
         if arrow.is_async {
             return Err(unsupported("an async arrow function", span));
+        }
+        if self.would_capture_a_per_iteration_binding() {
+            return Err(unsupported(
+                "a function that closes over a `let` or `const` declared in a loop",
+                span,
+            ));
         }
         // §15.3.3's `ConciseBody` has two shapes and one meaning: `a => b` returns `b`, and
         // `a => { … }` is an ordinary body. The first is compiled as the second with the `return`
@@ -170,7 +182,7 @@ fn compile_body(
     heap: &mut Heap,
     parameters: &FormalParameters,
     body: Body<'_>,
-    outer: Vec<Vec<Box<str>>>,
+    outer: Vec<Vec<Local>>,
     lexical: Lexical,
     span: Span,
 ) -> Result<Chunk, CompileError> {
@@ -202,6 +214,9 @@ fn compile_body(
             for name in var_declared_names(statements) {
                 compiler.declare(name.name);
             }
+            // §10.2.11 step 34 — a function body's `let` and `const` are created with the call
+            // and left uninitialised, exactly as a block's are.
+            compiler.declare_lexical_names(statements)?;
             compiler.hoist_functions(statements)?;
             compiler.statements(statements)?;
             // §10.2.1 step 4 — falling off the end returns `undefined`. The instruction is emitted

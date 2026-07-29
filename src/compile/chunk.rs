@@ -84,6 +84,29 @@ pub enum Instruction {
     /// Assignment is an expression: `a = (b = 1)` works because the inner one leaves its value
     /// behind. A statement that only wants the effect follows this with a [`Instruction::Pop`].
     StoreVariable(u32, u32),
+    /// Put a local binding into §9.1.1.1's uninitialised state — the temporal dead zone.
+    ///
+    /// Emitted where a block is *entered*, once for each `let` or `const` it declares, because
+    /// §14.2.3 `BlockDeclarationInstantiation` creates those bindings there and leaves them
+    /// uninitialised until their declaration runs. Reading one in between is a ReferenceError.
+    ///
+    /// An instruction rather than a state the environment starts in, because a slot is not new
+    /// each time its block is entered: a loop body's bindings occupy the same slots on every pass,
+    /// and the second pass must find the dead zone rather than the first pass's value.
+    Uninitialise(u32),
+    /// Give a local binding its first value, **without** taking it off the stack.
+    ///
+    /// `InitializeBinding` (§9.1.1.1.4), which is a different operation from an assignment and
+    /// has to be: an assignment to an uninitialised binding is a ReferenceError, and this is what
+    /// stops being one. Only a declaration emits it, and only for its own binding, which is why
+    /// there is no depth — a declaration initialises the binding it is written in.
+    Initialise(u32),
+    /// Throw a TypeError, because a `const` was assigned to — §9.1.1.1.5 step 3.
+    ///
+    /// The compiler resolved the binding and so already knows the assignment cannot stand. What is
+    /// left for run time is only the throw, and it happens *here* rather than at compile time
+    /// because §13.15.2 evaluates the right-hand side first: `const c = 1; c = f()` calls `f`.
+    ThrowImmutableAssignment,
     /// Push the value of a global, named by the String constant at this index.
     ///
     /// The other half of §9.4.2's `ResolveBinding`. A name the compiler could not place in any
@@ -383,6 +406,9 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Pop
         | Instruction::LoadVariable(_, _)
         | Instruction::StoreVariable(_, _)
+        | Instruction::Uninitialise(_)
+        | Instruction::Initialise(_)
+        | Instruction::ThrowImmutableAssignment
         | Instruction::LoadGlobal(_)
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)

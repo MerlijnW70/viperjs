@@ -45,7 +45,7 @@ impl Vm {
         let callee = self.stack[callee_at];
 
         let Value::Object(object) = callee else {
-            self.throw_type_error(
+            self.raise(
                 Abrupt::type_error("what was called is not a function"),
                 heap,
                 chunk,
@@ -56,7 +56,7 @@ impl Vm {
         };
         let lexical_this = heap.object(object).and_then(Object::lexical_this);
         let Some(callable) = heap.object(object).and_then(Object::call).cloned() else {
-            self.throw_type_error(
+            self.raise(
                 Abrupt::type_error("what was called is not a function"),
                 heap,
                 chunk,
@@ -88,7 +88,7 @@ impl Vm {
         // §15.3 — an arrow has no `[[Construct]]`, so `new (() => {})` is a TypeError rather than
         // an object nothing could be an instance of.
         if body.is_arrow() && how == Entry::Construct {
-            self.throw_type_error(
+            self.raise(
                 Abrupt::type_error("an arrow function is not a constructor"),
                 heap,
                 chunk,

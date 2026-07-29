@@ -16,6 +16,7 @@
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
+//! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
 
 mod accessors;
 mod array_methods;
@@ -25,6 +26,7 @@ mod arrows;
 mod builtins;
 mod coercion;
 mod functions;
+mod lexical;
 mod objects;
 mod objects_builtin;
 mod statements;

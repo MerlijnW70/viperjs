@@ -40,7 +40,7 @@ impl Compiler<'_> {
             // §14.2 — a block is its statements. No scope of its own yet: a block only *has* one
             // when something lexical is declared inside it, and `let` and `const` are refused
             // below until they can throw on a use before their declaration.
-            StmtKind::Block(body) => self.statements(body),
+            StmtKind::Block(body) => self.block(body),
             StmtKind::Declaration(declaration) => self.declaration(declaration, span),
             // §14.6 — the test is thrown away and exactly one branch runs. An `if` with no `else`
             // still jumps over nothing, which is one wasted instruction and no special case.
@@ -61,22 +61,28 @@ impl Compiler<'_> {
                 let top = self.here()?;
                 self.expression(&statement.test)?;
                 let out = self.chunk.emit_jump(Instruction::JumpIfFalse);
-                self.loop_body(&statement.body, |compiler| {
+                self.loop_marks.push(self.locals.len());
+                let compiled = self.loop_body(&statement.body, |compiler| {
                     compiler.chunk.emit(Instruction::Jump(top));
                     Ok(top)
-                })?;
+                });
+                self.loop_marks.pop();
+                compiled?;
                 self.chunk.patch(out)
             }
             // §14.7.1 — the test is at the *bottom*, so the body always runs once, the jump back
             // is the opposite sense, and `continue` goes to the test rather than to the top.
             StmtKind::DoWhile(statement) => {
                 let top = self.here()?;
-                self.loop_body(&statement.body, |compiler| {
+                self.loop_marks.push(self.locals.len());
+                let compiled = self.loop_body(&statement.body, |compiler| {
                     let test = compiler.here()?;
                     compiler.expression(&statement.test)?;
                     compiler.chunk.emit(Instruction::JumpIfTrue(top));
                     Ok(test)
-                })?;
+                });
+                self.loop_marks.pop();
+                compiled?;
                 Ok(())
             }
             // §14.7.4 — four parts, any of which may be missing. A missing test is `true`, which
@@ -128,19 +134,56 @@ impl Compiler<'_> {
             }
         }
     }
-    /// §14.3 — `var`, `let` and `const`.
+    /// §14.2 — a block, which is a scope of its own because §14.3.1 puts `let` and `const` in one.
     ///
-    /// Only `var` so far. `let` and `const` are refused rather than treated as `var`, because the
-    /// difference between them is the temporal dead zone: reading one before its declaration is a
-    /// **ReferenceError**, and nothing can throw one yet. Quietly making them behave like `var`
-    /// would be a wrong answer no test of this engine would catch.
+    /// The bindings are created here, all of them, before any statement runs — that is
+    /// §14.2.3 `BlockDeclarationInstantiation` — and each is left uninitialised, which is what
+    /// makes reading one above its declaration a ReferenceError rather than `undefined`.
+    pub(super) fn block(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
+        let mark = self.enter_scope();
+        self.declare_lexical_names(body)?;
+        // Deliberately *not* `hoist_functions`. §14.1 block-scopes a function declaration and
+        // Annex B.3.3 hoists it besides, and neither is implemented — so one written here is
+        // refused, which is what `Compiler::hoisted` is for. Hoisting it now that a block is a
+        // scope would give it the scope and none of Annex B, which is the silent wrong answer the
+        // refusal was added to stop.
+        self.statements(body)?;
+        self.leave_scope(mark);
+        Ok(())
+    }
+
+    /// Create every `let` and `const` a body declares, uninitialised — §14.2.3 and §10.2.11.
+    ///
+    /// Only the *top level* of the body, because that is what §8.2.6's `LexicallyDeclaredNames`
+    /// is: a `let` inside a nested block belongs to that block and is created when it is entered.
+    pub(super) fn declare_lexical_names(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
+        for statement in body {
+            let StmtKind::Declaration(declaration) = &statement.kind else {
+                continue;
+            };
+            if !declaration.kind.is_lexical() {
+                continue;
+            }
+            let immutable = declaration.kind == DeclarationKind::Const;
+            for declarator in &declaration.declarators {
+                let Binding::Identifier(name) = &declarator.binding else {
+                    return Err(unsupported("a destructuring binding", declarator.span));
+                };
+                let slot = self.declare_lexical(&name.name, immutable);
+                self.chunk.emit(Instruction::Uninitialise(slot));
+            }
+        }
+        Ok(())
+    }
+
+    /// §14.3 — `var`, `let` and `const`.
     pub(super) fn declaration(
         &mut self,
         declaration: &Declaration,
-        span: Span,
+        _span: Span,
     ) -> Result<(), CompileError> {
-        if declaration.kind != DeclarationKind::Var {
-            return Err(unsupported("let and const", span));
+        if declaration.kind.is_lexical() {
+            return self.lexical_declaration(declaration);
         }
         for declarator in &declaration.declarators {
             let Binding::Identifier(name) = &declarator.binding else {
@@ -172,8 +215,59 @@ impl Compiler<'_> {
         }
         Ok(())
     }
+    /// §14.3.1 — what a `let` or `const` declaration *runs*.
+    ///
+    /// The binding already exists: [`Compiler::declare_lexical_names`] made it when the block was
+    /// entered, and made it uninitialised. So all this does is give it its first value, which is
+    /// `InitializeBinding` (§9.1.1.1.4) and is the moment the dead zone ends.
+    ///
+    /// A `let` with no initializer is initialised to `undefined` — and that is not the same as
+    /// being left alone: `let x; x` is `undefined` where `x; let x;` is a ReferenceError, and the
+    /// difference is exactly this instruction having run or not.
+    fn lexical_declaration(&mut self, declaration: &Declaration) -> Result<(), CompileError> {
+        for declarator in &declaration.declarators {
+            let Binding::Identifier(name) = &declarator.binding else {
+                return Err(unsupported("a destructuring binding", declarator.span));
+            };
+            // §14.3.1.1 — `const` without an initializer is a Syntax Error the parser has already
+            // refused, so anything here without one is a `let`.
+            // Ordinarily the binding is already there: the block, body or case-block prologue
+            // made it uninitialised on the way in. A `for` head has no prologue — §14.7.4.4 gives
+            // the loop its own environment and this declaration is what creates the binding in it
+            // — so one is made here if there is not one.
+            let slot = match self.resolve_in_scope(&name.name) {
+                Some(slot) => slot,
+                None => {
+                    let immutable = declaration.kind == DeclarationKind::Const;
+                    let slot = self.declare_lexical(&name.name, immutable);
+                    self.chunk.emit(Instruction::Uninitialise(slot));
+                    slot
+                }
+            };
+            match &declarator.initializer {
+                Some(initializer) => self.expression(initializer)?,
+                None => self.constant(Value::Undefined)?,
+            }
+            self.chunk.emit(Instruction::Initialise(slot));
+            self.chunk.emit(Instruction::Pop);
+        }
+        Ok(())
+    }
+
     /// §14.7.4's four parts.
     fn for_statement(&mut self, statement: &ForStatement, span: Span) -> Result<(), CompileError> {
+        // §14.7.4.4 — the head's `let` and `const` belong to the *loop*, not to the statement
+        // around it, so the scope opens before the head is compiled and closes after the body.
+        let mark = self.enter_scope();
+        self.loop_marks.push(mark);
+        let compiled = self.for_parts(statement, span);
+        self.loop_marks.pop();
+        self.leave_scope(mark);
+        compiled
+    }
+
+    /// The rest of `for`, once its scope has been opened.
+    fn for_parts(&mut self, statement: &ForStatement, span: Span) -> Result<(), CompileError> {
         match &statement.init {
             Some(ForInit::Expression(expression)) => {
                 self.expression(expression)?;
@@ -249,6 +343,14 @@ impl Compiler<'_> {
     /// `x` of 1 runs `b` alone, and with `x` of 2 runs `a` and then `b`.
     fn switch_statement(&mut self, statement: &SwitchStatement) -> Result<(), CompileError> {
         self.expression(&statement.discriminant)?;
+        // §14.12.4 — the `CaseBlock` is *one* scope over all of the cases, not one per case. So a
+        // `let` in one case is in scope in the next, and its dead zone runs from the top of the
+        // whole block: `switch (x) { case 1: y; break; case 2: let y; }` throws rather than
+        // reading `undefined`. That is why the bindings are created here, before any test runs.
+        let mark = self.enter_scope();
+        for case in statement.cases.iter() {
+            self.declare_lexical_names(&case.body)?;
+        }
         // A `break` inside a switch leaves the switch, so it is a breakable statement like a
         // loop — but not a *continuable* one, which is why only the break stack is pushed.
         self.breaks.push(Vec::new());
@@ -296,6 +398,7 @@ impl Compiler<'_> {
             self.chunk.patch_to(jump, after);
         }
         self.chunk.emit(Instruction::Pop);
+        self.leave_scope(mark);
         Ok(())
     }
 
@@ -476,7 +579,7 @@ impl Compiler<'_> {
             // The normal way out: forget the handler, then run the finally.
             self.chunk.emit(Instruction::PopHandler);
             if let Some(finalizer) = &statement.finalizer {
-                self.statements(finalizer)?;
+                self.block(finalizer)?;
             }
             let end = self.chunk.emit_jump(Instruction::Jump);
             // …and the other way out, carrying whatever was thrown. The value is parked in a
@@ -486,7 +589,7 @@ impl Compiler<'_> {
             self.chunk.emit(Instruction::StoreVariable(0, saved));
             self.chunk.emit(Instruction::Pop);
             if let Some(finalizer) = &statement.finalizer {
-                self.statements(finalizer)?;
+                self.block(finalizer)?;
             }
             self.chunk.emit(Instruction::LoadVariable(0, saved));
             self.chunk.emit(Instruction::Throw);
@@ -501,7 +604,7 @@ impl Compiler<'_> {
         statement: &TryStatement,
         to_catch: Option<Unpatched>,
     ) -> Result<(), CompileError> {
-        self.statements(&statement.block)?;
+        self.block(&statement.block)?;
         let Some(to_catch) = to_catch else {
             // No catch clause, so the try block's protection ends here and a throw inside it has
             // already gone to the finally's handler.
@@ -521,7 +624,7 @@ impl Compiler<'_> {
         // §14.15.3 — the catch parameter is a *block-scoped* binding of its own, so it is given a
         // slot for the duration of the catch block and taken away again. `catch { }` with no
         // parameter is ES2019's optional binding: the value is simply discarded.
-        let outer_locals = self.locals.len();
+        let outer_locals = self.enter_scope();
         match &handler.parameter {
             Some(parameter) => {
                 let Binding::Identifier(name) = &parameter.binding else {
@@ -533,8 +636,8 @@ impl Compiler<'_> {
             }
             None => self.chunk.emit(Instruction::Pop),
         }
-        self.statements(&handler.body)?;
-        self.locals.truncate(outer_locals);
+        self.block(&handler.body)?;
+        self.leave_scope(outer_locals);
         self.chunk.patch(past_the_catch)
     }
     /// Make the function objects a body's declarations describe, before any of it runs.

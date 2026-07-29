@@ -136,8 +136,14 @@ fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
 #[test]
 fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
     let cases = [
-        ("let x = 1;", "let and const"),
-        ("const x = 1;", "let and const"),
+        (
+            "for (let i = 0; i < 1; i++) { (function () { return i; }); }",
+            "a function that closes over a `let` or `const` declared in a loop",
+        ),
+        (
+            "for (let i = 0; i < 1; i++) { (() => i); }",
+            "a function that closes over a `let` or `const` declared in a loop",
+        ),
         ("function* g() {}", "an async function or a generator"),
         ("try { } catch ([a]) { }", "a destructuring catch parameter"),
         ("for (var k in 1) ;", "for-in and for-of"),

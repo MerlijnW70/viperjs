@@ -223,11 +223,14 @@ impl Heap {
     }
 
     /// The values in an environment's slots, copied out so the walk may borrow the heap.
+    ///
+    /// A slot in §9.1.1.1's uninitialised state holds no value and so reaches nothing — a `let`
+    /// above its declaration is a binding with nothing behind it to keep alive.
     fn environment_slots(&self, id: EnvironmentId) -> Vec<Value> {
         self.environments
             .get(id.index())
             .and_then(Option::as_ref)
-            .map(|found| found.slots().to_vec())
+            .map(|found| found.slots().iter().flatten().copied().collect())
             .unwrap_or_default()
     }
 

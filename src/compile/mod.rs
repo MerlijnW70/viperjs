@@ -105,9 +105,44 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
         let index = compiler.name(name.name)?;
         compiler.chunk.emit(Instruction::DeclareGlobal(index));
     }
+    // §16.1.7 `GlobalDeclarationInstantiation` step 17 — a script's `let` and `const` go in the
+    // global *declarative* record rather than onto the global object, which is why these get slots
+    // like any other lexical binding while the `var`s above became properties.
+    compiler.declare_lexical_names(&script.body)?;
     compiler.hoist_functions(&script.body)?;
     compiler.statements(&script.body)?;
     Ok(compiler.finish())
+}
+
+/// One name with a slot, and what the compiler knows about it.
+#[derive(Debug, Clone)]
+struct Local {
+    /// What the source calls it.
+    name: Box<str>,
+    /// Whether it can still be resolved from where the compiler is standing.
+    ///
+    /// A block's bindings stop being visible when the block ends, but their slots are not given
+    /// back — [`Compiler::leave_scope`] says why. So going out of scope is a flag rather than a
+    /// truncation, and [`Compiler::resolve`] skips what is no longer in scope.
+    live: bool,
+    /// Whether it was declared by `let` or `const` rather than by `var` or as a parameter.
+    ///
+    /// What it changes is the *dead zone*: a lexical binding starts uninitialised and reading it
+    /// before its declaration is a ReferenceError, where a `var` reads as `undefined`.
+    lexical: bool,
+    /// Whether assigning to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
+    ///
+    /// Known here rather than at run time because the compiler resolved the binding: an
+    /// environment does not have to carry a mutability bit per slot to answer a question that was
+    /// already settled when the name was looked up.
+    immutable: bool,
+}
+
+impl Local {
+    /// Whether this is what `name` refers to from where the compiler is standing.
+    fn answers_to(&self, name: &str) -> bool {
+        self.live && &*self.name == name
+    }
 }
 
 /// What the compiler knows while it works.
@@ -119,12 +154,37 @@ struct Compiler<'a> {
     /// A `Vec` searched backwards rather than a map: a scope holds a handful of names, and the
     /// backwards search is what makes an inner declaration shadow an outer one when there are
     /// inner scopes to have. It is also what a map would have to be told to do.
-    locals: Vec<Box<str>>,
+    locals: Vec<Local>,
     /// The jumps that leave the innermost loop, waiting for its end.
     ///
     /// One list per enclosing loop. `break` in a loop inside a loop leaves the inner one, which
     /// is what the stack is for.
     breaks: Vec<Vec<Unpatched>>,
+    /// How many locals existed when each enclosing *scope* began, innermost last.
+    ///
+    /// What a declaration needs and [`Compiler::resolve`] cannot give it. Resolving a name walks
+    /// outwards and finds the nearest binding of that name anywhere in the function, which is the
+    /// right answer for a *use* and the wrong one for a *declaration*: `let i = 'kept'; for (let
+    /// i = 0; …)` would find the outer `i` and the loop would assign to it, so the loop's variable
+    /// would leak and the outer one would be destroyed. A declaration only ever looks inside the
+    /// scope it is written in.
+    ///
+    /// Empty means the function body's own scope, which starts at slot zero — so `last()`
+    /// defaulting to zero is the right answer rather than a missing case.
+    scope_marks: Vec<usize>,
+    /// How many locals existed when each enclosing loop began, innermost last.
+    ///
+    /// What it is for is §14.7.4.7 `CreatePerIterationEnvironment`. A `let` written inside a loop
+    /// is a *fresh binding on every pass*, so a closure made on the third pass and one made on the
+    /// fourth must see different variables. praxis gives each lexical declaration one slot for the
+    /// whole call, which is right for every binding that is entered once and wrong for one that is
+    /// entered again — and the difference is only observable through a closure.
+    ///
+    /// So this records where each loop started, and making a function is refused while a lexical
+    /// binding declared inside the innermost loop is live. Refused rather than compiled, because
+    /// the alternative is every closure in the loop sharing one variable and answering the last
+    /// value — a wrong answer that looks like a working program.
+    loop_marks: Vec<usize>,
     /// Where `continue` goes — the top of the innermost loop's test, or its update.
     continues: Vec<Vec<Unpatched>>,
     /// How deep into an expression the compiler currently is.
@@ -134,7 +194,7 @@ struct Compiler<'a> {
     /// The script's is at the front and the immediately enclosing function's at the back, so
     /// counting *backwards* from the end is counting environments outwards — which is exactly
     /// what a [`Instruction::LoadVariable`] depth means.
-    outer: Vec<Vec<Box<str>>>,
+    outer: Vec<Vec<Local>>,
     /// Whether this is the script rather than a function body.
     ///
     /// §14.2.2's completion value belongs to the script; what a function's statements evaluate to
@@ -177,6 +237,8 @@ impl<'a> Compiler<'a> {
             heap,
             locals: Vec::new(),
             breaks: Vec::new(),
+            scope_marks: Vec::new(),
+            loop_marks: Vec::new(),
             continues: Vec::new(),
             hoisted: Vec::new(),
             labels: Vec::new(),
@@ -214,8 +276,81 @@ impl<'a> Compiler<'a> {
     /// shadow: `var e = 1; try { throw 2 } catch (e) { e }` is 2 inside the block and 1 after it,
     /// which is what [`Compiler::declare_shadowing`] and the truncation afterwards produce.
     fn resolve(&self, name: &str) -> Option<u32> {
-        let at = self.locals.iter().rposition(|local| &**local == name)?;
+        let at = self
+            .locals
+            .iter()
+            .rposition(|local| local.answers_to(name))?;
         u32::try_from(at).ok()
+    }
+
+    /// Which slot `name` has *in the scope being compiled*, if it has one there.
+    ///
+    /// What a declaration asks, where a use asks [`Compiler::resolve`]. See
+    /// [`Compiler::scope_marks`] for why the two are different questions.
+    fn resolve_in_scope(&self, name: &str) -> Option<u32> {
+        let mark = self.scope_marks.last().copied().unwrap_or(0);
+        let at = self
+            .locals
+            .iter()
+            .rposition(|local| local.answers_to(name))
+            .filter(|at| *at >= mark)?;
+        u32::try_from(at).ok()
+    }
+
+    /// Open a scope, answering the mark that closes it.
+    fn enter_scope(&mut self) -> usize {
+        let mark = self.locals.len();
+        self.scope_marks.push(mark);
+        mark
+    }
+
+    /// The local `name` refers to, if it is one.
+    fn local(&self, name: &str) -> Option<&Local> {
+        self.locals
+            .iter()
+            .rev()
+            .find(|local| local.answers_to(name))
+    }
+
+    /// Give `name` a slot that a block will take out of scope again — §14.3.1's `let` and `const`.
+    ///
+    /// Always a *new* slot, never a reused one, and that is the whole of what makes sibling blocks
+    /// safe: `{ let x = 1; f = () => x } { let y = 2 }` would have `f` answering 2 if `y` were
+    /// given the slot `x` had finished with. Slots are cheap and closures are not repairable
+    /// afterwards.
+    fn declare_lexical(&mut self, name: &str, immutable: bool) -> u32 {
+        let slot = self.declare_shadowing(name);
+        if let Some(local) = self.locals.last_mut() {
+            local.lexical = true;
+            local.immutable = immutable;
+        }
+        slot
+    }
+
+    /// Whether a function written here would close over a binding that a loop re-creates.
+    ///
+    /// True when the innermost enclosing loop has a live lexical binding declared inside it. See
+    /// [`Compiler::loop_marks`] for why that is refused rather than compiled.
+    fn would_capture_a_per_iteration_binding(&self) -> bool {
+        let Some(&mark) = self.loop_marks.last() else {
+            return false;
+        };
+        self.locals
+            .iter()
+            .skip(mark)
+            .any(|local| local.live && local.lexical)
+    }
+
+    /// Take every local declared since `mark` out of scope, without giving its slot back.
+    ///
+    /// The slot stays taken for the rest of the function. See [`Compiler::declare_lexical`] — a
+    /// closure made inside the block still reads that slot after the block has ended, so handing
+    /// it to the next block would make the two share a variable.
+    fn leave_scope(&mut self, mark: usize) {
+        self.scope_marks.pop();
+        for local in self.locals.iter_mut().skip(mark) {
+            local.live = false;
+        }
     }
 
     /// Where `name` lives, from where the compiler is standing.
@@ -225,13 +360,18 @@ impl<'a> Compiler<'a> {
     /// string to find a variable — §9.1's records, resolved once.
     fn binding(&self, name: &str) -> Option<Where> {
         if let Some(index) = self.resolve(name) {
-            return Some(Where { depth: 0, index });
+            let immutable = self.local(name).is_some_and(|local| local.immutable);
+            return Some(Where {
+                depth: 0,
+                index,
+                immutable,
+            });
         }
         // Outwards, one scope at a time. The innermost enclosing scope is the *last* of `outer`,
         // so walking it in reverse is walking the environment chain — and the count is the depth
         // the instruction carries.
         for (back, scope) in self.outer.iter().rev().enumerate() {
-            let Some(at) = scope.iter().rposition(|local| &**local == name) else {
+            let Some(at) = scope.iter().rposition(|local| local.answers_to(name)) else {
                 continue;
             };
             // `back` counts enclosing scopes and `at` indexes one scope's locals, so both are
@@ -240,7 +380,12 @@ impl<'a> Compiler<'a> {
             // conversion can fail on a source we accepted in the first place.
             let depth = u32::try_from(back + 1).ok()?; // bounded by the u32 source-length contract
             let index = u32::try_from(at).ok()?; // same
-            return Some(Where { depth, index });
+            let immutable = scope.get(at).is_some_and(|local| local.immutable);
+            return Some(Where {
+                depth,
+                index,
+                immutable,
+            });
         }
         None
     }
@@ -299,6 +444,13 @@ impl<'a> Compiler<'a> {
     /// Emit a write of `name`, leaving the value on the stack.
     pub(super) fn store_name(&mut self, name: &str) -> Result<(), CompileError> {
         match self.binding(name) {
+            // §9.1.1.1.5 step 3 — a `const` refuses every assignment, and the compiler already
+            // knows which binding this is. What is left for run time is the throw, which happens
+            // *after* the right-hand side has run because §13.15.2 evaluates it first.
+            Some(binding) if binding.immutable => {
+                self.chunk.emit(Instruction::ThrowImmutableAssignment);
+                Ok(())
+            }
             Some(binding) => {
                 self.store(binding);
                 Ok(())
@@ -324,7 +476,12 @@ impl Compiler<'_> {
     /// this pushes rather than reusing — and why [`Compiler::resolve`] searches from the end.
     fn declare_shadowing(&mut self, name: &str) -> u32 {
         let slot = u32::try_from(self.locals.len()).unwrap_or(u32::MAX);
-        self.locals.push(name.into());
+        self.locals.push(Local {
+            name: name.into(),
+            live: true,
+            lexical: false,
+            immutable: false,
+        });
         self.high_water = self.high_water.max(self.locals.len());
         slot
     }
@@ -379,6 +536,12 @@ struct Where {
     depth: u32,
     /// Which slot, in that environment.
     index: u32,
+    /// Whether writing to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
+    ///
+    /// Carried here rather than looked up again by whoever writes, because a second lookup is a
+    /// second copy of the resolution rule: the two could disagree about *which* `x` a name means,
+    /// and only one of them would be right. Resolving once answers both questions at once.
+    immutable: bool,
 }
 
 /// A refusal with a location.

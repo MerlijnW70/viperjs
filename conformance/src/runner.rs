@@ -401,7 +401,7 @@ mod tests {
         // failures would write the same sentence into the expectations file thousands of times
         // and bury the ones that mean something.
         assert!(matches!(
-            verdict("/*---\ndescription: uses let\n---*/\nlet x = 1;"),
+            verdict("/*---\ndescription: uses a class\n---*/\nclass C {}"),
             Verdict::Skipped(_)
         ));
         // A *parse* failure is not skipped: the parser is finished, so a file it refuses is a

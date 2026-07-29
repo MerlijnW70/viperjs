@@ -257,7 +257,10 @@ impl Vm {
     }
 
     /// Throw, from a place that has no completion to settle.
-    fn throw_type_error(
+    ///
+    /// Any kind of error, not only a TypeError: this was named after its first caller and is
+    /// now handed §9.1.1.1.6's ReferenceError too.
+    pub(super) fn raise(
         &mut self,
         error: Abrupt,
         heap: &mut Heap,
