@@ -29,6 +29,7 @@
 //! - `property` — [`PropertyKey`], and what an object files under one.
 //! - `object` — the ordinary object (§10.1) and its internal methods.
 //! - `define` — §10.1.6.3, which decides whether a property may change and then changes it.
+//! - `enumerate` — §14.7.5.10, the names a `for`-`in` visits and the shadowing that decides them.
 //! - `collect` — mark and sweep, and what counts as a root.
 //! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
 //! - here — the arenas, their handles, and the intern table property keys need.
@@ -37,6 +38,7 @@ mod array;
 mod callable;
 mod collect;
 mod define;
+mod enumerate;
 mod environment;
 mod object;
 mod property;

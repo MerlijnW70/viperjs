@@ -39,7 +39,7 @@ use self::call::Frame;
 
 use crate::ast::UnaryOperator;
 use crate::compile::Chunk;
-use crate::heap::{EnvironmentId, Heap};
+use crate::heap::{EnvironmentId, Heap, PropertyKey, PropertyKind};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use std::rc::Rc;
@@ -254,6 +254,57 @@ impl Vm {
             return Err(Fault::UnbalancedStack);
         }
         Ok(Outcome::Value(self.completion))
+    }
+
+    /// The next name a `for`-`in` should visit, or `undefined` when there are none left.
+    ///
+    /// §14.7.5.10's iterator step. The list of names was taken once, before the loop began, so
+    /// this walks it — and asks the *object* about each one on the way past, because a property
+    /// deleted since the list was made must not be visited. A name added since is not in the list
+    /// and so is not visited either, which the same clause allows.
+    fn enumerate_next(
+        &mut self,
+        object: Value,
+        keys: u32,
+        index: u32,
+        heap: &mut Heap,
+    ) -> Result<Value, Fault> {
+        loop {
+            let at = match heap.variable(self.environment, index) {
+                Some(Some(Value::Number(at))) => at,
+                // The compiler owns both slots and writes a number into one before the loop
+                // begins, so anything else is a chunk that does not make sense.
+                _ => return Err(Fault::MissingLocal),
+            };
+            let Some(Some(Value::Object(list))) = heap.variable(self.environment, keys) else {
+                return Err(Fault::MissingLocal);
+            };
+            let position = u32::try_from(at as u64).unwrap_or(u32::MAX);
+            let slot = heap.index_key(position);
+            let Some(next) = heap
+                .object(list)
+                .and_then(|found| found.get_own_property(slot))
+            else {
+                return Ok(Value::Undefined);
+            };
+            let PropertyKind::Data { value, .. } = next.kind else {
+                return Err(Fault::MissingLocal);
+            };
+            if !heap.set_variable(self.environment, index, Value::Number(at + 1.0)) {
+                return Err(Fault::MissingLocal);
+            }
+            let Value::String(name) = value else {
+                return Err(Fault::MissingLocal);
+            };
+            // Still there? A `delete` inside the body reaches this before the name does.
+            let key = PropertyKey::from_string(heap, name);
+            if let Value::Object(source) = object
+                && !heap.has_property(source, key)
+            {
+                continue;
+            }
+            return Ok(value);
+        }
     }
 
     /// Throw, from a place that has no completion to settle.

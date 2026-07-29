@@ -224,6 +224,25 @@ impl PropertyDescriptor {
         configurable: None,
     };
 
+    /// A plain data property holding `value` — writable, enumerable and configurable.
+    ///
+    /// The three attributes an *assignment* gives a property it creates, per §10.1.9.2 step 4's
+    /// `CreateDataProperty`, and the shape almost every property in a running program has.
+    ///
+    /// Here rather than spelled out at each site, because written twice the copies can disagree —
+    /// and one of them is always the one nothing looks at. That is not hypothetical: the list a
+    /// `for`-`in` walks is built with this, and its own copy of the three booleans could be set to
+    /// anything without a single test noticing, since a script never sees that list.
+    pub const fn data(value: Value) -> Self {
+        Self {
+            value: Some(value),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..Self::EMPTY
+        }
+    }
+
     /// `IsAccessorDescriptor` (§6.2.6.1) — whether it has a `[[Getter]]` or a `[[Setter]]` field.
     pub fn is_accessor_descriptor(&self) -> bool {
         self.getter.is_some() || self.setter.is_some()

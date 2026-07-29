@@ -107,6 +107,26 @@ pub enum Instruction {
     /// left for run time is only the throw, and it happens *here* rather than at compile time
     /// because §13.15.2 evaluates the right-hand side first: `const c = 1; c = f()` calls `f`.
     ThrowImmutableAssignment,
+    /// Replace a value with the list of names a `for`-`in` over it visits — §14.7.5.10.
+    ///
+    /// The list is an ordinary Array of Strings, so the collector already knows how to keep it and
+    /// nothing new has to be a `Value`. A value that is `undefined` or `null` enumerates *nothing*
+    /// rather than failing: §14.7.5.6 step 2 leaves the loop before its body ever runs, and an
+    /// empty list is that, exactly.
+    EnumerateProperties,
+    /// Take the next name from an enumeration, or `undefined` when there are none left.
+    ///
+    /// The object is popped from the stack; the two operands are the slots holding the list and
+    /// the position in it, which the compiler owns and no source can name.
+    ///
+    /// `undefined` as the end marker is safe rather than convenient: §14.7.5.10 enumerates String
+    /// keys and nothing else, so no name it could yield is `undefined`.
+    ///
+    /// Skipping is part of the step. §14.7.5.10 requires that a property deleted before it is
+    /// reached is not visited, so each name is asked about again — on the object, not on the list
+    /// — before it is handed back. A name added during the enumeration is not visited, which the
+    /// same clause explicitly allows.
+    EnumerateNext(u32, u32),
     /// Push the value of a global, named by the String constant at this index.
     ///
     /// The other half of §9.4.2's `ResolveBinding`. A name the compiler could not place in any
@@ -409,6 +429,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Uninitialise(_)
         | Instruction::Initialise(_)
         | Instruction::ThrowImmutableAssignment
+        | Instruction::EnumerateProperties
+        | Instruction::EnumerateNext(_, _)
         | Instruction::LoadGlobal(_)
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)

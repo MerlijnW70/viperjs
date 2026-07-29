@@ -204,7 +204,7 @@ impl Heap {
     }
 
     /// The key an index is filed under, which is the decimal spelling and nothing else.
-    fn index_key(&mut self, index: u32) -> PropertyKey {
+    pub(crate) fn index_key(&mut self, index: u32) -> PropertyKey {
         PropertyKey::from_units(self, &index.to_string().encode_utf16().collect::<Vec<_>>())
     }
 

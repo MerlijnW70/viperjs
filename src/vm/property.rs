@@ -149,13 +149,7 @@ impl Vm {
         }
         // A new property, or one that shadows an inherited writable one. Either way it is created
         // on the receiver with the three attributes assignment always gives.
-        let descriptor = PropertyDescriptor {
-            value: Some(value),
-            writable: Some(true),
-            enumerable: Some(true),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        };
+        let descriptor = PropertyDescriptor::data(value);
         stored(heap.define_property_outcome(object, key, &descriptor))
     }
     /// §13.10.2's `InstanceofOperator`, by way of §7.3.22's `OrdinaryHasInstance`.

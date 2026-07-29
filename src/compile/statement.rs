@@ -4,10 +4,12 @@
 //! value, and that lives in a register rather than on the stack — precisely so that a statement
 //! in the middle of a block can replace it without disturbing anything below.
 
+use super::function::Keep;
 use super::{CompileError, Compiler, Instruction, Unpatched, unsupported};
 use crate::ast::{
-    BinaryOperator, Binding, Declaration, DeclarationKind, ForInit, ForStatement,
-    LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
+    AssignmentTarget, BinaryOperator, Binding, Declaration, DeclarationKind, ExprKind, ForInOfKind,
+    ForInOfStatement, ForInOfTarget, ForInit, ForStatement, LabelledStatement, Stmt, StmtKind,
+    SwitchStatement, TryStatement,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -104,7 +106,13 @@ impl Compiler<'_> {
             StmtKind::Try(statement) => self.try_statement(statement, span),
             // §14.12 — switch.
             StmtKind::Switch(statement) => self.switch_statement(statement),
-            StmtKind::ForInOf(_) => Err(unsupported("for-in and for-of", span)),
+            StmtKind::ForInOf(statement) => match statement.kind {
+                ForInOfKind::In => self.for_in_statement(statement, span),
+                // §14.7.5.7 drives an iterator, which needs `Symbol.iterator` and the protocol
+                // around it. Named apart from `for`-`in` so the conformance buckets say which of
+                // the two is being waited on.
+                ForInOfKind::Of => Err(unsupported("for-of", span)),
+            },
             // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
             StmtKind::Labelled(statement) => self.labelled_statement(statement, span),
             StmtKind::With(_) => Err(unsupported("with", span)),
@@ -264,6 +272,170 @@ impl Compiler<'_> {
         self.loop_marks.pop();
         self.leave_scope(mark);
         compiled
+    }
+
+    /// §14.7.5 — `for (x in o)`, over the enumerable property names of `o` and its prototypes.
+    ///
+    /// The names are taken once, before the body runs, and then walked. §14.7.5.10 asks for
+    /// exactly that: a property added while the loop runs need not be visited, and one deleted
+    /// before it is reached must not be — so the list settles the first and
+    /// [`Instruction::EnumerateNext`] asks the object again about each name, which settles the
+    /// second.
+    ///
+    /// The name is put in a slot of its own before it is assigned anywhere. That is what lets one
+    /// shape of code serve all three targets — a fresh binding, an existing name, a property —
+    /// rather than each having to reach a value buried under whatever it needs on the stack.
+    fn for_in_statement(
+        &mut self,
+        statement: &ForInOfStatement,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        // §14.7.5.5 — a `let` or `const` in the head belongs to the loop, so the scope opens
+        // before the binding is made and closes after the body.
+        let mark = self.enter_scope();
+        self.loop_marks.push(mark);
+        let compiled = self.for_in_parts(statement, span);
+        self.loop_marks.pop();
+        self.leave_scope(mark);
+        compiled
+    }
+
+    /// The rest of `for`-`in`, once its scope has been opened.
+    fn for_in_parts(
+        &mut self,
+        statement: &ForInOfStatement,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let keys = self.declare_hidden("keys");
+        let object = self.declare_hidden("object");
+        let index = self.declare_hidden("index");
+        let current = self.declare_hidden("current");
+
+        // §14.7.5.6 `ForIn/OfHeadEvaluation` — the object is evaluated once, and kept, because
+        // every step has to ask it whether the name it is about to visit is still there.
+        self.expression(&statement.right)?;
+        self.chunk.emit(Instruction::Duplicate);
+        self.chunk.emit(Instruction::EnumerateProperties);
+        self.chunk.emit(Instruction::StoreVariable(0, keys));
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::StoreVariable(0, object));
+        self.chunk.emit(Instruction::Pop);
+        self.constant(Value::Number(0.0))?;
+        self.chunk.emit(Instruction::StoreVariable(0, index));
+        self.chunk.emit(Instruction::Pop);
+
+        // The head's binding, if it declares one. Made once and given its value on each pass —
+        // §14.7.5.5 makes it a *fresh* binding per iteration, which is only observable through a
+        // closure, and `Compiler::loop_marks` refuses that rather than getting it wrong.
+        let binding = self.for_in_binding(&statement.left, span)?;
+
+        let top = self.here()?;
+        self.chunk.emit(Instruction::LoadVariable(0, object));
+        self.chunk.emit(Instruction::EnumerateNext(keys, index));
+        self.chunk.emit(Instruction::StoreVariable(0, current));
+        self.chunk.emit(Instruction::Pop);
+        // `undefined` is the end of the enumeration and cannot be a name — §14.7.5.10 yields
+        // Strings and nothing else.
+        self.chunk.emit(Instruction::LoadVariable(0, current));
+        self.constant(Value::Undefined)?;
+        self.chunk
+            .emit(Instruction::Binary(BinaryOperator::StrictEqual));
+        let out = self.chunk.emit_jump(Instruction::JumpIfTrue);
+
+        self.assign_enumerated(&statement.left, binding, current, span)?;
+        self.loop_body(&statement.body, |compiler| {
+            compiler.chunk.emit(Instruction::Jump(top));
+            Ok(top)
+        })?;
+        self.chunk.patch(out)
+    }
+
+    /// Make the head's binding, if the head declares one, and answer where it lives.
+    fn for_in_binding(
+        &mut self,
+        target: &ForInOfTarget,
+        span: Span,
+    ) -> Result<Option<u32>, CompileError> {
+        let ForInOfTarget::Declaration(declaration) = target else {
+            return Ok(None);
+        };
+        let Some(declarator) = declaration.declarators.first() else {
+            // `ForBinding` is singular and the parser produces exactly one, so this is a tree
+            // nobody can write.
+            return Err(unsupported("a `for`-`in` head with no binding", span));
+        };
+        let Binding::Identifier(name) = &declarator.binding else {
+            return Err(unsupported("a destructuring binding", declarator.span));
+        };
+        if !declaration.kind.is_lexical() {
+            // A `var` in the head is *not* the loop's. §14.7.5.5 gives it no per-iteration
+            // binding and no scope of its own: it was hoisted with the rest of the body's, it
+            // outlives the loop, and at the top level of a script it is a property of the global
+            // object rather than a slot at all. So nothing is declared here and the assignment
+            // goes by name, which is the one path that knows all of that.
+            return Ok(None);
+        }
+        let immutable = declaration.kind == DeclarationKind::Const;
+        let slot = self.declare_lexical(&name.name, immutable);
+        self.chunk.emit(Instruction::Uninitialise(slot));
+        Ok(Some(slot))
+    }
+
+    /// Put the name this pass is visiting where the head says it goes.
+    fn assign_enumerated(
+        &mut self,
+        target: &ForInOfTarget,
+        binding: Option<u32>,
+        current: u32,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        match (target, binding) {
+            // A head that declares: the binding is the loop's own, so this initialises it — which
+            // for a `const` is the one write it ever gets.
+            (ForInOfTarget::Declaration(_), Some(slot)) => {
+                self.chunk.emit(Instruction::LoadVariable(0, current));
+                self.chunk.emit(Instruction::Initialise(slot));
+                self.chunk.emit(Instruction::Pop);
+                Ok(())
+            }
+            // A `var` head: assigned by name, exactly as `var k = …` would be.
+            (ForInOfTarget::Declaration(declaration), None) => {
+                let Some(Binding::Identifier(name)) =
+                    declaration.declarators.first().map(|first| &first.binding)
+                else {
+                    return Err(unsupported("a destructuring binding", span));
+                };
+                self.chunk.emit(Instruction::LoadVariable(0, current));
+                self.store_name(&name.name)?;
+                self.chunk.emit(Instruction::Pop);
+                Ok(())
+            }
+            // A head that does not: an ordinary assignment to whatever it names, each pass.
+            (ForInOfTarget::Expression(target), _) => {
+                let AssignmentTarget::Simple(target) = &**target else {
+                    return Err(unsupported("a destructuring assignment", span));
+                };
+                match &target.kind {
+                    ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
+                        self.property_reference(target, Keep::Nothing)?;
+                        self.chunk.emit(Instruction::LoadVariable(0, current));
+                        self.chunk.emit(Instruction::SetProperty);
+                    }
+                    ExprKind::Identifier(name) => {
+                        self.chunk.emit(Instruction::LoadVariable(0, current));
+                        self.store_name(name)?;
+                    }
+                    _ => {
+                        return Err(unsupported(
+                            "an assignment to something that is not a name",
+                            target.span,
+                        ));
+                    }
+                }
+                self.chunk.emit(Instruction::Pop);
+                Ok(())
+            }
+        }
     }
 
     /// The rest of `for`, once its scope has been opened.

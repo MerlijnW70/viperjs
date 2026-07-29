@@ -152,6 +152,26 @@ impl Vm {
                         }
                     }
                 }
+                Instruction::EnumerateProperties => {
+                    let value = self.pop()?;
+                    let prototype = self.realm.array_prototype();
+                    // §14.7.5.6 step 2 — `undefined` and `null` are not an error here, they are
+                    // simply nothing to enumerate, and the loop body never runs. Any other
+                    // primitive would be wrapped by `ToObject`; a wrapper has no enumerable own
+                    // properties and §17 makes every prototype's non-enumerable, so an empty list
+                    // is the same answer for all of them but a String — whose wrapper has an own
+                    // enumerable property per index (§10.4.3), and which waits for wrappers.
+                    let keys = match value {
+                        Value::Object(object) => heap.new_enumeration(prototype, object),
+                        _ => heap.new_array(prototype, 0),
+                    };
+                    self.stack.push(Value::Object(keys));
+                }
+                Instruction::EnumerateNext(keys, index) => {
+                    let object = self.pop()?;
+                    let next = self.enumerate_next(object, keys, index, heap)?;
+                    self.stack.push(next);
+                }
                 Instruction::Uninitialise(index) => {
                     // Always the running scope's own binding, so no depth: a block puts *its*
                     // declarations into the dead zone, never somebody else's.

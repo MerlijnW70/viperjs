@@ -303,7 +303,7 @@ impl Drop for Worker {
     }
 }
 
-/// The argument that puts this program in the mode [`Worker`] drives.
+/// The argument that puts this program in the mode a worker runs in.
 ///
 /// Not in the usage text: it is how the program talks to itself, and an option nobody should pass
 /// is an option nobody needs to be told about.
@@ -311,9 +311,9 @@ pub const WORKER_FLAG: &str = "--worker";
 
 /// Run what arrives on standard input, a path to a line, and say what happened.
 ///
-/// The other half of [`Worker`]. Reading paths rather than taking one and exiting keeps a process
-/// per *worker* rather than per test — forty-eight thousand spawns would cost minutes of nothing
-/// but starting up — while still leaving each one killable at any moment.
+/// The other half of the worker pool above. Reading paths rather than taking one and exiting
+/// keeps a process per *worker* rather than per test — forty-eight thousand spawns would cost
+/// minutes of nothing but starting up — while still leaving each one killable at any moment.
 pub fn work(root: &Path) {
     use std::io::{BufRead, Write};
     let mut runner = Runner::new(root);
