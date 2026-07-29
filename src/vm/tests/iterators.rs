@@ -244,3 +244,88 @@ fn where_an_iterator_has_got_to_is_not_something_a_script_can_reach() {
         "true"
     );
 }
+
+#[test]
+fn array_from_reads_an_iterable_one_way_and_everything_else_another() {
+    // §23.1.2.1 — two readings of one argument, chosen by whether it has an `@@iterator`. Neither
+    // is a special case of the other, which is why a String is its characters and an object with a
+    // `length` is that many `undefined`s.
+    assert_eq!(run("Array.from([1, 2]).join(',')"), "1,2");
+    assert_eq!(run("Array.from('ab').join(',')"), "a,b");
+    assert_eq!(run("Array.from([1, 2].keys()).join(',')"), "0,1");
+    assert_eq!(run("Array.from({length: 2}).length"), "2");
+    assert_eq!(
+        run("Array.from({length: 2, 0: 'x', 1: 'y'}).join(',')"),
+        "x,y"
+    );
+    assert_eq!(run("Array.from({}).length"), "0");
+    assert_eq!(run("Array.from([]).length"), "0");
+    assert_eq!(run("Array.isArray(Array.from([1]))"), "true");
+    // A String iterates by code point, so an astral character is one element and not two.
+    assert_eq!(run("Array.from('\\ud83d\\ude00').length"), "1");
+    // …and a hand-written iterator is drained to its end like any other.
+    assert_eq!(
+        run(
+            "(function () { var o = {}; o[Symbol.iterator] = function () { var n = 0; \
+             return {next: function () { n++; return {value: n, done: n > 3}; }}; }; \
+             return Array.from(o).join(','); })()"
+        ),
+        "1,2,3"
+    );
+    // The mapping function is given the index with the value, which is what makes
+    // `Array.from({length: n}, (_, i) => i)` the idiom it is.
+    assert_eq!(
+        run("Array.from({length: 3}, function (v, i) { return i; }).join(',')"),
+        "0,1,2"
+    );
+    assert_eq!(
+        run("Array.from([1, 2], function (v) { return v * 2; }).join(',')"),
+        "2,4"
+    );
+    assert_eq!(
+        run("(function () { var seen = ''; \
+             Array.from([1, 2], function (v, i) { seen += v + ':' + i + ';'; return v; }); \
+             return seen; })()"),
+        "1:0;2:1;"
+    );
+    assert_eq!(
+        run("(function () { var t = {n: 5}; \
+             return Array.from([1], function () { return this.n; }, t)[0]; })()"),
+        "5"
+    );
+    // §23.1.2.1 step 2 — a mapping function that is not callable is refused before the iterable
+    // is asked for anything, and an `@@iterator` that is not callable is refused rather than
+    // quietly falling through to the array-like reading.
+    assert_eq!(
+        run("(function () { try { return Array.from([1], 5); } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("(function () { var o = {}; o[Symbol.iterator] = 5; \
+             try { return Array.from(o); } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("(function () { try { return Array.from(null); } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // …and "before" is the observable part of step 2: a bad mapping function stops the call
+    // without the iterable's `@@iterator` ever being asked for. Checked after, the side effect
+    // would already have happened.
+    assert_eq!(
+        run("(function () { var touched = false; var o = {}; \
+             o[Symbol.iterator] = function () { touched = true; return [].values(); }; \
+             try { Array.from(o, 5); } catch (e) {} return touched; })()"),
+        "false"
+    );
+    // §23.1.2.3 — the only reason `Array.of` exists: one argument is one element, where the
+    // constructor reads it as a length.
+    assert_eq!(run("Array.of(3).length"), "1");
+    assert_eq!(run("Array(3).length"), "3");
+    assert_eq!(run("Array.of(1, 2, 3).join(',')"), "1,2,3");
+    assert_eq!(run("Array.of().length"), "0");
+    assert_eq!(run("Array.from.length"), "1");
+    assert_eq!(run("Array.of.length"), "0");
+}

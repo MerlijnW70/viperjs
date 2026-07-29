@@ -117,7 +117,7 @@ pub(super) fn get_index(
 /// inside Rust with no instruction boundary in it. Asked here because this is the one place every
 /// such walk passes through, once per index, and because each pass interns a key — so a walk that
 /// is going nowhere is also a walk that is spending the budget.
-fn within_budget(heap: &Heap) -> Completion<()> {
+pub(super) fn within_budget(heap: &Heap) -> Completion<()> {
     if heap.is_exhausted() {
         return Err(Abrupt::range_error(
             "the heap has grown past what this engine will allocate",

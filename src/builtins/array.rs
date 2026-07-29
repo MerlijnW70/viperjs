@@ -106,5 +106,126 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let _ = heap.define_own_property(function, key, &descriptor);
     define_value(heap, prototype, "constructor", Value::Object(function));
     define_value(heap, global, "Array", Value::Object(function));
-    define_method(heap, realm, function, "isArray", 1, is_array);
+    for (name, length, native) in [
+        ("from", 1, from as crate::heap::Native),
+        ("isArray", 1, is_array),
+        ("of", 0, of),
+    ] {
+        define_method(heap, realm, function, name, length, native);
+    }
+}
+
+/// §23.1.2.1 `Array.from(items[, mapfn[, thisArg]])`.
+///
+/// Two different readings of one argument, chosen by whether it has an `@@iterator`. An iterable
+/// is *iterated*; anything else is read as an array-like, by its `length` and its indices. That is
+/// why `Array.from("ab")` is two characters and `Array.from({length: 2})` is two `undefined`s —
+/// the first has an iterator and the second does not, and neither is a special case of the other.
+fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let items = call.argument(0);
+    let mapper = match call.argument(1) {
+        Value::Undefined => None,
+        // Step 2 — checked before anything is read, so a bad `mapfn` is refused before the
+        // iterable is asked for its iterator.
+        value if is_callable(heap, value) => Some(value),
+        _ => return Err(Abrupt::type_error("the mapping function must be callable")),
+    };
+    let receiver = call.argument(2);
+    let taken = match iterator_of(vm, heap, items)? {
+        Some(iterator) => drain(vm, heap, iterator)?,
+        None => spread_array_like(vm, heap, items)?,
+    };
+    let mut built = Vec::with_capacity(taken.len());
+    for (at, value) in taken.into_iter().enumerate() {
+        let Some(mapper) = mapper else {
+            built.push(value);
+            continue;
+        };
+        // Step 6.e.vii — the index goes with the value, which is what makes
+        // `Array.from({length: 3}, (_, i) => i)` the idiom it is.
+        let index = Value::Number(at as f64);
+        built.push(vm.call_value(mapper, receiver, &[value, index], heap)?);
+    }
+    from_values(vm, heap, &built)
+}
+
+/// The iterator `items` hands out, or `None` if it has none — §7.4.2 with `GetMethod`.
+///
+/// No arm for `undefined` and `null`: reading a property of either is already the TypeError
+/// §23.1.2.1 step 4 asks for, by way of the `ToObject` it would otherwise reach. A guard here
+/// would answer the same thing one step earlier.
+fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
+    let Some(symbol) = vm.realm().well_known(super::well_known_at("iterator")) else {
+        return Ok(None);
+    };
+    let key = crate::heap::PropertyKey::from_symbol(symbol);
+    let method = vm.get_property_key(items, key, heap)?;
+    // §7.3.10 `GetMethod` — `undefined` and `null` both mean "there is none", and anything else
+    // that is not callable is a TypeError rather than a fall through to the array-like reading.
+    if matches!(method, Value::Undefined | Value::Null) {
+        return Ok(None);
+    }
+    // No callability check of its own: calling something that is not a function is already the
+    // TypeError §7.3.10 asks for, raised one step later and by the machinery that knows what a
+    // callable is. A guard here would be a second way to say the same thing.
+    let iterator = vm.call_value(method, items, &[], heap)?;
+    match iterator {
+        Value::Object(_) => Ok(Some(iterator)),
+        _ => Err(Abrupt::type_error("an iterator must be an object")),
+    }
+}
+
+/// Every value an iterator has left, in order.
+fn drain(vm: &mut Vm, heap: &mut Heap, iterator: Value) -> Completion<Vec<Value>> {
+    let next = key(heap, "next");
+    let next = vm.get_property_key(iterator, next, heap)?;
+    let done = key(heap, "done");
+    let value = key(heap, "value");
+    let mut taken = Vec::new();
+    loop {
+        let step = vm.call_value(next, iterator, &[], heap)?;
+        let Value::Object(_) = step else {
+            return Err(Abrupt::type_error("an iterator must answer an object"));
+        };
+        if vm.get_property_key(step, done, heap)?.to_boolean(heap) {
+            return Ok(taken);
+        }
+        taken.push(vm.get_property_key(step, value, heap)?);
+        // DR-0013 — an iterator that never says it is done would otherwise grow this list until
+        // the process died. Every step allocates the object §7.4.13 wraps its answer in, so the
+        // heap's budget is what notices, and it is the same one the Array methods watch.
+        super::array_methods::within_budget(heap)?;
+    }
+}
+
+/// §23.1.2.1 steps 7 and 8 — reading something that is not iterable by its `length`.
+fn spread_array_like(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Vec<Value>> {
+    let object = vm.object_for(items, heap)?;
+    let name = key(heap, "length");
+    let length = vm.get_property_key(object, name, heap)?;
+    let length = super::array_methods::to_length(vm.to_number(length, heap)?);
+    let mut taken = Vec::new();
+    for at in 0..length {
+        let index = super::array_methods::index_key(heap, at);
+        taken.push(vm.get_property_key(object, index, heap)?);
+        super::array_methods::within_budget(heap)?;
+    }
+    Ok(taken)
+}
+
+/// §23.1.2.3 `Array.of(...items)`.
+///
+/// The difference from the constructor, and the only reason it exists: `Array(3)` is three holes
+/// and `Array.of(3)` is one element. One argument means one element here, whatever it is.
+fn of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    from_values(vm, heap, call.arguments)
+}
+
+/// Whether a value is something a call may reach — §7.2.3 `IsCallable`.
+fn is_callable(heap: &Heap, value: Value) -> bool {
+    let Value::Object(object) = value else {
+        return false;
+    };
+    heap.object(object)
+        .is_some_and(|found| found.call().is_some())
 }
