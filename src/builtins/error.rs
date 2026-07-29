@@ -148,7 +148,7 @@ fn constructor(
     inherits: Option<ObjectId>,
 ) -> ObjectId {
     let parent = inherits.unwrap_or_else(|| realm.function_prototype());
-    let function = heap.new_native_function(parent, construct);
+    let function = heap.new_native_constructor(parent, construct);
     super::define_function_metadata(heap, function, name, 1);
 
     // §20.5.2 — `Error.prototype` on the constructor is **not** writable and **not**

@@ -105,7 +105,9 @@ fn constructor(
     prototype: ObjectId,
     native: crate::heap::Native,
 ) -> ObjectId {
-    let function = heap.new_native_function(realm.function_prototype(), native);
+    // §20.3.2 and §21.1.2 — `Boolean` and `Number` are constructors; everything this file
+    // installs beside them is a method and is not.
+    let function = heap.new_native_constructor(realm.function_prototype(), native);
     define_function_metadata(heap, function, name, length);
     // §20.3.2.1 and §21.1.2.15 — the `prototype` of a wrapper constructor is fixed in place, as
     // every constructor's is: an instance already inherits from it by the time a script could

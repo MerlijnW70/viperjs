@@ -65,6 +65,22 @@ impl Vm {
             )?;
             return Ok(());
         };
+        // §7.3.13 `Construct` requires an `IsConstructor`, and being callable is not it. An arrow
+        // (§15.3) and nearly every built-in (§10.3) have a `[[Call]]` and no `[[Construct]]`, so
+        // `new` in front of one is a TypeError rather than an object that nothing could be an
+        // instance of. Asked here, before the bound chain is flattened, because a bound function
+        // answers for itself — it is a constructor exactly when its target is, and it recorded
+        // that when it was made.
+        if how == Entry::Construct && !callable.constructs() {
+            self.raise(
+                Abrupt::type_error("what was used with `new` is not a constructor"),
+                heap,
+                chunk,
+                current,
+                at,
+            )?;
+            return Ok(());
+        }
         // §10.4.1 — a bound function is not a function of its own: it stands in front of another
         // one with a receiver and some arguments already decided. Resolved here, before anything
         // else, because what is actually being entered is the target.
@@ -87,7 +103,7 @@ impl Vm {
         let body = match callable {
             // Answered above; listed so that a third kind cannot arrive here unnoticed.
             Callable::Bound(_) => return Err(Fault::MissingFunction),
-            Callable::Native(native) => {
+            Callable::Native { native, .. } => {
                 return self.enter_native(
                     native,
                     object,
@@ -103,18 +119,7 @@ impl Vm {
             }
             Callable::Bytecode(body) => body,
         };
-        // §15.3 — an arrow has no `[[Construct]]`, so `new (() => {})` is a TypeError rather than
-        // an object nothing could be an instance of.
-        if body.is_arrow() && how == Entry::Construct {
-            self.raise(
-                Abrupt::type_error("an arrow function is not a constructor"),
-                heap,
-                chunk,
-                current,
-                at,
-            )?;
-            return Ok(());
-        }
+
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
         // different in each of the three ways in.
         let receiver = match how {

@@ -17,6 +17,7 @@
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
+//! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
 //! - `object_state` — §20.1.2's whole-object statics, and the coercion they start with.
 //! - `strings` — §22.1 and §10.4.3, and the object with a property per character.
 //! - `string_methods` — the rest of §22.1.3, and the four rules for taking a piece of a string.
@@ -35,6 +36,7 @@ mod arrows;
 mod bound;
 mod builtins;
 mod coercion;
+mod constructors;
 mod for_in;
 mod functions;
 mod lexical;

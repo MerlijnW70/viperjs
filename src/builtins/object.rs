@@ -264,7 +264,7 @@ pub fn is_extensible(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
 /// Build `Object` into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.object_prototype();
-    let function = heap.new_native_function(realm.function_prototype(), construct);
+    let function = heap.new_native_constructor(realm.function_prototype(), construct);
     super::define_function_metadata(heap, function, "Object", 1);
 
     // §20.1.2.20 — `Object.prototype` is not writable, not enumerable and not configurable, for

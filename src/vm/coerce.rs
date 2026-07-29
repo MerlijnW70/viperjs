@@ -160,7 +160,7 @@ impl Vm {
         let Some(callable) = heap.object(function).and_then(Object::call).cloned() else {
             return Err(Abrupt::type_error("what was called is not a function"));
         };
-        if let Callable::Native(native) = callable {
+        if let Callable::Native { native, .. } = callable {
             let call = NativeCall {
                 function,
                 this_value,

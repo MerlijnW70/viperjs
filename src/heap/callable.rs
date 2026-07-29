@@ -37,7 +37,12 @@ pub enum Callable {
     /// nothing else. See [`Heap::new_function`].
     Bytecode(Rc<Chunk>),
     /// A function written in Rust — §10.3's built-in function objects.
-    Native(Native),
+    Native {
+        /// The Rust function this runs.
+        native: Native,
+        /// Whether §10.3.2 gives it a `[[Construct]]` — see [`Callable::constructs`].
+        constructs: bool,
+    },
     /// What `bind` made — §10.4.1's bound function exotic objects.
     ///
     /// Not a function of its own: it holds another one and calls it with a `this` and a list of
@@ -51,9 +56,34 @@ pub enum Callable {
     Bound(Bound),
 }
 
+impl Callable {
+    /// Whether `new` may be written in front of this — its `[[Construct]]`.
+    ///
+    /// Being callable and being constructible are two properties and not one, and *which* two
+    /// depends on the kind. A function written in the language is a constructor unless it is an
+    /// arrow (§15.3), which the body already knows. A built-in has a `[[Construct]]` only where
+    /// §10.3.2 gives it one, which nothing about the Rust function could say. And a bound function
+    /// borrows its target's answer (§10.4.1.3 step 2), which was settled when it was made.
+    ///
+    /// Asked of the callable rather than of the object because a thing that cannot be called
+    /// cannot be constructed either, and there is no third answer for an object that is neither.
+    pub fn constructs(&self) -> bool {
+        match self {
+            Self::Bytecode(body) => !body.is_arrow(),
+            Self::Native { constructs, .. } => *constructs,
+            Self::Bound(bound) => bound.constructs,
+        }
+    }
+}
+
 /// What a bound function was bound to — §10.4.1's three internal slots.
 #[derive(Debug, Clone)]
 pub struct Bound {
+    /// Whether the target had a `[[Construct]]` — §10.4.1.3 step 2.
+    ///
+    /// Copied at binding time rather than looked up at call time, because §10.4.1.3 settles it
+    /// then: what the bound function is depends on what its target *was*.
+    pub constructs: bool,
     /// `[[BoundTargetFunction]]` — what is actually called.
     pub target: ObjectId,
     /// `[[BoundThis]]` — the receiver a call uses, and that `new` ignores.

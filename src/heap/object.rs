@@ -389,9 +389,24 @@ impl Heap {
     /// The `name` and `length` §10.3.3 requires are properties like any others and are given by
     /// the caller, because only the caller knows them.
     pub fn new_native_function(&mut self, prototype: ObjectId, native: Native) -> ObjectId {
+        self.built_in(prototype, native, false)
+    }
+
+    /// The same, for a built-in that §10.3.2 gives a `[[Construct]]` — a *constructor*.
+    ///
+    /// Separate from [`Heap::new_native_function`] rather than a flag at every call site, because
+    /// the two are unequal in number: nearly every built-in is a method and cannot be constructed,
+    /// and defaulting the other way would make `new Math.max()` an object rather than the
+    /// TypeError §10.3 asks for.
+    pub fn new_native_constructor(&mut self, prototype: ObjectId, native: Native) -> ObjectId {
+        self.built_in(prototype, native, true)
+    }
+
+    /// `CreateBuiltinFunction` (§10.3.4), for both kinds.
+    fn built_in(&mut self, prototype: ObjectId, native: Native, constructs: bool) -> ObjectId {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
-        object.call = Some(Callable::Native(native));
+        object.call = Some(Callable::Native { native, constructs });
         self.objects.push(Some(object));
         id
     }

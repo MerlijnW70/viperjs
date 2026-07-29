@@ -1205,8 +1205,6 @@ built-ins/Array/isArray/15.4.3.2-1-11.js :: it threw ReferenceError: JSON is not
 built-ins/Array/isArray/15.4.3.2-1-11.js (strict) :: it threw ReferenceError: JSON is not defined
 built-ins/Array/isArray/15.4.3.2-1-9.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/isArray/15.4.3.2-1-9.js (strict) :: it threw ReferenceError: Date is not defined
-built-ins/Array/isArray/not-a-constructor.js :: it threw an object with no name: new Array.isArray([]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/isArray/not-a-constructor.js (strict) :: it threw an object with no name: new Array.isArray([]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/isArray/proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/isArray/proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/isArray/proxy.js :: it threw ReferenceError: Proxy is not defined
@@ -6372,8 +6370,6 @@ built-ins/Function/prototype/toString/S15.3.4.2_A16.js :: it threw an object wit
 built-ins/Function/prototype/toString/S15.3.4.2_A16.js (strict) :: it threw an object with no name: String(obj) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js (strict) :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
-built-ins/Function/prototype/toString/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/toString/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/prototype/toString/proxy-non-callable-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Function/prototype/toString/proxy-non-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/GeneratorFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %GeneratorFunction%
@@ -7546,36 +7542,6 @@ built-ins/MapIteratorPrototype/next/this-not-object-throw-values.js :: it threw 
 built-ins/MapIteratorPrototype/next/this-not-object-throw-values.js (strict) :: it threw ReferenceError: Map is not defined
 built-ins/Math/Symbol.toStringTag.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Math/Symbol.toStringTag.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Math/abs/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/abs/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/acos/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/acos/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/acosh/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/acosh/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/asin/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/asin/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/asinh/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/asinh/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/atan/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/atan/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/atan2/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/atan2/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/atanh/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/atanh/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/cbrt/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/cbrt/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/ceil/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/ceil/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/clz32/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/clz32/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/cos/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/cos/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/cosh/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/cosh/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/exp/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/exp/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/expm1/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/expm1/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Math/f16round/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/f16round/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/f16round/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -7586,50 +7552,16 @@ built-ins/Math/f16round/prop-desc.js :: it threw an object with no name: f16roun
 built-ins/Math/f16round/prop-desc.js (strict) :: it threw an object with no name: f16round should be an own property
 built-ins/Math/f16round/value-conversion.js :: it threw TypeError: what was called is not a function
 built-ins/Math/f16round/value-conversion.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Math/floor/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/floor/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/fround/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/fround/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Math/hypot/Math.hypot_ToNumberErr.js :: it threw an object with no name: Math.hypot propagates an abrupt completion from coercing an argument to Number Expected a undefined but got a TypeError
 built-ins/Math/hypot/Math.hypot_ToNumberErr.js (strict) :: it threw an object with no name: Math.hypot propagates an abrupt completion from coercing an argument to Number Expected a undefined but got a TypeError
-built-ins/Math/hypot/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/hypot/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/imul/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/imul/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log10/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log10/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log1p/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log1p/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log2/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/log2/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Math/max/15.8.2.11-1.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/max/15.8.2.11-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/max/Math.max_each-element-coerced.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/max/Math.max_each-element-coerced.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/max/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/max/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Math/min/15.8.2.12-1.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/min/15.8.2.12-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/min/Math.min_each-element-coerced.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/min/Math.min_each-element-coerced.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/min/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/min/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/pow/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/pow/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/random/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/random/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/round/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/round/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sign/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sign/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sin/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sin/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sinh/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sinh/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sqrt/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/sqrt/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Math/sumPrecise/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/sumPrecise/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/sumPrecise/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -7646,12 +7578,6 @@ built-ins/Math/sumPrecise/sum-is-minus-zero.js :: it threw TypeError: what was c
 built-ins/Math/sumPrecise/sum-is-minus-zero.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/sum.js :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/sum.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Math/tan/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/tan/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/tanh/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/tanh/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/trunc/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Math/trunc/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/NativeErrors/EvalError/is-a-constructor.js :: it threw an object with no name: isConstructor(EvalError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/EvalError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(EvalError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/EvalError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
@@ -7726,20 +7652,12 @@ built-ins/Number/is-a-constructor.js :: it threw an object with no name: isConst
 built-ins/Number/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Number) must return true Expected SameValue(«false», «true») to be true
 built-ins/Number/isFinite/arg-is-not-number.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Number/isFinite/arg-is-not-number.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Number/isFinite/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Number/isFinite/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Number/isInteger/arg-is-not-number.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Number/isInteger/arg-is-not-number.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Number/isInteger/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Number/isInteger/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Number/isNaN/arg-is-not-number.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Number/isNaN/arg-is-not-number.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Number/isNaN/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Number/isNaN/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Number/isSafeInteger/arg-is-not-number.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Number/isSafeInteger/arg-is-not-number.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Number/isSafeInteger/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Number/isSafeInteger/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Number/parseFloat.js :: it threw ReferenceError: parseFloat is not defined
 built-ins/Number/parseFloat.js (strict) :: it threw ReferenceError: parseFloat is not defined
 built-ins/Number/parseFloat/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -7966,10 +7884,6 @@ built-ins/Object/assign/Source-Number-Boolen-Symbol.js :: it threw ReferenceErro
 built-ins/Object/assign/Source-Number-Boolen-Symbol.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/assign/Target-Symbol.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/assign/Target-Symbol.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/assign/invoked-as-ctor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/assign/invoked-as-ctor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/assign/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/assign/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/assign/source-own-prop-desc-missing.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/assign/source-own-prop-desc-missing.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/assign/source-own-prop-error.js :: it threw ReferenceError: Proxy is not defined
@@ -8176,8 +8090,6 @@ built-ins/Object/create/15.2.3.5-4-91.js :: it threw ReferenceError: RegExp is n
 built-ins/Object/create/15.2.3.5-4-91.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-92.js :: it threw ReferenceError: JSON is not defined
 built-ins/Object/create/15.2.3.5-4-92.js (strict) :: it threw ReferenceError: JSON is not defined
-built-ins/Object/create/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/create/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/create/properties-arg-to-object.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/defineProperties/15.2.3.7-2-10.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
@@ -8386,8 +8298,6 @@ built-ins/Object/defineProperties/15.2.3.7-6-a-19.js :: it threw ReferenceError:
 built-ins/Object/defineProperties/15.2.3.7-6-a-19.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-6-a-20.js :: it threw ReferenceError: JSON is not defined
 built-ins/Object/defineProperties/15.2.3.7-6-a-20.js (strict) :: it threw ReferenceError: JSON is not defined
-built-ins/Object/defineProperties/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/defineProperties/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/defineProperties/property-description-must-be-an-object-not-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Object/defineProperties/property-description-must-be-an-object-not-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Object/defineProperties/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Symbol is not defined
@@ -8639,8 +8549,6 @@ built-ins/Object/defineProperty/15.2.3.6-4-623.js :: it threw ReferenceError: Da
 built-ins/Object/defineProperty/15.2.3.6-4-623.js (strict) :: it threw ReferenceError: Date is not defined
 built-ins/Object/defineProperty/15.2.3.6-4-624.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/defineProperty/15.2.3.6-4-624.js (strict) :: it threw ReferenceError: Date is not defined
-built-ins/Object/defineProperty/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/defineProperty/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/defineProperty/property-description-must-be-an-object-not-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Object/defineProperty/property-description-must-be-an-object-not-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Object/defineProperty/symbol-data-property-configurable.js :: it threw ReferenceError: Symbol is not defined
@@ -8649,8 +8557,6 @@ built-ins/Object/defineProperty/symbol-data-property-default-non-strict.js :: it
 built-ins/Object/defineProperty/symbol-data-property-default-strict.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/defineProperty/symbol-data-property-writable.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/defineProperty/symbol-data-property-writable.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/entries/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/entries/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/entries/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/entries/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/entries/order-after-define-property-with-function.js :: it threw an object with no name: Actual [a, name] and expected [name, a] should have the same contents.
@@ -8669,8 +8575,6 @@ built-ins/Object/freeze/abrupt-completion.js :: it threw ReferenceError: Proxy i
 built-ins/Object/freeze/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/freeze/frozen-object-contains-symbol-properties-non-strict.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/freeze/frozen-object-contains-symbol-properties-strict.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/freeze/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/freeze/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/freeze/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/freeze/proxy-with-defineProperty-handler.js :: it threw ReferenceError: Symbol is not defined
@@ -8697,8 +8601,6 @@ built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js :: it thre
 built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/fromEntries/iterator-not-closed-for-uncallable-next.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/fromEntries/iterator-not-closed-for-uncallable-next.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/fromEntries/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/fromEntries/supports-symbols.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/fromEntries/supports-symbols.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/fromEntries/to-property-key.js :: it threw ReferenceError: Symbol is not defined
@@ -8883,12 +8785,8 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-92.js :: it threw TypeError
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-92.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-93.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-93.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/getOwnPropertyDescriptor/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/getOwnPropertyDescriptor/primitive-symbol.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/getOwnPropertyDescriptor/primitive-symbol.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/getOwnPropertyDescriptors/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/getOwnPropertyDescriptors/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/getOwnPropertyDescriptors/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/getOwnPropertyDescriptors/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/getOwnPropertyDescriptors/primitive-symbols.js :: it threw ReferenceError: Symbol is not defined
@@ -8903,8 +8801,6 @@ built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js :: it threw an object with 
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js (strict) :: it threw an object with no name: result1[expResult[p1]] !== true
 built-ins/Object/getOwnPropertyNames/non-object-argument-valid.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/getOwnPropertyNames/non-object-argument-valid.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/getOwnPropertyNames/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/getOwnPropertyNames/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/getOwnPropertyNames/proxy-invariant-absent-not-configurable-symbol-key.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/getOwnPropertyNames/proxy-invariant-absent-not-configurable-symbol-key.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/getOwnPropertyNames/proxy-invariant-duplicate-symbol-entry.js :: it threw ReferenceError: Symbol is not defined
@@ -8945,8 +8841,6 @@ built-ins/Object/getPrototypeOf/15.2.3.2-2-26.js :: it threw ReferenceError: Reg
 built-ins/Object/getPrototypeOf/15.2.3.2-2-26.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/getPrototypeOf/15.2.3.2-2-9.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/getPrototypeOf/15.2.3.2-2-9.js (strict) :: it threw ReferenceError: Date is not defined
-built-ins/Object/getPrototypeOf/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/getPrototypeOf/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/groupBy/callback-arg.js :: it threw TypeError: what was called is not a function
 built-ins/Object/groupBy/callback-arg.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Object/groupBy/callback-throws.js :: it threw an object with no name: Expected a undefined but got a TypeError
@@ -8973,8 +8867,6 @@ built-ins/Object/groupBy/string.js :: it threw TypeError: what was called is not
 built-ins/Object/groupBy/string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Object/groupBy/toPropertyKey.js :: it threw TypeError: what was called is not a function
 built-ins/Object/groupBy/toPropertyKey.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/hasOwn/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/hasOwn/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/hasOwn/symbol_own_property.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/hasOwn/symbol_own_property.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/hasOwn/symbol_property_toPrimitive.js :: it threw ReferenceError: Symbol is not defined
@@ -8993,8 +8885,6 @@ built-ins/Object/internals/DefineOwnProperty/consistent-writable-regexp-dollar1.
 built-ins/Object/internals/DefineOwnProperty/consistent-writable-regexp-dollar1.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Object/is-a-constructor.js :: it threw an object with no name: isConstructor(Object) must return true Expected SameValue(«false», «true») to be true
 built-ins/Object/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Object) must return true Expected SameValue(«false», «true») to be true
-built-ins/Object/is/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/is/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/is/not-same-value-x-y-symbol.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/is/not-same-value-x-y-symbol.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/is/same-value-x-y-symbol.js :: it threw ReferenceError: Symbol is not defined
@@ -9011,8 +8901,6 @@ built-ins/Object/isExtensible/15.2.3.13-2-20.js :: it threw ReferenceError: RegE
 built-ins/Object/isExtensible/15.2.3.13-2-20.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isExtensible/15.2.3.13-2-9.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/isExtensible/15.2.3.13-2-9.js (strict) :: it threw ReferenceError: Date is not defined
-built-ins/Object/isExtensible/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/isExtensible/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/isFrozen/15.2.3.12-3-15.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/isFrozen/15.2.3.12-3-15.js (strict) :: it threw ReferenceError: Date is not defined
 built-ins/Object/isFrozen/15.2.3.12-3-16.js :: it threw ReferenceError: Date is not defined
@@ -9023,8 +8911,6 @@ built-ins/Object/isFrozen/15.2.3.12-3-18.js :: it threw ReferenceError: RegExp i
 built-ins/Object/isFrozen/15.2.3.12-3-18.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isFrozen/15.2.3.12-3-27.js :: it threw ReferenceError: JSON is not defined
 built-ins/Object/isFrozen/15.2.3.12-3-27.js (strict) :: it threw ReferenceError: JSON is not defined
-built-ins/Object/isFrozen/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/isFrozen/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/isFrozen/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/isFrozen/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/isSealed/15.2.3.11-4-15.js :: it threw ReferenceError: Date is not defined
@@ -9037,14 +8923,10 @@ built-ins/Object/isSealed/15.2.3.11-4-18.js :: it threw ReferenceError: RegExp i
 built-ins/Object/isSealed/15.2.3.11-4-18.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isSealed/15.2.3.11-4-27.js :: it threw ReferenceError: JSON is not defined
 built-ins/Object/isSealed/15.2.3.11-4-27.js (strict) :: it threw ReferenceError: JSON is not defined
-built-ins/Object/isSealed/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/isSealed/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/isSealed/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/isSealed/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/keys/15.2.3.14-6-5.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/keys/15.2.3.14-6-5.js (strict) :: it threw ReferenceError: Date is not defined
-built-ins/Object/keys/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/keys/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/keys/order-after-define-property-with-function.js :: it threw an object with no name: Actual [a, length] and expected [length, a] should have the same contents.
 built-ins/Object/keys/order-after-define-property-with-function.js (strict) :: it threw an object with no name: Actual [a, length] and expected [length, a] should have the same contents.
 built-ins/Object/keys/property-traps-order-with-proxied-array.js :: it threw ReferenceError: Proxy is not defined
@@ -9065,8 +8947,6 @@ built-ins/Object/preventExtensions/15.2.3.10-3-9.js :: it threw ReferenceError: 
 built-ins/Object/preventExtensions/15.2.3.10-3-9.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/preventExtensions/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/preventExtensions/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/preventExtensions/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/preventExtensions/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/preventExtensions/symbol-object-contains-symbol-properties-non-strict.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/preventExtensions/symbol-object-contains-symbol-properties-strict.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/preventExtensions/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
@@ -9269,8 +9149,6 @@ built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js :
 built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/prototype/toString/get-symbol-tag-err.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/prototype/toString/get-symbol-tag-err.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/prototype/toString/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/toString/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/toString/proxy-array.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/proxy-array.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js :: it threw ReferenceError: Proxy is not defined
@@ -9309,8 +9187,6 @@ built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.p
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/seal/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/seal/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/seal/object-seal-o-is-a-date-object.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/seal/object-seal-o-is-a-date-object.js (strict) :: it threw ReferenceError: Date is not defined
 built-ins/Object/seal/object-seal-o-is-a-reg-exp-object.js :: it threw ReferenceError: RegExp is not defined
@@ -9383,8 +9259,6 @@ built-ins/Object/seal/symbol-object-contains-symbol-properties-non-strict.js :: 
 built-ins/Object/seal/symbol-object-contains-symbol-properties-strict.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/setPrototypeOf/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/setPrototypeOf/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/setPrototypeOf/o-not-obj.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/setPrototypeOf/o-not-obj.js (strict) :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/setPrototypeOf/proto-not-obj.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -9393,8 +9267,6 @@ built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy i
 built-ins/Object/setPrototypeOf/set-error.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/symbol_object-returns-fresh-symbol.js :: it threw ReferenceError: Symbol is not defined
 built-ins/Object/symbol_object-returns-fresh-symbol.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/Object/values/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/values/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/values/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/order-after-define-property.js :: it threw ReferenceError: Proxy is not defined
@@ -12555,14 +12427,8 @@ built-ins/String/S15.5.1.1_A1_T6.js :: it threw ReferenceError: eval is not defi
 built-ins/String/S15.5.1.1_A1_T6.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/String/S9.8_A1_T1.js :: it threw ReferenceError: eval is not defined
 built-ins/String/S9.8_A1_T1.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/String/fromCharCode/S15.5.3.2_A4.js :: it threw an object with no name: #1: __fcc__func = String.fromCharCode; var __obj = new __fcc__func(65,66,66,65) lead to throwing exception
-built-ins/String/fromCharCode/S15.5.3.2_A4.js (strict) :: it threw an object with no name: #1: __fcc__func = String.fromCharCode; var __obj = new __fcc__func(65,66,66,65) lead to throwing exception
-built-ins/String/fromCharCode/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/fromCharCode/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/fromCodePoint/argument-is-Symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/String/fromCodePoint/argument-is-Symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/String/fromCodePoint/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/fromCodePoint/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/is-a-constructor.js :: it threw an object with no name: isConstructor(String) must return true Expected SameValue(«false», «true») to be true
 built-ins/String/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(String) must return true Expected SameValue(«false», «true») to be true
 built-ins/String/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -13093,8 +12959,6 @@ built-ins/String/prototype/valueOf/non-generic.js :: it threw an object with no 
 built-ins/String/prototype/valueOf/non-generic.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/String/raw/nextkey-is-symbol-throws.js :: it threw ReferenceError: Symbol is not defined
 built-ins/String/raw/nextkey-is-symbol-throws.js (strict) :: it threw ReferenceError: Symbol is not defined
-built-ins/String/raw/not-a-constructor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/raw/not-a-constructor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/raw/returns-abrupt-from-substitution-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/String/raw/returns-abrupt-from-substitution-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/String/raw/template-length-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError

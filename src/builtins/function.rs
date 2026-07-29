@@ -91,6 +91,12 @@ pub fn bind(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     let bound = heap.new_bound_function(
         prototype,
         Bound {
+            // §10.4.1.3 step 2 — settled now, from what the target *is*, because that is when the
+            // specification asks. `Math.max.bind(null)` is not a constructor and never becomes one.
+            constructs: heap
+                .object(target)
+                .and_then(crate::heap::Object::call)
+                .is_some_and(crate::heap::Callable::constructs),
             target,
             this_value,
             arguments,
@@ -161,7 +167,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // §20.2.2 — the constructor, and the `prototype` that every function in the realm already
     // inherits from. Not writable, not enumerable and not configurable, for the reason
     // `Object.prototype` is not: everything callable points at it.
-    let function = heap.new_native_function(prototype, construct);
+    let function = heap.new_native_constructor(prototype, construct);
     crate::builtins::define_function_metadata(heap, function, "Function", 1);
     crate::builtins::define_fixed(heap, function, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(function));
