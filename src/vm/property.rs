@@ -77,6 +77,57 @@ impl Vm {
         PropertyKey::from_units(heap, &"length".encode_utf16().collect::<Vec<_>>())
     }
 
+    /// §7.3.25 `CopyDataProperties` — what a rest property collects.
+    ///
+    /// Own enumerable properties of `source` that `excluded` does not name, in the order
+    /// `[[OwnPropertyKeys]]` gives them, as a new ordinary object. Symbol keys are copied like any
+    /// other: §7.3.25 asks about enumerability and not about the kind of key, which is why
+    /// `{...rest}` carries a Symbol-keyed property across where `Object.keys` would not list it.
+    ///
+    /// A **get** per property, so a getter on the source runs here and what it answered is what
+    /// the rest object holds — the same reading `Object.assign` takes, and the reason the result
+    /// is values rather than accessors.
+    pub(crate) fn copy_rest(
+        &mut self,
+        source: Value,
+        excluded: &[Value],
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let built = heap.new_object(Some(self.realm.object_prototype()));
+        // §7.3.25 step 3's `undefined` and `null` need no arm of their own. The only caller is a
+        // pattern, and a pattern raises `RequireObjectCoercible` before it reads anything — so a
+        // guard here would be a branch no input could take, and `object_for` would refuse them
+        // anyway if one ever did.
+        let Value::Object(from) = self.object_for(source, heap)? else {
+            return Ok(Value::Object(built));
+        };
+        let mut refused = Vec::with_capacity(excluded.len());
+        for key in excluded {
+            refused.push(self.property_key(*key, heap)?);
+        }
+        for key in heap.own_property_keys(from) {
+            if refused.contains(&key) {
+                continue;
+            }
+            if !heap
+                .own_property(from, key)
+                .is_some_and(|property| property.enumerable)
+            {
+                continue;
+            }
+            let value = self.get_property_key(Value::Object(from), key, heap)?;
+            let descriptor = PropertyDescriptor {
+                value: Some(value),
+                writable: Some(true),
+                enumerable: Some(true),
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            };
+            heap.define_own_property(built, key, &descriptor);
+        }
+        Ok(Value::Object(built))
+    }
+
     /// `ToObject` (§7.1.18) — the object a primitive stands for.
     ///
     /// Named `object_for` rather than `to_object`: a `to_*` method that takes `self` by value

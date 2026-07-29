@@ -23015,6 +23015,8 @@ language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js :: it th
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/object/dstr/object-rest-proxy-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
+language/expressions/object/dstr/object-rest-proxy-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name should be an own property

@@ -116,6 +116,16 @@ pub enum Instruction {
     /// otherwise have its `done` read off that primitive's prototype as `undefined` — falsy — and
     /// the loop would never end. A check that turns a hang into an error.
     RequireObject,
+    /// §7.3.25 `CopyDataProperties` — a new object holding what a pattern did not name.
+    ///
+    /// Pops that many excluded keys and then the source, and pushes the object. The keys are
+    /// popped rather than named at compile time because a computed one is a value: `{[k]: v,
+    /// ...rest}` excludes whatever `k` came to, and evaluating `k` a second time to find out
+    /// would run it twice.
+    ///
+    /// Own *enumerable* properties only, and it **gets** each one — so a getter on the source runs
+    /// and its answer is what is copied, which is the same reading `Object.assign` takes.
+    CopyRest(u32),
     /// §7.1.2 `RequireObjectCoercible` — throw a **TypeError** for `undefined` or `null`, and
     /// leave anything else where it is.
     ///
@@ -514,6 +524,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::LoadWellKnown(_)
         | Instruction::RequireObject
         | Instruction::RequireCoercible
+        | Instruction::CopyRest(_)
         | Instruction::LoadVariable(_, _)
         | Instruction::StoreVariable(_, _)
         | Instruction::Uninitialise(_)

@@ -501,3 +501,118 @@ fn an_assignment_pattern_writes_to_references_and_not_only_to_names() {
         "1234"
     );
 }
+
+#[test]
+fn a_rest_property_collects_what_the_pattern_did_not_name() {
+    assert_eq!(
+        run("(function () { var {a, ...r} = {a: 1, b: 2, c: 3}; \
+             return a + ':' + Object.keys(r).join(','); })()"),
+        "1:b,c"
+    );
+    assert_eq!(
+        run("(function () { var {...r} = {a: 1}; return Object.keys(r).join(','); })()"),
+        "a"
+    );
+    assert_eq!(
+        run("(function () { var {a, ...r} = {a: 1}; return Object.keys(r).length; })()"),
+        "0"
+    );
+    assert_eq!(
+        run("(function () { var {a, ...r} = {a: 1, b: 2}; return r.a === undefined; })()"),
+        "true"
+    );
+    // …in an assignment pattern and a parameter too, and nested inside another pattern.
+    assert_eq!(
+        run("(function () { var a, r; ({a, ...r} = {a: 1, b: 2}); \
+             return a + ':' + Object.keys(r).join(','); })()"),
+        "1:b"
+    );
+    assert_eq!(
+        run(
+            "(function () { var o = {}; ({...o.rest} = {a: 1}); return Object.keys(o.rest).join(','); })()"
+        ),
+        "a"
+    );
+    assert_eq!(
+        run(
+            "(function ({a, ...r}) { return a + ':' + Object.keys(r).join(','); })({a: 1, b: 2, c: 3})"
+        ),
+        "1:b,c"
+    );
+    assert_eq!(
+        run(
+            "(function () { var {a: {b, ...inner}} = {a: {b: 1, c: 2}}; \
+             return b + ':' + Object.keys(inner).join(','); })()"
+        ),
+        "1:c"
+    );
+    // §7.3.25 — own *enumerable* properties, so a hidden one stays hidden…
+    assert_eq!(
+        run("(function () { var o = {a: 1}; \
+             Object.defineProperty(o, 'h', {value: 2, enumerable: false}); \
+             var {...r} = o; return Object.keys(r).join(','); })()"),
+        "a"
+    );
+    // …and a **get** per property, so a getter runs here and its answer is what lands. The rest
+    // object holds values, never accessors, however the source held them.
+    assert_eq!(
+        run(
+            "(function () { var o = {get g() { return 7; }, a: 1}; var {...r} = o; \
+             var d = Object.getOwnPropertyDescriptor(r, 'g'); \
+             return r.g + ',' + (typeof d.get); })()"
+        ),
+        "7,undefined"
+    );
+    // …and what it lands as is an ordinary property in every way, whatever it was on the source.
+    assert_eq!(
+        run(
+            "(function () { var {...r} = {a: 1};              var d = Object.getOwnPropertyDescriptor(r, 'a');              return d.writable + ',' + d.enumerable + ',' + d.configurable; })()"
+        ),
+        "true,true,true"
+    );
+    // A Symbol key is copied like any other: §7.3.25 asks about enumerability and not about the
+    // kind of key, which is why this carries across where `Object.keys` would not list it.
+    assert_eq!(
+        run(
+            "(function () { var s = Symbol('s'); var o = {a: 1}; o[s] = 2; \
+             var {a, ...r} = o; return r[s]; })()"
+        ),
+        "2"
+    );
+    // A computed key is evaluated **once**, which is the whole reason the keys are stashed rather
+    // than written out a second time for the exclusion list.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var f = function () { n++; return 'b'; }; \
+             var {[f()]: v, ...r} = {a: 1, b: 2}; return n + ':' + v; })()"
+        ),
+        "1:2"
+    );
+    assert_eq!(
+        run(
+            "(function () { var k = 'b'; var {[k]: v, ...r} = {a: 1, b: 2}; \
+             return v + ':' + Object.keys(r).join(','); })()"
+        ),
+        "2:a"
+    );
+    // The result is an ordinary object, and a primitive source is read through the object it
+    // stands for — `undefined` and `null` are refused before any of that.
+    assert_eq!(
+        run("(function () { var {a, ...r} = {a: 1, b: 2}; \
+             return Object.getPrototypeOf(r) === Object.prototype; })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { var {...r} = 'ab'; return Object.keys(r).join(','); })()"),
+        "0,1"
+    );
+    assert_eq!(
+        run("(function () { var {...r} = 5; return Object.keys(r).length; })()"),
+        "0"
+    );
+    assert_eq!(
+        run("(function () { try { var {...r} = null; return 'ok'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+}

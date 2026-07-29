@@ -133,6 +133,18 @@ impl Vm {
                     };
                     self.stack.push(Value::Symbol(symbol));
                 }
+                Instruction::CopyRest(count) => {
+                    let mut excluded = Vec::with_capacity(count as usize);
+                    for _ in 0..count {
+                        excluded.push(self.pop()?);
+                    }
+                    let source = self.pop()?;
+                    let copied = self.copy_rest(source, &excluded, heap);
+                    match self.settle(copied, heap, root, current, at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
                 Instruction::RequireCoercible => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     if matches!(value, Value::Undefined | Value::Null) {

@@ -268,22 +268,32 @@ impl Compiler<'_> {
         match binding {
             Binding::Identifier(name) => self.bind_name(&name.name, how),
             Binding::Pattern(BindingPattern::Object(pattern)) => {
-                if pattern.rest.is_some() {
-                    return Err(unsupported("a rest property in a binding pattern", span));
-                }
                 // §14.3.3.7 step 1 — `undefined` and `null` are refused before any property is
                 // read, which is why `var {} = null` throws despite reading nothing.
                 self.chunk.emit(Instruction::RequireCoercible);
-                for property in &pattern.properties {
+                let held = match pattern.rest.is_some() {
+                    true => self.stash_keys(pattern.properties.len()),
+                    false => Vec::new(),
+                };
+                for (at, property) in pattern.properties.iter().enumerate() {
                     self.chunk.emit(Instruction::Duplicate);
-                    self.property_key(&property.key)?;
+                    self.push_key(&property.key, held.get(at).copied())?;
                     self.chunk.emit(Instruction::GetProperty);
                     self.apply_default(property.value.default.as_deref())?;
                     self.destructure(&property.value.target, how, span)?;
                 }
-                // The source, which every property was read from and nothing wants now.
-                self.chunk.emit(Instruction::Pop);
-                Ok(())
+                match &pattern.rest {
+                    // §14.3.3 — the rest takes the source with it, since §7.3.25 needs it.
+                    Some(name) => {
+                        self.emit_rest(&held)?;
+                        self.bind_name(&name.name, how)
+                    }
+                    // Nothing wants the source now.
+                    None => {
+                        self.chunk.emit(Instruction::Pop);
+                        Ok(())
+                    }
+                }
             }
             Binding::Pattern(BindingPattern::Array(pattern)) => {
                 self.destructure_array(pattern, how, span)
@@ -331,22 +341,29 @@ impl Compiler<'_> {
     ) -> Result<(), CompileError> {
         match pattern {
             crate::ast::Pattern::Object(pattern) => {
-                if pattern.rest.is_some() {
-                    return Err(unsupported(
-                        "a rest property in an assignment pattern",
-                        span,
-                    ));
-                }
                 self.chunk.emit(Instruction::RequireCoercible);
-                for property in &pattern.properties {
+                let held = match pattern.rest.is_some() {
+                    true => self.stash_keys(pattern.properties.len()),
+                    false => Vec::new(),
+                };
+                for (at, property) in pattern.properties.iter().enumerate() {
                     self.chunk.emit(Instruction::Duplicate);
-                    self.property_key(&property.key)?;
+                    self.push_key(&property.key, held.get(at).copied())?;
                     self.chunk.emit(Instruction::GetProperty);
                     self.apply_default(property.value.default.as_deref())?;
                     self.assign_target(&property.value.target, span)?;
                 }
-                self.chunk.emit(Instruction::Pop);
-                Ok(())
+                match &pattern.rest {
+                    Some(target) => {
+                        self.emit_rest(&held)?;
+                        let target = AssignmentTarget::Simple((**target).clone());
+                        self.assign_target(&target, span)
+                    }
+                    None => {
+                        self.chunk.emit(Instruction::Pop);
+                        Ok(())
+                    }
+                }
             }
             crate::ast::Pattern::Array(pattern) => self.assign_array(pattern, span),
         }
@@ -642,6 +659,39 @@ impl Compiler<'_> {
         self.chunk.patch(ran_out)?;
         self.constant(Value::Undefined)?;
         self.chunk.patch(got)
+    }
+
+    /// Slots for a pattern's keys, when a rest property means they will be needed twice.
+    ///
+    /// Once to read the property, and once to tell §7.3.25 which keys not to copy. A *computed*
+    /// key is a value, so evaluating it a second time would run the expression twice — `{[f()]: v,
+    /// ...rest}` calls `f` once, and this is what makes that true. With no rest there is nothing
+    /// to stash and the keys are pushed where they are used.
+    fn stash_keys(&mut self, count: usize) -> Vec<u32> {
+        (0..count).map(|_| self.declare_hidden("key")).collect()
+    }
+
+    /// Push one property key, keeping a copy in `held` when the rest will want it back.
+    fn push_key(&mut self, key: &AstPropertyKey, held: Option<u32>) -> Result<(), CompileError> {
+        self.property_key(key)?;
+        let Some(slot) = held else {
+            return Ok(());
+        };
+        self.chunk.emit(Instruction::StoreVariable(0, slot));
+        Ok(())
+    }
+
+    /// §7.3.25 — turn the source on the stack into the object a rest property collects.
+    fn emit_rest(&mut self, held: &[u32]) -> Result<(), CompileError> {
+        for slot in held {
+            self.chunk.emit(Instruction::LoadVariable(0, *slot));
+        }
+        let count = u32::try_from(held.len()).map_err(|_| CompileError {
+            kind: crate::compile::ErrorKind::TooLong,
+            span: Span::new(0, 0),
+        })?;
+        self.chunk.emit(Instruction::CopyRest(count));
+        Ok(())
     }
 
     /// Push the key a binding property reads, computed or written down.
