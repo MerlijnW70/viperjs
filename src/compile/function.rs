@@ -189,27 +189,39 @@ fn compile_body(
     lexical: Lexical,
     span: Span,
 ) -> Result<Chunk, CompileError> {
-    if parameters.rest.is_some() {
-        return Err(unsupported("a rest parameter", span));
-    }
     let mut compiler = Compiler::new(heap);
     compiler.is_script = false;
     compiler.outer = outer;
     compiler.chunk.arrow = lexical == Lexical::Yes;
+    compiler.chunk.simple_parameters = parameters.is_simple();
 
     // §10.2.11 — the parameters are the first slots, in order, so an argument can be put in place
-    // without the callee being consulted. A default or a pattern would need code to run *inside*
-    // the callee before its body, which is a slice of its own.
+    // without the callee being consulted. A pattern would need the binding machinery destructuring
+    // brings, and is a slice of its own.
     for parameter in parameters.items.iter() {
-        if parameter.default.is_some() {
-            return Err(unsupported("a default parameter", span));
-        }
         let Binding::Identifier(name) = &parameter.target else {
             return Err(unsupported("a destructuring parameter", span));
         };
         compiler.declare(&name.name);
     }
     compiler.chunk.parameters = compiler.locals.len();
+    // §10.2.3 — `length` stops at the first parameter that has a default, and a rest parameter is
+    // not counted at all. It is what the function says it needs, which is not how many places it
+    // has to put things.
+    compiler.chunk.length = parameters
+        .items
+        .iter()
+        .position(|item| item.default.is_some())
+        .unwrap_or(parameters.items.len());
+    // §15.1 — the rest parameter is last and takes a slot of its own, which the *call* fills: the
+    // arguments past the named parameters are on the stack at entry and reachable from nowhere
+    // else, so building the array is the call's job and not the body's.
+    if let Some(rest) = &parameters.rest {
+        let Binding::Identifier(name) = rest.as_ref() else {
+            return Err(unsupported("a destructuring rest parameter", span));
+        };
+        compiler.chunk.rest = Some(compiler.declare(&name.name));
+    }
     // §10.2.11 steps 19 to 22 — the binding is made after the parameters and before the body, and
     // *not* when a parameter already took the name: `function f(arguments) { … }` has a parameter
     // called that and no arguments object at all.
@@ -225,6 +237,33 @@ fn compile_body(
     // and reading the body twice to save it is the more expensive of the two.
     if lexical == Lexical::No && compiler.resolve("arguments").is_none() {
         compiler.arguments_slot = Some(compiler.declare_shadowing("arguments"));
+    }
+
+    // §10.2.11 step 24 — the defaults run *inside* the callee, before the body and after the
+    // arguments object is made. So `arguments` holds what the call actually passed and a default
+    // that filled in for a missing one is nowhere in it, which is right and is only visible
+    // because the object is built first.
+    //
+    // Each is guarded by a comparison against `undefined` and not by a count of arguments:
+    // §10.2.11 applies the default when the parameter *is* `undefined`, so passing one explicitly
+    // takes it too. `f(undefined)` and `f()` agree, and that is the rule rather than a shortcut.
+    for (at, parameter) in parameters.items.iter().enumerate() {
+        let Some(default) = &parameter.default else {
+            continue;
+        };
+        let slot = u32::try_from(at).unwrap_or(u32::MAX);
+        compiler.chunk.emit(Instruction::LoadVariable(0, slot));
+        compiler.constant(Value::Undefined)?;
+        compiler
+            .chunk
+            .emit(Instruction::Binary(crate::ast::BinaryOperator::StrictEqual));
+        let given = compiler.chunk.emit_jump(Instruction::JumpIfFalse);
+        compiler.expression(default)?;
+        compiler.chunk.emit(Instruction::StoreVariable(0, slot));
+        // The store leaves its value behind, because an assignment is an expression. Here nothing
+        // wants it.
+        compiler.chunk.emit(Instruction::Pop);
+        compiler.chunk.patch(given)?;
     }
 
     match body {

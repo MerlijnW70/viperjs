@@ -22,6 +22,23 @@ pub struct Chunk {
     pub(super) constants: Vec<Value>,
     pub(super) locals: usize,
     pub(super) parameters: usize,
+    /// §10.2.3's `length` — the count *before* the first default or rest parameter.
+    ///
+    /// A second number because the two questions differ once a parameter list is not simple:
+    /// `function f(a, b = 1, c)` has three slots to fill and a `length` of 1. `length` is what a
+    /// caller is told to supply; `parameters` is how many places there are to put things.
+    pub(super) length: usize,
+    /// `IsSimpleParameterList` (§15.1.4) — whether every parameter is a plain name.
+    ///
+    /// Decides which arguments object §10.2.11 step 22 makes. A simple list gets the *mapped* one,
+    /// where an index and its parameter are one variable; anything else gets an unmapped one,
+    /// because a parameter initialised by running code is not a slot an index could stand for.
+    pub(super) simple_parameters: bool,
+    /// The slot a rest parameter's array goes in, if the list has one.
+    ///
+    /// Filled by the call rather than by the body, on the same terms as the arguments object: the
+    /// arguments past the last named parameter are on the stack at entry and nowhere else.
+    pub(super) rest: Option<u32>,
     /// Whether this body is an arrow's — §15.3.
     ///
     /// An arrow has no `this` of its own, no `prototype`, and no `[[Construct]]`. All three come
@@ -335,11 +352,29 @@ impl Chunk {
 
     /// How many named parameters the function this code belongs to declares.
     ///
-    /// §10.2.3's `length`: the count *before* the first default or rest parameter, which is why
-    /// `function f(a, b = 1, c)` has a length of 1. Neither of those exists yet, so for now it is
-    /// simply how many there are.
+    /// How many slots the parameters occupy — every named one, the rest parameter aside.
+    ///
+    /// What a call fills from its arguments. Not `length`: see [`Chunk::length`].
     pub fn parameters(&self) -> usize {
         self.parameters
+    }
+
+    /// §10.2.3's `length` — the count before the first default or rest parameter.
+    ///
+    /// `function f(a, b = 1, c)` has a length of 1, and a reader who expects 3 is reading the
+    /// number of *slots*. What this reports is how many arguments the function says it needs.
+    pub fn length(&self) -> usize {
+        self.length
+    }
+
+    /// Whether the parameter list is simple — §15.1.4, and which arguments object to build.
+    pub fn simple_parameters(&self) -> bool {
+        self.simple_parameters
+    }
+
+    /// The slot a rest parameter's array goes in, if there is one.
+    pub fn rest(&self) -> Option<u32> {
+        self.rest
     }
 
     /// The body of the nested function at this index, if there is one.

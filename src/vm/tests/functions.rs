@@ -168,9 +168,8 @@ fn what_functions_cannot_do_yet_says_which_and_where() {
     let cases = [
         ("function* g() {}", "an async function or a generator"),
         ("async function f() {}", "an async function or a generator"),
-        ("function f(a = 1) {}", "a default parameter"),
-        ("function f(...rest) {}", "a rest parameter"),
         ("function f([a]) {}", "a destructuring parameter"),
+        ("function f(...[a]) {}", "a destructuring rest parameter"),
         ("function f() {} f(...[1]);", "a spread argument"),
         ("var f = function () {}; f?.();", "optional chaining"),
     ];

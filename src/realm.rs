@@ -53,6 +53,12 @@ pub struct Realm {
     /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
     /// property on the constructor would be the script's to move; this is not.
     well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
+    /// %ThrowTypeError% — §10.2.4.1, the function that exists only to refuse.
+    ///
+    /// One per realm and shared by every use, which the specification is explicit about: the same
+    /// function object poisons `callee` on every unmapped arguments object, so a script comparing
+    /// two of them finds them equal.
+    thrower: ObjectId,
     /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
     ///
     /// An array rather than six fields because nothing here treats one differently from another:
@@ -122,6 +128,10 @@ impl Realm {
         let boolean_prototype = heap.new_object(Some(object_prototype));
         let number_prototype = heap.new_object(Some(object_prototype));
         let symbol_prototype = heap.new_object(Some(object_prototype));
+        // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
+        // rather than in a builtin module because it is not reachable by name from any script:
+        // its only appearances are as an accessor pair the specification puts in place.
+        let thrower = heap.new_native_function(function_prototype, refuse);
         // §6.1.5.1 — each is described as `Symbol.iterator` and so on, which is what makes
         // `String(Symbol.iterator)` answer `"Symbol(Symbol.iterator)"`.
         let well_known = crate::builtins::WELL_KNOWN.map(|name| {
@@ -185,6 +195,7 @@ impl Realm {
             string_prototype,
             symbol_prototype,
             well_known,
+            thrower,
             native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
@@ -251,6 +262,11 @@ impl Realm {
     /// What every Symbol finds its methods on.
     pub fn symbol_prototype(&self) -> ObjectId {
         self.symbol_prototype
+    }
+
+    /// %ThrowTypeError% — the function that throws whatever it is asked.
+    pub fn thrower(&self) -> ObjectId {
+        self.thrower
     }
 
     /// The well-known Symbol at this position in [`crate::builtins::WELL_KNOWN`].
@@ -338,6 +354,22 @@ fn define(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
     // The object was made here and is extensible with nothing in the way, so the rules cannot
     // refuse this. Ignoring the answer rather than asserting on it keeps the constructor total.
     let _ = heap.define_own_property(object, key, &descriptor);
+}
+
+/// %ThrowTypeError% (§10.2.4.1) — throws whatever it is asked, and answers nothing.
+///
+/// The specification's own name for it is a percent-delimited intrinsic, because no script can
+/// name it: it appears only where a clause puts it, as the getter and setter of a property that
+/// exists to be unreadable. `arguments.callee` on a function with a default parameter is the one
+/// place praxis reaches for it so far.
+fn refuse(
+    _vm: &mut crate::vm::Vm,
+    _heap: &mut Heap,
+    _call: &crate::heap::NativeCall<'_>,
+) -> crate::value::Completion<crate::value::Value> {
+    Err(crate::value::Abrupt::type_error(
+        "this property may not be read or written",
+    ))
 }
 
 #[cfg(test)]

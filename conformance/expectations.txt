@@ -1030,6 +1030,8 @@ annexB/language/global-code/if-stmt-else-decl-global-skip-early-err-try.js :: it
 annexB/language/global-code/if-stmt-else-decl-global-skip-early-err.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/statements/for-in/nonstrict-initializer.js :: it did not parse: a `for`-`in` or `for`-`of` binding may not have an initializer
+annexB/language/statements/function/default-parameters-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/statements/function/default-parameters-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/if/emulated-undefined.js :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/if/emulated-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/labeled/function-declaration.js :: it did not parse: a declaration may not stand where only a statement may
@@ -1446,12 +1448,8 @@ built-ins/Array/prototype/every/15.4.4.16-1-5.js :: it threw TypeError: an Array
 built-ins/Array/prototype/every/15.4.4.16-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/every/15.4.4.16-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/every/15.4.4.16-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-1-9.js :: it threw an object with no name: Array.prototype.every.call(obj, callbackfn) Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/every/15.4.4.16-1-9.js (strict) :: it threw an object with no name: Array.prototype.every.call(obj, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-2-18.js :: it threw ReferenceError: parseInt is not defined
 built-ins/Array/prototype/every/15.4.4.16-2-18.js (strict) :: it threw ReferenceError: parseInt is not defined
-built-ins/Array/prototype/every/15.4.4.16-2-19.js :: it threw an object with no name: Array.prototype.every.call(fun, callbackfn2) Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/every/15.4.4.16-2-19.js (strict) :: it threw an object with no name: Array.prototype.every.call(fun, callbackfn2) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/every/15.4.4.16-5-15.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/every/15.4.4.16-5-15.js (strict) :: it threw ReferenceError: Date is not defined
@@ -1489,10 +1487,6 @@ built-ins/Array/prototype/filter/15.4.4.20-1-5.js :: it threw TypeError: an Arra
 built-ins/Array/prototype/filter/15.4.4.20-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/filter/15.4.4.20-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/filter/15.4.4.20-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-1-9.js :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «11») to be true
-built-ins/Array/prototype/filter/15.4.4.20-1-9.js (strict) :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «11») to be true
-built-ins/Array/prototype/filter/15.4.4.20-2-19.js :: it threw an object with no name: newArr.length Expected SameValue(«0», «2») to be true
-built-ins/Array/prototype/filter/15.4.4.20-2-19.js (strict) :: it threw an object with no name: newArr.length Expected SameValue(«0», «2») to be true
 built-ins/Array/prototype/filter/15.4.4.20-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/filter/15.4.4.20-5-15.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/filter/15.4.4.20-5-15.js (strict) :: it threw ReferenceError: Date is not defined
@@ -1643,10 +1637,6 @@ built-ins/Array/prototype/forEach/15.4.4.18-1-5.js :: it threw TypeError: an Arr
 built-ins/Array/prototype/forEach/15.4.4.18-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/forEach/15.4.4.18-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/forEach/15.4.4.18-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-1-9.js :: it threw an object with no name: result !== true
-built-ins/Array/prototype/forEach/15.4.4.18-1-9.js (strict) :: it threw an object with no name: result !== true
-built-ins/Array/prototype/forEach/15.4.4.18-2-19.js :: it threw an object with no name: result !== true
-built-ins/Array/prototype/forEach/15.4.4.18-2-19.js (strict) :: it threw an object with no name: result !== true
 built-ins/Array/prototype/forEach/15.4.4.18-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/forEach/15.4.4.18-5-15.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-5-15.js (strict) :: it threw ReferenceError: Date is not defined
@@ -1678,10 +1668,6 @@ built-ins/Array/prototype/indexOf/15.4.4.14-1-5.js :: it threw TypeError: an Arr
 built-ins/Array/prototype/indexOf/15.4.4.14-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/indexOf/15.4.4.14-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/indexOf/15.4.4.14-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/15.4.4.14-1-9.js :: it threw an object with no name: Array.prototype.indexOf.call(obj, true) Expected SameValue(«-1», «1») to be true
-built-ins/Array/prototype/indexOf/15.4.4.14-1-9.js (strict) :: it threw an object with no name: Array.prototype.indexOf.call(obj, true) Expected SameValue(«-1», «1») to be true
-built-ins/Array/prototype/indexOf/15.4.4.14-2-19.js :: it threw an object with no name: Array.prototype.indexOf.call(obj, obj[1]) Expected SameValue(«-1», «1») to be true
-built-ins/Array/prototype/indexOf/15.4.4.14-2-19.js (strict) :: it threw an object with no name: Array.prototype.indexOf.call(obj, obj[1]) Expected SameValue(«-1», «1») to be true
 built-ins/Array/prototype/indexOf/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/indexOf/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.js :: it threw ReferenceError: Proxy is not defined
@@ -1718,10 +1704,6 @@ built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-5.js :: it threw ReferenceErro
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-5.js (strict) :: it threw ReferenceError: isNaN is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-9.js :: it threw an object with no name: Array.prototype.lastIndexOf.call(obj, true) Expected SameValue(«-1», «1») to be true
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-9.js (strict) :: it threw an object with no name: Array.prototype.lastIndexOf.call(obj, true) Expected SameValue(«-1», «1») to be true
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-19.js :: it threw an object with no name: Array.prototype.lastIndexOf.call(obj, obj[1]) Expected SameValue(«-1», «1») to be true
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-19.js (strict) :: it threw an object with no name: Array.prototype.lastIndexOf.call(obj, obj[1]) Expected SameValue(«-1», «1») to be true
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-8.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-8.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js :: it threw ReferenceError: RegExp is not defined
@@ -1746,12 +1728,8 @@ built-ins/Array/prototype/map/15.4.4.19-1-5.js :: it threw TypeError: an Array.p
 built-ins/Array/prototype/map/15.4.4.19-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/map/15.4.4.19-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/map/15.4.4.19-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-1-9.js :: it threw an object with no name: testResult[0] Expected SameValue(«undefined», «true») to be true
-built-ins/Array/prototype/map/15.4.4.19-1-9.js (strict) :: it threw an object with no name: testResult[0] Expected SameValue(«undefined», «true») to be true
 built-ins/Array/prototype/map/15.4.4.19-2-18.js :: it threw ReferenceError: parseInt is not defined
 built-ins/Array/prototype/map/15.4.4.19-2-18.js (strict) :: it threw ReferenceError: parseInt is not defined
-built-ins/Array/prototype/map/15.4.4.19-2-19.js :: it threw an object with no name: testResult.length Expected SameValue(«0», «2») to be true
-built-ins/Array/prototype/map/15.4.4.19-2-19.js (strict) :: it threw an object with no name: testResult.length Expected SameValue(«0», «2») to be true
 built-ins/Array/prototype/map/15.4.4.19-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/map/15.4.4.19-5-15.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/map/15.4.4.19-5-15.js (strict) :: it threw ReferenceError: Date is not defined
@@ -1813,14 +1791,6 @@ built-ins/Array/prototype/reduce/15.4.4.21-1-5.js :: it threw TypeError: an Arra
 built-ins/Array/prototype/reduce/15.4.4.21-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/15.4.4.21-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/15.4.4.21-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/15.4.4.21-1-9.js :: it threw an object with no name: Array.prototype.reduce.call(obj, callbackfn, 1) !== true
-built-ins/Array/prototype/reduce/15.4.4.21-1-9.js (strict) :: it threw an object with no name: Array.prototype.reduce.call(obj, callbackfn, 1) !== true
-built-ins/Array/prototype/reduce/15.4.4.21-2-19.js :: it threw an object with no name: Array.prototype.reduce.call(fun, callbackfn, 1) Expected SameValue(«1», «true») to be true
-built-ins/Array/prototype/reduce/15.4.4.21-2-19.js (strict) :: it threw an object with no name: Array.prototype.reduce.call(fun, callbackfn, 1) Expected SameValue(«1», «true») to be true
-built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-29.js :: it threw TypeError: reduce of an empty array with no initial value
-built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-29.js (strict) :: it threw TypeError: reduce of an empty array with no initial value
-built-ins/Array/prototype/reduce/15.4.4.21-9-c-i-29.js :: it threw an object with no name: testResult !== true
-built-ins/Array/prototype/reduce/15.4.4.21-9-c-i-29.js (strict) :: it threw an object with no name: testResult !== true
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-31.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-31.js (strict) :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-32.js :: it threw ReferenceError: RegExp is not defined
@@ -1846,14 +1816,6 @@ built-ins/Array/prototype/reduceRight/15.4.4.22-1-5.js :: it threw TypeError: an
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-9.js :: it threw an object with no name: Array.prototype.reduceRight.call(obj, callbackfn, 11) !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-9.js (strict) :: it threw an object with no name: Array.prototype.reduceRight.call(obj, callbackfn, 11) !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-2-19.js :: it threw an object with no name: Array.prototype.reduceRight.call(fun, callbackfn, 11) !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-2-19.js (strict) :: it threw an object with no name: Array.prototype.reduceRight.call(fun, callbackfn, 11) !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-8-b-iii-1-29.js :: it threw TypeError: reduce of an empty array with no initial value
-built-ins/Array/prototype/reduceRight/15.4.4.22-8-b-iii-1-29.js (strict) :: it threw TypeError: reduce of an empty array with no initial value
-built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-i-29.js :: it threw an object with no name: testResult !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-i-29.js (strict) :: it threw an object with no name: testResult !== true
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-31.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-31.js (strict) :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-32.js :: it threw ReferenceError: RegExp is not defined
@@ -1871,8 +1833,6 @@ built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an o
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/shift/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/shift/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/shift/throws-when-this-value-length-is-writable-false.js :: it threw an object with no name: Array.prototype.shift.call(function() {}) Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/shift/throws-when-this-value-length-is-writable-false.js (strict) :: it threw an object with no name: Array.prototype.shift.call(function() {}) Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/slice/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/slice/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/slice/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
@@ -1919,12 +1879,8 @@ built-ins/Array/prototype/some/15.4.4.17-1-5.js :: it threw TypeError: an Array.
 built-ins/Array/prototype/some/15.4.4.17-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/some/15.4.4.17-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/some/15.4.4.17-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-1-9.js :: it threw an object with no name: Array.prototype.some.call(obj, callbackfn) !== true
-built-ins/Array/prototype/some/15.4.4.17-1-9.js (strict) :: it threw an object with no name: Array.prototype.some.call(obj, callbackfn) !== true
 built-ins/Array/prototype/some/15.4.4.17-2-18.js :: it threw ReferenceError: parseInt is not defined
 built-ins/Array/prototype/some/15.4.4.17-2-18.js (strict) :: it threw ReferenceError: parseInt is not defined
-built-ins/Array/prototype/some/15.4.4.17-2-19.js :: it threw an object with no name: Array.prototype.some.call(fun, callbackfn1) !== true
-built-ins/Array/prototype/some/15.4.4.17-2-19.js (strict) :: it threw an object with no name: Array.prototype.some.call(fun, callbackfn1) !== true
 built-ins/Array/prototype/some/15.4.4.17-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/some/15.4.4.17-5-15.js :: it threw ReferenceError: Date is not defined
 built-ins/Array/prototype/some/15.4.4.17-5-15.js (strict) :: it threw ReferenceError: Date is not defined
@@ -6184,14 +6140,8 @@ built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw Referenc
 built-ins/Function/prototype/bind/get-fn-realm-recursive.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Function/prototype/bind/get-fn-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Function/prototype/bind/get-fn-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/Function/prototype/bind/instance-length-default-value.js :: it threw TypeError: this property cannot be redefined
-built-ins/Function/prototype/bind/instance-length-default-value.js (strict) :: it threw TypeError: this property cannot be redefined
-built-ins/Function/prototype/bind/instance-length-exceeds-int32.js :: it threw TypeError: this property cannot be redefined
-built-ins/Function/prototype/bind/instance-length-exceeds-int32.js (strict) :: it threw TypeError: this property cannot be redefined
-built-ins/Function/prototype/bind/instance-length-remaining-args.js :: it threw an object with no name: 0/2 Expected SameValue(«0», «2») to be true
-built-ins/Function/prototype/bind/instance-length-remaining-args.js (strict) :: it threw an object with no name: 0/2 Expected SameValue(«0», «2») to be true
-built-ins/Function/prototype/bind/instance-length-tointeger.js :: it threw TypeError: this property cannot be redefined
-built-ins/Function/prototype/bind/instance-length-tointeger.js (strict) :: it threw TypeError: this property cannot be redefined
+built-ins/Function/prototype/bind/instance-length-tointeger.js :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
+built-ins/Function/prototype/bind/instance-length-tointeger.js (strict) :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/instance-name-error.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -7276,6 +7226,7 @@ built-ins/Map/prototype/getOrInsertComputed/append-value-if-key-is-not-present-d
 built-ins/Map/prototype/getOrInsertComputed/append-value-if-key-is-not-present-different-key-types.js (strict) :: it threw ReferenceError: Map is not defined
 built-ins/Map/prototype/getOrInsertComputed/callbackfn-throws.js :: it threw ReferenceError: Map is not defined
 built-ins/Map/prototype/getOrInsertComputed/callbackfn-throws.js (strict) :: it threw ReferenceError: Map is not defined
+built-ins/Map/prototype/getOrInsertComputed/check-callback-fn-args.js (strict) :: it threw ReferenceError: Map is not defined
 built-ins/Map/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js :: it threw ReferenceError: Map is not defined
 built-ins/Map/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js (strict) :: it threw ReferenceError: Map is not defined
 built-ins/Map/prototype/getOrInsertComputed/different-types-function-callbackfn-does-not-throw.js :: it threw ReferenceError: Map is not defined
@@ -8733,10 +8684,10 @@ built-ins/Object/isSealed/proxy-no-ownkeys-returned-keys-order.js :: it threw Re
 built-ins/Object/isSealed/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/keys/15.2.3.14-6-5.js :: it threw ReferenceError: Date is not defined
 built-ins/Object/keys/15.2.3.14-6-5.js (strict) :: it threw ReferenceError: Date is not defined
-built-ins/Object/keys/order-after-define-property-with-function.js :: it threw an object with no name: Actual [a, length] and expected [length, a] should have the same contents.
-built-ins/Object/keys/order-after-define-property-with-function.js (strict) :: it threw an object with no name: Actual [a, length] and expected [length, a] should have the same contents.
 built-ins/Object/keys/property-traps-order-with-proxied-array.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/keys/property-traps-order-with-proxied-array.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/keys/proxy-keys.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/keys/proxy-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/keys/proxy-non-enumerable-prop-invariant-1.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/keys/proxy-non-enumerable-prop-invariant-1.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/keys/proxy-non-enumerable-prop-invariant-2.js :: it threw ReferenceError: Proxy is not defined
@@ -10197,6 +10148,8 @@ built-ins/Reflect/Symbol.toStringTag.js :: it threw ReferenceError: Reflect is n
 built-ins/Reflect/Symbol.toStringTag.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/apply/apply.js :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/apply/apply.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Reflect/apply/arguments-list-is-not-array-like.js :: it threw an object with no name: `Reflect.apply(fn, null, {get length() {throw new Test262Error();}})` throws a Test262Error exception Expected a undefined but got a ReferenceError
 built-ins/Reflect/apply/arguments-list-is-not-array-like.js (strict) :: it threw an object with no name: `Reflect.apply(fn, null, {get length() {throw new Test262Error();}})` throws a Test262Error exception Expected a undefined but got a ReferenceError
 built-ins/Reflect/apply/call-target.js :: it threw ReferenceError: Reflect is not defined
@@ -16127,6 +16080,8 @@ built-ins/ThrowTypeError/prototype.js :: it threw TypeError: undefined and null 
 built-ins/ThrowTypeError/prototype.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/ThrowTypeError/unique-per-realm-function-proto.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/ThrowTypeError/unique-per-realm-function-proto.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/ThrowTypeError/unique-per-realm-non-simple.js :: it threw an object with no name: callee.get Expected SameValue(«undefined», «[object Function]») to be true
+built-ins/ThrowTypeError/unique-per-realm-non-simple.js (strict) :: it threw an object with no name: callee.get Expected SameValue(«undefined», «[object Function]») to be true
 built-ins/TypedArray/Symbol.species/length.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/Symbol.species/length.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArray/Symbol.species/name.js :: it threw ReferenceError: Float64Array is not defined
@@ -20837,6 +20792,18 @@ language/directive-prologue/get-accsr-runtime.js :: it threw an object with no n
 language/directive-prologue/set-accsr-inside-func-expr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/directive-prologue/set-accsr-not-first-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/directive-prologue/set-accsr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/eval-code/direct/arrow-fn-a-following-parameter-is-named-arguments-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/arrow-fn-a-following-parameter-is-named-arguments-arrow-func-declare-arguments-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/arrow-fn-a-preceding-parameter-is-named-arguments-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/arrow-fn-a-preceding-parameter-is-named-arguments-arrow-func-declare-arguments-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-body-cntns-arguments-lex-bind-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-body-cntns-arguments-lex-bind-arrow-func-declare-arguments-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-declare-arguments-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/block-decl-eval-source-is-strict-nostrict.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/block-decl-eval-source-is-strict-onlystrict.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/block-decl-onlystrict.js (strict) :: it threw ReferenceError: eval is not defined
@@ -20862,6 +20829,30 @@ language/eval-code/direct/cptn-nrml-expr-prim.js :: it threw ReferenceError: eva
 language/eval-code/direct/cptn-nrml-expr-prim.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/cptn-thrw-prim.js :: it threw an object with no name: #1.2: throw 1 must throw SyntaxError. Actual: ReferenceError: eval is not defined
 language/eval-code/direct/cptn-thrw-prim.js (strict) :: it threw an object with no name: #1.2: throw 1 must throw SyntaxError. Actual: ReferenceError: eval is not defined
+language/eval-code/direct/func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-decl-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/func-expr-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/direct/global-env-rec-catch.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec-catch.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec-eval.js :: it threw ReferenceError: eval is not defined
@@ -20876,6 +20867,18 @@ language/eval-code/direct/lex-env-distinct-let.js :: it threw ReferenceError: ev
 language/eval-code/direct/lex-env-distinct-let.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/lex-env-heritage.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/lex-env-heritage.js (strict) :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/meth-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/eval-code/direct/meth-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/eval-code/direct/new.target-arrow.js :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
 language/eval-code/direct/new.target-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
 language/eval-code/direct/new.target-fn.js :: it threw ReferenceError: eval is not defined
@@ -21098,14 +21101,18 @@ language/expressions/arrow-function/arrow/binding-tests-2.js :: it threw Referen
 language/expressions/arrow-function/arrow/binding-tests-3.js :: it threw ReferenceError: eval is not defined
 language/expressions/arrow-function/arrow/capturing-closure-variables-1.js :: it threw ReferenceError: eval is not defined
 language/expressions/arrow-function/arrow/capturing-closure-variables-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/arrow-function/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/arrow-function/name.js :: it threw an object with no name: name should be an own property
 language/expressions/arrow-function/name.js (strict) :: it threw an object with no name: name should be an own property
-language/expressions/arrow-function/params-trailing-comma-multiple.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/expressions/arrow-function/params-trailing-comma-multiple.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/expressions/arrow-function/params-trailing-comma-single.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
-language/expressions/arrow-function/params-trailing-comma-single.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
 language/expressions/arrow-function/scope-body-lex-distinct.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
+language/expressions/arrow-function/scope-param-elem-var-open.js :: it threw ReferenceError: eval is not defined
 language/expressions/arrow-function/strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-rest.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/assignment/11.13.1-1-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/11.13.1-2-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/11.13.1-3-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -21149,10 +21156,6 @@ language/expressions/call/11.2.3-3_5.js :: it threw an object with no name: Expe
 language/expressions/call/11.2.3-3_5.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/expressions/call/S11.2.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/call/S11.2.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/call/S11.2.4_A1.1_T2.js :: it threw an object with no name: #3: function f_arg(x,y) {return arguments;} f_arg.length === 2. Actual: undefined
-language/expressions/call/S11.2.4_A1.1_T2.js (strict) :: it threw an object with no name: #3: function f_arg(x,y) {return arguments;} f_arg.length === 2. Actual: undefined
-language/expressions/call/S11.2.4_A1.2_T2.js :: it threw an object with no name: #6: f_arg = function(x,y) {return arguments;} f_arg.length === 2. Actual: undefined
-language/expressions/call/S11.2.4_A1.2_T2.js (strict) :: it threw an object with no name: #6: f_arg = function(x,y) {return arguments;} f_arg.length === 2. Actual: undefined
 language/expressions/call/eval-first-arg.js :: it threw ReferenceError: eval is not defined
 language/expressions/call/eval-first-arg.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/call/eval-no-args.js :: it threw ReferenceError: eval is not defined
@@ -21597,6 +21600,11 @@ language/expressions/equals/to-prim-hint.js :: it threw an object with no name: 
 language/expressions/equals/to-prim-hint.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 language/expressions/exponentiation/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
 language/expressions/exponentiation/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
+language/expressions/function/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/name-eval-stricteval.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -21609,13 +21617,13 @@ language/expressions/function/named-strict-error-reassign-fn-name-in-body-in-arr
 language/expressions/function/named-strict-error-reassign-fn-name-in-body-in-eval.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/expressions/function/named-strict-error-reassign-fn-name-in-body.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/function/param-eval-stricteval.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/expressions/function/params-trailing-comma-multiple.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/expressions/function/params-trailing-comma-multiple.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/expressions/function/params-trailing-comma-single.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
-language/expressions/function/params-trailing-comma-single.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
 language/expressions/function/scope-body-lex-distinct.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/function/scope-name-var-close.js :: it threw an object with no name: Expected SameValue(«"outside"», «[object Function]») to be true
 language/expressions/function/scope-name-var-close.js (strict) :: it threw an object with no name: Expected SameValue(«"outside"», «[object Function]») to be true
+language/expressions/function/scope-name-var-open-non-strict.js :: it threw an object with no name: inner binding value (from parameters) Expected SameValue(«null», «[object Function]») to be true
+language/expressions/function/scope-name-var-open-strict.js (strict) :: it threw an object with no name: inner binding value (from parameters) Expected SameValue(«null», «[object Function]») to be true
+language/expressions/function/scope-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
+language/expressions/function/scope-param-elem-var-open.js :: it threw ReferenceError: eval is not defined
 language/expressions/generators/eval-body-proto-realm.js :: it threw ReferenceError: $262 is not defined
 language/expressions/generators/eval-body-proto-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 language/expressions/greater-than-or-equal/S11.8.4_A1.js :: it threw ReferenceError: eval is not defined
@@ -21800,15 +21808,14 @@ language/expressions/object/fn-name-fn.js :: it threw an object with no name: na
 language/expressions/object/fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/method-definition/fn-name-fn.js :: it threw an object with no name: name should be an own property
 language/expressions/object/method-definition/fn-name-fn.js (strict) :: it threw an object with no name: name should be an own property
-language/expressions/object/method-definition/meth-params-trailing-comma-multiple.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/expressions/object/method-definition/meth-params-trailing-comma-multiple.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/expressions/object/method-definition/meth-params-trailing-comma-single.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
-language/expressions/object/method-definition/meth-params-trailing-comma-single.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
+language/expressions/object/method-definition/meth-dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/object/method-definition/meth-dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/object/method-definition/meth-dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/object/method-definition/meth-dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/object/method-definition/meth-eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/method-definition/name-invoke-ctor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/object/method-definition/name-invoke-ctor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/object/method-definition/name-invoke-fn-strict.js :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
-language/expressions/object/method-definition/name-length.js :: it threw an object with no name: length should be an own property
-language/expressions/object/method-definition/name-length.js (strict) :: it threw an object with no name: length should be an own property
 language/expressions/object/method-definition/name-name-prop-string.js :: it threw an object with no name: name should be an own property
 language/expressions/object/method-definition/name-name-prop-string.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/method-definition/name-name-prop-symbol.js :: it threw an object with no name: name should be an own property
@@ -21817,6 +21824,8 @@ language/expressions/object/method-definition/name-prototype-prop.js :: it threw
 language/expressions/object/method-definition/name-prototype-prop.js (strict) :: it threw an object with no name: Functions declared as methods do not define a 'prototype' property
 language/expressions/object/scope-getter-body-lex-distinc.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/scope-meth-body-lex-distinct.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/object/scope-meth-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
+language/expressions/object/scope-meth-param-elem-var-open.js :: it threw ReferenceError: eval is not defined
 language/expressions/object/scope-setter-body-lex-distinc.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/setter-param-arguments-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/object/setter-param-eval-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -22591,8 +22600,6 @@ language/statements/function/13.2-13-s.js :: it threw TypeError: building a func
 language/statements/function/13.2-13-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-14-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-14-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-15-1.js :: it threw an object with no name: length should be an own property
-language/statements/function/13.2-15-1.js (strict) :: it threw an object with no name: length should be an own property
 language/statements/function/13.2-15-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-15-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-16-s.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -22623,8 +22630,6 @@ language/statements/function/S13.2.1_A5_T1.js (strict) :: it threw TypeError: wh
 language/statements/function/S13.2.2_A14.js :: it threw an object with no name: #1: var obj = new FACTORY() does not lead to throwing exception
 language/statements/function/S13.2.2_A8_T3.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/S13.2.2_A8_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/S13.2_A3.js :: it threw an object with no name: #1: __func.length === 0. Actual: __func.length ===undefined
-language/statements/function/S13.2_A3.js (strict) :: it threw an object with no name: #1: __func.length === 0. Actual: __func.length ===undefined
 language/statements/function/S13_A14_T1.js :: it threw ReferenceError: eval is not defined
 language/statements/function/S13_A3_T1.js :: it threw ReferenceError: __exp__func is not defined
 language/statements/function/S13_A3_T1.js (strict) :: it threw ReferenceError: __exp__func is not defined
@@ -22632,6 +22637,11 @@ language/statements/function/S14_A2.js :: it threw ReferenceError: f is not defi
 language/statements/function/S14_A2.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/function/cptn-decl.js :: it threw ReferenceError: eval is not defined
 language/statements/function/cptn-decl.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/function/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/function/name-eval-stricteval.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -22640,11 +22650,9 @@ language/statements/function/name-unicode.js (strict) :: it threw ReferenceError
 language/statements/function/name.js :: it threw an object with no name: name should be an own property
 language/statements/function/name.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/function/param-eval-stricteval.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/function/params-trailing-comma-multiple.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/statements/function/params-trailing-comma-multiple.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «2») to be true
-language/statements/function/params-trailing-comma-single.js :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
-language/statements/function/params-trailing-comma-single.js (strict) :: it threw an object with no name: length is properly set Expected SameValue(«undefined», «1») to be true
 language/statements/function/scope-body-lex-distinct.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/function/scope-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
+language/statements/function/scope-param-elem-var-open.js :: it threw ReferenceError: eval is not defined
 language/statements/generators/cptn-decl.js :: it threw ReferenceError: eval is not defined
 language/statements/generators/cptn-decl.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/if/S12.5_A2.js :: it threw ReferenceError: eval is not defined

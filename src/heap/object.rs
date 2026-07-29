@@ -33,6 +33,7 @@
 use crate::compile::Chunk;
 use crate::heap::PropertyKind;
 use crate::heap::arguments;
+use crate::heap::arguments::Incoming;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::string_object;
 use crate::heap::{
@@ -763,44 +764,70 @@ impl Heap {
     /// The values are the arguments the call was given, all of them; the map joins the first
     /// `parameters` of them to the slots of `environment`. `callee` is the function itself, which
     /// §10.4.4.4 step 15 gives a mapped arguments object and an unmapped one refuses to.
-    pub fn new_arguments(
-        &mut self,
-        prototype: ObjectId,
-        environment: EnvironmentId,
-        values: &[Value],
-        parameters: usize,
-        callee: ObjectId,
-    ) -> ObjectId {
+    pub fn new_arguments(&mut self, prototype: ObjectId, call: &Incoming<'_>) -> ObjectId {
+        let &Incoming {
+            environment,
+            values,
+            parameters,
+            callee,
+            thrower,
+            mapped,
+        } = call;
         let object = self.new_object(Some(prototype));
         for (at, value) in values.iter().enumerate() {
             let index = u32::try_from(at).unwrap_or(u32::MAX);
             let key = self.index_key(index);
             self.define_own_property(object, key, &PropertyDescriptor::data(*value));
         }
-        // §10.4.4.4 steps 14 and 15 — `length` and `callee` are ordinary §17 properties: writable
-        // and configurable, and never enumerable, so `for`-`in` over `arguments` walks the
-        // indices and nothing else.
-        for (name, value) in [
-            ("length", Value::Number(values.len() as f64)),
-            ("callee", Value::Object(callee)),
-        ] {
-            let key = PropertyKey::from_units(self, &name.encode_utf16().collect::<Vec<_>>());
-            self.define_own_property(
-                object,
-                key,
-                &PropertyDescriptor {
-                    enumerable: Some(false),
-                    ..PropertyDescriptor::data(value)
-                },
-            );
-        }
+        // §10.4.4.4 step 14 — `length` is an ordinary §17 property: writable and configurable,
+        // and never enumerable, so `for`-`in` over `arguments` walks the indices and nothing else.
+        let key = PropertyKey::from_units(self, &"length".encode_utf16().collect::<Vec<_>>());
+        self.define_own_property(
+            object,
+            key,
+            &PropertyDescriptor {
+                enumerable: Some(false),
+                ..PropertyDescriptor::data(Value::Number(values.len() as f64))
+            },
+        );
+        let key = PropertyKey::from_units(self, &"callee".encode_utf16().collect::<Vec<_>>());
+        let callee = match mapped {
+            // §10.4.4.4 step 15 — the function itself, on a mapped object.
+            true => PropertyDescriptor {
+                enumerable: Some(false),
+                ..PropertyDescriptor::data(Value::Object(callee))
+            },
+            // §10.4.4.6 step 6 — and on an *unmapped* one it is poisoned: an accessor pair of
+            // %ThrowTypeError% for both halves, so reading it or writing it throws. That is a
+            // deliberate refusal rather than an omission — a function with a default parameter is
+            // ES2015 code, and `arguments.callee` is the idiom ES2015 was closing off.
+            false => PropertyDescriptor {
+                getter: Some(Value::Object(thrower)),
+                setter: Some(Value::Object(thrower)),
+                enumerable: Some(false),
+                configurable: Some(false),
+                ..PropertyDescriptor::EMPTY
+            },
+        };
+        self.define_own_property(object, key, &callee);
+        // §10.2.11 step 22 — the map is only made for a *simple* parameter list. Anything else
+        // gets §10.4.4.4's unmapped object: a parameter that a default filled in is not a slot an
+        // index could stand for, and joining them would make `arguments[0] = 1` reach past the
+        // code that decided what the parameter was.
+        //
         // Joined *after* the properties are made, because making them goes through the define
         // below — and a define on a joined index writes through to a parameter instead.
+        //
+        // The slot is present either way, and that is not a detail: §20.1.3.6 step 8 tags an
+        // object `Arguments` because it *has* a `[[ParameterMap]]`, not because the map joins
+        // anything. An unmapped object gets one that joins nothing, which is what §10.4.4.6's
+        // "set to undefined" behaves as.
+        let joined = match mapped {
+            true => parameters.min(values.len()),
+            false => 0,
+        };
         if let Some(found) = self.object_mut(object) {
-            found.arguments = Some(Box::new(ArgumentsMap::new(
-                environment,
-                parameters.min(values.len()),
-            )));
+            found.arguments = Some(Box::new(ArgumentsMap::new(environment, joined)));
         }
         object
     }

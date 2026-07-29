@@ -19,6 +19,7 @@
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
 //! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
 //! - `object_state` — §20.1.2's whole-object statics, and the coercion they start with.
+//! - `parameters` — §15.1, and the three things a list that is not simple decides.
 //! - `strings` — §22.1 and §10.4.3, and the object with a property per character.
 //! - `symbols` — §6.1.5 and §20.4, and the one primitive whose identity is itself.
 //! - `string_methods` — the rest of §22.1.3, and the four rules for taking a piece of a string.
@@ -45,6 +46,7 @@ mod math;
 mod object_state;
 mod objects;
 mod objects_builtin;
+mod parameters;
 mod statements;
 mod string_methods;
 mod strings;

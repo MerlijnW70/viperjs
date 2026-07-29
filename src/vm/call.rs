@@ -168,15 +168,43 @@ impl Vm {
             let index = u32::try_from(offset).unwrap_or(u32::MAX);
             heap.set_variable(environment, index, argument);
         }
+        // §15.1 — a rest parameter takes every argument past the named ones, as an ordinary
+        // Array. Built here because this is the only place they exist: the body sees slots, and
+        // the arguments beyond the last slot are on the stack and nowhere else.
+        if let Some(slot) = body.rest() {
+            let from = callee_at + 1 + body.parameters().min(count);
+            let extra: Vec<Value> =
+                self.stack[from.min(self.stack.len())..callee_at + 1 + count].to_vec();
+            let array = heap.new_array(self.realm.array_prototype(), 0);
+            for (at, value) in extra.iter().enumerate() {
+                let index = heap.index_key(u32::try_from(at).unwrap_or(u32::MAX));
+                heap.define_own_property(
+                    array,
+                    index,
+                    &crate::heap::PropertyDescriptor::data(*value),
+                );
+            }
+            heap.set_variable(environment, slot, Value::Object(array));
+        }
         // §10.2.11 step 22 `CreateMappedArgumentsObject`, and only when the body reads the name.
         // The values are every argument the call was given, and the map joins the first
         // `parameters` of them to the slots filled just above — which is what makes
         // `arguments[0]` and the first parameter one variable rather than two with equal values.
+        // A list that is not simple gets the unmapped object instead; see [`Heap::new_arguments`].
         if let Some(slot) = body.arguments() {
             let values: Vec<Value> = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
             let prototype = self.realm.object_prototype();
-            let arguments =
-                heap.new_arguments(prototype, environment, &values, body.parameters(), object);
+            let arguments = heap.new_arguments(
+                prototype,
+                &crate::heap::Incoming {
+                    environment,
+                    values: &values,
+                    parameters: body.parameters(),
+                    callee: object,
+                    thrower: self.realm.thrower(),
+                    mapped: body.simple_parameters(),
+                },
+            );
             heap.set_variable(environment, slot, Value::Object(arguments));
         }
         self.stack.truncate(receiver_at);

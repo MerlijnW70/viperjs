@@ -310,6 +310,24 @@ impl Vm {
                         self.environment,
                         lexical_this,
                     );
+                    // §20.2.4.1 — `length` is what the function says it needs, which stops at the
+                    // first default and never counts a rest parameter. Not writable and not
+                    // enumerable, and *configurable*, which is what lets a decorator replace it.
+                    let key = crate::heap::PropertyKey::from_units(
+                        heap,
+                        &"length".encode_utf16().collect::<Vec<_>>(),
+                    );
+                    heap.define_own_property(
+                        object,
+                        key,
+                        &crate::heap::PropertyDescriptor {
+                            value: Some(Value::Number(body.length() as f64)),
+                            writable: Some(false),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                    );
                     // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
                     // object, and that object gets a `constructor` back. The pair is what makes
                     // `new f() instanceof f` true, and it is made eagerly because a function may

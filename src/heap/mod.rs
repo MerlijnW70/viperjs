@@ -47,7 +47,7 @@ mod property;
 mod string_object;
 mod symbol;
 
-pub use self::arguments::ArgumentsMap;
+pub use self::arguments::{ArgumentsMap, Incoming};
 pub use self::callable::{Bound, Callable, Native, NativeCall};
 pub use self::symbol::{Symbol, SymbolId};
 

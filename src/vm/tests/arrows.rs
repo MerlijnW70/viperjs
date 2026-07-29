@@ -159,13 +159,12 @@ fn an_arrows_parameters_and_variables_belong_to_the_call() {
 #[test]
 fn the_arrow_forms_that_are_not_built_yet_are_refused_rather_than_guessed() {
     // Each of these has semantics the engine does not have, and a refusal is the only answer that
-    // is not a wrong one. §15.9's async arrow needs a job queue; the three parameter forms need
-    // code to run inside the callee before its body.
+    // is not a wrong one. §15.9's async arrow needs a job queue; the parameter forms left here
+    // need the binding machinery destructuring brings.
     for (source, what) in [
         ("var f = async x => x;", "an async arrow function"),
-        ("var f = (...a) => a;", "a rest parameter"),
-        ("var f = (a = 1) => a;", "a default parameter"),
         ("var f = ([a]) => a;", "a destructuring parameter"),
+        ("var f = (...[a]) => a;", "a destructuring rest parameter"),
     ] {
         let script = crate::parser::parse_script(source).expect("the source parses"); // the test is about the refusal
         let mut heap = Heap::new();

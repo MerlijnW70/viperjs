@@ -27,7 +27,29 @@
 //! default, rest and destructuring parameters are refused. Every arguments object it can build is
 //! a mapped one, so there is one path here rather than two.
 
-use crate::heap::{EnvironmentId, Heap, PropertyKey};
+use crate::heap::{EnvironmentId, Heap, ObjectId, PropertyKey};
+use crate::value::Value;
+
+/// What a call knows that its arguments object needs — §10.4.4.4 and §10.4.4.6's inputs.
+///
+/// A struct rather than six more parameters, because six of them in a row is a call whose
+/// arguments can be silently swapped. Two are `ObjectId`s and two are `bool`s: the compiler could
+/// not tell `callee` from `thrower`, nor `mapped` from anything else.
+#[derive(Debug, Clone, Copy)]
+pub struct Incoming<'a> {
+    /// The call's environment, where the parameters live.
+    pub environment: EnvironmentId,
+    /// Every argument the call was given, in order.
+    pub values: &'a [Value],
+    /// How many named parameters the function has — how far the map can reach.
+    pub parameters: usize,
+    /// The function being called, which a mapped object's `callee` names.
+    pub callee: ObjectId,
+    /// %ThrowTypeError%, which an unmapped object's `callee` is poisoned with.
+    pub thrower: ObjectId,
+    /// Whether §15.1.4 calls the parameter list simple, and so whether to join the map.
+    pub mapped: bool,
+}
 
 /// Which parameter each argument index is the same variable as — §10.4.4's parameter map.
 #[derive(Debug, Clone)]
