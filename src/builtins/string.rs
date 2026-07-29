@@ -18,7 +18,7 @@
 //! answers a unit and not a character, `length` counts units, and a surrogate pair is two of
 //! everything. That is observable and required: `"😀".length` is `2`.
 
-use super::{define_function_metadata, define_method, define_value};
+use super::{define_function_metadata, define_method, define_value, string_edit, string_index};
 use crate::heap::{Heap, NativeCall, Object, ObjectId, StringId};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
@@ -33,20 +33,48 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, prototype, "constructor", Value::Object(string));
     define_value(heap, global, "String", Value::Object(string));
 
-    define_method(heap, realm, string, "fromCharCode", 1, from_char_code);
-
     for (name, length, native) in [
-        ("toString", 0, string_to_string as crate::heap::Native),
-        ("valueOf", 0, value_of),
-        ("charAt", 1, char_at),
-        ("charCodeAt", 1, char_code_at),
-        ("indexOf", 1, index_of),
-        ("lastIndexOf", 1, last_index_of),
-        ("concat", 1, concat),
-        ("slice", 2, slice),
-        ("substring", 2, substring),
+        ("fromCharCode", 1, from_char_code as crate::heap::Native),
+        ("fromCodePoint", 1, from_code_point),
+        ("raw", 1, raw),
     ] {
+        define_method(heap, realm, string, name, length, native);
+    }
+
+    let own: [(&str, u32, crate::heap::Native); 6] = [
+        ("toString", 0, string_to_string),
+        ("valueOf", 0, value_of),
+        ("toLowerCase", 0, to_lower_case),
+        ("toUpperCase", 0, to_upper_case),
+        ("toLocaleLowerCase", 0, to_lower_case),
+        ("toLocaleUpperCase", 0, to_upper_case),
+    ];
+    for (name, length, native) in own
+        .into_iter()
+        .chain(string_index::METHODS)
+        .chain(string_edit::METHODS)
+    {
         define_method(heap, realm, prototype, name, length, native);
+    }
+    // B.2.2.14 and B.2.2.15 — the same function object under a second name, not a second function.
+    for (alias, of) in string_edit::ALIASES {
+        let Some(function) = read(heap, prototype, of) else {
+            continue;
+        };
+        define_value(heap, prototype, alias, function);
+    }
+}
+
+/// The value of a property just installed, for giving it a second name.
+///
+/// Ignores a miss rather than asserting: installation is total, and a name that is not there yet
+/// means an alias for a method this build does not have — which is a table that needs correcting,
+/// not a reason for a realm to fail to come up.
+fn read(heap: &mut Heap, object: ObjectId, name: &str) -> Option<Value> {
+    let key = super::key(heap, name);
+    match heap.own_property(object, key)?.kind {
+        crate::heap::PropertyKind::Data { value, .. } => Some(value),
+        crate::heap::PropertyKind::Accessor { .. } => None,
     }
 }
 
@@ -131,7 +159,11 @@ fn value_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 ///
 /// The order matters and is observable: `null` is refused before the argument is converted, so
 /// `String.prototype.indexOf.call(null, {toString: f})` never calls `f`.
-fn characters(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Vec<u16>> {
+pub(super) fn characters(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Vec<u16>> {
     if matches!(call.this_value, Value::Undefined | Value::Null) {
         return Err(Abrupt::type_error(
             "this method cannot be called on undefined or null",
@@ -141,33 +173,8 @@ fn characters(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     Ok(heap.string(data).unwrap_or(&[]).to_vec())
 }
 
-/// §22.1.3.1 `String.prototype.charAt(pos)`.
-///
-/// A position outside the string is the *empty* string, not `undefined` — unlike `s[i]`, which is
-/// the property read and answers `undefined`. The two look interchangeable and are not.
-fn char_at(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let units = characters(vm, heap, call)?;
-    let position = to_integer_or_infinity(vm.to_number(call.argument(0), heap)?);
-    let Some(unit) = at(&units, position) else {
-        return Ok(Value::String(heap.intern(&[])));
-    };
-    Ok(Value::String(heap.intern(&[unit])))
-}
-
-/// §22.1.3.2 `String.prototype.charCodeAt(pos)`.
-///
-/// NaN outside the string, which is the one place a string method answers NaN rather than
-/// `undefined` or `-1`. §22.1.3.2 step 5 says so and every other choice would be a guess.
-fn char_code_at(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let units = characters(vm, heap, call)?;
-    let position = to_integer_or_infinity(vm.to_number(call.argument(0), heap)?);
-    Ok(Value::Number(
-        at(&units, position).map_or(f64::NAN, f64::from),
-    ))
-}
-
 /// The unit at a position that may be any number at all, including an infinite one.
-fn at(units: &[u16], position: f64) -> Option<u16> {
+pub(super) fn at(units: &[u16], position: f64) -> Option<u16> {
     // A cast from `f64` saturates at both ends: a position past the last unit lands on `usize::MAX`
     // and `get` refuses it, so only the low end needs a comparison. Written as `>= 0.0` rather than
     // `< 0.0` negated because that is also the test a NaN fails, and a NaN cast to a `usize` would
@@ -178,74 +185,15 @@ fn at(units: &[u16], position: f64) -> Option<u16> {
 }
 
 /// §7.1.5 `ToIntegerOrInfinity` — truncation towards zero, with NaN as zero.
-fn to_integer_or_infinity(number: f64) -> f64 {
+pub(super) fn to_integer_or_infinity(number: f64) -> f64 {
     if number.is_nan() {
         return 0.0;
     }
     number.trunc()
 }
 
-/// §22.1.3.9 `String.prototype.indexOf(searchString[, position])`.
-///
-/// An empty needle is found at the clamped position rather than not found, which is why
-/// `"abc".indexOf("")` is `0` and `"abc".indexOf("", 10)` is `3`. Falls out of the search below
-/// rather than being a special case, because an empty slice matches at once.
-fn index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let units = characters(vm, heap, call)?;
-    let needle = argument_string(vm, heap, call, 0)?;
-    let start = to_integer_or_infinity(vm.to_number(call.argument(1), heap)?);
-    let from = clamp(start, units.len());
-    Ok(Value::Number(search(
-        &units,
-        &needle,
-        from..=units.len(),
-        false,
-    )))
-}
-
-/// §22.1.3.10 `String.prototype.lastIndexOf(searchString[, position])`.
-///
-/// The position argument is `ToNumber` and *not* `ToIntegerOrInfinity` first, because a NaN there
-/// means "the end of the string" rather than zero — step 5 tests for NaN before truncating. So
-/// `"aa".lastIndexOf("a", undefined)` is `1` while `"aa".indexOf("a", undefined)` is `0`.
-fn last_index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let units = characters(vm, heap, call)?;
-    let needle = argument_string(vm, heap, call, 0)?;
-    let asked = vm.to_number(call.argument(1), heap)?;
-    let end = match asked.is_nan() {
-        true => units.len(),
-        false => clamp(to_integer_or_infinity(asked), units.len()),
-    };
-    Ok(Value::Number(search(&units, &needle, 0..=end, true)))
-}
-
-/// Where `needle` sits in `units`, searching only starts inside `range`.
-///
-/// One function for both directions because the two differ in nothing but which match they keep,
-/// and written twice one of the two boundary rules would eventually be fixed in only one of them.
-fn search(
-    units: &[u16],
-    needle: &[u16],
-    range: std::ops::RangeInclusive<usize>,
-    last: bool,
-) -> f64 {
-    let mut found = -1.0;
-    for start in range {
-        if units.len() - start < needle.len() {
-            break;
-        }
-        if units[start..start + needle.len()] == *needle {
-            found = start as f64;
-            if !last {
-                break;
-            }
-        }
-    }
-    found
-}
-
 /// A position argument turned into an offset inside a string of `length` units.
-fn clamp(position: f64, length: usize) -> usize {
+pub(super) fn clamp(position: f64, length: usize) -> usize {
     // `max` first, because it answers the *other* operand for a NaN and so folds §7.1.5's "NaN is
     // zero" into the same expression. Then the saturating cast handles an infinity, and `min` the
     // upper end. Three rules, no branches — and nothing here a test could walk without reaching a
@@ -254,7 +202,7 @@ fn clamp(position: f64, length: usize) -> usize {
 }
 
 /// The `ToString` of one argument, as units.
-fn argument_string(
+pub(super) fn argument_string(
     vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
@@ -264,13 +212,31 @@ fn argument_string(
     Ok(heap.string(id).unwrap_or(&[]).to_vec())
 }
 
-/// §22.1.3.4 `String.prototype.concat(...strings)`.
-fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let mut units = characters(vm, heap, call)?;
-    // Converted one at a time and in order, because each conversion can run a `toString` that sees
-    // what the earlier ones did — so collecting them all first would be a different program.
-    for at in 0..call.arguments.len() {
-        units.extend(argument_string(vm, heap, call, at)?);
+/// A `slice`-style index: negative counts back from the end, and everything is clamped.
+pub(super) fn relative(position: f64, length: usize) -> usize {
+    let position = to_integer_or_infinity(position);
+    match position < 0.0 {
+        true => clamp(position + length as f64, length),
+        false => clamp(position, length),
+    }
+}
+
+/// §22.1.2.2 `String.fromCodePoint(...codePoints)`.
+///
+/// Each argument must be an integer in `[0, 0x10FFFF]` — a fraction, a negative, or anything past
+/// the last code point is a **RangeError**. That is the whole difference from `fromCharCode`, which
+/// takes any number at all and wraps it: this one builds *code points*, and there is no code point
+/// to build from `1.5`.
+fn from_code_point(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let mut units = Vec::with_capacity(call.arguments.len());
+    for argument in call.arguments {
+        let number = vm.to_number(*argument, heap)?;
+        let Some(point) = code_point_of(number) else {
+            return Err(Abrupt::range_error(
+                "a code point must be an integer from 0 to 0x10FFFF",
+            ));
+        };
+        encode(point, &mut units);
     }
     let Some(id) = heap.new_string_checked(units) else {
         return Err(Abrupt::range_error(
@@ -280,50 +246,142 @@ fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
     Ok(Value::String(id))
 }
 
-/// §22.1.3.25 `String.prototype.slice(start, end)`.
+/// The code point a number names, if it names one — §22.1.2.2 steps 5.b to 5.d.
 ///
-/// Negative arguments count from the end, and a range that ends before it starts is empty rather
-/// than reversed. That is the whole difference from `substring`, which swaps them instead.
-fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let units = characters(vm, heap, call)?;
-    let from = relative(vm.to_number(call.argument(0), heap)?, units.len());
-    let to = match call.argument(1) {
-        Value::Undefined => units.len(),
-        value => relative(vm.to_number(value, heap)?, units.len()),
-    };
-    let taken = units.get(from..to.max(from)).unwrap_or(&[]).to_vec();
-    Ok(Value::String(heap.intern(&taken)))
+/// Refuses a fraction, a negative, and anything past `U+10FFFF`, and accepts everything else —
+/// including a lone surrogate, which is a code point that Rust's `char` cannot hold.
+/// `String.fromCodePoint(0xD800)` is a one-unit string and not an error, so this answers a `u32`
+/// and [`encode`] does the part `char::encode_utf16` would otherwise have done.
+pub(super) fn code_point_of(number: f64) -> Option<u32> {
+    if number.trunc() != number || !(0.0..=1_114_111.0).contains(&number) {
+        return None;
+    }
+    Some(number as u32)
 }
 
-/// §22.1.3.24 `String.prototype.substring(start, end)`.
+/// Append a code point to `units` as UTF-16 — one unit, or a surrogate pair.
 ///
-/// Clamps rather than counting from the end, and then puts the smaller first: `"abcd".substring(3,
-/// 1)` is `"bc"`. §22.1.3.24 step 7 does the swap outright, and it is the reason this cannot share
-/// its body with `slice`.
-fn substring(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let units = characters(vm, heap, call)?;
-    let first = clamp(
-        to_integer_or_infinity(vm.to_number(call.argument(0), heap)?),
-        units.len(),
-    );
-    let second = match call.argument(1) {
-        Value::Undefined => units.len(),
-        value => clamp(
-            to_integer_or_infinity(vm.to_number(value, heap)?),
-            units.len(),
-        ),
+/// Written out rather than deferred to `char::encode_utf16`, because half of what this is asked to
+/// encode is a surrogate that is already a code unit and has no `char`.
+fn encode(point: u32, units: &mut Vec<u16>) {
+    let Some(above) = point.checked_sub(0x10000) else {
+        // Below the astral planes, which includes the surrogates themselves — §11.1.1 lets a String
+        // hold one, and this is the only way one can be put there deliberately.
+        units.push(point as u16);
+        return;
     };
-    let (from, to) = (first.min(second), first.max(second));
-    let taken = units.get(from..to).unwrap_or(&[]).to_vec();
-    Ok(Value::String(heap.intern(&taken)))
+    units.push(0xD800 + (above >> 10) as u16);
+    units.push(0xDC00 + (above & 0x3FF) as u16);
 }
 
-/// A `slice`-style index: negative counts back from the end, and everything is clamped.
-fn relative(position: f64, length: usize) -> usize {
-    let position = to_integer_or_infinity(position);
-    match position < 0.0 {
-        true => clamp(position + length as f64, length),
-        false => clamp(position, length),
+/// §22.1.2.4 `String.raw(template, ...substitutions)`.
+///
+/// Reads `template.raw` as an array-like and joins its elements with the substitutions between
+/// them, which is what makes it work on a hand-made object and not only on a tagged template. There
+/// is one more raw piece than there are substitutions, so the last piece has nothing after it.
+fn raw(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let template = vm.object_for(call.argument(0), heap)?;
+    let raw_key = super::key(heap, "raw");
+    let pieces = vm.get_property_key(template, raw_key, heap)?;
+    let pieces = vm.object_for(pieces, heap)?;
+    let length_key = super::key(heap, "length");
+    let length = vm.get_property_key(pieces, length_key, heap)?;
+    // §22.1.2.4 step 4 is `ToLength`, which clamps rather than refusing — and clamps a NaN to
+    // zero, which is why this is not `f64::clamp`. The one already written for the Array methods,
+    // because a second copy is a second place for that NaN rule to be got wrong.
+    let count = super::array_methods::to_length(vm.to_number(length, heap)?);
+    let mut units: Vec<u16> = Vec::new();
+    for at in 0..count {
+        let key = super::array_methods::index_key(heap, at);
+        let piece = vm.get_property_key(pieces, key, heap)?;
+        let piece = vm.to_string(piece, heap)?;
+        units.extend_from_slice(heap.string(piece).unwrap_or(&[]));
+        // The substitutions go *between* the pieces, so the last one is not followed by anything —
+        // step 8.e stops one short rather than the loop doing.
+        if at + 1 == count {
+            break;
+        }
+        let Some(value) = call.arguments.get(at as usize + 1) else {
+            continue;
+        };
+        let filled = vm.to_string(*value, heap)?;
+        units.extend_from_slice(heap.string(filled).unwrap_or(&[]));
+    }
+    let Some(id) = heap.new_string_checked(units) else {
+        return Err(Abrupt::range_error(
+            "the resulting string would be too long",
+        ));
+    };
+    Ok(Value::String(id))
+}
+
+/// §22.1.3.30 `String.prototype.toLowerCase`, and §22.1.3.26 `toLocaleLowerCase` with it.
+fn to_lower_case(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    recased(vm, heap, call, false)
+}
+
+/// §22.1.3.28 `String.prototype.toUpperCase`, and §22.1.3.27 `toLocaleUpperCase` with it.
+fn to_upper_case(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    recased(vm, heap, call, true)
+}
+
+/// §22.1.3.29 `ToLowerCase`/`ToUpperCase` — the Unicode Default Case Conversion.
+///
+/// Not a per-unit table. The mapping is defined over code *points* and is not one-to-one: `ß`
+/// uppercases to `SS`, and `İ` lowercases to two code points. So the units are decoded, mapped,
+/// and encoded again, and the result may be longer than what went in.
+///
+/// The locale-sensitive variants share this. §22.1.3.26 permits an implementation with no locale
+/// data to answer the locale-independent mapping, and praxis has none — so `toLocaleUpperCase` is
+/// `toUpperCase` under a second name rather than a second, subtly different answer.
+fn recased(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    upwards: bool,
+) -> Completion<Value> {
+    let units = characters(vm, heap, call)?;
+    let mut built: Vec<u16> = Vec::with_capacity(units.len());
+    let mut encoded = [0u16; 2];
+    for point in char::decode_utf16(units.iter().copied()) {
+        // A lone surrogate has no case and no `char` — it is copied through, which is what keeps
+        // `"\ud800".toUpperCase().length` at one rather than replacing it with U+FFFD.
+        let Ok(point) = point else {
+            built.push(point.unwrap_err().unpaired_surrogate());
+            continue;
+        };
+        let mapped = match upwards {
+            true => Cased::Up(point.to_uppercase()),
+            false => Cased::Down(point.to_lowercase()),
+        };
+        for point in mapped {
+            built.extend_from_slice(point.encode_utf16(&mut encoded));
+        }
+    }
+    let Some(id) = heap.new_string_checked(built) else {
+        return Err(Abrupt::range_error(
+            "the resulting string would be too long",
+        ));
+    };
+    Ok(Value::String(id))
+}
+
+/// One code point's case mapping, either way — the two have different types and the same shape.
+enum Cased {
+    /// What §22.1.3.28 maps a code point to.
+    Up(std::char::ToUppercase),
+    /// What §22.1.3.30 maps it to.
+    Down(std::char::ToLowercase),
+}
+
+impl Iterator for Cased {
+    type Item = char;
+
+    fn next(&mut self) -> Option<char> {
+        match self {
+            Self::Up(points) => points.next(),
+            Self::Down(points) => points.next(),
+        }
     }
 }
 

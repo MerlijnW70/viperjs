@@ -18,6 +18,7 @@
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
 //! - `strings` — §22.1 and §10.4.3, and the object with a property per character.
+//! - `string_methods` — the rest of §22.1.3, and the four rules for taking a piece of a string.
 //! - `arguments` — §10.4.4, and the map that makes an index and a parameter one variable.
 //! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
 //! - `for_in` — §14.7.5's enumeration, and the shadowing that decides what it visits.
@@ -40,6 +41,7 @@ mod math;
 mod objects;
 mod objects_builtin;
 mod statements;
+mod string_methods;
 mod strings;
 mod values;
 mod wrapper;

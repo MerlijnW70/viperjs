@@ -95,6 +95,19 @@ use std::collections::HashMap;
 /// small enough that the allocation itself is not the next way to fall over.
 pub const MAX_STRING_LENGTH: usize = (1 << 28) - 1;
 
+/// Whether a String of this many code units is one that may exist — DR-0012's cap.
+///
+/// The same number [`Heap::new_string_checked`] enforces, asked *before* anything is built. A
+/// caller about to compute a length has to be able to find out whether the answer could exist, and
+/// finding out by trying it is exactly what DR-0002 forbids.
+///
+/// Compared in `f64` because that is what the callers are working in: a length that has not been
+/// built yet is a product of two numbers and may be far past what a `usize` holds, and narrowing it
+/// first would turn "an exabyte" into some small number that fits.
+pub fn fits_in_a_string(units: f64) -> bool {
+    units <= MAX_STRING_LENGTH as f64
+}
+
 /// Whether a String of `left` units followed by `right` more is one that may exist — DR-0012.
 ///
 /// Separated from [`Heap::concat`] so that the decision can be *asked* at any size while joining
@@ -341,6 +354,28 @@ impl Heap {
     /// live values, which is the same number until something sweeps.
     pub fn string_count(&self) -> usize {
         self.strings.iter().filter(|slot| slot.is_some()).count()
+    }
+}
+
+#[cfg(test)]
+mod cap {
+    use super::{MAX_STRING_LENGTH, fits_in_a_string};
+
+    #[test]
+    fn the_longest_string_that_may_exist_is_the_cap_itself() {
+        // The boundary, from both sides. Asked rather than walked: proving it by building a String
+        // this long would cost half a gigabyte, and a limit nobody can afford to test is a limit
+        // nobody has checked.
+        assert!(fits_in_a_string(MAX_STRING_LENGTH as f64));
+        assert!(fits_in_a_string(MAX_STRING_LENGTH as f64 - 1.0));
+        assert!(!fits_in_a_string(MAX_STRING_LENGTH as f64 + 1.0));
+        assert!(fits_in_a_string(0.0));
+        // The sizes the callers actually arrive with, none of which a `usize` would hold.
+        assert!(!fits_in_a_string(1e18));
+        assert!(!fits_in_a_string(f64::INFINITY));
+        // A NaN fits nothing: every comparison against it is false, and answering `false` is what
+        // a caller that cannot build a length wants anyway.
+        assert!(!fits_in_a_string(f64::NAN));
     }
 }
 

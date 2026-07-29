@@ -51,6 +51,27 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     Ok(Value::Object(array))
 }
 
+/// A dense Array holding exactly these values — `CreateArrayFromList` (§7.3.18).
+///
+/// The array a built-in hands back when it has computed a list rather than been given one. Its
+/// elements are ordinary in every way, which is what §7.3.18 means by an array "whose elements are
+/// the elements of list".
+pub(super) fn from_values(vm: &Vm, heap: &mut Heap, values: &[Value]) -> Completion<Value> {
+    let array = heap.new_array(vm.realm().array_prototype(), 0);
+    for (at, value) in values.iter().enumerate() {
+        let key = key(heap, &at.to_string());
+        let descriptor = PropertyDescriptor {
+            value: Some(*value),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(array, key, &descriptor);
+    }
+    Ok(Value::Object(array))
+}
+
 /// §23.1.2.2 `Array.isArray`.
 ///
 /// The only way to ask. `instanceof Array` answers a different question — it walks a prototype

@@ -23,6 +23,8 @@ pub mod function;
 mod math;
 pub mod object;
 mod string;
+mod string_edit;
+mod string_index;
 mod wrapper;
 
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
