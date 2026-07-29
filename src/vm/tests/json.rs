@@ -161,12 +161,10 @@ fn the_replacer_and_the_indent_are_two_separate_arguments() {
     );
     // …and a conversion that throws is not swallowed on the way out.
     assert_eq!(
-        run(
-            "(function () { var n = new Number(1); \
+        run("(function () { var n = new Number(1); \
              n.valueOf = function () { throw new TypeError('no'); }; \
              try { JSON.stringify({a: 1}, null, n); return 'ok'; } \
-             catch (e) { return e.constructor.name; } })()"
-        ),
+             catch (e) { return e.constructor.name; } })()"),
         "TypeError"
     );
 }
