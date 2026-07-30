@@ -60,6 +60,12 @@ pub struct Realm {
     /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
     /// property on the constructor would be the script's to move; this is not.
     well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
+    /// %ArrayBuffer.prototype% — §25.1.5.
+    array_buffer_prototype: ObjectId,
+    /// %ArrayBuffer% itself, which `slice`'s `SpeciesConstructor` falls back to.
+    array_buffer_constructor: ObjectId,
+    /// %DataView.prototype% — §25.3.4.
+    data_view_prototype: ObjectId,
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
     /// %Set.prototype% — §24.2.3.
@@ -177,6 +183,8 @@ impl Realm {
         let iterator_prototype = heap.new_object(Some(object_prototype));
         let array_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let string_iterator_prototype = heap.new_object(Some(iterator_prototype));
+        let array_buffer_prototype = heap.new_object(Some(object_prototype));
+        let data_view_prototype = heap.new_object(Some(object_prototype));
         let map_prototype = heap.new_object(Some(object_prototype));
         let set_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
@@ -249,6 +257,10 @@ impl Realm {
             string_prototype,
             symbol_prototype,
             well_known,
+            array_buffer_prototype,
+            // Replaced by `builtins::buffer::install`, which is where the constructor is made.
+            array_buffer_constructor: array_buffer_prototype,
+            data_view_prototype,
             map_prototype,
             set_prototype,
             map_iterator_prototype,
@@ -275,6 +287,9 @@ impl Realm {
         // than allocated.
         if let Some(found) = crate::builtins::promise::constructor_of(heap, &realm) {
             realm.set_promise_constructor(found);
+        }
+        if let Some(found) = crate::builtins::global_object(heap, &realm, "ArrayBuffer") {
+            realm.array_buffer_constructor = found;
         }
         realm
     }
@@ -346,6 +361,21 @@ impl Realm {
     /// %ThrowTypeError% — the function that throws whatever it is asked.
     pub fn thrower(&self) -> ObjectId {
         self.thrower
+    }
+
+    /// %ArrayBuffer.prototype% — §25.1.5.
+    pub fn array_buffer_prototype(&self) -> ObjectId {
+        self.array_buffer_prototype
+    }
+
+    /// %ArrayBuffer% — the default `slice`'s `SpeciesConstructor` falls back to.
+    pub fn array_buffer_constructor(&self) -> ObjectId {
+        self.array_buffer_constructor
+    }
+
+    /// %DataView.prototype% — §25.3.4.
+    pub fn data_view_prototype(&self) -> ObjectId {
+        self.data_view_prototype
     }
 
     /// %Map.prototype% — §24.1.3.

@@ -37,6 +37,7 @@
 
 mod arguments;
 mod array;
+mod buffer;
 mod callable;
 mod collect;
 mod collection;
@@ -81,6 +82,7 @@ impl From<bool> for DefineOutcome {
         }
     }
 }
+pub use self::buffer::{Buffer, View};
 pub use self::collect::{Collected, Roots};
 pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Environment, EnvironmentId};
@@ -232,6 +234,12 @@ pub struct Heap {
     /// and walking every String to answer it would make the check cost more than the work it
     /// guards. The arenas' own lengths are already `O(1)`; this is the one part that is not.
     string_units: usize,
+    /// How many bytes every `ArrayBuffer` on this heap holds between them.
+    ///
+    /// Counted, and counted at all because DR-0013's footprint is what stops a runaway: without
+    /// this, `while (true) { new ArrayBuffer(1 << 20); }` allocates until the process dies, since
+    /// none of the other three terms grows by anything like what one costs.
+    buffer_bytes: usize,
 }
 
 impl Heap {
@@ -274,6 +282,22 @@ impl Heap {
             + self.environments.len() * size_of::<Option<Environment>>()
             + self.strings.len() * size_of::<Option<Box<[u16]>>>()
             + self.string_units * size_of::<u16>()
+            + self.buffer_bytes
+    }
+
+    /// Note that a buffer of `length` bytes now exists — see [`Heap::allowance`].
+    pub fn charge_buffer(&mut self, length: usize) {
+        self.buffer_bytes = self.buffer_bytes.saturating_add(length);
+    }
+
+    /// How much more DR-0013 will allow, in bytes.
+    ///
+    /// What `ArrayBuffer` asks before it allocates rather than after. Every other allocation here
+    /// is small enough that noticing afterwards is soon enough; a buffer is asked for by a number a
+    /// program chose, so `new ArrayBuffer(2 ** 40)` has to be refused *before* the memory is taken
+    /// rather than reported once it has been.
+    pub fn allowance(&self) -> usize {
+        MAX_HEAP_BYTES.saturating_sub(self.footprint())
     }
 
     /// Whether this heap has taken more than DR-0013 allows.

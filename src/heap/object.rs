@@ -34,6 +34,7 @@ use crate::compile::Chunk;
 use crate::heap::PropertyKind;
 use crate::heap::arguments;
 use crate::heap::arguments::Incoming;
+use crate::heap::buffer::{Buffer, View};
 use crate::heap::collection::Collection;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::promise::{Promise, Role};
@@ -221,6 +222,16 @@ pub struct Object {
     /// Date(NaN)` is a legal invalid date whose time value *is* NaN. Measured at 176 bytes before
     /// and 192 after; if that matters it is an M8 question, with a number in front of it.
     pub(super) date: Option<f64>,
+    /// §25.1.3.1's data block, if this is an `ArrayBuffer`.
+    ///
+    /// Boxed like the others, and unlike the others it holds no `Value` at all: a buffer is bytes,
+    /// so the collector has nothing to follow through one.
+    buffer: Option<Box<Buffer>>,
+    /// §25.3's view slots, if this is a `DataView`.
+    ///
+    /// Three `usize`s and an id, so it is inline rather than boxed: a pointer to it would cost as
+    /// much as half of it.
+    view: Option<View>,
     /// §24.1's `[[MapData]]` or §24.2's `[[SetData]]`, if this is one of those.
     ///
     /// Boxed for the reason the promise is: an `Object` sits inline in the arena, so its size is
@@ -289,6 +300,8 @@ impl Object {
             iteration: None,
             primitive: None,
             date: None,
+            buffer: None,
+            view: None,
             collection: None,
             promise: None,
             role: None,
@@ -329,6 +342,31 @@ impl Object {
     /// which is why `new ({ m() {} }).m` is a TypeError.
     pub fn is_constructor(&self) -> bool {
         self.call.as_ref().is_some_and(super::Callable::constructs)
+    }
+
+    /// The window this object is, if it is a `DataView`.
+    pub fn view(&self) -> Option<View> {
+        self.view
+    }
+
+    /// Make this object a `DataView` — §25.3.2.1, which is the only caller.
+    pub fn set_view(&mut self, view: View) {
+        self.view = Some(view);
+    }
+
+    /// The bytes this object holds, if it is an `ArrayBuffer`.
+    pub fn buffer(&self) -> Option<&Buffer> {
+        self.buffer.as_deref()
+    }
+
+    /// The same, to write through or to detach.
+    pub fn buffer_mut(&mut self) -> Option<&mut Buffer> {
+        self.buffer.as_deref_mut()
+    }
+
+    /// Make this object an `ArrayBuffer` — §25.1.3.1, which is the only caller.
+    pub fn set_buffer(&mut self, buffer: Buffer) {
+        self.buffer = Some(Box::new(buffer));
     }
 
     /// The entries this object holds, if it is a `Map` or a `Set`.

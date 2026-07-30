@@ -190,6 +190,12 @@ impl Heap {
                     }
                 }
             }
+            // The buffer a view is a window onto. Nothing else need be holding it: `new
+            // DataView(new ArrayBuffer(8))` leaves the buffer named by the view and by nothing at
+            // all, and collecting it would leave a window onto bytes that are gone.
+            if let Some(view) = object.view() {
+                pending.push(view.buffer);
+            }
             // Every key and value a `Map` or a `Set` holds. Nothing else need be holding them: a
             // collection is precisely a thing that keeps values alive on purpose.
             if let Some(collection) = object.collection() {

@@ -18,6 +18,7 @@ pub mod array;
 pub mod array_edit;
 pub mod array_iterate;
 pub mod array_methods;
+mod buffer;
 mod collection;
 pub(crate) mod date;
 mod date_format;
@@ -34,6 +35,7 @@ mod object_state;
 pub(crate) mod promise;
 mod promise_group;
 mod symbol;
+mod view;
 pub use self::symbol::WELL_KNOWN;
 
 /// Where a well-known Symbol sits in [`WELL_KNOWN`], by name.
@@ -79,11 +81,25 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     date::install(heap, realm, global);
     promise::install(heap, realm, global);
     collection::install(heap, realm, global);
+    buffer::install(heap, realm, global);
+    view::install(heap, realm, global);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.
+/// A constructor this realm has just installed, read back off the global object.
+///
+/// `install` is handed a finished [`Realm`] and cannot write to it, so an intrinsic it made is
+/// found again here rather than passed back. Safe at exactly that moment and at no other: nothing
+/// has run, so the property is still the one just defined.
+pub(crate) fn global_object(heap: &mut Heap, realm: &Realm, name: &str) -> Option<ObjectId> {
+    match own_value(heap, realm.global(), name) {
+        Some(Value::Object(id)) => Some(id),
+        _ => None,
+    }
+}
+
 pub(crate) fn key(heap: &mut Heap, name: &str) -> PropertyKey {
     PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>())
 }

@@ -337,7 +337,7 @@ fn then(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
     // Step 3 — `SpeciesConstructor`, so a subclass gets its own kind back and a program that
     // replaced `constructor` gets what it put there. Read before anything is added to a list.
     let default = vm.realm().promise_constructor();
-    let species = species_constructor(vm, heap, promise, default)?;
+    let species = species_of(vm, heap, promise, default)?;
     let capability = new_promise_capability(vm, heap, species)?;
     perform_then(
         vm,
@@ -424,7 +424,7 @@ fn finally(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     // Step 4 — the constructor is read *before* the handler is looked at, so a `@@species` that
     // throws throws even for `finally(null)`.
     let default = vm.realm().promise_constructor();
-    let species = species_constructor(vm, heap, promise, default)?;
+    let species = species_of(vm, heap, promise, default)?;
     let handler = call.argument(0);
     let then = vm.get_property_key(call.this_value, key(heap, "then"), heap)?;
     // Step 6 — a handler that is not callable is passed to `then` **as both arguments**, where it
@@ -659,8 +659,12 @@ fn capabilities_executor(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
     }
 }
 
-/// §7.3.22 `SpeciesConstructor` — what kind of promise `then` should answer with.
-fn species_constructor(
+/// §7.3.22 `SpeciesConstructor` — what kind of thing an operation should answer with.
+///
+/// Shared, because every clause that has a `@@species` reads it the same way: `ArrayBuffer.slice`,
+/// `Promise.prototype.then` and the Array methods are the same eleven steps with a different
+/// default.
+pub(super) fn species_of(
     vm: &mut Vm,
     heap: &mut Heap,
     object: ObjectId,

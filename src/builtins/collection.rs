@@ -137,12 +137,12 @@ fn build(
             ..PropertyDescriptor::EMPTY
         },
     );
-    tag(heap, realm, prototype, name);
+    tag_with(heap, realm, prototype, name);
 
     // §24.1.5 and §24.2.5 — the iterator prototypes, which inherit from %IteratorPrototype% and so
     // get `[@@iterator]` from it.
     define_method(heap, realm, iterator_prototype, "next", 0, next);
-    tag(
+    tag_with(
         heap,
         realm,
         iterator_prototype,
@@ -180,7 +180,7 @@ fn alias_symbol(heap: &mut Heap, realm: &Realm, prototype: ObjectId, symbol: &st
 }
 
 /// `[@@toStringTag]`, which is what `Object.prototype.toString` reads.
-fn tag(heap: &mut Heap, realm: &Realm, object: ObjectId, text: &str) {
+pub(super) fn tag_with(heap: &mut Heap, realm: &Realm, object: ObjectId, text: &str) {
     let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) else {
         return;
     };
