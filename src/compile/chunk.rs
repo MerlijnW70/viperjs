@@ -45,6 +45,12 @@ pub struct Chunk {
     /// from the same fact: §15.3 makes it a function *expression* over the scope it was written
     /// in rather than a thing you can be inside of, so `this` is whatever it was one line above.
     pub(super) arrow: bool,
+    /// Whether this body is a class constructor — §15.7.14.
+    ///
+    /// It has a `[[Construct]]` and no useful `[[Call]]`: written without `new` it is a TypeError.
+    /// The flag lives on the body because by the time a call happens the chunk is the only thing
+    /// left that could still know.
+    pub(super) class_constructor: bool,
     /// The slot §10.4.4's arguments object goes in, if this body reaches for the name.
     ///
     /// `None` when it does not, and then no object is made: §10.2.11 makes one for every
@@ -269,6 +275,28 @@ pub enum Instruction {
     DefineGetter,
     /// The same for a setter.
     DefineSetter,
+    /// §15.7.14 `ClassDefinitionEvaluation` — the constructor and its prototype, made as a pair.
+    ///
+    /// One instruction rather than a sequence because neither half is observable on its own: the
+    /// prototype cannot be reached until the constructor holds it, and the constructor is not usable
+    /// until the prototype points back. There is no intermediate state worth naming in bytecode.
+    ///
+    /// The operand indexes the constructor's body. Leaves the constructor on the stack.
+    MakeClass(u32),
+    /// Replace the constructor on top of the stack with the prototype it was made with.
+    ///
+    /// Reads the object rather than the `prototype` property. At this point in a class definition the
+    /// property is already non-writable and no getter could have been installed, so the two agree —
+    /// and reading the object means a method definition cannot be intercepted.
+    ClassPrototype,
+    /// §15.7.14's method definition — a data property or one half of an accessor, **not** enumerable.
+    ///
+    /// The single runtime difference between a class body and an object literal: §15.4.5 makes a
+    /// literal's methods enumerable and §15.7.14 does not, so `for (k in new C)` finds nothing. That
+    /// one attribute is why this cannot be [`Instruction::DefineField`] with a flag.
+    ///
+    /// Pops the value, then the key, then the target.
+    DefineClassMethod(crate::ast::MethodKind),
     /// Take a key and a base and push the property's value — `[[Get]]`, §10.1.8.
     GetProperty,
     /// Take a value, a key and a base; store the value and leave it on the stack — §10.1.9.
@@ -433,6 +461,11 @@ impl Chunk {
         self.locals
     }
 
+    /// Whether this body is a class constructor, and so refuses a call without `new`.
+    pub fn is_class_constructor(&self) -> bool {
+        self.class_constructor
+    }
+
     /// Whether this body is an arrow's, and so has no `this` of its own.
     pub fn is_arrow(&self) -> bool {
         self.arrow
@@ -553,6 +586,9 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::DefineField
         | Instruction::DefineGetter
         | Instruction::DefineSetter
+        | Instruction::MakeClass(_)
+        | Instruction::ClassPrototype
+        | Instruction::DefineClassMethod(_)
         | Instruction::GetProperty
         | Instruction::SetProperty
         | Instruction::DeleteProperty

@@ -16,7 +16,7 @@
 
 pub mod ast;
 pub mod builtins;
-pub use builtins::date::{local_offset, set_local_offset};
+pub use crate::builtins::date::{local_offset, set_local_offset};
 pub mod compile;
 pub mod heap;
 pub mod lexer;

@@ -43,6 +43,7 @@ mod arrays;
 mod arrows;
 mod bound;
 mod builtins;
+mod classes;
 mod coercion;
 mod constructors;
 mod date;
@@ -95,6 +96,20 @@ fn run(source: &str) -> String {
         .run(&chunk, &mut heap)
         .expect("the chunk is well formed"); // same
     describe(outcome, &mut heap)
+}
+
+/// The message a source the compiler refuses comes back with.
+///
+/// Separate from [`run`], which expects a chunk: a refusal is the answer here rather than a failure,
+/// and the conformance harness treats one as *not run* rather than as a wrong result. A row using
+/// this is a claim about what praxis does not implement yet, so it has to fail once that changes.
+fn compile_error(source: &str) -> String {
+    let mut heap = Heap::new();
+    let script = parse_script(source).expect("the source parses"); // the test is about the compiler
+    match compile_script(&script, &mut heap) {
+        Ok(_) => String::from("it compiled"),
+        Err(error) => error.message(),
+    }
 }
 
 /// The property `object` files under `name`, if it has one of its own.

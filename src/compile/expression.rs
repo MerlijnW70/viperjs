@@ -320,7 +320,9 @@ impl Compiler<'_> {
             ExprKind::Function(function) => self.make_function(function, span),
             // §15.3 — an arrow, which is a function expression that keeps the `this` around it.
             ExprKind::Arrow(arrow) => self.make_arrow(arrow, span),
-            ExprKind::Class(_) => Err(unsupported("a class expression", span)),
+            // §15.7.12 — an expression leaves the constructor where it was evaluated. Its own name,
+            // if it has one, binds only inside the body and is not created yet.
+            ExprKind::Class(class) => self.class(class, span),
             ExprKind::Template(template) => self.template(template),
             ExprKind::TaggedTemplate { .. } => Err(unsupported("a tagged template", span)),
             ExprKind::RegExp(_) => Err(unsupported("a regular expression literal", span)),

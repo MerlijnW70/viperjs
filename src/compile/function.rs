@@ -82,7 +82,7 @@ impl Compiler<'_> {
     /// What the nested body may see: the script's names, and — only to refuse against — the names
     /// of every function it is written inside. It is written inside this scope, so its chain is
     /// ours with ours on the end.
-    fn compile_nested(
+    pub(super) fn compile_nested(
         &mut self,
         parameters: &FormalParameters,
         body: Body<'_>,
@@ -156,7 +156,7 @@ impl Compiler<'_> {
 ///
 /// Two shapes rather than two compilers, because everything before the body is the same for both
 /// and the parameter rules written twice would be a refusal no test could reach.
-enum Body<'a> {
+pub(super) enum Body<'a> {
     /// A statement list: a function's body, or an arrow's `a => { … }`.
     Statements(&'a [Stmt]),
     /// An arrow's `a => b`, whose value is what the call answers.
@@ -169,7 +169,7 @@ enum Body<'a> {
 /// is carried here, and it reaches run time as [`Chunk::is_arrow`] because all three things an
 /// arrow lacks — `this`, `prototype`, `[[Construct]]` — are decided there.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Lexical {
+pub(super) enum Lexical {
     /// An ordinary function: the call binds `this` from the receiver.
     No,
     /// An arrow: `this` is whatever it was where the arrow was written.

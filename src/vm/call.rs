@@ -120,6 +120,21 @@ impl Vm {
             Callable::Bytecode(body) => body,
         };
 
+        // §15.7.14 — a class constructor has a `[[Construct]]` and its `[[Call]]` does nothing but
+        // refuse. Checked here rather than at the class definition because the two are separated by
+        // any amount of program: what arrives at a call site is a function object, and the body it
+        // holds is the only thing that still remembers how it was written.
+        if body.is_class_constructor() && !matches!(how, Entry::Construct) {
+            self.raise(
+                Abrupt::type_error("a class constructor cannot be called without `new`"),
+                heap,
+                chunk,
+                current,
+                at,
+            )?;
+            return Ok(());
+        }
+
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
         // different in each of the three ways in.
         let receiver = match how {

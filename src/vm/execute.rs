@@ -391,6 +391,116 @@ impl Vm {
                     }
                     self.stack.push(Value::Object(object));
                 }
+                Instruction::MakeClass(index) => {
+                    let Some(body) = running.function(index) else {
+                        return Err(Fault::MissingFunction);
+                    };
+                    let object = heap.new_function(
+                        self.realm.function_prototype(),
+                        body.clone(),
+                        self.environment,
+                        None,
+                    );
+                    let key = property_name(heap, "length");
+                    heap.define_own_property(
+                        object,
+                        key,
+                        &crate::heap::PropertyDescriptor {
+                            value: Some(Value::Number(body.length() as f64)),
+                            writable: Some(false),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                    );
+                    // §15.7.14 steps 12 to 14 — the prototype, and the pair of references that make
+                    // `new C() instanceof C` true. `prototype` is **not writable** here, which is the
+                    // difference from §10.2.5's `MakeConstructor` for an ordinary function: a class
+                    // may not be pointed at a different prototype after the fact.
+                    let prototype = heap.new_object(Some(self.realm.object_prototype()));
+                    let key = property_name(heap, "constructor");
+                    heap.define_own_property(
+                        prototype,
+                        key,
+                        &crate::heap::PropertyDescriptor {
+                            value: Some(Value::Object(object)),
+                            writable: Some(true),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                    );
+                    let key = property_name(heap, "prototype");
+                    heap.define_own_property(
+                        object,
+                        key,
+                        &crate::heap::PropertyDescriptor {
+                            value: Some(Value::Object(prototype)),
+                            writable: Some(false),
+                            enumerable: Some(false),
+                            configurable: Some(false),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                    );
+                    self.stack.push(Value::Object(object));
+                }
+                Instruction::ClassPrototype => {
+                    let Value::Object(constructor) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let key = property_name(heap, "prototype");
+                    // Read rather than `[[Get]]`: `MakeClass` defined this a moment ago as
+                    // non-writable and non-configurable, so nothing could have replaced it with an
+                    // accessor, and a method definition must not be interceptable.
+                    let found = heap.own_property(constructor, key).and_then(|property| {
+                        match property.kind {
+                            crate::heap::PropertyKind::Data { value, .. } => Some(value),
+                            crate::heap::PropertyKind::Accessor { .. } => None,
+                        }
+                    });
+                    let Some(value @ Value::Object(_)) = found else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    self.stack.push(value);
+                }
+                Instruction::DefineClassMethod(kind) => {
+                    let value = self.pop()?;
+                    let key = self.pop()?;
+                    let Value::Object(target) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let key = match self.property_key(key, heap) {
+                        Ok(key) => key,
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    // §15.7.14 — writable and configurable, and *not* enumerable. The last of those
+                    // is the whole runtime difference from an object literal's method.
+                    let descriptor = match kind {
+                        crate::ast::MethodKind::Get => crate::heap::PropertyDescriptor {
+                            getter: Some(value),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                        crate::ast::MethodKind::Set => crate::heap::PropertyDescriptor {
+                            setter: Some(value),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                        crate::ast::MethodKind::Normal => crate::heap::PropertyDescriptor {
+                            value: Some(value),
+                            writable: Some(true),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                    };
+                    let _ = heap.define_own_property(target, key, &descriptor);
+                }
                 Instruction::Call(count) | Instruction::CallMethod(count) => {
                     let method = matches!(instruction, Instruction::CallMethod(_));
                     let how = if method { Entry::Method } else { Entry::Plain };
@@ -580,4 +690,12 @@ impl Vm {
             }
         }
     }
+}
+
+/// One built-in property name, interned.
+///
+/// Written out four times inside `MakeClass` it was the same three lines of UTF-16 encoding each
+/// time, which said nothing about what the property was for.
+fn property_name(heap: &mut Heap, name: &str) -> crate::heap::PropertyKey {
+    crate::heap::PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>())
 }

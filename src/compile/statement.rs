@@ -128,7 +128,19 @@ impl Compiler<'_> {
                 true => Ok(()),
                 false => Err(unsupported("a function declaration inside a block", span)),
             },
-            StmtKind::Class(_) => Err(unsupported("a class declaration", span)),
+            // §15.7.11 — a declaration evaluates the class and initialises the binding its name
+            // already has: the name is hoisted and left uninitialised, so a reference before this
+            // point is the temporal dead zone rather than `undefined`.
+            StmtKind::Class(class) => {
+                self.class(class, span)?;
+                match &class.name {
+                    Some(name) => self.bind_name(&name.name, Bind::Made),
+                    None => {
+                        self.chunk.emit(Instruction::Pop);
+                        Ok(())
+                    }
+                }
+            }
             // §14.10 — `return`, whose argument is optional and whose absence is `undefined`.
             StmtKind::Return(argument) => {
                 if self.is_script {
@@ -175,6 +187,17 @@ impl Compiler<'_> {
     /// is: a `let` inside a nested block belongs to that block and is created when it is entered.
     pub(super) fn declare_lexical_names(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
         for statement in body {
+            // §15.7.11 — a class declaration is a lexical declaration: its name is hoisted and left
+            // uninitialised, so a reference above it is the temporal dead zone rather than
+            // `undefined`. That is the difference from a function declaration, which is hoisted
+            // *initialised* and callable before its own line.
+            if let StmtKind::Class(class) = &statement.kind {
+                if let Some(name) = &class.name {
+                    let slot = self.declare_lexical(&name.name, false);
+                    self.chunk.emit(Instruction::Uninitialise(slot));
+                }
+                continue;
+            }
             let StmtKind::Declaration(declaration) = &statement.kind else {
                 continue;
             };
@@ -700,7 +723,7 @@ impl Compiler<'_> {
     }
 
     /// Push the key a binding property reads, computed or written down.
-    fn property_key(&mut self, key: &AstPropertyKey) -> Result<(), CompileError> {
+    pub(super) fn property_key(&mut self, key: &AstPropertyKey) -> Result<(), CompileError> {
         match key {
             AstPropertyKey::Identifier(name) => {
                 let id = self.name_of(name);

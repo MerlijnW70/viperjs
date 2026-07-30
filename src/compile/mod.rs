@@ -27,6 +27,7 @@
 use crate::ast::{Expr, Script};
 use crate::value::Value;
 mod chunk;
+mod class;
 mod expression;
 mod function;
 mod statement;

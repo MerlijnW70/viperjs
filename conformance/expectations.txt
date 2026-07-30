@@ -5050,6 +5050,8 @@ built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object wi
 built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/concat/fresh-iterator-result.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/fresh-iterator-result.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/get-iterator-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/get-iterator-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/get-iterator-method-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Iterator/concat/get-iterator-method-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Iterator/concat/get-value-after-done.js :: it threw ReferenceError: Iterator is not defined
@@ -5098,6 +5100,8 @@ built-ins/Iterator/concat/zero-arguments.js :: it threw ReferenceError: Iterator
 built-ins/Iterator/concat/zero-arguments.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/constructor.js :: it threw an object with no name: The value of `typeof Iterator` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/constructor.js (strict) :: it threw an object with no name: The value of `typeof Iterator` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/from/get-next-method-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Iterator/from/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Iterator/from/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/from/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/from/length.js :: it threw ReferenceError: Iterator is not defined
@@ -5146,6 +5150,8 @@ built-ins/Iterator/prototype/constructor/weird-setter.js :: it threw ReferenceEr
 built-ins/Iterator/prototype/constructor/weird-setter.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/argument-effect-order.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/length.js :: it threw ReferenceError: Iterator is not defined
@@ -5366,6 +5372,8 @@ built-ins/Iterator/prototype/some/this-plain-iterator.js :: it threw ReferenceEr
 built-ins/Iterator/prototype/some/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/argument-effect-order.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/length.js :: it threw ReferenceError: Iterator is not defined
@@ -7384,6 +7392,8 @@ built-ins/Promise/all/resolve-element-function-prototype.js :: it threw Referenc
 built-ins/Promise/all/resolve-element-function-prototype.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/resolve-from-same-thenable.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/resolve-from-same-thenable.js (strict) :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/all/resolve-throws-iterator-return-null-or-undefined.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/all/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/same-reject-function.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/same-reject-function.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/species-get-error.js :: it threw ReferenceError: Promise is not defined
@@ -7502,6 +7512,8 @@ built-ins/Promise/allSettled/resolve-element-function-prototype.js :: it threw R
 built-ins/Promise/allSettled/resolve-element-function-prototype.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/resolve-from-same-thenable.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/resolve-from-same-thenable.js (strict) :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/allSettled/resolve-throws-iterator-return-null-or-undefined.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/allSettled/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/returns-promise.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/returns-promise.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/species-get-error.js :: it threw ReferenceError: Promise is not defined
@@ -7586,6 +7598,8 @@ built-ins/Promise/any/resolve-before-loop-exit.js :: it threw ReferenceError: Pr
 built-ins/Promise/any/resolve-before-loop-exit.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/resolve-from-same-thenable.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/resolve-from-same-thenable.js (strict) :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/any/resolve-throws-iterator-return-null-or-undefined.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/any/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/returns-promise.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/returns-promise.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/species-get-error.js :: it threw ReferenceError: Promise is not defined
@@ -7768,6 +7782,8 @@ built-ins/Promise/race/reject-from-same-thenable.js :: it threw ReferenceError: 
 built-ins/Promise/race/reject-from-same-thenable.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/race/resolve-from-same-thenable.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/race/resolve-from-same-thenable.js (strict) :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/race/resolve-throws-iterator-return-null-or-undefined.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/race/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/race/same-reject-function.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/race/same-reject-function.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/race/same-resolve-function.js :: it threw ReferenceError: Promise is not defined
@@ -9859,6 +9875,8 @@ built-ins/Set/prototype/difference/set-like-array.js :: it threw ReferenceError:
 built-ins/Set/prototype/difference/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -10051,6 +10069,8 @@ built-ins/Set/prototype/intersection/set-like-array.js :: it threw ReferenceErro
 built-ins/Set/prototype/intersection/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/builtins.js :: it threw ReferenceError: Set is not defined
@@ -10079,6 +10099,8 @@ built-ins/Set/prototype/isDisjointFrom/not-a-constructor.js :: it threw Referenc
 built-ins/Set/prototype/isDisjointFrom/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/set-like-array.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isDisjointFrom/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isDisjointFrom/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/set-like-iter-return.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/set-like-iter-return.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/array-throws.js :: it threw ReferenceError: Set is not defined
@@ -10107,6 +10129,8 @@ built-ins/Set/prototype/isSubsetOf/not-a-constructor.js :: it threw ReferenceErr
 built-ins/Set/prototype/isSubsetOf/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/set-like-array.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSubsetOf/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSubsetOf/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/builtins.js :: it threw ReferenceError: Set is not defined
@@ -10135,6 +10159,8 @@ built-ins/Set/prototype/isSupersetOf/not-a-constructor.js :: it threw ReferenceE
 built-ins/Set/prototype/isSupersetOf/not-a-constructor.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/set-like-array.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSupersetOf/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSupersetOf/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/set-like-iter-return.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/set-like-iter-return.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/keys/keys.js :: it threw ReferenceError: Set is not defined
@@ -10183,6 +10209,8 @@ built-ins/Set/prototype/symmetricDifference/set-like-array.js :: it threw Refere
 built-ins/Set/prototype/symmetricDifference/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/symmetricDifference.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/symmetricDifference.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/add-not-called.js :: it threw ReferenceError: Set is not defined
@@ -10219,6 +10247,8 @@ built-ins/Set/prototype/union/set-like-array.js :: it threw ReferenceError: Set 
 built-ins/Set/prototype/union/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/set-like-class-mutation.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/set-like-class-order.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/union.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/union.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -19756,6 +19786,18 @@ language/comments/hashbang/no-line-separator.js :: it threw ReferenceError: eval
 language/comments/hashbang/no-line-separator.js (strict) :: it threw ReferenceError: eval is not defined
 language/comments/mongolian-vowel-separator-single-eval.js :: it threw ReferenceError: eval is not defined
 language/comments/mongolian-vowel-separator-single-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/computed-property-names/class/static/getter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/computed-property-names/class/static/getter-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/computed-property-names/class/static/method-number-order.js :: it threw an object with no name: Actual [1, 2, length, prototype, a, c] and expected [1, 2, length, name, prototype, a, c] should have the same contents.
+language/computed-property-names/class/static/method-number-order.js (strict) :: it threw an object with no name: Actual [1, 2, length, prototype, a, c] and expected [1, 2, length, name, prototype, a, c] should have the same contents.
+language/computed-property-names/class/static/method-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/computed-property-names/class/static/method-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/computed-property-names/class/static/method-string-order.js :: it threw an object with no name: Actual [length, prototype, a, b, c, d] and expected [length, name, prototype, a, b, c, d] should have the same contents.
+language/computed-property-names/class/static/method-string-order.js (strict) :: it threw an object with no name: Actual [length, prototype, a, b, c, d] and expected [length, name, prototype, a, b, c, d] should have the same contents.
+language/computed-property-names/class/static/method-symbol-order.js :: it threw an object with no name: Actual [length, prototype, a, c] and expected [length, name, prototype, a, c] should have the same contents.
+language/computed-property-names/class/static/method-symbol-order.js (strict) :: it threw an object with no name: Actual [length, prototype, a, c] and expected [length, name, prototype, a, c] should have the same contents.
+language/computed-property-names/class/static/setter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/computed-property-names/class/static/setter-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/directive-prologue/10.1.1-11-s.js :: it threw an object with no name: err instanceof SyntaxError
 language/directive-prologue/10.1.1-12-s.js :: it threw ReferenceError: eval is not defined
 language/directive-prologue/10.1.1-13-s.js :: it threw ReferenceError: eval is not defined
@@ -19856,6 +19898,8 @@ language/eval-code/direct/global-env-rec-fun.js :: it threw ReferenceError: eval
 language/eval-code/direct/global-env-rec-fun.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/global-env-rec.js (strict) :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/lex-env-distinct-cls.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/lex-env-distinct-cls.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/lex-env-distinct-const.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/lex-env-distinct-const.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/lex-env-distinct-let.js :: it threw ReferenceError: eval is not defined
@@ -19993,6 +20037,8 @@ language/eval-code/indirect/global-env-rec-fun.js :: it threw ReferenceError: ev
 language/eval-code/indirect/global-env-rec-fun.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/indirect/global-env-rec.js :: it threw ReferenceError: eval is not defined
 language/eval-code/indirect/global-env-rec.js (strict) :: it threw ReferenceError: eval is not defined
+language/eval-code/indirect/lex-env-distinct-cls.js :: it threw ReferenceError: eval is not defined
+language/eval-code/indirect/lex-env-distinct-cls.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/indirect/lex-env-distinct-const.js :: it threw ReferenceError: eval is not defined
 language/eval-code/indirect/lex-env-distinct-const.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/indirect/lex-env-distinct-let.js :: it threw ReferenceError: eval is not defined
@@ -20092,24 +20138,32 @@ language/expressions/arrow-function/dflt-params-ref-self.js :: it threw an objec
 language/expressions/arrow-function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/arrow-function/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -20148,6 +20202,8 @@ language/expressions/assignment/destructuring/target-assign-throws-iterator-retu
 language/expressions/assignment/destructuring/target-assign-throws-iterator-return-get-throws.js (strict) :: it threw an object with no name: Thrown value was not an object!
 language/expressions/assignment/dstr/array-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/array-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-class.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/array-elem-init-fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/array-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/array-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/array-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -20188,6 +20244,8 @@ language/expressions/assignment/dstr/array-rest-lref-err.js (strict) :: it threw
 language/expressions/assignment/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/obj-id-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-class.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-id-init-fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-id-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-id-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-id-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -20195,6 +20253,8 @@ language/expressions/assignment/dstr/obj-id-init-fn-name-fn.js (strict) :: it th
 language/expressions/assignment/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-class.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -20202,6 +20262,8 @@ language/expressions/assignment/dstr/obj-prop-elem-init-fn-name-fn.js (strict) :
 language/expressions/assignment/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/assignment/fn-name-class.js :: it threw an object with no name: name should be an own property
+language/expressions/assignment/fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/expressions/assignment/fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/assignment/fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -20255,8 +20317,82 @@ language/expressions/class/decorator/syntax/valid/decorator-member-expr-identifi
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
+language/expressions/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method-static/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method-static/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method-static/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/method/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/expressions/class/name.js :: it threw an object with no name: name should be an own property
+language/expressions/class/name.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -20298,6 +20434,10 @@ language/expressions/class/private-static-setter-multiple-evaluations-of-class-e
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw ReferenceError: $262 is not defined
+language/expressions/class/scope-name-lex-close.js :: it threw an object with no name: from instance method Expected SameValue(«"outside"», «[object Function]») to be true
+language/expressions/class/scope-name-lex-close.js (strict) :: it threw an object with no name: from instance method Expected SameValue(«"outside"», «[object Function]») to be true
+language/expressions/class/scope-name-lex-open-no-heritage.js :: it threw an object with no name: inner binding value Expected SameValue(«"outside"», «[object Function]») to be true
+language/expressions/class/scope-name-lex-open-no-heritage.js (strict) :: it threw an object with no name: inner binding value Expected SameValue(«"outside"», «[object Function]») to be true
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -20637,24 +20777,32 @@ language/expressions/function/dflt-params-ref-self.js :: it threw an object with
 language/expressions/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/function/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/function/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/function/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/function/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/function/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -20801,24 +20949,32 @@ language/expressions/object/computed-property-name-topropertykey-before-value-ev
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/object/dstr/meth-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -20835,6 +20991,8 @@ language/expressions/object/fn-name-accessor-set.js :: it threw an object with n
 language/expressions/object/fn-name-accessor-set.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/expressions/object/fn-name-class.js :: it threw an object with no name: name should be an own property
+language/expressions/object/fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/expressions/object/fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -21139,6 +21297,8 @@ language/global-code/script-decl-func-err-non-extensible.js :: it threw an objec
 language/global-code/script-decl-func-err-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/global-code/script-decl-func.js :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-func.js (strict) :: it threw ReferenceError: $262 is not defined
+language/global-code/script-decl-lex-lex.js :: it threw an object with no name: `let` binding Expected a SyntaxError but got a ReferenceError
+language/global-code/script-decl-lex-lex.js (strict) :: it threw an object with no name: `let` binding Expected a SyntaxError but got a ReferenceError
 language/global-code/script-decl-lex-restricted-global.js :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-lex-restricted-global.js (strict) :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-lex-var-declared-via-eval.js :: it threw ReferenceError: eval is not defined
@@ -21147,6 +21307,8 @@ language/global-code/script-decl-lex-var.js :: it threw an object with no name: 
 language/global-code/script-decl-lex-var.js (strict) :: it threw an object with no name: variable Expected a SyntaxError but got a ReferenceError
 language/global-code/script-decl-lex.js :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-lex.js (strict) :: it threw ReferenceError: $262 is not defined
+language/global-code/script-decl-var-collision.js :: it threw ReferenceError: $262 is not defined
+language/global-code/script-decl-var-collision.js (strict) :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-var-err.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/global-code/script-decl-var-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/global-code/script-decl-var.js :: it threw ReferenceError: $262 is not defined
@@ -21364,32 +21526,152 @@ language/statements/class/decorator/syntax/valid/decorator-member-expr-identifie
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
+language/statements/class/definition/accessors.js :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/accessors.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/basics.js :: it threw an object with no name: The value of `C.name` is `'C'` Expected SameValue(«undefined», «"C"») to be true
+language/statements/class/definition/basics.js (strict) :: it threw an object with no name: The value of `C.name` is `'C'` Expected SameValue(«undefined», «"C"») to be true
+language/statements/class/definition/constructor-strict-by-default.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/definition/constructor-strict-by-default.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/definition/fn-name-accessor-get.js :: it threw an object with no name: name should be an own property
+language/statements/class/definition/fn-name-accessor-get.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/class/definition/fn-name-accessor-set.js :: it threw an object with no name: name should be an own property
+language/statements/class/definition/fn-name-accessor-set.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/class/definition/fn-name-method.js :: it threw an object with no name: name should be an own property
+language/statements/class/definition/fn-name-method.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/class/definition/getters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/definition/getters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/definition/getters-prop-desc.js :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/getters-prop-desc.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/methods-restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/definition/methods-restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/definition/methods.js :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/methods.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/setters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/definition/setters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/definition/setters-prop-desc.js :: it threw an object with no name: The result of `'prototype' in descr.set` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/setters-prop-desc.js (strict) :: it threw an object with no name: The result of `'prototype' in descr.set` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-6.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-6.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method-static/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method-static/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method-static/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/method/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/statements/class/name-binding/const.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/name-binding/const.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/name-binding/expression.js :: it threw ReferenceError: C is not defined
+language/statements/class/name-binding/expression.js (strict) :: it threw ReferenceError: C is not defined
+language/statements/class/name.js :: it threw an object with no name: name should be an own property
+language/statements/class/name.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/class/scope-name-lex-close.js :: it threw an object with no name: from instance method Expected SameValue(«null», «[object Function]») to be true
+language/statements/class/scope-name-lex-close.js (strict) :: it threw an object with no name: from instance method Expected SameValue(«null», «[object Function]») to be true
+language/statements/class/scope-name-lex-open-no-heritage.js :: it threw an object with no name: inner binding value Expected SameValue(«null», «[object Function]») to be true
+language/statements/class/scope-name-lex-open-no-heritage.js (strict) :: it threw an object with no name: inner binding value Expected SameValue(«null», «[object Function]») to be true
 language/statements/class/static-init-arguments-functions.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
+language/statements/class/static-method-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/static-method-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/const/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/const/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/const/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/const/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/const/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/const/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/const/fn-name-class.js :: it threw an object with no name: name should be an own property
+language/statements/const/fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/const/fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/statements/const/fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/const/fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -21469,6 +21751,8 @@ language/statements/for-of/cptn-expr-no-itr.js :: it threw ReferenceError: eval 
 language/statements/for-of/cptn-expr-no-itr.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-of/dstr/array-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/array-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-class.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/array-elem-init-fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/array-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/array-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/array-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -21540,6 +21824,8 @@ language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not p
 language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/obj-prop-elem-init-fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/obj-prop-elem-init-fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-class.js :: it threw an object with no name: name should be an own property
+language/statements/for-of/dstr/obj-prop-elem-init-fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/obj-prop-elem-init-fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/obj-prop-elem-init-fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/for-of/dstr/obj-prop-elem-init-fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -21548,12 +21834,16 @@ language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it d
 language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for-of/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for-of/dstr/var-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -21663,12 +21953,16 @@ language/statements/for/dstr/let-obj-ptrn-id-init-fn-name-arrow.js :: it threw a
 language/statements/for/dstr/let-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for/dstr/var-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/for/dstr/var-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -21759,24 +22053,32 @@ language/statements/function/dflt-params-ref-self.js :: it threw an object with 
 language/statements/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/dstr/dflt-ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/dstr/dflt-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/function/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/function/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/function/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/function/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/function/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -21824,18 +22126,24 @@ language/statements/let/cptn-value.js :: it threw ReferenceError: eval is not de
 language/statements/let/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/let/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/let/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/let/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/let/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/let/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/let/fn-name-class.js :: it threw an object with no name: name should be an own property
+language/statements/let/fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/let/fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/statements/let/fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/let/fn-name-fn.js :: it threw an object with no name: name should be an own property
@@ -21926,12 +22234,16 @@ language/statements/try/cptn-try.js :: it threw ReferenceError: eval is not defi
 language/statements/try/cptn-try.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/try/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/try/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/try/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/try/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/try/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/try/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/try/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
@@ -22057,18 +22369,24 @@ language/statements/variable/cptn-value.js :: it threw ReferenceError: eval is n
 language/statements/variable/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/variable/dstr/ary-ptrn-elem-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-arrow.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-class.js :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
+language/statements/variable/dstr/obj-ptrn-id-init-fn-name-class.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cls"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-cover.js :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/variable/dstr/obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/variable/fn-name-arrow.js :: it threw an object with no name: name should be an own property
 language/statements/variable/fn-name-arrow.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/variable/fn-name-class.js :: it threw an object with no name: name should be an own property
+language/statements/variable/fn-name-class.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/variable/fn-name-cover.js :: it threw an object with no name: name should be an own property
 language/statements/variable/fn-name-cover.js (strict) :: it threw an object with no name: name should be an own property
 language/statements/variable/fn-name-fn.js :: it threw an object with no name: name should be an own property
