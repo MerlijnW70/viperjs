@@ -86,3 +86,93 @@ fn each_substitution_is_converted_before_the_next_one_is_evaluated() {
         "2"
     );
 }
+
+#[test]
+fn a_tagged_template_calls_its_tag_with_the_template_object_and_the_substitutions() {
+    // §13.3.11 — `` f`a${b}c` `` is `f(templateObject, b)`, so a tag with no substitutions still
+    // takes one argument and the cooked strings are always one more than the substitutions.
+    assert_eq!(
+        run(
+            "(function () { function tag(s, x, y) { return s.join(',') + '|' + x + '|' + y; } \
+             return tag`a${1}b${2}c`; })()"
+        ),
+        "a,b,c|1|2"
+    );
+    assert_eq!(
+        run(
+            "(function () { function tag(s) { return s.length + ',' + arguments.length; } \
+             return tag`only`; })()"
+        ),
+        "1,1"
+    );
+    // §13.2.8.3 — the cooked strings and a `raw` beside them, which is the whole reason a tag is
+    // handed an object rather than a string: `raw` has the escapes exactly as written.
+    assert_eq!(
+        run(
+            "(function () { function tag(s) { return (s[0] === 'a\\nb') + ',' + s.raw[0]; } \
+             return tag`a\\nb`; })()"
+        ),
+        "true,a\\nb"
+    );
+    // §12.9.6 leaves `TV` **undefined** for an escape that is not one, which only a *tagged* template
+    // may contain — an untagged one is a Syntax Error. So `cooked` has a hole and `raw` does not.
+    assert_eq!(
+        run(
+            "(function () { function tag(s) { return String(s[0]) + ',' + s.raw[0]; } \
+             return tag`\\unicode`; })()"
+        ),
+        "undefined,\\unicode"
+    );
+    // The tag is called as a *method* when it is written as one, exactly as `o.m()` would be.
+    assert_eq!(
+        run("(function () { var o = { m(s) { return this === o; } }; return o.m`x`; })()"),
+        "true"
+    );
+}
+
+#[test]
+fn the_template_object_is_the_same_one_every_time_that_site_is_evaluated() {
+    // §13.2.8.3 caches per *Parse Node*, and that identity is the only thing about the object a
+    // program can detect which its contents do not already say — it is what lets a tag use it as a key
+    // into a table of its own. Building a fresh object each time passes every test about the contents
+    // and fails every test about this.
+    assert_eq!(
+        run("(function () { function tag(s) { return s; } \
+             function twice() { return tag`x`; } return twice() === twice(); })()"),
+        "true"
+    );
+    // Two *sites* that happen to spell the same thing are two objects, which is the other half: the
+    // key is the site and not the text.
+    assert_eq!(
+        run("(function () { function tag(s) { return s; } \
+             function a() { return tag`x`; } function b() { return tag`x`; } \
+             return a() === b(); })()"),
+        "false"
+    );
+    // §13.2.8.3 steps 10 and 11 — both arrays are frozen, so a tag cannot change what a later
+    // evaluation of the same site will see. That is what makes handing the same object out safe.
+    assert_eq!(
+        run(
+            "(function () { function tag(s) { return Object.isFrozen(s) + ',' + Object.isFrozen(s.raw); } \
+             return tag`x`; })()"
+        ),
+        "true,true"
+    );
+    assert_eq!(
+        run(
+            "(function () { function tag(s) { return s; } function once() { return tag`x`; } \
+             var first = once(); first[0] = 'changed'; \
+             return once()[0]; })()"
+        ),
+        "x"
+    );
+    // …and `raw` is **not enumerable**, which is the one of its three attributes the freeze does not
+    // set for it: `Object.keys` of the object is its indices and nothing else.
+    assert_eq!(
+        run(
+            "(function () { function tag(s) { return Object.keys(s).join(',') \
+             + '|' + s.propertyIsEnumerable('raw'); } return tag`a${1}b`; })()"
+        ),
+        "0,1|false"
+    );
+}

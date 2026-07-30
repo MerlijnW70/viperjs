@@ -21499,8 +21499,20 @@ language/expressions/super/prop-expr-obj-val-from-eval.js :: it threw ReferenceE
 language/expressions/super/prop-expr-obj-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/super/realm.js :: it threw ReferenceError: $262 is not defined
 language/expressions/super/realm.js (strict) :: it threw ReferenceError: $262 is not defined
+language/expressions/tagged-template/cache-differing-expressions-eval.js :: it threw ReferenceError: eval is not defined
+language/expressions/tagged-template/cache-differing-expressions-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/tagged-template/cache-differing-expressions-new-function.js :: it threw TypeError: building a function from source text is not implemented yet
+language/expressions/tagged-template/cache-differing-expressions-new-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/tagged-template/cache-eval-inner-function.js :: it threw ReferenceError: eval is not defined
 language/expressions/tagged-template/cache-eval-inner-function.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/tagged-template/cache-identical-source-eval.js :: it threw ReferenceError: eval is not defined
+language/expressions/tagged-template/cache-identical-source-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/tagged-template/cache-identical-source-new-function.js :: it threw TypeError: building a function from source text is not implemented yet
+language/expressions/tagged-template/cache-identical-source-new-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/expressions/tagged-template/cache-realm.js :: it threw ReferenceError: $262 is not defined
+language/expressions/tagged-template/cache-realm.js (strict) :: it threw ReferenceError: $262 is not defined
+language/expressions/tagged-template/tco-call.js (strict) :: it threw ReferenceError: f is not defined
+language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tco-pos.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/template-literal/mongolian-vowel-separator-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/template-literal/mongolian-vowel-separator-eval.js (strict) :: it threw ReferenceError: eval is not defined

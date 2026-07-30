@@ -695,6 +695,28 @@ impl Vm {
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
+                Instruction::TemplateObject(index) => {
+                    let site = TemplateSite {
+                        chunk: std::ptr::from_ref(running) as usize,
+                        index,
+                    };
+                    // §13.2.8.3 — **cached per site**, so the same tagged template hands the tag the
+                    // same object every time it is evaluated. That identity is the only thing about
+                    // the object a program can detect that its contents do not already say, and it is
+                    // what lets a tag use it as a key into a table of its own.
+                    let object = match self.templates.get(&site) {
+                        Some(held) => *held,
+                        None => {
+                            let Some(template) = running.template(index) else {
+                                return Err(Fault::MissingConstant);
+                            };
+                            let built = self.build_template_object(&template.clone(), heap);
+                            self.templates.insert(site, built);
+                            built
+                        }
+                    };
+                    self.stack.push(Value::Object(object));
+                }
                 Instruction::SuperCall(count) => {
                     let parent = match self.super_constructor(heap) {
                         Ok(parent) => parent,
@@ -1161,6 +1183,92 @@ impl Vm {
                 }
             }
         }
+    }
+}
+
+/// Which tagged template a cached object belongs to — §13.2.8.3's "same Parse Node".
+///
+/// The chunk's address stands for the Parse Node, which is exactly as stable as it needs to be: a
+/// chunk is immutable once compiled and is held alive by the function object that owns it, so two
+/// evaluations of one site are two runs of the same address. The index distinguishes the sites within
+/// it. Not a `Chunk` reference, because the map outlives any one borrow of one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(super) struct TemplateSite {
+    /// The chunk the site is in, by address.
+    chunk: usize,
+    /// Which site in that chunk.
+    index: u32,
+}
+
+impl Vm {
+    /// §13.2.8.3 `GetTemplateObject` — the frozen pair of Arrays a tag is handed.
+    ///
+    /// Frozen and with a frozen `raw` beside it, which is what makes the object safe to hand out and
+    /// keep: a tag cannot change what a later evaluation of the same site will see. A cooked component
+    /// that is `None` becomes `undefined` — §12.9.6 leaves `TV` undefined for an escape that is not
+    /// one, which only a *tagged* template may contain.
+    #[inline(never)]
+    fn build_template_object(
+        &mut self,
+        template: &crate::compile::Template,
+        heap: &mut Heap,
+    ) -> crate::heap::ObjectId {
+        let prototype = self.realm.array_prototype();
+        let count = u32::try_from(template.raw.len()).unwrap_or(u32::MAX); // bounded by the source length
+        let cooked = heap.new_array(prototype, count);
+        let raw = heap.new_array(prototype, count);
+        for (at, (one, other)) in template.cooked.iter().zip(&template.raw).enumerate() {
+            let key = heap.index_key(u32::try_from(at).unwrap_or(u32::MAX)); // same
+            let value = match one {
+                Some(text) => Value::String(*text),
+                None => Value::Undefined,
+            };
+            heap.define_own_property(cooked, key, &PropertyDescriptor::data(value));
+            heap.define_own_property(raw, key, &PropertyDescriptor::data(Value::String(*other)));
+        }
+        // §13.2.8.3 steps 10 and 11 — both arrays are frozen, `raw` before it is attached.
+        freeze(heap, raw);
+        let key = property_name(heap, "raw");
+        // §13.2.8.3 step 9 asks for all three attributes false. Only `enumerable` is stated here: the
+        // freeze on the next line sets the other two a moment later, so writing them would be two
+        // values no input could tell from their absence — which mutation coverage duly reported.
+        heap.define_own_property(
+            cooked,
+            key,
+            &PropertyDescriptor {
+                value: Some(Value::Object(raw)),
+                enumerable: Some(false),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+        freeze(heap, cooked);
+        cooked
+    }
+}
+
+/// `SetIntegrityLevel(o, frozen)` for an array this engine has just built — §7.3.15.
+///
+/// Every property is made non-writable and non-configurable and the object non-extensible. Narrower
+/// than the general operation because the object is one made a moment ago: there are no accessors
+/// among its properties and nothing can have refused, so there is no answer to report.
+fn freeze(heap: &mut Heap, object: crate::heap::ObjectId) {
+    let keys = match heap.object(object) {
+        Some(found) => found.own_property_keys(heap),
+        None => return,
+    };
+    for key in keys {
+        heap.define_own_property(
+            object,
+            key,
+            &PropertyDescriptor {
+                writable: Some(false),
+                configurable: Some(false),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+    }
+    if let Some(found) = heap.object_mut(object) {
+        found.prevent_extensions();
     }
 }
 

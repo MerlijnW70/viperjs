@@ -32,7 +32,7 @@ mod expression;
 mod function;
 mod statement;
 
-pub use self::chunk::{Chunk, Instruction, ShortCircuit, SpreadCall};
+pub use self::chunk::{Chunk, Instruction, ShortCircuit, SpreadCall, Template};
 
 use self::chunk::Unpatched;
 use crate::heap::Heap;

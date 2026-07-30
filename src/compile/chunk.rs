@@ -103,6 +103,12 @@ pub struct Chunk {
     /// exactly as `this` does. The function around it has to know, because it is the one that has
     /// to build the object — and it finds out from here when the arrow's body comes back compiled.
     pub(super) outer_arguments: bool,
+    /// The template objects' contents, one entry per tagged-template *site* in this chunk.
+    ///
+    /// Held here rather than built at compile time because the object is a frozen Array and belongs to
+    /// a *realm*: the same chunk may run in two of them, and each needs its own. See
+    /// [`Instruction::TemplateObject`], which builds one and caches it per site.
+    pub(super) templates: Vec<Template>,
     /// The bodies of the functions written inside this one, in the order they were met.
     ///
     /// An `Rc` because a function object has to outlive the code that made it — `var f = g()`
@@ -111,6 +117,19 @@ pub struct Chunk {
     /// *heap*, where cycles are made before user code runs; a tree of code has none, so the
     /// argument does not reach here.
     pub(super) functions: Vec<Rc<Chunk>>,
+}
+
+/// What a tagged template's object is made of — §13.2.8.3's two arrays.
+///
+/// The cooked strings and the raw ones, one of each per literal component. A cooked one is `None`
+/// where the component holds a `NotEscapeSequence`: §12.9.6 leaves `TV` undefined there, which is
+/// legal in a *tagged* template and a Syntax Error in an untagged one, and is why `String.raw` exists.
+#[derive(Debug, Clone)]
+pub struct Template {
+    /// `TV` per component — `None` for one whose escape is not a valid escape.
+    pub cooked: Vec<Option<crate::heap::StringId>>,
+    /// `TRV` per component, escapes exactly as written.
+    pub raw: Vec<crate::heap::StringId>,
 }
 
 /// One instruction.
@@ -579,6 +598,14 @@ pub enum Instruction {
     /// The operand is the `this` binding's slot, always in the running environment: a `return` is
     /// compiled inside the constructor whose binding it is, however many blocks deep.
     CompleteDerivedReturn(u32),
+    /// Push §13.2.8.3's template object for the tagged template at this index.
+    ///
+    /// A frozen Array of the cooked strings with a frozen `raw` Array of the raw ones. **Cached per
+    /// site**: the same tagged template evaluated twice hands the tag the *same* object, which is what
+    /// lets a tag use it as a key and is the one thing about it a program can detect. So the identity
+    /// is per site and per realm rather than per evaluation, and building a fresh one each time would
+    /// pass every test about its contents and fail every test about its identity.
+    TemplateObject(u32),
     /// Push the running function's `new.target` — §13.3.12.
     ///
     /// `undefined` unless the running call was a `new`, which is the whole of what the expression
@@ -694,6 +721,11 @@ impl Chunk {
     /// The slot a rest parameter's array goes in, if there is one.
     pub fn rest(&self) -> Option<u32> {
         self.rest
+    }
+
+    /// The template at this index, if there is one.
+    pub fn template(&self, index: u32) -> Option<&Template> {
+        self.templates.get(index as usize)
     }
 
     /// The body of the nested function at this index, if there is one.
@@ -856,6 +888,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
+        | Instruction::TemplateObject(_)
         | Instruction::SuperCall(_)
         | Instruction::MakeMethod(_)
         | Instruction::NewPrivateName(_)

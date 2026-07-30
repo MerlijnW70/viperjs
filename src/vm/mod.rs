@@ -157,6 +157,12 @@ pub struct Vm {
     /// path. It starts at zero so that a script which allocates before its first jump is still
     /// asked about.
     until_heap_check: usize,
+    /// §13.2.8.3's template objects, one per tagged-template site that has been reached.
+    ///
+    /// Kept on the machine rather than on the chunk because the object belongs to a *realm*: a chunk
+    /// is immutable and may run in two of them, and each needs its own. Not cleared between runs of
+    /// the same machine, which is what makes the identity survive — that is the whole point of it.
+    templates: std::collections::HashMap<execute::TemplateSite, crate::heap::ObjectId>,
     /// How many nested executions are running, which is how much Rust stack they are using.
     ///
     /// The main loop does not recurse: ten thousand nested JavaScript calls cost ten thousand
@@ -212,6 +218,7 @@ impl Vm {
             completion: Value::Undefined,
             floor: Floor::default(),
             until_heap_check: 0,
+            templates: std::collections::HashMap::new(),
             reentries: 0,
         }
     }

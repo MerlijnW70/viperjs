@@ -372,7 +372,7 @@ impl Compiler<'_> {
             // if it has one, binds only inside the body and is not created yet.
             ExprKind::Class(class) => self.class(class, Naming::default(), span),
             ExprKind::Template(template) => self.template(template),
-            ExprKind::TaggedTemplate { .. } => Err(unsupported("a tagged template", span)),
+            ExprKind::TaggedTemplate { tag, quasi } => self.tagged_template(tag, quasi, span),
             ExprKind::RegExp(_) => Err(unsupported("a regular expression literal", span)),
             ExprKind::Await(_) => Err(unsupported("await", span)),
             ExprKind::Yield(_) => Err(unsupported("yield", span)),
@@ -549,6 +549,70 @@ impl Compiler<'_> {
         }
         Ok(())
     }
+    /// §13.3.11 — a tagged template, which is a call whose first argument is the template object.
+    ///
+    /// `f\`a${b}c\`` is `f(templateObject, b)`, and the tag is called as a *method* when it is written
+    /// as one: `` o.m`x` `` has `o` for its receiver, exactly as `o.m()` would. So this is the ordinary
+    /// call path with an argument list nobody wrote.
+    fn tagged_template(
+        &mut self,
+        tag: &Expr,
+        quasi: &TemplateLiteral,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let method = matches!(
+            tag.kind,
+            ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
+        );
+        if method {
+            let reference = self.property_reference(tag, Keep::Receiver)?;
+            self.chunk.emit(reference.get());
+        } else {
+            self.expression(tag)?;
+        }
+        // §13.2.8.3's object first, then the substitutions in order — which is the argument list
+        // §13.3.11 builds, and the reason a tag with no substitutions still takes one argument.
+        let index = self.template_object(quasi, span)?;
+        self.chunk.emit(Instruction::TemplateObject(index));
+        for expression in quasi.expressions.iter() {
+            self.expression(expression)?;
+        }
+        let count = u32::try_from(quasi.expressions.len() + 1).map_err(|_| CompileError {
+            kind: ErrorKind::TooLong,
+            span,
+        })?;
+        self.chunk.emit(match method {
+            true => Instruction::CallMethod(count),
+            false => Instruction::Call(count),
+        });
+        Ok(())
+    }
+
+    /// File this site's template strings and answer their index.
+    ///
+    /// Interned, because the components of a template are fixed text and the same one may appear in
+    /// a hundred sites — and because the key a property is filed under has to be the interned one.
+    fn template_object(
+        &mut self,
+        quasi: &TemplateLiteral,
+        span: Span,
+    ) -> Result<u32, CompileError> {
+        let mut cooked = Vec::with_capacity(quasi.quasis.len());
+        let mut raw = Vec::with_capacity(quasi.quasis.len());
+        for element in quasi.quasis.iter() {
+            cooked.push(element.cooked.as_ref().map(|units| self.heap.intern(units)));
+            raw.push(self.heap.intern(&element.raw));
+        }
+        let index = u32::try_from(self.chunk.templates.len()).map_err(|_| CompileError {
+            kind: ErrorKind::TooLong,
+            span,
+        })?;
+        self.chunk
+            .templates
+            .push(crate::compile::chunk::Template { cooked, raw });
+        Ok(index)
+    }
+
     /// §8.6.3 `NamedEvaluation` — compile `value`, and name it `name` if it is anonymous.
     ///
     /// The positions this applies to are a closed list in the specification, and every caller of this

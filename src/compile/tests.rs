@@ -51,7 +51,6 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
         ("f?.()", "optional chaining"),
         ("1n", "a BigInt literal"),
         ("delete x", "deleting a name"),
-        ("tag`a`", "a tagged template"),
         ("1 ? 2n : 3", "a BigInt literal"),
         ("/re/", "a regular expression literal"),
     ];
