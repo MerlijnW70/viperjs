@@ -390,6 +390,14 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::NewObject);
 
         for property in properties.iter() {
+            // §13.2.5 — `...o` contributes properties rather than *a* property, so it has no key to
+            // push and nothing for the match below to describe. Its own enumerable properties are
+            // copied onto the literal being built, by the same walk §14.3.3's object rest uses.
+            if let PropertyDefinition::Spread { value, .. } = property {
+                self.expression(value)?;
+                self.chunk.emit(Instruction::SpreadProperties);
+                continue;
+            }
             // §13.2.5's four productions that make a property, reduced to a key and something to
             // put under it. A shorthand is `{a: a}` — the name is both — and a method is a
             // function expression with the property's name; only an *accessor* is a different
@@ -412,6 +420,9 @@ impl Compiler<'_> {
                 PropertyDefinition::ShorthandWithDefault { .. } => {
                     return Err(unsupported("a shorthand with an initializer", span));
                 }
+                // Handled above: a spread has no key, so it cannot produce the triple this match is
+                // for. Listed rather than swept into a catch-all so that a fourth kind of property
+                // cannot arrive here unnoticed.
                 PropertyDefinition::Spread { .. } => {
                     return Err(unsupported("a spread in an object literal", span));
                 }

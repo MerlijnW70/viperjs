@@ -94,12 +94,31 @@ impl Vm {
         heap: &mut Heap,
     ) -> Completion<Value> {
         let built = heap.new_object(Some(self.realm.object_prototype()));
-        // §7.3.25 step 3's `undefined` and `null` need no arm of their own. The only caller is a
-        // pattern, and a pattern raises `RequireObjectCoercible` before it reads anything — so a
-        // guard here would be a branch no input could take, and `object_for` would refuse them
-        // anyway if one ever did.
+        self.copy_data_properties(built, source, excluded, heap)?;
+        Ok(Value::Object(built))
+    }
+
+    /// §7.3.25 `CopyDataProperties` — every own enumerable property of `source`, onto `target`.
+    ///
+    /// Shared by §14.3.3's object rest, which wants a fresh object to put them in, and §13.2.5's
+    /// object spread, which wants them added to the literal being built. Writing the walk twice is
+    /// how the two come to disagree about an accessor or a non-enumerable property.
+    ///
+    /// Step 3 — `undefined` and `null` are *skipped* rather than refused, which is why `{...null}`
+    /// is an empty object and `var {...a} = null` is a TypeError: the difference is a
+    /// `RequireCoercible` the pattern emits and the literal does not, not anything here.
+    pub(crate) fn copy_data_properties(
+        &mut self,
+        target: crate::heap::ObjectId,
+        source: Value,
+        excluded: &[Value],
+        heap: &mut Heap,
+    ) -> Completion<()> {
+        if matches!(source, Value::Undefined | Value::Null) {
+            return Ok(());
+        }
         let Value::Object(from) = self.object_for(source, heap)? else {
-            return Ok(Value::Object(built));
+            return Ok(());
         };
         let mut refused = Vec::with_capacity(excluded.len());
         for key in excluded {
@@ -123,9 +142,9 @@ impl Vm {
                 configurable: Some(true),
                 ..PropertyDescriptor::EMPTY
             };
-            heap.define_own_property(built, key, &descriptor);
+            heap.define_own_property(target, key, &descriptor);
         }
-        Ok(Value::Object(built))
+        Ok(())
     }
 
     /// `ToObject` (§7.1.18) — the object a primitive stands for.

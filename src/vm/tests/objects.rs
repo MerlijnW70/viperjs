@@ -569,3 +569,80 @@ fn an_object_with_many_properties_answers_the_same_as_one_with_few() {
         "z,a"
     );
 }
+
+#[test]
+fn a_spread_in_an_object_literal_copies_own_enumerable_properties() {
+    assert_eq!(
+        run("(function () { var o = {a: 1, b: 2}; var c = {...o}; return c.a + ',' + c.b; })()"),
+        "1,2"
+    );
+    assert_eq!(
+        run("(function () { var o = {a: 1}; var c = {...o, b: 2}; return c.a + ',' + c.b; })()"),
+        "1,2"
+    );
+    // Later wins, whichever side it is written on — a spread is not special in that.
+    assert_eq!(
+        run("(function () { var o = {a: 1}; return {a: 9, ...o}.a; })()"),
+        "1"
+    );
+    assert_eq!(
+        run("(function () { var o = {a: 1}; return {...o, a: 9}.a; })()"),
+        "9"
+    );
+    // §7.3.25 step 3 — `undefined` and `null` are skipped rather than refused. That is the difference
+    // from object *rest* in a pattern, where `var {...a} = null` is a TypeError: the pattern emits a
+    // coercibility check and a literal does not.
+    assert_eq!(
+        run(
+            "(function () { return JSON.stringify({...null}) + ',' + JSON.stringify({...undefined}); })()"
+        ),
+        "{},{}"
+    );
+    // Own and enumerable, both conditions. A non-enumerable property is not copied…
+    assert_eq!(
+        run("(function () { var o = {}; \
+             Object.defineProperty(o, 'h', {value: 1, enumerable: false}); o.v = 2; \
+             var c = {...o}; return ('h' in c) + ',' + c.v; })()"),
+        "false,2"
+    );
+    // …and an inherited one is not either.
+    assert_eq!(
+        run(
+            "(function () { var base = {inherited: 1}; var o = Object.create(base); o.own = 2; \
+             var c = {...o}; return ('inherited' in c) + ',' + c.own; })()"
+        ),
+        "false,2"
+    );
+    // A getter is *called*, once, and what it answered is copied as a plain data property — the
+    // accessor itself does not come along.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var o = {get g() { n++; return 3; }}; var c = {...o}; \
+             return c.g + ',' + n + ',' \
+             + (Object.getOwnPropertyDescriptor(c, 'g').get === undefined); })()"
+        ),
+        "3,1,true"
+    );
+    // Anything with own enumerable properties, not only an object: a String has one per index.
+    assert_eq!(
+        run("(function () { var c = {...'ab'}; return c[0] + c[1]; })()"),
+        "ab"
+    );
+    // Two spreads, each contributing.
+    assert_eq!(
+        run(
+            "(function () { var a = {a: 1}, b = {b: 2}; var c = {...a, ...b}; \
+             return c.a + ',' + c.b; })()"
+        ),
+        "1,2"
+    );
+    // The copies are ordinary data properties, whatever the source's attributes were.
+    assert_eq!(
+        run("(function () { var o = {}; \
+             Object.defineProperty(o, 'a', {value: 1, enumerable: true, writable: false, \
+                                            configurable: false}); \
+             var d = Object.getOwnPropertyDescriptor({...o}, 'a'); \
+             return d.writable + ',' + d.enumerable + ',' + d.configurable; })()"),
+        "true,true,true"
+    );
+}

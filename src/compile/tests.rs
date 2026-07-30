@@ -49,7 +49,6 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // "praxis cannot do this yet" and a wrong answer nobody notices.
     let cases = [
         ("f?.()", "optional chaining"),
-        ("({...a})", "a spread in an object literal"),
         ("1n", "a BigInt literal"),
         ("delete x", "deleting a name"),
         ("tag`a`", "a tagged template"),

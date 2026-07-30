@@ -506,6 +506,20 @@ impl Vm {
                     let how = if method { Entry::Method } else { Entry::Plain };
                     self.enter(how, count, heap, root, current, at)?;
                 }
+                Instruction::SpreadProperties => {
+                    let source = self.pop()?;
+                    let target = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let Value::Object(target) = target else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let copied = self.copy_data_properties(target, source, &[], heap);
+                    if self
+                        .settle(copied.map(|()| Value::Undefined), heap, root, current, at)?
+                        .is_none()
+                    {
+                        continue;
+                    }
+                }
                 Instruction::CallSpread(how) => {
                     // The arguments arrived as one array, because §13.3.8's spread has no count until
                     // it has been iterated. Expanding it here rather than teaching `enter` about

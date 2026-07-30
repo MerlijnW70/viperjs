@@ -288,6 +288,17 @@ pub enum Instruction {
     /// and a spread does not have one until it has been iterated. The array is built first, by the
     /// same code an array literal uses, and this expands it: `f(...a, 1)` and `f.apply` differ only
     /// in who writes the array.
+    /// §13.2.5 `...o` in an object literal — every own enumerable property of the value on top of
+    /// the stack, added to the object beneath it.
+    ///
+    /// Pops the source and leaves the target, because a literal is built with one object on the stack
+    /// throughout, the same way [`Instruction::DefineField`] does.
+    SpreadProperties,
+    /// Call with the arguments in the array on top of the stack — §13.3.8's spread.
+    ///
+    /// A separate instruction because [`Instruction::Call`] fixes its argument count at compile time
+    /// and a spread does not have one until it has been iterated. The array is built first, by the
+    /// same code an array literal uses, and this expands it.
     CallSpread(SpreadCall),
     /// §15.7.14 `ClassDefinitionEvaluation` — the constructor and its prototype, made as a pair.
     ///
@@ -615,6 +626,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::DefineField
         | Instruction::DefineGetter
         | Instruction::DefineSetter
+        | Instruction::SpreadProperties
         | Instruction::CallSpread(_)
         | Instruction::MakeClass(_)
         | Instruction::ClassPrototype
