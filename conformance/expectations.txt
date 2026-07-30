@@ -22230,14 +22230,6 @@ language/statements/class/subclass/builtins.js :: it threw ReferenceError: Uint8
 language/statements/class/subclass/builtins.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 language/statements/class/subclass/default-constructor-spread-override.js :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/default-constructor-spread-override.js (strict) :: it threw an object with no name: @@iterator invoked
-language/statements/class/subclass/derived-class-return-override-catch-finally.js :: it threw ReferenceError: a derived constructor returned before calling `super`
-language/statements/class/subclass/derived-class-return-override-catch-finally.js (strict) :: it threw ReferenceError: a derived constructor returned before calling `super`
-language/statements/class/subclass/derived-class-return-override-catch-super.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/subclass/derived-class-return-override-catch-super.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/subclass/derived-class-return-override-catch.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/subclass/derived-class-return-override-catch.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/subclass/derived-class-return-override-finally-super.js :: it threw ReferenceError: a derived constructor returned before calling `super`
-language/statements/class/subclass/derived-class-return-override-finally-super.js (strict) :: it threw ReferenceError: a derived constructor returned before calling `super`
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/subclass/superclass-arrow-function.js :: it threw ReferenceError: Proxy is not defined
 language/statements/class/subclass/superclass-arrow-function.js (strict) :: it threw ReferenceError: Proxy is not defined
@@ -22645,18 +22637,8 @@ language/statements/switch/scope-var-none-dflt.js :: it threw ReferenceError: ev
 language/statements/switch/tco-case-body-dflt.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/switch/tco-case-body.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/switch/tco-dftl-body.js (strict) :: it threw ReferenceError: f is not defined
-language/statements/try/S12.14_A13_T2.js :: it threw an object with no name: #1.2: "finally" block must be evaluated
-language/statements/try/S12.14_A13_T2.js (strict) :: it threw an object with no name: #1.2: "finally" block must be evaluated
-language/statements/try/S12.14_A13_T3.js :: it threw an object with no name: #1.4: "finally" block must be evaluated
-language/statements/try/S12.14_A13_T3.js (strict) :: it threw an object with no name: #1.4: "finally" block must be evaluated
 language/statements/try/catch-parameter-boundnames-restriction-arguments-eval-throws.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/try/catch-parameter-boundnames-restriction-eval-eval-throws.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/try/completion-values-fn-finally-abrupt.js :: it threw an object with no name: 2: try Abrupt, catch Return, finally Abrupt; Completion: finally Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/try/completion-values-fn-finally-abrupt.js (strict) :: it threw an object with no name: 2: try Abrupt, catch Return, finally Abrupt; Completion: finally Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/try/completion-values-fn-finally-normal.js :: it threw an object with no name: 1 Expected SameValue(«0», «1») to be true
-language/statements/try/completion-values-fn-finally-normal.js (strict) :: it threw an object with no name: 1 Expected SameValue(«0», «1») to be true
-language/statements/try/completion-values-fn-finally-return.js :: it threw an object with no name: 1: try Return, catch Return, finally Return; Completion: finally Expected SameValue(«"try"», «"finally"») to be true
-language/statements/try/completion-values-fn-finally-return.js (strict) :: it threw an object with no name: 1: try Return, catch Return, finally Return; Completion: finally Expected SameValue(«"try"», «"finally"») to be true
 language/statements/try/completion-values.js :: it threw ReferenceError: eval is not defined
 language/statements/try/completion-values.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/try/cptn-catch-empty-break.js :: it threw ReferenceError: eval is not defined

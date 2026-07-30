@@ -298,42 +298,152 @@ fn a_catch_parameter_shadows_an_outer_name_only_inside_its_block() {
 }
 
 #[test]
-fn leaving_a_try_that_has_a_finally_is_refused_rather_than_skipping_it() {
-    // A `break` past a `finally` is a third way out, and the finally would have to run on the
-    // way. Refusing is narrow: a loop written *inside* the try is unaffected, which is the
-    // second row.
-    let mut heap = Heap::new();
-    let script = parse_script("while (1) { try { break; } finally { } }").expect("parses"); // the test is about compiling
-    let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+fn every_way_out_of_a_try_runs_its_finally_on_the_way_past() {
+    // §14.15.3 — a `finally` runs on *every* completion of its `try`, and there are five: falling
+    // off the end, throwing, `break`, `continue` and `return`. The first two were the easy ones,
+    // because they are the two paths the code already had somewhere to put.
     assert_eq!(
-        error.kind,
-        crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
+        run("var n = 0; while (1) { try { break; } finally { n = 1; } } n;"),
+        "1"
     );
-    // A loop inside the `try` may still be left, because that jump crosses no finally.
+    assert_eq!(
+        run(
+            "var r = ''; for (var i = 0; i < 3; i++) { try { continue; } finally { r += 'f'; } } r;"
+        ),
+        "fff"
+    );
+    // A `break` that is *not* the first statement still runs it, and only once.
+    assert_eq!(
+        run(
+            "var r = ''; for (var i = 0; i < 3; i++) { try { if (i === 1) break; r += i; } \
+             finally { r += 'f'; } } r;"
+        ),
+        "0ff"
+    );
+    // A loop written *inside* the `try` crosses no finally, and a `break` after one has already
+    // ended crosses nothing either — both were the cases the old refusal took care to allow, and
+    // both still have to give the same answers now that nothing is refused.
     assert_eq!(
         run("var n = 0; try { while (1) { n = n + 1; break; } } finally { n = n + 10; } n;"),
         "11"
     );
-    // …and a `break` inside a `try` that has only a `catch` is fine too.
-    assert_eq!(
-        run("var n = 0; while (1) { try { break; } catch (e) { } } n;"),
-        "0"
-    );
-
-    // The guard belongs to the `try` that raised it and is put down when that `try` ends, so
-    // a `break` *after* one is crossing nothing.
     assert_eq!(
         run("var n = 0; while (1) { try { } finally { } n = 1; break; } n;"),
         "1"
     );
-    // …and an inner `try` with no finally does not put down the outer one's guard, so a
-    // `break` inside it is still refused.
-    let source = "while (1) { try { try { } catch (e) { } break; } finally { } }";
-    let script = parse_script(source).expect("parses"); // the test is about compiling
-    let error = compile_script(&script, &mut heap).expect_err("still crosses a finally"); // same
+    // Nested, innermost first — an inner `try` with no `finally` of its own is not a reason to
+    // skip the outer one's.
     assert_eq!(
-        error.kind,
-        crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
+        run(
+            "var r = ''; while (1) { try { try { } catch (e) { } break; } finally { r += 'o'; } } r;"
+        ),
+        "o"
+    );
+    assert_eq!(
+        run(
+            "var r = ''; while (1) { try { try { break; } finally { r += 'i'; } } \
+             finally { r += 'o'; } } r;"
+        ),
+        "io"
+    );
+}
+
+#[test]
+fn a_finally_that_cannot_be_compiled_is_reported_from_the_innermost_one() {
+    // A `break` compiles every `finally` it crosses, innermost first, and the first one that
+    // cannot be compiled is the answer. Carrying on past it would report whichever of them failed
+    // *last* — and if a later one compiled cleanly, would report no failure at all and emit a
+    // `break` past a block that was never built.
+    //
+    // Two different refusals, so that "the first one" and "the last one" are distinguishable
+    // answers rather than the same sentence arriving by two routes.
+    let source = "while (1) { try { try { break; } finally { with (0) {} } } \
+                  finally { function* g() {} } }";
+    let mut heap = Heap::new();
+    let script = parse_script(source).expect("the source parses"); // the test is about compiling
+    let error = compile_script(&script, &mut heap).expect_err("the inner finally is refused"); // same
+    assert_eq!(error.kind, crate::compile::ErrorKind::Unsupported("with"));
+}
+
+#[test]
+fn a_return_runs_the_finallys_it_leaves_and_one_of_them_may_replace_it() {
+    // §14.15.3 — the `try` completes with a return, the `finally` runs, and `UpdateEmpty` keeps
+    // the return unless the `finally` completes abruptly itself. Skipping the block entirely
+    // passed every test about the returned *value* and was wrong about everything else: a
+    // `finally` is where a program puts the thing that must happen.
+    assert_eq!(
+        run(
+            "var log = ''; function g() { try { return 1; } finally { log += 'f'; } } \
+             var v = g(); v + ',' + log;"
+        ),
+        "1,f"
+    );
+    // …and when the `finally` has a completion of its own, that one wins. Both directions: a
+    // `return` in the `finally` replaces the value, and one replaces a *throw* as well.
+    assert_eq!(
+        run("function g() { try { return 1; } finally { return 2; } } g();"),
+        "2"
+    );
+    assert_eq!(
+        run("function g() { try { throw new Error('x'); } finally { return 2; } } g();"),
+        "2"
+    );
+    // Every enclosing one, innermost first, and the value survives all of them — it is parked in
+    // a slot rather than left on the stack, because the blocks in between use the stack.
+    assert_eq!(
+        run(
+            "var r = ''; function g() { try { try { return 'v'; } finally { r += 'i'; } } \
+             finally { r += 'o'; } } g() + r;"
+        ),
+        "vio"
+    );
+    // The value is evaluated *before* the finally runs, so a `finally` that changes what the
+    // expression read does not change what was returned.
+    assert_eq!(
+        run("function g() { var n = 1; try { return n; } finally { n = 99; } } g();"),
+        "1"
+    );
+}
+
+#[test]
+fn a_jump_out_of_a_try_takes_down_the_handlers_it_jumps_past() {
+    // Not the specification's: §14.15 unwinds by completion, where this VM unwinds by a stack of
+    // handlers. A `break` that jumped out of a `try` used to leave its handler armed, and the
+    // stale one then caught a throw that happened *after* the `try` had been left — landing in a
+    // `catch` block belonging to a statement the program had finished with. An exception appearing
+    // to be handled by code that is no longer running is about as wrong as an answer gets, and
+    // nothing about it looks like an error from the outside.
+    assert_eq!(
+        run(
+            "(function () { for (;;) { try { break; } catch (e) { return 'a stale handler fired'; } } \
+             try { null.x; } catch (e) { return 'caught here'; } })()"
+        ),
+        "caught here"
+    );
+    // …and with no `try` after it at all, the throw escapes rather than finding the old one.
+    assert_eq!(
+        run(
+            "(function () { try { for (;;) { try { break; } catch (e) { return 'stale'; } } null.x; } \
+             catch (e) { return 'the outer one'; } })()"
+        ),
+        "the outer one"
+    );
+    // A `catch` block is inside one fewer handler than the `try` block is, because the throw that
+    // got there took its own handler off the stack — so a `break` out of a `catch` owes one less.
+    assert_eq!(
+        run(
+            "(function () { for (;;) { try { null.x; } catch (e) { break; } } \
+             try { null.y; } catch (e) { return 'caught here'; } return 'escaped'; })()"
+        ),
+        "caught here"
+    );
+    // …and the same again with a `finally`, which leaves one armed where a bare `catch` leaves none.
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (;;) { try { null.x; } catch (e) { break; } \
+             finally { r += 'f'; } } try { null.y; } catch (e) { return r + ',caught'; } })()"
+        ),
+        "f,caught"
     );
 }
 
@@ -453,16 +563,30 @@ fn a_label_names_the_statement_that_break_and_continue_aim_at() {
 }
 
 #[test]
-fn a_labelled_break_may_not_cross_a_finally_either() {
-    // The same rule the unlabelled one has, and the label makes it easier to break: `break outer`
-    // from inside a `try` leaves a statement further out, so it crosses the finally on the way.
-    let mut heap = Heap::new();
-    let source = "outer: while (1) { try { break outer; } finally { } }";
-    let script = parse_script(source).expect("parses"); // the test is about compiling
-    let error = compile_script(&script, &mut heap).expect_err("crosses a finally"); // same
+fn a_labelled_jump_runs_every_finally_between_here_and_its_label() {
+    // A labelled break leaves more statements than an unlabelled one, and that is the whole of
+    // what is different about it: each one it leaves gets what it is owed, in order.
     assert_eq!(
-        error.kind,
-        crate::compile::ErrorKind::Unsupported("break or continue out of a try with a finally")
+        run("var r = ''; outer: while (1) { try { break outer; } finally { r += 'f'; } } r;"),
+        "f"
+    );
+    // Two of them, innermost first — the order is the nesting and nothing else.
+    assert_eq!(
+        run(
+            "var r = ''; outer: while (1) { try { try { break outer; } finally { r += 'i'; } } \
+             finally { r += 'o'; } } r;"
+        ),
+        "io"
+    );
+    // A labelled `continue` crossing a finally runs it too, and goes round again — which is the
+    // row that separates the two: `break` and `continue` cross the same `finally` and stop at
+    // different places.
+    assert_eq!(
+        run(
+            "var r = ''; outer: for (var i = 0; i < 2; i++) { for (var j = 0; j < 2; j++) { \
+             try { if (j === 0) continue outer; r += 'x'; } finally { r += 'f'; } } } r;"
+        ),
+        "ff"
     );
 
     // A loop *inside* the try is unaffected, labelled or not — the jump crosses nothing.

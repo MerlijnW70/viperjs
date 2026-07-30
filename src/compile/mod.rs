@@ -24,7 +24,7 @@
 //! a location, not a panic and not a silent wrong answer. That list shrinks with each slice, and
 //! the errors are how a reader can tell what is genuinely finished.
 
-use crate::ast::{Expr, Script};
+use crate::ast::{Expr, Script, Stmt};
 use crate::value::Value;
 mod chunk;
 mod class;
@@ -38,6 +38,7 @@ use self::chunk::Unpatched;
 use crate::heap::Heap;
 use crate::span::Span;
 use crate::static_semantics::var_declared_names;
+use std::rc::Rc;
 
 /// Why a program could not be compiled.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -263,11 +264,7 @@ struct Compiler<'a> {
     /// backwards search finds the nearest of two labels with the same name — which the parser
     /// forbids, and which costs nothing to be right about.
     labels: Vec<(Box<str>, usize)>,
-    /// For each enclosing `try` that has a `finally`, how many loops were open when it began.
-    ///
-    /// A `break` may not jump past a `finally`, and this is what tells the two cases apart: a
-    /// loop opened inside the `try` has a greater depth than the number recorded here.
-    finally_guards: Vec<usize>,
+
     /// The jumps out of each `OptionalChain` currently being compiled, innermost last.
     ///
     /// §13.3.9's short circuit ends at the **chain**, not at the link: `a?.b.c` gives up on the whole
@@ -276,22 +273,64 @@ struct Compiler<'a> {
     /// where the jumps to it wait — the same shape `breaks` has, for the same reason: the target is
     /// not compiled yet when the jump is emitted.
     chains: Vec<Vec<Unpatched>>,
-    /// The iterator slot of each `for`-`of` currently being compiled, innermost last.
+    /// What each enclosing statement needs done on the way out of it — innermost last.
     ///
-    /// §7.4.9 `IteratorClose` has to run on every way out of the loop that is not the iterator
-    /// saying it is done — a `break`, a `return`, a labelled break crossing this loop. The
-    /// compiler is the only thing that knows where those jumps are, so it emits the closing
-    /// before each of them, and this is how it knows which iterators are still open.
+    /// A `break`, a `continue` and a `return` all leave statements that installed something, and
+    /// every one of those has to be taken back down in the order it was put up. The specification
+    /// has no such list: §14.15.3 says a `finally` runs on *every* way out of its `try`, §7.4.9
+    /// says a `for`-`of` closes its iterator, and the handler stack is this implementation's own.
+    /// They interleave by nesting and nothing else, so they belong on one stack rather than on
+    /// three that have to be reconciled at each jump.
     ///
-    /// Parallel to `breaks` — **one entry per breakable statement**, and `None` for the ones that
-    /// drive no iterator.
+    /// One stack because two did not work. The iterators were kept in a list parallel to `breaks`
+    /// and the `finally`s in a list of loop depths, and neither could say which of the two was
+    /// *inner* when both sat at the same depth — which is precisely the question a `continue` out
+    /// of a `try` inside a `for`-`of` asks. Position on this stack answers it for free.
+    unwinds: Vec<Unwind>,
+}
+
+/// One thing an abrupt exit has to do on its way past the statement that installed it.
+#[derive(Clone)]
+struct Unwind {
+    /// How many breakable statements were open when this was installed.
     ///
-    /// Genuinely parallel, which it was not: it held one entry per open `for`-`of` while `breaks`
-    /// held one per breakable, and the two indices coincide only while every enclosing breakable is a
-    /// `for`-`of`. A `switch` between a label and its loop was enough to make a labelled break close
-    /// the wrong iterators, or none. Now the index is the same index, and the `Option` is what says
-    /// there is nothing to close rather than the lengths saying it.
-    closes: Vec<Option<u32>>,
+    /// The jump names the breakable it is leaving by index, so this is what decides whether it
+    /// crosses this entry at all: a `try` written *inside* the loop being left has a greater
+    /// number than that loop's index, and one written *around* it does not.
+    outer: usize,
+    /// What to emit.
+    what: Crossing,
+}
+
+/// The three kinds of thing [`Unwind`] can hold, and what each costs to cross.
+#[derive(Clone)]
+enum Crossing {
+    /// The handlers a `try` armed, which a jump out of it has to take down.
+    ///
+    /// Nothing in the specification, and a bug without it: §14.15 unwinds by *completion*, where
+    /// this VM unwinds by a stack of handlers a `PushHandler` put there. Left armed after a
+    /// `break` jumped past it, one of them catches a later throw and lands in a `catch` block the
+    /// program has already left — a wrong answer with no exception in sight.
+    ///
+    /// A count rather than a flag: a `try` with both a `catch` and a `finally` arms two over its
+    /// try block, and only one over its catch block, the other having been consumed by the throw
+    /// that got there.
+    Handlers(u32),
+    /// A `finally` block, which §14.15.3 runs on every way out of the `try` it belongs to.
+    ///
+    /// The statements rather than a jump to one copy of them, because there is nowhere to jump
+    /// *back* to: this VM has no return address that is not a call frame. So the block is emitted
+    /// again at each exit that crosses it, which is what the throw path has always done — the
+    /// normal way out and the unwinding way out are already two copies. Held by `Rc` so that
+    /// re-emitting is a pointer copy rather than a clone of the syntax tree.
+    ///
+    /// Code size is the cost, and it is bounded by the source: a `finally` inside a `finally`
+    /// doubles per level, so deeply nested ones grow fast. A single copy with a dispatch on a
+    /// pending-completion slot would be linear instead; it is worth doing when a real program is
+    /// found that needs it, and not before.
+    Finally(Rc<[Stmt]>),
+    /// A `for`-`of` iterator to close — §7.4.9 `IteratorClose`, in the slot holding it.
+    Iterator(u32),
 }
 
 impl<'a> Compiler<'a> {
@@ -308,8 +347,7 @@ impl<'a> Compiler<'a> {
             continues: Vec::new(),
             hoisted: Vec::new(),
             labels: Vec::new(),
-            finally_guards: Vec::new(),
-            closes: Vec::new(),
+            unwinds: Vec::new(),
             chains: Vec::new(),
             high_water: 0,
             depth: 0,

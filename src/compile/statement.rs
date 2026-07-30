@@ -5,7 +5,7 @@
 //! in the middle of a block can replace it without disturbing anything below.
 
 use super::function::Keep;
-use super::{CompileError, Compiler, Instruction, Unpatched, unsupported};
+use super::{CompileError, Compiler, Crossing, Instruction, Unpatched, Unwind, unsupported};
 use crate::ast::PropertyKey as AstPropertyKey;
 use crate::ast::{
     AssignmentTarget, BinaryOperator, Binding, BindingPattern, Declaration, DeclarationKind, Expr,
@@ -14,6 +14,32 @@ use crate::ast::{
 };
 use crate::span::Span;
 use crate::value::Value;
+use std::rc::Rc;
+
+/// Which jump is leaving, and what it leaves.
+///
+/// The three abrupt completions that travel *out* of a statement without being an exception. They
+/// differ in one place only — whether the target loop's own iterator is closed — and this is where
+/// that one difference is written down, so that no caller has to remember it.
+#[derive(Clone, Copy)]
+enum Exit {
+    /// `break` — the statement whose break list is at this index is left, and everything in it.
+    Break(usize),
+    /// `continue` — the loop at this index is *not* left, so its iterator stays open.
+    Continue(usize),
+    /// `return` — every enclosing statement is left, whatever it is and however deep.
+    Return,
+}
+
+impl Exit {
+    /// The jump a `break` or a `continue` aimed at the statement at `depth` makes.
+    fn of(leaving: bool, depth: usize) -> Self {
+        match leaving {
+            true => Self::Break(depth),
+            false => Self::Continue(depth),
+        }
+    }
+}
 
 impl Compiler<'_> {
     /// Compile one statement, leaving the stack as it found it.
@@ -158,15 +184,19 @@ impl Compiler<'_> {
                     Some(argument) => self.expression(argument)?,
                     None => self.constant(Value::Undefined)?,
                 }
-                // §7.4.9 — a `return` leaves *every* enclosing `for`-`of`, so each of their
-                // iterators is told, innermost first. The value is already on the stack and the
-                // closing is stack-balanced, so it is still there afterwards — and if a `return`
-                // method throws, that throw wins over the return, which is step 7.
-                for at in (0..self.closes.len()).rev() {
-                    if let Some(iterator) = self.closes[at] {
-                        self.emit_close(iterator, Check::Loop)?;
-                    }
-                }
+                // §14.15.3 and §7.4.9 — a `return` leaves *every* enclosing statement, so each
+                // `finally` runs and each `for`-`of` iterator is told, innermost first. If a
+                // `return` method throws, that throw wins over the return, which is §7.4.9 step 7;
+                // if a `finally` returns something of its own, its `Return` runs and this one
+                // never does, which is §14.15.3's `UpdateEmpty` seen from the other side.
+                //
+                // The value stays on the stack under whatever those blocks put above it, and
+                // nothing saves it first. `Return` truncates to the frame it is leaving, so the one
+                // case where this is not stack-neutral — a `finally` that jumps away instead of
+                // falling through, abandoning the value — abandons it into a frame that is about to
+                // go. Saving it in a slot was written first and then taken out: four mutants said
+                // the slot decided nothing, and no test could be written that told them apart.
+                self.unwind_across(Exit::Return)?;
                 // §10.2.2 step 13 — a derived constructor's `return` is stricter than every other
                 // one: an object is answered with, `undefined` is answered with the bound `this`, and
                 // any other primitive is a **TypeError** where a base constructor would ignore it.
@@ -1268,6 +1298,57 @@ impl Compiler<'_> {
             None => Ok(()),
         }
     }
+    /// Emit everything between here and the statement being left.
+    ///
+    /// The one place a `break`, a `continue` and a `return` agree: each leaves some run of
+    /// enclosing statements, and each of those may have a `finally` to run (§14.15.3), an iterator
+    /// to close (§7.4.9) or a handler to take down. They come off innermost first, which is what
+    /// makes a throw inside a `finally` escape the `try` that owns it rather than being caught by
+    /// its own `catch` — the handlers go down before the block that might throw runs.
+    ///
+    /// [`Exit`] says which jump this is and what it leaves — one argument rather than an index and
+    /// a flag, because those two together can spell a `return` that leaves only *some* of them,
+    /// which is not a thing that exists. A mutant that flipped that flag survived every test there
+    /// was, for the good reason that nothing it changed was ever read.
+    fn unwind_across(&mut self, exit: Exit) -> Result<(), CompileError> {
+        let stack = std::mem::take(&mut self.unwinds);
+        let mut outcome = Ok(());
+        for at in (0..stack.len()).rev() {
+            let entry = &stack[at];
+            let iterator = matches!(entry.what, Crossing::Iterator(_));
+            let crossed = match exit {
+                Exit::Return => true,
+                // An iterator belongs to its own loop rather than sitting inside it, which is the
+                // one place the two jumps differ: a `break` closes the target loop's own iterator
+                // and a `continue` does not, while a `finally` at that same depth was written in
+                // the body and runs for either.
+                Exit::Break(depth) => entry.outer > depth || (iterator && entry.outer == depth),
+                Exit::Continue(depth) => entry.outer > depth,
+            };
+            if !crossed {
+                break;
+            }
+            // While this entry is being emitted, it and everything above it is already dealt with.
+            // Without that, a `return` written inside a `finally` would emit the same `finally`
+            // again, and again, for as long as the compiler had memory.
+            self.unwinds = stack[..at].to_vec();
+            outcome = match &stack[at].what {
+                Crossing::Handlers(count) => {
+                    for _ in 0..*count {
+                        self.chunk.emit(Instruction::PopHandler);
+                    }
+                    Ok(())
+                }
+                Crossing::Finally(body) => self.block(body),
+                Crossing::Iterator(slot) => self.emit_close(*slot, Check::Loop),
+            };
+            if outcome.is_err() {
+                break;
+            }
+        }
+        self.unwinds = stack;
+        outcome
+    }
     /// Compile a loop body with somewhere for `break` and `continue` to go.
     ///
     /// `after` compiles whatever follows the body — the jump back, and a `for` loop's update —
@@ -1281,17 +1362,24 @@ impl Compiler<'_> {
     ) -> Result<(), CompileError> {
         self.breaks.push(Vec::new());
         self.continues.push(Vec::new());
-        // One entry per breakable, and the iterator this loop drives if it drives one — §7.4.9's list
-        // is indexed by breakable, so `None` is what says there is nothing to close rather than the
-        // entry being absent. Taken as an argument rather than pushed by the caller beforehand: the
-        // caller would have to know not to push twice, and *that* was a branch nothing could pin.
-        self.closes.push(iterator);
+        // §7.4.9 — the iterator this loop drives, if it drives one, recorded against this loop's
+        // own index rather than against its body: a `continue` of *this* loop does not close it,
+        // which is the one place an iterator differs from everything else on the stack. Taken as an
+        // argument rather than pushed by the caller beforehand: the caller would have to know not to
+        // push twice, and *that* was a branch nothing could pin.
+        let mark = self.unwinds.len();
+        if let Some(slot) = iterator {
+            self.unwinds.push(Unwind {
+                outer: self.breaks.len() - 1,
+                what: Crossing::Iterator(slot),
+            });
+        }
         let compiled = self.statement(body).and_then(|()| after(self));
-        // The two stacks come back down even when compilation failed, so that a later loop does
+        // The stacks come back down even when compilation failed, so that a later loop does
         // not inherit this one's pending jumps and patch them into its own end.
         let continues = self.continues.pop().unwrap_or_default();
         let breaks = self.breaks.pop().unwrap_or_default();
-        self.closes.truncate(self.breaks.len());
+        self.unwinds.truncate(mark);
         let continue_target = compiled?;
         for jump in continues {
             self.chunk.patch_to(jump, continue_target);
@@ -1327,7 +1415,6 @@ impl Compiler<'_> {
         // A `break` inside a switch leaves the switch, so it is a breakable statement like a
         // loop — but not a *continuable* one, which is why only the break stack is pushed.
         self.breaks.push(Vec::new());
-        self.closes.push(None);
 
         // The tests, in order, each jumping to where its body begins.
         let mut entries = Vec::new();
@@ -1368,7 +1455,6 @@ impl Compiler<'_> {
         // The discriminant is still under everything, and a `break` jumps here — so it is
         // discarded after the breaks land rather than before, or a break would leave it behind.
         let breaks = self.breaks.pop().unwrap_or_default();
-        self.closes.truncate(self.breaks.len());
         for jump in breaks {
             self.chunk.patch_to(jump, after);
         }
@@ -1405,10 +1491,8 @@ impl Compiler<'_> {
         // the end of it. `continue outer` is a Syntax Error the parser has already refused, which is
         // why there is no continue list to go with it.
         self.breaks.push(Vec::new());
-        self.closes.push(None);
         let compiled = self.statement(&statement.body);
         let breaks = self.breaks.pop().unwrap_or_default();
-        self.closes.truncate(self.breaks.len());
         self.labels.pop();
         compiled?;
         let after = self.here()?;
@@ -1434,30 +1518,10 @@ impl Compiler<'_> {
             return Err(unsupported("a break or continue to an unknown label", span));
         };
         let depth = *depth;
-        // `depth` is the *index* of the loop's break list, so the loop is `depth + 1` deep —
-        // and a guard recorded at that same number was raised *inside* this loop rather than
-        // outside it. Comparing the index against the count directly refuses a break that
-        // crosses nothing.
-        if self
-            .finally_guards
-            .last()
-            .is_some_and(|guard| depth < *guard)
-        {
-            return Err(unsupported(
-                "break or continue out of a try with a finally",
-                span,
-            ));
-        }
-        // §7.4.9 — a labelled jump may cross several loops, and every `for`-`of` it leaves has
-        // to be told, innermost first. `depth` is the index of the target loop's break list, so
-        // the loops being left are the ones at that index and above — and a `continue` stays
-        // inside the target, so it leaves one fewer.
-        let staying = usize::from(!leaving);
-        for at in (depth + staying..self.closes.len()).rev() {
-            if let Some(iterator) = self.closes[at] {
-                self.emit_close(iterator, Check::Loop)?;
-            }
-        }
+        // A labelled jump may cross several statements at once, and each gets what it is owed on
+        // the way past — which is the whole of what is special about it. An ordinary break leaves
+        // one statement; this one leaves as many as the label is above.
+        self.unwind_across(Exit::of(leaving, depth))?;
         // No "is there a list" check, because there always is: [`Compiler::labelled_statement`]
         // records a label only for a loop, and a loop pushes both lists before its body is
         // compiled. Written with a guard, that guard was a branch nothing could take.
@@ -1486,30 +1550,10 @@ impl Compiler<'_> {
         if pending.is_none() {
             return Err(unsupported("break or continue outside a loop", span));
         }
-        // Leaving a `try` that has a `finally` is a third way out of it, and the finally has to
-        // run on the way past. A loop written inside the `try` is unaffected, which is what the
-        // depth comparison is for: the jump only crosses the finally when its loop began before
-        // the `try` did.
-        // `depth` is the *index* of the loop's break list, so the loop is `depth + 1` deep —
-        // and a guard recorded at that same number was raised *inside* this loop rather than
-        // outside it. Comparing the index against the count directly refuses a break that
-        // crosses nothing.
-        if self
-            .finally_guards
-            .last()
-            .is_some_and(|depth| self.breaks.len() <= *depth)
-        {
-            return Err(unsupported(
-                "break or continue out of a try with a finally",
-                span,
-            ));
-        }
-        // §7.4.9 — a `break` leaves the innermost loop, so an iterator it was driving has to be
-        // told. A `continue` stays in the loop and has nothing to tell it.
-        // The innermost breakable, asked directly rather than inferred from two lengths agreeing.
-        if leaving && let Some(Some(iterator)) = self.closes.last().copied() {
-            self.emit_close(iterator, Check::Loop)?;
-        }
+        // The innermost breakable is the target, and everything between here and it is crossed:
+        // a `finally` in between runs, an iterator in between is closed, a handler in between
+        // comes down.
+        self.unwind_across(Exit::of(leaving, self.breaks.len() - 1))?;
         let jump = self.chunk.emit_jump(Instruction::Jump);
         let pending = if leaving {
             self.breaks.last_mut()
@@ -1557,23 +1601,35 @@ impl Compiler<'_> {
     /// which is the case a single handler gets wrong.
     fn try_statement(&mut self, statement: &TryStatement, span: Span) -> Result<(), CompileError> {
         let has_finally = statement.finalizer.is_some();
-        // `break` and `continue` out of a `try` would have to run the finally on the way past,
-        // which is a third exit path and a larger design. Refusing the ones that leave the `try`
-        // is narrow and honest; a loop written *inside* the try is unaffected, which is why this
-        // records the loop depth rather than refusing outright.
-        if has_finally {
-            self.finally_guards.push(self.breaks.len());
+        let outer = self.breaks.len();
+        let mark = self.unwinds.len();
+        // §14.15.3 — the `finally` goes on first, so that a jump out of here meets it *after* the
+        // handlers. A throw inside a `finally` is not caught by the `try` the `finally` belongs to,
+        // and taking the handlers down before running the block is what makes that true.
+        if let Some(finalizer) = &statement.finalizer {
+            self.unwinds.push(Unwind {
+                outer,
+                what: Crossing::Finally(Rc::from(&**finalizer)),
+            });
         }
         let unwind = has_finally.then(|| self.chunk.emit_jump(Instruction::PushHandler));
         let to_catch = statement
             .handler
             .as_ref()
             .map(|_| self.chunk.emit_jump(Instruction::PushHandler));
+        // Both of them are armed over the try block, and a `break` out of it has to take down
+        // exactly the ones it jumps past — a count rather than a flag, because the catch block
+        // below is inside one of these two and not the other.
+        let armed = u32::from(unwind.is_some()) + u32::from(to_catch.is_some());
+        self.unwinds.push(Unwind {
+            outer,
+            what: Crossing::Handlers(armed),
+        });
 
         let compiled = self.try_body(statement, to_catch);
-        if has_finally {
-            self.finally_guards.pop();
-        }
+        // Down before the `finally` is emitted below: the block belongs to whatever encloses this
+        // `try` rather than to the `try`, so a `break` inside it does not run it a second time.
+        self.unwinds.truncate(mark);
         compiled?;
 
         if let Some(unwind) = unwind {
@@ -1616,6 +1672,14 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::PopHandler);
         let past_the_catch = self.chunk.emit_jump(Instruction::Jump);
         self.chunk.patch(to_catch)?;
+        // From here on one fewer handler is armed: getting to a catch block means the throw found
+        // this handler, and a handler that fires is taken off the stack by the throw that found it.
+        // So a `break` out of the *catch* block owes one less than one out of the try block.
+        if let Some(entry) = self.unwinds.last_mut()
+            && let Crossing::Handlers(armed) = &mut entry.what
+        {
+            *armed = u32::from(statement.finalizer.is_some());
+        }
 
         let Some(handler) = &statement.handler else {
             // Unreachable: `to_catch` exists only when the handler does. Saying so with a jump
