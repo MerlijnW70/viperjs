@@ -158,6 +158,14 @@ impl Compiler<'_> {
                     let iterator = self.closes[at];
                     self.emit_close(iterator, Check::Loop)?;
                 }
+                // §10.2.2 step 13 — a derived constructor's `return` is stricter than every other
+                // one: an object is answered with, `undefined` is answered with the bound `this`, and
+                // any other primitive is a **TypeError** where a base constructor would ignore it.
+                // Emitted after the iterators are closed, because a `return` inside a `for`-`of` has
+                // to close it whatever the value turns out to be.
+                if let Some(slot) = self.chunk.derived_this {
+                    self.chunk.emit(Instruction::CompleteDerivedReturn(slot));
+                }
                 self.chunk.emit(Instruction::Return);
                 Ok(())
             }

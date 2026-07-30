@@ -33,22 +33,32 @@ annexB/built-ins/RegExp/legacy-accessors/input/prop-desc.js :: it threw Referenc
 annexB/built-ins/RegExp/legacy-accessors/input/prop-desc.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/input/this-cross-realm-constructor.js :: it threw ReferenceError: $262 is not defined
 annexB/built-ins/RegExp/legacy-accessors/input/this-cross-realm-constructor.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/built-ins/RegExp/legacy-accessors/input/this-subclass-constructor.js :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/legacy-accessors/input/this-subclass-constructor.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/prop-desc.js :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/prop-desc.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-cross-realm-constructor.js :: it threw ReferenceError: $262 is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-cross-realm-constructor.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-subclass-constructor.js :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-subclass-constructor.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastParen/prop-desc.js :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastParen/prop-desc.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastParen/this-cross-realm-constructor.js :: it threw ReferenceError: $262 is not defined
 annexB/built-ins/RegExp/legacy-accessors/lastParen/this-cross-realm-constructor.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/built-ins/RegExp/legacy-accessors/lastParen/this-subclass-constructor.js :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/legacy-accessors/lastParen/this-subclass-constructor.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/leftContext/prop-desc.js :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/leftContext/prop-desc.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/leftContext/this-cross-realm-constructor.js :: it threw ReferenceError: $262 is not defined
 annexB/built-ins/RegExp/legacy-accessors/leftContext/this-cross-realm-constructor.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/built-ins/RegExp/legacy-accessors/leftContext/this-subclass-constructor.js :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/legacy-accessors/leftContext/this-subclass-constructor.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/rightContext/prop-desc.js :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/rightContext/prop-desc.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-cross-realm-constructor.js :: it threw ReferenceError: $262 is not defined
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-cross-realm-constructor.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/prototype/compile/B.RegExp.prototype.compile.js :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/prototype/compile/B.RegExp.prototype.compile.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/prototype/compile/length.js :: it threw ReferenceError: RegExp is not defined
@@ -61,6 +71,8 @@ annexB/built-ins/RegExp/prototype/compile/this-not-object.js :: it threw Referen
 annexB/built-ins/RegExp/prototype/compile/this-not-object.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/prototype/compile/this-obj-not-regexp.js :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/RegExp/prototype/compile/this-obj-not-regexp.js (strict) :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/prototype/compile/this-subclass-instance.js :: it threw ReferenceError: RegExp is not defined
+annexB/built-ins/RegExp/prototype/compile/this-subclass-instance.js (strict) :: it threw ReferenceError: RegExp is not defined
 annexB/built-ins/String/prototype/anchor/B.2.3.2.js :: it threw TypeError: what was called is not a function
 annexB/built-ins/String/prototype/anchor/B.2.3.2.js (strict) :: it threw TypeError: what was called is not a function
 annexB/built-ins/String/prototype/anchor/attr-tostring-err.js :: it threw an object with no name: Expected a undefined but got a TypeError
@@ -1007,6 +1019,10 @@ annexB/language/global-code/switch-case-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/statements/class/subclass/superclass-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/statements/class/subclass/superclass-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/language/statements/class/subclass/superclass-prototype-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
+annexB/language/statements/class/subclass/superclass-prototype-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js :: it threw ReferenceError: $262 is not defined
@@ -2113,6 +2129,8 @@ built-ins/ArrayBuffer/isView/arg-is-dataview-buffer.js :: it threw ReferenceErro
 built-ins/ArrayBuffer/isView/arg-is-dataview-buffer.js (strict) :: it threw ReferenceError: DataView is not defined
 built-ins/ArrayBuffer/isView/arg-is-dataview-constructor.js :: it threw ReferenceError: ArrayBuffer is not defined
 built-ins/ArrayBuffer/isView/arg-is-dataview-constructor.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
+built-ins/ArrayBuffer/isView/arg-is-dataview-subclass-instance.js :: it threw ReferenceError: DataView is not defined
+built-ins/ArrayBuffer/isView/arg-is-dataview-subclass-instance.js (strict) :: it threw ReferenceError: DataView is not defined
 built-ins/ArrayBuffer/isView/arg-is-dataview.js :: it threw ReferenceError: DataView is not defined
 built-ins/ArrayBuffer/isView/arg-is-dataview.js (strict) :: it threw ReferenceError: DataView is not defined
 built-ins/ArrayBuffer/isView/arg-is-not-object.js :: it threw ReferenceError: ArrayBuffer is not defined
@@ -2121,6 +2139,8 @@ built-ins/ArrayBuffer/isView/arg-is-typedarray-buffer.js :: it threw ReferenceEr
 built-ins/ArrayBuffer/isView/arg-is-typedarray-buffer.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/arg-is-typedarray-constructor.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/arg-is-typedarray-constructor.js (strict) :: it threw ReferenceError: Float64Array is not defined
+built-ins/ArrayBuffer/isView/arg-is-typedarray-subclass-instance.js :: it threw ReferenceError: Float64Array is not defined
+built-ins/ArrayBuffer/isView/arg-is-typedarray-subclass-instance.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/arg-is-typedarray.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/arg-is-typedarray.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/invoked-as-a-fn.js :: it threw ReferenceError: Float64Array is not defined
@@ -2645,6 +2665,8 @@ built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack.j
 built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/sets-state-to-disposed.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/sets-state-to-disposed.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/move/still-returns-new-asyncdisposablestack-when-subclassed.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/move/still-returns-new-asyncdisposablestack-when-subclassed.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/this-does-not-have-internal-asyncdisposablestate-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/this-does-not-have-internal-asyncdisposablestate-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/this-not-object-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -4396,6 +4418,10 @@ built-ins/DisposableStack/prototype/dispose/this-does-not-have-internal-disposab
 built-ins/DisposableStack/prototype/dispose/this-does-not-have-internal-disposablestate-throws.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/dispose/this-not-object-throws.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/dispose/this-not-object-throws.js (strict) :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype/dispose/throws-error-as-is-if-only-one-error-during-disposal.js :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype/dispose/throws-error-as-is-if-only-one-error-during-disposal.js (strict) :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype/dispose/throws-suppressederror-if-multiple-errors-during-disposal.js :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype/dispose/throws-suppressederror-if-multiple-errors-during-disposal.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/disposed/does-not-have-disposablestate-internal-slot.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/disposed/does-not-have-disposablestate-internal-slot.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/disposed/getter.js :: it threw ReferenceError: DisposableStack is not defined
@@ -4426,6 +4452,8 @@ built-ins/DisposableStack/prototype/move/returns-new-disposablestack.js :: it th
 built-ins/DisposableStack/prototype/move/returns-new-disposablestack.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/move/sets-state-to-disposed.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/move/sets-state-to-disposed.js (strict) :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype/move/still-returns-new-disposablestack-when-subclassed.js :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype/move/still-returns-new-disposablestack-when-subclassed.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/move/this-does-not-have-internal-disposablestate-throws.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/move/this-does-not-have-internal-disposablestate-throws.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/move/this-not-object-throws.js :: it threw ReferenceError: DisposableStack is not defined
@@ -4484,6 +4512,8 @@ built-ins/Error/constructor.js :: it threw TypeError: cannot convert an object t
 built-ins/Error/constructor.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Error/is-a-constructor.js :: it threw an object with no name: isConstructor(Error) must return true Expected SameValue(«false», «true») to be true
 built-ins/Error/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Error) must return true Expected SameValue(«false», «true») to be true
+built-ins/Error/isError/error-subclass.js :: it threw TypeError: what was called is not a function
+built-ins/Error/isError/error-subclass.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Error/isError/errors-other-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Error/isError/errors-other-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Error/isError/errors.js :: it threw TypeError: what was called is not a function
@@ -4522,6 +4552,8 @@ built-ins/Error/prototype/stack/getter-not-a-constructor.js :: it threw TypeErro
 built-ins/Error/prototype/stack/getter-not-a-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-receiver-is-proxy.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-receiver-is-proxy.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Error/prototype/stack/getter-subclass.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Error/prototype/stack/getter-subclass.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-this-not-object.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-this-not-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/instance-no-own-stack.js :: it threw an object with no name: Error: Error.prototype has the accessor Expected SameValue(«undefined», «undefined») to be false
@@ -5090,6 +5122,8 @@ built-ins/Iterator/concat/next-method-returns-non-object.js :: it threw Referenc
 built-ins/Iterator/concat/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
@@ -5172,34 +5206,76 @@ built-ins/Iterator/prototype/drop/argument-effect-order.js :: it threw Reference
 built-ins/Iterator/prototype/drop/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/drop/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/drop/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/drop/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/every/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/every/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/every/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/every/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/every/proto.js :: it threw ReferenceError: Iterator is not defined
@@ -5214,16 +5290,40 @@ built-ins/Iterator/prototype/filter/argument-effect-order.js :: it threw an obje
 built-ins/Iterator/prototype/filter/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/filter/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/filter/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -5234,14 +5334,36 @@ built-ins/Iterator/prototype/find/argument-effect-order.js :: it threw an object
 built-ins/Iterator/prototype/find/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/find/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/find/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/find/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/find/proto.js :: it threw ReferenceError: Iterator is not defined
@@ -5256,16 +5378,40 @@ built-ins/Iterator/prototype/flatMap/argument-effect-order.js :: it threw an obj
 built-ins/Iterator/prototype/flatMap/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/flatMap/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/length.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/mapper-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/mapper-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/mapper-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/mapper-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-underlying-iterator.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-underlying-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/flatMap/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -5276,12 +5422,30 @@ built-ins/Iterator/prototype/forEach/argument-effect-order.js :: it threw an obj
 built-ins/Iterator/prototype/forEach/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/forEach/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/fn-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/fn-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/fn-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/fn-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/forEach/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/forEach/proto.js :: it threw ReferenceError: Iterator is not defined
@@ -5332,16 +5496,40 @@ built-ins/Iterator/prototype/map/argument-effect-order.js :: it threw an object 
 built-ins/Iterator/prototype/map/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/map/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/length.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/mapper-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/mapper-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/mapper-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/mapper-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/return-is-forwarded-to-underlying-iterator.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/return-is-forwarded-to-underlying-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/map/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -5352,16 +5540,34 @@ built-ins/Iterator/prototype/reduce/argument-effect-order.js :: it threw an obje
 built-ins/Iterator/prototype/reduce/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/reduce/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/reducer-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/reducer-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/reducer-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/reduce/reducer-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/reduce/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/reduce/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/reduce/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -5372,14 +5578,36 @@ built-ins/Iterator/prototype/some/argument-effect-order.js :: it threw an object
 built-ins/Iterator/prototype/some/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/some/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/some/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/some/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/some/proto.js :: it threw ReferenceError: Iterator is not defined
@@ -5394,28 +5622,62 @@ built-ins/Iterator/prototype/take/argument-effect-order.js :: it threw Reference
 built-ins/Iterator/prototype/take/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/proto.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/take/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/take/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/take/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/length.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/name.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/toArray/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/prop-desc.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/proto.js :: it threw ReferenceError: Iterator is not defined
@@ -5426,12 +5688,18 @@ built-ins/Iterator/prototype/toArray/this-non-object.js :: it threw an object wi
 built-ins/Iterator/prototype/toArray/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/prototype/toArray/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/toArray/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/subclassable.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/subclassable.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zip/is-function.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zip/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zip/iterables-containing-string-objects.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zip/iterables-containing-string-objects.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zip/iterables-iteration-after-reading-options.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zip/iterables-iteration-after-reading-options.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/zip/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/zip/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/zip/iterables-iteration-iterator-step-value-abrupt-completion.js :: it threw an object with no name: Expected a Error but got a ReferenceError
+built-ins/Iterator/zip/iterables-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw an object with no name: Expected a Error but got a ReferenceError
 built-ins/Iterator/zip/iterator-non-iterable.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/zip/iterator-non-iterable.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Iterator/zip/iterator-zip-iteration-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
@@ -5492,6 +5760,12 @@ built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js :: it threw Reference
 built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js :: it threw an object with no name: Expected a Error but got a ReferenceError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a Error but got a ReferenceError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-symbol-key.js :: it threw ReferenceError: Iterator is not defined
@@ -7324,6 +7598,8 @@ built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is 
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/subclass-object-arg.js :: it threw ReferenceError: Reflect is not defined
+built-ins/Object/subclass-object-arg.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Object/values/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/order-after-define-property.js :: it threw ReferenceError: Proxy is not defined
@@ -7360,6 +7636,8 @@ built-ins/Promise/all/capability-resolve-throws-no-close.js :: it threw Referenc
 built-ins/Promise/all/capability-resolve-throws-no-close.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/all/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/all/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/all/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/all/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/all/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/all/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7464,6 +7742,8 @@ built-ins/Promise/allSettled/capability-resolve-throws-no-close.js :: it threw R
 built-ins/Promise/allSettled/capability-resolve-throws-no-close.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/allSettled/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/allSettled/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/allSettled/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettled/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/allSettled/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/allSettled/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7584,6 +7864,8 @@ built-ins/Promise/any/capability-executor-not-callable.js :: it threw an object 
 built-ins/Promise/any/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected a TypeError but got a ReferenceError
 built-ins/Promise/any/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/any/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/any/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/any/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/ctx-non-ctor.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/ctx-non-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/any/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7712,6 +7994,10 @@ built-ins/Promise/prototype/finally/prop-desc.js :: it threw ReferenceError: Pro
 built-ins/Promise/prototype/finally/prop-desc.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/finally/species-constructor-throws.js :: it threw an object with no name: SpeciesConstructor throws a TypeError if the constructor property is not an object. Expected a TypeError but got a ReferenceError
 built-ins/Promise/prototype/finally/species-constructor-throws.js (strict) :: it threw an object with no name: SpeciesConstructor throws a TypeError if the constructor property is not an object. Expected a TypeError but got a ReferenceError
+built-ins/Promise/prototype/finally/subclass-species-constructor-reject-count.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/finally/subclass-species-constructor-reject-count.js (strict) :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/finally/subclass-species-constructor-resolve-count.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/finally/subclass-species-constructor-resolve-count.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/finally/this-value-non-object.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/finally/this-value-non-object.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/finally/this-value-proxy.js :: it threw ReferenceError: Proxy is not defined
@@ -7738,8 +8024,14 @@ built-ins/Promise/prototype/then/S25.4.5.3_A2.1_T1.js :: it threw ReferenceError
 built-ins/Promise/prototype/then/S25.4.5.3_A2.1_T1.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/then/S25.4.5.3_A2.1_T2.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/prototype/then/S25.4.5.3_A2.1_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/prototype/then/capability-executor-called-twice.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/then/capability-executor-called-twice.js (strict) :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/then/capability-executor-not-callable.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/then/capability-executor-not-callable.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/then/context-check-on-entry.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/prototype/then/context-check-on-entry.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/prototype/then/ctor-custom.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/prototype/then/ctor-custom.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/then/ctor-null.js :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/then/ctor-null.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/prototype/then/ctor-poisoned.js :: it threw ReferenceError: Promise is not defined
@@ -7770,6 +8062,8 @@ built-ins/Promise/race/capability-executor-not-callable.js :: it threw an object
 built-ins/Promise/race/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected a TypeError but got a ReferenceError
 built-ins/Promise/race/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/race/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/race/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/race/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/race/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/race/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/race/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7840,6 +8134,8 @@ built-ins/Promise/reject/capability-invocation.js :: it threw ReferenceError: Pr
 built-ins/Promise/reject/capability-invocation.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/reject/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/reject/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/reject/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/reject/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/reject/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/reject/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/reject/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7880,6 +8176,8 @@ built-ins/Promise/resolve/context-non-object-with-promise.js :: it threw Referen
 built-ins/Promise/resolve/context-non-object-with-promise.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/resolve/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/resolve/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/resolve/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/resolve/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/resolve/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/resolve/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/resolve/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7898,6 +8196,8 @@ built-ins/Promise/resolve/resolve-prms-cstm-then.js :: it threw ReferenceError: 
 built-ins/Promise/resolve/resolve-prms-cstm-then.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/try/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/try/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
+built-ins/Promise/try/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/try/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/try/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/try/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/try/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7914,6 +8214,8 @@ built-ins/Promise/try/prop-desc.js :: it threw ReferenceError: Promise is not de
 built-ins/Promise/try/prop-desc.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/undefined-newtarget.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/undefined-newtarget.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/withResolvers/ctx-ctor.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/withResolvers/ctx-ctor.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/withResolvers/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/withResolvers/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/withResolvers/ctx-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7988,10 +8290,14 @@ built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js :: it thre
 built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Proxy/construct/return-not-object-throws-undefined.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/return-not-object-throws-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-not-callable-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Proxy/construct/trap-is-not-callable-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Proxy/construct/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-null.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-null.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-undefined-no-property.js :: it threw ReferenceError: Proxy is not defined
@@ -8000,6 +8306,8 @@ built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js 
 built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw ReferenceError: $262 is not defined
+built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/constructor.js :: it threw an object with no name: `typeof Proxy` is `'function'` Expected SameValue(«"undefined"», «"function"») to be true
@@ -9163,6 +9471,10 @@ built-ins/RegExp/is-a-constructor.js :: it threw ReferenceError: RegExp is not d
 built-ins/RegExp/is-a-constructor.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/RegExp/lastIndex.js :: it threw ReferenceError: RegExp is not defined
 built-ins/RegExp/lastIndex.js (strict) :: it threw ReferenceError: RegExp is not defined
+built-ins/RegExp/named-groups/groups-object-subclass-sans.js :: it threw ReferenceError: RegExp is not defined
+built-ins/RegExp/named-groups/groups-object-subclass-sans.js (strict) :: it threw ReferenceError: RegExp is not defined
+built-ins/RegExp/named-groups/groups-object-subclass.js :: it threw ReferenceError: RegExp is not defined
+built-ins/RegExp/named-groups/groups-object-subclass.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/RegExp/named-groups/non-unicode-property-names-invalid.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/RegExp/named-groups/non-unicode-property-names-invalid.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/RegExp/named-groups/string-replace-escaped.js :: it threw ReferenceError: RegExp is not defined
@@ -9901,6 +10213,10 @@ built-ins/Set/prototype/difference/set-like-class-mutation.js :: it threw Refere
 built-ins/Set/prototype/difference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/subclass.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/subclass.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -10095,6 +10411,10 @@ built-ins/Set/prototype/intersection/set-like-class-mutation.js :: it threw Refe
 built-ins/Set/prototype/intersection/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/subclass.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/subclass.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/builtins.js :: it threw ReferenceError: Set is not defined
@@ -10235,6 +10555,10 @@ built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js :: it thr
 built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/subclass.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/subclass.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/symmetricDifference.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/symmetricDifference.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/add-not-called.js :: it threw ReferenceError: Set is not defined
@@ -10273,6 +10597,10 @@ built-ins/Set/prototype/union/set-like-class-mutation.js :: it threw ReferenceEr
 built-ins/Set/prototype/union/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/subclass.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/subclass.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/union.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/union.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -11223,6 +11551,8 @@ built-ins/Symbol/species/builtin-getter-name.js :: it threw TypeError: cannot re
 built-ins/Symbol/species/builtin-getter-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Symbol/species/cross-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Symbol/species/cross-realm.js (strict) :: it threw ReferenceError: $262 is not defined
+built-ins/Symbol/species/subclassing.js :: it threw ReferenceError: RegExp is not defined
+built-ins/Symbol/species/subclassing.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Symbol/split/cross-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Symbol/split/cross-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Symbol/toPrimitive/cross-realm.js :: it threw ReferenceError: $262 is not defined
@@ -12247,6 +12577,8 @@ built-ins/Temporal/PlainDate/compare/not-same-object.js :: it threw ReferenceErr
 built-ins/Temporal/PlainDate/compare/not-same-object.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/use-internal-slots.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/compare/use-internal-slots.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/constructor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -12895,6 +13227,8 @@ built-ins/Temporal/PlainDateTime/compare/not-a-constructor.js :: it threw an obj
 built-ins/Temporal/PlainDateTime/compare/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/compare/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/use-internal-slots.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/compare/use-internal-slots.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/constructor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -13879,6 +14213,8 @@ built-ins/Temporal/PlainTime/compare/plaintime-propertybag-no-time-units.js :: i
 built-ins/Temporal/PlainTime/compare/plaintime-propertybag-no-time-units.js (strict) :: it threw an object with no name: TypeError if no properties are present Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainTime/compare/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/use-internal-slots.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/compare/use-internal-slots.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/constructor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -14347,6 +14683,8 @@ built-ins/Temporal/PlainYearMonth/compare/not-a-constructor.js :: it threw an ob
 built-ins/Temporal/PlainYearMonth/compare/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/compare/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/use-internal-slots.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/compare/use-internal-slots.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/constructor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -14513,6 +14851,8 @@ built-ins/Temporal/PlainYearMonth/prototype/equals/not-a-constructor.js :: it th
 built-ins/Temporal/PlainYearMonth/prototype/equals/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/prototype/equals/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/use-internal-slots.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/prototype/equals/use-internal-slots.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/year-zero.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/equals/year-zero.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/era/basic.js :: it threw ReferenceError: Temporal is not defined
@@ -18093,6 +18433,8 @@ built-ins/TypedArrayConstructors/ctors/no-args/use-custom-proto-if-object.js :: 
 built-ins/TypedArrayConstructors/ctors/no-args/use-custom-proto-if-object.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArrayConstructors/ctors/no-args/use-default-proto-if-custom-proto-is-not-object.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArrayConstructors/ctors/no-args/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw ReferenceError: Float64Array is not defined
+built-ins/TypedArrayConstructors/ctors/no-species.js :: it threw ReferenceError: ArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors/no-species.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
 built-ins/TypedArrayConstructors/ctors/object-arg/as-array-returns.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArrayConstructors/ctors/object-arg/as-array-returns.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/TypedArrayConstructors/ctors/object-arg/conversion-operation-consistent-nan.js :: it threw ReferenceError: Float64Array is not defined
@@ -18735,6 +19077,8 @@ built-ins/Uint8Array/fromBase64/alphabet.js :: it threw ReferenceError: Uint8Arr
 built-ins/Uint8Array/fromBase64/alphabet.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Uint8Array/fromBase64/descriptor.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Uint8Array/fromBase64/descriptor.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+built-ins/Uint8Array/fromBase64/ignores-receiver.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/Uint8Array/fromBase64/ignores-receiver.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Uint8Array/fromBase64/illegal-characters.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/Uint8Array/fromBase64/illegal-characters.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/Uint8Array/fromBase64/last-chunk-handling.js :: it threw ReferenceError: Uint8Array is not defined
@@ -18757,6 +19101,8 @@ built-ins/Uint8Array/fromBase64/whitespace.js :: it threw ReferenceError: Uint8A
 built-ins/Uint8Array/fromBase64/whitespace.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Uint8Array/fromHex/descriptor.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Uint8Array/fromHex/descriptor.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+built-ins/Uint8Array/fromHex/ignores-receiver.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/Uint8Array/fromHex/ignores-receiver.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Uint8Array/fromHex/illegal-characters.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/Uint8Array/fromHex/illegal-characters.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/Uint8Array/fromHex/length.js :: it threw ReferenceError: Uint8Array is not defined
@@ -20439,6 +20785,26 @@ language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js ::
 language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/arrow-body-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/arrow-body-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
@@ -20455,6 +20821,26 @@ language/expressions/class/elements/computed-name-toprimitive-symbol.js :: it th
 language/expressions/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
 language/expressions/class/elements/computed-name-toprimitive.js :: it threw an object with no name
 language/expressions/class/elements/computed-name-toprimitive.js (strict) :: it threw an object with no name
+language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
@@ -20476,6 +20862,26 @@ language/expressions/class/elements/indirect-eval-err-contains-newtarget.js :: i
 language/expressions/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/class/elements/nested-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/nested-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/nested-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/nested-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
@@ -20538,6 +20944,80 @@ language/expressions/class/private-static-setter-multiple-evaluations-of-class-e
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw ReferenceError: $262 is not defined
+language/expressions/class/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/subclass-builtins/subclass-AggregateError.js :: it threw ReferenceError: AggregateError is not defined
+language/expressions/class/subclass-builtins/subclass-AggregateError.js (strict) :: it threw ReferenceError: AggregateError is not defined
+language/expressions/class/subclass-builtins/subclass-Array.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Array.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-ArrayBuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
+language/expressions/class/subclass-builtins/subclass-ArrayBuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
+language/expressions/class/subclass-builtins/subclass-BigInt64Array.js :: it threw ReferenceError: BigInt64Array is not defined
+language/expressions/class/subclass-builtins/subclass-BigInt64Array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+language/expressions/class/subclass-builtins/subclass-BigUint64Array.js :: it threw ReferenceError: BigUint64Array is not defined
+language/expressions/class/subclass-builtins/subclass-BigUint64Array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
+language/expressions/class/subclass-builtins/subclass-Boolean.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Boolean.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-DataView.js :: it threw ReferenceError: DataView is not defined
+language/expressions/class/subclass-builtins/subclass-DataView.js (strict) :: it threw ReferenceError: DataView is not defined
+language/expressions/class/subclass-builtins/subclass-Date.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Date.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Error.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Error.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-EvalError.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-EvalError.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Float32Array.js :: it threw ReferenceError: Float32Array is not defined
+language/expressions/class/subclass-builtins/subclass-Float32Array.js (strict) :: it threw ReferenceError: Float32Array is not defined
+language/expressions/class/subclass-builtins/subclass-Float64Array.js :: it threw ReferenceError: Float64Array is not defined
+language/expressions/class/subclass-builtins/subclass-Float64Array.js (strict) :: it threw ReferenceError: Float64Array is not defined
+language/expressions/class/subclass-builtins/subclass-Function.js :: it threw TypeError: building a function from source text is not implemented yet
+language/expressions/class/subclass-builtins/subclass-Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/expressions/class/subclass-builtins/subclass-Int16Array.js :: it threw ReferenceError: Int16Array is not defined
+language/expressions/class/subclass-builtins/subclass-Int16Array.js (strict) :: it threw ReferenceError: Int16Array is not defined
+language/expressions/class/subclass-builtins/subclass-Int32Array.js :: it threw ReferenceError: Int32Array is not defined
+language/expressions/class/subclass-builtins/subclass-Int32Array.js (strict) :: it threw ReferenceError: Int32Array is not defined
+language/expressions/class/subclass-builtins/subclass-Int8Array.js :: it threw ReferenceError: Int8Array is not defined
+language/expressions/class/subclass-builtins/subclass-Int8Array.js (strict) :: it threw ReferenceError: Int8Array is not defined
+language/expressions/class/subclass-builtins/subclass-Map.js :: it threw ReferenceError: Map is not defined
+language/expressions/class/subclass-builtins/subclass-Map.js (strict) :: it threw ReferenceError: Map is not defined
+language/expressions/class/subclass-builtins/subclass-Number.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Number.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Object.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Object.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Promise.js :: it threw ReferenceError: Promise is not defined
+language/expressions/class/subclass-builtins/subclass-Promise.js (strict) :: it threw ReferenceError: Promise is not defined
+language/expressions/class/subclass-builtins/subclass-RangeError.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-RangeError.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-ReferenceError.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-ReferenceError.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-RegExp.js :: it threw ReferenceError: RegExp is not defined
+language/expressions/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
+language/expressions/class/subclass-builtins/subclass-Set.js :: it threw ReferenceError: Set is not defined
+language/expressions/class/subclass-builtins/subclass-Set.js (strict) :: it threw ReferenceError: Set is not defined
+language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
+language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+language/expressions/class/subclass-builtins/subclass-String.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-String.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-SyntaxError.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-SyntaxError.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-TypeError.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-TypeError.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-URIError.js :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-URIError.js (strict) :: it threw an object with no name: Expected true but got false
+language/expressions/class/subclass-builtins/subclass-Uint16Array.js :: it threw ReferenceError: Uint16Array is not defined
+language/expressions/class/subclass-builtins/subclass-Uint16Array.js (strict) :: it threw ReferenceError: Uint16Array is not defined
+language/expressions/class/subclass-builtins/subclass-Uint32Array.js :: it threw ReferenceError: Uint32Array is not defined
+language/expressions/class/subclass-builtins/subclass-Uint32Array.js (strict) :: it threw ReferenceError: Uint32Array is not defined
+language/expressions/class/subclass-builtins/subclass-Uint8Array.js :: it threw ReferenceError: Uint8Array is not defined
+language/expressions/class/subclass-builtins/subclass-Uint8Array.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+language/expressions/class/subclass-builtins/subclass-Uint8ClampedArray.js :: it threw ReferenceError: Uint8ClampedArray is not defined
+language/expressions/class/subclass-builtins/subclass-Uint8ClampedArray.js (strict) :: it threw ReferenceError: Uint8ClampedArray is not defined
+language/expressions/class/subclass-builtins/subclass-WeakMap.js :: it threw ReferenceError: WeakMap is not defined
+language/expressions/class/subclass-builtins/subclass-WeakMap.js (strict) :: it threw ReferenceError: WeakMap is not defined
+language/expressions/class/subclass-builtins/subclass-WeakRef.js :: it threw ReferenceError: WeakRef is not defined
+language/expressions/class/subclass-builtins/subclass-WeakRef.js (strict) :: it threw ReferenceError: WeakRef is not defined
+language/expressions/class/subclass-builtins/subclass-WeakSet.js :: it threw ReferenceError: WeakSet is not defined
+language/expressions/class/subclass-builtins/subclass-WeakSet.js (strict) :: it threw ReferenceError: WeakSet is not defined
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -21230,10 +21710,18 @@ language/expressions/subtraction/S11.6.2_A1.js :: it threw ReferenceError: eval 
 language/expressions/subtraction/S11.6.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
 language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
+language/expressions/super/call-construct-invocation.js :: it threw ReferenceError: Reflect is not defined
+language/expressions/super/call-construct-invocation.js (strict) :: it threw ReferenceError: Reflect is not defined
+language/expressions/super/prop-dot-cls-val-from-eval.js :: it threw ReferenceError: eval is not defined
+language/expressions/super/prop-dot-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-dot-obj-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-dot-obj-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/super/prop-expr-cls-val-from-eval.js :: it threw ReferenceError: eval is not defined
+language/expressions/super/prop-expr-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-obj-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-obj-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/super/realm.js :: it threw ReferenceError: $262 is not defined
+language/expressions/super/realm.js (strict) :: it threw ReferenceError: $262 is not defined
 language/expressions/tagged-template/cache-eval-inner-function.js :: it threw ReferenceError: eval is not defined
 language/expressions/tagged-template/cache-eval-inner-function.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/tco-pos.js (strict) :: it threw ReferenceError: f is not defined
@@ -21756,17 +22244,59 @@ language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js :: 
 language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw ReferenceError: Proxy is not defined
+language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/computed-name-toprimitive-symbol.js :: it threw an object with no name
 language/statements/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
 language/statements/class/elements/computed-name-toprimitive.js :: it threw an object with no name
 language/statements/class/elements/computed-name-toprimitive.js (strict) :: it threw an object with no name
+language/statements/class/elements/derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
@@ -21790,6 +22320,26 @@ language/statements/class/elements/indirect-eval-err-contains-newtarget.js :: it
 language/statements/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/statements/class/elements/nested-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/nested-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/nested-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/nested-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
@@ -21809,6 +22359,8 @@ language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js :: i
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
+language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 language/statements/class/elements/static-field-init-with-this.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/static-field-init-with-this.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
@@ -21823,12 +22375,176 @@ language/statements/class/method/dflt-params-ref-self.js :: it threw an object w
 language/statements/class/method/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/name.js :: it threw an object with no name: name should be an own property
 language/statements/class/name.js (strict) :: it threw an object with no name: name should be an own property
+language/statements/class/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/static-init-arguments-functions.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-method-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/static-method-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/strict-mode/arguments-callee.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/strict-mode/arguments-callee.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/subclass-builtins/subclass-AggregateError.js :: it threw ReferenceError: AggregateError is not defined
+language/statements/class/subclass-builtins/subclass-AggregateError.js (strict) :: it threw ReferenceError: AggregateError is not defined
+language/statements/class/subclass-builtins/subclass-Array.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Array.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-ArrayBuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
+language/statements/class/subclass-builtins/subclass-ArrayBuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
+language/statements/class/subclass-builtins/subclass-BigInt64Array.js :: it threw ReferenceError: BigInt64Array is not defined
+language/statements/class/subclass-builtins/subclass-BigInt64Array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+language/statements/class/subclass-builtins/subclass-BigUint64Array.js :: it threw ReferenceError: BigUint64Array is not defined
+language/statements/class/subclass-builtins/subclass-BigUint64Array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
+language/statements/class/subclass-builtins/subclass-Boolean.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Boolean.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-DataView.js :: it threw ReferenceError: DataView is not defined
+language/statements/class/subclass-builtins/subclass-DataView.js (strict) :: it threw ReferenceError: DataView is not defined
+language/statements/class/subclass-builtins/subclass-Date.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Date.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Error.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Error.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-EvalError.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-EvalError.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Float32Array.js :: it threw ReferenceError: Float32Array is not defined
+language/statements/class/subclass-builtins/subclass-Float32Array.js (strict) :: it threw ReferenceError: Float32Array is not defined
+language/statements/class/subclass-builtins/subclass-Float64Array.js :: it threw ReferenceError: Float64Array is not defined
+language/statements/class/subclass-builtins/subclass-Float64Array.js (strict) :: it threw ReferenceError: Float64Array is not defined
+language/statements/class/subclass-builtins/subclass-Function.js :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass-builtins/subclass-Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass-builtins/subclass-Int16Array.js :: it threw ReferenceError: Int16Array is not defined
+language/statements/class/subclass-builtins/subclass-Int16Array.js (strict) :: it threw ReferenceError: Int16Array is not defined
+language/statements/class/subclass-builtins/subclass-Int32Array.js :: it threw ReferenceError: Int32Array is not defined
+language/statements/class/subclass-builtins/subclass-Int32Array.js (strict) :: it threw ReferenceError: Int32Array is not defined
+language/statements/class/subclass-builtins/subclass-Int8Array.js :: it threw ReferenceError: Int8Array is not defined
+language/statements/class/subclass-builtins/subclass-Int8Array.js (strict) :: it threw ReferenceError: Int8Array is not defined
+language/statements/class/subclass-builtins/subclass-Map.js :: it threw ReferenceError: Map is not defined
+language/statements/class/subclass-builtins/subclass-Map.js (strict) :: it threw ReferenceError: Map is not defined
+language/statements/class/subclass-builtins/subclass-Number.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Number.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Object.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Object.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Promise.js :: it threw ReferenceError: Promise is not defined
+language/statements/class/subclass-builtins/subclass-Promise.js (strict) :: it threw ReferenceError: Promise is not defined
+language/statements/class/subclass-builtins/subclass-RangeError.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-RangeError.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-ReferenceError.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-ReferenceError.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-RegExp.js :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass-builtins/subclass-Set.js :: it threw ReferenceError: Set is not defined
+language/statements/class/subclass-builtins/subclass-Set.js (strict) :: it threw ReferenceError: Set is not defined
+language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
+language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+language/statements/class/subclass-builtins/subclass-String.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-String.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-SyntaxError.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-SyntaxError.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-TypeError.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-TypeError.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-URIError.js :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-URIError.js (strict) :: it threw an object with no name: Expected true but got false
+language/statements/class/subclass-builtins/subclass-Uint16Array.js :: it threw ReferenceError: Uint16Array is not defined
+language/statements/class/subclass-builtins/subclass-Uint16Array.js (strict) :: it threw ReferenceError: Uint16Array is not defined
+language/statements/class/subclass-builtins/subclass-Uint32Array.js :: it threw ReferenceError: Uint32Array is not defined
+language/statements/class/subclass-builtins/subclass-Uint32Array.js (strict) :: it threw ReferenceError: Uint32Array is not defined
+language/statements/class/subclass-builtins/subclass-Uint8Array.js :: it threw ReferenceError: Uint8Array is not defined
+language/statements/class/subclass-builtins/subclass-Uint8Array.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+language/statements/class/subclass-builtins/subclass-Uint8ClampedArray.js :: it threw ReferenceError: Uint8ClampedArray is not defined
+language/statements/class/subclass-builtins/subclass-Uint8ClampedArray.js (strict) :: it threw ReferenceError: Uint8ClampedArray is not defined
+language/statements/class/subclass-builtins/subclass-WeakMap.js :: it threw ReferenceError: WeakMap is not defined
+language/statements/class/subclass-builtins/subclass-WeakMap.js (strict) :: it threw ReferenceError: WeakMap is not defined
+language/statements/class/subclass-builtins/subclass-WeakRef.js :: it threw ReferenceError: WeakRef is not defined
+language/statements/class/subclass-builtins/subclass-WeakRef.js (strict) :: it threw ReferenceError: WeakRef is not defined
+language/statements/class/subclass-builtins/subclass-WeakSet.js :: it threw ReferenceError: WeakSet is not defined
+language/statements/class/subclass-builtins/subclass-WeakSet.js (strict) :: it threw ReferenceError: WeakSet is not defined
+language/statements/class/subclass/builtin-objects/ArrayBuffer/regular-subclassing.js :: it threw ReferenceError: ArrayBuffer is not defined
+language/statements/class/subclass/builtin-objects/ArrayBuffer/regular-subclassing.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
+language/statements/class/subclass/builtin-objects/ArrayBuffer/super-must-be-called.js :: it threw ReferenceError: ArrayBuffer is not defined
+language/statements/class/subclass/builtin-objects/ArrayBuffer/super-must-be-called.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
+language/statements/class/subclass/builtin-objects/DataView/regular-subclassing.js :: it threw ReferenceError: DataView is not defined
+language/statements/class/subclass/builtin-objects/DataView/regular-subclassing.js (strict) :: it threw ReferenceError: DataView is not defined
+language/statements/class/subclass/builtin-objects/DataView/super-must-be-called.js :: it threw ReferenceError: DataView is not defined
+language/statements/class/subclass/builtin-objects/DataView/super-must-be-called.js (strict) :: it threw ReferenceError: DataView is not defined
+language/statements/class/subclass/builtin-objects/Error/message-property-assignment.js :: it threw an object with no name: Expected SameValue(«""», «"custom-error"») to be true
+language/statements/class/subclass/builtin-objects/Error/message-property-assignment.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-error"») to be true
+language/statements/class/subclass/builtin-objects/Function/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/instance-name.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/regular-subclassing.js :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/regular-subclassing.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/Map/regular-subclassing.js :: it threw ReferenceError: Map is not defined
+language/statements/class/subclass/builtin-objects/Map/regular-subclassing.js (strict) :: it threw ReferenceError: Map is not defined
+language/statements/class/subclass/builtin-objects/Map/super-must-be-called.js :: it threw ReferenceError: Map is not defined
+language/statements/class/subclass/builtin-objects/Map/super-must-be-called.js (strict) :: it threw ReferenceError: Map is not defined
+language/statements/class/subclass/builtin-objects/NativeError/EvalError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-eval-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/EvalError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-eval-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/RangeError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-range-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/RangeError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-range-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/ReferenceError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-reference-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/ReferenceError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-reference-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/SyntaxError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-syntax-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/SyntaxError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-syntax-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/TypeError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-type-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/TypeError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-type-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/URIError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-uri-error"») to be true
+language/statements/class/subclass/builtin-objects/NativeError/URIError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-uri-error"») to be true
+language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js :: it threw TypeError: what was called is not a function
+language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js (strict) :: it threw TypeError: what was called is not a function
+language/statements/class/subclass/builtin-objects/Object/regular-subclassing.js :: it threw an object with no name: returns the class prototype Expected SameValue(«[object Object]», «[object Object]») to be false
+language/statements/class/subclass/builtin-objects/Object/regular-subclassing.js (strict) :: it threw an object with no name: returns the class prototype Expected SameValue(«[object Object]», «[object Object]») to be false
+language/statements/class/subclass/builtin-objects/Object/replacing-prototype.js :: it threw an object with no name: Replaces prototype Expected SameValue(«[object Object]», «42») to be true
+language/statements/class/subclass/builtin-objects/Object/replacing-prototype.js (strict) :: it threw an object with no name: Replaces prototype Expected SameValue(«[object Object]», «42») to be true
+language/statements/class/subclass/builtin-objects/Promise/regular-subclassing.js :: it threw ReferenceError: Promise is not defined
+language/statements/class/subclass/builtin-objects/Promise/regular-subclassing.js (strict) :: it threw ReferenceError: Promise is not defined
+language/statements/class/subclass/builtin-objects/Promise/super-must-be-called.js :: it threw ReferenceError: Promise is not defined
+language/statements/class/subclass/builtin-objects/Promise/super-must-be-called.js (strict) :: it threw ReferenceError: Promise is not defined
+language/statements/class/subclass/builtin-objects/Proxy/no-prototype-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+language/statements/class/subclass/builtin-objects/Proxy/no-prototype-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+language/statements/class/subclass/builtin-objects/RegExp/lastIndex.js :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass/builtin-objects/RegExp/lastIndex.js (strict) :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass/builtin-objects/RegExp/regular-subclassing.js :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass/builtin-objects/RegExp/regular-subclassing.js (strict) :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass/builtin-objects/RegExp/super-must-be-called.js :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass/builtin-objects/RegExp/super-must-be-called.js (strict) :: it threw ReferenceError: RegExp is not defined
+language/statements/class/subclass/builtin-objects/Set/regular-subclassing.js :: it threw ReferenceError: Set is not defined
+language/statements/class/subclass/builtin-objects/Set/regular-subclassing.js (strict) :: it threw ReferenceError: Set is not defined
+language/statements/class/subclass/builtin-objects/Set/super-must-be-called.js :: it threw ReferenceError: Set is not defined
+language/statements/class/subclass/builtin-objects/Set/super-must-be-called.js (strict) :: it threw ReferenceError: Set is not defined
+language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js :: it threw TypeError: a class may only extend a constructor or null
+language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js (strict) :: it threw TypeError: a class may only extend a constructor or null
+language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js :: it threw TypeError: a class may only extend a constructor or null
+language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js (strict) :: it threw TypeError: a class may only extend a constructor or null
+language/statements/class/subclass/builtin-objects/TypedArray/regular-subclassing.js :: it threw ReferenceError: Float64Array is not defined
+language/statements/class/subclass/builtin-objects/TypedArray/regular-subclassing.js (strict) :: it threw ReferenceError: Float64Array is not defined
+language/statements/class/subclass/builtin-objects/TypedArray/super-must-be-called.js :: it threw ReferenceError: Float64Array is not defined
+language/statements/class/subclass/builtin-objects/TypedArray/super-must-be-called.js (strict) :: it threw ReferenceError: Float64Array is not defined
+language/statements/class/subclass/builtin-objects/WeakMap/regular-subclassing.js :: it threw ReferenceError: WeakMap is not defined
+language/statements/class/subclass/builtin-objects/WeakMap/regular-subclassing.js (strict) :: it threw ReferenceError: WeakMap is not defined
+language/statements/class/subclass/builtin-objects/WeakMap/super-must-be-called.js :: it threw ReferenceError: WeakMap is not defined
+language/statements/class/subclass/builtin-objects/WeakMap/super-must-be-called.js (strict) :: it threw ReferenceError: WeakMap is not defined
+language/statements/class/subclass/builtin-objects/WeakSet/regular-subclassing.js :: it threw ReferenceError: WeakSet is not defined
+language/statements/class/subclass/builtin-objects/WeakSet/regular-subclassing.js (strict) :: it threw ReferenceError: WeakSet is not defined
+language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.js :: it threw ReferenceError: WeakSet is not defined
+language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.js (strict) :: it threw ReferenceError: WeakSet is not defined
+language/statements/class/subclass/builtins.js :: it threw ReferenceError: Uint8Array is not defined
+language/statements/class/subclass/builtins.js (strict) :: it threw ReferenceError: Uint8Array is not defined
+language/statements/class/subclass/default-constructor-spread-override.js :: it threw an object with no name: @@iterator invoked
+language/statements/class/subclass/default-constructor-spread-override.js (strict) :: it threw an object with no name: @@iterator invoked
+language/statements/class/subclass/derived-class-return-override-catch-finally.js :: it threw ReferenceError: a derived constructor returned before calling `super`
+language/statements/class/subclass/derived-class-return-override-catch-finally.js (strict) :: it threw ReferenceError: a derived constructor returned before calling `super`
+language/statements/class/subclass/derived-class-return-override-catch-super.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/subclass/derived-class-return-override-catch-super.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/subclass/derived-class-return-override-catch.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/subclass/derived-class-return-override-catch.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/subclass/derived-class-return-override-finally-super.js :: it threw ReferenceError: a derived constructor returned before calling `super`
+language/statements/class/subclass/derived-class-return-override-finally-super.js (strict) :: it threw ReferenceError: a derived constructor returned before calling `super`
+language/statements/class/subclass/superclass-arrow-function.js :: it threw ReferenceError: Proxy is not defined
+language/statements/class/subclass/superclass-arrow-function.js (strict) :: it threw ReferenceError: Proxy is not defined
+language/statements/class/subclass/superclass-bound-function.js :: it threw TypeError: undefined and null cannot be converted to an object
+language/statements/class/subclass/superclass-bound-function.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/const/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/const/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/const/dstr/ary-ptrn-elem-id-init-fn-name-arrow.js :: it threw an object with no name: Expected SameValue(«undefined», «"arrow"») to be true

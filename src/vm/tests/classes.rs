@@ -285,14 +285,24 @@ fn a_class_declaration_is_lexical_and_an_expression_is_a_value() {
 
 #[test]
 fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
-    // `extends` is the last thing a class body cannot hold, and it is refused rather than
-    // mis-compiled: the harness reports a refusal as *not run* rather than as a wrong answer, and a
-    // class that silently dropped its inheritance would be worse than one that will not compile.
+    // Refused rather than mis-compiled: the harness reports a refusal as *not run* rather than as a
+    // wrong answer, and a class that silently dropped an element would be worse than one that will
+    // not compile.
     //
-    // This list has been shortened five times, once per slice, and each time because a row was
-    // asserting the opposite of what it said. A refusal test outlives the refusal it describes.
-    let error = compile_error("class C extends Object {}");
-    assert!(error.contains("extends"), "got {error:?}");
+    // This list has been shortened seven times, once per slice, and each time because a row was
+    // asserting the opposite of what it said — a refusal test outlives the refusal it describes. Two
+    // near-identical copies of it had also accumulated in this file, each shortened separately; they
+    // are one test now, because the second was where a stale row could hide from the first.
+    //
+    // What is genuinely left: a private name, and `super` in any position but a call — `super.m()`
+    // needs `[[HomeObject]]`, which is its own slice.
+    for (source, named) in [
+        ("class C { #x = 1; }", "private name"),
+        ("class B {} class C extends B { m() { return super.m(); } }", "super"),
+    ] {
+        let error = compile_error(source);
+        assert!(error.contains(named), "{source}: got {error:?}");
+    }
     // Everything else a class body can hold now compiles, so there is no row for it here.
     assert_eq!(
         run(
@@ -400,15 +410,10 @@ fn fields_run_in_source_order_and_before_the_constructor_body() {
 }
 
 #[test]
-fn what_a_class_body_still_cannot_hold_is_refused_by_name() {
-    // A static block is the last class element with no implementation, and it is refused rather than
-    // approximated: the harness reports a refusal as *not run* rather than as a wrong answer.
-    // `extends` likewise — the prototype chain, `super`, and a derived constructor's `this` are their
-    // own slice.
-    let error = compile_error("class C extends Object {}");
-    assert!(error.contains("extends"), "got {error:?}");
-    // Fields, static fields and computed field names all compile now, so there is no row for them
-    // here. A refusal row that no longer refuses asserts the opposite of what it says.
+fn a_class_body_holds_every_kind_of_element_at_once() {
+    // What was a second copy of the refusal list above, kept for the one thing it did that the other
+    // did not: check that the element kinds still work when they are written together, rather than
+    // one per test.
     assert_eq!(
         run("class C { a = 1; static b = 2; ['c'] = 3; } C.b + ',' + new C().a"),
         "2,1"
@@ -710,5 +715,342 @@ fn a_static_block_runs_once_with_this_bound_to_the_constructor() {
     assert_eq!(
         run("class C { static { this.a = 1; } static { this.b = this.a + 1; } } C.a + ',' + C.b"),
         "1,2"
+    );
+}
+
+#[test]
+fn extends_points_both_halves_of_a_class_at_both_halves_of_its_parent() {
+    // §15.7.14 steps 12 to 14 — two edges, not one, and each carries something different. The
+    // prototype chain is what makes an inherited *method* reachable; the constructor chain is what
+    // makes an inherited *static* reachable. An implementation that wired only the first would pass
+    // every method test and answer `undefined` for `D.s()`.
+    assert_eq!(
+        run("(function () { class B { m() { return 'm'; } static s() { return 's'; } } \
+             class D extends B {} return new D().m() + D.s(); })()"),
+        "ms"
+    );
+    assert_eq!(
+        run("(function () { class B {} class D extends B {} \
+             return (Object.getPrototypeOf(D.prototype) === B.prototype) + ',' \
+                  + (Object.getPrototypeOf(D) === B); })()"),
+        "true,true"
+    );
+    // …and an instance is an instance of every class in the chain, which is the same two edges read
+    // by §7.3.20 rather than by a call.
+    assert_eq!(
+        run("(function () { class B {} class D extends B {} class E extends D {} var e = new E(); \
+             return (e instanceof E) + ',' + (e instanceof D) + ',' + (e instanceof B); })()"),
+        "true,true,true"
+    );
+}
+
+#[test]
+fn a_heritage_that_is_not_a_constructor_is_a_type_error_and_null_is_not() {
+    // §15.7.14 steps 9 to 11 read the value three ways, and the middle case is about `[[Construct]]`
+    // rather than about being an object: `Math.max` is a function and is not a constructor, so it
+    // fails here where reading its `prototype` would simply have found `undefined`.
+    for heritage in ["1", "'a'", "{}", "Math.max", "(() => {})", "undefined"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ class D extends {heritage} {{}} return 'no'; }} \
+                 catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError",
+            "extends {heritage}"
+        );
+    }
+    // §15.7.14 step 9 — `extends null` is *not* an error. The class is made, its instances would
+    // inherit from nothing, and it is still derived: so the error arrives per construction, when
+    // `super()` looks for a constructor and finds `Function.prototype`.
+    assert_eq!(
+        run("(function () { class D extends null {} return typeof D; })()"),
+        "function"
+    );
+    assert_eq!(
+        run("(function () { class D extends null {} \
+             return Object.getPrototypeOf(D.prototype) === null; })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { class D extends null {} \
+             try { new D(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // A parent whose `prototype` was replaced with a primitive is step 11's other TypeError, and it
+    // is a different check from the one above: `B` here *is* a constructor.
+    assert_eq!(
+        run("(function () { function B() {} B.prototype = 1; \
+             try { class D extends B {} return 'no'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_derived_constructor_with_none_written_forwards_every_argument() {
+    // §15.7.14 step 15 — the implicit one is `constructor(...args) { super(...args); }`, so the
+    // arguments reach the parent unchanged and however many there are. An implementation that
+    // synthesised an *empty* constructor would construct successfully and lose every argument.
+    assert_eq!(
+        run("(function () { class B { constructor(a, b) { this.sum = a + b; } } \
+             class D extends B {} return new D(1, 2).sum; })()"),
+        "3"
+    );
+    // Through two levels, each of which forwards, and with a count neither one names.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.n = arguments.length; } } \
+             class D extends B {} class E extends D {} return new E(1, 2, 3, 4).n; })()"),
+        "4"
+    );
+}
+
+#[test]
+fn a_derived_instance_inherits_from_the_class_that_was_written_after_new() {
+    // §10.2.2 — `super()` inherits `new.target` rather than replacing it with the parent, and this is
+    // the single most consequential thing about a derived construction: the *parent* makes the
+    // object, so if it made one from its own `prototype` then `new D()` would answer a `B` and
+    // `d instanceof D` would be false. Read from inside the parent, where the object is made.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.p = Object.getPrototypeOf(this); } } \
+             class D extends B {} return new D().p === D.prototype; })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { class B { constructor() { this.t = new.target; } } \
+             class D extends B {} class E extends D {} return new E().t === E; })()"),
+        "true"
+    );
+    // The running function is read at `super()` time, not captured when the class was defined — so
+    // moving `D`'s prototype moves what `super()` reaches. A definition that had recorded the answer
+    // would go on calling `B`.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.who = 'B'; } } \
+             class C { constructor() { this.who = 'C'; } } \
+             class D extends B {} Object.setPrototypeOf(D, C); \
+             return new D().who; })()"),
+        "C"
+    );
+}
+
+#[test]
+fn a_derived_constructors_this_does_not_exist_until_super_has_returned() {
+    // §10.2.2 and DR-0015 — the whole reason `this` is a binding there. Every one of these is a
+    // ReferenceError, and each reaches the binding by a different route.
+    let unbound = [
+        // Read directly, above the call.
+        "class D extends B { constructor() { this.x = 1; super(); } }",
+        // Read by a parameter default, which runs before the body — so the binding has to exist
+        // before the defaults do.
+        "class D extends B { constructor(a = this) { super(); } }",
+        // Never called at all, so the *return* is what finds the binding empty.
+        "class D extends B { constructor() {} }",
+        // Returned `undefined` explicitly, which is the same step by the other path.
+        "class D extends B { constructor() { return undefined; } }",
+        // Called twice: the second is §10.2.2's `BindThisValue` refusing an already-bound binding.
+        "class D extends B { constructor() { super(); super(); } }",
+    ];
+    for source in unbound {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ class B {{}} {source} \
+                 try {{ new D(); return 'no'; }} catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "ReferenceError",
+            "{source}"
+        );
+    }
+    // …and after `super()` it is there, which is what makes the rows above about *timing* rather
+    // than about `this` being broken.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { super(); this.x = 1; } } \
+             return new D().x; })()"),
+        "1"
+    );
+    // A `try` around the read proves the throw is an ordinary abrupt completion and not a fault: the
+    // constructor recovers and goes on to call `super()`.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { try { this; } \
+                 catch (e) { super(); this.caught = 1; } } } \
+             return new D().caught; })()"),
+        "1"
+    );
+}
+
+#[test]
+fn an_arrow_written_above_a_super_call_still_sees_the_instance() {
+    // The case DR-0015 exists for, and the reason `this` is a binding rather than a flag beside the
+    // register. An arrow captures its `this` as a *value* where it is written, so an arrow written
+    // above the `super()` would have captured the placeholder and answered `undefined` forever.
+    // Reading the binding instead means it sees the `super()` that ran after it was made.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { var f = () => this; super(); \
+                 this.ok = f() === this; } } \
+             return new D().ok; })()"),
+        "true"
+    );
+    // Called before the `super()`, the same arrow throws — so it is reading the binding each time
+    // rather than having been repaired once.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { var f = () => this; \
+                 try { f(); } catch (e) { super(); this.e = e.constructor.name; } } } \
+             return new D().e; })()"),
+        "ReferenceError"
+    );
+    // Two levels of arrow, because the binding is reached by counting environments outward and one
+    // level is where an off-by-one would still pass.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { var f = () => () => this; super(); \
+                 this.ok = f()() === this; } } \
+             return new D().ok; })()"),
+        "true"
+    );
+    // The dangerous direction: a body that binds `this` itself must *not* reach the binding. An
+    // object-literal method and a function expression both get their own receiver, and a permissive
+    // propagation rule would hand them the enclosing instance instead.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { super(); \
+                 var o = { m() { return this; } }; this.ok = o.m() === o; } } \
+             return new D().ok; })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { super(); \
+                 this.m = function () { return this; }; } } \
+             var d = new D(); return d.m() === d; })()"),
+        "true"
+    );
+}
+
+#[test]
+fn a_derived_constructor_may_only_answer_with_an_object_or_undefined() {
+    // §10.2.2 step 13, which is *stricter* than a base constructor's: there a primitive `return` is
+    // ignored and the constructed object is answered with anyway. Here it is a TypeError, and that
+    // difference is the whole reason the two returns cannot share one instruction.
+    for value in ["1", "'a'", "true", "null"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ class B {{}} \
+                 class D extends B {{ constructor() {{ super(); return {value}; }} }} \
+                 try {{ new D(); return 'no'; }} catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError",
+            "return {value}"
+        );
+        // The same value from a *base* constructor is ignored, not an error.
+        assert_eq!(
+            run(&format!(
+                "(function () {{ class B {{ constructor() {{ return {value}; }} }} \
+                 return new B() instanceof B; }})()"
+            )),
+            "true",
+            "base return {value}"
+        );
+    }
+    // An object return wins, exactly as in a base constructor — and it does not have to be the
+    // instance.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { super(); return { z: 9 }; } } \
+             return new D().z; })()"),
+        "9"
+    );
+    // `return;` with nothing is `return undefined`, which is answered with the bound `this`.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { super(); this.x = 1; return; } } \
+             return new D().x; })()"),
+        "1"
+    );
+}
+
+#[test]
+fn a_derived_classs_fields_are_initialised_by_super_and_not_on_entry() {
+    // §15.7.14 — `InitializeInstanceElements` runs at step 7 of `SuperCall`, after the parent has made
+    // the object, because until then there is nothing to define a property on. So a field initialiser
+    // can read what the parent wrote, which is what makes the ordering observable rather than
+    // internal.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.x = 10; } } \
+             class D extends B { y = this.x + 1; } return new D().y; })()"),
+        "11"
+    );
+    // …and the parent cannot see the field, which is the same ordering from the other side.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.seen = this.y; } } \
+             class D extends B { y = 1; } return String(new D().seen); })()"),
+        "undefined"
+    );
+    // Fields go in source order, and after the parent's work in both cases.
+    assert_eq!(
+        run("(function () { var order = []; \
+             class B { constructor() { order.push('B'); } } \
+             class D extends B { a = order.push('a'); b = order.push('b'); \
+               constructor() { super(); order.push('body'); } } \
+             new D(); return order.join(','); })()"),
+        "B,a,b,body"
+    );
+    // A computed field name in a derived class is still evaluated once, at definition time — the slot
+    // it was left in is reached from the field initialiser body, which is one environment further out
+    // than in a base class because that body is nested inside the constructor.
+    assert_eq!(
+        run("(function () { var n = 0; class B {} \
+             class D extends B { [(n++, 'k')] = 1; } \
+             new D(); new D(); return new D().k + ',' + n; })()"),
+        "1,1"
+    );
+}
+
+#[test]
+fn super_forwards_a_spread_and_the_arguments_a_written_constructor_chooses() {
+    // §13.3.8 through §13.3.7 — a spread in a `super()` has no count until it is iterated, exactly as
+    // in any other call, and it goes through the same array-building path. The implicit constructor
+    // uses it too, which is why that path had to exist before `extends` could.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.n = arguments.length; } } \
+             class D extends B { constructor(list) { super(...list, 9); } } \
+             return new D([1, 2, 3]).n; })()"),
+        "4"
+    );
+    // A written constructor may pass whatever it likes, which is the difference from the implicit one.
+    assert_eq!(
+        run("(function () { class B { constructor(a) { this.a = a; } } \
+             class D extends B { constructor(a) { super(a * 2); } } \
+             return new D(21).a; })()"),
+        "42"
+    );
+    // A spread whose iterator is exhausted contributes nothing, and `super()` with no arguments is
+    // the same call with a count of zero.
+    assert_eq!(
+        run("(function () { class B { constructor() { this.n = arguments.length; } } \
+             class D extends B { constructor() { super(...[]); } } \
+             return new D().n; })()"),
+        "0"
+    );
+}
+
+#[test]
+fn a_class_may_extend_an_ordinary_function_and_be_called_only_with_new() {
+    // §15.7.14 does not require the parent to be a class. An ordinary function is a constructor, so
+    // it is a legal heritage, and `super()` constructs it — which is how a subclass of a
+    // pre-class-syntax constructor works.
+    assert_eq!(
+        run("(function () { function B(x) { this.x = x; } \
+             B.prototype.m = function () { return this.x; }; \
+             class D extends B { constructor() { super(7); } } return new D().m(); })()"),
+        "7"
+    );
+    // …and a derived constructor is still a class constructor, so calling it without `new` is a
+    // TypeError before anything in its body runs.
+    assert_eq!(
+        run("(function () { class B {} class D extends B {} \
+             try { D(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
     );
 }

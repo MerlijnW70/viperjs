@@ -205,6 +205,33 @@ struct Compiler<'a> {
     /// counting *backwards* from the end is counting environments outwards — which is exactly
     /// what a [`Instruction::LoadVariable`] depth means.
     outer: Vec<Vec<Local>>,
+    /// Where `this` lives, when it is a binding rather than the register — DR-0015.
+    ///
+    /// `Some` inside a derived constructor and inside any arrow written in one, and that propagation
+    /// rule is §10.2.11's `[[ThisMode]]`: an arrow reaches outward for `this`, so it reaches for the
+    /// binding; a non-arrow function is given one of its own by the call, so it must *not*, or a
+    /// method written inside a derived constructor would answer the enclosing instance instead of
+    /// its own receiver. See [`Compiler::compile_nested`], which is where the rule is applied.
+    ///
+    /// The depth is carried rather than looked up. Resolving `%this` by name through the scope chain
+    /// would answer the same thing, and would also have a failure case — a `None` that could only
+    /// mean the compiler had lost its own binding, with no honest thing to emit for it. Counting
+    /// instead is exact by construction: an arrow is one environment, so propagating adds one.
+    ///
+    /// Not a [`Where`], though the two hold the same numbers. A `Where` also carries `immutable`,
+    /// which decides whether a *write* is a TypeError — and nothing ever writes this binding through
+    /// `store_name`, so the field would be a value no input could distinguish. Mutation coverage said
+    /// exactly that, by surviving a flip of it.
+    this_binding: Option<ThisSlot>,
+    /// The body that initialises this derived constructor's instance fields, if it has any.
+    ///
+    /// §15.7.14 runs `InitializeInstanceElements` from `super()` rather than on entry, because until
+    /// the parent has made the object there is nothing to put a field on. So the field list has to
+    /// reach the `super()`, which may be anywhere in the constructor — and a *list* cannot be kept
+    /// here, its lifetime being the syntax tree's rather than this compiler's. A compiled body can:
+    /// the fields become a function of no arguments, called with the new object as its receiver,
+    /// which is the same shape a static field's initialiser already uses and for the same reason.
+    derived_fields: Option<u32>,
     /// Whether this is the script rather than a function body.
     ///
     /// §14.2.2's completion value belongs to the script; what a function's statements evaluate to
@@ -269,7 +296,25 @@ impl<'a> Compiler<'a> {
             high_water: 0,
             depth: 0,
             outer: Vec::new(),
+            this_binding: None,
+            derived_fields: None,
             is_script: true,
+        }
+    }
+
+    /// Emit a read of `this` — §9.1.1.3's `ResolveThisBinding`.
+    ///
+    /// Two representations and the compiler picks, which is DR-0015's whole cost. Inside a derived
+    /// constructor `this` is a binding that `super()` fills, so reading it before then is the
+    /// ReferenceError §10.2.2 asks for; everywhere else it is the register the call set, and there is
+    /// no state in which it could be missing.
+    pub(super) fn load_this(&mut self) {
+        match self.this_binding {
+            Some(at) => self.chunk.emit(Instruction::LoadThisBinding {
+                depth: at.depth,
+                index: at.index,
+            }),
+            None => self.chunk.emit(Instruction::LoadThis),
         }
     }
 
@@ -582,6 +627,14 @@ impl Compiler<'_> {
 /// compiler, which recurses just as deeply, did not.
 const MAX_EXPRESSION_DEPTH: u32 = 64;
 
+/// The name of the slot a derived constructor's `this` occupies — DR-0015.
+///
+/// A `%` in front, which is the house convention for a slot no source text can spell: `%` is in
+/// neither `IdentifierStart` nor `IdentifierPart`, so nothing a program can write resolves here. It
+/// has a name at all only so that the locals table reads honestly when something goes wrong; the
+/// slot is reached by the number the compiler kept, never by looking the name up.
+const THIS_BINDING: &str = "%this";
+
 /// Where a name lives — §9.1's environment records, resolved at compile time.
 ///
 /// Named for the question rather than for the thing, because the syntax tree already has a
@@ -601,6 +654,17 @@ struct Where {
     /// second copy of the resolution rule: the two could disagree about *which* `x` a name means,
     /// and only one of them would be right. Resolving once answers both questions at once.
     immutable: bool,
+}
+
+/// Where a derived constructor's `this` lives, from where the compiler is standing — DR-0015.
+///
+/// Two numbers and no third, which is the point: see [`Compiler::this_binding`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ThisSlot {
+    /// How many environments out — `0` in the constructor, one more per enclosing arrow.
+    depth: u32,
+    /// Which slot, in that environment.
+    index: u32,
 }
 
 /// A refusal with a location.

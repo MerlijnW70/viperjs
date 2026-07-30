@@ -22,12 +22,11 @@
 //! one that would not compile.
 
 use super::function::{Body, Lexical};
-use super::{CompileError, ErrorKind, unsupported};
+use super::CompileError;
 use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
 use crate::span::Span;
-use std::rc::Rc;
 
 impl Compiler<'_> {
     /// Evaluate a class and leave its constructor on the stack.
@@ -35,9 +34,6 @@ impl Compiler<'_> {
     /// The elements are walked once, in source order, because that order is observable: a computed
     /// key runs when it is reached, and two methods with the same key leave the later one in place.
     pub(super) fn class(&mut self, class: &Class, span: Span) -> Result<(), CompileError> {
-        if class.heritage.is_some() {
-            return Err(unsupported("a class with `extends`", span));
-        }
         let mut fields: Vec<&crate::ast::ClassField> = Vec::new();
         // §15.7.14 keeps the static elements in one list, because a field and a block run in the
         // order they were written and nothing distinguishes them at that point.
@@ -84,6 +80,14 @@ impl Compiler<'_> {
         // nothing measurable and there is nothing left to get wrong.
         for at in 0..fields.len() {
             self.declare_shadowing(&field_name_slot(at));
+        }
+
+        // §15.7.14 step 8 — the heritage is evaluated **inside** the class scope and after the inner
+        // name binding has been made but before it holds anything, so `class C extends C {}` is a
+        // ReferenceError from the dead zone rather than a reference to an outer `C`. Its value is
+        // left on the stack for `MakeClass`, which is where steps 9 to 11 read it three ways.
+        if let Some(heritage) = &class.heritage {
+            self.expression(heritage)?;
         }
 
         self.constructor(class, &fields, span)?;
@@ -272,9 +276,23 @@ impl Compiler<'_> {
             Some(function) => (&function.parameters, &function.body),
             None => (&empty, &[]),
         };
+        // §15.7.14 step 15 — a derived class with no constructor written gets
+        // `constructor(...args) { super(...args); }` rather than an empty one, because the parent has
+        // to be given what the `new` was given. Synthesised as a rest parameter and a spread call so
+        // that it is the *same* code path as a written one: an argument list assembled by hand here
+        // would be a second implementation of §13.3.8 to keep in step with the first.
+        let forwarding = derived_default(span);
+        let (parameters, statements) = match (written.is_none() && class.heritage.is_some(), &forwarding) {
+            (true, (parameters, statements)) => (parameters, statements.as_slice()),
+            (false, _) => (parameters, statements),
+        };
         let mut body = self.compile_nested(
             parameters,
-            Body::Constructor { fields, statements },
+            Body::Constructor {
+                fields,
+                statements,
+                derived: class.heritage.is_some(),
+            },
             Lexical::No,
             span,
         )?;
@@ -282,22 +300,25 @@ impl Compiler<'_> {
         // without `new` it is a TypeError. The body has to carry that, because by the time a call
         // happens the only thing left is the chunk.
         body.class_constructor = true;
-        self.emit_class(body, span)
+        self.emit_class(body, class.heritage.is_some(), span)
     }
 
     /// Push a constructor's body and emit [`Instruction::MakeClass`] for it.
     ///
     /// The sibling of [`Compiler::emit_function`], and separate for one reason: the instruction
-    /// differs. Both have to carry an inner arrow's reach for `arguments` outward, which is what the
-    /// `|=` is doing.
-    fn emit_class(&mut self, body: Chunk, span: Span) -> Result<(), CompileError> {
-        let index = u32::try_from(self.chunk.functions.len()).map_err(|_| CompileError {
-            kind: ErrorKind::TooLong,
-            span,
-        })?;
-        self.uses_arguments |= body.outer_arguments;
-        self.chunk.functions.push(Rc::new(body));
-        self.chunk.emit(Instruction::MakeClass(index));
+    /// differs. Both have to carry an inner arrow's reach for `arguments` outward, which is what
+    /// [`Compiler::file_function`] is doing.
+    fn emit_class(
+        &mut self,
+        body: Chunk,
+        derived: bool,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let index = self.file_function(body, span)?;
+        self.chunk.emit(Instruction::MakeClass {
+            body: index,
+            derived,
+        });
         Ok(())
     }
 
@@ -319,7 +340,7 @@ impl Compiler<'_> {
         // so no input can tell the shortcut from its absence — mutation coverage reported exactly
         // that. Two instructions per construction is not a cost a benchmark has complained about,
         // and a branch nothing can pin is worse than one that was never written.
-        self.chunk.emit(Instruction::LoadThis);
+        self.load_this();
         for (at, field) in fields.iter().enumerate() {
             // Read back out of the slot the walk filled, whatever kind of name it was. Choosing
             // between the slot and a fresh constant here would be a branch with no observable
@@ -336,6 +357,47 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
         Ok(())
     }
+}
+
+/// §15.7.14 step 15's implicit constructor for a derived class — `(...args) => super(...args)`.
+///
+/// Built as a syntax tree rather than as bytecode, so that it goes through the one path a written
+/// constructor goes through: the rest parameter is §15.1's, the spread is §13.3.8's, and neither is
+/// implemented a second time here to be kept in step with the first. A first attempt that assembled
+/// the argument list by hand is exactly how the two would come to disagree about a `Symbol.iterator`
+/// somebody had replaced.
+///
+/// The parameter is named `%args`, which no source can spell, so the forwarding cannot be disturbed
+/// by anything the class body declares — and there is no class body to disturb it, since this is only
+/// used when no constructor was written.
+fn derived_default(span: Span) -> (FormalParameters, Vec<Stmt>) {
+    let name = crate::ast::BindingName {
+        name: "%args".into(),
+        span,
+    };
+    let parameters = FormalParameters {
+        items: Box::new([]),
+        rest: Some(Box::new(crate::ast::Binding::Identifier(name))),
+        span,
+    };
+    let forward = crate::ast::Expr::new(
+        crate::ast::ExprKind::Call {
+            optional: false,
+            callee: Box::new(crate::ast::Expr::new(crate::ast::ExprKind::Super, span)),
+            arguments: Box::new([crate::ast::Argument::Spread(crate::ast::Expr::new(
+                crate::ast::ExprKind::Identifier("%args".to_string()),
+                span,
+            ))]),
+        },
+        span,
+    );
+    (
+        parameters,
+        vec![Stmt {
+            kind: crate::ast::StmtKind::Expression(Box::new(forward)),
+            span,
+        }],
+    )
 }
 
 /// The name of the compiler temporary holding the `at`th instance field's evaluated key.

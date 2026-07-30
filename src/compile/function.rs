@@ -5,7 +5,9 @@
 //! numberings must not share a table — and the separation is what makes a nested body unable to
 //! reach a slot it has no environment for.
 
-use super::{CompileError, Compiler, ErrorKind, Instruction, Local, unsupported};
+use super::{
+    CompileError, Compiler, ErrorKind, Instruction, Local, THIS_BINDING, ThisSlot, unsupported,
+};
 use crate::ast::{
     Argument, ArrowBody, ArrowFunction, Binding, Expr, ExprKind, FormalParameters, Function, Stmt,
 };
@@ -91,11 +93,37 @@ impl Compiler<'_> {
     ) -> Result<Chunk, CompileError> {
         let mut outer = self.outer.clone();
         outer.push(self.locals.clone());
-        compile_body(self.heap, parameters, body, outer, lexical, span)
+        // DR-0015's propagation rule, and the only place it is applied. An arrow reaches outward for
+        // `this`, so it inherits the enclosing derived constructor's binding one environment further
+        // out; a non-arrow function is handed a `this` of its own by the call, so it inherits
+        // nothing — without that clearing, a method written inside a derived constructor would
+        // resolve the binding through the chain and answer the enclosing instance.
+        let this_binding = match lexical {
+            Lexical::Yes => self.this_binding.map(|at| ThisSlot {
+                depth: at.depth + 1,
+                index: at.index,
+            }),
+            Lexical::No => None,
+        };
+        compile_body(
+            self.heap,
+            parameters,
+            body,
+            outer,
+            Nesting {
+                lexical,
+                this_binding,
+            },
+            span,
+        )
     }
 
-    /// File a compiled body under this chunk and emit the instruction that makes an object of it.
-    pub(super) fn emit_function(&mut self, body: Chunk, span: Span) -> Result<(), CompileError> {
+    /// File a compiled body under this chunk and answer its index, emitting nothing.
+    ///
+    /// Separate from [`Compiler::emit_function`] for the one body that is filed now and made later:
+    /// a derived class's field initialiser is compiled with the constructor and its object is built
+    /// by each `super()`, which may be anywhere in the body or not reached at all.
+    pub(super) fn file_function(&mut self, body: Chunk, span: Span) -> Result<u32, CompileError> {
         let index = u32::try_from(self.chunk.functions.len()).map_err(|_| CompileError {
             kind: ErrorKind::TooLong,
             span,
@@ -104,6 +132,12 @@ impl Compiler<'_> {
         // reached outward for it is what tells this one to build the object.
         self.uses_arguments |= body.outer_arguments;
         self.chunk.functions.push(Rc::new(body));
+        Ok(index)
+    }
+
+    /// File a compiled body under this chunk and emit the instruction that makes an object of it.
+    pub(super) fn emit_function(&mut self, body: Chunk, span: Span) -> Result<(), CompileError> {
+        let index = self.file_function(body, span)?;
         self.chunk.emit(Instruction::MakeFunction(index));
         Ok(())
     }
@@ -120,6 +154,12 @@ impl Compiler<'_> {
     ) -> Result<(), CompileError> {
         // §13.3.6.1 — a method call keeps the object the method was *found on* as the receiver.
         // The base is evaluated once and copied, because `f().m()` must call `f` once.
+        // §13.3.7 — `super(…)` names no callee at all: the parent is the running function's
+        // `[[Prototype]]`, so there is nothing to evaluate and push. It is answered first because
+        // every branch below assumes a callee is on the stack.
+        if matches!(callee.kind, ExprKind::Super) {
+            return self.super_call(arguments, span);
+        }
         let method = matches!(
             callee.kind,
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
@@ -163,6 +203,58 @@ impl Compiler<'_> {
         } else {
             Instruction::Call(count)
         });
+        Ok(())
+    }
+
+    /// §13.3.7.1 `SuperCall` — construct the parent, bind `this` to it, and initialise the fields.
+    ///
+    /// Three things in that order, and the order is the specification's. The parent makes the object
+    /// (step 5); `BindThisValue` makes it this constructor's `this` (step 6), which is also what makes
+    /// a second `super()` a ReferenceError rather than a second construction; and only then does
+    /// `InitializeInstanceElements` run (step 7), because until now there was nothing to put a field
+    /// on. A field initialiser can therefore read `this` and see the parent's work, which is the whole
+    /// reason the order is observable.
+    ///
+    /// The object is left on the stack: §13.3.7.1 step 8 makes it the value of the expression, and an
+    /// expression statement will discard it like any other.
+    fn super_call(&mut self, arguments: &[Argument], span: Span) -> Result<(), CompileError> {
+        // The parser has already refused `super(…)` anywhere but a derived constructor — §15.7.1
+        // makes it a Syntax Error even in a base class's — so reaching here without a binding to fill
+        // would mean the two disagreed about which bodies those are. Both facts are asked for at
+        // once, and by the same guard: a derived constructor has both or the compiler has lost track
+        // of one, and a second check for the second one would be a branch nothing could reach.
+        let (Some(at), Some(fields)) = (self.this_binding, self.derived_fields) else {
+            return Err(unsupported("`super` outside a derived constructor", span));
+        };
+        if arguments
+            .iter()
+            .any(|argument| matches!(argument, Argument::Spread(_)))
+        {
+            self.argument_array(arguments)?;
+            self.chunk
+                .emit(Instruction::CallSpread(crate::compile::chunk::SpreadCall::Super));
+        } else {
+            for argument in arguments {
+                let Argument::Value(value) = argument else {
+                    return Err(unsupported("a spread argument", span));
+                };
+                self.expression(value)?;
+            }
+            let count = u32::try_from(arguments.len()).map_err(|_| CompileError {
+                kind: ErrorKind::TooLong,
+                span,
+            })?;
+            self.chunk.emit(Instruction::SuperCall(count));
+        }
+        // Peeks, so the object stays for the fields below and for the expression's value.
+        self.chunk.emit(Instruction::BindThis(at.index));
+        // Called with the object as its receiver, because §15.7.14 evaluates a field initialiser with
+        // `this` bound to the instance and a call is the only thing that binds a receiver. The same
+        // shape a static field's initialiser uses.
+        self.chunk.emit(Instruction::Duplicate);
+        self.chunk.emit(Instruction::MakeFunction(fields));
+        self.chunk.emit(Instruction::CallMethod(0));
+        self.chunk.emit(Instruction::Pop);
         Ok(())
     }
 
@@ -221,7 +313,26 @@ pub(super) enum Body<'a> {
         fields: &'a [&'a crate::ast::ClassField],
         /// What the author wrote.
         statements: &'a [Stmt],
+        /// Whether the class has an `extends` clause — §10.2.2's `[[ConstructorKind]]`.
+        ///
+        /// Three things follow from it and nothing else does: `this` becomes a binding that starts
+        /// out unbound (DR-0015), the fields are initialised by `super()` rather than on entry
+        /// (§15.7.14 runs `InitializeInstanceElements` after the parent has made the object), and a
+        /// `return` obeys §10.2.2 step 13's stricter rule.
+        derived: bool,
     },
+}
+
+/// What a nested body inherits from the one it is written inside.
+///
+/// Two facts that travel together and are decided at the same moment, so a struct rather than two
+/// parameters: the second is *computed from* the first, and passing them separately would let a
+/// caller pair an arrow's reach with a function's boundary.
+pub(super) struct Nesting {
+    /// Whether the body binds `this` itself — §15.3's whole difference from §15.2.
+    lexical: Lexical,
+    /// The enclosing derived constructor's `this`, if this body may reach it — DR-0015.
+    this_binding: Option<ThisSlot>,
 }
 
 /// Whether the body binds `this` itself, or takes the one around it.
@@ -247,12 +358,14 @@ fn compile_body(
     parameters: &FormalParameters,
     body: Body<'_>,
     outer: Vec<Vec<Local>>,
-    lexical: Lexical,
+    nesting: Nesting,
     span: Span,
 ) -> Result<Chunk, CompileError> {
+    let lexical = nesting.lexical;
     let mut compiler = Compiler::new(heap);
     compiler.is_script = false;
     compiler.outer = outer;
+    compiler.this_binding = nesting.this_binding;
     compiler.chunk.arrow = lexical == Lexical::Yes;
     compiler.chunk.simple_parameters = parameters.is_simple();
 
@@ -301,6 +414,21 @@ fn compile_body(
     // and reading the body twice to save it is the more expensive of the two.
     if lexical == Lexical::No && compiler.resolve("arguments").is_none() {
         compiler.arguments_slot = Some(compiler.declare_shadowing("arguments"));
+    }
+
+    // DR-0015 — a derived constructor's `this` is a binding, and it starts out unbound. Declared
+    // here, above the parameter defaults, because a default may read `this`:
+    // `constructor(x = this.y) {}` in a derived class is §10.2.2's ReferenceError, and it can only
+    // be one if the binding already exists to be found in the dead zone.
+    //
+    // The slot is put back into that state explicitly. A fresh environment gives every slot
+    // `undefined` rather than nothing, so without this the read would answer `undefined` — a silent
+    // wrong answer where the specification asks for a throw.
+    if matches!(body, Body::Constructor { derived: true, .. }) {
+        let index = compiler.declare_shadowing(THIS_BINDING);
+        compiler.chunk.emit(Instruction::Uninitialise(index));
+        compiler.this_binding = Some(ThisSlot { depth: 0, index });
+        compiler.chunk.derived_this = Some(index);
     }
 
     // §10.2.11 step 24 — the defaults run *inside* the callee, before the body and after the
@@ -364,8 +492,43 @@ fn compile_body(
         Body::Expression(expression) => compiler.expression(expression)?,
         // §15.7.14 — the fields first, then the body. `InitializeInstanceElements` runs before the
         // constructor's first statement, so a field is already there when the body looks.
-        Body::Constructor { fields, statements } => {
-            compiler.instance_fields(fields)?;
+        Body::Constructor {
+            fields,
+            statements,
+            derived,
+        } => {
+            // §15.7.14 — a base class initialises its fields before the body's first statement,
+            // because `this` is already there to put them on. A derived class cannot: there is no
+            // object until `super()` has made one, so `InitializeInstanceElements` moves to the
+            // `super()` itself and the fields are carried there instead.
+            if derived {
+                // Compiled once, here, and *called* by every `super()` — see
+                // [`Compiler::derived_fields`] for why it is a body rather than a stored list.
+                //
+                // Built even when the class has no fields. Skipping it would save a function object
+                // and a call per construction, which is a real cost and would be worth having — but
+                // initialising nothing is indistinguishable from not initialising, so the guard is a
+                // branch no input can pin, and mutation coverage duly survived forcing it. An
+                // optimisation gets a benchmark in front of it before it gets a branch, and there is
+                // no benchmark here yet; `lab/` is where that argument would be made.
+                let initialiser = compiler.compile_nested(
+                    &FormalParameters {
+                        items: Box::new([]),
+                        rest: None,
+                        span,
+                    },
+                    Body::Constructor {
+                        fields,
+                        statements: &[],
+                        derived: false,
+                    },
+                    Lexical::No,
+                    span,
+                )?;
+                compiler.derived_fields = Some(compiler.file_function(initialiser, span)?);
+            } else {
+                compiler.instance_fields(fields)?;
+            }
             for name in var_declared_names(statements) {
                 compiler.declare(name.name);
             }
@@ -374,6 +537,15 @@ fn compile_body(
             compiler.statements(statements)?;
             compiler.constant(Value::Undefined)?;
         }
+    }
+    // §10.2.2 step 13 — falling off the end of a derived constructor is a `return undefined`, and
+    // that is answered with the bound `this`. Which is also how a constructor that never called
+    // `super()` becomes the ReferenceError the specification asks for, rather than answering with
+    // nothing: the binding is still unbound, and reading it throws.
+    if let Some(slot) = compiler.chunk.derived_this {
+        compiler
+            .chunk
+            .emit(Instruction::CompleteDerivedReturn(slot));
     }
     compiler.chunk.emit(Instruction::Return);
     // Only now is it known whether anything read the name — including an arrow written inside,

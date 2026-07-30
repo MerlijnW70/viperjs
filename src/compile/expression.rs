@@ -183,9 +183,10 @@ impl Compiler<'_> {
             // global object when it cannot. Which of the two is decided here; whether the global
             // is *there* is decided at run time, because a script can make one at any moment.
             ExprKind::Identifier(name) => self.load_name(name),
-            // §13.2.1 — `this`, which the call decided and the frame is holding.
+            // §13.2.1 — `this`, which the call decided and the frame is holding, unless DR-0015
+            // moved it into a binding because a derived constructor can change it.
             ExprKind::This => {
-                self.chunk.emit(Instruction::LoadThis);
+                self.load_this();
                 Ok(())
             }
             ExprKind::BigInt(_) => Err(unsupported("a BigInt literal", span)),

@@ -51,6 +51,13 @@ pub struct Chunk {
     /// The flag lives on the body because by the time a call happens the chunk is the only thing
     /// left that could still know.
     pub(super) class_constructor: bool,
+    /// Where a derived constructor's `this` lives, if this body is one — DR-0015.
+    ///
+    /// `None` for every other body, which is where `this` is the register the call set. Present, it
+    /// is the slot §9.1.1.3's `[[ThisValue]]` occupies, and the *call* has to know: §10.2.2 does not
+    /// create the receiver for a derived constructor, so what would otherwise be made on entry has
+    /// to be left for `super()` to make.
+    pub(super) derived_this: Option<u32>,
     /// The slot §10.4.4's arguments object goes in, if this body reaches for the name.
     ///
     /// `None` when it does not, and then no object is made: §10.2.11 makes one for every
@@ -307,7 +314,17 @@ pub enum Instruction {
     /// until the prototype points back.
     ///
     /// The operand indexes the constructor's body. Leaves the constructor on the stack.
-    MakeClass(u32),
+    MakeClass {
+        /// Which of this chunk's nested bodies is the constructor.
+        body: u32,
+        /// Whether the value of an `extends` clause is on the stack, waiting to be inherited from.
+        ///
+        /// §15.7.14 steps 8 to 11 read it three ways — `null` is a case of its own, a
+        /// non-constructor is a TypeError, and otherwise both the constructor and its prototype are
+        /// pointed at the parent's. A flag rather than a second instruction because everything after
+        /// those steps is identical, and written twice one copy would be a branch no test reaches.
+        derived: bool,
+    },
     /// Replace the constructor on top of the stack with the prototype it was made with.
     ///
     /// Reads the object rather than the `prototype` property. At this point in a class definition the
@@ -374,6 +391,45 @@ pub enum Instruction {
     Construct(u32),
     /// Push the running function's `this`.
     LoadThis,
+    /// `super(…)` — construct the parent and leave the object it made on the stack (§13.3.7.1).
+    ///
+    /// Not [`Instruction::Construct`] with a different callee, and the differences are the whole of
+    /// what a derived construction is. The callee is not named in the source: it is the running
+    /// function's `[[Prototype]]`, read now rather than captured at the class definition, because
+    /// `Object.setPrototypeOf(D, Other)` changes what `super()` reaches. And `new.target` is
+    /// *inherited* rather than becoming the parent, which is what makes `new E()` produce an `E`
+    /// however many `extends` clauses it passes through.
+    ///
+    /// The operand is the argument count; the arguments are on the stack above nothing else.
+    SuperCall(u32),
+    /// §10.2.2's `BindThisValue` — bind the derived constructor's `this` to the top value.
+    ///
+    /// Peeked rather than popped, because §13.3.7.1 step 8 makes the object the value of the
+    /// `super()` expression as well. Binding a second time is a **ReferenceError**, which is what
+    /// makes two `super()` calls in one constructor an error rather than two constructions — so this
+    /// cannot be [`Instruction::Initialise`], which writes whatever it finds.
+    BindThis(u32),
+    /// Read a derived constructor's `this` — §9.1.1.3's `ResolveThisBinding` (DR-0015).
+    ///
+    /// Its own instruction rather than [`Instruction::LoadVariable`] for the message alone: the
+    /// binding is in the same uninitialised state a `let` above its declaration is in, and reporting
+    /// it as one would send a reader looking for a declaration there is not.
+    LoadThisBinding {
+        /// How many environments out — non-zero for an arrow written inside the constructor.
+        depth: u32,
+        /// Which slot, in that environment.
+        index: u32,
+    },
+    /// Turn the top value into what a derived constructor returns — §10.2.2 step 13.
+    ///
+    /// Stricter than a base constructor's, which is why it cannot be left to
+    /// [`Instruction::Return`]: an object is answered with, `undefined` is answered with the bound
+    /// `this` — a ReferenceError if `super()` never ran — and **any other primitive is a
+    /// TypeError**, where a base constructor ignores it and answers with the object it made.
+    ///
+    /// The operand is the `this` binding's slot, always in the running environment: a `return` is
+    /// compiled inside the constructor whose binding it is, however many blocks deep.
+    CompleteDerivedReturn(u32),
     /// Push the running function's `new.target` — §13.3.12.
     ///
     /// `undefined` unless the running call was a `new`, which is the whole of what the expression
@@ -494,6 +550,14 @@ impl Chunk {
         self.locals
     }
 
+    /// Where a derived constructor's `this` lives, if this body is one — DR-0015.
+    ///
+    /// `None` means the call binds `this` and makes the receiver, which is every other body. The
+    /// call reads this to decide *not* to make one: §10.2.2 leaves that to `super()`.
+    pub fn derived_this(&self) -> Option<u32> {
+        self.derived_this
+    }
+
     /// Whether this body is a class constructor, and so refuses a call without `new`.
     pub fn is_class_constructor(&self) -> bool {
         self.class_constructor
@@ -579,6 +643,8 @@ pub enum SpreadCall {
     Method,
     /// `new f(...a)` — the receiver is made by the call.
     Construct,
+    /// `super(...a)` — the callee is the running function's `[[Prototype]]`, not on the stack.
+    Super,
 }
 
 /// The same jump, pointed somewhere else.
@@ -626,6 +692,10 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
+        | Instruction::SuperCall(_)
+        | Instruction::BindThis(_)
+        | Instruction::LoadThisBinding { .. }
+        | Instruction::CompleteDerivedReturn(_)
         | Instruction::Duplicate
         | Instruction::Return
         | Instruction::NewObject
@@ -637,7 +707,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::DefineSetter
         | Instruction::SpreadProperties
         | Instruction::CallSpread(_)
-        | Instruction::MakeClass(_)
+        | Instruction::MakeClass { .. }
         | Instruction::ClassPrototype
         | Instruction::DefineClassMethod(_)
         | Instruction::GetProperty

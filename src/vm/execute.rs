@@ -394,12 +394,29 @@ impl Vm {
                     }
                     self.stack.push(Value::Object(object));
                 }
-                Instruction::MakeClass(index) => {
+                Instruction::MakeClass { body: index, derived } => {
                     let Some(body) = running.function(index) else {
                         return Err(Fault::MissingFunction);
                     };
+                    // §15.7.14 steps 9 to 11 — the heritage read three ways. `extends null` is a
+                    // class whose instances inherit from nothing, and whose constructor still
+                    // inherits from `Function.prototype`; anything that is not a constructor is a
+                    // TypeError, and `extends {}` is caught by that rather than by the step below.
+                    let inheritance = match derived {
+                        false => Inheritance {
+                            prototype: Some(self.realm.object_prototype()),
+                            constructor: self.realm.function_prototype(),
+                        },
+                        true => match self.inheritance(heap) {
+                            Ok(found) => found,
+                            Err(error) => {
+                                self.raise(error, heap, root, current, at)?;
+                                continue;
+                            }
+                        },
+                    };
                     let object = heap.new_function(
-                        self.realm.function_prototype(),
+                        inheritance.constructor,
                         body.clone(),
                         self.environment,
                         None,
@@ -420,7 +437,7 @@ impl Vm {
                     // `new C() instanceof C` true. `prototype` is **not writable** here, which is the
                     // difference from §10.2.5's `MakeConstructor` for an ordinary function: a class
                     // may not be pointed at a different prototype after the fact.
-                    let prototype = heap.new_object(Some(self.realm.object_prototype()));
+                    let prototype = heap.new_object(inheritance.prototype);
                     let key = property_name(heap, "constructor");
                     heap.define_own_property(
                         prototype,
@@ -565,6 +582,25 @@ impl Vm {
                         SpreadCall::Plain => Entry::Plain,
                         SpreadCall::Method => Entry::Method,
                         SpreadCall::Construct => Entry::Construct,
+                        // §13.3.7 — the one call whose callee is not on the stack, because the source
+                        // never named it. Pushed under the arguments now, which is where every other
+                        // call had put it before its arguments were evaluated.
+                        SpreadCall::Super => {
+                            let parent = match self.super_constructor(heap) {
+                                Ok(parent) => parent,
+                                Err(error) => {
+                                    self.raise(error, heap, root, current, at)?;
+                                    continue;
+                                }
+                            };
+                            let callee_at = self
+                                .stack
+                                .len()
+                                .checked_sub(count as usize)
+                                .ok_or(Fault::StackUnderflow)?;
+                            self.stack.insert(callee_at, parent);
+                            Entry::Super
+                        }
                     };
                     self.enter(how, count, heap, root, current, at)?;
                 }
@@ -596,6 +632,112 @@ impl Vm {
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
+                Instruction::SuperCall(count) => {
+                    let parent = match self.super_constructor(heap) {
+                        Ok(parent) => parent,
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    // Pushed *under* the arguments, which are already on the stack, because `enter`
+                    // expects the callee first — it was written that way by every other call.
+                    let callee_at = self
+                        .stack
+                        .len()
+                        .checked_sub(count as usize)
+                        .ok_or(Fault::StackUnderflow)?;
+                    self.stack.insert(callee_at, parent);
+                    self.enter(Entry::Super, count, heap, root, current, at)?;
+                }
+                Instruction::BindThis(index) => {
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    // §10.2.2's `BindThisValue` step 2 — already bound is a **ReferenceError**, and
+                    // that is what makes two `super()` calls in one constructor an error rather than
+                    // two constructions. Asked of the slot rather than tracked separately, so the
+                    // question and the answer cannot come apart.
+                    match heap.variable(self.environment, index) {
+                        None => return Err(Fault::MissingLocal),
+                        Some(Some(_)) => {
+                            self.raise(
+                                Abrupt::reference_error("`super` was already called"),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
+                        Some(None) => {}
+                    }
+                    if !heap.set_variable(self.environment, index, value) {
+                        return Err(Fault::MissingLocal);
+                    }
+                }
+                Instruction::LoadThisBinding { depth, index } => {
+                    let slot = heap
+                        .environment_at(self.environment, depth)
+                        .and_then(|at| heap.variable(at, index))
+                        .ok_or(Fault::MissingLocal)?;
+                    match slot {
+                        Some(value) => self.stack.push(value),
+                        // §9.1.1.3 `ResolveThisBinding` on a record whose `[[ThisBindingStatus]]` is
+                        // still `uninitialized` — which is every use of `this` in a derived
+                        // constructor above its `super()`.
+                        None => {
+                            self.raise(
+                                Abrupt::reference_error(
+                                    "`this` was read before `super` was called",
+                                ),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::CompleteDerivedReturn(index) => {
+                    let value = self.pop()?;
+                    match value {
+                        // §10.2.2 step 13a — an object return wins, exactly as in a base constructor.
+                        Value::Object(_) => self.stack.push(value),
+                        // …step 13b — `undefined` is answered with the bound `this`, and the binding
+                        // being unbound is how a constructor that never called `super()` becomes a
+                        // ReferenceError rather than answering with nothing.
+                        Value::Undefined => match heap.variable(self.environment, index) {
+                            None => return Err(Fault::MissingLocal),
+                            Some(Some(bound)) => self.stack.push(bound),
+                            Some(None) => {
+                                self.raise(
+                                    Abrupt::reference_error(
+                                        "a derived constructor returned before calling `super`",
+                                    ),
+                                    heap,
+                                    root,
+                                    current,
+                                    at,
+                                )?;
+                                continue;
+                            }
+                        },
+                        // …step 13c — and every other primitive is a TypeError, where a base
+                        // constructor would have ignored it and answered with the object it made.
+                        _ => {
+                            self.raise(
+                                Abrupt::type_error(
+                                    "a derived constructor returned something that is not an object",
+                                ),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
+                    }
+                }
                 Instruction::Duplicate => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     self.stack.push(value);
@@ -762,4 +904,104 @@ impl Vm {
 /// time, which said nothing about what the property was for.
 fn property_name(heap: &mut Heap, name: &str) -> crate::heap::PropertyKey {
     crate::heap::PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>())
+}
+
+/// The two prototypes a class definition points its halves at — §15.7.14 steps 9 to 11.
+///
+/// A pair rather than two values because the three cases decide them *together*: `extends null` sets
+/// one to nothing and the other to `Function.prototype`, and nothing sets only one of them.
+struct Inheritance {
+    /// What instances inherit from — `[[Prototype]]` of the class's `prototype` object.
+    ///
+    /// `None` for `extends null`, which is the whole reason it is an `Option`: a class whose
+    /// instances inherit from nothing at all is legal, and its instances have no `toString`.
+    prototype: Option<crate::heap::ObjectId>,
+    /// What the constructor itself inherits from, which is how a static method is inherited.
+    constructor: crate::heap::ObjectId,
+}
+
+impl Vm {
+    /// §10.2.2's `GetSuperConstructor` — the running function's `[[Prototype]]`.
+    ///
+    /// Read now rather than captured when the class was defined, because it is *mutable*:
+    /// `Object.setPrototypeOf(D, Other)` changes which constructor `super()` reaches, and a class
+    /// definition that had recorded the answer would go on calling the old one.
+    fn super_constructor(&mut self, heap: &Heap) -> Result<Value, crate::value::Abrupt> {
+        let running = self.frames.last().and_then(|frame| frame.function);
+        // Unreachable from source: the parser makes `super(…)` outside a derived constructor a
+        // Syntax Error, and a constructor is always entered through a frame. A hand-written chunk
+        // can ask, and this is the honest answer rather than a panic.
+        let Some(running) = running else {
+            return Err(crate::value::Abrupt::type_error(
+                "`super` was called outside a constructor",
+            ));
+        };
+        let parent = heap.object(running).and_then(crate::heap::Object::prototype);
+        // §10.2.2 step 3 — the parent must be a constructor. `class D extends null {}` arrives here
+        // with `Function.prototype`, which is callable and *not* a constructor, so this is where
+        // `new D()` on such a class becomes the TypeError §15.7.14 promised at step 9.
+        let constructs = parent.is_some_and(|parent| {
+            heap.object(parent)
+                .and_then(crate::heap::Object::call)
+                .is_some_and(crate::heap::Callable::constructs)
+        });
+        match (parent, constructs) {
+            (Some(parent), true) => Ok(Value::Object(parent)),
+            _ => Err(crate::value::Abrupt::type_error(
+                "the superclass is not a constructor",
+            )),
+        }
+    }
+
+    /// Read the `extends` value on top of the stack as §15.7.14 steps 9 to 11 read it.
+    ///
+    /// Three cases, and the middle one is the reason this is not a property access: `extends {}` and
+    /// `extends 1` are TypeErrors because the value is not a **constructor**, which is a question
+    /// about `[[Construct]]` and not about being callable — so `extends Math.max` fails here too,
+    /// where `Math.max.prototype` would simply have been `undefined`.
+    fn inheritance(&mut self, heap: &mut Heap) -> Result<Inheritance, crate::value::Abrupt> {
+        // A missing operand is a chunk that does not make sense rather than a throw, and there is
+        // nothing to inherit from either way — the compiler emits the heritage before this.
+        let heritage = self.stack.pop().unwrap_or(Value::Undefined);
+        // §15.7.14 step 9 — `extends null` is not an error and not the same as no `extends` at all:
+        // the class is still *derived*, so its constructor must call `super()`, and `super()` will
+        // then find `null` where a constructor should be. That is a run-time TypeError per
+        // construction rather than a definition-time one, which is what the specification says.
+        if matches!(heritage, Value::Null) {
+            return Ok(Inheritance {
+                prototype: None,
+                constructor: self.realm.function_prototype(),
+            });
+        }
+        let constructs = match heritage {
+            Value::Object(parent) => heap
+                .object(parent)
+                .and_then(crate::heap::Object::call)
+                .is_some_and(crate::heap::Callable::constructs),
+            _ => false,
+        };
+        let (Value::Object(parent), true) = (heritage, constructs) else {
+            return Err(crate::value::Abrupt::type_error(
+                "a class may only extend a constructor or null",
+            ));
+        };
+        // §15.7.14 step 11 — the parent's `prototype` is read with `[[Get]]`, so a getter runs and a
+        // Proxy would be consulted. It must be an Object or null; a parent whose `prototype` was
+        // replaced with a number is a TypeError, and this is the one place that check lives.
+        let key = property_name(heap, "prototype");
+        let found = self.get_property_key(Value::Object(parent), key, heap)?;
+        let prototype = match found {
+            Value::Object(prototype) => Some(prototype),
+            Value::Null => None,
+            _ => {
+                return Err(crate::value::Abrupt::type_error(
+                    "the `prototype` of an extended constructor is neither an object nor null",
+                ));
+            }
+        };
+        Ok(Inheritance {
+            prototype,
+            constructor: parent,
+        })
+    }
 }

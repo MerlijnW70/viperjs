@@ -71,7 +71,7 @@ impl Vm {
         // instance of. Asked here, before the bound chain is flattened, because a bound function
         // answers for itself — it is a constructor exactly when its target is, and it recorded
         // that when it was made.
-        if how == Entry::Construct && !callable.constructs() {
+        if matches!(how, Entry::Construct | Entry::Super) && !callable.constructs() {
             self.raise(
                 Abrupt::type_error("what was used with `new` is not a constructor"),
                 heap,
@@ -124,7 +124,7 @@ impl Vm {
         // refuse. Checked here rather than at the class definition because the two are separated by
         // any amount of program: what arrives at a call site is a function object, and the body it
         // holds is the only thing that still remembers how it was written.
-        if body.is_class_constructor() && !matches!(how, Entry::Construct) {
+        if body.is_class_constructor() && !matches!(how, Entry::Construct | Entry::Super) {
             self.raise(
                 Abrupt::type_error("a class constructor cannot be called without `new`"),
                 heap,
@@ -135,8 +135,29 @@ impl Vm {
             return Ok(());
         }
 
+        // §9.1.1.3 — `[[NewTarget]]` is the constructor a `new` named, `undefined` for every other
+        // way in, and *inherited* by a `super()`: §10.2.2 passes newTarget down rather than
+        // replacing it, which is what makes a chain of `extends` produce an instance of the class
+        // that was written after `new`. Computed before the receiver because the receiver is made
+        // from it.
+        //
+        // An arrow has no function environment of its own, so §13.3.12's lookup walks outward and
+        // arrives at whatever was in force where the arrow was written — the same walk, and the same
+        // answer, as the `this` below.
+        let new_target = match lexical {
+            Some(captured) => captured.new_target,
+            None => match how {
+                Entry::Construct => callee,
+                Entry::Super => self.new_target,
+                Entry::Plain | Entry::Method => Value::Undefined,
+            },
+        };
+        // §10.2.2 — a *derived* constructor is not given a receiver at all. `this` starts unbound
+        // and `super()` creates it, which is DR-0015; making one here would be an object the
+        // constructor could never see and the parent would make a second.
+        let derived = body.derived_this().is_some();
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
-        // different in each of the three ways in.
+        // different in each of the ways in.
         let receiver = match how {
             // §10.2.1.2 `OrdinaryCallBindThis` — the substitution belongs to the **function**
             // rather than to the shape of the call: a non-strict function is given the global
@@ -158,8 +179,19 @@ impl Vm {
             // of the constructor's own `prototype` property. A `prototype` that is not an object
             // — a script may assign anything to it — falls back to `Object.prototype`, which is
             // what §10.1.13 says rather than an error.
-            Entry::Construct => {
-                let prototype = self.prototype_property(object, heap)?;
+            Entry::Construct | Entry::Super if derived => Value::Undefined,
+            Entry::Construct | Entry::Super => {
+                // From **new.target's** `prototype` and not the callee's. For a plain `new` the two
+                // are the same object, which is why this was invisible until `super()` existed: there
+                // the callee is the parent and new.target is the class that was written after `new`,
+                // and only the second one has the prototype the instance must inherit from.
+                let from = match new_target {
+                    Value::Object(target) => target,
+                    // Unreachable from source — a construction always has one — and `object` is what
+                    // §10.2.2 would fall back to, since it is the constructor being entered.
+                    _ => object,
+                };
+                let prototype = self.prototype_property(from, heap)?;
                 Value::Object(heap.new_object(Some(prototype)))
             }
         };
@@ -234,11 +266,14 @@ impl Vm {
             // §10.2.2 step 13 — a constructor's call answers with the object it was given
             // unless its body returned an object of its own. A primitive `return` is ignored,
             // which is why `function F() { return 1; }` still constructs an `F`.
-            constructed: if how == Entry::Construct {
-                Some(receiver)
-            } else {
-                None
+            // …and nothing for a derived one, whose answer §10.2.2 step 13 settles in the body:
+            // `CompleteDerivedReturn` puts the object on the stack, so by the time `Return` runs
+            // there is nothing left for the frame to prefer.
+            constructed: match how {
+                Entry::Construct | Entry::Super if !derived => Some(receiver),
+                _ => None,
             },
+            function: Some(object),
         });
         self.environment = environment;
         // §10.2.1.2 step 1 — an arrow's `[[ThisMode]]` is `lexical`, so `OrdinaryCallBindThis`
@@ -250,17 +285,7 @@ impl Vm {
             Some(captured) => captured.this_value,
             None => receiver,
         };
-        // §9.1.1.3 — `[[NewTarget]]` is the constructor a `new` named, and `undefined` for every
-        // other way in. An arrow has no function environment of its own, so §13.3.12's lookup walks
-        // outward and arrives at whatever was in force where the arrow was written — which is the
-        // same walk, and the same answer, as the `this` above.
-        self.new_target = match lexical {
-            Some(captured) => captured.new_target,
-            None => match how {
-                Entry::Construct => callee,
-                Entry::Plain | Entry::Method => Value::Undefined,
-            },
-        };
+        self.new_target = new_target;
         *current = Some(body);
         *at = 0;
         Ok(())
@@ -392,14 +417,18 @@ impl Vm {
         // `Error("x")` and `new Error("x")` come to the same thing.
         let this_value = match how {
             Entry::Method => self.stack[receiver_at],
-            Entry::Plain | Entry::Construct => Value::Undefined,
+            Entry::Plain | Entry::Construct | Entry::Super => Value::Undefined,
         };
         let arguments = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
         let call = crate::heap::NativeCall {
             function,
             this_value,
             arguments: &arguments,
-            constructing: how == Entry::Construct,
+            // §15.7.14 — `class D extends Array {}` reaches its parent through `super()`, and what
+            // the parent has to do is construct: it makes its own object out of its own `prototype`,
+            // which is why a subclass of `Array` does not get the exotic `length` until §10.4.2's
+            // `[[Prototype]]` chain is enough for it. Both ways in are constructions.
+            constructing: matches!(how, Entry::Construct | Entry::Super),
         };
         let answer = native(self, heap, &call);
         // The callee, its receiver and its arguments all go, and the answer takes their place —
@@ -453,11 +482,19 @@ pub(super) struct Frame {
     /// The code that was running, and the instruction to come back to.
     pub(super) code: Option<Rc<Chunk>>,
     pub(super) at: usize,
-    /// The object `new` made, if this call was a construction.
+    /// The object `new` made, if this call was a construction that made one.
     ///
     /// §10.2.2 step 13: a constructor answers with the object it was given unless its body
     /// returned an object of its own, so the answer has to be kept until the return decides.
     pub(super) constructed: Option<Value>,
+    /// The function object this call entered — §10.2.2's *active function object*.
+    ///
+    /// `None` only for the script, which no function entered. What needs it is `super()`: §10.2.2's
+    /// `GetSuperConstructor` reads the running function's `[[Prototype]]`, and it reads it *now*
+    /// rather than at the class definition, because `Object.setPrototypeOf(D, Other)` changes what
+    /// `super()` reaches. So the answer cannot be compiled in and the frame is the only thing that
+    /// still knows which function is running.
+    pub(super) function: Option<crate::heap::ObjectId>,
     /// The `this` to go back to.
     pub(super) this_value: Value,
     /// The `new.target` to go back to.
@@ -504,4 +541,12 @@ pub(super) enum Entry {
     Method,
     /// `new f()` — a fresh object, made from the constructor's `prototype`.
     Construct,
+    /// `super()` — a construction whose `new.target` is inherited rather than being the callee.
+    ///
+    /// Its own way in rather than `Construct` with a flag, because the two differ in the one thing
+    /// that decides what object is made: §10.2.2 step 5 builds the receiver from **new.target's**
+    /// `prototype`, and for a plain `new` that is the callee's own while for a `super()` it is the
+    /// derived class's. That is what makes `new E()` an `E` however many `extends` clauses it passes
+    /// through, and reading the parent's `prototype` instead would quietly produce a `B`.
+    Super,
 }
