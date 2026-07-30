@@ -20381,6 +20381,28 @@ language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js ::
 language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/expressions/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/expressions/class/elements/arrow-body-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/class/elements/nested-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
 language/expressions/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -21614,10 +21636,35 @@ language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js :: 
 language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-cover.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"cover"») to be true
 language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
 language/statements/class/dstr/meth-static-obj-ptrn-id-init-fn-name-fn.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"fn"») to be true
+language/statements/class/elements/arrow-body-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/statements/class/elements/nested-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-3.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-3.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-6.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-6.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError

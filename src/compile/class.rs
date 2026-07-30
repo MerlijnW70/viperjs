@@ -23,7 +23,7 @@
 
 use super::function::{Body, Lexical};
 use super::{CompileError, ErrorKind, unsupported};
-use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
+use crate::ast::{Class, ClassElement, FormalParameters, PropertyKey as AstPropertyKey, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
 use crate::span::Span;
@@ -38,11 +38,25 @@ impl Compiler<'_> {
         if class.heritage.is_some() {
             return Err(unsupported("a class with `extends`", span));
         }
+        let mut fields: Vec<&crate::ast::ClassField> = Vec::new();
         for element in &class.elements {
             match element {
-                ClassElement::Field(field) => {
-                    return Err(unsupported("a class field", field.key_span));
+                ClassElement::Field(field) if field.is_static => {
+                    // A static field's initialiser is evaluated with `this` bound to the
+                    // *constructor*, at definition time. Emitting it inline here would give it
+                    // whatever `this` the surrounding scope has, which is a wrong answer rather than
+                    // a missing one — so it is refused until there is somewhere to bind it.
+                    return Err(unsupported("a static class field", field.key_span));
                 }
+                ClassElement::Field(field) => match &field.key {
+                    AstPropertyKey::Computed(_) => {
+                        // A computed name is evaluated once, at definition time, while the
+                        // initialiser runs per construction. Keeping that one value where the
+                        // constructor can find it needs §15.7.14's `[[Fields]]` on the object.
+                        return Err(unsupported("a computed class field name", field.key_span));
+                    }
+                    _ => fields.push(field),
+                },
                 ClassElement::StaticBlock(block) => {
                     return Err(unsupported("a class static block", block.span));
                 }
@@ -50,7 +64,7 @@ impl Compiler<'_> {
             }
         }
 
-        self.constructor(class, span)?;
+        self.constructor(class, &fields, span)?;
 
         for element in &class.elements {
             let ClassElement::Method(method) = element else {
@@ -80,7 +94,12 @@ impl Compiler<'_> {
     /// [`Compiler::compile_nested`] means the implicit constructor is scoped, counted and bounded
     /// exactly as a written one is, instead of being a second implementation that has to be kept in
     /// step with the first.
-    fn constructor(&mut self, class: &Class, span: Span) -> Result<(), CompileError> {
+    fn constructor(
+        &mut self,
+        class: &Class,
+        fields: &[&crate::ast::ClassField],
+        span: Span,
+    ) -> Result<(), CompileError> {
         let written = class.elements.iter().find_map(|element| match element {
             ClassElement::Method(method) if element.is_constructor() => Some(&*method.function),
             _ => None,
@@ -100,8 +119,12 @@ impl Compiler<'_> {
             Some(function) => (&function.parameters, &function.body),
             None => (&empty, &[]),
         };
-        let mut body =
-            self.compile_nested(parameters, Body::Statements(statements), Lexical::No, span)?;
+        let mut body = self.compile_nested(
+            parameters,
+            Body::Constructor { fields, statements },
+            Lexical::No,
+            span,
+        )?;
         // §15.7.14 — a class constructor has a `[[Construct]]` and no useful `[[Call]]`: written
         // without `new` it is a TypeError. The body has to carry that, because by the time a call
         // happens the only thing left is the chunk.
@@ -122,6 +145,39 @@ impl Compiler<'_> {
         self.uses_arguments |= body.outer_arguments;
         self.chunk.functions.push(Rc::new(body));
         self.chunk.emit(Instruction::MakeClass(index));
+        Ok(())
+    }
+
+    /// §15.7.14's `InitializeInstanceElements`, as the prologue of a constructor.
+    ///
+    /// `CreateDataPropertyOrThrow` and **not** an assignment. That is the whole reason these are
+    /// instructions rather than synthesised `this.x = e` statements: an assignment is `[[Set]]`, which
+    /// calls an inherited setter, and a field must shadow one instead. A class whose field shares a
+    /// name with a prototype setter is where the two answers differ.
+    ///
+    /// `this` is loaded once and left in place, because `DefineField` peeks its base — an object
+    /// literal defines one property after another the same way.
+    pub(super) fn instance_fields(
+        &mut self,
+        fields: &[&crate::ast::ClassField],
+    ) -> Result<(), CompileError> {
+        // No early return for a class without fields. Skipping the two instructions would be an
+        // optimisation and not a semantic: `LoadThis` followed by `Pop` leaves the stack as it was,
+        // so no input can tell the shortcut from its absence — mutation coverage reported exactly
+        // that. Two instructions per construction is not a cost a benchmark has complained about,
+        // and a branch nothing can pin is worse than one that was never written.
+        self.chunk.emit(Instruction::LoadThis);
+        for field in fields {
+            self.property_key(&field.key)?;
+            match &field.initializer {
+                Some(expression) => self.expression(expression)?,
+                // §15.7.14 — a field written without one is `undefined`, which is not the same as
+                // the field being absent: `x;` makes an own property and `for...in` finds it.
+                None => self.constant(crate::value::Value::Undefined)?,
+            }
+            self.chunk.emit(Instruction::DefineField);
+        }
+        self.chunk.emit(Instruction::Pop);
         Ok(())
     }
 }

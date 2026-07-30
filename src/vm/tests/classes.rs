@@ -290,8 +290,6 @@ fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
     // conformance harness reports a refusal as *not run* rather than as a wrong answer.
     for (source, what) in [
         ("class C extends Object {}", "extends"),
-        ("class C { x = 1; }", "field"),
-        ("class C { x; }", "field"),
         ("class C { static { 1; } }", "static block"),
     ] {
         let error = compile_error(source);
@@ -300,4 +298,118 @@ fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
             "{source:?} should be refused for {what:?}, got {error:?}"
         );
     }
+}
+
+#[test]
+fn a_field_is_defined_on_the_instance_and_not_assigned_to_it() {
+    assert_eq!(
+        run("(function () { class C { x = 1; } return new C().x; })()"),
+        "1"
+    );
+    // §15.7.14 — a field written without an initialiser is `undefined`, which is not the same as the
+    // field being absent: the own property is there and `for...in` finds it.
+    assert_eq!(
+        run("(function () { class C { x; } var o = new C(); \
+             return o.hasOwnProperty('x') + ',' + (o.x === undefined); })()"),
+        "true,true"
+    );
+    // Unlike a method, a field *is* enumerable — it is an ordinary data property of the instance.
+    assert_eq!(
+        run("(function () { class C { x = 1; } var seen = []; \
+             for (var p in new C()) seen.push(p); return seen.join(','); })()"),
+        "x"
+    );
+    assert_eq!(
+        run("(function () { class C { x = 1; } \
+             var d = Object.getOwnPropertyDescriptor(new C(), 'x'); \
+             return d.writable + ',' + d.enumerable + ',' + d.configurable; })()"),
+        "true,true,true"
+    );
+    // The row this whole design exists for. §15.7.14 initialises with `CreateDataPropertyOrThrow`,
+    // which ignores an inherited setter; `this.s = 5` is `[[Set]]`, which would call it. So a field
+    // *shadows* a prototype setter rather than running it — and an implementation that prepended
+    // assignment statements to the constructor would pass every other row in this file and fail this
+    // one.
+    assert_eq!(
+        run("(function () { class B {} \
+             Object.defineProperty(B.prototype, 's', {set: function (v) { this.ran = v; }}); \
+             class C { s = 5; } var o = new C(); \
+             return o.hasOwnProperty('s') + ',' + (o.ran === undefined) + ',' + o.s; })()"),
+        "true,true,5"
+    );
+    // …and the assignment form really would have run it, which is what makes the row above mean
+    // something rather than merely pass.
+    assert_eq!(
+        run("(function () { class B {} \
+             Object.defineProperty(B.prototype, 's', {set: function (v) { this.ran = v; }}); \
+             var o = Object.create(B.prototype); o.s = 5; \
+             return o.hasOwnProperty('s') + ',' + o.ran; })()"),
+        "false,5"
+    );
+}
+
+#[test]
+fn fields_run_in_source_order_and_before_the_constructor_body() {
+    // Each field can see the ones above it through `this`, because they are already defined.
+    assert_eq!(
+        run("(function () { class C { x = 1; y = this.x + 1; } return new C().y; })()"),
+        "2"
+    );
+    // §15.7.14 — `InitializeInstanceElements` runs before the constructor's first statement, so the
+    // body finds every field already there.
+    assert_eq!(
+        run(
+            "(function () { class C { x = 1; constructor() { this.y = this.x + 1; } } \
+             return new C().y; })()"
+        ),
+        "2"
+    );
+    // The initialisers run in the order they are written, which a side effect can see.
+    assert_eq!(
+        run(
+            "(function () { var order = []; var mark = function (n) { order.push(n); return n; }; \
+             class C { a = mark(1); b = mark(2); c = mark(3); } new C(); \
+             return order.join(''); })()"
+        ),
+        "123"
+    );
+    // Once per construction, not once per class.
+    assert_eq!(
+        run(
+            "(function () { var calls = 0; var mark = function () { calls++; return 1; }; \
+             class C { a = mark(); } new C(); new C(); return calls; })()"
+        ),
+        "2"
+    );
+    // A field and a constructor parameter of the same name do not collide: the field wins, because
+    // it is initialised before the body could assign anything.
+    assert_eq!(
+        run(
+            "(function () { class C { x = 'field'; constructor(x) { this.taken = x; } } \
+             var o = new C('argument'); return o.x + ',' + o.taken; })()"
+        ),
+        "field,argument"
+    );
+    // An empty field list emits no prologue at all, which is the branch a class without fields takes.
+    assert_eq!(
+        run("(function () { class C { m() { return 1; } } return new C().m(); })()"),
+        "1"
+    );
+}
+
+#[test]
+fn the_two_kinds_of_field_this_slice_does_not_take_are_refused_by_name() {
+    // A static field's initialiser is evaluated with `this` bound to the constructor, at definition
+    // time. Compiled inline it would take whatever `this` the surrounding scope has, which is a wrong
+    // answer rather than a missing one.
+    let error = compile_error("class C { static x = 1; }");
+    assert!(error.contains("static class field"), "got {error:?}");
+    // A computed name is evaluated once at definition time while the initialiser runs per
+    // construction, so the one value has to be kept where the constructor can reach it — §15.7.14's
+    // `[[Fields]]`, which is a slot this does not have yet.
+    let error = compile_error("class C { ['a'] = 1; }");
+    assert!(error.contains("computed class field name"), "got {error:?}");
+    // A static block is a third thing again, and still refused.
+    let error = compile_error("class C { static { 1; } }");
+    assert!(error.contains("static block"), "got {error:?}");
 }

@@ -161,6 +161,17 @@ pub(super) enum Body<'a> {
     Statements(&'a [Stmt]),
     /// An arrow's `a => b`, whose value is what the call answers.
     Expression(&'a Expr),
+    /// A constructor's body, preceded by the instance fields §15.7.14 initialises before it.
+    ///
+    /// The fields are carried here rather than compiled by the caller because they belong *inside*
+    /// this chunk: `this` is only bound within the constructor, and a field initialiser is evaluated
+    /// with it. Prepending them to the code afterwards would move every jump target in the body.
+    Constructor {
+        /// The instance fields, in source order — which is the order they are initialised in.
+        fields: &'a [&'a crate::ast::ClassField],
+        /// What the author wrote.
+        statements: &'a [Stmt],
+    },
 }
 
 /// Whether the body binds `this` itself, or takes the one around it.
@@ -301,6 +312,18 @@ fn compile_body(
         // is no `undefined` to fall through to and no hoisting to do: an expression declares
         // nothing.
         Body::Expression(expression) => compiler.expression(expression)?,
+        // §15.7.14 — the fields first, then the body. `InitializeInstanceElements` runs before the
+        // constructor's first statement, so a field is already there when the body looks.
+        Body::Constructor { fields, statements } => {
+            compiler.instance_fields(fields)?;
+            for name in var_declared_names(statements) {
+                compiler.declare(name.name);
+            }
+            compiler.declare_lexical_names(statements)?;
+            compiler.hoist_functions(statements)?;
+            compiler.statements(statements)?;
+            compiler.constant(Value::Undefined)?;
+        }
     }
     compiler.chunk.emit(Instruction::Return);
     // Only now is it known whether anything read the name — including an arrow written inside,
