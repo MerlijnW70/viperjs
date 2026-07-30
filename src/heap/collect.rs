@@ -241,6 +241,23 @@ impl Heap {
                         other => self.mark_value(other, marked),
                     }
                 }
+                // A combinator's shared record, which holds the values gathered so far and the
+                // capability they will resolve. Nothing else need be holding any of it: the group's
+                // own promise is what a program keeps, and everything above hangs off this.
+                Some(crate::heap::Role::Element { gather, .. }) => {
+                    let state = gather.borrow();
+                    let held = state.values.iter().copied().chain([
+                        state.capability.promise,
+                        state.capability.resolve,
+                        state.capability.reject,
+                    ]);
+                    for value in held {
+                        match value {
+                            Value::Object(reached) => pending.push(reached),
+                            other => self.mark_value(other, marked),
+                        }
+                    }
+                }
                 None => {}
             }
             // A method's home object, which nothing else need be holding: a method taken off a class

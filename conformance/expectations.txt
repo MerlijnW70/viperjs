@@ -7581,80 +7581,14 @@ built-ins/Object/values/order-after-define-property.js :: it threw ReferenceErro
 built-ins/Object/values/order-after-define-property.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/tamper-with-global-object.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/values/tamper-with-global-object.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Promise/all/S25.4.4.1_A1.1_T1.js :: it threw an object with no name: The value of `typeof Promise.all` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/all/S25.4.4.1_A1.1_T1.js (strict) :: it threw an object with no name: The value of `typeof Promise.all` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/all/S25.4.4.1_A2.1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/S25.4.4.1_A2.1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/call-resolve-element-after-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/call-resolve-element-after-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/call-resolve-element-items.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/call-resolve-element-items.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/call-resolve-element.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/call-resolve-element.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/capability-executor-called-twice.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/capability-executor-called-twice.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/all/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/all/capability-resolve-throws-no-close.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/capability-resolve-throws-no-close.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/all/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/all/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/invoke-resolve-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve-get-once-multiple-calls.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve-get-once-multiple-calls.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve-get-once-no-calls.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve-get-once-no-calls.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/invoke-resolve-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/invoke-resolve.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-resolve.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-then-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-then-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-then-get-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-then-get-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-then.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/invoke-then.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/iter-next-val-err-no-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/iter-next-val-err-no-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/iter-step-err-no-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/iter-step-err-no-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/all/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/all/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/all/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/all/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/all/new-resolve-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/new-resolve-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/all/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/all/prop-desc.js :: it threw an object with no name: all should be an own property
-built-ins/Promise/all/prop-desc.js (strict) :: it threw an object with no name: all should be an own property
-built-ins/Promise/all/resolve-before-loop-exit-from-same.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-before-loop-exit-from-same.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-before-loop-exit.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-before-loop-exit.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-extensible.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-extensible.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-nonconstructor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-nonconstructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-property-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-property-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-prototype.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-element-function-prototype.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-throws-iterator-return-null-or-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/same-reject-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/same-reject-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/species-get-error.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/all/species-get-error.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/all/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/all/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/all/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/all/invoke-resolve-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/all/invoke-then-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/all/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/all/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/all/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/allKeyed/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
 built-ins/Promise/allKeyed/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
 built-ins/Promise/allKeyed/ctx-ctor-constructed.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -7685,94 +7619,14 @@ built-ins/Promise/allKeyed/resolve-element-function-properties.js :: it threw Ty
 built-ins/Promise/allKeyed/resolve-element-function-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/call-resolve-element-after-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/call-resolve-element-after-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/call-resolve-element-items.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/call-resolve-element-items.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/call-resolve-element.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/call-resolve-element.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/capability-executor-called-twice.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/capability-executor-called-twice.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/allSettled/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/allSettled/capability-resolve-throws-no-close.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/capability-resolve-throws-no-close.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/allSettled/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/allSettled/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/invoke-resolve-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-get-once-multiple-calls.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-get-once-multiple-calls.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-get-once-no-calls.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-get-once-no-calls.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/invoke-resolve-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/invoke-resolve.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-then-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-then-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-then-get-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-then-get-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-then.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-then.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/allSettled/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/allSettled/iter-next-val-err-no-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/iter-next-val-err-no-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/iter-step-err-no-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/iter-step-err-no-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/allSettled/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/allSettled/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/allSettled/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/allSettled/new-reject-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/new-reject-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/new-resolve-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/new-resolve-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/allSettled/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/allSettled/prop-desc.js :: it threw an object with no name: allSettled should be an own property
-built-ins/Promise/allSettled/prop-desc.js (strict) :: it threw an object with no name: allSettled should be an own property
-built-ins/Promise/allSettled/reject-element-function-extensible.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-extensible.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-multiple-calls.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-multiple-calls.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-nonconstructor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-nonconstructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-property-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-property-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-prototype.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/reject-element-function-prototype.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-before-loop-exit-from-same.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-before-loop-exit-from-same.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-before-loop-exit.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-before-loop-exit.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-extensible.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-extensible.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-nonconstructor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-nonconstructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-property-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-property-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-prototype.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-element-function-prototype.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-throws-iterator-return-null-or-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/returns-promise.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/returns-promise.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/allSettled/species-get-error.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/allSettled/species-get-error.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allSettled/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/allSettled/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/allSettled/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allSettled/invoke-resolve-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allSettled/invoke-then-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allSettled/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allSettled/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allSettled/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/allSettledKeyed/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
 built-ins/Promise/allSettledKeyed/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
 built-ins/Promise/allSettledKeyed/ctx-ctor-constructed.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -7869,58 +7723,14 @@ built-ins/Promise/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is n
 built-ins/Promise/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Promise/prototype/finally/this-value-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/prototype/finally/this-value-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/race/S25.4.4.3_A1.1_T1.js :: it threw an object with no name: The value of `typeof Promise.race` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/race/S25.4.4.3_A1.1_T1.js (strict) :: it threw an object with no name: The value of `typeof Promise.race` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/race/S25.4.4.3_A2.1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/S25.4.4.3_A2.1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/capability-executor-called-twice.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/capability-executor-called-twice.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/race/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/race/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/race/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/race/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/invoke-resolve-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve-get-once-multiple-calls.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve-get-once-multiple-calls.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve-get-once-no-calls.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve-get-once-no-calls.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/invoke-resolve-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/invoke-resolve.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-resolve.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-then-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-then-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-then-get-error-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-then-get-error-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-then.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/invoke-then.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/iter-next-val-err-no-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/iter-next-val-err-no-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/iter-step-err-no-close.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/iter-step-err-no-close.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/race/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/race/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/race/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/race/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/race/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/race/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/race/prop-desc.js :: it threw an object with no name: race should be an own property
-built-ins/Promise/race/prop-desc.js (strict) :: it threw an object with no name: race should be an own property
-built-ins/Promise/race/reject-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/reject-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/resolve-throws-iterator-return-null-or-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/same-reject-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/same-reject-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/same-resolve-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/same-resolve-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/species-get-error.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/race/species-get-error.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/race/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/race/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/race/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/race/invoke-resolve-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/race/invoke-then-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/race/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/race/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/race/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/reject/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/reject/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/resolve/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError

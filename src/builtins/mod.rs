@@ -31,6 +31,7 @@ mod math;
 mod object;
 mod object_state;
 pub(crate) mod promise;
+mod promise_group;
 mod symbol;
 pub use self::symbol::WELL_KNOWN;
 

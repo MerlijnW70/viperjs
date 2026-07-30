@@ -32,7 +32,7 @@
 
 use crate::heap::{Heap, ObjectId};
 use crate::value::Value;
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 /// `[[PromiseState]]` — §27.2.6.
@@ -142,6 +142,40 @@ impl Settler {
     }
 }
 
+/// Which of §27.2.4's combinators a group of elements belongs to.
+///
+/// They differ in three small ways and each is a whole clause: what a rejection does, whether the
+/// value is recorded or the outcome is, and whether anything is recorded at all.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Group {
+    /// §27.2.4.1 — every value, in iteration order; the first rejection rejects the group.
+    All,
+    /// §27.2.4.2 — an outcome object per element, and no rejection at all.
+    AllSettled,
+    /// §27.2.4.4 — the first to settle, whichever way it settled, and nothing is collected.
+    Race,
+}
+
+/// What a group of elements shares — §27.2.4.1.1's `values` and `remainingElementsCount`.
+///
+/// One record behind an `Rc`, because the specification's is shared by every element function and
+/// by the walk that made them: each holds it, each changes it, and the last one to put it down is
+/// the one that settles the promise.
+#[derive(Debug)]
+pub struct Gather {
+    /// One slot per element, made when the element is *read* and filled when it settles.
+    ///
+    /// Made early on purpose: the answer is in iteration order however the promises settle, and a
+    /// list appended to on settlement would be in completion order instead.
+    pub values: Vec<Value>,
+    /// `[[RemainingElements]]`, which starts at **one** — see the module documentation.
+    pub remaining: usize,
+    /// What is settled when the count reaches zero.
+    pub capability: Capability,
+    /// Which combinator this is.
+    pub group: Group,
+}
+
 /// What one of §27.2's function objects carries where the specification writes a closure.
 ///
 /// Three of them capture state: the resolve and reject functions capture the promise they settle
@@ -181,6 +215,21 @@ pub enum Role {
     Thunk(Value),
     /// The same, for the rejection half — §27.2.5.3.2 step 6, which **throws** rather than answers.
     Thrower(Value),
+    /// One element function of a combinator — §27.2.4.1.2 and §27.2.4.2.2.
+    Element {
+        /// Which slot of the shared list this one fills.
+        index: usize,
+        /// `[[AlreadyCalled]]`, shared with the other half of this element's pair.
+        ///
+        /// Shared because `allSettled` subscribes two functions per element and a promise that
+        /// managed to call both must fill its slot once: settling twice would take the count down
+        /// twice and resolve the group early, with holes in it.
+        called: Rc<Cell<bool>>,
+        /// The group this element belongs to.
+        gather: Rc<RefCell<Gather>>,
+        /// Which half of the pair this is, which is what `allSettled` records as `status`.
+        kind: ReactionKind,
+    },
 }
 
 impl Promise {

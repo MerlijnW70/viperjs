@@ -83,7 +83,9 @@ impl From<bool> for DefineOutcome {
 pub use self::collect::{Collected, Roots};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
-pub use self::promise::{Capability, Promise, PromiseState, Reaction, ReactionKind, Role, Settler};
+pub use self::promise::{
+    Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
+};
 
 impl Heap {
     /// §7.2.3 `IsCallable` — whether a *value* is something a call may reach.

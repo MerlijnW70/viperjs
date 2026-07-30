@@ -567,3 +567,199 @@ fn then_answers_a_promise_of_the_kind_species_names() {
         "false,true"
     );
 }
+
+#[test]
+fn all_answers_every_value_in_iteration_order_and_fails_on_the_first_rejection() {
+    // §27.2.4.1 — the order of the answer is the order of the *iterable*, not the order the
+    // promises settled in. A list appended to on settlement would give the right values in the
+    // wrong places, and would do so only sometimes, which is the worst kind of wrong.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.all([Promise.resolve(1), 2, Promise.resolve(3)])              .then(function (v) { out = v.join(','); });",
+            "out"
+        ),
+        "1,2,3"
+    );
+    // …including when the later element settles first, which is what the slot-made-early is for.
+    assert_eq!(
+        run_settled(
+            "var out; var slow; var p = new Promise(function (r) { slow = r; });              Promise.all([p, Promise.resolve('fast')]).then(function (v) { out = v.join(','); });              slow('slow');",
+            "out"
+        ),
+        "slow,fast"
+    );
+    // An **empty** iterable resolves, and resolves with an array. This is the row the counter that
+    // starts at one exists for: with a counter starting at zero it would never settle.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.all([]).then(function (v) { out = Array.isArray(v) + ',' + v.length; });",
+            "out"
+        ),
+        "true,0"
+    );
+    // The first rejection rejects the group, and the rest are neither waited for nor recorded.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.all([Promise.resolve(1), Promise.reject('no'), Promise.resolve(3)])              .then(function () { out = 'wrongly resolved'; }, function (e) { out = 'rejected ' + e; });",
+            "out"
+        ),
+        "rejected no"
+    );
+    // An answer that is not iterable is a **rejection**, not a throw — which is the most
+    // surprising thing about all four of these and is what `IfAbruptRejectPromise` is for.
+    assert_eq!(
+        run_settled(
+            "var out; var p = Promise.all(null); p.catch(function (e) { out = e.constructor.name; });",
+            "out"
+        ),
+        "TypeError"
+    );
+    assert_eq!(run("Promise.all(null) instanceof Promise"), "true");
+}
+
+#[test]
+fn all_settled_records_how_each_one_settled_and_never_rejects() {
+    // §27.2.4.2 — an outcome object per element, in two shapes. A rejection is not a failure of
+    // the group; that is the whole difference from `all`.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.allSettled([Promise.resolve(1), Promise.reject('no')])              .then(function (v) {                 out = v[0].status + ':' + v[0].value + '|' + v[1].status + ':' + v[1].reason; });",
+            "out"
+        ),
+        "fulfilled:1|rejected:no"
+    );
+    // Two shapes rather than one with a hole: a program tells them apart by `status`, and an
+    // object carrying both keys would answer `'value' in result` wrongly for a rejection.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.allSettled([Promise.reject('no')]).then(function (v) {                 out = ('value' in v[0]) + ',' + ('reason' in v[0]); });",
+            "out"
+        ),
+        "false,true"
+    );
+    assert_eq!(
+        run_settled(
+            "var out; Promise.allSettled([]).then(function (v) { out = v.length; });",
+            "out"
+        ),
+        "0"
+    );
+}
+
+#[test]
+fn race_takes_the_first_to_settle_whichever_way_it_settled() {
+    // §27.2.4.4 — and it keeps no state at all: each element is subscribed with the group's own
+    // resolve and reject, so the first to arrive settles it and the rest find it already settled.
+    // One that settles later wins over one that never settles, which is the plain case.
+    assert_eq!(
+        run_settled(
+            "var out; var late; \
+             Promise.race([new Promise(function (r) { late = r; }), new Promise(function () {})]) \
+             .then(function (v) { out = v; }); \
+             Promise.resolve().then(function () { late('late'); });",
+            "out"
+        ),
+        "late"
+    );
+    // When two settled at the same moment, "first" means first *subscribed*, which is iteration
+    // order. The whole walk is synchronous, so a promise a later statement resolves has already
+    // been subscribed to by then and takes its turn in the queue behind the ones before it.
+    assert_eq!(
+        run_settled(
+            "var out; var slow; \
+             Promise.race([new Promise(function (r) { slow = r; }), Promise.resolve('quick')]) \
+             .then(function (v) { out = v; }); slow('slow');",
+            "out"
+        ),
+        "quick"
+    );
+    // A rejection wins just as a fulfilment does, which is what separates `race` from `any`.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.race([Promise.reject('first'), Promise.resolve('second')])              .then(function () { out = 'wrongly resolved'; }, function (e) { out = 'rejected ' + e; });",
+            "out"
+        ),
+        "rejected first"
+    );
+    // An empty iterable never settles — there is nothing to be first. Nothing runs, and that is
+    // the right answer rather than a hang: the queue empties and the program ends.
+    assert_eq!(
+        run_settled(
+            "var out = 'never settled'; Promise.race([]).then(function () { out = 'wrong'; });",
+            "out"
+        ),
+        "never settled"
+    );
+}
+
+#[test]
+fn a_combinator_reads_resolve_once_and_subscribes_before_reading_the_next_element() {
+    // §27.2.4.1 step 3 — `resolve` is read from the constructor **once**, before the walk. A
+    // program that replaces it halfway through would otherwise get two different functions for one
+    // call, which no clause allows.
+    assert_eq!(
+        run_settled(
+            "var seen = 0; class P extends Promise {}              Object.defineProperty(P, 'resolve', { get: function () { seen++; return Promise.resolve; } });              P.all([1, 2, 3]); var out = seen;",
+            "out"
+        ),
+        "1"
+    );
+    // §27.2.4.1.1 step 8 — one element is read, resolved and subscribed before the next is read.
+    // An iterator with side effects sees the interleaving, and a version that drained the iterable
+    // first would show every read before any subscription.
+    assert_eq!(
+        run_settled(
+            "var log = ''; var made = 0;              var iterable = {}; iterable[Symbol.iterator] = function () {                var at = 0; return { next: function () {                  log += 'read' + at + ','; at++;                  return at > 2 ? { done: true } : { done: false, value: at }; } }; };              var seen = Promise.resolve;              Promise.all(iterable); var out = log;",
+            "out"
+        ),
+        "read0,read1,read2,"
+    );
+}
+
+#[test]
+fn an_element_settles_its_slot_once_however_many_times_it_is_told() {
+    // §27.2.4.1.2 step 1 — `[[AlreadyCalled]]`. Every element gives up exactly one of the group's
+    // count, and an element that gave up two would take the count to zero while slots were still
+    // empty: the group would resolve early, with holes in its array.
+    //
+    // Reaching it needs a `resolve` that answers something other than a promise, because a real
+    // promise settles once by itself. A subclass may replace it with anything, and then the walk
+    // subscribes by calling that object's `then` — which is free to call back twice.
+    let twice = "class P extends Promise {                    static resolve(v) { return { then: function (f) { f(v); f(v); } }; } }";
+    assert_eq!(
+        run_settled(
+            &format!(
+                "{twice} var out; P.all([1, 2, 3]).then(function (v) {{ out = v.join(','); }});"
+            ),
+            "out"
+        ),
+        "1,2,3"
+    );
+    // The same for `allSettled`, where the pair *shares* the record: an element told both that it
+    // was fulfilled and that it was rejected fills its slot once, with whichever came first.
+    let both = "class P extends Promise {                   static resolve(v) { return { then: function (f, r) { f(v); r('later'); } }; } }";
+    assert_eq!(
+        run_settled(
+            &format!(
+                "{both} var out; P.allSettled([1]).then(function (v) {{                    out = v.length + ':' + v[0].status + ':' + v[0].value; }});"
+            ),
+            "out"
+        ),
+        "1:fulfilled:1"
+    );
+}
+
+#[test]
+fn an_all_settled_outcome_is_an_ordinary_object_a_program_may_change() {
+    // §27.2.4.2.2 steps 10 and 11 use `CreateDataPropertyOrThrow`, which is §7.3.5's *ordinary*
+    // property: writable, enumerable and configurable. Not §6.1.7.1's defaults, which would make
+    // the result unwritable and invisible to `Object.keys` — a result a program cannot inspect
+    // with the tools it inspects everything else with.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.allSettled([Promise.resolve(1)]).then(function (v) {                var d = Object.getOwnPropertyDescriptor(v[0], 'value');                out = d.writable + ',' + d.enumerable + ',' + d.configurable                  + '|' + Object.keys(v[0]).join('+'); });",
+            "out"
+        ),
+        "true,true,true|status+value"
+    );
+}

@@ -156,7 +156,7 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 /// No arm for `undefined` and `null`: reading a property of either is already the TypeError
 /// §23.1.2.1 step 4 asks for, by way of the `ToObject` it would otherwise reach. A guard here
 /// would answer the same thing one step earlier.
-fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
+pub(super) fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
     let Some(symbol) = vm.realm().well_known(super::well_known_at("iterator")) else {
         return Ok(None);
     };
