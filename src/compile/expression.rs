@@ -61,7 +61,7 @@ impl Compiler<'_> {
                 // reference. For a property that is the base and the key, and for anything else
                 // there is nothing to delete.
                 if *operator == UnaryOperator::Delete {
-                    return self.delete(argument, span);
+                    return self.delete(argument);
                 }
                 // §13.5.1.1 step 2 — `typeof` is the one operator that takes an *unresolvable*
                 // reference and answers instead of throwing. `typeof JSON !== "undefined"` is
@@ -778,7 +778,7 @@ impl Compiler<'_> {
     /// Answers whether the property is gone, which is not the same as whether it was there:
     /// `delete o.nothing` is `true`. Deleting anything that is not a property reference is also
     /// `true` and does nothing at all, which is why `delete 1` is legal outside strict mode.
-    fn delete(&mut self, argument: &Expr, span: Span) -> Result<(), CompileError> {
+    fn delete(&mut self, argument: &Expr) -> Result<(), CompileError> {
         match &argument.kind {
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
                 let reference = self.property_reference(argument, Keep::Nothing)?;
@@ -796,10 +796,24 @@ impl Compiler<'_> {
                 });
                 Ok(())
             }
-            // §13.5.1.2 step 2 — deleting a name is only legal in sloppy code and only for a
-            // configurable global, which needs the global object. Deleting anything else at all
-            // evaluates it and answers `true`.
-            ExprKind::Identifier(_) => Err(unsupported("deleting a name", span)),
+            // §13.5.1.2 step 5 — deleting a *name*, which the parser has already refused in strict
+            // code (§13.5.1.1 makes it an early error there). What is left is sloppy, and the answer
+            // depends on where the name lives rather than on anything at run time:
+            //
+            // A name the compiler can place is a declarative binding — a `var`, a parameter, a `let`,
+            // a function's own slot — and §9.1.1.1.5 makes every one of those **non-deletable**. So
+            // the answer is `false` and there is nothing to emit but the constant.
+            //
+            // A name it cannot place is a property of the global object, which may or may not be
+            // configurable and may not be there at all. That one needs the object, at run time.
+            ExprKind::Identifier(name) => match self.binding(name) {
+                Some(_) => self.constant(Value::Boolean(false)),
+                None => {
+                    let index = self.name(name)?;
+                    self.chunk.emit(Instruction::DeleteGlobal(index));
+                    Ok(())
+                }
+            },
             _ => {
                 self.expression(argument)?;
                 self.chunk.emit(Instruction::Pop);

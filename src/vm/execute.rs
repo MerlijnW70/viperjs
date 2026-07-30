@@ -328,6 +328,25 @@ impl Vm {
                     let key = self.global_name(running, index, heap)?;
                     self.declare_global(key, heap);
                 }
+                Instruction::DeleteGlobal(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    // §9.1.1.2.7 `DeleteBinding` is `[[Delete]]` of the binding object, and §10.1.10.1
+                    // step 2 answers **true** for a property that is not there — which is also what
+                    // §13.5.1.2 step 3 says about a name that resolves nowhere. The two paths the
+                    // specification separates give the same answer here, so one call serves both.
+                    //
+                    // `[[Delete]]` is own-only while `HasBinding` walks the prototype chain, and that
+                    // difference is deliberate on both sides: `delete toString` at the top level answers
+                    // true and leaves `Object.prototype.toString` exactly where it was.
+                    //
+                    // Straight to the heap rather than through `delete_property_key`, because the
+                    // global object is ordinary and §10.1.10.1 is total for one: there is no
+                    // completion to settle and so no branch here that nothing can reach. The parser
+                    // makes `delete x` an early error in strict code (§13.5.1.1), so the throw a
+                    // `false` answer would earn there is unreachable from this instruction too.
+                    let gone = heap.delete_own_property(self.realm.global(), key);
+                    self.stack.push(Value::Boolean(gone));
+                }
                 Instruction::Bury(depth) => {
                     // Removed from the top and inserted lower down rather than swapped along:
                     // everything it passes keeps its order, and only this value moves.

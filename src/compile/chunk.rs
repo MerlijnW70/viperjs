@@ -390,6 +390,16 @@ pub enum Instruction {
     ///
     /// Pops the value, then the key, then the target.
     DefineClassMethod(crate::ast::MethodKind),
+    /// `delete x` where `x` is a property of the global object — §13.5.1.2 step 5.
+    ///
+    /// The operand names it, exactly as [`Instruction::LoadGlobal`] does. A name the global object
+    /// does not have answers **true**: §6.2.5.6 makes an unresolvable reference a delete of nothing,
+    /// which succeeded vacuously. One it has answers whether the property was configurable.
+    ///
+    /// Only a *global* reaches this. A name the compiler could place is a declarative binding, and
+    /// §9.1.1.1.5 makes every one of those non-deletable — so that answer is a constant `false` and
+    /// needs no instruction at all.
+    DeleteGlobal(u32),
     /// Take a key and a base and push the property's value — `[[Get]]`, §10.1.8.
     GetProperty,
     /// Take a value, a key and a base; store the value and leave it on the stack — §10.1.9.
@@ -879,6 +889,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)
         | Instruction::DeclareGlobal(_)
+        | Instruction::DeleteGlobal(_)
         | Instruction::SetCompletion
         | Instruction::Throw
         | Instruction::PopHandler

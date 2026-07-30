@@ -21614,6 +21614,7 @@ language/global-code/script-decl-func-err-non-extensible.js :: it threw an objec
 language/global-code/script-decl-func-err-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/global-code/script-decl-func.js :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-func.js (strict) :: it threw ReferenceError: $262 is not defined
+language/global-code/script-decl-lex-deletion.js :: it threw ReferenceError: $262 is not defined
 language/global-code/script-decl-lex-lex.js :: it threw an object with no name: `let` binding Expected a SyntaxError but got a ReferenceError
 language/global-code/script-decl-lex-lex.js (strict) :: it threw an object with no name: `let` binding Expected a SyntaxError but got a ReferenceError
 language/global-code/script-decl-lex-restricted-global.js :: it threw ReferenceError: $262 is not defined

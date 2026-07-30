@@ -346,6 +346,61 @@ fn delete_reaches_only_own_properties_and_a_non_reference_is_always_gone() {
 }
 
 #[test]
+fn deleting_a_name_answers_for_the_binding_and_only_a_global_property_ever_goes() {
+    // §13.5.1.2 step 5 — `delete x` is not `delete o.x` with the base left out. The name resolves to
+    // an environment record first, and *which* record it lands in decides the answer before anything
+    // is looked at: a declarative binding is non-deletable by §9.1.1.1.5, and a property of the
+    // global object is deletable exactly when it is configurable.
+    //
+    // A `var` in a function and a `var` at the top level of a script both answer `false`, and that
+    // agreement is a coincidence of two different rules — the first is a binding that cannot be
+    // deleted, the second is a global property §9.1.1.4.5 makes non-configurable. Both rows are
+    // here because an implementation that gets one right by the other's reasoning still answers
+    // wrongly for `delete Math`.
+    assert_eq!(
+        run("function f() { var a = 1; return delete a; } f()"),
+        "false"
+    );
+    assert_eq!(
+        run("function f() { var a = 1; delete a; return a; } f()"),
+        "1"
+    );
+    assert_eq!(run("function f(p) { return delete p; } f(1)"), "false");
+    assert_eq!(
+        run("function f() { return delete arguments; } f()"),
+        "false"
+    );
+    assert_eq!(run("var y = 1; delete y"), "false");
+    assert_eq!(run("var y = 1; delete y; y"), "1");
+    assert_eq!(run("function g() {} delete g"), "false");
+    assert_eq!(run("let l = 1; delete l"), "false");
+    assert_eq!(run("const k = 1; delete k"), "false");
+    // A configurable global really goes, and this is the only shape of `delete x` that changes
+    // anything at all. `Math` is the row that matters: §19's built-ins are `{ writable: true,
+    // enumerable: false, configurable: true }`, so deleting one is legal and permanent.
+    assert_eq!(run("delete Math"), "true");
+    assert_eq!(run("delete Math; typeof Math"), "undefined");
+    assert_eq!(
+        run("this.z = 1; var r = delete z; r + ',' + (typeof z)"),
+        "true,undefined"
+    );
+    // …and `undefined` is the built-in that is *not* configurable, so it stays.
+    assert_eq!(run("delete undefined"), "false");
+    // §13.5.1.2 step 3 — a name that resolves nowhere answers `true`, and so does deleting the same
+    // global twice. §10.1.10.1 step 2 gives the second one for free: there is nothing there to refuse.
+    assert_eq!(run("delete notdeclared"), "true");
+    assert_eq!(run("this.z = 1; delete z; delete z"), "true");
+    // Own only, exactly as for a property reference — `toString` resolves as a bare name because
+    // §9.1.1.2.1 walks the prototype chain, and `[[Delete]]` does not. So the answer is `true` and
+    // `Object.prototype.toString` is untouched, which is the same trap as the inherited property
+    // above wearing different syntax.
+    assert_eq!(run("delete toString; typeof toString"), "function");
+    // Strict code cannot say any of this at all: §13.5.1.1 makes `delete` of a name an early error
+    // whatever the name turns out to be, which is why nothing above needs a strict counterpart and
+    // why the instruction has no strict path. The refusal itself is the parser's, and pinned there.
+}
+
+#[test]
 fn optional_chaining_gives_up_on_the_whole_chain_and_stops_at_the_parenthesis() {
     // §13.3.9 — the short circuit ends at the **chain**, not at the link, and that boundary is the
     // whole of what is hard about it. `a?.b.c` gives up on all of it when `a` is nullish; `(a?.b).c`
