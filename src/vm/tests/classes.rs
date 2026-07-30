@@ -285,19 +285,21 @@ fn a_class_declaration_is_lexical_and_an_expression_is_a_value() {
 
 #[test]
 fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
-    // Each of these is a slice of its own. Refused rather than mis-compiled, because a class that
-    // silently dropped its fields would be worse than one that will not compile — and the
-    // conformance harness reports a refusal as *not run* rather than as a wrong answer.
-    for (source, what) in [
-        ("class C extends Object {}", "extends"),
-        ("class C { static { 1; } }", "static block"),
-    ] {
-        let error = compile_error(source);
-        assert!(
-            error.contains(what),
-            "{source:?} should be refused for {what:?}, got {error:?}"
-        );
-    }
+    // `extends` is the last thing a class body cannot hold, and it is refused rather than
+    // mis-compiled: the harness reports a refusal as *not run* rather than as a wrong answer, and a
+    // class that silently dropped its inheritance would be worse than one that will not compile.
+    //
+    // This list has been shortened five times, once per slice, and each time because a row was
+    // asserting the opposite of what it said. A refusal test outlives the refusal it describes.
+    let error = compile_error("class C extends Object {}");
+    assert!(error.contains("extends"), "got {error:?}");
+    // Everything else a class body can hold now compiles, so there is no row for it here.
+    assert_eq!(
+        run(
+            "class C { a = 1; static b = 2; ['c'] = 3; static { this.d = 4; } m() {}              static n() {} get g() { return 5; } }              C.b + ',' + C.d + ',' + new C().a + ',' + new C().c + ',' + new C().g"
+        ),
+        "2,4,1,3,5"
+    );
 }
 
 #[test]
@@ -401,8 +403,6 @@ fn fields_run_in_source_order_and_before_the_constructor_body() {
 fn what_a_class_body_still_cannot_hold_is_refused_by_name() {
     // A static block is the last class element with no implementation, and it is refused rather than
     // approximated: the harness reports a refusal as *not run* rather than as a wrong answer.
-    let error = compile_error("class C { static { 1; } }");
-    assert!(error.contains("static block"), "got {error:?}");
     // `extends` likewise — the prototype chain, `super`, and a derived constructor's `this` are their
     // own slice.
     let error = compile_error("class C extends Object {}");
@@ -661,6 +661,54 @@ fn a_computed_field_name_is_evaluated_once_and_kept() {
     // A static and an instance computed name in one class do not disturb each other.
     assert_eq!(
         run("class C { static ['s'] = 1; ['i'] = 2; } C.s + ',' + new C().i"),
+        "1,2"
+    );
+}
+
+#[test]
+fn a_static_block_runs_once_with_this_bound_to_the_constructor() {
+    assert_eq!(run("class C { static { this.x = 1; } } C.x"), "1");
+    // §15.7.14 binds `this` to the constructor, which is what a block is for — it defines nothing on
+    // its own, so without a receiver it could do nothing at all.
+    assert_eq!(
+        run("class C { static { this.self = this; } } C.self === C"),
+        "true"
+    );
+    assert_eq!(
+        run("class C { static { this.m = function () { return 5; }; } } C.m()"),
+        "5"
+    );
+    // Once, when the class is defined — not per instance.
+    assert_eq!(
+        run("var n = 0; class C { static { n++; } } new C(); new C(); n"),
+        "1"
+    );
+    // A body, not an expression: declarations inside it are its own.
+    assert_eq!(
+        run("class C { static { var a = 1; this.v = a + 1; } } C.v"),
+        "2"
+    );
+    assert_eq!(
+        run("class C { static { let a = 2; this.v = a; } } C.v"),
+        "2"
+    );
+    // It sees a static field defined above it, because every static element runs after every element
+    // has been defined and they run in order.
+    assert_eq!(
+        run("class C { static x = 1; static { this.y = this.x + 1; } } C.y"),
+        "2"
+    );
+    // Blocks and fields are one list in source order — nothing distinguishes them at that point, and
+    // gathering them separately would lose the order between them.
+    assert_eq!(
+        run("var order = []; \
+             class C { static { order.push(1); } static a = order.push(2); \
+                       static { order.push(3); } } order.join('')"),
+        "123"
+    );
+    // Two blocks in one class, each run.
+    assert_eq!(
+        run("class C { static { this.a = 1; } static { this.b = this.a + 1; } } C.a + ',' + C.b"),
         "1,2"
     );
 }

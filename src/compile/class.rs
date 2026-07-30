@@ -39,17 +39,16 @@ impl Compiler<'_> {
             return Err(unsupported("a class with `extends`", span));
         }
         let mut fields: Vec<&crate::ast::ClassField> = Vec::new();
-        // A static field is paired with the slot its evaluated name will be kept in; see
-        // [`Compiler::static_field`] for why the two halves are separated.
-        let mut statics: Vec<(&crate::ast::ClassField, u32)> = Vec::new();
+        // §15.7.14 keeps the static elements in one list, because a field and a block run in the
+        // order they were written and nothing distinguishes them at that point.
+        let mut statics: Vec<StaticElement<'_>> = Vec::new();
         for element in &class.elements {
             match element {
                 // Taken in the element walk below, where the specification evaluates its name.
                 ClassElement::Field(field) if field.is_static => {}
                 ClassElement::Field(field) => fields.push(field),
-                ClassElement::StaticBlock(block) => {
-                    return Err(unsupported("a class static block", block.span));
-                }
+                // Taken in the element walk below, in order with the static fields.
+                ClassElement::StaticBlock(_) => {}
                 ClassElement::Method(_) => {}
             }
         }
@@ -126,7 +125,11 @@ impl Compiler<'_> {
                 let slot = self.declare_shadowing("static field name");
                 self.chunk.emit(Instruction::StoreVariable(0, slot));
                 self.chunk.emit(Instruction::Pop);
-                statics.push((field, slot));
+                statics.push(StaticElement::Field(field, slot));
+                continue;
+            }
+            if let ClassElement::StaticBlock(block) = element {
+                statics.push(StaticElement::Block(block));
                 continue;
             }
             let ClassElement::Method(method) = element else {
@@ -146,10 +149,43 @@ impl Compiler<'_> {
             self.make_function(&method.function, span)?;
             self.chunk.emit(Instruction::DefineClassMethod(method.kind));
         }
-        for (field, slot) in &statics {
-            self.static_field(field, *slot, span)?;
+        for element in &statics {
+            match element {
+                StaticElement::Field(field, slot) => self.static_field(field, *slot, span)?,
+                StaticElement::Block(block) => self.static_block(block, span)?,
+            }
         }
         self.leave_scope(mark);
+        Ok(())
+    }
+
+    /// §15.7.14's `ClassStaticBlockDefinitionEvaluation` — a `static { … }` body, run once.
+    ///
+    /// The same shape as a static field's initialiser and for the same reason: it is compiled as a
+    /// body of its own and *called* with the constructor as its receiver, because §15.7.14 binds
+    /// `this` to the constructor and a call is the only thing that binds a receiver. What differs is
+    /// that a block is a statement list rather than an expression, and defines no property — so its
+    /// answer is discarded, and `return` is a Syntax Error the parser has already refused.
+    fn static_block(
+        &mut self,
+        block: &crate::ast::ClassStaticBlock,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        self.chunk.emit(Instruction::Duplicate);
+        let parameters = FormalParameters {
+            items: Box::new([]),
+            rest: None,
+            span,
+        };
+        let body = self.compile_nested(
+            &parameters,
+            Body::Statements(&block.body),
+            Lexical::No,
+            span,
+        )?;
+        self.emit_function(body, span)?;
+        self.chunk.emit(Instruction::CallMethod(0));
+        self.chunk.emit(Instruction::Pop);
         Ok(())
     }
 
@@ -313,4 +349,15 @@ impl Compiler<'_> {
 /// mean, without either having to be told.
 fn field_name_slot(at: usize) -> String {
     format!("%class field name {at}")
+}
+
+/// One `static` element of a class body, in the order it was written.
+///
+/// §15.7.14 runs the static fields and the static blocks as one list, after every element has been
+/// defined, so they cannot be gathered separately without losing the order between them.
+enum StaticElement<'a> {
+    /// `static x = 1;`, with the slot its evaluated name was left in.
+    Field(&'a crate::ast::ClassField, u32),
+    /// `static { … }`, which defines nothing and is run for its effects.
+    Block(&'a crate::ast::ClassStaticBlock),
 }
