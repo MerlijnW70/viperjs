@@ -511,7 +511,6 @@ impl Compiler<'_> {
         Ok(Reference::Ordinary)
     }
 
-
     /// The base and the key of a property reference, pushed in that order.
     ///
     /// Shared by reading, writing and deleting, which all need the same two values and all refuse

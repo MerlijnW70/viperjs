@@ -21,8 +21,8 @@
 //! rather than mis-compiled, because a class that silently dropped its fields would be worse than
 //! one that would not compile.
 
-use super::function::{Body, Lexical};
 use super::CompileError;
+use super::function::{Body, Lexical};
 use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
@@ -293,10 +293,11 @@ impl Compiler<'_> {
         // that it is the *same* code path as a written one: an argument list assembled by hand here
         // would be a second implementation of §13.3.8 to keep in step with the first.
         let forwarding = derived_default(span);
-        let (parameters, statements) = match (written.is_none() && class.heritage.is_some(), &forwarding) {
-            (true, (parameters, statements)) => (parameters, statements.as_slice()),
-            (false, _) => (parameters, statements),
-        };
+        let (parameters, statements) =
+            match (written.is_none() && class.heritage.is_some(), &forwarding) {
+                (true, (parameters, statements)) => (parameters, statements.as_slice()),
+                (false, _) => (parameters, statements),
+            };
         let mut body = self.compile_nested(
             parameters,
             Body::Constructor {
@@ -319,12 +320,7 @@ impl Compiler<'_> {
     /// The sibling of [`Compiler::emit_function`], and separate for one reason: the instruction
     /// differs. Both have to carry an inner arrow's reach for `arguments` outward, which is what
     /// [`Compiler::file_function`] is doing.
-    fn emit_class(
-        &mut self,
-        body: Chunk,
-        derived: bool,
-        span: Span,
-    ) -> Result<(), CompileError> {
+    fn emit_class(&mut self, body: Chunk, derived: bool, span: Span) -> Result<(), CompileError> {
         let index = self.file_function(body, span)?;
         self.chunk.emit(Instruction::MakeClass {
             body: index,

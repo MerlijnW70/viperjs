@@ -94,8 +94,10 @@ fn new_target_is_the_constructor_a_new_named_and_undefined_in_every_other_call()
         "true"
     );
     assert_eq!(
-        run("(function () { function f() { this.p = new.target.prototype === f.prototype; } \
-             return new f().p; })()"),
+        run(
+            "(function () { function f() { this.p = new.target.prototype === f.prototype; } \
+             return new f().p; })()"
+        ),
         "true"
     );
 }
@@ -139,8 +141,10 @@ fn an_arrow_answers_the_new_target_of_the_call_it_was_written_in() {
     );
     // The same again through a property, so that the answer does not depend on that step.
     assert_eq!(
-        run("(function () { function f() { this.arrow = () => new.target; } \
-             var made = new f(); return made.arrow() === f; })()"),
+        run(
+            "(function () { function f() { this.arrow = () => new.target; } \
+             var made = new f(); return made.arrow() === f; })()"
+        ),
         "true"
     );
     // An arrow written in a plain call captured `undefined`, which is the same rule and the other
@@ -152,9 +156,11 @@ fn an_arrow_answers_the_new_target_of_the_call_it_was_written_in() {
     );
     // Two arrows from two calls disagree, which is what makes it a capture rather than a constant.
     assert_eq!(
-        run("(function () { function f() { this.arrow = () => new.target; } \
+        run(
+            "(function () { function f() { this.arrow = () => new.target; } \
              function g() { this.arrow = () => new.target; } \
-             return (new f().arrow() === f) + ' ' + (new g().arrow() === f); })()"),
+             return (new f().arrow() === f) + ' ' + (new g().arrow() === f); })()"
+        ),
         "true false"
     );
 }
@@ -189,8 +195,10 @@ fn a_built_in_constructor_makes_its_object_from_new_target_and_not_from_itself()
     // Two levels, because the target is inherited by each `super()` in turn rather than becoming
     // whichever class is nearest the built-in.
     assert_eq!(
-        run("(function () { class D extends Error {} class E extends D {} \
-             return new E() instanceof E; })()"),
+        run(
+            "(function () { class D extends Error {} class E extends D {} \
+             return new E() instanceof E; })()"
+        ),
         "true"
     );
 }
@@ -206,8 +214,10 @@ fn a_subclass_of_a_built_in_keeps_what_the_built_in_does() {
     );
     // §10.4.2's exotic `length` belongs to the object the parent made, so a subclass has it.
     assert_eq!(
-        run("(function () { class D extends Array {} var d = new D(); d.push(1); d.push(2); \
-             return d.length + ',' + Array.isArray(d); })()"),
+        run(
+            "(function () { class D extends Array {} var d = new D(); d.push(1); d.push(2); \
+             return d.length + ',' + Array.isArray(d); })()"
+        ),
         "2,true"
     );
     assert_eq!(
@@ -215,8 +225,10 @@ fn a_subclass_of_a_built_in_keeps_what_the_built_in_does() {
         "4"
     );
     assert_eq!(
-        run("(function () { class D extends String {} var d = new D('ab'); \
-             return d.length + ',' + d[0]; })()"),
+        run(
+            "(function () { class D extends String {} var d = new D('ab'); \
+             return d.length + ',' + d[0]; })()"
+        ),
         "2,a"
     );
     assert_eq!(
@@ -226,8 +238,10 @@ fn a_subclass_of_a_built_in_keeps_what_the_built_in_does() {
     // A subclass inherits the parent's prototype methods through the chain rather than by copying,
     // and may override one — which is the ordinary prototype mechanism and not a special case.
     assert_eq!(
-        run("(function () { class D extends Error { toString() { return 'mine'; } } \
-             return String(new D('x')); })()"),
+        run(
+            "(function () { class D extends Error { toString() { return 'mine'; } } \
+             return String(new D('x')); })()"
+        ),
         "mine"
     );
 }

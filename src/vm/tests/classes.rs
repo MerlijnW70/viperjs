@@ -728,8 +728,10 @@ fn extends_points_both_halves_of_a_class_at_both_halves_of_its_parent() {
     // makes an inherited *static* reachable. An implementation that wired only the first would pass
     // every method test and answer `undefined` for `D.s()`.
     assert_eq!(
-        run("(function () { class B { m() { return 'm'; } static s() { return 's'; } } \
-             class D extends B {} return new D().m() + D.s(); })()"),
+        run(
+            "(function () { class B { m() { return 'm'; } static s() { return 's'; } } \
+             class D extends B {} return new D().m() + D.s(); })()"
+        ),
         "ms"
     );
     assert_eq!(
@@ -741,8 +743,10 @@ fn extends_points_both_halves_of_a_class_at_both_halves_of_its_parent() {
     // …and an instance is an instance of every class in the chain, which is the same two edges read
     // by §7.3.20 rather than by a call.
     assert_eq!(
-        run("(function () { class B {} class D extends B {} class E extends D {} var e = new E(); \
-             return (e instanceof E) + ',' + (e instanceof D) + ',' + (e instanceof B); })()"),
+        run(
+            "(function () { class B {} class D extends B {} class E extends D {} var e = new E(); \
+             return (e instanceof E) + ',' + (e instanceof D) + ',' + (e instanceof B); })()"
+        ),
         "true,true,true"
     );
 }
@@ -795,14 +799,18 @@ fn a_derived_constructor_with_none_written_forwards_every_argument() {
     // arguments reach the parent unchanged and however many there are. An implementation that
     // synthesised an *empty* constructor would construct successfully and lose every argument.
     assert_eq!(
-        run("(function () { class B { constructor(a, b) { this.sum = a + b; } } \
-             class D extends B {} return new D(1, 2).sum; })()"),
+        run(
+            "(function () { class B { constructor(a, b) { this.sum = a + b; } } \
+             class D extends B {} return new D(1, 2).sum; })()"
+        ),
         "3"
     );
     // Through two levels, each of which forwards, and with a count neither one names.
     assert_eq!(
-        run("(function () { class B { constructor() { this.n = arguments.length; } } \
-             class D extends B {} class E extends D {} return new E(1, 2, 3, 4).n; })()"),
+        run(
+            "(function () { class B { constructor() { this.n = arguments.length; } } \
+             class D extends B {} class E extends D {} return new E(1, 2, 3, 4).n; })()"
+        ),
         "4"
     );
 }
@@ -814,23 +822,29 @@ fn a_derived_instance_inherits_from_the_class_that_was_written_after_new() {
     // object, so if it made one from its own `prototype` then `new D()` would answer a `B` and
     // `d instanceof D` would be false. Read from inside the parent, where the object is made.
     assert_eq!(
-        run("(function () { class B { constructor() { this.p = Object.getPrototypeOf(this); } } \
-             class D extends B {} return new D().p === D.prototype; })()"),
+        run(
+            "(function () { class B { constructor() { this.p = Object.getPrototypeOf(this); } } \
+             class D extends B {} return new D().p === D.prototype; })()"
+        ),
         "true"
     );
     assert_eq!(
-        run("(function () { class B { constructor() { this.t = new.target; } } \
-             class D extends B {} class E extends D {} return new E().t === E; })()"),
+        run(
+            "(function () { class B { constructor() { this.t = new.target; } } \
+             class D extends B {} class E extends D {} return new E().t === E; })()"
+        ),
         "true"
     );
     // The running function is read at `super()` time, not captured when the class was defined — so
     // moving `D`'s prototype moves what `super()` reaches. A definition that had recorded the answer
     // would go on calling `B`.
     assert_eq!(
-        run("(function () { class B { constructor() { this.who = 'B'; } } \
+        run(
+            "(function () { class B { constructor() { this.who = 'B'; } } \
              class C { constructor() { this.who = 'C'; } } \
              class D extends B {} Object.setPrototypeOf(D, C); \
-             return new D().who; })()"),
+             return new D().who; })()"
+        ),
         "C"
     );
 }
@@ -986,8 +1000,10 @@ fn a_derived_classs_fields_are_initialised_by_super_and_not_on_entry() {
     );
     // …and the parent cannot see the field, which is the same ordering from the other side.
     assert_eq!(
-        run("(function () { class B { constructor() { this.seen = this.y; } } \
-             class D extends B { y = 1; } return String(new D().seen); })()"),
+        run(
+            "(function () { class B { constructor() { this.seen = this.y; } } \
+             class D extends B { y = 1; } return String(new D().seen); })()"
+        ),
         "undefined"
     );
     // Fields go in source order, and after the parent's work in both cases.
@@ -1016,9 +1032,11 @@ fn super_forwards_a_spread_and_the_arguments_a_written_constructor_chooses() {
     // in any other call, and it goes through the same array-building path. The implicit constructor
     // uses it too, which is why that path had to exist before `extends` could.
     assert_eq!(
-        run("(function () { class B { constructor() { this.n = arguments.length; } } \
+        run(
+            "(function () { class B { constructor() { this.n = arguments.length; } } \
              class D extends B { constructor(list) { super(...list, 9); } } \
-             return new D([1, 2, 3]).n; })()"),
+             return new D([1, 2, 3]).n; })()"
+        ),
         "4"
     );
     // A written constructor may pass whatever it likes, which is the difference from the implicit one.
@@ -1031,9 +1049,11 @@ fn super_forwards_a_spread_and_the_arguments_a_written_constructor_chooses() {
     // A spread whose iterator is exhausted contributes nothing, and `super()` with no arguments is
     // the same call with a count of zero.
     assert_eq!(
-        run("(function () { class B { constructor() { this.n = arguments.length; } } \
+        run(
+            "(function () { class B { constructor() { this.n = arguments.length; } } \
              class D extends B { constructor() { super(...[]); } } \
-             return new D().n; })()"),
+             return new D().n; })()"
+        ),
         "0"
     );
 }
@@ -1085,15 +1105,19 @@ fn super_reads_from_one_level_above_where_the_method_was_defined() {
     );
     // Absent is `undefined` rather than an error, as any read is.
     assert_eq!(
-        run("(function () { class B {} class D extends B { m() { return String(super.nothing); } } \
-             return new D().m(); })()"),
+        run(
+            "(function () { class B {} class D extends B { m() { return String(super.nothing); } } \
+             return new D().m(); })()"
+        ),
         "undefined"
     );
     // A base class's method has a home too — its prototype's prototype is `Object.prototype`, so
     // this is not a special case for derived classes.
     assert_eq!(
-        run("(function () { class C { m() { return typeof super.hasOwnProperty; } } \
-             return new C().m(); })()"),
+        run(
+            "(function () { class C { m() { return typeof super.hasOwnProperty; } } \
+             return new C().m(); })()"
+        ),
         "function"
     );
 }
@@ -1139,8 +1163,10 @@ fn a_static_methods_super_reads_the_parent_class_and_not_its_prototype() {
         "st"
     );
     assert_eq!(
-        run("(function () { class B { static get g() { return 'bg'; } } \
-             class D extends B { static read() { return super.g; } } return D.read(); })()"),
+        run(
+            "(function () { class B { static get g() { return 'bg'; } } \
+             class D extends B { static read() { return super.g; } } return D.read(); })()"
+        ),
         "bg"
     );
 }
@@ -1200,9 +1226,11 @@ fn a_write_through_super_lands_on_the_receiver_and_not_on_the_base() {
     // An inherited setter is called instead, with `this` as its receiver — so it writes wherever it
     // means to, and nothing is defined on the instance by this instruction.
     assert_eq!(
-        run("(function () { class B { set s(v) { this.taken = v * 2; } } \
+        run(
+            "(function () { class B { set s(v) { this.taken = v * 2; } } \
              class D extends B { m() { super.s = 4; return this.taken; } } \
-             return new D().m(); })()"),
+             return new D().m(); })()"
+        ),
         "8"
     );
     // A setter-less accessor and a non-writable data property both refuse the write, silently in
@@ -1216,8 +1244,10 @@ fn a_write_through_super_lands_on_the_receiver_and_not_on_the_base() {
     );
     // The assignment is an expression, so its value is what was written and not what was read back.
     assert_eq!(
-        run("(function () { class B {} class D extends B { m() { return (super.z = 5); } } \
-             return new D().m(); })()"),
+        run(
+            "(function () { class B {} class D extends B { m() { return (super.z = 5); } } \
+             return new D().m(); })()"
+        ),
         "5"
     );
 }
@@ -1254,9 +1284,11 @@ fn super_in_a_class_that_extends_null_refuses_the_read_rather_than_faulting() {
     // read is a TypeError. Not a fault and not `undefined`: the class was made, and it is the *read*
     // that has nowhere to go.
     assert_eq!(
-        run("(function () { class D extends null { m() { return super.anything; } } \
+        run(
+            "(function () { class D extends null { m() { return super.anything; } } \
              var d = Object.create(D.prototype); \
-             try { d.m(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+             try { d.m(); return 'no'; } catch (e) { return e.constructor.name; } })()"
+        ),
         "TypeError"
     );
 }

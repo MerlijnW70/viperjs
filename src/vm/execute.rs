@@ -406,7 +406,10 @@ impl Vm {
                     }
                     self.stack.push(Value::Object(object));
                 }
-                Instruction::MakeClass { body: index, derived } => {
+                Instruction::MakeClass {
+                    body: index,
+                    derived,
+                } => {
                     let Some(body) = running.function(index) else {
                         return Err(Fault::MissingFunction);
                     };
@@ -1041,7 +1044,9 @@ impl Vm {
                 "`super` was called outside a constructor",
             ));
         };
-        let parent = heap.object(running).and_then(crate::heap::Object::prototype);
+        let parent = heap
+            .object(running)
+            .and_then(crate::heap::Object::prototype);
         // §10.2.2 step 3 — the parent must be a constructor. `class D extends null {}` arrives here
         // with `Function.prototype`, which is callable and *not* a constructor, so this is where
         // `new D()` on such a class becomes the TypeError §15.7.14 promised at step 9.

@@ -190,11 +190,7 @@ pub(crate) fn define_metadata(heap: &mut Heap, function: ObjectId, length: Value
 /// `default` is the clause's *intrinsic default prototype*, used when the constructor's `prototype`
 /// is not an object. §10.1.13 says to fall back rather than to throw, which is why
 /// `Error.prototype = 1; new Error()` is an ordinary error and not a TypeError.
-pub(crate) fn prototype_from(
-    heap: &Heap,
-    call: &NativeCall<'_>,
-    default: ObjectId,
-) -> ObjectId {
+pub(crate) fn prototype_from(heap: &Heap, call: &NativeCall<'_>, default: ObjectId) -> ObjectId {
     let constructor = match call.new_target {
         Value::Object(target) => target,
         _ => call.function,

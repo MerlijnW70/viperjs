@@ -234,8 +234,9 @@ impl Compiler<'_> {
             .any(|argument| matches!(argument, Argument::Spread(_)))
         {
             self.argument_array(arguments)?;
-            self.chunk
-                .emit(Instruction::CallSpread(crate::compile::chunk::SpreadCall::Super));
+            self.chunk.emit(Instruction::CallSpread(
+                crate::compile::chunk::SpreadCall::Super,
+            ));
         } else {
             for argument in arguments {
                 let Argument::Value(value) = argument else {
