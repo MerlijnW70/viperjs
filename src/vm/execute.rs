@@ -963,19 +963,20 @@ impl Vm {
                     let object = heap.new_object(Some(self.realm.object_prototype()));
                     self.stack.push(Value::Object(object));
                 }
-                Instruction::DuplicateTwo => {
-                    let depth = self.stack.len();
-                    let (Some(first), Some(second)) = (
-                        depth
-                            .checked_sub(2)
-                            .and_then(|at| self.stack.get(at))
-                            .copied(),
-                        self.stack.last().copied(),
-                    ) else {
-                        return Err(Fault::StackUnderflow);
-                    };
-                    self.stack.push(first);
-                    self.stack.push(second);
+                Instruction::DuplicateTop(count) => {
+                    // A whole *reference* at once, whatever its width: two values for `o.x`, three for
+                    // `super.x`, and a compound assignment needs the lot twice over — once for the read
+                    // and once for the write, because §13.15.2 evaluates the reference only once.
+                    let count = count as usize;
+                    let from = self
+                        .stack
+                        .len()
+                        .checked_sub(count)
+                        .ok_or(Fault::StackUnderflow)?;
+                    // Collected before pushing: extending a `Vec` from a slice of itself is not a thing
+                    // Rust will allow, and the borrow is what says so.
+                    let copied: Vec<Value> = self.stack[from..].to_vec();
+                    self.stack.extend_from_slice(&copied);
                 }
                 Instruction::DefineField => {
                     let value = self.pop()?;

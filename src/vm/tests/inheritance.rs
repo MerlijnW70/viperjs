@@ -656,3 +656,45 @@ fn super_reaches_the_right_home_from_every_synthesised_body_in_a_class() {
         "function"
     );
 }
+
+#[test]
+fn a_compound_assignment_and_an_update_work_through_super() {
+    // §13.3.7.1's reference is **three** values — the receiver as well as the base and the key — so a
+    // compound form has to copy three, and both of these were refused until the copy took a count.
+    //
+    // The write still lands on the receiver, which is what makes this more than a wider copy: the
+    // parent's property is read and the instance's is written, so `super.v += 4` leaves the prototype
+    // alone. An implementation that read and wrote the same object would answer 5 for both.
+    assert_eq!(
+        run("(function () { class B {} B.prototype.v = 1; \
+             class D extends B { bump() { super.v += 4; return this.v + ',' + B.prototype.v; } } \
+             return new D().bump(); })()"),
+        "5,1"
+    );
+    assert_eq!(
+        run("(function () { class B {} B.prototype.v = 2; \
+             class D extends B { bump() { return super.v++ + ',' + this.v; } } \
+             return new D().bump(); })()"),
+        "2,3"
+    );
+    // A logical assignment that short-circuits writes nothing, and has three values to clear up rather
+    // than two — the path where the circuit fires is where an unbalanced stack would show.
+    assert_eq!(
+        run("(function () { class B {} B.prototype.v = 'kept'; \
+             class D extends B { keep() { super.v ||= 'written'; \
+                 return this.v + ',' + this.hasOwnProperty('v'); } } \
+             return new D().keep(); })()"),
+        "kept,false"
+    );
+    // …and the getter of an inherited accessor is called with `this`, which the compound form must
+    // keep doing: it reads through the same instruction a plain `super.v` does.
+    assert_eq!(
+        run(
+            "(function () { class B { get v() { return this.base; } set v(x) { this.taken = x; } } \
+             class D extends B { constructor() { super(); this.base = 2; } \
+                 bump() { super.v += 3; return this.taken; } } \
+             return new D().bump(); })()"
+        ),
+        "5"
+    );
+}

@@ -287,49 +287,27 @@ fn a_class_declaration_is_lexical_and_an_expression_is_a_value() {
 }
 
 #[test]
-fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
-    // Refused rather than mis-compiled: the harness reports a refusal as *not run* rather than as a
-    // wrong answer, and a class that silently dropped an element would be worse than one that will
-    // not compile.
+fn every_kind_of_class_element_compiles_and_the_refusal_list_is_empty() {
+    // This was `what_a_class_body_cannot_hold_yet_is_refused_by_name`, and it had been shortened eight
+    // times — once per slice, each time because a row had come to assert the opposite of what it said.
+    // There is nothing left to shorten: §15.7 is complete, and so is the pair of forms that read a
+    // reference back before writing it. A refusal test with no refusals in it is not a test, so what
+    // remains is the positive half, which is what the rows were guarding all along.
     //
-    // This list has been shortened seven times, once per slice, and each time because a row was
-    // asserting the opposite of what it said — a refusal test outlives the refusal it describes. Two
-    // near-identical copies of it had also accumulated in this file, each shortened separately; they
-    // are one test now, because the second was where a stale row could hide from the first.
-    //
-    // What is genuinely left is not a class *element* at all — §15.7 is complete. It is the two forms
-    // that read a reference back before writing it: a compound assignment and an update, through
-    // either `super` or a private name, both of which leave a reference of the wrong width for the
-    // `DuplicateTwo` those forms use.
-    for (source, named) in [
-        (
-            "class C { #x; m() { this.#x += 1; } }",
-            "compound assignment to a private field",
-        ),
-        (
-            "class B {} class C extends B { m() { super.x += 1; } }",
-            "compound assignment to a `super` property",
-        ),
-        // …and `++` on either, which reads the old value back the same way a compound assignment
-        // does and so has the same trouble with a reference of the wrong width.
-        (
-            "class C { #x; m() { this.#x++; } }",
-            "update of a `super` property or a private field",
-        ),
-        (
-            "class B {} class C extends B { m() { super.x--; } }",
-            "update of a `super` property or a private field",
-        ),
-    ] {
-        let error = compile_error(source);
-        assert!(error.contains(named), "{source}: got {error:?}");
-    }
-    // Everything else a class body can hold now compiles, so there is no row for it here.
+    // Kept as one test rather than deleted, because the *list* is the useful artefact: the next
+    // element §15.7 grows gets a row here, and a reader looking for what a class body cannot hold
+    // finds the answer in one place.
     assert_eq!(
         run(
-            "class C { a = 1; static b = 2; ['c'] = 3; static { this.d = 4; } m() {}              static n() {} get g() { return 5; } }              C.b + ',' + C.d + ',' + new C().a + ',' + new C().c + ',' + new C().g"
+            "class C { a = 1; static b = 2; ['c'] = 3; static { this.d = 4; } m() {} \
+             static n() {} get g() { return 5; } #p = 6; #q() { return 7; } \
+             get #r() { return 8; } static #s = 9; static #t() { return 10; } \
+             all() { return this.#p + ',' + this.#q() + ',' + this.#r; } \
+             static statics() { return C.#s + ',' + C.#t(); } } \
+             C.b + ',' + C.d + ',' + new C().a + ',' + new C().c + ',' + new C().g \
+             + ',' + new C().all() + ',' + C.statics()"
         ),
-        "2,4,1,3,5"
+        "2,4,1,3,5,6,7,8,9,10"
     );
 }
 

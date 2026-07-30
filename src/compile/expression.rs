@@ -687,67 +687,46 @@ impl Compiler<'_> {
         // two. Rather than a three-deep copy for one construct, the plain assignment is compiled here
         // and the rest is refused by name: `super.x += 1` is legal and rare, and a refusal with a span
         // is better than an unbalanced stack.
+        // The reference is compiled once, and it decides everything below: how wide it is, how the old
+        // value is read back, and how the new one is written. `super.x` is three values and `o.#x` is
+        // two with a Private Name where a key would be, and both used to be refused here for exactly
+        // that — a compound form that copied two values could not read either of them back.
         let reference = self.property_reference(target, Keep::Nothing)?;
-        // §7.3.32 — a private write does not create, and it is refused for the same shape reason a
-        // `super` one is: the compound forms below read the old value with `DuplicateTwo`, and a
-        // private reference's two values are a base and a *name* rather than a base and a key, so the
-        // read would have to go through `GetPrivate`. `#x += 1` is legal and rare.
-        if reference == Reference::Private {
-            if operator != AssignmentOperator::Assign {
-                return Err(unsupported(
-                    "a compound assignment to a private field",
-                    span,
-                ));
-            }
-            self.expression(value)?;
-            self.chunk.emit(Instruction::SetPrivate);
-            return Ok(());
-        }
-        if reference == Reference::Super {
-            if operator != AssignmentOperator::Assign {
-                return Err(unsupported(
-                    "a compound assignment to a `super` property",
-                    span,
-                ));
-            }
-            self.expression(value)?;
-            self.chunk.emit(Instruction::SetSuperProperty);
-            return Ok(());
-        }
+        let width = reference.width();
         match compound_operator(operator) {
             None if operator == AssignmentOperator::Assign => self.expression(value)?,
             Some(binary) => {
-                self.chunk.emit(Instruction::DuplicateTwo);
-                self.chunk.emit(Instruction::GetProperty);
+                self.chunk.emit(Instruction::DuplicateTop(width));
+                self.chunk.emit(reference.get());
                 self.expression(value)?;
                 self.chunk.emit(Instruction::Binary(binary));
             }
-            // The same rule as for a name, with the base and the key to clear up. On the path where
-            // the circuit fires they are still under the old value, so it is buried beneath them and
-            // they are dropped — both paths have to leave the stack one deep or the chunk is
-            // unbalanced.
+            // The same rule as for a name, with the reference to clear up. On the path where the
+            // circuit fires it is still under the old value, so the value is buried beneath it and it
+            // is dropped — both paths have to leave the stack one deep or the chunk is unbalanced.
             None if short_circuit_operator(operator).is_some() => {
                 let condition = match short_circuit_operator(operator) {
                     Some(condition) => condition,
                     None => return Err(unsupported("a logical assignment", span)),
                 };
-                self.chunk.emit(Instruction::DuplicateTwo);
-                self.chunk.emit(Instruction::GetProperty);
+                self.chunk.emit(Instruction::DuplicateTop(width));
+                self.chunk.emit(reference.get());
                 let circuit_fired = self
                     .chunk
                     .emit_jump(|target| Instruction::JumpKeeping(condition, target));
                 self.expression(value)?;
-                self.chunk.emit(Instruction::SetProperty);
+                self.chunk.emit(reference.set());
                 let done = self.chunk.emit_jump(Instruction::Jump);
                 self.chunk.patch(circuit_fired)?;
-                self.chunk.emit(Instruction::Bury(2));
-                self.chunk.emit(Instruction::Pop);
-                self.chunk.emit(Instruction::Pop);
+                self.chunk.emit(Instruction::Bury(width));
+                for _ in 0..width {
+                    self.chunk.emit(Instruction::Pop);
+                }
                 return self.chunk.patch(done);
             }
             None => return Err(unsupported("a logical assignment", span)),
         }
-        self.chunk.emit(Instruction::SetProperty);
+        self.chunk.emit(reference.set());
         Ok(())
     }
     /// §13.4 — `++a`, `a++`, `--a` and `a--`.
@@ -803,28 +782,23 @@ impl Compiler<'_> {
                 // §13.4.4.1 step 1 evaluates the reference *once*, so `o[f()]++` calls `f` once —
                 // the same guarantee `o[f()] += 1` needs, and the same instructions.
                 let reference = self.property_reference(argument, Keep::Nothing)?;
-                // §13.4.4.1 reads the old value back, which `DuplicateTwo` does for a two-value
-                // reference and cannot do for either of the others. Refused by name: `super.x++` and
-                // `this.#x++` are legal and rare, and a refusal with a span beats an unbalanced stack.
-                if !reference.is_ordinary() {
-                    return Err(unsupported(
-                        "an update of a `super` property or a private field",
-                        span,
-                    ));
-                }
-                self.chunk.emit(Instruction::DuplicateTwo);
-                self.chunk.emit(Instruction::GetProperty);
+                let width = reference.width();
+                self.chunk.emit(Instruction::DuplicateTop(width));
+                self.chunk.emit(reference.get());
                 self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
                 if !prefix {
                     // Under the base, the key and the copy that is about to become the new value
                     // — the three the store is going to consume. It surfaces again when the new
                     // value the store leaves behind is discarded.
                     self.chunk.emit(Instruction::Duplicate);
-                    self.chunk.emit(Instruction::Bury(3));
+                    // Under the whole reference and the copy that is about to become the new value —
+                    // everything the store is going to consume. `width + 1` and not a literal, because
+                    // a `super` reference is one value wider than the other two.
+                    self.chunk.emit(Instruction::Bury(width + 1));
                 }
                 self.constant(Value::Number(1.0))?;
                 self.chunk.emit(Instruction::Binary(step));
-                self.chunk.emit(Instruction::SetProperty);
+                self.chunk.emit(reference.set());
                 if !prefix {
                     self.chunk.emit(Instruction::Pop);
                 }
@@ -1092,11 +1066,16 @@ impl Reference {
         }
     }
 
-    /// Whether a compound or update form can read this reference back with `DuplicateTwo`.
+    /// How many values this reference occupies on the stack.
     ///
-    /// Only an ordinary one: the other two have a value too many or a key that is not a key, and
-    /// `#x += 1` and `super.x++` are refused by name rather than compiled to an unbalanced stack.
-    pub(super) fn is_ordinary(self) -> bool {
-        matches!(self, Self::Ordinary)
+    /// What a compound assignment and an update need: both read the old value and then write, and
+    /// §13.15.2 evaluates the reference once — so the whole of it has to be copied, and how much that
+    /// is depends on which reference it is. Two for `o.x` and for `o.#x`, three for `super.x`, whose
+    /// receiver sits under the base.
+    pub(super) fn width(self) -> u32 {
+        match self {
+            Self::Ordinary | Self::Private => 2,
+            Self::Super => 3,
+        }
     }
 }

@@ -21601,6 +21601,10 @@ language/expressions/super/prop-expr-cls-val-from-eval.js :: it threw ReferenceE
 language/expressions/super/prop-expr-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-compound-assign.js :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-compound-assign.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/super/prop-expr-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true

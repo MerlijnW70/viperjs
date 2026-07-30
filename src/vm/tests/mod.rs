@@ -37,6 +37,12 @@
 //! - `for_in` — §14.7.5's enumeration, and the shadowing that decides what it visits.
 //! - `bound` — §20.2's `Function`, and §10.4.1's bound functions.
 //! - `math` — §21.3, and the four places it is not what a CPU does.
+//!
+//! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
+//! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
+//! slice that implemented what it described, which is what a refusal test is for. Bring it back with
+//! the next refusal, and put the row beside the feature rather than in a list of its own: a list of
+//! refusals outlives the refusals it describes, and this one had to be shortened eight times.
 
 mod accessors;
 mod arguments;
@@ -102,20 +108,6 @@ fn run(source: &str) -> String {
         .run(&chunk, &mut heap)
         .expect("the chunk is well formed"); // same
     describe(outcome, &mut heap)
-}
-
-/// The message a source the compiler refuses comes back with.
-///
-/// Separate from [`run`], which expects a chunk: a refusal is the answer here rather than a failure,
-/// and the conformance harness treats one as *not run* rather than as a wrong result. A row using
-/// this is a claim about what praxis does not implement yet, so it has to fail once that changes.
-fn compile_error(source: &str) -> String {
-    let mut heap = Heap::new();
-    let script = parse_script(source).expect("the source parses"); // the test is about the compiler
-    match compile_script(&script, &mut heap) {
-        Ok(_) => String::from("it compiled"),
-        Err(error) => error.message(),
-    }
 }
 
 /// The property `object` files under `name`, if it has one of its own.

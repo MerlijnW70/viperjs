@@ -267,7 +267,7 @@ pub enum Instruction {
     /// and the key. Evaluating them twice would call `f` twice in `o[f()] += 1`, so they are
     /// evaluated once and copied — which is what makes the once-only guarantee an instruction
     /// rather than a promise.
-    DuplicateTwo,
+    DuplicateTop(u32),
     /// Take the top value and put it back this many places further down.
     ///
     /// `Bury(3)` turns `[a, b, c, v]` into `[v, a, b, c]`. There is one thing that needs it:
@@ -836,7 +836,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Return
         | Instruction::NewObject
         | Instruction::NewArray(_)
-        | Instruction::DuplicateTwo
+        | Instruction::DuplicateTop(_)
         | Instruction::Bury(_)
         | Instruction::DefineField
         | Instruction::DefineGetter

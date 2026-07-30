@@ -603,3 +603,52 @@ fn adding_the_same_private_element_to_one_object_twice_is_refused() {
         );
     }
 }
+
+#[test]
+fn a_compound_assignment_and_an_update_work_through_a_private_name() {
+    // §13.15.2 evaluates the reference **once** and then reads it back before writing, which needs the
+    // whole reference copied — and how much that is depends on which reference it is. Both of these
+    // were refused until the copy took a count: a private reference's two values are a base and a
+    // *name*, so a read through `GetProperty` would have looked for a property under a Symbol.
+    assert_eq!(
+        run(
+            "(function () { class C { #x = 1; bump() { this.#x += 5; return this.#x; } } \
+             return new C().bump(); })()"
+        ),
+        "6"
+    );
+    // §13.4.4.1 — `++` answers the old value and stores the new one, and the coercion is of the *old*
+    // one: the answer is a number even where the field held a string.
+    assert_eq!(
+        run(
+            "(function () { class C { #x = '1'; bump() { return this.#x++; } read() { return this.#x; } } \
+             var c = new C(); return typeof c.bump() + ',' + c.read(); })()"
+        ),
+        "number,2"
+    );
+    // A logical assignment does not write at all when it short-circuits, and its stack has to balance
+    // on both paths — the reference is under the old value on the one where the circuit fires.
+    assert_eq!(
+        run(
+            "(function () { class C { #x = null; or() { this.#x ||= 7; return this.#x; } } \
+             return new C().or(); })()"
+        ),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { #x = 3; keep() { this.#x ??= 9; return this.#x; } } \
+             return new C().keep(); })()"
+        ),
+        "3"
+    );
+    // …and a private *method* still refuses the write, which is the rule the compound form must not
+    // have found a way around.
+    assert_eq!(
+        run(
+            "(function () { class C { #m() {} bad() { this.#m += 1; } } \
+             try { new C().bad(); return 'no'; } catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+}
