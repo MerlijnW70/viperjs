@@ -31,7 +31,7 @@
 //! `#x` would be worse than one that would not compile.
 
 use super::CompileError;
-use super::function::{Body, Lexical};
+use super::function::{Body, Lexical, Naming};
 use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
@@ -42,7 +42,12 @@ impl Compiler<'_> {
     ///
     /// The elements are walked once, in source order, because that order is observable: a computed
     /// key runs when it is reached, and two methods with the same key leave the later one in place.
-    pub(super) fn class(&mut self, class: &Class, span: Span) -> Result<(), CompileError> {
+    pub(super) fn class(
+        &mut self,
+        class: &Class,
+        naming: Naming<'_>,
+        span: Span,
+    ) -> Result<(), CompileError> {
         let mut fields: Vec<&crate::ast::ClassField> = Vec::new();
         // §15.7.14 keeps the static elements in one list, because a field and a block run in the
         // order they were written and nothing distinguishes them at that point.
@@ -135,7 +140,7 @@ impl Compiler<'_> {
             self.expression(heritage)?;
         }
 
-        self.constructor(class, &fields, span)?;
+        self.constructor(class, &fields, naming, span)?;
 
         // Initialised to the constructor before any element is defined — which is the whole reason
         // the scope exists, and why the binding is uninitialised until now: a computed key evaluated
@@ -217,7 +222,11 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::ClassPrototype);
             }
             self.property_key(&method.key)?;
-            self.make_function(&method.function, span)?;
+            // §10.2.9 — a method's name is its key's, and an accessor's carries `get ` or `set ` as
+            // part of the name rather than as decoration: `d.get.name` is `"get a"`, which test262
+            // checks. A *computed* key is not known here — the name would be whatever the expression
+            // came to at run time — so it is left unnamed rather than guessed at.
+            self.make_function(&method.function, method_naming(method), span)?;
             // §15.7.14's `MethodDefinitionEvaluation` calls `MakeMethod` with the object the method
             // is being put on — the prototype for an instance method and the constructor for a
             // static one, which is exactly what is under the key here. That is what makes `super.x`
@@ -262,6 +271,7 @@ impl Compiler<'_> {
         let body = self.compile_nested(
             &parameters,
             Body::Statements(&block.body),
+            Naming::default(),
             Lexical::No,
             span,
         )?;
@@ -304,9 +314,14 @@ impl Compiler<'_> {
                 };
                 // `Body::Expression` is evaluated and returned, which is what an initialiser is;
                 // `Lexical::No` gives the body a `this` of its own for the call to bind.
+                //
+                // The naming goes to the *expression* inside, not to this wrapper: the wrapper is
+                // praxis's own and no program can see it, while §8.6.3 names whatever the initialiser
+                // evaluates to. So the wrapper stays anonymous and `named_evaluation` runs inside it.
                 let body = self.compile_nested(
                     &parameters,
                     Body::Expression(expression),
+                    Naming::default(),
                     Lexical::No,
                     span,
                 )?;
@@ -347,6 +362,7 @@ impl Compiler<'_> {
         &mut self,
         class: &Class,
         fields: &[&crate::ast::ClassField],
+        naming: Naming<'_>,
         span: Span,
     ) -> Result<(), CompileError> {
         let written = class.elements.iter().find_map(|element| match element {
@@ -379,6 +395,8 @@ impl Compiler<'_> {
                 (true, (parameters, statements)) => (parameters, statements.as_slice()),
                 (false, _) => (parameters, statements),
             };
+        // §10.2.9 — a class's constructor *is* the class, so its name is the class's. An anonymous
+        // class expression in a named position takes that name, which is why it arrives from outside.
         let mut body = self.compile_nested(
             parameters,
             Body::Constructor {
@@ -386,6 +404,10 @@ impl Compiler<'_> {
                 statements,
                 derived: class.heritage.is_some(),
                 private_methods: instance_private_method_names(class),
+            },
+            match &class.name {
+                Some(written) => Naming::of(&written.name),
+                None => naming,
             },
             Lexical::No,
             span,
@@ -444,7 +466,12 @@ impl Compiler<'_> {
                 _ => self.load_name(&field_name_slot(at))?,
             }
             match &field.initializer {
-                Some(expression) => self.expression(expression)?,
+                // §8.6.3 — `FieldDefinition : ClassElementName Initializer` is a named position, so
+                // `class C { x = () => {} }` calls the arrow `x`. A private field's name keeps its `#`.
+                Some(expression) => match field_naming(field) {
+                    Some(name) => self.named_evaluation(&name, expression)?,
+                    None => self.expression(expression)?,
+                },
                 // §15.7.14 — a field written without one is `undefined`, which is not the same as
                 // the field being absent: `x;` makes an own property and `for...in` finds it.
                 None => self.constant(crate::value::Value::Undefined)?,
@@ -525,7 +552,8 @@ impl Compiler<'_> {
         if !method.is_static {
             self.chunk.emit(Instruction::ClassPrototype);
         }
-        self.make_function(&method.function, span)?;
+        // §10.2.9 — a private method is named with its `#`, which is part of the name.
+        self.make_function(&method.function, method_naming(method), span)?;
         self.chunk.emit(Instruction::MakeMethod(1));
         self.store_private_slot(&private_function_slot(name, method.kind))?;
         // The function and the home, both of which have served their purpose.
@@ -668,6 +696,46 @@ fn private_function_slot(name: &str, kind: crate::ast::MethodKind) -> String {
         crate::ast::MethodKind::Set => "setter",
     };
     format!("%private {half} #{name}")
+}
+
+/// §8.6.3's name for a class field's initialiser, or `None` when there is not one to give.
+///
+/// Owned, because a private field's is its name with a `#` put back in front — the AST holds the name
+/// without it, `#` being punctuation of the production.
+fn field_naming(field: &crate::ast::ClassField) -> Option<String> {
+    match &field.key {
+        crate::ast::PropertyKey::Identifier(name) => Some(name.to_string()),
+        crate::ast::PropertyKey::Private(name) => Some(format!("#{name}")),
+        _ => None,
+    }
+}
+
+/// §10.2.9's name for a class method, with the accessor prefix that is part of it.
+///
+/// `None` for a computed key, whose name is whatever the expression came to at run time — naming it
+/// would mean threading the evaluated key back into the body compiler, and a guess would be worse
+/// than the empty string the specification falls back to.
+fn method_naming(method: &crate::ast::ClassMethod) -> Naming<'_> {
+    // §10.2.9 — a private method's `#` is part of its name: `#m` and `get #a`. The AST holds the name
+    // without it, the `#` being punctuation of the production, so it comes back here.
+    let private = matches!(method.key, crate::ast::PropertyKey::Private(_));
+    let prefix = match (method.kind, private) {
+        (crate::ast::MethodKind::Normal, false) => None,
+        (crate::ast::MethodKind::Normal, true) => Some("#"),
+        (crate::ast::MethodKind::Get, false) => Some("get "),
+        (crate::ast::MethodKind::Get, true) => Some("get #"),
+        (crate::ast::MethodKind::Set, false) => Some("set "),
+        (crate::ast::MethodKind::Set, true) => Some("set #"),
+    };
+    let name = match &method.key {
+        crate::ast::PropertyKey::Identifier(name) | crate::ast::PropertyKey::Private(name) => {
+            Some(&**name)
+        }
+        // A computed key's name is whatever the expression came to at run time, and a String or
+        // numeric key would need converting — both are left to §10.2.9's empty string for now.
+        _ => None,
+    };
+    Naming { name, prefix }
 }
 
 /// Every private name the class body binds, in source order and without duplicates.

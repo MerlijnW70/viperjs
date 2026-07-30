@@ -4,7 +4,7 @@
 //! consumes whatever it needed. That is what lets a statement be stack-neutral by construction
 //! and what [`crate::vm::Fault::UnbalancedStack`] checks at the end of a chunk.
 
-use super::function::Keep;
+use super::function::{Keep, Naming};
 use super::{
     CompileError, Compiler, ErrorKind, Instruction, MAX_EXPRESSION_DEPTH, ShortCircuit, unsupported,
 };
@@ -277,8 +277,12 @@ impl Compiler<'_> {
                     ));
                 };
                 match compound_operator(*operator) {
-                    // `a = v`.
-                    None if *operator == AssignmentOperator::Assign => self.expression(value)?,
+                    // `a = v`, which is one of §8.6.3's named positions: `f = function () {}` gives
+                    // the function the name `f`. Only a plain `=` — `f ||= function () {}` does not
+                    // name it, because §13.15.2's compound forms are not in the list.
+                    None if *operator == AssignmentOperator::Assign => {
+                        self.named_evaluation(name, value)?;
+                    }
                     // `a += v` is `a = a + v`, with `a` read once — which matters not at all for
                     // a slot and matters a great deal for `o[f()] += 1`, where the property key
                     // is evaluated once. The shape is the same either way.
@@ -359,12 +363,14 @@ impl Compiler<'_> {
             }
             // §15.2.5 — a function expression. The object is made where the expression is
             // *evaluated*, so a `function` keyword inside a loop makes one object per iteration.
-            ExprKind::Function(function) => self.make_function(function, span),
+            // Unnamed unless something above named it; §8.6.3 reaches only the positions that do,
+            // and [`Compiler::named_evaluation`] is where each of those is listed.
+            ExprKind::Function(function) => self.make_function(function, Naming::default(), span),
             // §15.3 — an arrow, which is a function expression that keeps the `this` around it.
-            ExprKind::Arrow(arrow) => self.make_arrow(arrow, span),
+            ExprKind::Arrow(arrow) => self.make_arrow(arrow, Naming::default(), span),
             // §15.7.12 — an expression leaves the constructor where it was evaluated. Its own name,
             // if it has one, binds only inside the body and is not created yet.
-            ExprKind::Class(class) => self.class(class, span),
+            ExprKind::Class(class) => self.class(class, Naming::default(), span),
             ExprKind::Template(template) => self.template(template),
             ExprKind::TaggedTemplate { .. } => Err(unsupported("a tagged template", span)),
             ExprKind::RegExp(_) => Err(unsupported("a regular expression literal", span)),
@@ -469,7 +475,14 @@ impl Compiler<'_> {
                 }
             }
             match value {
-                Element::Value(expression) => self.expression(expression)?,
+                Element::Value(expression) => match key {
+                    // §13.2.5.5 — a property definition is one of §8.6.3's named positions, so
+                    // `{ a: function () {} }` and `{ a: () => {} }` are both called `a`.
+                    AstPropertyKey::Identifier(name) => {
+                        self.named_evaluation(name, expression)?;
+                    }
+                    _ => self.expression(expression)?,
+                },
                 Element::Name(name, at) => {
                     let _ = at;
                     self.load_name(name)?;
@@ -479,7 +492,25 @@ impl Compiler<'_> {
                 // `{ m: function () { return super.x; } }` is a Syntax Error, which is the only place
                 // the two shapes differ at all. The object is under the key, two down.
                 Element::Function(function) => {
-                    self.make_function(function, span)?;
+                    // §10.2.9 — a literal's method is named by its key, and an accessor carries the
+                    // prefix. A computed key is not known at compile time, so it is left unnamed.
+                    let prefix = match accessor {
+                        Some(MethodKind::Get) => Some("get "),
+                        Some(MethodKind::Set) => Some("set "),
+                        _ => None,
+                    };
+                    let named = match key {
+                        AstPropertyKey::Identifier(name) => Some(&**name),
+                        _ => None,
+                    };
+                    self.make_function(
+                        function,
+                        Naming {
+                            name: named,
+                            prefix,
+                        },
+                        span,
+                    )?;
                     self.chunk.emit(Instruction::MakeMethod(2));
                 }
             }
@@ -497,6 +528,32 @@ impl Compiler<'_> {
         }
         Ok(())
     }
+    /// §8.6.3 `NamedEvaluation` — compile `value`, and name it `name` if it is anonymous.
+    ///
+    /// The positions this applies to are a closed list in the specification, and every caller of this
+    /// is one of them: a variable declaration, an assignment to a name, a property definition, a class
+    /// field, and a destructuring default. It reaches an **anonymous** function, arrow or class and
+    /// nothing else — `var a = function f() {}` is called `f`, and `var a = (0, function () {})` is
+    /// called nothing at all, because a parenthesised comma expression is not a function.
+    pub(super) fn named_evaluation(
+        &mut self,
+        name: &str,
+        value: &Expr,
+    ) -> Result<(), CompileError> {
+        let span = value.span;
+        match &value.kind {
+            ExprKind::Function(function) if function.name.is_none() => {
+                self.make_function(function, Naming::of(name), span)
+            }
+            // An arrow has no name of its own to prefer — there is no production for one.
+            ExprKind::Arrow(arrow) => self.make_arrow(arrow, Naming::of(name), span),
+            ExprKind::Class(class) if class.name.is_none() => {
+                self.class(class, Naming::of(name), span)
+            }
+            _ => self.expression(value),
+        }
+    }
+
     /// The object half of a property reference, and the receiver a call would want with it.
     ///
     /// Two shapes, and `super` is the one that needs a name. An ordinary base *is* the receiver, so a

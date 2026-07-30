@@ -28,6 +28,17 @@ pub struct Chunk {
     /// `function f(a, b = 1, c)` has three slots to fill and a `length` of 1. `length` is what a
     /// caller is told to supply; `parameters` is how many places there are to put things.
     pub(super) length: usize,
+    /// §10.2.9's `name`, if the compiler could tell what this function is called.
+    ///
+    /// The compiler and not the call, because a function has one name for its whole life and the
+    /// position it was *written* in is what decides it: a declaration is named by its binding, a method
+    /// by its key, and §8.6.3's `NamedEvaluation` gives an anonymous expression the name of whatever it
+    /// is being assigned to. One syntactic position, one chunk, one name.
+    ///
+    /// `None` where §10.2.9 asks for the empty string — an anonymous function that is not in a named
+    /// position — because a `None` and an interned `""` are the same thing to the only reader, and one
+    /// of the two does not need a String on the heap per anonymous function in the program.
+    pub(super) name: Option<crate::heap::StringId>,
     /// `IsSimpleParameterList` (§15.1.4) — whether every parameter is a plain name.
     ///
     /// Decides which arguments object §10.2.11 step 22 makes. A simple list gets the *mapped* one,
@@ -632,6 +643,11 @@ impl Chunk {
     /// number of *slots*. What this reports is how many arguments the function says it needs.
     pub fn length(&self) -> usize {
         self.length
+    }
+
+    /// §10.2.9's `name`, or `None` where the specification asks for the empty string.
+    pub fn name(&self) -> Option<crate::heap::StringId> {
+        self.name
     }
 
     /// Whether the parameter list is simple — §15.1.4, and which arguments object to build.

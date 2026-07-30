@@ -149,12 +149,17 @@ fn bind_refuses_what_is_not_callable_and_answers_a_new_object_each_time() {
         run("var f = function () {}; Object.getPrototypeOf(f.bind(null)) === Function.prototype"),
         "true"
     );
-    // §20.2.3.2 step 8 — the name is the target's with `bound ` in front. praxis gives an
-    // ordinary function no `name` of its own yet, so what is in front of is nothing; a built-in
-    // does have one, which is why the second row says more than the first.
+    // §20.2.3.2 step 8 — the name is the target's with `bound ` in front. This row said `"bound "`
+    // while praxis gave an ordinary function no `name` of its own, and its comment said so; §10.2.9
+    // has since arrived, which is what a test that asserts the *absence* of a feature is for.
     assert_eq!(
         run("var f = function foo() {}; f.bind(null).name"),
-        "bound "
+        "bound foo"
+    );
+    // …and twice over, because §20.2.3.2 reads the target's `name` however that target got one.
+    assert_eq!(
+        run("var f = function foo() {}; f.bind(null).bind(null).name"),
+        "bound bound foo"
     );
     assert_eq!(
         run("Function.prototype.call.bind(Array.prototype.join).name"),

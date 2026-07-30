@@ -394,6 +394,26 @@ impl Vm {
                             ..crate::heap::PropertyDescriptor::EMPTY
                         },
                     );
+                    // §10.2.9 `SetFunctionName` — not writable, not enumerable, and *configurable*,
+                    // which is the set §10.3.3 gives `length` beside it. An unnamed function gets the
+                    // empty string rather than no property at all: `(function () {}).name` is `""`, and
+                    // `'name' in f` is true for every function.
+                    let named = match body.name() {
+                        Some(text) => Value::String(text),
+                        None => Value::String(heap.intern(&[])),
+                    };
+                    let key = property_name(heap, "name");
+                    heap.define_own_property(
+                        object,
+                        key,
+                        &PropertyDescriptor {
+                            value: Some(named),
+                            writable: Some(false),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..PropertyDescriptor::EMPTY
+                        },
+                    );
                     // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
                     // object, and that object gets a `constructor` back. The pair is what makes
                     // `new f() instanceof f` true, and it is made eagerly because a function may
@@ -446,6 +466,26 @@ impl Vm {
                             enumerable: Some(false),
                             configurable: Some(true),
                             ..crate::heap::PropertyDescriptor::EMPTY
+                        },
+                    );
+                    // §10.2.9 `SetFunctionName` — not writable, not enumerable, and *configurable*,
+                    // which is the set §10.3.3 gives `length` beside it. An unnamed function gets the
+                    // empty string rather than no property at all: `(function () {}).name` is `""`, and
+                    // `'name' in f` is true for every function.
+                    let named = match body.name() {
+                        Some(text) => Value::String(text),
+                        None => Value::String(heap.intern(&[])),
+                    };
+                    let key = property_name(heap, "name");
+                    heap.define_own_property(
+                        object,
+                        key,
+                        &PropertyDescriptor {
+                            value: Some(named),
+                            writable: Some(false),
+                            enumerable: Some(false),
+                            configurable: Some(true),
+                            ..PropertyDescriptor::EMPTY
                         },
                     );
                     // §15.7.14 steps 12 to 14 — the prototype, and the pair of references that make

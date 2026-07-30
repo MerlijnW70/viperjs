@@ -132,7 +132,15 @@ impl Compiler<'_> {
             // already has: the name is hoisted and left uninitialised, so a reference before this
             // point is the temporal dead zone rather than `undefined`.
             StmtKind::Class(class) => {
-                self.class(class, span)?;
+                // §10.2.9 — a class declaration names its constructor after its own binding.
+                self.class(
+                    class,
+                    match &class.name {
+                        Some(name) => super::function::Naming::of(&name.name),
+                        None => super::function::Naming::default(),
+                    },
+                    span,
+                )?;
                 match &class.name {
                     Some(name) => self.bind_name(&name.name, Bind::Made),
                     None => {
@@ -249,7 +257,7 @@ impl Compiler<'_> {
             // The value is evaluated first and the binding takes it apart — which is what makes
             // a `var` at the top level of a script a property of the global object rather than a
             // slot, decided per name inside [`Compiler::bind_name`] rather than here.
-            self.expression(initializer)?;
+            self.initialiser(&declarator.binding, initializer)?;
             self.destructure(&declarator.binding, Bind::Var, declarator.span)?;
         }
         Ok(())
@@ -269,7 +277,7 @@ impl Compiler<'_> {
             // §14.3.1.1 — `const` without an initializer is a Syntax Error the parser has already
             // refused, so anything here without one is a `let`.
             match &declarator.initializer {
-                Some(initializer) => self.expression(initializer)?,
+                Some(initializer) => self.initialiser(&declarator.binding, initializer)?,
                 None => self.constant(Value::Undefined)?,
             }
             self.destructure(
@@ -310,7 +318,10 @@ impl Compiler<'_> {
                     self.chunk.emit(Instruction::Duplicate);
                     self.push_key(&property.key, held.get(at).copied())?;
                     self.chunk.emit(Instruction::GetProperty);
-                    self.apply_default(property.value.default.as_deref())?;
+                    self.apply_default(
+                        property.value.default.as_deref(),
+                        bound_name(&property.value.target),
+                    )?;
                     self.destructure(&property.value.target, how, span)?;
                 }
                 match &pattern.rest {
@@ -381,7 +392,10 @@ impl Compiler<'_> {
                     self.chunk.emit(Instruction::Duplicate);
                     self.push_key(&property.key, held.get(at).copied())?;
                     self.chunk.emit(Instruction::GetProperty);
-                    self.apply_default(property.value.default.as_deref())?;
+                    self.apply_default(
+                        property.value.default.as_deref(),
+                        bound_name(&property.value.target),
+                    )?;
                     self.assign_target(&property.value.target, span)?;
                 }
                 match &pattern.rest {
@@ -464,7 +478,7 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::Pop);
                 continue;
             };
-            self.apply_default(element.default.as_deref())?;
+            self.apply_default(element.default.as_deref(), bound_name(&element.target))?;
             self.assign_target(&element.target, span)?;
         }
         let Some(rest) = &pattern.rest else {
@@ -620,7 +634,7 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::Pop);
                 continue;
             };
-            self.apply_default(element.default.as_deref())?;
+            self.apply_default(element.default.as_deref(), bound_name(&element.target))?;
             self.destructure(&element.target, how, span)?;
         }
         let Some(rest) = &pattern.rest else {
@@ -760,12 +774,37 @@ impl Compiler<'_> {
         }
     }
 
+    /// §8.6.3 — a binding's initialiser, named after the binding when it is anonymous.
+    ///
+    /// One of the closed list of positions `NamedEvaluation` applies to, and the commonest: it is what
+    /// makes `var f = function () {}` and `const f = () => {}` both answer `"f"` for `f.name`.
+    pub(super) fn initialiser(
+        &mut self,
+        target: &Binding,
+        value: &Expr,
+    ) -> Result<(), CompileError> {
+        match target {
+            // Only a plain name is a named position. A pattern binds several names and none of them is
+            // *the* name — `var [a] = [function () {}]` leaves the function unnamed, and the element's
+            // own default is where §8.6.3 reaches instead.
+            Binding::Identifier(name) => self.named_evaluation(&name.name, value),
+            Binding::Pattern(_) => self.expression(value),
+        }
+    }
+
     /// §14.3.3 — replace the value on top with `default` when it is `undefined`.
     ///
     /// The default is evaluated only when it is needed, which is observable: `{a = f()}` does not
     /// call `f` when `a` was there. Compared against `undefined` and not against absence, so a
     /// property that is present and `undefined` takes the default too.
-    fn apply_default(&mut self, default: Option<&Expr>) -> Result<(), CompileError> {
+    ///
+    /// `target` is what the default is standing in for, when that is a plain name: §8.6.3 reaches a
+    /// destructuring default too, so `let [x = function () {}] = []` gives the function the name `x`.
+    fn apply_default(
+        &mut self,
+        default: Option<&Expr>,
+        target: Option<&str>,
+    ) -> Result<(), CompileError> {
         let Some(default) = default else {
             return Ok(());
         };
@@ -775,7 +814,10 @@ impl Compiler<'_> {
             .emit(Instruction::Binary(BinaryOperator::StrictEqual));
         let given = self.chunk.emit_jump(Instruction::JumpIfFalse);
         self.chunk.emit(Instruction::Pop);
-        self.expression(default)?;
+        match target {
+            Some(name) => self.named_evaluation(name, default)?,
+            None => self.expression(default)?,
+        }
         self.chunk.patch(given)
     }
 
@@ -1616,12 +1658,28 @@ impl Compiler<'_> {
                 true => {
                     let index = self.name(&name.name)?;
                     self.chunk.emit(Instruction::DeclareGlobal(index));
-                    self.make_function(function, statement.span)?;
+                    self.make_function(
+                        function,
+                        // §10.2.9 — a declaration is named by its own binding.
+                        match &function.name {
+                            Some(written) => super::function::Naming::of(&written.name),
+                            None => super::function::Naming::default(),
+                        },
+                        statement.span,
+                    )?;
                     self.chunk.emit(Instruction::StoreGlobal(index));
                 }
                 false => {
                     let slot = self.declare(&name.name);
-                    self.make_function(function, statement.span)?;
+                    self.make_function(
+                        function,
+                        // §10.2.9 — a declaration is named by its own binding.
+                        match &function.name {
+                            Some(written) => super::function::Naming::of(&written.name),
+                            None => super::function::Naming::default(),
+                        },
+                        statement.span,
+                    )?;
                     self.chunk.emit(Instruction::StoreVariable(0, slot));
                 }
             }
@@ -1678,4 +1736,39 @@ enum Bind {
     /// A `let` or `const`, which exists uninitialised and is being initialised. The flag is
     /// whether it is a `const`, for the case where the binding has to be made here.
     Lexical(bool),
+}
+
+/// The name a destructuring target binds, when it binds exactly one — §8.6.3's named position.
+///
+/// `None` for a pattern, which binds several and none of them is *the* name, and for a property
+/// reference, because §13.15.5 asks for an `IsIdentifierRef` and `o.p` is not one.
+trait BoundName {
+    /// The single name, if there is one.
+    fn bound_name(&self) -> Option<&str>;
+}
+
+impl BoundName for Binding {
+    fn bound_name(&self) -> Option<&str> {
+        match self {
+            Self::Identifier(name) => Some(&name.name),
+            Self::Pattern(_) => None,
+        }
+    }
+}
+
+impl BoundName for AssignmentTarget {
+    fn bound_name(&self) -> Option<&str> {
+        match self {
+            Self::Simple(target) => match &target.kind {
+                ExprKind::Identifier(name) => Some(name),
+                _ => None,
+            },
+            Self::Pattern(_) => None,
+        }
+    }
+}
+
+/// The single name a target binds, for the two shapes a destructuring element's target can have.
+fn bound_name(target: &impl BoundName) -> Option<&str> {
+    target.bound_name()
 }

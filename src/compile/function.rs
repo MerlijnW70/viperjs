@@ -28,6 +28,7 @@ impl Compiler<'_> {
     pub(super) fn make_function(
         &mut self,
         function: &Function,
+        naming: Naming<'_>,
         span: Span,
     ) -> Result<(), CompileError> {
         if function.is_async || function.is_generator {
@@ -39,9 +40,17 @@ impl Compiler<'_> {
                 span,
             ));
         }
+        // §10.2.9 — a function expression that names itself takes that name, and it wins over the
+        // position: `var a = function f() {}` is called `f`. `NamedEvaluation` only reaches an
+        // *anonymous* one, which is what §8.6.3 says and what the callers here check.
+        let naming = match &function.name {
+            Some(written) => Naming::of(&written.name),
+            None => naming,
+        };
         let body = self.compile_nested(
             &function.parameters,
             Body::Statements(&function.body),
+            naming,
             Lexical::No,
             span,
         )?;
@@ -57,6 +66,7 @@ impl Compiler<'_> {
     pub(super) fn make_arrow(
         &mut self,
         arrow: &ArrowFunction,
+        naming: Naming<'_>,
         span: Span,
     ) -> Result<(), CompileError> {
         if arrow.is_async {
@@ -75,7 +85,7 @@ impl Compiler<'_> {
             ArrowBody::Expression(expression) => Body::Expression(expression),
             ArrowBody::Block(body) => Body::Statements(body),
         };
-        let body = self.compile_nested(&arrow.parameters, shape, Lexical::Yes, span)?;
+        let body = self.compile_nested(&arrow.parameters, shape, naming, Lexical::Yes, span)?;
         self.emit_function(body, span)
     }
 
@@ -88,6 +98,7 @@ impl Compiler<'_> {
         &mut self,
         parameters: &FormalParameters,
         body: Body<'_>,
+        naming: Naming<'_>,
         lexical: Lexical,
         span: Span,
     ) -> Result<Chunk, CompileError> {
@@ -111,6 +122,7 @@ impl Compiler<'_> {
             body,
             outer,
             Nesting {
+                naming,
                 lexical,
                 this_binding,
             },
@@ -341,11 +353,47 @@ pub(super) enum Body<'a> {
 /// Two facts that travel together and are decided at the same moment, so a struct rather than two
 /// parameters: the second is *computed from* the first, and passing them separately would let a
 /// caller pair an arrow's reach with a function's boundary.
-pub(super) struct Nesting {
+pub(super) struct Nesting<'a> {
+    /// What §10.2.9 calls the function, if the position it was written in says.
+    naming: Naming<'a>,
     /// Whether the body binds `this` itself — §15.3's whole difference from §15.2.
     lexical: Lexical,
     /// The enclosing derived constructor's `this`, if this body may reach it — DR-0015.
     this_binding: Option<ThisSlot>,
+}
+
+/// What a function is called, and where the compiler learned it — §10.2.9 and §8.6.3.
+///
+/// Three sources and they do not compete: a `Function` may carry its own name, a method takes its
+/// key's, and an anonymous expression in a named position takes the binding's. Which one applies is
+/// decided by the caller, because only the caller knows the position.
+#[derive(Debug, Clone, Copy, Default)]
+pub(super) struct Naming<'a> {
+    /// The name itself, if there is one.
+    pub(super) name: Option<&'a str>,
+    /// `get ` or `set ` — §10.2.9's prefix, which is part of the name and not decoration.
+    ///
+    /// `Object.getOwnPropertyDescriptor(o, 'a').get.name` is `"get a"`, and test262 checks it.
+    pub(super) prefix: Option<&'static str>,
+}
+
+impl<'a> Naming<'a> {
+    /// The name a function in this position is given, spelled out.
+    fn spelled(self) -> Option<String> {
+        let name = self.name?;
+        Some(match self.prefix {
+            Some(prefix) => format!("{prefix}{name}"),
+            None => name.to_string(),
+        })
+    }
+
+    /// A plain name with no prefix.
+    pub(super) fn of(name: &'a str) -> Self {
+        Self {
+            name: Some(name),
+            prefix: None,
+        }
+    }
 }
 
 /// Whether the body binds `this` itself, or takes the one around it.
@@ -371,11 +419,18 @@ fn compile_body(
     parameters: &FormalParameters,
     body: Body<'_>,
     outer: Vec<Vec<Local>>,
-    nesting: Nesting,
+    nesting: Nesting<'_>,
     span: Span,
 ) -> Result<Chunk, CompileError> {
     let lexical = nesting.lexical;
     let mut compiler = Compiler::new(heap);
+    // §10.2.9 — interned, so that the hundred `function f` in a program share one String and so that
+    // the key made from it is the one the object already has.
+    compiler.chunk.name = nesting.naming.spelled().map(|name| {
+        compiler
+            .heap
+            .intern(&name.encode_utf16().collect::<Vec<_>>())
+    });
     compiler.is_script = false;
     compiler.outer = outer;
     compiler.this_binding = nesting.this_binding;
@@ -461,7 +516,13 @@ fn compile_body(
                 .chunk
                 .emit(Instruction::Binary(crate::ast::BinaryOperator::StrictEqual));
             let given = compiler.chunk.emit_jump(Instruction::JumpIfFalse);
-            compiler.expression(default)?;
+            // §8.6.3 again — `SingleNameBinding : BindingIdentifier Initializer` is a named position,
+            // so `function f(a = () => {})` calls the arrow `a`. A pattern's is not, for the reason a
+            // destructuring target's is not: it binds several names and none of them is *the* name.
+            match &parameter.target {
+                Binding::Identifier(name) => compiler.named_evaluation(&name.name, default)?,
+                Binding::Pattern(_) => compiler.expression(default)?,
+            }
             compiler.chunk.emit(Instruction::StoreVariable(0, slot));
             // The store leaves its value behind, because an assignment is an expression. Here
             // nothing wants it.
@@ -537,6 +598,7 @@ fn compile_body(
                         derived: false,
                         private_methods: private_methods.clone(),
                     },
+                    Naming::default(),
                     Lexical::No,
                     span,
                 )?;
