@@ -54,7 +54,7 @@ impl Vm {
             )?;
             return Ok(());
         };
-        let lexical_this = heap.object(object).and_then(Object::lexical_this);
+        let lexical = heap.object(object).and_then(Object::lexical);
         let Some(callable) = heap.object(object).and_then(Object::call).cloned() else {
             self.raise(
                 Abrupt::type_error("what was called is not a function"),
@@ -227,6 +227,7 @@ impl Vm {
             code: (*current).take(),
             at: *at,
             this_value: self.this_value,
+            new_target: self.new_target,
             environment: self.environment,
             stack_base: receiver_at,
             handlers_base: self.handlers.len(),
@@ -245,9 +246,20 @@ impl Vm {
         // body sees instead is the `this` the arrow was *written* beside, which it has held since
         // it was made. This is why `f.call(other)` cannot move an arrow's `this` and why passing
         // one as a callback keeps it: neither is a place the arrow was written.
-        self.this_value = match lexical_this {
-            Some(captured) => captured,
+        self.this_value = match lexical {
+            Some(captured) => captured.this_value,
             None => receiver,
+        };
+        // §9.1.1.3 — `[[NewTarget]]` is the constructor a `new` named, and `undefined` for every
+        // other way in. An arrow has no function environment of its own, so §13.3.12's lookup walks
+        // outward and arrives at whatever was in force where the arrow was written — which is the
+        // same walk, and the same answer, as the `this` above.
+        self.new_target = match lexical {
+            Some(captured) => captured.new_target,
+            None => match how {
+                Entry::Construct => callee,
+                Entry::Plain | Entry::Method => Value::Undefined,
+            },
         };
         *current = Some(body);
         *at = 0;
@@ -448,6 +460,12 @@ pub(super) struct Frame {
     pub(super) constructed: Option<Value>,
     /// The `this` to go back to.
     pub(super) this_value: Value,
+    /// The `new.target` to go back to.
+    ///
+    /// Saved beside the `this` because §9.1.1.3 keeps the two in one record: a call decides both,
+    /// and a return has to put both back or a constructor that called a plain function would find
+    /// its own `new.target` gone when the call came back.
+    pub(super) new_target: Value,
     /// The environment to go back to.
     ///
     /// Not the callee's — that one may outlive the call, if the callee made a closure over it.

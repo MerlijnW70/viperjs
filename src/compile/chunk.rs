@@ -374,6 +374,14 @@ pub enum Instruction {
     Construct(u32),
     /// Push the running function's `this`.
     LoadThis,
+    /// Push the running function's `new.target` — §13.3.12.
+    ///
+    /// `undefined` unless the running call was a `new`, which is the whole of what the expression
+    /// is for: a function cannot otherwise tell `f()` from `new f()`. Its own instruction rather
+    /// than a property of anything, because it is a property of the *call* — the same function
+    /// object answers differently on two successive calls, so there is nowhere else to read it
+    /// from.
+    LoadNewTarget,
     /// Push a copy of the top value.
     ///
     /// A method call needs the base twice — once to find the method on and once to call it with —
@@ -617,6 +625,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Construct(_)
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
+        | Instruction::LoadNewTarget
         | Instruction::Duplicate
         | Instruction::Return
         | Instruction::NewObject

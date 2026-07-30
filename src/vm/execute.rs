@@ -354,12 +354,15 @@ impl Vm {
                     // at exactly the same moment (§10.2.3 step 6). Reading it at *call* time
                     // instead would be dynamic `this` wearing a lexical name: the two agree only
                     // while the arrow is called from inside the call that made it.
-                    let lexical_this = body.is_arrow().then_some(self.this_value);
+                    let lexical = body.is_arrow().then_some(crate::heap::Lexical {
+                        this_value: self.this_value,
+                        new_target: self.new_target,
+                    });
                     let object = heap.new_function(
                         self.realm.function_prototype(),
                         body.clone(),
                         self.environment,
-                        lexical_this,
+                        lexical,
                     );
                     // §20.2.4.1 — `length` is what the function says it needs, which stops at the
                     // first default and never counts a rest parameter. Not writable and not
@@ -587,10 +590,12 @@ impl Vm {
                     self.stack.push(answer);
                     self.environment = frame.environment;
                     self.this_value = frame.this_value;
+                    self.new_target = frame.new_target;
                     *current = frame.code;
                     *at = frame.at;
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
+                Instruction::LoadNewTarget => self.stack.push(self.new_target),
                 Instruction::Duplicate => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     self.stack.push(value);

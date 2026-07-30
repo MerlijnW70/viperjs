@@ -50,6 +50,24 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjectId(pub(super) usize);
 
+/// What an arrow reaches outward for, captured where it was written — §10.2.3 step 6.
+///
+/// Two values and not one, because §9.1.1.3's function environment holds both and an arrow gets
+/// neither of its own: `this` and `new.target` are looked up through the same walk and answered by
+/// the same environment, so an arrow that had captured one and resolved the other could disagree
+/// with itself about which call it belongs to. One struct means the pair is captured at one moment
+/// or not at all.
+// No `PartialEq`: [`Value`] deliberately has none, because JavaScript has three different
+// equalities and none of them is a derive.
+#[derive(Debug, Clone, Copy)]
+pub struct Lexical {
+    /// The `this` in force where the arrow was written.
+    pub this_value: Value,
+    /// The `new.target` in force there — §13.3.12 reaches outward exactly as `this` does, which is
+    /// why `() => new.target` inside a constructor answers that constructor and not `undefined`.
+    pub new_target: Value,
+}
+
 /// An ordinary object — §10.1.
 #[derive(Debug, Default)]
 pub struct Object {
@@ -80,16 +98,16 @@ pub struct Object {
     /// A closure is this field. The call that made the function is long gone by the time the
     /// function runs, and the variables it could see are still here because this holds them.
     environment: Option<EnvironmentId>,
-    /// The `this` an arrow was written beside — §10.2's `[[ThisMode]]` of `lexical`.
+    /// What an arrow was written beside — §10.2's `[[ThisMode]]` of `lexical`.
     ///
     /// `None` for every function that binds its own, which is all of them but arrows. Present, it
     /// is the same idea as `environment` one field up and for the same reason: the call that made
-    /// the arrow is gone by the time the arrow runs, so the `this` it could see has to be *held*
+    /// the arrow is gone by the time the arrow runs, so what it could see has to be *held*
     /// rather than looked for. §9.1.1.3 words it as a function environment with no `[[ThisBinding]]`
     /// whose `ResolveThisBinding` walks outward; the environment that walk arrives at is exactly
-    /// the one running when the arrow was made, so recording its `this` here is that walk, done
+    /// the one running when the arrow was made, so recording it here is that walk, done
     /// once and in advance.
-    lexical_this: Option<Value>,
+    lexical: Option<Lexical>,
     /// Whether this is §10.4.2's exotic Array, whose `length` and indices move each other.
     pub(super) array: bool,
     /// §10.4.4's parameter map, if this is an arguments object.
@@ -177,7 +195,7 @@ impl Object {
             date: None,
             call: None,
             environment: None,
-            lexical_this: None,
+            lexical: None,
             properties: Vec::new(),
             index: None,
         }
@@ -260,12 +278,12 @@ impl Object {
         self.environment
     }
 
-    /// The `this` this function took from around it, if it is an arrow.
+    /// What this function took from around it, if it is an arrow.
     ///
     /// `None` means the function binds `this` from the call, which is every function but an arrow
     /// — and also every non-function, which has no `this` to speak of either way.
-    pub fn lexical_this(&self) -> Option<Value> {
-        self.lexical_this
+    pub fn lexical(&self) -> Option<Lexical> {
+        self.lexical
     }
 
     /// `[[IsExtensible]]` (§10.1.3).
@@ -419,7 +437,7 @@ impl Heap {
     /// Ordinary in every way but one: it has a `[[Call]]`, which is what makes `typeof` say
     /// `"function"` and what a call expression looks for.
     ///
-    /// `lexical_this` is `Some` only for an arrow, and holds the `this` in force where the arrow
+    /// `lexical` is `Some` only for an arrow, and holds what was in force where the arrow
     /// was written — §10.2.3 step 6's `[[ThisMode]]` of `lexical`, captured rather than resolved.
     /// Every other function is handed its `this` by the call, so it passes `None`.
     pub fn new_function(
@@ -427,13 +445,13 @@ impl Heap {
         prototype: ObjectId,
         body: Rc<Chunk>,
         environment: EnvironmentId,
-        lexical_this: Option<Value>,
+        lexical: Option<Lexical>,
     ) -> ObjectId {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Bytecode(body));
         object.environment = Some(environment);
-        object.lexical_this = lexical_this;
+        object.lexical = lexical;
         self.objects.push(Some(object));
         id
     }

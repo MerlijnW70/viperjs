@@ -81,7 +81,7 @@ impl From<bool> for DefineOutcome {
 }
 pub use self::collect::{Collected, Roots};
 pub use self::environment::{Environment, EnvironmentId};
-pub use self::object::{Object, ObjectId};
+pub use self::object::{Lexical, Object, ObjectId};
 pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
 
 use crate::span::Span;

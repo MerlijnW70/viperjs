@@ -1518,6 +1518,10 @@ built-ins/Array/prototype/flatMap/this-value-ctor-non-object.js :: it threw an o
 built-ins/Array/prototype/flatMap/this-value-ctor-non-object.js (strict) :: it threw an object with no name: The value of `typeof Array.prototype.flatMap` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.js :: it threw an object with no name: The value of `typeof Array.prototype.flatMap` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.js (strict) :: it threw an object with no name: The value of `typeof Array.prototype.flatMap` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species.js :: it threw an object with no name: The value of `typeof Array.prototype.flatMap` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species.js (strict) :: it threw an object with no name: The value of `typeof Array.prototype.flatMap` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/flatMap/this-value-null-undefined-throws.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -4972,6 +4976,12 @@ built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw Referenc
 built-ins/Function/prototype/bind/get-fn-realm-recursive.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Function/prototype/bind/get-fn-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Function/prototype/bind/get-fn-realm.js (strict) :: it threw ReferenceError: $262 is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js :: it threw ReferenceError: Reflect is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget.js :: it threw ReferenceError: Reflect is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js :: it threw ReferenceError: Reflect is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Function/prototype/bind/instance-length-tointeger.js :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-length-tointeger.js (strict) :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
@@ -7410,6 +7420,8 @@ built-ins/Promise/all/species-get-error.js :: it threw ReferenceError: Promise i
 built-ins/Promise/all/species-get-error.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allKeyed/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected a TypeError but got a ReferenceError
 built-ins/Promise/allKeyed/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected a TypeError but got a ReferenceError
+built-ins/Promise/allKeyed/ctx-ctor-constructed.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/allKeyed/ctx-ctor-constructed.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allKeyed/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/allKeyed/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/allKeyed/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7530,6 +7542,8 @@ built-ins/Promise/allSettled/species-get-error.js :: it threw ReferenceError: Pr
 built-ins/Promise/allSettled/species-get-error.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettledKeyed/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected a TypeError but got a ReferenceError
 built-ins/Promise/allSettledKeyed/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected a TypeError but got a ReferenceError
+built-ins/Promise/allSettledKeyed/ctx-ctor-constructed.js :: it threw ReferenceError: Promise is not defined
+built-ins/Promise/allSettledKeyed/ctx-ctor-constructed.js (strict) :: it threw ReferenceError: Promise is not defined
 built-ins/Promise/allSettledKeyed/ctx-ctor-throws.js :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/allSettledKeyed/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Promise/allSettledKeyed/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -21031,6 +21045,10 @@ language/expressions/multiplication/S11.5.1_A1.js :: it threw ReferenceError: ev
 language/expressions/multiplication/S11.5.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
 language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
+language/expressions/new.target/value-via-reflect-apply.js :: it threw ReferenceError: Reflect is not defined
+language/expressions/new.target/value-via-reflect-apply.js (strict) :: it threw ReferenceError: Reflect is not defined
+language/expressions/new.target/value-via-reflect-construct.js :: it threw ReferenceError: Reflect is not defined
+language/expressions/new.target/value-via-reflect-construct.js (strict) :: it threw ReferenceError: Reflect is not defined
 language/expressions/new/S11.2.2_A1.1.js :: it threw ReferenceError: eval is not defined
 language/expressions/new/S11.2.2_A1.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/new/S11.2.2_A1.2.js :: it threw ReferenceError: eval is not defined

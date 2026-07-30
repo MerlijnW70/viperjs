@@ -135,6 +135,12 @@ pub struct Vm {
     frames: Vec<Frame>,
     /// The running function's `this` — §10.2.1.2's binding, decided by the call.
     this_value: Value,
+    /// The running function's `new.target` — §9.1.1.3's `[[NewTarget]]`, decided by the call.
+    ///
+    /// A register beside `this_value` and for the same reason: both belong to the call rather than
+    /// to the function, both are restored by a return, and both are captured by an arrow written
+    /// inside. `undefined` in a plain call, which is every call the script itself makes.
+    new_target: Value,
     /// The environment the running code is in.
     ///
     /// Set when [`Vm::run`] begins and changed by every call and return. A variable is found by
@@ -202,6 +208,7 @@ impl Vm {
             // at all is not a state that has to be representable.
             environment: heap.new_environment(None, 0),
             this_value: Value::Undefined,
+            new_target: Value::Undefined,
             completion: Value::Undefined,
             floor: Floor::default(),
             until_heap_check: 0,
@@ -235,6 +242,11 @@ impl Vm {
         // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined`, which is
         // the one place the two goal symbols disagree about it.
         self.this_value = Value::Object(self.realm.global());
+        // §16.1.7 — nothing constructed the script, so its `new.target` is `undefined`. The parser
+        // makes `new.target` at the top level a Syntax Error, so no program can read this one; it
+        // is set for the same reason `this_value` is, which is that a machine run twice must not
+        // start the second time where the first left off.
+        self.new_target = Value::Undefined;
         // `None` is the script itself, which the caller owns; `Some` is a function body, which
         // the function object owns. Two sources rather than one because the root is borrowed and
         // a callee is reference-counted, and moving the root into an `Rc` would make every
@@ -394,6 +406,7 @@ impl Vm {
             };
             self.environment = frame.environment;
             self.this_value = frame.this_value;
+            self.new_target = frame.new_target;
             *current = frame.code;
             *at = frame.at;
         }

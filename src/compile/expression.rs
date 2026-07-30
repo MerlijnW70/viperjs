@@ -361,7 +361,12 @@ impl Compiler<'_> {
             ExprKind::Await(_) => Err(unsupported("await", span)),
             ExprKind::Yield(_) => Err(unsupported("yield", span)),
             ExprKind::Super => Err(unsupported("super", span)),
-            ExprKind::NewTarget => Err(unsupported("new.target", span)),
+            // §13.3.12 — `GetNewTarget()`, which the running call decided and which the parser has
+            // already refused anywhere there is no call to have decided it.
+            ExprKind::NewTarget => {
+                self.chunk.emit(Instruction::LoadNewTarget);
+                Ok(())
+            }
             ExprKind::ImportMeta => Err(unsupported("import.meta", span)),
             ExprKind::ImportCall { .. } => Err(unsupported("a dynamic import", span)),
             ExprKind::OptionalChain(_) => Err(unsupported("optional chaining", span)),

@@ -168,10 +168,18 @@ impl Heap {
                 Some(other) => self.mark_value(other, marked),
                 None => {}
             }
-            match object.lexical_this() {
-                Some(Value::Object(reached)) => pending.push(reached),
-                Some(other) => self.mark_value(other, marked),
-                None => {}
+            // Both halves of what an arrow captured, because either can be an object and the arrow
+            // may be the only thing left holding it: `function F() { return () => new.target }`
+            // hands back an arrow whose `new.target` is a constructor nothing else need name.
+            for captured in object
+                .lexical()
+                .into_iter()
+                .flat_map(|lexical| [lexical.this_value, lexical.new_target])
+            {
+                match captured {
+                    Value::Object(reached) => pending.push(reached),
+                    other => self.mark_value(other, marked),
+                }
             }
             // What an iterator is walking, which nothing else need be holding: after
             // `var i = [1, 2].values()` the array has no other name, and collecting it would
@@ -592,7 +600,7 @@ mod tests {
     }
 
     #[test]
-    fn an_arrow_keeps_the_this_it_closed_over() {
+    fn an_arrow_keeps_what_it_closed_over() {
         // §15.3's captured `this` is an edge in the object graph like any other, and it is the
         // *only* one holding the receiver: `function F() { return () => this; }` leaves nothing
         // else pointing at the constructed object. A collector that walked the environment but
@@ -603,7 +611,15 @@ mod tests {
         let receiver = heap.new_object(None);
         let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
         let prototype = heap.new_object(None);
-        let arrow = heap.new_function(prototype, body, environment, Some(Value::Object(receiver)));
+        let arrow = heap.new_function(
+            prototype,
+            body,
+            environment,
+            Some(crate::heap::Lexical {
+                this_value: Value::Object(receiver),
+                new_target: Value::Undefined,
+            }),
+        );
 
         let roots = Roots {
             values: vec![Value::Object(arrow)],
@@ -611,6 +627,29 @@ mod tests {
         };
         heap.collect(&roots);
         assert!(heap.object(receiver).is_some());
+        // The captured `new.target` is the same edge and needs walking for the same reason, and it
+        // is a *separate* one: `function F() { return () => new.target; }` leaves the constructor
+        // reachable only through the arrow, and the object graph does not join it to the `this`.
+        let mut heap = Heap::new();
+        let environment = heap.new_environment(None, 0);
+        let target = heap.new_object(None);
+        let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
+        let prototype = heap.new_object(None);
+        let arrow = heap.new_function(
+            prototype,
+            body,
+            environment,
+            Some(crate::heap::Lexical {
+                this_value: Value::Undefined,
+                new_target: Value::Object(target),
+            }),
+        );
+        let roots = Roots {
+            values: vec![Value::Object(arrow)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(target).is_some());
         // …and a captured String is kept for the same reason, a primitive `this` being reachable
         // exactly as far as the arrow is.
         let mut heap = Heap::new();
@@ -618,7 +657,15 @@ mod tests {
         let text = heap.intern(&"held".encode_utf16().collect::<Vec<_>>());
         let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
         let prototype = heap.new_object(None);
-        let arrow = heap.new_function(prototype, body, environment, Some(Value::String(text)));
+        let arrow = heap.new_function(
+            prototype,
+            body,
+            environment,
+            Some(crate::heap::Lexical {
+                this_value: Value::String(text),
+                new_target: Value::Undefined,
+            }),
+        );
         let roots = Roots {
             values: vec![Value::Object(arrow)],
             ..Roots::default()
