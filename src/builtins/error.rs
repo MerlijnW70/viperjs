@@ -53,6 +53,30 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     Ok(Value::Object(error))
 }
 
+/// §20.5.7.1 — `new AggregateError(errors, message)`.
+///
+/// The **errors come first**, which is the whole reason this is not the ordinary error constructor
+/// with a different prototype: `new AggregateError("oops")` is a message-less error whose `errors`
+/// is the characters of `"oops"`, and that is not a mistake in the specification — the first
+/// argument is an iterable of what went wrong and the second is what to say about it.
+fn aggregate_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let prototype = super::prototype_from(heap, call, vm.realm().aggregate_error_prototype());
+    let error = heap.new_object(Some(prototype));
+    // Step 3 — the message, on the same terms as any other error's: `undefined` is *absent*.
+    let message = call.argument(1);
+    if !matches!(message, Value::Undefined) {
+        let text = message.to_string(heap)?;
+        define_value(heap, error, "message", Value::String(text));
+    }
+    // Step 5 — `IterableToList`, and then step 6 defines `errors` as writable, **not enumerable**
+    // and configurable. Not enumerable because an error is a thing programs log wholesale, and a
+    // list of causes in every `for...in` over one would be a surprise.
+    let list = super::promise_group::iterable_to_list(vm, heap, call.argument(0))?;
+    let errors = super::array::from_values(vm, heap, &list)?;
+    define_value(heap, error, "errors", errors);
+    Ok(Value::Object(error))
+}
+
 /// §20.5.3.4 `Error.prototype.toString`.
 ///
 /// `"Error: something went wrong"`, or just the name when there is no message, or just the
@@ -118,6 +142,28 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         define_value(heap, global, name, Value::Object(made));
     }
     define_value(heap, global, "Error", Value::Object(error));
+
+    // §20.5.7 — its own constructor, because its arguments are in a different order and its
+    // instances carry a property no other error has. Its `[[Prototype]]` is `Error`, exactly as a
+    // native error's is, so it inherits the constructor's properties in the same way.
+    let aggregate = realm.aggregate_error_prototype();
+    let made = heap.new_native_constructor(error, aggregate_construct);
+    super::define_function_metadata(heap, made, "AggregateError", 2);
+    let key = key(heap, "prototype");
+    let descriptor = PropertyDescriptor {
+        value: Some(Value::Object(aggregate)),
+        writable: Some(false),
+        enumerable: Some(false),
+        configurable: Some(false),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(made, key, &descriptor);
+    define_value(heap, aggregate, "constructor", Value::Object(made));
+    let name = super::text(heap, "AggregateError");
+    define_value(heap, aggregate, "name", name);
+    let message = super::text(heap, "");
+    define_value(heap, aggregate, "message", message);
+    define_value(heap, global, "AggregateError", Value::Object(made));
 
     // §20.5.3.4 — the one method, on `Error.prototype`, inherited by every native error's
     // prototype rather than repeated on each. That is why `new Abrupt::type_error("x") + ""` says

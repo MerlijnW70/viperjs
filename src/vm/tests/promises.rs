@@ -763,3 +763,107 @@ fn an_all_settled_outcome_is_an_ordinary_object_a_program_may_change() {
         "true,true,true|status+value"
     );
 }
+
+#[test]
+fn any_takes_the_first_fulfilment_and_gathers_the_reasons_if_there_is_none() {
+    // §27.2.4.3 — `all` with the two halves exchanged. The first fulfilment wins outright, and a
+    // rejection is not a failure of the group but an entry in a list.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.any([Promise.reject('a'), Promise.resolve('yes'), Promise.reject('b')])              .then(function (v) { out = v; });",
+            "out"
+        ),
+        "yes"
+    );
+    // Running out of elements is the failure, and what it failed with is every reason in
+    // iteration order — which is what `AggregateError` exists for and its only use in the language.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.any([Promise.reject('a'), Promise.reject('b')])              .catch(function (e) {                 out = e.constructor.name + ':' + e.errors.join(',') + ':' + (e instanceof Error); });",
+            "out"
+        ),
+        "AggregateError:a,b:true"
+    );
+    // An **empty** iterable rejects immediately, with no reasons at all — where `Promise.all([])`
+    // resolves and `Promise.race([])` never settles. Three answers to the same question, and the
+    // counter that starts at one is what makes each of them arrive.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.any([]).catch(function (e) {                 out = e.constructor.name + ':' + e.errors.length; });",
+            "out"
+        ),
+        "AggregateError:0"
+    );
+    // The error `any` builds carries `errors` on the same terms the constructor's does — writable,
+    // **not enumerable**, configurable — which is a separate piece of code and so a separate row:
+    // §27.2.4.3.1 defines the property itself rather than going through §20.5.7.1.
+    assert_eq!(
+        run_settled(
+            "var out; Promise.any([Promise.reject(1)]).catch(function (e) {                 var d = Object.getOwnPropertyDescriptor(e, 'errors');                 out = d.writable + ',' + d.enumerable + ',' + d.configurable                   + '|' + Object.keys(e).length; });",
+            "out"
+        ),
+        "true,false,true|0"
+    );
+    // §27.2.4.3.1 makes the error *without* calling `AggregateError`, so a program that replaced
+    // it does not change what `any` rejects with — and one that made it throw cannot make `any`
+    // throw. The rejection is still an instance of the original, by its prototype.
+    assert_eq!(
+        run_settled(
+            "var kept = AggregateError;              AggregateError = function () { throw new Error('replaced'); };              var out; Promise.any([Promise.reject(1)])              .catch(function (e) { out = (e instanceof kept) + ',' + e.errors.join(''); });",
+            "out"
+        ),
+        "true,1"
+    );
+}
+
+#[test]
+fn an_aggregate_error_takes_its_errors_first_and_its_message_second() {
+    // §20.5.7.1 — the argument order is the thing to get right, and it is the opposite of what
+    // every other error constructor does. `new AggregateError("oops")` is a *message-less* error
+    // whose `errors` is the characters of the string, because a string is iterable.
+    assert_eq!(
+        run("var e = new AggregateError([1, 2], 'why'); e.message + '|' + e.errors.join(',')"),
+        "why|1,2"
+    );
+    assert_eq!(
+        run("var e = new AggregateError('oops'); e.message + '|' + e.errors.join('')"),
+        "|oops"
+    );
+    // §20.5.7.1 step 6 — `errors` is **not enumerable**, because an error is a thing programs log
+    // wholesale and a list of causes in every `for...in` over one would be a surprise. It is
+    // writable and configurable, which the other two attributes of a data property are.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(new AggregateError([1]), 'errors');              d.writable + ',' + d.enumerable + ',' + d.configurable"
+        ),
+        "true,false,true"
+    );
+    assert_eq!(run("Object.keys(new AggregateError([1], 'm')).length"), "0");
+    // It is an `Error` and its prototype chain says so, which is what `catch (e) { if (e instanceof
+    // Error) }` relies on.
+    assert_eq!(
+        run(
+            "var e = new AggregateError([]); (e instanceof AggregateError) + ',' + (e instanceof Error)              + ',' + e.name + ',' + String(e)"
+        ),
+        "true,true,AggregateError,AggregateError"
+    );
+    // §20.5.7.2 — `AggregateError.prototype` is not writable, not enumerable and not configurable,
+    // exactly as every other error constructor's is. A script may replace `f.prototype` on a
+    // function it wrote and may not replace this one.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(AggregateError, 'prototype');              d.writable + ',' + d.enumerable + ',' + d.configurable"
+        ),
+        "false,false,false"
+    );
+    // §20.5.7.2 — `length` is 2 and the constructor inherits from `Error`, as a native error's does.
+    assert_eq!(
+        run("AggregateError.length + ',' + (Object.getPrototypeOf(AggregateError) === Error)"),
+        "2,true"
+    );
+    // Something that is not iterable is a TypeError, because step 5 is `IterableToList`.
+    assert_eq!(
+        run("try { new AggregateError(1); } catch (e) { e.constructor.name; }"),
+        "TypeError"
+    );
+}

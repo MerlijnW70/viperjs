@@ -46,6 +46,11 @@ pub(super) fn all_settled(
     combine(vm, heap, call, Group::AllSettled)
 }
 
+/// §27.2.4.3 — `Promise.any(iterable)`.
+pub(super) fn any(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    combine(vm, heap, call, Group::Any)
+}
+
 /// §27.2.4.4 — `Promise.race(iterable)`.
 pub(super) fn race(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     combine(vm, heap, call, Group::Race)
@@ -211,14 +216,26 @@ fn handlers(
         }
         Value::Object(function)
     };
-    let on_fulfilled = make(element_settled, ReactionKind::Fulfil);
-    let on_rejected = match group {
-        // §27.2.4.1.1 step 8.j — `all` subscribes the *capability's* reject, so the first rejection
-        // rejects the group directly and no slot is filled.
-        Group::All => capability.reject,
-        _ => make(element_settled, ReactionKind::Reject),
-    };
-    (on_fulfilled, on_rejected)
+    // §27.2.4.3 is §27.2.4.1 with the two halves exchanged, and saying so here is the whole of
+    // the difference: `any` collects *rejections* and lets the first fulfilment through, where
+    // `all` collects fulfilments and lets the first rejection through.
+    match group {
+        // §27.2.4.1.1 step 8.j — the group's own reject, so the first rejection rejects it
+        // directly and no slot is ever filled.
+        Group::All => (
+            make(element_settled, ReactionKind::Fulfil),
+            capability.reject,
+        ),
+        // §27.2.4.3.1 step 8.j — the group's own resolve, for the same reason from the other side.
+        Group::Any => (
+            capability.resolve,
+            make(element_settled, ReactionKind::Reject),
+        ),
+        _ => (
+            make(element_settled, ReactionKind::Fulfil),
+            make(element_settled, ReactionKind::Reject),
+        ),
+    }
 }
 
 /// §27.2.4.1.2 and §27.2.4.2.2 — one element has settled.
@@ -290,13 +307,76 @@ fn outcome_object(
 
 /// Settle the group if the count has reached zero — the caller has already given up its own.
 fn settle_if_done(vm: &mut Vm, heap: &mut Heap, gather: &Rc<RefCell<Gather>>) -> Completion<Value> {
-    let (finished, capability, values) = {
+    let (finished, capability, values, group) = {
         let state = gather.borrow();
-        (state.remaining, state.capability, state.values.clone())
+        (
+            state.remaining,
+            state.capability,
+            state.values.clone(),
+            state.group,
+        )
     };
     if finished != 0 {
         return Ok(Value::Undefined);
     }
     let array = super::array::from_values(vm, heap, &values)?;
+    // §27.2.4.3.1 step 8.d — running out of elements is `any`'s *failure*, and the reasons
+    // gathered along the way are what it failed with. Every other combinator's end is its success.
+    if group == Group::Any {
+        let error = aggregate_error(vm, heap, array)?;
+        return vm.call_value(capability.reject, Value::Undefined, &[error], heap);
+    }
     vm.call_value(capability.resolve, Value::Undefined, &[array], heap)
+}
+
+/// §27.2.4.3.1 step 8.d.iii — an `AggregateError` carrying the reasons, made without the
+/// constructor.
+///
+/// Built directly rather than through `AggregateError` itself, because §27.2.4.3.1 says
+/// `OrdinaryCreateFromConstructor(%AggregateError%, …)` and then defines `errors` — it never calls
+/// the constructor, so a program that replaced `AggregateError` does not change what `any` rejects
+/// with, and one that made it throw cannot make `any` throw.
+fn aggregate_error(vm: &mut Vm, heap: &mut Heap, errors: Value) -> Completion<Value> {
+    let error = heap.new_object(Some(vm.realm().aggregate_error_prototype()));
+    let descriptor = PropertyDescriptor {
+        value: Some(errors),
+        writable: Some(true),
+        enumerable: Some(false),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    let name = key(heap, "errors");
+    let _ = heap.define_own_property(error, name, &descriptor);
+    Ok(Value::Object(error))
+}
+
+/// §7.4.14 `IterableToList` — everything an iterable has, in order.
+///
+/// Here rather than beside the arrays because §20.5.7.1 is its only other caller and this is where
+/// the walking of an iterable already lives.
+pub(super) fn iterable_to_list(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    iterable: Value,
+) -> Completion<Vec<Value>> {
+    let Some(iterator) = super::array::iterator_of(vm, heap, iterable)? else {
+        return Err(Abrupt::type_error("this is not iterable"));
+    };
+    let next = key(heap, "next");
+    let next = vm.get_property_key(iterator, next, heap)?;
+    let done_key = key(heap, "done");
+    let value_key = key(heap, "value");
+    let mut taken = Vec::new();
+    loop {
+        let step = vm.call_value(next, iterator, &[], heap)?;
+        let Value::Object(_) = step else {
+            return Err(Abrupt::type_error("an iterator must answer an object"));
+        };
+        if vm.get_property_key(step, done_key, heap)?.to_boolean(heap) {
+            return Ok(taken);
+        }
+        taken.push(vm.get_property_key(step, value_key, heap)?);
+        // DR-0013 — an iterator that never says it is done would grow this until the process died.
+        super::array_methods::within_budget(heap)?;
+    }
 }

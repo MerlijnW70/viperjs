@@ -49,6 +49,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         // §27.2.4.1, §27.2.4.2 and §27.2.4.4 — each takes one iterable, and each `length` is 1.
         ("all", 1, super::promise_group::all),
         ("allSettled", 1, super::promise_group::all_settled),
+        ("any", 1, super::promise_group::any),
         ("race", 1, super::promise_group::race),
     ] {
         define_method(heap, realm, constructor, name, length, native);

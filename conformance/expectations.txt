@@ -1047,54 +1047,20 @@ annexB/language/statements/try/catch-redeclared-var-statement-captured.js :: it 
 annexB/language/statements/try/catch-redeclared-var-statement-captured.js (strict) :: it did not parse: the catch parameter is already declared in the catch block
 annexB/language/statements/try/catch-redeclared-var-statement.js :: it did not parse: the catch parameter is already declared in the catch block
 annexB/language/statements/try/catch-redeclared-var-statement.js (strict) :: it did not parse: the catch parameter is already declared in the catch block
-built-ins/AggregateError/cause-property.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/cause-property.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/errors-iterabletolist-failures.js :: it threw an object with no name: get Symbol.iterator Expected a Test262Error but got a ReferenceError
-built-ins/AggregateError/errors-iterabletolist-failures.js (strict) :: it threw an object with no name: get Symbol.iterator Expected a Test262Error but got a ReferenceError
-built-ins/AggregateError/errors-iterabletolist.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/errors-iterabletolist.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/is-a-constructor.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/is-a-constructor.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/length.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/length.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/message-method-prop-cast.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/message-method-prop-cast.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/message-method-prop.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/message-method-prop.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/message-tostring-abrupt-symbol.js :: it threw an object with no name: toPrimitive Expected a TypeError but got a ReferenceError
-built-ins/AggregateError/message-tostring-abrupt-symbol.js (strict) :: it threw an object with no name: toPrimitive Expected a TypeError but got a ReferenceError
-built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with no name: toPrimitive Expected a Test262Error but got a ReferenceError
-built-ins/AggregateError/message-tostring-abrupt.js (strict) :: it threw an object with no name: toPrimitive Expected a Test262Error but got a ReferenceError
-built-ins/AggregateError/message-undefined-no-prop.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/message-undefined-no-prop.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/name.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/name.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/newtarget-is-undefined.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/newtarget-is-undefined.js (strict) :: it threw ReferenceError: AggregateError is not defined
+built-ins/AggregateError/cause-property.js :: it threw an object with no name: cause should be an own property
+built-ins/AggregateError/cause-property.js (strict) :: it threw an object with no name: cause should be an own property
+built-ins/AggregateError/is-a-constructor.js :: it threw an object with no name: isConstructor(AggregateError) must return true Expected SameValue(«false», «true») to be true
+built-ins/AggregateError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(AggregateError) must return true Expected SameValue(«false», «true») to be true
+built-ins/AggregateError/message-method-prop-cast.js :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/AggregateError/message-method-prop-cast.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
+built-ins/AggregateError/message-tostring-abrupt.js (strict) :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
 built-ins/AggregateError/newtarget-proto-custom.js :: it threw ReferenceError: Proxy is not defined
 built-ins/AggregateError/newtarget-proto-custom.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/AggregateError/newtarget-proto.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/newtarget-proto.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/order-of-args-evaluation.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/AggregateError/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cannot convert an object to a primitive value
+built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/AggregateError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/AggregateError/proto.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/proto.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/constructor.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/constructor.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/errors-absent-on-prototype.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/errors-absent-on-prototype.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/message.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/message.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/name.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/name.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/prop-desc.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/prop-desc.js (strict) :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/proto.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/AggregateError/prototype/proto.js (strict) :: it threw ReferenceError: AggregateError is not defined
 built-ins/Array/S15.4.5.2_A3_T2.js :: it threw RangeError: an array length must be an integer index
 built-ins/Array/S15.4.5.2_A3_T2.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Array/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -3010,6 +2976,10 @@ built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js :: it threw Refere
 built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/descriptor.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/false-for-timeout.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/false-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/is-function.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/is-function.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/length.js :: it threw ReferenceError: Atomics is not defined
@@ -3018,6 +2988,8 @@ built-ins/Atomics/waitAsync/name.js :: it threw ReferenceError: Atomics is not d
 built-ins/Atomics/waitAsync/name.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/negative-index-throws.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/negative-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/negative-timeout.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/negative-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/non-shared-bufferdata-throws.js :: it threw ReferenceError: Atomics is not defined
@@ -3030,12 +3002,16 @@ built-ins/Atomics/waitAsync/null-bufferdata-throws.js :: it threw ReferenceError
 built-ins/Atomics/waitAsync/null-bufferdata-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/null-for-timeout.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/null-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/object-for-timeout.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/object-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/out-of-range-index-throws.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/out-of-range-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js :: it threw ReferenceError: Atomics is not defined
@@ -3046,6 +3022,10 @@ built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js :: it threw ReferenceEr
 built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/symbol-for-value-throws.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/waitAsync/symbol-for-value-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/undefined-for-timeout.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/undefined-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/value-not-equal.js :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/waitAsync/value-not-equal.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/xor/descriptor.js :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/xor/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
 built-ins/Atomics/xor/expected-return-value.js :: it threw ReferenceError: Int32Array is not defined
@@ -7519,8 +7499,6 @@ built-ins/Object/seal/proxy-no-ownkeys-returned-keys-order.js :: it threw Refere
 built-ins/Object/seal/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/proxy-with-defineProperty-handler.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/proxy-with-defineProperty-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/seal-aggregateerror.js :: it threw ReferenceError: AggregateError is not defined
-built-ins/Object/seal/seal-aggregateerror.js (strict) :: it threw ReferenceError: AggregateError is not defined
 built-ins/Object/seal/seal-arraybuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
 built-ins/Object/seal/seal-arraybuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
 built-ins/Object/seal/seal-arrowfunction.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -7589,36 +7567,92 @@ built-ins/Promise/all/invoke-then-error-close.js :: it threw an object with no n
 built-ins/Promise/all/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/all/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/all/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allKeyed/arg-is-function.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/arg-is-function.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/arg-not-object-reject.js :: the test called $DONE with Test262Error: undefined Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/arg-not-object-reject.js (strict) :: the test called $DONE with Test262Error: undefined Expected a TypeError to be thrown asynchronously but the function threw synchronously
 built-ins/Promise/allKeyed/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
 built-ins/Promise/allKeyed/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
+built-ins/Promise/allKeyed/capability-resolve-throws-reject.js :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allKeyed/capability-resolve-throws-reject.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/ctx-ctor-constructed.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/ctx-ctor-constructed.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Promise/allKeyed/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Promise/allKeyed/extensible.js :: it threw an object with no name: Expected true but got false
 built-ins/Promise/allKeyed/extensible.js (strict) :: it threw an object with no name: Expected true but got false
+built-ins/Promise/allKeyed/get-value-not-called-for-non-enumerable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/get-value-not-called-for-non-enumerable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/get-value-throws-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/get-value-throws-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/getownproperty-not-enumerable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/getownproperty-not-enumerable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/getownproperty-returns-undefined.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allKeyed/getownproperty-returns-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allKeyed/getownproperty-throws.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allKeyed/getownproperty-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/allKeyed/invoke-resolve-custom.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/invoke-resolve-custom.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allKeyed/invoke-resolve-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-resolve-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-resolve-get-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-resolve-get-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/invoke-resolve-get-once.js :: it threw TypeError: what was called is not a function
 built-ins/Promise/allKeyed/invoke-resolve-get-once.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Promise/allKeyed/invoke-resolve-return.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/invoke-resolve-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allKeyed/invoke-then-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-then-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-then-get-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-then-get-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/invoke-then-not-callable-reject.js :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/invoke-then-not-callable-reject.js (strict) :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/key-order-preserved.js :: it threw TypeError: what was called is not a function
+built-ins/Promise/allKeyed/key-order-preserved.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Promise/allKeyed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allKeyed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allKeyed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allKeyed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Promise/allKeyed/non-enumerable-properties-ignored.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/non-enumerable-properties-ignored.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/non-enumerable-properties-only.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/non-enumerable-properties-only.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Promise/allKeyed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Promise/allKeyed/ownkeys-throws.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allKeyed/ownkeys-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/allKeyed/prop-desc.js :: it threw an object with no name: allKeyed should be an own property
 built-ins/Promise/allKeyed/prop-desc.js (strict) :: it threw an object with no name: allKeyed should be an own property
 built-ins/Promise/allKeyed/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allKeyed/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Promise/allKeyed/prototype-keys-ignored.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/prototype-keys-ignored.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-deferred.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-deferred.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-first.js :: it threw TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-first.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-immed.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-immed.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-last.js :: it threw TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-last.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-second.js :: it threw TypeError: what was called is not a function
+built-ins/Promise/allKeyed/reject-second.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Promise/allKeyed/resolve-before-loop-exit.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-before-loop-exit.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-element-function-properties.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-element-function-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allKeyed/resolve-missing-reject-with-typeerror.js :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/resolve-missing-reject-with-typeerror.js (strict) :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/resolve-not-callable-reject-with-typeerror.js :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/resolve-not-callable-reject-with-typeerror.js (strict) :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allKeyed/resolves-empty-object.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/resolves-empty-object.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/result-property-descriptors.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/result-property-descriptors.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/symbol-keys.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/symbol-keys.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettled/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/allSettled/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/allSettled/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -7627,8 +7661,14 @@ built-ins/Promise/allSettled/invoke-then-error-close.js :: it threw an object wi
 built-ins/Promise/allSettled/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/allSettled/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/allSettled/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Promise/allSettledKeyed/arg-is-function.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/arg-is-function.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/arg-not-object-reject.js :: the test called $DONE with Test262Error: undefined Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/arg-not-object-reject.js (strict) :: the test called $DONE with Test262Error: undefined Expected a TypeError to be thrown asynchronously but the function threw synchronously
 built-ins/Promise/allSettledKeyed/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
 built-ins/Promise/allSettledKeyed/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
+built-ins/Promise/allSettledKeyed/capability-resolve-throws-reject.js :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allSettledKeyed/capability-resolve-throws-reject.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/ctx-ctor-constructed.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/ctx-ctor-constructed.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -7637,82 +7677,82 @@ built-ins/Promise/allSettledKeyed/element-function-properties.js :: it threw Typ
 built-ins/Promise/allSettledKeyed/element-function-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/extensible.js :: it threw an object with no name: Expected true but got false
 built-ins/Promise/allSettledKeyed/extensible.js (strict) :: it threw an object with no name: Expected true but got false
+built-ins/Promise/allSettledKeyed/get-value-not-called-for-non-enumerable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/get-value-not-called-for-non-enumerable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/get-value-throws-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/get-value-throws-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/getownproperty-not-enumerable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/getownproperty-not-enumerable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/getownproperty-returns-undefined.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allSettledKeyed/getownproperty-returns-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allSettledKeyed/getownproperty-throws.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allSettledKeyed/getownproperty-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/allSettledKeyed/invoke-resolve-custom.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/invoke-resolve-custom.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allSettledKeyed/invoke-resolve-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-resolve-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-resolve-get-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-resolve-get-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/invoke-resolve-get-once.js :: it threw TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/invoke-resolve-get-once.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/invoke-resolve-return.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/invoke-resolve-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allSettledKeyed/invoke-then-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-then-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-then-get-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-then-get-error-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/invoke-then-not-callable-reject.js :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/invoke-then-not-callable-reject.js (strict) :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/key-order-preserved.js :: it threw TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/key-order-preserved.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allSettledKeyed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allSettledKeyed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allSettledKeyed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Promise/allSettledKeyed/non-enumerable-properties-ignored.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/non-enumerable-properties-ignored.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/non-enumerable-properties-only.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/non-enumerable-properties-only.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Promise/allSettledKeyed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Promise/allSettledKeyed/ownkeys-throws.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allSettledKeyed/ownkeys-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/allSettledKeyed/prop-desc.js :: it threw an object with no name: allSettledKeyed should be an own property
 built-ins/Promise/allSettledKeyed/prop-desc.js (strict) :: it threw an object with no name: allSettledKeyed should be an own property
 built-ins/Promise/allSettledKeyed/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Promise/allSettledKeyed/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Promise/allSettledKeyed/prototype-keys-ignored.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/prototype-keys-ignored.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/reject-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/reject-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/resolve-before-loop-exit.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/resolve-before-loop-exit.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/call-reject-element-after-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/call-reject-element-after-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/call-reject-element-items.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/call-reject-element-items.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/capability-executor-called-twice.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/capability-executor-called-twice.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/capability-executor-not-callable.js :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/any/capability-executor-not-callable.js (strict) :: it threw an object with no name: executor not called at all Expected SameValue(«""», «"a"») to be true
-built-ins/Promise/any/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/any/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/any/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/ctx-non-ctor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/any/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/any/invoke-resolve-return.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/invoke-resolve-return.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/any/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Promise/any/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/any/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/any/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/any/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/any/new-reject-function.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/new-reject-function.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/any/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/any/prop-desc.js :: it threw an object with no name: any should be an own property
-built-ins/Promise/any/prop-desc.js (strict) :: it threw an object with no name: any should be an own property
-built-ins/Promise/any/reject-element-function-extensible.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-extensible.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-nonconstructor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-nonconstructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-property-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-property-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-prototype.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-element-function-prototype.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/reject-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-before-loop-exit-from-same.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-before-loop-exit-from-same.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-before-loop-exit.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-before-loop-exit.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-from-same-thenable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-from-same-thenable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-throws-iterator-return-null-or-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/resolve-throws-iterator-return-null-or-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/returns-promise.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/any/returns-promise.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/any/species-get-error.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/any/species-get-error.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Promise/allSettledKeyed/resolve-missing-reject-with-typeerror.js :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/resolve-missing-reject-with-typeerror.js (strict) :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/resolve-not-callable-reject-with-typeerror.js :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/resolve-not-callable-reject-with-typeerror.js (strict) :: the test called $DONE with Test262Error: Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/allSettledKeyed/resolved-all-fulfilled.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolved-all-fulfilled.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolved-all-mixed.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolved-all-mixed.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolved-all-rejected.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolved-all-rejected.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolves-empty-object.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/resolves-empty-object.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/result-property-descriptors.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/result-property-descriptors.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/symbol-keys.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/symbol-keys.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/any/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/any/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/any/invoke-resolve-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Promise/any/invoke-resolve-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Promise/any/invoke-then-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Promise/any/invoke-then-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Promise/any/invoke-then-get-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Promise/any/invoke-then-get-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
 built-ins/Promise/get-prototype-abrupt-executor-not-callable.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/get-prototype-abrupt-executor-not-callable.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/get-prototype-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
@@ -7721,6 +7761,10 @@ built-ins/Promise/is-a-constructor.js :: it threw an object with no name: isCons
 built-ins/Promise/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Promise) must return true Expected SameValue(«false», «true») to be true
 built-ins/Promise/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Promise/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
+built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
+built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
+built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
+built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/this-value-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/prototype/finally/this-value-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/race/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -7735,6 +7779,8 @@ built-ins/Promise/reject/ctx-non-ctor.js :: it threw an object with no name: Exp
 built-ins/Promise/reject/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/resolve/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/resolve/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Promise/try/args.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/try/args.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/try/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Promise/try/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Promise/try/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -7749,6 +7795,10 @@ built-ins/Promise/try/promise.js :: it threw TypeError: what was called is not a
 built-ins/Promise/try/promise.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Promise/try/prop-desc.js :: it threw an object with no name: try should be an own property
 built-ins/Promise/try/prop-desc.js (strict) :: it threw an object with no name: try should be an own property
+built-ins/Promise/try/return-value.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/try/return-value.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/try/throws.js :: the test called $DONE with Test262Error: error thrown from callback must become a rejection Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Promise/try/throws.js (strict) :: the test called $DONE with Test262Error: error thrown from callback must become a rejection Expected a Test262Error to be thrown asynchronously but the function threw synchronously
 built-ins/Promise/withResolvers/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/withResolvers/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/withResolvers/promise.js :: it threw TypeError: what was called is not a function
@@ -20426,8 +20476,6 @@ language/expressions/class/private-static-setter-multiple-evaluations-of-class-f
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw ReferenceError: $262 is not defined
 language/expressions/class/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/subclass-builtins/subclass-AggregateError.js :: it threw ReferenceError: AggregateError is not defined
-language/expressions/class/subclass-builtins/subclass-AggregateError.js (strict) :: it threw ReferenceError: AggregateError is not defined
 language/expressions/class/subclass-builtins/subclass-ArrayBuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-ArrayBuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-BigInt64Array.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -20585,6 +20633,134 @@ language/expressions/does-not-equals/S11.9.2_A1.js :: it threw ReferenceError: e
 language/expressions/does-not-equals/S11.9.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/does-not-equals/S11.9.2_A6.1.js :: it threw ReferenceError: eval is not defined
 language/expressions/does-not-equals/S11.9.2_A6.1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-source-source-text-module.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
@@ -20745,6 +20921,8 @@ language/expressions/dynamic-import/syntax/valid/top-level-import-source-empty-s
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/usage-from-eval.js :: it threw ReferenceError: eval is not defined
+language/expressions/dynamic-import/usage-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/equals/S11.9.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/equals/S11.9.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/equals/S11.9.1_A6.1.js :: it threw ReferenceError: eval is not defined
@@ -21363,10 +21541,132 @@ language/statementList/eval-fn-regexp-literal.js :: it threw ReferenceError: eva
 language/statementList/eval-fn-regexp-literal.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/async-function/cptn-decl.js :: it threw ReferenceError: eval is not defined
 language/statements/async-function/cptn-decl.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/await-using/Symbol.asyncDispose-getter.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.asyncDispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.asyncDispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.asyncDispose-method-called-with-correct-this.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.asyncDispose-method-not-async.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.asyncDispose-method-not-async.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.dispose-getter.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.dispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.dispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/Symbol.dispose-method-called-with-correct-this.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-Symbol.asyncDispose-allows-non-promise-return-value.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-Symbol.asyncDispose-allows-non-promise-return-value.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-Symbol.asyncDispose-allows-promiselike-return-value.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-Symbol.asyncDispose-allows-promiselike-return-value.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-allows-null-initializer.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-allows-null-initializer.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-allows-undefined-initializer.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-allows-undefined-initializer.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-does-not-imply-await-if-not-evaluated.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-does-not-imply-await-if-not-evaluated.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-implies-await-if-evaluated.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/await-using-implies-await-if-evaluated.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/block-local-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/block-local-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/block-local-use-before-initialization-in-declaration-statement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/block-local-use-before-initialization-in-declaration-statement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/block-local-use-before-initialization-in-prior-statement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/block-local-use-before-initialization-in-prior-statement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-arrow.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-arrow.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-class.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-class.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-cover.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-cover.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-fn.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-fn.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-gen.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/fn-name-gen.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/function-local-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/function-local-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/function-local-use-before-initialization-in-declaration-statement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/function-local-use-before-initialization-in-declaration-statement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/function-local-use-before-initialization-in-prior-statement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/function-local-use-before-initialization-in-prior-statement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.asyncDispose-property-once.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.asyncDispose-property-once.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-null.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-null.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-undefined.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.dispose-after-Symbol.asyncDispose-is-undefined.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.dispose-property-once.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-Symbol.dispose-property-once.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-does-not-read-Symbol.dispose-if-Symbol.asyncDispose-exists.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/gets-initializer-does-not-read-Symbol.dispose-if-Symbol.asyncDispose-exists.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/global-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/global-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/global-use-before-initialization-in-declaration-statement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/global-use-before-initialization-in-declaration-statement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/global-use-before-initialization-in-prior-statement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/global-use-before-initialization-in-prior-statement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-asyncgeneratorbody.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-block.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-block.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-each-iteration-of-forofstatement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-each-iteration-of-forofstatement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-forstatement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-at-end-of-forstatement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws-in-forstatement-head.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncgeneratorbody.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-block.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-block.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-each-iteration-of-forofstatement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-each-iteration-of-forofstatement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-forstatement.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-forstatement.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws-in-forstatement-head.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/multiple-resources-disposed-in-reverse-order.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/multiple-resources-disposed-in-reverse-order.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-multiple-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-allows-bindingidentifier.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-allows-bindingidentifier.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-multiple-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-invalid-assignment-next-expression-for.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-invalid-assignment-next-expression-for.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js :: it did not parse: this expression cannot be assigned to
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js (strict) :: it did not parse: this expression cannot be assigned to
+language/statements/await-using/throws-error-as-is-if-only-one-error-during-disposal.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-error-as-is-if-only-one-error-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-null.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-null.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-undefined.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-undefined.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-not-callable.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-not-callable.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-null.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-null.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-undefined.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.dispose-property-is-undefined.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.dispose-property-not-callable.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-Symbol.dispose-property-not-callable.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-missing-both-Symbol.asyncDispose-and-Symbol.dispose.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-missing-both-Symbol.asyncDispose-and-Symbol.dispose.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-not-object.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-if-initializer-not-object.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/block/tco-stmt-list.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/block/tco-stmt.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/break/S12.8_A7.js :: it threw an object with no name: 1.1: Appearing of break within eval statement inside of IterationStatement yields SyntaxError
@@ -21676,8 +21976,6 @@ language/statements/class/static-method-non-configurable-err.js :: it threw an o
 language/statements/class/static-method-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/strict-mode/arguments-callee.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/strict-mode/arguments-callee.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/subclass-builtins/subclass-AggregateError.js :: it threw ReferenceError: AggregateError is not defined
-language/statements/class/subclass-builtins/subclass-AggregateError.js (strict) :: it threw ReferenceError: AggregateError is not defined
 language/statements/class/subclass-builtins/subclass-ArrayBuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-ArrayBuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-BigInt64Array.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -21802,6 +22100,70 @@ language/statements/expression/S12.4_A2_T1.js :: it threw ReferenceError: eval i
 language/statements/expression/S12.4_A2_T1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/for-await-of/async-func-decl-dstr-array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
+language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
 language/statements/for-in/S12.6.4_A3.1.js :: it threw ReferenceError: eval is not defined
 language/statements/for-in/S12.6.4_A3.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-in/S12.6.4_A3.js :: it threw ReferenceError: eval is not defined
@@ -21927,6 +22289,8 @@ language/statements/for-of/float64array-mutate.js :: it threw ReferenceError: Fl
 language/statements/for-of/float64array-mutate.js (strict) :: it threw ReferenceError: Float64Array is not defined
 language/statements/for-of/float64array.js :: it threw ReferenceError: Float64Array is not defined
 language/statements/for-of/float64array.js (strict) :: it threw ReferenceError: Float64Array is not defined
+language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
+language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-let-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -22247,6 +22611,10 @@ language/statements/using/global-use-before-initialization-in-declaration-statem
 language/statements/using/global-use-before-initialization-in-declaration-statement.js (strict) :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
 language/statements/using/global-use-before-initialization-in-prior-statement.js :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
 language/statements/using/global-use-before-initialization-in-prior-statement.js (strict) :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
+language/statements/using/initializer-disposed-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
+language/statements/using/initializer-disposed-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/using/initializer-disposed-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
+language/statements/using/initializer-disposed-at-end-of-asyncgeneratorbody.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-block.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-block.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-forstatement.js :: it did not parse: expected `;`, found an identifier

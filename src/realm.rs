@@ -60,6 +60,13 @@ pub struct Realm {
     /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
     /// property on the constructor would be the script's to move; this is not.
     well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
+    /// %AggregateError.prototype% — §20.5.7.3.
+    ///
+    /// Its own field and not a seventh entry in [`NATIVE_ERRORS`], because that table exists for
+    /// the errors that are *the same but for a name*: made together, installed together, thrown by
+    /// the engine. §20.5.7's constructor takes its arguments in a different order and gives its
+    /// instances a property none of the others has, so it shares nothing with them but a prototype.
+    aggregate_error_prototype: ObjectId,
     /// %Promise.prototype% — §27.2.5.
     promise_prototype: ObjectId,
     /// %Promise% itself — §27.2.4.
@@ -156,6 +163,7 @@ impl Realm {
         let number_prototype = heap.new_object(Some(object_prototype));
         let date_prototype = heap.new_object(Some(object_prototype));
         let symbol_prototype = heap.new_object(Some(object_prototype));
+        let aggregate_error_prototype = heap.new_object(Some(error_prototype));
         let promise_prototype = heap.new_object(Some(object_prototype));
         let iterator_prototype = heap.new_object(Some(object_prototype));
         let array_iterator_prototype = heap.new_object(Some(iterator_prototype));
@@ -228,6 +236,7 @@ impl Realm {
             string_prototype,
             symbol_prototype,
             well_known,
+            aggregate_error_prototype,
             promise_prototype,
             // Replaced by `builtins::promise::install`, which is where the constructor is made. A
             // placeholder rather than an `Option`, because every reader wants the real one and a
@@ -320,6 +329,11 @@ impl Realm {
     /// %ThrowTypeError% — the function that throws whatever it is asked.
     pub fn thrower(&self) -> ObjectId {
         self.thrower
+    }
+
+    /// %AggregateError.prototype% — §20.5.7.3.
+    pub fn aggregate_error_prototype(&self) -> ObjectId {
+        self.aggregate_error_prototype
     }
 
     /// %Promise.prototype% — §27.2.5.

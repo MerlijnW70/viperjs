@@ -152,6 +152,8 @@ pub enum Group {
     All,
     /// §27.2.4.2 — an outcome object per element, and no rejection at all.
     AllSettled,
+    /// §27.2.4.3 — the first fulfilment; running out is a rejection carrying every reason.
+    Any,
     /// §27.2.4.4 — the first to settle, whichever way it settled, and nothing is collected.
     Race,
 }

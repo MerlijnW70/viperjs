@@ -140,14 +140,10 @@ impl Runner {
         if block.has("CanBlockIsFalse") || block.has("CanBlockIsTrue") {
             return Verdict::Skipped("agents are not implemented".to_string());
         }
-        // An `async` test signals that it finished by calling `$DONE`, and a host that does not
-        // provide `$DONE` cannot tell a test that completed from one that never got there —
-        // both simply end without throwing. Running it would manufacture passes.
-        if block.has("async") {
-            return Verdict::Skipped(
-                "an async test reports through $DONE, which needs a host function".to_string(),
-            );
-        }
+        // An `async` test signals that it finished by calling `$DONE`. INTERPRETING.md leaves the
+        // function to the host, and this host defines it below — the prologue, because a *later*
+        // definition would be the test's own and the point is that the host supplies it.
+        let asynchronous = block.has("async");
         // `raw` means exactly the text and nothing else — no harness, no strict prologue. It is
         // used by tests that are *about* the prologue, so prepending one would test the reverse.
         let mut program = String::new();
@@ -169,13 +165,34 @@ impl Runner {
                 }
             }
         }
+        // Before the test and after the includes, because `asyncHelpers.js` asks whether `$DONE`
+        // is an **own property of the global object** and refuses to run if it is not — which a
+        // function declaration at the top level of a script is, and nothing else here would be.
+        if asynchronous {
+            program.push_str(DONE);
+        }
         program.push_str(source);
-        evaluate(&program, block)
+        evaluate(&program, block, asynchronous)
     }
 }
 
+/// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
+///
+/// test262 ships `harness/doneprintHandle.js`, which spells the same thing in terms of a host
+/// `print`. This is that with the printing taken out: praxis has no `print` and inventing one would
+/// be a second host function to explain, where what is actually needed is somewhere to put one
+/// word. No test in the suite includes `doneprintHandle.js` itself, so nothing is being overridden.
+///
+/// Three states rather than two. "Never" is the one that matters and is the reason the whole thing
+/// exists: a test that *did not finish* must not be a pass, and without a third state it would be
+/// indistinguishable from one that finished cleanly.
+const DONE: &str = "var $__status = 'the test never called $DONE';\n     function $DONE(error) {\n       if ($__status !== 'the test never called $DONE') { return; }\n       $__status = arguments.length === 0 || error === undefined ? 'done'\n         : 'the test called $DONE with ' + String(error);\n     }\n";
+
+/// The second script, which reads the status after §9.5's jobs have run.
+const PROBE: &str = "$__status;";
+
 /// Run a whole program and decide what its frontmatter says about the result.
-fn evaluate(program: &str, block: &Frontmatter) -> Verdict {
+fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
     let negative = block.negative.as_ref();
     let mut heap = Heap::new();
 
@@ -214,6 +231,12 @@ fn evaluate(program: &str, block: &Frontmatter) -> Verdict {
     let mut vm = Vm::new(&mut heap);
     match vm.run(&chunk, &mut heap) {
         Err(fault) => Verdict::Failed(format!("the chunk did not make sense: {fault:?}")),
+        // Nothing was thrown, which for an ordinary test is the whole answer and for an async one
+        // is not an answer at all: what it says about itself is in `$DONE`, which was called — or
+        // was not — while the jobs ran.
+        Ok(VmOutcome::Value(_)) if asynchronous && negative.is_none() => {
+            reported(&mut vm, &mut heap)
+        }
         Ok(VmOutcome::Value(_)) => match negative {
             None => Verdict::Passed,
             Some(expected) => Verdict::Failed(format!(
@@ -241,6 +264,29 @@ fn evaluate(program: &str, block: &Frontmatter) -> Verdict {
                 None => Verdict::Failed(format!("it threw {said}")),
             }
         }
+    }
+}
+
+/// What the test said about itself through `$DONE`.
+///
+/// A second script in the same realm, run after the first has finished and after §9.5's jobs have
+/// run with it — which is the only moment the answer exists. DR-0016 explains why it cannot be the
+/// first script's completion value: that is decided by its last statement, and a handler that calls
+/// `$DONE` has not run yet at that point.
+fn reported(vm: &mut Vm, heap: &mut Heap) -> Verdict {
+    let Ok(script) = parse_script(PROBE) else {
+        return Verdict::Failed("the harness could not read the test's status".to_string());
+    };
+    let Ok(chunk) = compile_script(&script, heap) else {
+        return Verdict::Failed("the harness could not read the test's status".to_string());
+    };
+    match vm.run(&chunk, heap) {
+        Ok(VmOutcome::Value(status)) => match status.to_string(heap) {
+            Ok(id) if text(heap, id) == "done" => Verdict::Passed,
+            Ok(id) => Verdict::Failed(text(heap, id)),
+            Err(_) => Verdict::Failed("the test's status could not be read".to_string()),
+        },
+        _ => Verdict::Failed("the test's status could not be read".to_string()),
     }
 }
 
@@ -327,7 +373,97 @@ mod tests {
 
     fn verdict(source: &str) -> Verdict {
         let block = Frontmatter::parse(source).unwrap_or_default();
-        evaluate(source, &block)
+        let asynchronous = block.has("async");
+        // The prologue is what `Runner::run_once` would have prepended; without it an async test
+        // would be judged on a `$__status` that no one declared.
+        let program = match asynchronous {
+            true => format!("{DONE}{source}"),
+            false => source.to_string(),
+        };
+        evaluate(&program, &block, asynchronous)
+    }
+
+    #[test]
+    fn an_async_test_passes_only_when_it_says_so_and_never_by_finishing() {
+        // The whole reason this was refused for so long. A test that *did not finish* ends without
+        // throwing, exactly as one that finished cleanly does — so "nothing was thrown" cannot be
+        // the verdict, and reading `$DONE` is the only thing that separates them.
+        assert!(matches!(
+            verdict(
+                "/*---
+flags: [async]
+---*/
+$DONE();"
+            ),
+            Verdict::Passed
+        ));
+        let never = verdict(
+            "/*---
+flags: [async]
+---*/
+var quietly = 1;",
+        );
+        assert!(
+            matches!(&never, Verdict::Failed(why) if why.contains("never called $DONE")),
+            "{never:?}"
+        );
+        // `$DONE(error)` is the failure report, and the reason travels into the verdict — which is
+        // what makes the expectations file say something useful about an async test rather than
+        // the same sentence thousands of times over.
+        let failed = verdict(
+            "/*---
+flags: [async]
+---*/
+$DONE('it went wrong');",
+        );
+        assert!(
+            matches!(&failed, Verdict::Failed(why) if why.contains("it went wrong")),
+            "{failed:?}"
+        );
+        // `$DONE(undefined)` is a *pass*: `doneprintHandle.js` tests the argument for truthiness,
+        // and `asyncHelpers.js` calls it from a `then` handler that takes one argument and is
+        // handed `undefined`. Asking "was it called with anything" would fail every test that uses
+        // the standard helper, which is 391 of them.
+        assert!(matches!(
+            verdict(
+                "/*---
+flags: [async]
+---*/
+$DONE(undefined);"
+            ),
+            Verdict::Passed
+        ));
+        // The **first** call is the answer, so a second one cannot overwrite a failure with a pass.
+        let twice = verdict(
+            "/*---
+flags: [async]
+---*/
+$DONE('first'); $DONE();",
+        );
+        assert!(
+            matches!(&twice, Verdict::Failed(why) if why.contains("first")),
+            "{twice:?}"
+        );
+        // A test that is **not** async gets no `$DONE` at all. The host provides it for the tests
+        // that report through it and for no others: a global that appeared in every test would be
+        // one more thing the suite could accidentally depend on, and `asyncHelpers.js` decides
+        // whether it may run by asking whether the global object has it.
+        assert!(matches!(
+            verdict("if (typeof $DONE !== 'undefined') { throw new Error('it was defined'); }"),
+            Verdict::Passed
+        ));
+        // …and the answer arrives from a *job*, which is what every real async test does. This is
+        // the row that fails if the status is read as the script's completion value: by then the
+        // handler has not run. DR-0016 is the long version.
+        assert!(matches!(
+            verdict(
+                "/*---
+flags: [async]
+---*/
+Promise.resolve().then(function () { $DONE(); });"
+            ),
+            Verdict::Passed
+        ));
     }
 
     /// A checkout with a hand-written harness, so that what gets prepended is observable.
@@ -446,11 +582,24 @@ mod tests {
         assert_eq!(module.len(), 1);
         assert!(!module[0].strict);
 
-        // An async test reports completion by calling `$DONE`. With no host function to receive
-        // it, a test that finished and one that never got there both simply end without
-        // throwing — so running it would manufacture a pass.
-        let done = run(&root, "/*---\nflags: [async]\n---*/\nassert(true);");
-        assert!(matches!(&done[0].verdict, Verdict::Skipped(why) if why.contains("$DONE")));
+        // An async test is *run*, and what it says about itself comes from `$DONE` — which this
+        // host defines in the prologue, so the test finds it on the global object as its own
+        // property, which is what `asyncHelpers.js` insists on.
+        let done = run(&root, "/*---\nflags: [async]\n---*/\n$DONE();");
+        assert!(matches!(&done[0].verdict, Verdict::Passed), "{done:?}");
+
+        // A test that is **not** async gets no `$DONE` at all. The host provides it for the tests
+        // that report through it and for no others: a global that appeared in every test would be
+        // one more thing the suite could accidentally come to depend on, and `asyncHelpers.js`
+        // decides whether it may run at all by asking whether the global object has it.
+        let plain = run(
+            &root,
+            "/*---
+description: plain
+---*/
+             if (typeof $DONE !== 'undefined') { throw new Error('it was defined'); }",
+        );
+        assert!(matches!(&plain[0].verdict, Verdict::Passed), "{plain:?}");
 
         // Both spellings of the agent flag, because each is a separate claim about the host.
         for flag in ["CanBlockIsFalse", "CanBlockIsTrue"] {
