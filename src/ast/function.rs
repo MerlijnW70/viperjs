@@ -50,6 +50,17 @@ pub struct Function {
     /// independent of `is_generator`: all four combinations are productions of their own, the
     /// two together being §15.6's async generator.
     pub is_async: bool,
+    /// Whether this body is strict code — §11.2.1.
+    ///
+    /// Recorded rather than re-derived, because deriving it means reading the Directive Prologue, and
+    /// that rule has corners: a prologue ends at the first statement that is not a string literal, and
+    /// a `"use strict"` containing an escape is **not** the directive. The parser applies all of that
+    /// already; a second copy in the compiler would be a second thing to keep right.
+    ///
+    /// Inherited and never given back: a function inside strict code is strict without a directive of
+    /// its own, and a body cannot switch it off. So this is the *answer* for this body rather than
+    /// whether it declared one.
+    pub is_strict: bool,
     /// Whether a `*` followed the `function`, making this a generator (§15.5).
     ///
     /// What it changes is the `[Yield]` grammar parameter over the parameters and the body: with
@@ -68,6 +79,8 @@ pub struct Function {
 /// `UniqueFormalParameters`, so unlike a plain function's they may never repeat.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ArrowFunction {
+    /// Whether this body is strict code — §11.2.1, on the same terms as a [`Function`]'s.
+    pub is_strict: bool,
     /// Whether `async` preceded it (§15.9).
     ///
     /// Unlike a [`Function`] there is no generator form: `async* () => {}` is not a production,

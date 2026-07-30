@@ -110,12 +110,17 @@ impl Parser<'_> {
         self.body_context = enclosing_context;
         let (parameters, (body, end, declares_strict)) = parts?;
         self.check_method_body(&parameters, &body, declares_strict)?;
+        // §11.2.1 again, and a class body brings its own: §15.7.1 makes every part of a class
+        // definition strict code whatever encloses it, and `self.strict` is already true inside one
+        // because the class parser sets it. So this is the same union every other body computes.
+        let is_strict = self.strict || declares_strict;
         Ok(Box::new(Function {
             // A method's name is its key's, and the key is not a binding — nothing inside the
             // body can see it, where a named function expression's name is visible within.
             name: None,
             parameters,
             body,
+            is_strict,
             is_generator,
             is_async,
             span: end,

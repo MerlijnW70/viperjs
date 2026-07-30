@@ -56,7 +56,7 @@ fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
     // §11.2.1: a `ScriptBody` may open with a Directive Prologue, and `"use strict"` in it makes
     // everything after strict — including everything nested, for ever.
-    let (body, _) = parser.parse_body_with_prologue(TokenKind::Eof)?;
+    let (body, declares_strict) = parser.parse_body_with_prologue(TokenKind::Eof)?;
     parser.expect_eof()?;
     // §15.7.7: every `#a` had to be declared by *some* enclosing class, and each class body
     // took its own off the list as it closed. Whatever is left was declared nowhere.
@@ -69,6 +69,8 @@ fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
     super::scope::check_declared_names(&body, super::scope::Level::Top)?;
     Ok(Script {
+        // A Script is strict only if it says so. A Module always is, which is M7's to record.
+        is_strict: declares_strict,
         body,
         span: Span::new(0, source.len() as u32),
     })

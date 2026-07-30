@@ -1107,7 +1107,6 @@ built-ins/Array/Symbol.species/symbol-species.js :: it threw TypeError: cannot r
 built-ins/Array/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/from/calling-from-valid-1-onlyStrict.js (strict) :: it threw an object with no name: The value of calls[0].thisArg is expected to equal undefined Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/Array/from/elements-deleted-after.js :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
 built-ins/Array/from/elements-deleted-after.js (strict) :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
 built-ins/Array/from/elements-updated-after.js :: it threw an object with no name: The value of value is expected to be 127 Expected SameValue(«4», «127») to be true
@@ -1120,7 +1119,6 @@ built-ins/Array/from/iter-cstm-ctor.js :: it threw an object with no name: The r
 built-ins/Array/from/iter-cstm-ctor.js (strict) :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
 built-ins/Array/from/iter-map-fn-err.js :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
 built-ins/Array/from/iter-map-fn-err.js (strict) :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
-built-ins/Array/from/iter-map-fn-this-strict.js (strict) :: it threw an object with no name: The value of thisVals[0] is expected to equal undefined Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/Array/from/iter-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-length-err.js :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -1362,7 +1360,6 @@ built-ins/Array/prototype/every/15.4.4.16-1-5.js :: it threw TypeError: an Array
 built-ins/Array/prototype/every/15.4.4.16-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/every/15.4.4.16-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/every/15.4.4.16-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/every/15.4.4.16-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/every/15.4.4.16-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/every/15.4.4.16-5-7.js :: it threw ReferenceError: eval is not defined
@@ -1393,7 +1390,6 @@ built-ins/Array/prototype/filter/15.4.4.20-1-5.js :: it threw TypeError: an Arra
 built-ins/Array/prototype/filter/15.4.4.20-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/filter/15.4.4.20-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/filter/15.4.4.20-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/filter/15.4.4.20-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/15.4.4.20-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/15.4.4.20-5-7.js :: it threw ReferenceError: eval is not defined
@@ -1436,14 +1432,12 @@ built-ins/Array/prototype/find/call-with-boolean.js :: it threw TypeError: an Ar
 built-ins/Array/prototype/find/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js (strict) :: it threw ReferenceError: Float64Array is not defined
-built-ins/Array/prototype/find/predicate-call-this-strict.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findIndex/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findIndex/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js (strict) :: it threw ReferenceError: Float64Array is not defined
-built-ins/Array/prototype/findIndex/predicate-call-this-strict.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
@@ -1452,7 +1446,6 @@ built-ins/Array/prototype/findLast/call-with-boolean.js :: it threw TypeError: a
 built-ins/Array/prototype/findLast/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js (strict) :: it threw ReferenceError: Float64Array is not defined
-built-ins/Array/prototype/findLast/predicate-call-this-strict.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
@@ -1461,7 +1454,6 @@ built-ins/Array/prototype/findLastIndex/call-with-boolean.js :: it threw TypeErr
 built-ins/Array/prototype/findLastIndex/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js (strict) :: it threw ReferenceError: Float64Array is not defined
-built-ins/Array/prototype/findLastIndex/predicate-call-this-strict.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: Uint8Array is not defined
@@ -1553,7 +1545,6 @@ built-ins/Array/prototype/forEach/15.4.4.18-1-5.js :: it threw TypeError: an Arr
 built-ins/Array/prototype/forEach/15.4.4.18-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/forEach/15.4.4.18-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/forEach/15.4.4.18-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/forEach/15.4.4.18-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-5-7.js :: it threw ReferenceError: eval is not defined
@@ -1630,7 +1621,6 @@ built-ins/Array/prototype/map/15.4.4.19-1-5.js :: it threw TypeError: an Array.p
 built-ins/Array/prototype/map/15.4.4.19-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/map/15.4.4.19-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/map/15.4.4.19-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/map/15.4.4.19-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/map/15.4.4.19-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/map/15.4.4.19-5-7.js :: it threw ReferenceError: eval is not defined
@@ -1687,7 +1677,6 @@ built-ins/Array/prototype/reduce/15.4.4.21-1-7.js :: it threw TypeError: an Arra
 built-ins/Array/prototype/reduce/15.4.4.21-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-32.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-32.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-4-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/reduce/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/callbackfn-resize-arraybuffer.js :: it threw ReferenceError: Float64Array is not defined
@@ -1708,7 +1697,6 @@ built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js :: it threw TypeError: an
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-32.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-32.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-4-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/reduceRight/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/callbackfn-resize-arraybuffer.js :: it threw ReferenceError: Float64Array is not defined
@@ -1769,7 +1757,6 @@ built-ins/Array/prototype/some/15.4.4.17-1-5.js :: it threw TypeError: an Array.
 built-ins/Array/prototype/some/15.4.4.17-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/some/15.4.4.17-1-7.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/some/15.4.4.17-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-5-1-s.js :: it threw an object with no name: innerThisCorrect !== true
 built-ins/Array/prototype/some/15.4.4.17-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/some/15.4.4.17-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/some/15.4.4.17-5-7.js :: it threw ReferenceError: eval is not defined
@@ -3157,7 +3144,6 @@ built-ins/Boolean/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is n
 built-ins/Boolean/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Boolean/prototype/S15.6.3.1_A1.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
 built-ins/Boolean/prototype/S15.6.3.1_A1.js (strict) :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/Boolean/prototype/S15.6.3.1_A3.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T1.js :: it threw TypeError: Boolean.prototype.toString requires a boolean
 built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T1.js (strict) :: it threw TypeError: Boolean.prototype.toString requires a boolean
 built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T2.js :: it threw TypeError: Boolean.prototype.toString requires a boolean
@@ -7087,7 +7073,6 @@ built-ins/Object/defineProperty/15.2.3.6-4-150.js :: it threw an object with no 
 built-ins/Object/defineProperty/15.2.3.6-4-150.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Object/defineProperty/15.2.3.6-4-151.js :: it threw RangeError: an array length must be an integer index
 built-ins/Object/defineProperty/15.2.3.6-4-151.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-243-2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/defineProperty/15.2.3.6-4-292-2.js (strict) :: it threw an object with no name: Expected a === 0, actually 20
 built-ins/Object/defineProperty/15.2.3.6-4-293-4.js (strict) :: it threw an object with no name: Expected "a === 0", actually 10
 built-ins/Object/defineProperty/15.2.3.6-4-393.js :: it threw ReferenceError: RegExp is not defined
@@ -7098,7 +7083,6 @@ built-ins/Object/defineProperty/15.2.3.6-4-409.js :: it threw ReferenceError: Re
 built-ins/Object/defineProperty/15.2.3.6-4-409.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-4-585.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-4-585.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/symbol-data-property-default-strict.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/entries/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/entries/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/entries/tamper-with-global-object.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -7107,7 +7091,6 @@ built-ins/Object/freeze/15.2.3.9-2-d-7.js :: it threw ReferenceError: RegExp is 
 built-ins/Object/freeze/15.2.3.9-2-d-7.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/freeze/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/freeze/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/frozen-object-contains-symbol-properties-strict.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/freeze/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/freeze/proxy-with-defineProperty-handler.js :: it threw ReferenceError: Proxy is not defined
@@ -7308,7 +7291,6 @@ built-ins/Object/preventExtensions/15.2.3.10-3-9.js :: it threw ReferenceError: 
 built-ins/Object/preventExtensions/15.2.3.10-3-9.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/preventExtensions/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/preventExtensions/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/preventExtensions/symbol-object-contains-symbol-properties-strict.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/preventExtensions/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/preventExtensions/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -7444,7 +7426,7 @@ built-ins/Object/prototype/__proto__/set-immutable.js (strict) :: it threw an ob
 built-ins/Object/prototype/__proto__/set-invalid-value.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/set-invalid-value.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/set-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__proto__/set-non-extensible.js (strict) :: it threw TypeError: this property will not take a value
 built-ins/Object/prototype/__proto__/set-non-obj-coercible.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/set-non-obj-coercible.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/set-non-object.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -7591,7 +7573,6 @@ built-ins/Object/seal/seal-weakref.js :: it threw ReferenceError: WeakRef is not
 built-ins/Object/seal/seal-weakref.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/Object/seal/seal-weakset.js :: it threw ReferenceError: WeakSet is not defined
 built-ins/Object/seal/seal-weakset.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/Object/seal/symbol-object-contains-symbol-properties-strict.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
@@ -20146,7 +20127,6 @@ built-ins/isNaN/toprimitive-result-is-symbol-throws.js :: it threw an object wit
 built-ins/isNaN/toprimitive-result-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/isNaN/toprimitive-valid-result.js :: it threw an object with no name: toPrimitive is called - non-NaN number Expected SameValue(«NaN», «1») to be true
 built-ins/isNaN/toprimitive-valid-result.js (strict) :: it threw an object with no name: toPrimitive is called - non-NaN number Expected SameValue(«NaN», «1») to be true
-built-ins/undefined/15.1.1.3-2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/undefined/S15.1.1.3_A1.js :: it threw ReferenceError: eval is not defined
 built-ins/undefined/S15.1.1.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
 harness/assert-throws-same-realm.js :: it threw ReferenceError: $262 is not defined
@@ -20177,11 +20157,9 @@ language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js ::
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-1.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-3.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-4.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/arguments-object/mapped/nonconfigurable-descriptors-define-failure.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
 language/arguments-object/unmapped/Symbol.iterator.js :: it threw an object with no name: Symbol(Symbol.iterator) should be an own property
@@ -20214,16 +20192,6 @@ language/directive-prologue/10.1.1-31-s.js :: it threw TypeError: building a fun
 language/directive-prologue/10.1.1-32-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/directive-prologue/10.1.1-5-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/directive-prologue/10.1.1-8-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/directive-prologue/14.1-1-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-10-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-11-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-12-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-13-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-14-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-15-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-2-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-8-s.js :: it threw an object with no name: Expected true but got false
-language/directive-prologue/14.1-9-s.js :: it threw an object with no name: Expected true but got false
 language/directive-prologue/func-decl-inside-func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/directive-prologue/func-decl-no-semi-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/directive-prologue/func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -20551,16 +20519,6 @@ language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-4.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-5.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-rest.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/assignment/11.13.1-1-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-2-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-3-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-4-14-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-4-27-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-4-28gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-4-29gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-4-3-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/11.13.1-4-6-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/assignment/8.14.4-8-b_2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/S11.13.1_A6_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/assignment/S11.13.1_A6_T2.js :: it threw ReferenceError: eval is not defined
 language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -20967,39 +20925,6 @@ language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw Referenc
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/comma/S11.14_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/comma/tco-final.js (strict) :: it threw ReferenceError: f is not defined
-language/expressions/compound-assignment/11.13.2-23-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-24-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-25-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-26-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-27-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-28-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-29-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-30-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-31-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-32-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-33-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-34-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-35-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-36-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-37-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-38-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-39-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-40-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-41-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-42-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-43-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-44-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-45-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-46-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-47-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-48-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-49-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-50-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-51-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-52-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-53-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-54-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/11.13.2-55-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/S11.13.2_A6.10_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/compound-assignment/S11.13.2_A6.11_T1.js :: it threw ReferenceError: eval is not defined
 language/expressions/compound-assignment/S11.13.2_A6.1_T1.js :: it threw ReferenceError: eval is not defined
@@ -21094,16 +21019,9 @@ language/expressions/conditional/S11.12_A1.js :: it threw ReferenceError: eval i
 language/expressions/conditional/S11.12_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/conditional/tco-cond.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/conditional/tco-pos.js (strict) :: it threw ReferenceError: f is not defined
-language/expressions/delete/11.4.1-4-a-1-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/delete/11.4.1-4-a-2-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/delete/11.4.1-4.a-3-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/delete/11.4.1-4.a-7.js :: it threw ReferenceError: eval is not defined
-language/expressions/delete/11.4.1-4.a-8-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/delete/11.4.1-4.a-9-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/delete/11.4.1-5-a-27-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/delete/11.4.1-5-a-28-s.js :: it threw ReferenceError: RegExp is not defined
 language/expressions/delete/11.4.1-5-a-28-s.js (strict) :: it threw ReferenceError: RegExp is not defined
-language/expressions/delete/11.4.4-4.a-3-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/delete/S11.4.1_A5.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/expressions/delete/non-reference-return-true.js :: it threw TypeError: cannot delete a property of something that is not an object
 language/expressions/delete/non-reference-return-true.js (strict) :: it threw TypeError: cannot delete a property of something that is not an object
@@ -21392,8 +21310,6 @@ language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevalua
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-and-assignment-operator-no-set-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/logical-assignment/lgcl-and-assignment-operator-non-writeable-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
@@ -21402,9 +21318,6 @@ language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedev
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-no-set-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-writeable-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
@@ -21413,9 +21326,6 @@ language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluat
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-no-set-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/logical-assignment/lgcl-or-assignment-operator-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/logical-assignment/lgcl-or-assignment-operator-non-writeable-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-not/S11.4.9_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/logical-not/S11.4.9_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/logical-not/S9.2_A1_T2.js :: it threw ReferenceError: eval is not defined
@@ -21490,7 +21400,6 @@ language/expressions/object/method-definition/meth-dflt-params-ref-self.js (stri
 language/expressions/object/method-definition/meth-eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/method-definition/name-invoke-ctor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/object/method-definition/name-invoke-ctor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/object/method-definition/name-invoke-fn-strict.js :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
 language/expressions/object/method-definition/name-name-prop-symbol.js :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
 language/expressions/object/method-definition/name-name-prop-symbol.js (strict) :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
 language/expressions/object/method-definition/name-prototype-prop.js :: it threw an object with no name: Functions declared as methods do not define a 'prototype' property
@@ -21631,7 +21540,6 @@ language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it 
 language/expressions/void/S11.4.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
-language/function-code/10.4.3-1-10-s.js :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
 language/function-code/10.4.3-1-100-s.js :: it threw TypeError: what was called is not a function
 language/function-code/10.4.3-1-100-s.js (strict) :: it threw TypeError: what was called is not a function
 language/function-code/10.4.3-1-100gs.js :: it threw TypeError: what was called is not a function
@@ -21643,11 +21551,6 @@ language/function-code/10.4.3-1-102-s.js (strict) :: it threw TypeError: what wa
 language/function-code/10.4.3-1-102gs.js :: it threw TypeError: what was called is not a function
 language/function-code/10.4.3-1-102gs.js (strict) :: it threw TypeError: what was called is not a function
 language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
-language/function-code/10.4.3-1-10gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-11-s.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-11gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-12-s.js :: it threw an object with no name: Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-12gs.js :: it threw the string 'this' had incorrect value!
 language/function-code/10.4.3-1-13-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-13gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-14-s.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -21664,66 +21567,7 @@ language/function-code/10.4.3-1-19gs.js (strict) :: it threw ReferenceError: eva
 language/function-code/10.4.3-1-2-s.js :: it threw an object with no name: bar.call("1") Expected SameValue(«"string"», «"object"») to be true
 language/function-code/10.4.3-1-20-s.js :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-20gs.js :: it threw ReferenceError: eval is not defined
-language/function-code/10.4.3-1-27-s.js (strict) :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-27gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-28-s.js (strict) :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-28gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-29-s.js (strict) :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-29gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-3-s.js :: it threw an object with no name: foo.call(undefined) Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-30-s.js (strict) :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-30gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-31-s.js (strict) :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-31gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-32-s.js (strict) :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-32gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-33-s.js (strict) :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-33gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-34-s.js (strict) :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-34gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-35-s.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-35gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-36-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-36gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-37-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-37gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-38-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-38gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-39-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-39gs.js :: it threw the string 'this' had incorrect value!
 language/function-code/10.4.3-1-4-s.js :: it threw an object with no name: bar.call(true) Expected SameValue(«"boolean"», «"object"») to be true
-language/function-code/10.4.3-1-40-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-40gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-41-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-41gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-42-s.js :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-42gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-43-s.js :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-43gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-44-s.js :: it threw an object with no name: Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-44gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-45-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-45gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-46-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-46gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-47-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-47gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-48-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-48gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-49-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-49gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-50-s.js :: it threw an object with no name: f1() !== true
-language/function-code/10.4.3-1-50gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-51-s.js :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-51gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-52-s.js :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-52gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-53-s.js :: it threw an object with no name: Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-53gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-62-s.js :: it threw an object with no name: foo() Expected SameValue(«[object Object]», «undefined») to be true
-language/function-code/10.4.3-1-62-s.js (strict) :: it threw an object with no name: foo() Expected SameValue(«[object Object]», «undefined») to be true
-language/function-code/10.4.3-1-62gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-62gs.js (strict) :: it threw the string 'this' had incorrect value!
 language/function-code/10.4.3-1-63-s.js :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-63-s.js (strict) :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-63gs.js :: it threw ReferenceError: eval is not defined
@@ -21736,57 +21580,14 @@ language/function-code/10.4.3-1-65-s.js :: it threw TypeError: building a functi
 language/function-code/10.4.3-1-65-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-65gs.js :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-65gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-66-s.js :: it threw an object with no name: f.apply() !== true
-language/function-code/10.4.3-1-66-s.js (strict) :: it threw an object with no name: f.apply() !== true
-language/function-code/10.4.3-1-66gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-66gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-67-s.js :: it threw an object with no name: f.apply(null) !== true
-language/function-code/10.4.3-1-67-s.js (strict) :: it threw an object with no name: f.apply(null) !== true
-language/function-code/10.4.3-1-67gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-67gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-68-s.js :: it threw an object with no name: f.apply(undefined) !== true
-language/function-code/10.4.3-1-68-s.js (strict) :: it threw an object with no name: f.apply(undefined) !== true
-language/function-code/10.4.3-1-68gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-68gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-7-s.js (strict) :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-71-s.js :: it threw an object with no name: f.call() !== true
-language/function-code/10.4.3-1-71-s.js (strict) :: it threw an object with no name: f.call() !== true
-language/function-code/10.4.3-1-71gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-71gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-72-s.js :: it threw an object with no name: f.call(null) !== true
-language/function-code/10.4.3-1-72-s.js (strict) :: it threw an object with no name: f.call(null) !== true
-language/function-code/10.4.3-1-72gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-72gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-73-s.js :: it threw an object with no name: f.call(undefined) !== true
-language/function-code/10.4.3-1-73-s.js (strict) :: it threw an object with no name: f.call(undefined) !== true
-language/function-code/10.4.3-1-73gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-73gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-76-s.js :: it threw an object with no name: f.bind()() !== true
-language/function-code/10.4.3-1-76-s.js (strict) :: it threw an object with no name: f.bind()() !== true
-language/function-code/10.4.3-1-76gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-76gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-77-s.js :: it threw an object with no name: f.bind(null)() !== true
-language/function-code/10.4.3-1-77-s.js (strict) :: it threw an object with no name: f.bind(null)() !== true
-language/function-code/10.4.3-1-77gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-77gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-78-s.js :: it threw an object with no name: f.bind(undefined)() !== true
-language/function-code/10.4.3-1-78-s.js (strict) :: it threw an object with no name: f.bind(undefined)() !== true
-language/function-code/10.4.3-1-78gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-78gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-7gs.js (strict) :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-8-s.js :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
 language/function-code/10.4.3-1-82-s.js :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-82gs.js :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-83-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-83gs.js :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-84-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-84gs.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-8gs.js :: it threw the string 'this' had incorrect value!
-language/function-code/10.4.3-1-9-s.js (strict) :: it threw an object with no name: f() Expected SameValue(«"object"», «"undefined"») to be true
-language/function-code/10.4.3-1-9gs.js (strict) :: it threw the string 'this' had incorrect value!
 language/function-code/S10.2.1_A2.js :: it threw an object with no name: #1: f1(1, 2) === 2
 language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(1, 2) === undefined
-language/function-code/S10.4.3_A1.js (strict) :: it threw an object with no name: #1: "this" leaked as: [object Object]
 language/function-code/eval-param-env-with-computed-key.js :: it threw ReferenceError: eval is not defined
 language/function-code/eval-param-env-with-prop-initializer.js :: it threw ReferenceError: eval is not defined
 language/global-code/decl-lex-restricted-global.js :: expected a SyntaxError at runtime time, and nothing was thrown
@@ -23036,9 +22837,6 @@ language/statements/with/S12.10_A5_T6.js :: it threw ReferenceError: eval is not
 language/statements/with/cptn-abrupt-empty.js :: it threw ReferenceError: eval is not defined
 language/statements/with/cptn-nrml.js :: it threw ReferenceError: eval is not defined
 language/types/reference/8.7.2-3-a-1gs.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/types/reference/8.7.2-3-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/types/reference/8.7.2-4-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/types/reference/8.7.2-5-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/types/reference/get-value-prop-base-primitive-realm.js :: it threw ReferenceError: $262 is not defined
 language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 language/types/reference/put-value-prop-base-primitive-realm.js :: it threw ReferenceError: $262 is not defined

@@ -210,6 +210,7 @@ fn a_return_at_the_top_level_is_refused_by_the_compiler_too() {
     // built by hand.
     let mut heap = Heap::new();
     let script = Script {
+        is_strict: false,
         body: Box::new([Stmt {
             kind: StmtKind::Return(None),
             span: Span::new(0, 7),
@@ -272,6 +273,7 @@ fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
     let mut heap = Heap::new();
     for kind in [StmtKind::Break(None), StmtKind::Continue(None)] {
         let script = Script {
+            is_strict: false,
             body: Box::new([Stmt {
                 kind,
                 span: Span::new(0, 5),

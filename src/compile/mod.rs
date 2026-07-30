@@ -93,6 +93,9 @@ pub fn compile_expression(expression: &Expr, heap: &mut Heap) -> Result<Chunk, C
 /// is what hoisting *is*: `x` is readable before its declaration and holds nothing.
 pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(heap);
+    // §11.2.1 — a Script is strict only if its own Directive Prologue says so, and everything nested
+    // inherits that. A Module always is, which is M7's to record.
+    compiler.chunk.strict = script.is_strict;
     // §16.1.7 step 8's `GlobalDeclarationInstantiation`. A script's `var`s belong to the *global
     // object*, not to a scope of its own — which is why `var x = 1` at the top level makes
     // `globalThis.x` and a `let` never will. `VarDeclaredNames` of the whole body rather than of

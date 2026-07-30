@@ -12,6 +12,10 @@ use crate::span::Span;
 /// A whole `Script` (§16.1) — what a source text parses to.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Script {
+    /// Whether the script is strict code — §11.2.1, from its own Directive Prologue.
+    ///
+    /// A Module is always strict; a Script is strict only if it says so. See [`super::Function`].
+    pub is_strict: bool,
     /// The statements it contains, in order. Empty for an empty source.
     pub body: Box<[Stmt]>,
     /// The whole source text, so a diagnostic about the script itself has somewhere to point.

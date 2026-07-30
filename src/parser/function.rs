@@ -112,11 +112,17 @@ impl Parser<'_> {
         self.enter()?;
         let parts = self.parse_function_parts(is_generator, is_async, after);
         self.leave();
-        let (parameters, body, end) = parts?;
+        let FunctionParts {
+            parameters,
+            body,
+            end,
+            is_strict,
+        } = parts?;
         Ok(Function {
             name,
             parameters,
             body,
+            is_strict,
             is_generator,
             is_async,
             span: keyword.span.to(end),
@@ -156,7 +162,7 @@ impl Parser<'_> {
         is_generator: bool,
         is_async: bool,
         after: Goal,
-    ) -> Result<(FormalParameters, Box<[Stmt]>, Span), ParseError> {
+    ) -> Result<FunctionParts, ParseError> {
         // `FormalParameters[+Yield]` for a generator and `[~Yield]` for everything else — which
         // is why a plain function nested in a generator may still take a parameter called
         // `yield`. The refusal of a `YieldExpression` among them lives there too.
@@ -188,10 +194,19 @@ impl Parser<'_> {
                 span: parameters.span,
             });
         }
-        if declares_strict || self.strict {
+        // The body's own strictness: its directive, or the enclosing code's, because strictness is
+        // inherited and never given back. `self.strict` is the *enclosing* value here — the body's own
+        // was restored on the way out of `parse_function_body` — so this is exactly the union.
+        let is_strict = declares_strict || self.strict;
+        if is_strict {
             check_strict_parameters(&parameters)?;
         }
-        Ok((parameters, body, end))
+        Ok(FunctionParts {
+            parameters,
+            body,
+            end,
+            is_strict,
+        })
     }
 
     /// `( FormalParameters )` (§15.1).
@@ -410,6 +425,21 @@ fn check_parameters_against_body(
         }
     }
     Ok(())
+}
+
+/// Everything reading a function's parentheses and braces produces.
+///
+/// A struct because four returns is where a tuple stops being readable — and because the fourth is a
+/// `bool` beside a `Span`, which is exactly the pair a caller can silently swap.
+struct FunctionParts {
+    /// What it takes.
+    parameters: FormalParameters,
+    /// The `FunctionBody`.
+    body: Box<[Stmt]>,
+    /// Where the closing brace is, for the function's own span.
+    end: Span,
+    /// Whether the body is strict code — §11.2.1, its own directive or the enclosing code's.
+    is_strict: bool,
 }
 
 #[cfg(test)]

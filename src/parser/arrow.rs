@@ -252,12 +252,16 @@ impl Parser<'_> {
         // than bindings — `eval` may be read in strict code and may not be bound. So the binding
         // rules are applied here, where the references have become bindings, and only once the
         // body has had its say about strictness.
-        if self.strict || declares_strict {
+        // Its own strictness: the enclosing code's or its own directive, since strictness is
+        // inherited and never given back.
+        let is_strict = self.strict || declares_strict;
+        if is_strict {
             super::function::check_strict_parameters(&parameters)?;
         }
         let span = parameters.span.to(end);
         Ok(Expr::new(
             ExprKind::Arrow(Box::new(ArrowFunction {
+                is_strict,
                 is_async,
                 parameters,
                 body,

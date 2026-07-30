@@ -1070,22 +1070,51 @@ impl Vm {
                     }
                 }
                 Instruction::SetProperty => {
+                    // Read before the borrow of `running` has to end: `raise` wants the code pointer
+                    // mutably, and the chunk this instruction came from is a borrow of it.
+                    let strict = running.is_strict();
                     let value = self.pop()?;
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let done = self.set_property(base, key, value, heap);
                     match self.settle(done, heap, root, current, at)? {
-                        // §13.15.2 — the value of an assignment is the value assigned, whether or
-                        // not the object took it. A silent refusal is what sloppy mode is.
+                        // §13.15.2 — the value of an assignment is the value assigned, whether or not
+                        // the object took it. §6.2.5.6 step 6.d decides whether "did not take it" is
+                        // the end of the matter: **a silent refusal is what sloppy mode is**, and
+                        // strict code throws instead.
+                        Some(Value::Boolean(false)) if strict => {
+                            self.raise(
+                                Abrupt::type_error("this property will not take a value"),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
                         Some(_) => self.stack.push(value),
                         None => continue,
                     }
                 }
                 Instruction::DeleteProperty => {
+                    let strict = running.is_strict();
                     let key = self.pop()?;
                     let base = self.pop()?;
                     let done = self.delete_property(base, key, heap);
                     match self.settle(done, heap, root, current, at)? {
+                        // §13.5.1.2 step 5.b — the same rule as an assignment's, from the other side:
+                        // `delete` answers `false` for a non-configurable property, and strict code
+                        // turns that answer into a throw.
+                        Some(Value::Boolean(false)) if strict => {
+                            self.raise(
+                                Abrupt::type_error("this property cannot be deleted"),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
                         Some(value) => self.stack.push(value),
                         None => continue,
                     }

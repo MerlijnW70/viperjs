@@ -31,7 +31,7 @@
 //! `#x` would be worse than one that would not compile.
 
 use super::CompileError;
-use super::function::{Body, Lexical, Naming};
+use super::function::{Body, Lexical, Naming, Strict};
 use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
@@ -272,6 +272,9 @@ impl Compiler<'_> {
             &parameters,
             Body::Statements(&block.body),
             Naming::default(),
+            // §15.7.1 — every part of a class definition is strict code, and a static block has no
+            // directive of its own to say so. Inherited, and the class scope is where it comes from.
+            Strict::Inherited,
             Lexical::No,
             span,
         )?;
@@ -322,6 +325,7 @@ impl Compiler<'_> {
                     &parameters,
                     Body::Expression(expression),
                     Naming::default(),
+                    Strict::Inherited,
                     Lexical::No,
                     span,
                 )?;
@@ -409,6 +413,9 @@ impl Compiler<'_> {
                 Some(written) => Naming::of(&written.name),
                 None => naming,
             },
+            // §15.7.1 — a class definition is strict whatever encloses it, so a constructor is too,
+            // written directive or not. The parser has already set it on the body it parsed.
+            Strict::Yes,
             Lexical::No,
             span,
         )?;

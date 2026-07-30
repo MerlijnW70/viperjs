@@ -39,6 +39,17 @@ pub struct Chunk {
     /// position — because a `None` and an interned `""` are the same thing to the only reader, and one
     /// of the two does not need a String on the heap per anonymous function in the program.
     pub(super) name: Option<crate::heap::StringId>,
+    /// Whether this body is strict code — §11.2.1, as the parser computed it.
+    ///
+    /// Three things turn on it at run time and none of them can be decided anywhere else. §10.2.1.2
+    /// step 3 does not substitute the global object for a strict function's `undefined` receiver;
+    /// §6.2.5.6 step 6.d **throws** where a sloppy assignment silently does nothing; and §13.5.1.2
+    /// does the same for a `delete` that was refused.
+    ///
+    /// On the chunk because strictness is a property of the *body*, which is what a call has to hand
+    /// when it decides the receiver — and because a strict function called from sloppy code is still
+    /// strict, so the caller cannot answer for it.
+    pub(super) strict: bool,
     /// `IsSimpleParameterList` (§15.1.4) — whether every parameter is a plain name.
     ///
     /// Decides which arguments object §10.2.11 step 22 makes. A simple list gets the *mapped* one,
@@ -658,6 +669,11 @@ impl Chunk {
     /// §10.2.9's `name`, or `None` where the specification asks for the empty string.
     pub fn name(&self) -> Option<crate::heap::StringId> {
         self.name
+    }
+
+    /// Whether this body is strict code — §11.2.1.
+    pub fn is_strict(&self) -> bool {
+        self.strict
     }
 
     /// Whether the parameter list is simple — §15.1.4, and which arguments object to build.

@@ -165,12 +165,17 @@ impl Vm {
             // `f()` and `f.call()` and `f.call(null)` all agree, and a method call only differs
             // because its receiver is an object already.
             //
-            // Strict mode keeps the `undefined`, and telling the two apart needs the flag the
-            // parser already computes. §7.1.18 also says a *primitive* receiver is wrapped,
-            // which waits for wrapper objects.
+            // §7.1.18 also says a *primitive* receiver is wrapped for a sloppy function, which waits
+            // for a slice of its own — a strict one is handed the primitive as it stands, which is
+            // what the rows above do.
             // A plain call has no receiver slot at all — `receiver_at` is the callee — so what
             // it passes is `undefined`, and the substitution then applies to that.
+            // …and **strict mode keeps the `undefined`**, which is step 3 of the same operation and
+            // the reason the flag has to reach the callee's body rather than the call site: a strict
+            // function called from sloppy code is still strict, so the caller cannot answer for it.
+            Entry::Plain if body.is_strict() => Value::Undefined,
             Entry::Plain => Value::Object(self.realm.global()),
+            Entry::Method if body.is_strict() => self.stack[receiver_at],
             Entry::Method => match self.stack[receiver_at] {
                 Value::Undefined | Value::Null => Value::Object(self.realm.global()),
                 given => given,
