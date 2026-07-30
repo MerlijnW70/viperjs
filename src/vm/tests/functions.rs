@@ -169,7 +169,6 @@ fn what_functions_cannot_do_yet_says_which_and_where() {
         ("function* g() {}", "an async function or a generator"),
         ("async function f() {}", "an async function or a generator"),
         ("function f(...[a]) {}", "a destructuring rest parameter"),
-        ("function f() {} f(...[1]);", "a spread argument"),
         ("var f = function () {}; f?.();", "optional chaining"),
     ];
     let mut heap = Heap::new();
@@ -476,5 +475,109 @@ fn constructing_something_that_is_not_a_function_is_a_type_error() {
     assert_eq!(
         run("function F() { throw 'boom'; } try { new F(); } catch (e) { 'caught ' + e; }"),
         "caught boom"
+    );
+}
+
+#[test]
+fn a_spread_argument_contributes_however_many_it_turns_out_to_have() {
+    // §13.3.8 — the count is not known until the spread has been iterated, so the arguments are
+    // gathered into an array and expanded by the call. `f(...a)` and `[...a]` iterate by exactly the
+    // same rules, and share the code that does it.
+    assert_eq!(
+        run(
+            "(function () { var f = function (a, b, c) { return a + ',' + b + ',' + c; }; \
+             return f(...[1, 2, 3]); })()"
+        ),
+        "1,2,3"
+    );
+    assert_eq!(
+        run(
+            "(function () { var f = function () { return arguments.length; }; return f(...[]); })()"
+        ),
+        "0"
+    );
+    // Mixed with ordinary arguments, in written order, before and after.
+    assert_eq!(
+        run(
+            "(function () { var f = function (a, b, c, d) { return '' + a + b + c + d; }; \
+             return f(1, ...[2, 3], 4); })()"
+        ),
+        "1234"
+    );
+    // Two spreads in one call, each contributing its own length.
+    assert_eq!(
+        run("(function () { var f = function () { \
+               return Array.prototype.join.call(arguments, '-'); }; \
+             return f(...[1, 2], ...[3, 4]); })()"),
+        "1-2-3-4"
+    );
+    // Anything iterable, not only an array — a String iterates by code point.
+    assert_eq!(
+        run(
+            "(function () { var f = function () { return arguments.length; }; \
+             return f(...'abc'); })()"
+        ),
+        "3"
+    );
+    // A custom iterator is used, and used once.
+    assert_eq!(
+        run("(function () { var made = 0; var it = {}; \
+             it[Symbol.iterator] = function () { made++; var i = 0; return { next: function () { \
+               return i < 3 ? {value: i++, done: false} : {done: true}; } }; }; \
+             var f = function () { return arguments.length; }; \
+             return f(...it) + ',' + made; })()"),
+        "3,1"
+    );
+    // A call with no spread still takes the fixed-count path, which is the majority of calls.
+    assert_eq!(
+        run("(function () { var f = function (a, b) { return a + ',' + b; }; return f(1, 2); })()"),
+        "1,2"
+    );
+}
+
+#[test]
+fn a_spread_argument_keeps_the_receiver_and_works_with_new() {
+    // A method call's receiver sits under the callee, and expanding the array must not disturb it.
+    assert_eq!(
+        run(
+            "(function () { var o = {n: 10, m: function (a) { return this.n + a; }}; \
+             return o.m(...[5]); })()"
+        ),
+        "15"
+    );
+    assert_eq!(
+        run(
+            "(function () { var o = {n: 1, m: function () { return this.n + arguments.length; }}; \
+             return o.m(...[0, 0, 0]); })()"
+        ),
+        "4"
+    );
+    // §13.3.5 — `new` makes its own receiver, so a spread there differs only in who supplies it.
+    assert_eq!(
+        run("(function () { function C(a, b) { this.v = a + b; } return new C(...[1, 2]).v; })()"),
+        "3"
+    );
+    assert_eq!(
+        run(
+            "(function () { function C(a, b) { this.v = '' + a + b; } return new C(1, ...[2]).v; })()"
+        ),
+        "12"
+    );
+    // Including a class constructor, which is the shape §15.7.14's default derived constructor needs.
+    assert_eq!(
+        run(
+            "(function () { class C { constructor(a, b) { this.v = a + b; } } \
+             return new C(...[3, 4]).v; })()"
+        ),
+        "7"
+    );
+    // The spread is evaluated where it is written, so a side effect in it happens after the callee's.
+    assert_eq!(
+        run("(function () { var order = []; \
+             var f = function () { order.push('call'); return function () {}; }; \
+             var args = {}; args[Symbol.iterator] = function () { order.push('iterate'); \
+               return {next: function () { return {done: true}; }}; }; \
+             f()(...args); return order.join(','); })()"),
+        "call,iterate"
     );
 }

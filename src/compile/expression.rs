@@ -203,6 +203,18 @@ impl Compiler<'_> {
             // `new o.m()` constructs with `o.m`, and the `o` plays no part.
             ExprKind::New { callee, arguments } => {
                 self.expression(callee)?;
+                // §13.3.5 with a spread: gathered into one array and expanded by the call, exactly as
+                // an ordinary call's are. `new` differs only in who makes the receiver.
+                if arguments
+                    .iter()
+                    .any(|argument| matches!(argument, Argument::Spread(_)))
+                {
+                    self.argument_array(arguments)?;
+                    self.chunk.emit(Instruction::CallSpread(
+                        crate::compile::chunk::SpreadCall::Construct,
+                    ));
+                    return Ok(());
+                }
                 for argument in arguments.iter() {
                     let Argument::Value(value) = argument else {
                         return Err(unsupported("a spread argument", span));
@@ -668,7 +680,7 @@ impl Compiler<'_> {
     }
 
     /// Move the running index on by one.
-    fn bump(&mut self, at: u32) -> Result<(), CompileError> {
+    pub(super) fn bump(&mut self, at: u32) -> Result<(), CompileError> {
         self.chunk.emit(Instruction::LoadVariable(0, at));
         self.constant(Value::Number(1.0))?;
         self.chunk.emit(Instruction::Binary(BinaryOperator::Add));
@@ -682,7 +694,7 @@ impl Compiler<'_> {
     /// Leaves the array where it found it. Nothing is closed on the way out because there is no
     /// way out until the iterator says it is done — §13.2.4.1 spreads to exhaustion, so the only
     /// abrupt end is one the iterator itself raised, and §7.4.9 has nothing to add to that.
-    fn spread_into(&mut self, at: u32) -> Result<(), CompileError> {
+    pub(super) fn spread_into(&mut self, at: u32) -> Result<(), CompileError> {
         let iterator = self.declare_hidden("iterator");
         let next = self.declare_hidden("next");
         let done = self.declare_hidden("done");

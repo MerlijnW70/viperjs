@@ -9,7 +9,7 @@
 
 use super::call::Entry;
 use super::{Fault, HEAP_CHECK_INTERVAL, Handler, Vm, jump_to};
-use crate::compile::{Chunk, Instruction, ShortCircuit};
+use crate::compile::{Chunk, Instruction, ShortCircuit, SpreadCall};
 use crate::heap::{Heap, PropertyDescriptor};
 use crate::realm::NativeError;
 use crate::value::{Abrupt, Value};
@@ -504,6 +504,51 @@ impl Vm {
                 Instruction::Call(count) | Instruction::CallMethod(count) => {
                     let method = matches!(instruction, Instruction::CallMethod(_));
                     let how = if method { Entry::Method } else { Entry::Plain };
+                    self.enter(how, count, heap, root, current, at)?;
+                }
+                Instruction::CallSpread(how) => {
+                    // The arguments arrived as one array, because §13.3.8's spread has no count until
+                    // it has been iterated. Expanding it here rather than teaching `enter` about
+                    // arrays keeps one calling convention: by the time the frame is built the stack
+                    // looks exactly as it does for a call whose count was known all along.
+                    let Value::Object(list) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let name = property_name(heap, "length");
+                    let length = match self.get_property_key(Value::Object(list), name, heap) {
+                        Ok(value) => value,
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    // The array is one this compiler built a moment ago, so its length is an integer
+                    // and its elements are plain data. Read through the ordinary path anyway: a
+                    // second way of reading an array is a second way to be wrong about one.
+                    let count = match length {
+                        // A float cast saturates in Rust, so an absurd length clamps rather than
+                        // wrapping — and the length here was written by this compiler anyway.
+                        Value::Number(number) if number >= 0.0 && number.is_finite() => {
+                            number as u32
+                        }
+                        _ => 0,
+                    };
+                    for index in 0..count {
+                        let key = property_name(heap, &index.to_string());
+                        let value = match self.get_property_key(Value::Object(list), key, heap) {
+                            Ok(value) => value,
+                            Err(error) => {
+                                self.raise(error, heap, root, current, at)?;
+                                continue;
+                            }
+                        };
+                        self.stack.push(value);
+                    }
+                    let how = match how {
+                        SpreadCall::Plain => Entry::Plain,
+                        SpreadCall::Method => Entry::Method,
+                        SpreadCall::Construct => Entry::Construct,
+                    };
                     self.enter(how, count, heap, root, current, at)?;
                 }
                 Instruction::Construct(count) => {

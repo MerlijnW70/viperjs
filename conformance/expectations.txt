@@ -1306,6 +1306,8 @@ built-ins/Array/prototype/copyWithin/not-a-constructor.js :: it threw an object 
 built-ins/Array/prototype/copyWithin/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Array/prototype/copyWithin/prop-desc.js :: it threw an object with no name: `typeof Array.prototype.copyWithin` is `function` Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/copyWithin/prop-desc.js (strict) :: it threw an object with no name: `typeof Array.prototype.copyWithin` is `function` Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/prototype/copyWithin/resizable-buffer.js :: it threw ReferenceError: Uint8Array is not defined
+built-ins/Array/prototype/copyWithin/resizable-buffer.js (strict) :: it threw ReferenceError: Uint8Array is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-end.js :: it threw an object with no name: Expected a undefined but got a TypeError
@@ -5062,6 +5064,8 @@ built-ins/Iterator/concat/is-function.js :: it threw ReferenceError: Iterator is
 built-ins/Iterator/concat/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/length.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/length.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/many-arguments.js :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/many-arguments.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/name.js :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/name.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/concat/next-method-called-with-zero-arguments.js :: it threw ReferenceError: Iterator is not defined
@@ -12167,6 +12171,8 @@ built-ins/Temporal/PlainDate/calendar-case-insensitive.js :: it threw ReferenceE
 built-ins/Temporal/PlainDate/calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/calendar-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/calendar-undefined.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/calendar-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-object.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-object.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/compare/argument-propertybag-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
@@ -12273,6 +12279,8 @@ built-ins/Temporal/PlainDate/get-prototype-from-constructor-throws.js :: it thre
 built-ins/Temporal/PlainDate/get-prototype-from-constructor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Temporal/PlainDate/length.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/length.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDate/missing-arguments.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDate/missing-arguments.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDate/name.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/name.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDate/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -12807,6 +12815,8 @@ built-ins/Temporal/PlainDateTime/calendar-case-insensitive.js :: it threw Refere
 built-ins/Temporal/PlainDateTime/calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/calendar-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/calendar-undefined.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/calendar-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-object-insufficient-data.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-object-insufficient-data.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/compare/argument-propertybag-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
@@ -12919,6 +12929,8 @@ built-ins/Temporal/PlainDateTime/length.js :: it threw ReferenceError: Temporal 
 built-ins/Temporal/PlainDateTime/length.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/limits.js :: it threw an object with no name: negative year out of bounds Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/limits.js (strict) :: it threw an object with no name: negative year out of bounds Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/missing-arguments.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/missing-arguments.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainDateTime/name.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/name.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -13561,6 +13573,10 @@ built-ins/Temporal/PlainDateTime/prototype/yearOfWeek/branding.js :: it threw Re
 built-ins/Temporal/PlainDateTime/prototype/yearOfWeek/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/yearOfWeek/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainDateTime/prototype/yearOfWeek/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainDateTime/throws-if-date-is-invalid.js :: it threw an object with no name: args = [1970,0,1] Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/throws-if-date-is-invalid.js (strict) :: it threw an object with no name: args = [1970,0,1] Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/throws-if-time-is-invalid.js :: it threw an object with no name: args = [-1] Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainDateTime/throws-if-time-is-invalid.js (strict) :: it threw an object with no name: args = [-1] Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/calendar-always.js :: it threw ReferenceError: Temporal is not defined
@@ -13569,6 +13585,8 @@ built-ins/Temporal/PlainMonthDay/calendar-case-insensitive.js :: it threw Refere
 built-ins/Temporal/PlainMonthDay/calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/calendar-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/calendar-undefined.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/calendar-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/constructor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/from/argument-propertybag-calendar-year-zero.js :: it threw an object with no name: reject minus zero as extended year Expected a RangeError but got a ReferenceError
@@ -13787,6 +13805,8 @@ built-ins/Temporal/PlainMonthDay/prototype/with/prop-desc.js :: it threw Referen
 built-ins/Temporal/PlainMonthDay/prototype/with/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainMonthDay/refisoyear-out-of-range.js :: it threw an object with no name: after the maximum ISO date Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainMonthDay/refisoyear-out-of-range.js (strict) :: it threw an object with no name: after the maximum ISO date Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainMonthDay/refisoyear-undefined.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainMonthDay/refisoyear-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/compare/argument-cast.js :: it threw ReferenceError: Temporal is not defined
@@ -14243,6 +14263,8 @@ built-ins/Temporal/PlainTime/prototype/with/prop-desc.js :: it threw ReferenceEr
 built-ins/Temporal/PlainTime/prototype/with/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/with/throws-if-time-is-invalid-when-overflow-is-reject.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainTime/prototype/with/throws-if-time-is-invalid-when-overflow-is-reject.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainTime/throws-if-time-is-invalid.js :: it threw an object with no name: args = [-1] Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainTime/throws-if-time-is-invalid.js (strict) :: it threw an object with no name: args = [-1] Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/calendar-always.js :: it threw ReferenceError: Temporal is not defined
@@ -14251,6 +14273,8 @@ built-ins/Temporal/PlainYearMonth/calendar-case-insensitive.js :: it threw Refer
 built-ins/Temporal/PlainYearMonth/calendar-case-insensitive.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/calendar-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/calendar-string.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/calendar-undefined.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/calendar-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-cast.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-cast.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/compare/argument-propertybag-calendar-case-insensitive.js :: it threw ReferenceError: Temporal is not defined
@@ -14355,6 +14379,8 @@ built-ins/Temporal/PlainYearMonth/get-prototype-from-constructor-throws.js :: it
 built-ins/Temporal/PlainYearMonth/get-prototype-from-constructor-throws.js (strict) :: it threw an object with no name: Expected a undefined but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/length.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/length.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/missing-arguments.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
+built-ins/Temporal/PlainYearMonth/missing-arguments.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/Temporal/PlainYearMonth/name.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/name.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prop-desc.js :: it threw ReferenceError: Temporal is not defined
@@ -14735,6 +14761,8 @@ built-ins/Temporal/PlainYearMonth/prototype/year/branding.js :: it threw Referen
 built-ins/Temporal/PlainYearMonth/prototype/year/branding.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/year/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/PlainYearMonth/prototype/year/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/refisoday-undefined.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/PlainYearMonth/refisoday-undefined.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/builtin.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/builtin.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/argument-propertybag-optional-properties.js :: it threw ReferenceError: Temporal is not defined
@@ -20297,6 +20325,14 @@ language/expressions/call/eval-first-arg.js (strict) :: it threw ReferenceError:
 language/expressions/call/eval-no-args.js :: it threw ReferenceError: eval is not defined
 language/expressions/call/eval-no-args.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/call/eval-realm-indirect.js :: it threw ReferenceError: $262 is not defined
+language/expressions/call/eval-spread-empty-leading.js :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread-empty-leading.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread-empty-trailing.js :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread-empty-trailing.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread-empty.js :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread-empty.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread.js :: it threw ReferenceError: eval is not defined
+language/expressions/call/eval-spread.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/call/eval-strictness-inherit-non-strict.js :: it threw ReferenceError: eval is not defined
 language/expressions/call/eval-strictness-inherit-strict.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/call/tco-call-args.js (strict) :: it threw ReferenceError: f is not defined

@@ -133,6 +133,21 @@ impl Compiler<'_> {
         } else {
             self.expression(callee)?;
         }
+        // §13.3.8 — a spread has no argument count until it has been iterated, so the list cannot be
+        // pushed one value at a time. It is gathered into an array instead, by the same code an array
+        // literal uses, and expanded again by the call.
+        if arguments
+            .iter()
+            .any(|argument| matches!(argument, Argument::Spread(_)))
+        {
+            self.argument_array(arguments)?;
+            let how = match method {
+                true => crate::compile::chunk::SpreadCall::Method,
+                false => crate::compile::chunk::SpreadCall::Plain,
+            };
+            self.chunk.emit(Instruction::CallSpread(how));
+            return Ok(());
+        }
         for argument in arguments {
             let Argument::Value(value) = argument else {
                 return Err(unsupported("a spread argument", span));
@@ -148,6 +163,41 @@ impl Compiler<'_> {
         } else {
             Instruction::Call(count)
         });
+        Ok(())
+    }
+
+    /// Gather an argument list that contains a spread into one array, left to right.
+    ///
+    /// The same shape as an array literal's, and deliberately so: `f(...a)` and `[...a]` iterate by
+    /// exactly the rules of §7.4, and writing that out twice is how the two come to disagree about a
+    /// custom iterator. The running index is a hidden slot because a spread contributes a count that
+    /// is not known until it has run.
+    pub(super) fn argument_array(&mut self, arguments: &[Argument]) -> Result<(), CompileError> {
+        let at = self.declare_hidden("argument");
+        self.chunk.emit(Instruction::NewArray(0));
+        self.constant(Value::Number(0.0))?;
+        self.chunk.emit(Instruction::StoreVariable(0, at));
+        self.chunk.emit(Instruction::Pop);
+        for argument in arguments {
+            match argument {
+                Argument::Value(value) => {
+                    self.chunk.emit(Instruction::LoadVariable(0, at));
+                    self.expression(value)?;
+                    self.chunk.emit(Instruction::DefineField);
+                    self.bump(at)?;
+                }
+                Argument::Spread(value) => {
+                    self.expression(value)?;
+                    self.spread_into(at)?;
+                }
+            }
+        }
+        let name = self.name_of("length");
+        self.chunk.emit(Instruction::Duplicate);
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::LoadVariable(0, at));
+        self.chunk.emit(Instruction::SetProperty);
+        self.chunk.emit(Instruction::Pop);
         Ok(())
     }
 }

@@ -282,6 +282,20 @@ pub enum Instruction {
     /// until the prototype points back. There is no intermediate state worth naming in bytecode.
     ///
     /// The operand indexes the constructor's body. Leaves the constructor on the stack.
+    /// Call with the arguments in the array on top of the stack — §13.3.8's spread.
+    ///
+    /// A separate instruction because [`Instruction::Call`] fixes its argument count at compile time
+    /// and a spread does not have one until it has been iterated. The array is built first, by the
+    /// same code an array literal uses, and this expands it: `f(...a, 1)` and `f.apply` differ only
+    /// in who writes the array.
+    CallSpread(SpreadCall),
+    /// §15.7.14 `ClassDefinitionEvaluation` — the constructor and its prototype, made as a pair.
+    ///
+    /// One instruction rather than a sequence because neither half is observable on its own: the
+    /// prototype cannot be reached until the constructor holds it, and the constructor is not usable
+    /// until the prototype points back.
+    ///
+    /// The operand indexes the constructor's body. Leaves the constructor on the stack.
     MakeClass(u32),
     /// Replace the constructor on top of the stack with the prototype it was made with.
     ///
@@ -533,6 +547,21 @@ impl Chunk {
     }
 }
 
+/// Which of §13.3's three ways in a spread call takes.
+///
+/// One operand rather than a flag per way: `f(...a)`, `o.m(...a)` and `new f(...a)` differ only in
+/// where the receiver comes from, and a second boolean beside the first would leave a fourth
+/// combination that means nothing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpreadCall {
+    /// `f(...a)` — no receiver.
+    Plain,
+    /// `o.m(...a)` — the receiver sits under the callee.
+    Method,
+    /// `new f(...a)` — the receiver is made by the call.
+    Construct,
+}
+
 /// The same jump, pointed somewhere else.
 ///
 /// Exhaustive on purpose. Written with a catch-all arm it silently did nothing to a `PushHandler`,
@@ -586,6 +615,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::DefineField
         | Instruction::DefineGetter
         | Instruction::DefineSetter
+        | Instruction::CallSpread(_)
         | Instruction::MakeClass(_)
         | Instruction::ClassPrototype
         | Instruction::DefineClassMethod(_)
