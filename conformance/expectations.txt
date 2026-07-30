@@ -10213,6 +10213,8 @@ built-ins/Set/prototype/difference/set-like-class-mutation.js :: it threw Refere
 built-ins/Set/prototype/difference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/difference/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/difference/subclass.js :: it threw ReferenceError: Set is not defined
@@ -10411,6 +10413,8 @@ built-ins/Set/prototype/intersection/set-like-class-mutation.js :: it threw Refe
 built-ins/Set/prototype/intersection/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/intersection/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/intersection/subclass.js :: it threw ReferenceError: Set is not defined
@@ -10447,6 +10451,8 @@ built-ins/Set/prototype/isDisjointFrom/set-like-class-order.js :: it threw Refer
 built-ins/Set/prototype/isDisjointFrom/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/set-like-iter-return.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isDisjointFrom/set-like-iter-return.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isDisjointFrom/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isDisjointFrom/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/builtins.js :: it threw ReferenceError: Set is not defined
@@ -10475,6 +10481,8 @@ built-ins/Set/prototype/isSubsetOf/set-like-array.js :: it threw ReferenceError:
 built-ins/Set/prototype/isSubsetOf/set-like-array.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSubsetOf/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSubsetOf/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSubsetOf/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/array-throws.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/array-throws.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/builtins.js :: it threw ReferenceError: Set is not defined
@@ -10507,6 +10515,8 @@ built-ins/Set/prototype/isSupersetOf/set-like-class-order.js :: it threw Referen
 built-ins/Set/prototype/isSupersetOf/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/set-like-iter-return.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/isSupersetOf/set-like-iter-return.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSupersetOf/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/isSupersetOf/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/keys/keys.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/keys/keys.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/size/length.js :: it threw ReferenceError: Set is not defined
@@ -10555,6 +10565,8 @@ built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js :: it thr
 built-ins/Set/prototype/symmetricDifference/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/symmetricDifference/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/symmetricDifference/subclass.js :: it threw ReferenceError: Set is not defined
@@ -10597,6 +10609,8 @@ built-ins/Set/prototype/union/set-like-class-mutation.js :: it threw ReferenceEr
 built-ins/Set/prototype/union/set-like-class-mutation.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/set-like-class-order.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/set-like-class-order.js (strict) :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/subclass-receiver-methods.js :: it threw ReferenceError: Set is not defined
+built-ins/Set/prototype/union/subclass-receiver-methods.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/subclass-symbol-species.js :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/subclass-symbol-species.js (strict) :: it threw ReferenceError: Set is not defined
 built-ins/Set/prototype/union/subclass.js :: it threw ReferenceError: Set is not defined
@@ -11257,6 +11271,10 @@ built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.js :: it
 built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.js :: it threw an object with no name: Expected a undefined but got a TypeError
 built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
+built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js :: it threw ReferenceError: RegExp is not defined
+built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js (strict) :: it threw ReferenceError: RegExp is not defined
+built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js :: it threw ReferenceError: RegExp is not defined
+built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replaceAll/searchValue-replacer-call-abrupt.js :: it threw an object with no name: Expected a undefined but got a TypeError
 built-ins/String/prototype/replaceAll/searchValue-replacer-call-abrupt.js (strict) :: it threw an object with no name: Expected a undefined but got a TypeError
 built-ins/String/prototype/replaceAll/searchValue-replacer-is-null.js :: it threw TypeError: what was called is not a function
@@ -21686,12 +21704,24 @@ language/expressions/subtraction/order-of-evaluation.js :: it threw an object wi
 language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a undefined
 language/expressions/super/call-construct-invocation.js :: it threw ReferenceError: Reflect is not defined
 language/expressions/super/call-construct-invocation.js (strict) :: it threw ReferenceError: Reflect is not defined
+language/expressions/super/prop-dot-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
+language/expressions/super/prop-dot-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-dot-cls-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-dot-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/super/prop-dot-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-dot-obj-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-dot-obj-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/super/prop-expr-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
+language/expressions/super/prop-expr-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-cls-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
+language/expressions/super/prop-expr-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-obj-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-obj-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/super/realm.js :: it threw ReferenceError: $262 is not defined
@@ -22150,6 +22180,8 @@ language/statements/class/definition/methods-restricted-properties.js :: it thre
 language/statements/class/definition/methods-restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/methods.js :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
 language/statements/class/definition/methods.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/numeric-property-names.js :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
+language/statements/class/definition/numeric-property-names.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
 language/statements/class/definition/setters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/setters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/setters-prop-desc.js :: it threw an object with no name: The result of `'prototype' in descr.set` is `false` Expected SameValue(«true», «false») to be true

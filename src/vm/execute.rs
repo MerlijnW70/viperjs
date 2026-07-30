@@ -354,9 +354,21 @@ impl Vm {
                     // at exactly the same moment (§10.2.3 step 6). Reading it at *call* time
                     // instead would be dynamic `this` wearing a lexical name: the two agree only
                     // while the arrow is called from inside the call that made it.
+                    // §15.3 — an arrow reaches outward for `super` on exactly the terms it reaches
+                    // outward for `this` and `new.target`: it has no `[[HomeObject]]` of its own, so
+                    // §9.1.1.3's walk arrives at the method it was written in. All three are captured
+                    // here rather than walked at use time, which is the same argument for each — by
+                    // the time the arrow runs, the frame it was written in may be long gone.
+                    let home = self
+                        .frames
+                        .last()
+                        .and_then(|frame| frame.function)
+                        .and_then(|function| heap.object(function))
+                        .and_then(crate::heap::Object::home_object);
                     let lexical = body.is_arrow().then_some(crate::heap::Lexical {
                         this_value: self.this_value,
                         new_target: self.new_target,
+                        home,
                     });
                     let object = heap.new_function(
                         self.realm.function_prototype(),
@@ -438,6 +450,10 @@ impl Vm {
                     // difference from §10.2.5's `MakeConstructor` for an ordinary function: a class
                     // may not be pointed at a different prototype after the fact.
                     let prototype = heap.new_object(inheritance.prototype);
+                    // §15.7.14 step 17 `MakeMethod(F, proto)` — the constructor is a method of the
+                    // prototype, which is what lets `super.x` be written in it. Set here rather than
+                    // by an instruction because both objects are only in one place at this moment.
+                    heap.set_home_object(object, prototype);
                     let key = property_name(heap, "constructor");
                     heap.define_own_property(
                         prototype,
@@ -649,6 +665,95 @@ impl Vm {
                         .ok_or(Fault::StackUnderflow)?;
                     self.stack.insert(callee_at, parent);
                     self.enter(Entry::Super, count, heap, root, current, at)?;
+                }
+                Instruction::MakeMethod(depth) => {
+                    let below = self
+                        .stack
+                        .len()
+                        .checked_sub(depth as usize + 1)
+                        .ok_or(Fault::StackUnderflow)?;
+                    let (Some(&Value::Object(function)), Value::Object(home)) =
+                        (self.stack.last(), self.stack[below])
+                    else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    heap.set_home_object(function, home);
+                }
+                Instruction::LoadSuperBase => {
+                    // §9.1.1.3 `GetSuperBase` — the home object's prototype, one level above where the
+                    // method was defined. A method with no home cannot be reached from source: the
+                    // parser makes `super` outside a method a Syntax Error.
+                    let home = self
+                        .frames
+                        .last()
+                        .and_then(|frame| frame.function)
+                        .and_then(|function| heap.object(function))
+                        .and_then(crate::heap::Object::home_object);
+                    let base = home
+                        .and_then(|home| heap.object(home))
+                        .and_then(crate::heap::Object::prototype);
+                    // `null` for a class whose parent has none, and `undefined` for no home at all.
+                    // Both refuse the read below, and neither is a fault: `class D extends null`
+                    // reaches the first honestly.
+                    self.stack.push(match (home, base) {
+                        (Some(_), Some(prototype)) => Value::Object(prototype),
+                        (Some(_), None) => Value::Null,
+                        (None, _) => Value::Undefined,
+                    });
+                }
+                Instruction::GetSuperProperty => {
+                    let key = self.pop()?;
+                    let base = self.pop()?;
+                    let receiver = self.pop()?;
+                    match self.get_super(base, receiver, key, heap) {
+                        Ok(value) => self.stack.push(value),
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::SetSuperProperty => {
+                    let value = self.pop()?;
+                    let key = self.pop()?;
+                    let base = self.pop()?;
+                    let receiver = self.pop()?;
+                    match self.set_super(base, receiver, key, value, heap) {
+                        // An assignment is an expression, so its value stays behind.
+                        Ok(_) => self.stack.push(value),
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::ThrowSuperDelete => {
+                    // The base and the key are dropped with the rest of the expression as the throw
+                    // unwinds, on the same terms as `ThrowImmutableAssignment`.
+                    self.raise(
+                        Abrupt::reference_error("a property of `super` cannot be deleted"),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )?;
+                    continue;
+                }
+                Instruction::InheritHome => {
+                    let Some(&Value::Object(function)) = self.stack.last() else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let home = self
+                        .frames
+                        .last()
+                        .and_then(|frame| frame.function)
+                        .and_then(|running| heap.object(running))
+                        .and_then(crate::heap::Object::home_object);
+                    // Nothing to inherit means the running function is not a method, which no source
+                    // reaches: this is only emitted inside a class constructor.
+                    if let Some(home) = home {
+                        heap.set_home_object(function, home);
+                    }
                 }
                 Instruction::BindThis(index) => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;

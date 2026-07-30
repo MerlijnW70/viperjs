@@ -173,8 +173,8 @@ impl Compiler<'_> {
             // §13.3.2 and §13.3.3 — `o.x` and `o[k]`. The name is a constant where the key is
             // an expression, which is the whole difference between the two forms.
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
-                self.property_reference(expression, Keep::Nothing)?;
-                self.chunk.emit(Instruction::GetProperty);
+                let reference = self.property_reference(expression, Keep::Nothing)?;
+                self.chunk.emit(reference.get());
                 Ok(())
             }
             // Everything else, named as the specification names it so that the message says which
@@ -466,7 +466,14 @@ impl Compiler<'_> {
                     let _ = at;
                     self.load_name(name)?;
                 }
-                Element::Function(function) => self.make_function(function, span)?,
+                // §15.4.5 `MethodDefinitionEvaluation` — a *method* gets `MakeMethod` and a function
+                // written as a value does not: `{ m() { return super.x; } }` is legal and
+                // `{ m: function () { return super.x; } }` is a Syntax Error, which is the only place
+                // the two shapes differ at all. The object is under the key, two down.
+                Element::Function(function) => {
+                    self.make_function(function, span)?;
+                    self.chunk.emit(Instruction::MakeMethod(2));
+                }
             }
             match accessor {
                 // §15.4.5 — a getter and a setter are *halves* of one property, so defining one
@@ -482,6 +489,29 @@ impl Compiler<'_> {
         }
         Ok(())
     }
+    /// The object half of a property reference, and the receiver a call would want with it.
+    ///
+    /// Two shapes, and `super` is the one that needs a name. An ordinary base *is* the receiver, so a
+    /// call copies it. §13.3.7.1's super reference has two different objects: the property is looked
+    /// up on the home object's prototype and the receiver stays `this`, so the receiver is pushed
+    /// first and the base after it. Everything above this — reading, calling, assigning, deleting —
+    /// then works on a stack of `[receiver?, base, key]` either way.
+    fn base(&mut self, object: &Expr, keep: Keep) -> Result<Reference, CompileError> {
+        if matches!(object.kind, ExprKind::Super) {
+            // The receiver §13.3.7.1 keeps, and a copy of it if a call is going to want one under the
+            // callee. `keep.receiver` is the same `Duplicate` an ordinary base uses, applied to the
+            // receiver rather than to the base — which is precisely the difference.
+            self.load_this();
+            keep.receiver(self);
+            self.chunk.emit(Instruction::LoadSuperBase);
+            return Ok(Reference::Super);
+        }
+        self.expression(object)?;
+        keep.receiver(self);
+        Ok(Reference::Ordinary)
+    }
+
+
     /// The base and the key of a property reference, pushed in that order.
     ///
     /// Shared by reading, writing and deleting, which all need the same two values and all refuse
@@ -492,7 +522,7 @@ impl Compiler<'_> {
         &mut self,
         target: &Expr,
         keep: Keep,
-    ) -> Result<(), CompileError> {
+    ) -> Result<Reference, CompileError> {
         match &target.kind {
             ExprKind::Member {
                 private,
@@ -506,11 +536,11 @@ impl Compiler<'_> {
                 if *optional {
                     return Err(unsupported("optional chaining", target.span));
                 }
-                self.expression(object)?;
-                keep.receiver(self);
+                let reference = self.base(object, keep)?;
                 let units: Vec<u16> = property.encode_utf16().collect();
                 let id = self.heap.new_string(units);
-                self.constant(Value::String(id))
+                self.constant(Value::String(id))?;
+                Ok(reference)
             }
             ExprKind::ComputedMember {
                 optional,
@@ -520,9 +550,9 @@ impl Compiler<'_> {
                 if *optional {
                     return Err(unsupported("optional chaining", target.span));
                 }
-                self.expression(object)?;
-                keep.receiver(self);
-                self.expression(property)
+                let reference = self.base(object, keep)?;
+                self.expression(property)?;
+                Ok(reference)
             }
             _ => Err(unsupported(
                 "a reference to something that is not a property",
@@ -538,8 +568,15 @@ impl Compiler<'_> {
     fn delete(&mut self, argument: &Expr, span: Span) -> Result<(), CompileError> {
         match &argument.kind {
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
-                self.property_reference(argument, Keep::Nothing)?;
-                self.chunk.emit(Instruction::DeleteProperty);
+                let reference = self.property_reference(argument, Keep::Nothing)?;
+                // §13.5.1.1 step 3 — `delete super.x` is a **ReferenceError**, always, and there is
+                // no super reference it is legal for. A run-time throw rather than an early error
+                // because the reference is evaluated first: `delete super[k]` runs `ToPropertyKey(k)`
+                // and *then* refuses, so a `toString` on the key has already had its effect.
+                self.chunk.emit(match reference {
+                    Reference::Super => Instruction::ThrowSuperDelete,
+                    Reference::Ordinary => Instruction::DeleteProperty,
+                });
                 Ok(())
             }
             // §13.5.1.2 step 2 — deleting a name is only legal in sloppy code and only for a
@@ -573,7 +610,23 @@ impl Compiler<'_> {
         value: &Expr,
         span: Span,
     ) -> Result<(), CompileError> {
-        self.property_reference(target, Keep::Nothing)?;
+        // §13.3.7.1 leaves a reference with *three* values — the receiver as well as the base and the
+        // key — and every compound form below reads the old value with `DuplicateTwo`, which copies
+        // two. Rather than a three-deep copy for one construct, the plain assignment is compiled here
+        // and the rest is refused by name: `super.x += 1` is legal and rare, and a refusal with a span
+        // is better than an unbalanced stack.
+        let reference = self.property_reference(target, Keep::Nothing)?;
+        if reference == Reference::Super {
+            if operator != AssignmentOperator::Assign {
+                return Err(unsupported(
+                    "a compound assignment to a `super` property",
+                    span,
+                ));
+            }
+            self.expression(value)?;
+            self.chunk.emit(Instruction::SetSuperProperty);
+            return Ok(());
+        }
         match compound_operator(operator) {
             None if operator == AssignmentOperator::Assign => self.expression(value)?,
             Some(binary) => {
@@ -900,4 +953,28 @@ enum Element<'a> {
     Name(&'a str, Span),
     /// `a() {}`, `get a() {}`, `set a(v) {}`.
     Function(&'a crate::ast::Function),
+}
+
+/// Which of §13.3's two property references was compiled, and so which instruction reads it.
+///
+/// Answered by the code that pushed the values rather than asked about the tree afterwards. A second
+/// walk over the tree is a second copy of the rule, and the copy nothing reads is the one that would
+/// disagree — the first attempt at this was such a walk, with a catch-all arm for a shape it could
+/// never be handed, which mutation coverage duly reported as unpinnable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Reference {
+    /// `o.x` — one object, which is both where the property is found and the receiver.
+    Ordinary,
+    /// `super.x` — §13.3.7.1's two, with the receiver pushed under the base.
+    Super,
+}
+
+impl Reference {
+    /// The instruction that reads this reference.
+    pub(super) fn get(self) -> Instruction {
+        match self {
+            Self::Ordinary => Instruction::GetProperty,
+            Self::Super => Instruction::GetSuperProperty,
+        }
+    }
 }

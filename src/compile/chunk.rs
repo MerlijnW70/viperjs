@@ -402,6 +402,54 @@ pub enum Instruction {
     ///
     /// The operand is the argument count; the arguments are on the stack above nothing else.
     SuperCall(u32),
+    /// §9.1.1.3's `MakeMethod` — tell the function on top of the stack which object it was defined on.
+    ///
+    /// Nothing is popped and nothing is observable: `[[HomeObject]]` is not a property and no script
+    /// can read it. Only `super` consults it, which is why an ordinary function expression never gets
+    /// one — `{ m: function () { return super.x; } }` is a Syntax Error, and the parser says so.
+    ///
+    /// The operand is how far below the top the home object sits, because the definition that follows
+    /// needs its own operands in place: a method definition has `[home, key, function]` on the stack
+    /// and a synthesised initialiser has `[home, function]`.
+    MakeMethod(u32),
+    /// §9.1.1.3's `GetSuperBase` — push the running method's home object's `[[Prototype]]`.
+    ///
+    /// One level *above* where the method was defined, which is the whole point: a method that read
+    /// its own home would find itself and recurse. `undefined` when the running function has no home,
+    /// which no `super` the parser accepts can reach.
+    LoadSuperBase,
+    /// `super.x` — read a property of the super base with `this` as the receiver (§13.3.7.1).
+    ///
+    /// Two objects, which is what makes this its own instruction. The property is *found* on the
+    /// super base and an accessor is called with **`this`**, so a getter inherited from a parent sees
+    /// the instance rather than the prototype it was found on. [`Instruction::GetProperty`] uses one
+    /// value for both and cannot express it.
+    ///
+    /// Pops the key, the base and the receiver, in that order down the stack.
+    GetSuperProperty,
+    /// `super.x = v` — write through the super base with `this` as the receiver (§13.3.7.1).
+    ///
+    /// The receiver decides where the value *lands*: an inherited setter is called with `this`, and a
+    /// write with no setter creates an own property of `this` rather than of the base. So
+    /// `super.x = 1` in a method leaves an own `x` on the instance, which is the same rule as an
+    /// ordinary assignment through a prototype and reads oddly only because the base is named.
+    ///
+    /// Pops the value, the key, the base and the receiver, leaving the value.
+    SetSuperProperty,
+    /// `delete super.x` — §13.5.1.1 step 3's unconditional **ReferenceError**.
+    ///
+    /// A run-time throw and not an early error, because the reference is evaluated first: `delete
+    /// super[k]` runs `ToPropertyKey(k)` and only then refuses, so a `toString` on the key has
+    /// already had its effect. The base and the key are on the stack and go with the throw.
+    ThrowSuperDelete,
+    /// Give the function on top of the stack the running function's `[[HomeObject]]`.
+    ///
+    /// For the bodies praxis synthesises to stand in for inline code — a derived class's instance
+    /// field initialisers, which §15.7.14 runs from `super()` rather than on entry. Written inline
+    /// those statements would see the constructor's home; as a body of their own they have none, so
+    /// this is what an arrow's capture does, for a function that is not an arrow and needs its own
+    /// `this`.
+    InheritHome,
     /// §10.2.2's `BindThisValue` — bind the derived constructor's `this` to the top value.
     ///
     /// Peeked rather than popped, because §13.3.7.1 step 8 makes the object the value of the
@@ -693,6 +741,12 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
         | Instruction::SuperCall(_)
+        | Instruction::MakeMethod(_)
+        | Instruction::ThrowSuperDelete
+        | Instruction::InheritHome
+        | Instruction::LoadSuperBase
+        | Instruction::GetSuperProperty
+        | Instruction::SetSuperProperty
         | Instruction::BindThis(_)
         | Instruction::LoadThisBinding { .. }
         | Instruction::CompleteDerivedReturn(_)

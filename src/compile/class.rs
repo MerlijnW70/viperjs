@@ -151,6 +151,11 @@ impl Compiler<'_> {
             }
             self.property_key(&method.key)?;
             self.make_function(&method.function, span)?;
+            // §15.7.14's `MethodDefinitionEvaluation` calls `MakeMethod` with the object the method
+            // is being put on — the prototype for an instance method and the constructor for a
+            // static one, which is exactly what is under the key here. That is what makes `super.x`
+            // in a static method read the *parent class* rather than its prototype.
+            self.chunk.emit(Instruction::MakeMethod(2));
             self.chunk.emit(Instruction::DefineClassMethod(method.kind));
         }
         for element in &statics {
@@ -188,6 +193,9 @@ impl Compiler<'_> {
             span,
         )?;
         self.emit_function(body, span)?;
+        // §15.7.14 makes a static block a method of the *constructor*, which is the copy one below —
+        // so `super.x` in one reads the parent class rather than its prototype.
+        self.chunk.emit(Instruction::MakeMethod(1));
         self.chunk.emit(Instruction::CallMethod(0));
         self.chunk.emit(Instruction::Pop);
         Ok(())
@@ -230,6 +238,9 @@ impl Compiler<'_> {
                     span,
                 )?;
                 self.emit_function(body, span)?;
+                // A static field's initialiser is a method of the constructor too, for the same
+                // reason and with the constructor in the same place.
+                self.chunk.emit(Instruction::MakeMethod(1));
                 self.chunk.emit(Instruction::CallMethod(0));
             }
             // §15.7.14 — written without one it is `undefined`, and there is nothing to call.

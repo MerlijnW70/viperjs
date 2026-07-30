@@ -66,6 +66,11 @@ pub struct Lexical {
     /// The `new.target` in force there — §13.3.12 reaches outward exactly as `this` does, which is
     /// why `() => new.target` inside a constructor answers that constructor and not `undefined`.
     pub new_target: Value,
+    /// The `[[HomeObject]]` of the method the arrow was written in, if it was written in one.
+    ///
+    /// The third thing §9.1.1.3 answers by walking outward, so it is captured with the other two.
+    /// `None` for an arrow written outside any method, where `super` is a Syntax Error anyway.
+    pub home: Option<ObjectId>,
 }
 
 /// An ordinary object — §10.1.
@@ -108,6 +113,14 @@ pub struct Object {
     /// the one running when the arrow was made, so recording it here is that walk, done
     /// once and in advance.
     lexical: Option<Lexical>,
+    /// `[[HomeObject]]` — the object a method was defined *on*, if it is a method.
+    ///
+    /// `None` for every function that is not one, which is every function expression and every
+    /// arrow. What needs it is `super.x`: §9.1.1.3's `GetSuperBase` reads this object's
+    /// `[[Prototype]]`, so a method knows where to start looking that is one level above where it was
+    /// defined. Unrelated to `this` and deliberately so — a method borrowed by another object keeps
+    /// the home it was written in, which is why `super.x` there still reads the original parent.
+    pub(super) home: Option<ObjectId>,
     /// Whether this is §10.4.2's exotic Array, whose `length` and indices move each other.
     pub(super) array: bool,
     /// §10.4.4's parameter map, if this is an arguments object.
@@ -196,6 +209,7 @@ impl Object {
             call: None,
             environment: None,
             lexical: None,
+            home: None,
             properties: Vec::new(),
             index: None,
         }
@@ -276,6 +290,11 @@ impl Object {
     /// The environment this function was written in, if it is a function at all.
     pub fn environment(&self) -> Option<EnvironmentId> {
         self.environment
+    }
+
+    /// The object this method was defined on — `[[HomeObject]]`, which is the super base minus a step.
+    pub fn home_object(&self) -> Option<ObjectId> {
+        self.home
     }
 
     /// What this function took from around it, if it is an arrow.
@@ -451,6 +470,11 @@ impl Heap {
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Bytecode(body));
         object.environment = Some(environment);
+        // An arrow's home comes from the same capture as its `this`, so the three cannot be captured
+        // separately and disagree about which method the arrow was written in. A method's own home is
+        // set afterwards by §9.1.1.3's `MakeMethod`, which is a different moment and a different
+        // object — see [`Heap::set_home_object`].
+        object.home = lexical.and_then(|captured| captured.home);
         object.lexical = lexical;
         self.objects.push(Some(object));
         id
@@ -946,6 +970,21 @@ impl Heap {
             cursor = self.object(at)?.prototype();
         }
         None
+    }
+
+    /// §9.1.1.3's `MakeMethod` — record which object a function was defined on.
+    ///
+    /// Not a property and not observable: no script can read `[[HomeObject]]` by any means, and the
+    /// only thing that consults it is `super`.
+    ///
+    /// A handle to nothing is ignored rather than reported. Every caller passes a function it made a
+    /// moment earlier, so there is no state in which the answer could be acted on — and a `bool`
+    /// nobody could ever see be `false` is a branch no test can pin, which mutation coverage said by
+    /// surviving a flip of it.
+    pub fn set_home_object(&mut self, function: ObjectId, home: ObjectId) {
+        if let Some(object) = self.objects.get_mut(function.0).and_then(Option::as_mut) {
+            object.home = Some(home);
+        }
     }
 
     /// `OrdinarySetPrototypeOf` (§10.1.2) — point `object` at `prototype`, if that is allowed.

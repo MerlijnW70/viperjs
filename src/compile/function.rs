@@ -168,8 +168,11 @@ impl Compiler<'_> {
             // The base is evaluated once and copied *before* the key, so the stack ends as
             // [receiver, method] with nothing between them. Copying after the key would leave the
             // key underneath, and evaluating the base twice would run `f()` twice in `f().m()`.
-            self.property_reference(callee, Keep::Receiver)?;
-            self.chunk.emit(Instruction::GetProperty);
+            let reference = self.property_reference(callee, Keep::Receiver)?;
+            // §13.3.7.1 — `super.m()` calls with `this` as the receiver and not with the object the
+            // method was found on, which is what makes a parent's method see the instance. The copy
+            // above was of `this` for exactly that reason.
+            self.chunk.emit(reference.get());
         } else {
             self.expression(callee)?;
         }
@@ -253,6 +256,10 @@ impl Compiler<'_> {
         // shape a static field's initialiser uses.
         self.chunk.emit(Instruction::Duplicate);
         self.chunk.emit(Instruction::MakeFunction(fields));
+        // §15.7.14 makes a field initialiser a method of the class's prototype, which is the home the
+        // *constructor* has — so the synthesised body takes the running function's rather than being
+        // told a prototype it has no way to reach from here.
+        self.chunk.emit(Instruction::InheritHome);
         self.chunk.emit(Instruction::CallMethod(0));
         self.chunk.emit(Instruction::Pop);
         Ok(())

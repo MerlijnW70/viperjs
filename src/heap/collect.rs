@@ -168,6 +168,12 @@ impl Heap {
                 Some(other) => self.mark_value(other, marked),
                 None => {}
             }
+            // A method's home object, which nothing else need be holding: a method taken off a class
+            // and stored on its own still reads `super.x` through it, so the class's prototype is
+            // reachable through the method and by no other path.
+            if let Some(home) = object.home_object() {
+                pending.push(home);
+            }
             // Both halves of what an arrow captured, because either can be an object and the arrow
             // may be the only thing left holding it: `function F() { return () => new.target }`
             // hands back an arrow whose `new.target` is a constructor nothing else need name.
@@ -618,6 +624,7 @@ mod tests {
             Some(crate::heap::Lexical {
                 this_value: Value::Object(receiver),
                 new_target: Value::Undefined,
+                home: None,
             }),
         );
 
@@ -642,6 +649,7 @@ mod tests {
             Some(crate::heap::Lexical {
                 this_value: Value::Undefined,
                 new_target: Value::Object(target),
+                home: None,
             }),
         );
         let roots = Roots {
@@ -664,6 +672,7 @@ mod tests {
             Some(crate::heap::Lexical {
                 this_value: Value::String(text),
                 new_target: Value::Undefined,
+                home: None,
             }),
         );
         let roots = Roots {

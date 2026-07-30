@@ -294,11 +294,14 @@ fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
     // near-identical copies of it had also accumulated in this file, each shortened separately; they
     // are one test now, because the second was where a stale row could hide from the first.
     //
-    // What is genuinely left: a private name, and `super` in any position but a call — `super.m()`
-    // needs `[[HomeObject]]`, which is its own slice.
+    // What is genuinely left: a private name, and a *compound* assignment through `super`, which
+    // §13.3.7.1 leaves a three-value reference for where every compound form copies two.
     for (source, named) in [
         ("class C { #x = 1; }", "private name"),
-        ("class B {} class C extends B { m() { return super.m(); } }", "super"),
+        (
+            "class B {} class C extends B { m() { super.x += 1; } }",
+            "compound assignment to a `super` property",
+        ),
     ] {
         let error = compile_error(source);
         assert!(error.contains(named), "{source}: got {error:?}");
@@ -1052,5 +1055,280 @@ fn a_class_may_extend_an_ordinary_function_and_be_called_only_with_new() {
         run("(function () { class B {} class D extends B {} \
              try { D(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
         "TypeError"
+    );
+}
+
+#[test]
+fn super_reads_from_one_level_above_where_the_method_was_defined() {
+    // §9.1.1.3 `GetSuperBase` — the home object's *prototype*, not the home object. A method that
+    // read its own home would find itself, and `super.m()` would be infinite recursion rather than a
+    // call to the parent.
+    assert_eq!(
+        run("(function () { class B { m() { return 1; } } \
+             class D extends B { m() { return super.m() + 1; } } return new D().m(); })()"),
+        "2"
+    );
+    // Three deep, so the base is where the method was *defined* and not where it was found: `D`'s
+    // `m` reads `C`'s however it was reached, which is what makes the chain terminate.
+    assert_eq!(
+        run("(function () { class B { m() { return 'B'; } } \
+             class C extends B { m() { return super.m() + 'C'; } } \
+             class D extends C { m() { return super.m() + 'D'; } } return new D().m(); })()"),
+        "BCD"
+    );
+    // A computed key is the same reference with the key evaluated at run time.
+    assert_eq!(
+        run("(function () { class B {} B.prototype.v = 5; \
+             class D extends B { m() { return super['v'] + super['v' + '']; } } \
+             return new D().m(); })()"),
+        "10"
+    );
+    // Absent is `undefined` rather than an error, as any read is.
+    assert_eq!(
+        run("(function () { class B {} class D extends B { m() { return String(super.nothing); } } \
+             return new D().m(); })()"),
+        "undefined"
+    );
+    // A base class's method has a home too — its prototype's prototype is `Object.prototype`, so
+    // this is not a special case for derived classes.
+    assert_eq!(
+        run("(function () { class C { m() { return typeof super.hasOwnProperty; } } \
+             return new C().m(); })()"),
+        "function"
+    );
+}
+
+#[test]
+fn super_keeps_this_as_the_receiver_and_not_the_object_it_looked_on() {
+    // §13.3.7.1 — the reference has two objects, and this is the row that tells them apart. The
+    // parent's getter is *found* on `B.prototype` and called with the instance, so it can read a
+    // field the instance has and the prototype does not. An implementation that passed the base for
+    // both would answer `undefined` here and pass every other row in this file.
+    assert_eq!(
+        run("(function () { class B { get g() { return this.x; } } \
+             class D extends B { constructor() { super(); this.x = 7; } read() { return super.g; } } \
+             return new D().read(); })()"),
+        "7"
+    );
+    // The same for a method call, which is the common case: `super.m()` is `this.m()` with the
+    // lookup started higher.
+    assert_eq!(
+        run("(function () { class B { m() { return this.tag; } } \
+             class D extends B { m() { return super.m(); } } \
+             var d = new D(); d.tag = 'inst'; return d.m(); })()"),
+        "inst"
+    );
+    // A getter with no getter half answers `undefined` rather than throwing, which is a different
+    // route to the same answer as an absent property.
+    assert_eq!(
+        run("(function () { class B {} \
+             Object.defineProperty(B.prototype, 'w', { set: function (v) {} }); \
+             class D extends B { m() { return String(super.w); } } return new D().m(); })()"),
+        "undefined"
+    );
+}
+
+#[test]
+fn a_static_methods_super_reads_the_parent_class_and_not_its_prototype() {
+    // §15.7.14 gives a static method the *constructor* as its home, so its super base is the parent
+    // constructor — which is how a static method is inherited and overridden. Getting the home wrong
+    // here would look for a static on the parent's prototype and find nothing.
+    assert_eq!(
+        run("(function () { class B { static s() { return 's'; } } \
+             class D extends B { static s() { return super.s() + 't'; } } return D.s(); })()"),
+        "st"
+    );
+    assert_eq!(
+        run("(function () { class B { static get g() { return 'bg'; } } \
+             class D extends B { static read() { return super.g; } } return D.read(); })()"),
+        "bg"
+    );
+}
+
+#[test]
+fn super_survives_being_taken_off_the_class_it_was_written_in() {
+    // `[[HomeObject]]` is fixed where the method was *written* and has nothing to do with how it is
+    // called — which is the whole reason it is a field on the function rather than something derived
+    // from `this`. A method borrowed by an unrelated object still reads the original parent.
+    assert_eq!(
+        run("(function () { class B { m() { return 1; } } \
+             class D extends B { m() { return super.m() + 1; } } \
+             var taken = new D().m; return taken.call({}); })()"),
+        "2"
+    );
+    // …and an arrow written inside a method reaches the enclosing method's home, because §15.3 gives
+    // it none of its own — the same outward reach as `this`, captured at the same moment and in the
+    // same field, so the two cannot disagree about which method the arrow was written in.
+    assert_eq!(
+        run("(function () { class B { m() { return 'B'; } } \
+             class D extends B { m() { var f = () => super.m(); return f() + 'D'; } } \
+             return new D().m(); })()"),
+        "BD"
+    );
+    // Two levels deep, where a capture that reached only one would still have passed.
+    assert_eq!(
+        run("(function () { class B { m() { return 'B'; } } \
+             class D extends B { m() { var f = () => () => super.m(); return f()(); } } \
+             return new D().m(); })()"),
+        "B"
+    );
+}
+
+#[test]
+fn a_write_through_super_lands_on_the_receiver_and_not_on_the_base() {
+    // §13.3.7.1 with `[[Set]]` — the receiver decides where the value goes, so `super.x = 1` makes an
+    // own property of the *instance* and leaves the parent prototype alone. That reads oddly and is
+    // the same rule an ordinary assignment through a prototype follows.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { m() { super.q = 3; \
+                 return this.q + ',' + B.prototype.hasOwnProperty('q') \
+                      + ',' + this.hasOwnProperty('q'); } } \
+             return new D().m(); })()"),
+        "3,false,true"
+    );
+    // …and the same when the base *does* have the property already, which is the case that says the
+    // write is not simply falling through to an ordinary assignment on the base: the parent's
+    // property is untouched and the instance shadows it.
+    assert_eq!(
+        run("(function () { class B {} B.prototype.p = 1; \
+             class D extends B { m() { super.p = 2; \
+                 return this.p + ',' + B.prototype.p + ',' + this.hasOwnProperty('p'); } } \
+             return new D().m(); })()"),
+        "2,1,true"
+    );
+    // An inherited setter is called instead, with `this` as its receiver — so it writes wherever it
+    // means to, and nothing is defined on the instance by this instruction.
+    assert_eq!(
+        run("(function () { class B { set s(v) { this.taken = v * 2; } } \
+             class D extends B { m() { super.s = 4; return this.taken; } } \
+             return new D().m(); })()"),
+        "8"
+    );
+    // A setter-less accessor and a non-writable data property both refuse the write, silently in
+    // sloppy code, which is what an ordinary assignment does too.
+    assert_eq!(
+        run("(function () { class B {} \
+             Object.defineProperty(B.prototype, 'r', { get: function () { return 1; } }); \
+             class D extends B { m() { super.r = 9; return String(this.r); } } \
+             return new D().m(); })()"),
+        "1"
+    );
+    // The assignment is an expression, so its value is what was written and not what was read back.
+    assert_eq!(
+        run("(function () { class B {} class D extends B { m() { return (super.z = 5); } } \
+             return new D().m(); })()"),
+        "5"
+    );
+}
+
+#[test]
+fn an_object_literal_method_has_a_home_and_a_function_written_as_a_value_does_not() {
+    // §15.4.5 calls `MakeMethod` for a `MethodDefinition` and not for a property whose value happens
+    // to be a function. That is the only difference between the two shapes, and `super` is the only
+    // thing that can see it — which is why the parser makes `super` in the second a Syntax Error.
+    assert_eq!(
+        run("(function () { var parent = { m() { return 'p'; } }; \
+             var child = { m() { return super.m() + 'c'; } }; \
+             Object.setPrototypeOf(child, parent); return child.m(); })()"),
+        "pc"
+    );
+    assert_eq!(
+        run("(function () { var parent = { get g() { return 'pg'; } }; \
+             var child = { read() { return super.g; } }; \
+             Object.setPrototypeOf(child, parent); return child.read(); })()"),
+        "pg"
+    );
+    // An accessor in a literal is a method definition too, so it has a home.
+    assert_eq!(
+        run("(function () { var parent = { m() { return 'p'; } }; \
+             var child = { get g() { return super.m(); } }; \
+             Object.setPrototypeOf(child, parent); return child.g; })()"),
+        "p"
+    );
+}
+
+#[test]
+fn super_in_a_class_that_extends_null_refuses_the_read_rather_than_faulting() {
+    // §9.1.1.3 — the home object exists and its prototype is `null`, so the base is `null` and the
+    // read is a TypeError. Not a fault and not `undefined`: the class was made, and it is the *read*
+    // that has nowhere to go.
+    assert_eq!(
+        run("(function () { class D extends null { m() { return super.anything; } } \
+             var d = Object.create(D.prototype); \
+             try { d.m(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn deleting_a_property_of_super_is_a_reference_error_after_the_key_has_run() {
+    // §13.5.1.1 step 3 — there is no super reference `delete` is legal for, so this is unconditional.
+    // It was a *silent* wrong answer the moment `super` began to compile: the reference resolves, and
+    // an implementation that let it through would delete a property of the parent prototype.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { m() { try { delete super.x; return 'no'; } \
+                 catch (e) { return e.constructor.name; } } } \
+             return new D().m(); })()"),
+        "ReferenceError"
+    );
+    // A run-time throw and not an early error, which is observable: step 1 evaluates the reference,
+    // so `ToPropertyKey` has already run its side effect by the time step 3 refuses.
+    assert_eq!(
+        run("(function () { var order = []; class B {} \
+             class D extends B { m() { \
+                 try { delete super[(order.push('key'), 'k')]; } \
+                 catch (e) { order.push(e.constructor.name); } \
+                 return order.join(','); } } \
+             return new D().m(); })()"),
+        "key,ReferenceError"
+    );
+    // An ordinary delete is untouched, which is the row that says the refusal is about `super` and
+    // not about member deletion.
+    assert_eq!(
+        run("(function () { var o = { x: 1 }; return delete o.x; })()"),
+        "true"
+    );
+}
+
+#[test]
+fn super_reaches_the_right_home_from_every_synthesised_body_in_a_class() {
+    // praxis compiles four things as bodies of their own that the specification writes as inline
+    // code: a static block, a static field's initialiser, and a derived class's instance field
+    // initialisers. Each therefore needs a `[[HomeObject]]` it did not get from being defined on
+    // anything, and each needs a *different* one — which is why they are four rows and not one.
+    //
+    // A static block and a static field belong to the **constructor**, so `super` in either reads the
+    // parent class rather than its prototype.
+    assert_eq!(
+        run("(function () { class B { static s() { return 'S'; } } \
+             class D extends B { static { D.got = super.s(); } } return D.got; })()"),
+        "S"
+    );
+    assert_eq!(
+        run("(function () { class B { static s() { return 'S'; } } \
+             class D extends B { static f = super.s(); } return D.f; })()"),
+        "S"
+    );
+    // An instance field initialiser belongs to the **prototype**, and in a derived class it runs from
+    // `super()` inside a body of its own — so it takes the constructor's home rather than being told
+    // a prototype it has no way to name from there.
+    assert_eq!(
+        run("(function () { class B { m() { return 'B'; } } \
+             class D extends B { f = super.m(); } return new D().f; })()"),
+        "B"
+    );
+    // …and an arrow inside such an initialiser reaches through it, which is two captures deep.
+    assert_eq!(
+        run("(function () { class B { m() { return 'B'; } } \
+             class D extends B { f = () => super.m(); } return new D().f(); })()"),
+        "B"
+    );
+    // A *base* class's field initialiser is inline in the constructor, so it uses the constructor's
+    // home directly — the same answer by a different path, which is worth pinning separately.
+    assert_eq!(
+        run("(function () { class C { f = typeof super.hasOwnProperty; } return new C().f; })()"),
+        "function"
     );
 }

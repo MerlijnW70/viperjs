@@ -51,6 +51,89 @@ impl Vm {
         self.get_property_key(base, key, heap)
     }
 
+    /// `super.x` — §13.3.7.1, which finds on one object and calls back on another.
+    ///
+    /// The lookup walks from `base`, and an accessor found anywhere along it is called with
+    /// `receiver` as its `this`. That is the whole of what makes this different from
+    /// [`Vm::get_property`], which passes the base for both — and the difference is observable
+    /// exactly when a parent's getter reads a field of the instance.
+    ///
+    /// No primitive case, unlike the ordinary read: a super base is `home.[[GetPrototypeOf]]()`, so it
+    /// is an object or it is `null`, and `null` is the TypeError below.
+    pub(crate) fn get_super(
+        &mut self,
+        base: Value,
+        receiver: Value,
+        key: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let key = self.property_key(key, heap)?;
+        let Value::Object(object) = base else {
+            return Err(Abrupt::type_error(
+                "cannot read a property of `super` when there is no superclass",
+            ));
+        };
+        // Absent is `undefined` rather than an error, as any read is: `super.nothing` in a class whose
+        // parent has no such property is not a mistake the language reports.
+        let Some((_, property)) = heap.find_own(object, key) else {
+            return Ok(Value::Undefined);
+        };
+        match property.kind {
+            PropertyKind::Data { value, .. } => Ok(value),
+            // §10.1.8.1 step 8 — a getter with nothing behind it answers `undefined`, which is not
+            // the same as the property being absent and is reached by a different route.
+            PropertyKind::Accessor {
+                getter: Value::Undefined,
+                ..
+            } => Ok(Value::Undefined),
+            PropertyKind::Accessor { getter, .. } => self.call_value(getter, receiver, &[], heap),
+        }
+    }
+
+    /// `super.x = v` — §13.3.7.1's write, which lands on the receiver rather than on the base.
+    ///
+    /// Two rules, and both follow from the receiver being `this`. An inherited setter is called with
+    /// `this`, so it writes wherever it means to. With no setter the value is defined on **`this`** and
+    /// not on the base — so `super.x = 1` in a method leaves an own `x` on the instance and the parent
+    /// prototype is untouched, which is the same rule an ordinary assignment through a prototype
+    /// follows.
+    pub(crate) fn set_super(
+        &mut self,
+        base: Value,
+        receiver: Value,
+        key: Value,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let key = self.property_key(key, heap)?;
+        let Value::Object(object) = base else {
+            return Err(Abrupt::type_error(
+                "cannot write a property of `super` when there is no superclass",
+            ));
+        };
+        if let Some((_, property)) = heap.find_own(object, key) {
+            match property.kind {
+                // A property with a getter and no setter refuses the write, silently in sloppy code.
+                PropertyKind::Accessor {
+                    setter: Value::Undefined,
+                    ..
+                } => return Ok(value),
+                PropertyKind::Accessor { setter, .. } => {
+                    self.call_value(setter, receiver, &[value], heap)?;
+                    return Ok(value);
+                }
+                // A non-writable data property refuses it too, on the same terms.
+                PropertyKind::Data {
+                    writable: false, ..
+                } => return Ok(value),
+                PropertyKind::Data { .. } => {}
+            }
+        }
+        // §10.1.9.2 step 4 — the value is filed on the *receiver*, through the ordinary path so that
+        // an exotic receiver (an Array's `length`, an arguments object's map) behaves as it should.
+        self.set_property_key(receiver, key, value, heap)
+    }
+
     /// What a String primitive has of its own — §10.4.3.5's characters and §10.4.3.4's `length`.
     ///
     /// `None` when the key is neither, and then the read goes on to `String.prototype` as any
