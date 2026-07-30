@@ -275,9 +275,15 @@ struct Compiler<'a> {
     /// compiler is the only thing that knows where those jumps are, so it emits the closing
     /// before each of them, and this is how it knows which iterators are still open.
     ///
-    /// Parallel to `breaks`, so a labelled break can tell how many loops it crosses and close
-    /// exactly those.
-    closes: Vec<u32>,
+    /// Parallel to `breaks` — **one entry per breakable statement**, and `None` for the ones that
+    /// drive no iterator.
+    ///
+    /// Genuinely parallel, which it was not: it held one entry per open `for`-`of` while `breaks`
+    /// held one per breakable, and the two indices coincide only while every enclosing breakable is a
+    /// `for`-`of`. A `switch` between a label and its loop was enough to make a labelled break close
+    /// the wrong iterators, or none. Now the index is the same index, and the `Option` is what says
+    /// there is nothing to close rather than the lengths saying it.
+    closes: Vec<Option<u32>>,
 }
 
 impl<'a> Compiler<'a> {

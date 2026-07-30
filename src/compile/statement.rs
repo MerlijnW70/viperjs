@@ -65,7 +65,7 @@ impl Compiler<'_> {
                 self.expression(&statement.test)?;
                 let out = self.chunk.emit_jump(Instruction::JumpIfFalse);
                 self.loop_marks.push(self.locals.len());
-                let compiled = self.loop_body(&statement.body, |compiler| {
+                let compiled = self.loop_body(&statement.body, None, |compiler| {
                     compiler.chunk.emit(Instruction::Jump(top));
                     Ok(top)
                 });
@@ -78,7 +78,7 @@ impl Compiler<'_> {
             StmtKind::DoWhile(statement) => {
                 let top = self.here()?;
                 self.loop_marks.push(self.locals.len());
-                let compiled = self.loop_body(&statement.body, |compiler| {
+                let compiled = self.loop_body(&statement.body, None, |compiler| {
                     let test = compiler.here()?;
                     compiler.expression(&statement.test)?;
                     compiler.chunk.emit(Instruction::JumpIfTrue(top));
@@ -115,7 +115,7 @@ impl Compiler<'_> {
                 ForInOfKind::Of => self.for_of_statement(statement, span),
             },
             // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
-            StmtKind::Labelled(statement) => self.labelled_statement(statement, span),
+            StmtKind::Labelled(statement) => self.labelled_statement(statement),
             StmtKind::With(_) => Err(unsupported("with", span)),
             // Already made by [`Compiler::hoist_functions`] before the body ran, so a declaration
             // at a body's top level has nothing left to do — and produces no completion value,
@@ -163,8 +163,9 @@ impl Compiler<'_> {
                 // closing is stack-balanced, so it is still there afterwards — and if a `return`
                 // method throws, that throw wins over the return, which is step 7.
                 for at in (0..self.closes.len()).rev() {
-                    let iterator = self.closes[at];
-                    self.emit_close(iterator, Check::Loop)?;
+                    if let Some(iterator) = self.closes[at] {
+                        self.emit_close(iterator, Check::Loop)?;
+                    }
                 }
                 // §10.2.2 step 13 — a derived constructor's `return` is stricter than every other
                 // one: an object is answered with, `undefined` is answered with the bound `this`, and
@@ -948,7 +949,7 @@ impl Compiler<'_> {
         let out = self.chunk.emit_jump(Instruction::JumpIfTrue);
 
         self.assign_enumerated(&statement.left, binding, current, span)?;
-        self.loop_body(&statement.body, |compiler| {
+        self.loop_body(&statement.body, None, |compiler| {
             compiler.chunk.emit(Instruction::Jump(top));
             Ok(top)
         })?;
@@ -1041,12 +1042,10 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
 
         self.assign_enumerated(&statement.left, binding, current, span)?;
-        self.closes.push(iterator);
-        let body = self.loop_body(&statement.body, |compiler| {
+        let body = self.loop_body(&statement.body, Some(iterator), |compiler| {
             compiler.chunk.emit(Instruction::Jump(top));
             Ok(top)
         });
-        self.closes.pop();
         body?;
         // Every `break` arrives here having already taken the handler down and closed for itself,
         // so this is the *done* path's business alone.
@@ -1253,7 +1252,7 @@ impl Compiler<'_> {
             None => None,
         };
         let update = statement.update.as_ref();
-        self.loop_body(&statement.body, |compiler| {
+        self.loop_body(&statement.body, None, |compiler| {
             // `continue` goes to the *update*, not to the test: `for (i = 0; i < 3; i = i + 1) {
             // continue; }` still increments, which is the whole reason the third part exists.
             let target = compiler.here()?;
@@ -1277,15 +1276,22 @@ impl Compiler<'_> {
     fn loop_body(
         &mut self,
         body: &Stmt,
+        iterator: Option<u32>,
         after: impl FnOnce(&mut Self) -> Result<u32, CompileError>,
     ) -> Result<(), CompileError> {
         self.breaks.push(Vec::new());
         self.continues.push(Vec::new());
+        // One entry per breakable, and the iterator this loop drives if it drives one — §7.4.9's list
+        // is indexed by breakable, so `None` is what says there is nothing to close rather than the
+        // entry being absent. Taken as an argument rather than pushed by the caller beforehand: the
+        // caller would have to know not to push twice, and *that* was a branch nothing could pin.
+        self.closes.push(iterator);
         let compiled = self.statement(body).and_then(|()| after(self));
         // The two stacks come back down even when compilation failed, so that a later loop does
         // not inherit this one's pending jumps and patch them into its own end.
         let continues = self.continues.pop().unwrap_or_default();
         let breaks = self.breaks.pop().unwrap_or_default();
+        self.closes.truncate(self.breaks.len());
         let continue_target = compiled?;
         for jump in continues {
             self.chunk.patch_to(jump, continue_target);
@@ -1321,6 +1327,7 @@ impl Compiler<'_> {
         // A `break` inside a switch leaves the switch, so it is a breakable statement like a
         // loop — but not a *continuable* one, which is why only the break stack is pushed.
         self.breaks.push(Vec::new());
+        self.closes.push(None);
 
         // The tests, in order, each jumping to where its body begins.
         let mut entries = Vec::new();
@@ -1361,6 +1368,7 @@ impl Compiler<'_> {
         // The discriminant is still under everything, and a `break` jumps here — so it is
         // discarded after the breaks land rather than before, or a break would leave it behind.
         let breaks = self.breaks.pop().unwrap_or_default();
+        self.closes.truncate(self.breaks.len());
         for jump in breaks {
             self.chunk.patch_to(jump, after);
         }
@@ -1376,11 +1384,7 @@ impl Compiler<'_> {
     /// round it again. So the label is remembered for as long as that statement is being
     /// compiled, and a `break` that names it patches into the same list the statement's own
     /// breaks do.
-    fn labelled_statement(
-        &mut self,
-        statement: &LabelledStatement,
-        span: Span,
-    ) -> Result<(), CompileError> {
+    fn labelled_statement(&mut self, statement: &LabelledStatement) -> Result<(), CompileError> {
         // §14.13.1 — a label may not be nested inside one of the same name. The parser refuses
         // that, so this is not a duplicate check; it is what makes the innermost match the right
         // one when the names differ.
@@ -1388,16 +1392,30 @@ impl Compiler<'_> {
             statement.body.kind,
             StmtKind::While(_) | StmtKind::DoWhile(_) | StmtKind::For(_) | StmtKind::ForInOf(_)
         );
-        if !breakable {
-            // `outer: { break outer; }` is legal and needs a break target with no loop under it.
-            // A block is not a loop, so there is nowhere for the jump to land yet.
-            return Err(unsupported("a label on something that is not a loop", span));
-        }
         self.labels
             .push((statement.label.name.clone(), self.breaks.len()));
+        if breakable {
+            let compiled = self.statement(&statement.body);
+            self.labels.pop();
+            return compiled;
+        }
+        // §14.13.4 — a label on anything else is a break target and nothing more: `outer: { break
+        // outer; }` leaves the block, and there is no loop under it for the jump to land in. So the
+        // statement gets a break list of its own, exactly as a `switch` does, and the jumps patch to
+        // the end of it. `continue outer` is a Syntax Error the parser has already refused, which is
+        // why there is no continue list to go with it.
+        self.breaks.push(Vec::new());
+        self.closes.push(None);
         let compiled = self.statement(&statement.body);
+        let breaks = self.breaks.pop().unwrap_or_default();
+        self.closes.truncate(self.breaks.len());
         self.labels.pop();
-        compiled
+        compiled?;
+        let after = self.here()?;
+        for jump in breaks {
+            self.chunk.patch_to(jump, after);
+        }
+        Ok(())
     }
 
     /// `break name` or `continue name` — §14.9 and §14.8 with a label.
@@ -1436,8 +1454,9 @@ impl Compiler<'_> {
         // inside the target, so it leaves one fewer.
         let staying = usize::from(!leaving);
         for at in (depth + staying..self.closes.len()).rev() {
-            let iterator = self.closes[at];
-            self.emit_close(iterator, Check::Loop)?;
+            if let Some(iterator) = self.closes[at] {
+                self.emit_close(iterator, Check::Loop)?;
+            }
         }
         // No "is there a list" check, because there always is: [`Compiler::labelled_statement`]
         // records a label only for a loop, and a loop pushes both lists before its body is
@@ -1487,8 +1506,8 @@ impl Compiler<'_> {
         }
         // §7.4.9 — a `break` leaves the innermost loop, so an iterator it was driving has to be
         // told. A `continue` stays in the loop and has nothing to tell it.
-        if leaving && self.closes.len() == self.breaks.len() {
-            let iterator = self.closes[self.closes.len() - 1];
+        // The innermost breakable, asked directly rather than inferred from two lengths agreeing.
+        if leaving && let Some(Some(iterator)) = self.closes.last().copied() {
             self.emit_close(iterator, Check::Loop)?;
         }
         let jump = self.chunk.emit_jump(Instruction::Jump);

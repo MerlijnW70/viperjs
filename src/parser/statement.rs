@@ -150,6 +150,17 @@ impl Parser<'_> {
                 span: self.current.span,
             });
         }
+        // …and `let [` is the fourth, needing a lookahead for the opposite reason: `let` is not
+        // reserved, so `let` alone is an ordinary identifier and only the `[` decides. It is singled
+        // out because it is the one shape that would otherwise *parse*: `let[a] = []` is a perfectly
+        // good member assignment, so without this `if (x) let [a] = [];` compiles and then fails at
+        // run time. `let x` and `let {` are refused by the expression grammar on their own.
+        if self.at_let_bracket()? {
+            return Err(ParseError {
+                kind: ParseErrorKind::DeclarationInStatementPosition,
+                span: self.current.span,
+            });
+        }
         match self.current.kind {
             TokenKind::LBrace => self.parse_block(),
             TokenKind::Semicolon => {

@@ -145,10 +145,6 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
             "a function that closes over a `let` or `const` declared in a loop",
         ),
         ("function* g() {}", "an async function or a generator"),
-        (
-            "outer: { break outer; }",
-            "a label on something that is not a loop",
-        ),
         ("delete x;", "deleting a name"),
     ];
     for (source, what) in cases {
@@ -590,5 +586,93 @@ fn a_global_is_looked_up_each_time_because_a_script_can_change_it_underneath() {
             "globalThis.gone = 1; function f() { return gone } delete globalThis.gone; try { f() } catch (e) { e.name }"
         ),
         "ReferenceError"
+    );
+}
+
+#[test]
+fn a_label_on_something_that_is_not_a_loop_is_a_break_target() {
+    // §14.13.4 — a label on a non-iteration statement is a break target and nothing more:
+    // `outer: { break outer; }` leaves the block, and there is no loop under it for the jump to land
+    // in. `continue outer` naming one is a Syntax Error the parser refuses, which is why the label
+    // needs a break list and no continue list.
+    assert_eq!(
+        run("(function () { var seen = []; \
+             outer: { seen.push(1); break outer; seen.push(2); } \
+             seen.push(3); return seen.join(','); })()"),
+        "1,3"
+    );
+    // A break naming an outer label leaves everything between, loops included.
+    assert_eq!(
+        run("(function () { var n = 0; \
+             outer: { for (var i = 0; i < 3; i++) { if (i === 1) break outer; n++; } n = 99; } \
+             return n; })()"),
+        "1"
+    );
+    // Two labels on one statement, which §14.13 allows and which share the one target.
+    assert_eq!(
+        run(
+            "(function () { var out = []; a: b: { out.push(1); break a; } return out.join(','); })()"
+        ),
+        "1"
+    );
+    // A labelled block *inside* a loop does not swallow a `continue` aimed past it.
+    assert_eq!(
+        run("(function () { var log = []; \
+             outer: for (const x of [1, 2, 3]) { inner: { if (x === 2) continue outer; log.push(x); } } \
+             return log.join(','); })()"),
+        "1,3"
+    );
+}
+
+#[test]
+fn a_labelled_break_closes_exactly_the_iterators_it_leaves() {
+    // §7.4.9 — and the pair of rows that says the bookkeeping is right, because the two shapes differ
+    // only in where the label sits. The list of open iterators is indexed by *breakable statement*,
+    // one entry each with `None` for the ones that drive nothing; before this it held one entry per
+    // open `for`-`of`, and the two indices agree only while every enclosing breakable is a `for`-`of`.
+    // A `switch` or a labelled block between a label and its loop was enough to close the wrong ones.
+    let counting = "var closed = 0; var it = { [Symbol.iterator]() { var i = 0; return { \
+                    next() { return { value: i++, done: i > 5 }; }, \
+                    return() { closed++; return {}; } }; } };";
+    // Leaving a label *around* the loop leaves the loop, so the iterator is told.
+    assert_eq!(
+        run(&format!(
+            "(function () {{ {counting} lab: {{ for (const x of it) {{ break lab; }} }} \
+             return closed; }})()"
+        )),
+        "1"
+    );
+    // Leaving a label *inside* the loop stays in the loop, so it is not.
+    assert_eq!(
+        run(&format!(
+            "(function () {{ {counting} for (const x of it) {{ lab: {{ break lab; }} }} \
+             return closed; }})()"
+        )),
+        "0"
+    );
+    // A plain `break` out of a loop *inside* a `for`-`of` leaves that loop and not the `for`-`of`, so
+    // the iterator is untouched — the row that says every breakable has an entry of its own, rather
+    // than the innermost `for`-`of`'s being found by accident.
+    assert_eq!(
+        run(&format!(
+            "(function () {{ {counting}              for (const x of it) {{ while (true) {{ break; }} break; }}              return closed; }})()"
+        )),
+        "1"
+    );
+    assert_eq!(
+        run(&format!(
+            "(function () {{ {counting} var n = 0;              for (const x of it) {{ for (var i = 0; i < 2; i++) {{ n++; break; }} }}              return closed + ',' + n; }})()"
+        )),
+        "0,5"
+    );
+    // …and a `switch` between the label and the loop is the shape that was wrong before: the break
+    // leaves the labelled block and both loops inside it.
+    assert_eq!(
+        run(&format!(
+            "(function () {{ {counting} \
+             lab: {{ switch (1) {{ default: {{ for (const x of it) {{ break lab; }} }} }} }} \
+             return closed; }})()"
+        )),
+        "1"
     );
 }

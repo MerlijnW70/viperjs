@@ -44,6 +44,20 @@ impl Parser<'_> {
             || matches!(next.kind, TokenKind::LBracket | TokenKind::LBrace))
     }
 
+    /// Whether `let [` begins here — §14.5's lookahead restriction, from the statement's side.
+    ///
+    /// The one member of that list that needs *two* tokens and would otherwise parse: `let[a] = []`
+    /// is a member assignment, so where only a `Statement` may stand — a labelled item, an `if` body —
+    /// this shape has to be refused rather than read as an expression.
+    pub(super) fn at_let_bracket(&self) -> Result<bool, ParseError> {
+        if !self.at_contextual("let") {
+            return Ok(false);
+        }
+        // Under `Div`, which is what would follow `let` were it an identifier. A `[` means the same
+        // under either goal, so the choice cannot mislead.
+        Ok(self.peek(Goal::Div)?.kind == TokenKind::LBracket)
+    }
+
     /// `VariableStatement` or `LexicalDeclaration` (§14.3), with the cursor on the keyword.
     ///
     /// The statement forms, which is to say the ones whose terminating semicolon automatic
@@ -367,5 +381,34 @@ mod tests {
                 .join(", ")
             + ";";
         assert!(parse_script(&many).is_ok());
+    }
+
+    #[test]
+    fn let_bracket_may_not_stand_where_only_a_statement_may() {
+        // §14.5's lookahead restriction, and the one member of it that needs two tokens: `let` is not
+        // reserved, so `let` alone is an ordinary identifier and only the `[` decides. It is singled
+        // out because it is the shape that would otherwise *parse* — `let[a] = []` is a perfectly good
+        // member assignment, so without this `if (x) let [a] = [];` compiled and failed at run time.
+        for source in [
+            "outer: let [a] = [1];",
+            "if (1) let [a] = [1];",
+            "while (0) let [a] = [1];",
+            "for (;;) let [a] = [1];",
+        ] {
+            assert_eq!(
+                parse_script(source).expect_err("§14.5 refuses this").kind, // the test is the refusal
+                ParseErrorKind::DeclarationInStatementPosition,
+                "{source}"
+            );
+        }
+        // Where a `Declaration` *is* allowed it is an ordinary lexical declaration, which is the row
+        // that says the restriction is about the position and not about the two tokens.
+        assert_eq!(statements("let [a] = [1];"), ["(let [a]=[1])"]);
+        // …and the other `let` forms are unaffected: only `[` follows it into this rule.
+        assert_eq!(statements("let a = 1;"), ["(let a=1)"]);
+        assert!(
+            parse_script("if (1) let;").is_ok(),
+            "`let` alone is an identifier"
+        );
     }
 }
