@@ -124,24 +124,32 @@ a commit, and none may cost a single conformance test.
 M1, M2, M3 and M5 are done: the lexer, the parser, the value and object model, a bytecode compiler
 and an interpreter that runs code — and the conformance harness that measures it, which from here is
 what says what to build next. **M4 is what is in progress.** `Object`, `Function`, `Array`, `String`,
-`Number`, `Boolean`, `Math`, `JSON` and the `Error` hierarchy are in; **`Date` and `RegExp` are what
-remain**, and the regular expression engine is ours to write — no dependency.
+`Number`, `Boolean`, `Math`, `JSON`, `Date` and the `Error` hierarchy are in, and so are classes,
+`Promise` and §9.5's job queue from M6; **`RegExp` is what remains of M4**, and the regular
+expression engine is ours to write — no dependency.
 
-Conformance as of this commit is **33.15% of test262** — 30,879 of 93,161 runs. Treat that number as
+Conformance as of this commit is **43.32% of test262** — 40,357 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Let the failure buckets choose the next slice, not intuition. The largest right now:
 
 | Runs | What stops them |
 | --- | --- |
-| 10,737 | an async test reports through `$DONE`, which needs a host function |
-| 10,505 | `class` declarations and expressions |
-| 6,866 | regular expression literals |
-| 4,432 | generators and `async` functions |
-| 3,107 | `BigInt` literals |
+| 17,069 | `async` functions and generators |
+| 6,896 | regular expression literals |
+| 3,137 | `BigInt` literals |
+| 872 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
+| 830 | modules |
 
-Note what that list says about order: the parser already accepts classes, generators and `async`, so
-those buckets are compiler and runtime work rather than grammar. A bucket with ten thousand runs
-behind it is the next slice; one with four is not.
+Note what that list says about order. The parser already accepts generators and `async`, so that
+bucket is compiler and runtime work rather than grammar — and it is *one* piece of work, because
+both need the same thing: an interpreter whose frames can be suspended and resumed. That is the
+largest single change left in the engine and it is worth planning before starting.
+
+The `$DONE` bucket is gone, and what it was hiding is the reason the table above looks different
+from the one that stood here before: 10,737 runs were skipped because an async test reports through
+a host function this harness did not provide. It provides one now, and those tests report their real
+reasons — most of which is the first row. A bucket that large is worth being suspicious of; it was
+one missing host function standing in front of a fifth of the suite.
 
 Read [`GOAL.md`](GOAL.md) first — it is binding and it outranks this file — then `src/span.rs` to
 calibrate on the bar. `cargo run --release --example parse -- --commonjs <dir>` over a real
