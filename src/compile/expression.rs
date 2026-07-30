@@ -280,9 +280,29 @@ impl Compiler<'_> {
                         self.expression(value)?;
                         self.chunk.emit(Instruction::Binary(binary));
                     }
-                    // `a &&= v` and its two siblings only assign when the short circuit does not
-                    // fire, so the store is *inside* the jump. Left for the slice that has a
-                    // reason to build it.
+                    // §13.15.2 — `a ||= v` and its two siblings assign *only* when the short circuit
+                    // does not fire, so the store is inside the jump rather than after the match. The
+                    // value the whole expression answers is the old one when it fires and the new one
+                    // when it does not, which is exactly what `JumpKeeping` leaves behind.
+                    None if short_circuit_operator(*operator).is_some() => {
+                        let condition = match short_circuit_operator(*operator) {
+                            Some(condition) => condition,
+                            // Unreachable: the guard above just asked. Written out rather than
+                            // unwrapped because a panic here would be an engine bug the types cannot
+                            // encode, and there is a real answer to give instead.
+                            None => return Err(unsupported("a logical assignment", span)),
+                        };
+                        self.load_name(name)?;
+                        let over_the_store = self
+                            .chunk
+                            .emit_jump(|target| Instruction::JumpKeeping(condition, target));
+                        // No `Pop` for the old value: `JumpKeeping` keeps it only on the path that
+                        // jumps, and consumes it on the one that falls through — which is the whole
+                        // reason `a || b` answers `b` rather than leaving both behind.
+                        self.expression(value)?;
+                        self.store_name(name)?;
+                        return self.chunk.patch(over_the_store);
+                    }
                     None => return Err(unsupported("a logical assignment", span)),
                 }
                 self.store_name(name)
@@ -545,6 +565,29 @@ impl Compiler<'_> {
                 self.expression(value)?;
                 self.chunk.emit(Instruction::Binary(binary));
             }
+            // The same rule as for a name, with the base and the key to clear up. On the path where
+            // the circuit fires they are still under the old value, so it is buried beneath them and
+            // they are dropped — both paths have to leave the stack one deep or the chunk is
+            // unbalanced.
+            None if short_circuit_operator(operator).is_some() => {
+                let condition = match short_circuit_operator(operator) {
+                    Some(condition) => condition,
+                    None => return Err(unsupported("a logical assignment", span)),
+                };
+                self.chunk.emit(Instruction::DuplicateTwo);
+                self.chunk.emit(Instruction::GetProperty);
+                let circuit_fired = self
+                    .chunk
+                    .emit_jump(|target| Instruction::JumpKeeping(condition, target));
+                self.expression(value)?;
+                self.chunk.emit(Instruction::SetProperty);
+                let done = self.chunk.emit_jump(Instruction::Jump);
+                self.chunk.patch(circuit_fired)?;
+                self.chunk.emit(Instruction::Bury(2));
+                self.chunk.emit(Instruction::Pop);
+                self.chunk.emit(Instruction::Pop);
+                return self.chunk.patch(done);
+            }
             None => return Err(unsupported("a logical assignment", span)),
         }
         self.chunk.emit(Instruction::SetProperty);
@@ -792,6 +835,21 @@ impl Compiler<'_> {
 /// `+=` is `+`, and so on for the eleven that pair up. The three logical ones — `&&=`, `||=`,
 /// `??=` — do not: they are short circuits, so they may not assign at all, and there is no
 /// binary operator that describes them.
+/// The short circuit `&&=`, `||=` and `??=` test before they assign, if this is one of them.
+///
+/// Separate from [`compound_operator`] because these three are not compound assignments at all:
+/// §13.15.2 gives them their own evaluation, in which the value is never computed and the store never
+/// happens unless the test fails. `a ||= f()` does not call `f` when `a` is truthy, where `a += f()`
+/// always calls it.
+fn short_circuit_operator(operator: AssignmentOperator) -> Option<ShortCircuit> {
+    Some(match operator {
+        AssignmentOperator::LogicalAnd => ShortCircuit::WhenFalsy,
+        AssignmentOperator::LogicalOr => ShortCircuit::WhenTruthy,
+        AssignmentOperator::NullishCoalescing => ShortCircuit::WhenNotNullish,
+        _ => return None,
+    })
+}
+
 fn compound_operator(operator: AssignmentOperator) -> Option<BinaryOperator> {
     Some(match operator {
         AssignmentOperator::Add => BinaryOperator::Add,

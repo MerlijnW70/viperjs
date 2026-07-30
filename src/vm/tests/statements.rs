@@ -150,7 +150,6 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
             "a label on something that is not a loop",
         ),
         ("delete x;", "deleting a name"),
-        ("var a; a ||= 1;", "a logical assignment"),
     ];
     for (source, what) in cases {
         let mut heap = Heap::new();

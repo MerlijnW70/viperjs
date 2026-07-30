@@ -327,3 +327,106 @@ fn a_prototype_chain_of_any_length_answers_without_running_out_of_stack() {
                 var k = n; o = n; i = i + 1; } A.prototype = {}; o instanceof A";
     assert_eq!(run(deep), "false");
 }
+
+#[test]
+fn a_logical_assignment_only_stores_when_the_circuit_does_not_fire() {
+    // §13.15.2 — these three are not compound assignments. `a += f()` always calls `f`; `a ||= f()`
+    // calls it only when the store is going to happen, and that is the whole difference.
+    assert_eq!(
+        run("(function () { var a = 0; a ||= 5; return a; })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { var a = 1; a ||= 5; return a; })()"),
+        "1"
+    );
+    assert_eq!(
+        run("(function () { var a = 1; a &&= 5; return a; })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { var a = 0; a &&= 5; return a; })()"),
+        "0"
+    );
+    assert_eq!(
+        run("(function () { var a = null; a ??= 5; return a; })()"),
+        "5"
+    );
+    // `??` tests for nullish and not for falsy, which is why it exists: `0 ||= 5` stores and
+    // `0 ??= 5` does not.
+    assert_eq!(
+        run("(function () { var a = 0; a ??= 5; return a; })()"),
+        "0"
+    );
+    // The right-hand side is never evaluated when the circuit fires — asserted by counting calls,
+    // because a value alone cannot show whether a function ran.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var f = function () { n++; return 9; }; \
+             var a = 1; a ||= f(); return a + ',' + n; })()"
+        ),
+        "1,0"
+    );
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var f = function () { n++; return 9; }; \
+             var a = 0; a ||= f(); return a + ',' + n; })()"
+        ),
+        "9,1"
+    );
+    // The expression answers the old value when the circuit fires and the new one when it does not.
+    assert_eq!(run("(function () { var a = 1; return (a ||= 5); })()"), "1");
+    assert_eq!(run("(function () { var a = 0; return (a ||= 5); })()"), "5");
+}
+
+#[test]
+fn a_logical_assignment_to_a_property_evaluates_the_reference_once() {
+    assert_eq!(
+        run("(function () { var o = {p: 0}; o.p ||= 7; return o.p; })()"),
+        "7"
+    );
+    assert_eq!(
+        run("(function () { var o = {p: 1}; o.p ||= 7; return o.p; })()"),
+        "1"
+    );
+    assert_eq!(
+        run("(function () { var o = {p: null}; o.p ??= 3; return o.p; })()"),
+        "3"
+    );
+    assert_eq!(
+        run("(function () { var o = {p: 0}; return (o.p ||= 7); })()"),
+        "7"
+    );
+    assert_eq!(
+        run("(function () { var o = {p: 1}; return (o.p ||= 7); })()"),
+        "1"
+    );
+    // §13.15.2 evaluates the reference *before* the test, so a computed key runs once even when the
+    // circuit fires and no store happens. Twice would be observable and wrong.
+    assert_eq!(
+        run("(function () { var n = 0; var o = {p: 1}; \
+             var k = function () { n++; return 'p'; }; o[k()] ||= 9; return o.p + ',' + n; })()"),
+        "1,1"
+    );
+    assert_eq!(
+        run("(function () { var n = 0; var o = {p: 0}; \
+             var k = function () { n++; return 'p'; }; o[k()] ||= 9; return o.p + ',' + n; })()"),
+        "9,1"
+    );
+    // And the right-hand side is not evaluated when the circuit fires, here either.
+    assert_eq!(
+        run(
+            "(function () { var n = 0; var f = function () { n++; return 4; }; \
+             var o = {p: 0}; o.p ??= f(); return o.p + ',' + n; })()"
+        ),
+        "0,0"
+    );
+    // A setter is reached only when the store happens, which is the property half of the same rule.
+    assert_eq!(
+        run("(function () { var ran = 0; var o = {}; \
+             Object.defineProperty(o, 'p', {get: function () { return 1; }, \
+                                            set: function () { ran++; }}); \
+             o.p ||= 9; return ran; })()"),
+        "0"
+    );
+}

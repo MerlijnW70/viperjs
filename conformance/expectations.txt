@@ -793,6 +793,12 @@ annexB/language/expressions/equals/emulates-undefined.js :: it threw ReferenceEr
 annexB/language/expressions/equals/emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/expressions/logical-and/emulates-undefined.js :: it threw ReferenceError: $262 is not defined
 annexB/language/expressions/logical-and/emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/logical-assignment/emulates-undefined-and.js :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/logical-assignment/emulates-undefined-and.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/logical-assignment/emulates-undefined-coalesce.js :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/logical-assignment/emulates-undefined-coalesce.js (strict) :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/logical-assignment/emulates-undefined-or.js :: it threw ReferenceError: $262 is not defined
+annexB/language/expressions/logical-assignment/emulates-undefined-or.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/expressions/logical-not/emulates-undefined.js :: it threw ReferenceError: $262 is not defined
 annexB/language/expressions/logical-not/emulates-undefined.js (strict) :: it threw ReferenceError: $262 is not defined
 annexB/language/expressions/logical-or/emulates-undefined.js :: it threw ReferenceError: $262 is not defined
@@ -20972,6 +20978,38 @@ language/expressions/less-than/S11.8.1_A1.js (strict) :: it threw ReferenceError
 language/expressions/logical-and/S11.11.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/logical-and/S11.11.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/logical-and/tco-right.js (strict) :: it threw ReferenceError: f is not defined
+language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-and-assignment-operator-no-set-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-and-assignment-operator-non-writeable-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-no-set-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-writeable-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a undefined
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«undefined», «"value"») to be true
+language/expressions/logical-assignment/lgcl-or-assignment-operator-no-set-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-or-assignment-operator-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/logical-assignment/lgcl-or-assignment-operator-non-writeable-put.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-not/S11.4.9_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/logical-not/S11.4.9_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/logical-not/S9.2_A1_T2.js :: it threw ReferenceError: eval is not defined
