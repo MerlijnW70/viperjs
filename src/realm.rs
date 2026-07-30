@@ -35,6 +35,13 @@ pub struct Realm {
     /// An ordinary object and *not* a Number wrapper, so that
     /// `Number.prototype.valueOf.call(Number.prototype)` is a TypeError rather than zero.
     number_prototype: ObjectId,
+    /// What `new Date()` inherits from.
+    ///
+    /// An ordinary object and *not* a Date, which §21.4.4 requires: it holds no `[[DateValue]]`, so
+    /// `Date.prototype.getTime.call(Date.prototype)` is the TypeError §21.4.4.10 asks for rather
+    /// than NaN. ES5 had it as a Date whose value was NaN; ES2015 changed it, and the change is
+    /// observable exactly here.
+    date_prototype: ObjectId,
     /// What `new String("a")` inherits from.
     ///
     /// A String exotic object over the empty String, and §22.1.3 is explicit that it is one — so
@@ -139,6 +146,7 @@ impl Realm {
         let array_prototype = heap.new_array(object_prototype, 0);
         let boolean_prototype = heap.new_object(Some(object_prototype));
         let number_prototype = heap.new_object(Some(object_prototype));
+        let date_prototype = heap.new_object(Some(object_prototype));
         let symbol_prototype = heap.new_object(Some(object_prototype));
         let iterator_prototype = heap.new_object(Some(object_prototype));
         let array_iterator_prototype = heap.new_object(Some(iterator_prototype));
@@ -207,6 +215,7 @@ impl Realm {
             array_prototype,
             boolean_prototype,
             number_prototype,
+            date_prototype,
             string_prototype,
             symbol_prototype,
             well_known,
@@ -270,6 +279,11 @@ impl Realm {
     /// `%Number.prototype%`.
     pub fn number_prototype(&self) -> ObjectId {
         self.number_prototype
+    }
+
+    /// `%Date.prototype%`.
+    pub fn date_prototype(&self) -> ObjectId {
+        self.date_prototype
     }
 
     /// What every String object and every String primitive finds its methods on.

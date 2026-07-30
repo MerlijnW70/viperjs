@@ -111,6 +111,21 @@ pub struct Object {
     /// `Boolean.prototype.valueOf.call(new Number(1))` be the TypeError §20.3.3 asks for without
     /// three fields to keep apart.
     primitive: Option<Value>,
+    /// `[[DateValue]]` — the time value, in milliseconds since the epoch, if this is a Date.
+    ///
+    /// Its own field rather than a `Value::Number` in `primitive`, and that is not redundancy: the
+    /// slot above is documented to say *which* wrapper it is by the type of the value in it, so a
+    /// Number there means `[[NumberData]]` and can mean nothing else. Putting a time value there
+    /// would make `new Date()` indistinguishable from `new Number()`, which would let
+    /// `Number.prototype.valueOf.call(new Date())` answer instead of throwing, and would make
+    /// `JSON.stringify(v, null, aDate)` indent by the epoch.
+    ///
+    /// Inline rather than boxed, unlike the two maps above, because the payload is one `f64` and a
+    /// pointer to it would cost the same eight bytes plus an allocation. It widens every object by
+    /// 16 — there is no niche in an `f64`, and NaN cannot stand in for absence because `new
+    /// Date(NaN)` is a legal invalid date whose time value *is* NaN. Measured at 176 bytes before
+    /// and 192 after; if that matters it is an M8 question, with a number in front of it.
+    pub(super) date: Option<f64>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -159,6 +174,7 @@ impl Object {
             arguments: None,
             iteration: None,
             primitive: None,
+            date: None,
             call: None,
             environment: None,
             lexical_this: None,
@@ -189,6 +205,25 @@ impl Object {
     /// asking a flag.
     pub fn primitive(&self) -> Option<Value> {
         self.primitive
+    }
+
+    /// The time value this object holds, if it is a Date — `[[DateValue]]`.
+    ///
+    /// `Some(NaN)` is a Date that is present and invalid, which is a different answer from `None`
+    /// for something that is not a Date at all. Every `Date.prototype` method needs to tell those
+    /// two apart: the first produces `NaN` or `"Invalid Date"`, the second a TypeError.
+    pub fn date_value(&self) -> Option<f64> {
+        self.date
+    }
+
+    /// Move a Date to another instant — `Date.prototype.setTime` and every other setter.
+    ///
+    /// The caller must already have established that this *is* a Date, which every setter in §21.4.4
+    /// has: each one reads `thisTimeValue` before it computes anything, and a receiver without the
+    /// slot has thrown by then. So there is no guard here — a branch no input can reach is a branch
+    /// no test can pin, and one written defensively would only look tested.
+    pub fn set_date_value(&mut self, value: f64) {
+        self.date = Some(value);
     }
 
     /// The characters this object *is*, if it is a String exotic object — `[[StringData]]`.
@@ -459,6 +494,19 @@ impl Heap {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.primitive = Some(primitive);
+        self.objects.push(Some(object));
+        id
+    }
+
+    /// Put a Date on the heap — §21.4.2.1's `OrdinaryCreateFromConstructor` with `[[DateValue]]`.
+    ///
+    /// `time` may be NaN, and that is a Date rather than a failure: §21.4.1.31's `TimeClip` answers
+    /// NaN for anything out of range, and the object it lands in is a perfectly ordinary Date whose
+    /// every getter reports NaN. There is no separate "invalid" state to represent.
+    pub fn new_date(&mut self, prototype: ObjectId, time: f64) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(Some(prototype));
+        object.date = Some(time);
         self.objects.push(Some(object));
         id
     }

@@ -60,14 +60,18 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
         // Steps 4 to 14's table, in the rows this heap keeps enough state to answer. `IsArray`
         // is step 4 and is a real question about the object rather than about its prototype, so
         // `Object.prototype.toString.call([])` says `[object Array]` and one on an object merely
-        // *given* `Array.prototype` does not. The rest of the table — `Error`, `Date`, `RegExp`
-        // — reads internal slots that do not exist yet.
+        // *given* `Array.prototype` does not. `Error` and `RegExp` read internal slots that do
+        // not exist yet; `Date` reads one that does.
         Value::Object(object) => match heap.object(object) {
             // Step 8 — an arguments object is tagged by its parameter map, which is the only
             // thing that tells it from an ordinary object with numeric keys.
             Some(found) if found.arguments_map().is_some() => "Arguments",
             Some(found) if found.is_array() => "Array",
             Some(found) if found.call().is_some() => "Function",
+            // Step 12 — a `[[DateValue]]` tags as Date, and it has to be asked *before* the
+            // wrapper rows below: a time value is a Number, and a Date reaching those would be
+            // tagged `[object Number]`.
+            Some(found) if found.date_value().is_some() => "Date",
             // Steps 9 and 10 — a wrapper is tagged by what it wraps, which is why
             // `Object.prototype.toString.call(new Number(1))` is `[object Number]` and not
             // `[object Object]`.

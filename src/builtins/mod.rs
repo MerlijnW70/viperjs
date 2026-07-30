@@ -18,6 +18,9 @@ pub mod array;
 pub mod array_edit;
 pub mod array_iterate;
 pub mod array_methods;
+pub(crate) mod date;
+mod date_format;
+mod date_methods;
 pub mod error;
 pub mod function;
 pub mod global;
@@ -68,6 +71,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     wrapper::install(heap, realm, global);
     iterator::install(heap, realm);
     json::install(heap, realm, global);
+    date::install(heap, realm, global);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }

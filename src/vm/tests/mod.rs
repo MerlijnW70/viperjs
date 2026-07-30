@@ -45,6 +45,7 @@ mod bound;
 mod builtins;
 mod coercion;
 mod constructors;
+mod date;
 mod destructuring;
 mod for_in;
 mod for_of;
