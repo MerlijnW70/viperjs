@@ -125,19 +125,29 @@ pub struct NativeCall<'a> {
     /// reads past the end with [`NativeCall::argument`], because §10.3's built-ins are all
     /// specified in terms of "if `x` is absent" meaning `undefined`.
     pub arguments: &'a [Value],
-    /// Whether this is `new f(...)` rather than `f(...)` — §10.3.2's `[[Construct]]`.
+    /// §9.4's `[[NewTarget]]` — the constructor a `new` named, or `undefined` for a plain call.
     ///
-    /// Most built-ins do not care: `Error("x")` and `new Error("x")` are the same object by
-    /// §20.5.1.1, and the clause says so rather than the implementation forgetting to ask. The
-    /// wrapper constructors are the ones that do — `Number(1)` is a Number and `new Number(1)` is
-    /// an object — so the difference has to reach them.
+    /// Two questions at once, and they used to be two fields' worth of answer. *Whether* this is a
+    /// construction is what the wrapper constructors need — `Number(1)` is a Number and
+    /// `new Number(1)` is an object — and [`NativeCall::constructing`] asks it.
     ///
-    /// A flag and not §9.4's `[[NewTarget]]`: nothing yet can construct with a target other than
-    /// the function itself, and a flag cannot be mistaken for one that can.
-    pub constructing: bool,
+    /// *Which* constructor is what §10.3.2 needs, and it was a flag until `super()` existed: a
+    /// built-in reached through `class D extends Error {}` must make an object inheriting from
+    /// `D.prototype`, and the only thing that knows about `D` is this. With a flag here the answer
+    /// was `Error.prototype` and `new D() instanceof D` was false — right for every construction a
+    /// program could write before, and wrong for every one it can write now.
+    pub new_target: Value,
 }
 
 impl NativeCall<'_> {
+    /// Whether this is `new f(…)` rather than `f(…)` — §10.3.2's `[[Construct]]`.
+    ///
+    /// Derived from the target rather than stored beside it, so the two cannot disagree about
+    /// whether a construction is happening.
+    pub fn constructing(&self) -> bool {
+        !matches!(self.new_target, Value::Undefined)
+    }
+
     /// The argument at this position, or `undefined` when there was none.
     ///
     /// Every built-in in §20 through §28 is written as though the list were infinite and padded
@@ -162,12 +172,33 @@ mod tests {
             function: heap.new_object(None),
             this_value: Value::Undefined,
             arguments: &arguments,
-            constructing: false,
+            new_target: Value::Undefined,
         };
         assert!(matches!(call.argument(0), Value::Number(value) if value == 1.0));
         assert!(matches!(call.argument(1), Value::Null));
         assert!(matches!(call.argument(2), Value::Undefined));
         // …and far past the end is the same answer rather than a different one.
         assert!(matches!(call.argument(9_999), Value::Undefined));
+    }
+
+    #[test]
+    fn a_call_is_a_construction_exactly_when_it_has_a_new_target() {
+        // §10.3.2 — the two questions the field answers, and the reason it is one field. Derived
+        // rather than stored beside the target, so a call cannot claim to be constructing while
+        // naming nobody, or name a target while claiming not to be.
+        let mut heap = Heap::new();
+        let target = heap.new_object(None);
+        let plain = NativeCall {
+            function: target,
+            this_value: Value::Undefined,
+            arguments: &[],
+            new_target: Value::Undefined,
+        };
+        assert!(!plain.constructing());
+        let constructing = NativeCall {
+            new_target: Value::Object(target),
+            ..plain
+        };
+        assert!(constructing.constructing());
     }
 }

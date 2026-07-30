@@ -303,7 +303,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 /// says so, and it is the one constructor in the language that ignores its arguments entirely when
 /// called that way.
 fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    if !call.constructing {
+    if !call.constructing() {
         let text = super::date_format::full_text(local_time(now_ms()));
         return Ok(super::text(heap, &text));
     }
@@ -326,7 +326,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             utc_from_local(make_date(day, time))
         }
     };
-    let prototype = vm.realm().date_prototype();
+    let prototype = super::prototype_from(heap, call, vm.realm().date_prototype());
     Ok(Value::Object(heap.new_date(prototype, time_clip(time))))
 }
 

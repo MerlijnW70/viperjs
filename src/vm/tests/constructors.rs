@@ -158,3 +158,100 @@ fn an_arrow_answers_the_new_target_of_the_call_it_was_written_in() {
         "true false"
     );
 }
+
+#[test]
+fn a_built_in_constructor_makes_its_object_from_new_target_and_not_from_itself() {
+    // §10.3.2 through §10.1.13 — a built-in's `[[Construct]]` is given a newTarget and builds its
+    // object with `OrdinaryCreateFromConstructor(newTarget, …)`. Invisible until `super()` existed,
+    // because for a plain `new` the target *is* the function; through a subclass the two differ, and
+    // reading its own intrinsic gave an instance that was not an instance of the class that made it.
+    for (parent, extra) in [
+        ("Error", "'x'"),
+        ("TypeError", "'x'"),
+        ("RangeError", "'x'"),
+        ("Array", ""),
+        ("Object", ""),
+        ("Number", "1"),
+        ("Boolean", "true"),
+        ("String", "'ab'"),
+        ("Date", "0"),
+    ] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ class D extends {parent} {{}} var d = new D({extra}); \
+                 return (d instanceof D) + ',' + (d instanceof {parent}) + ',' \
+                      + (Object.getPrototypeOf(d) === D.prototype); }})()"
+            )),
+            "true,true,true",
+            "extends {parent}"
+        );
+    }
+    // Two levels, because the target is inherited by each `super()` in turn rather than becoming
+    // whichever class is nearest the built-in.
+    assert_eq!(
+        run("(function () { class D extends Error {} class E extends D {} \
+             return new E() instanceof E; })()"),
+        "true"
+    );
+}
+
+#[test]
+fn a_subclass_of_a_built_in_keeps_what_the_built_in_does() {
+    // The prototype is the only thing new.target decides. Everything the parent's `[[Construct]]`
+    // does to the object it made still happens, which is what makes a subclass useful rather than
+    // merely correctly-shaped.
+    assert_eq!(
+        run("(function () { class D extends Error {} return new D('boom').message; })()"),
+        "boom"
+    );
+    // §10.4.2's exotic `length` belongs to the object the parent made, so a subclass has it.
+    assert_eq!(
+        run("(function () { class D extends Array {} var d = new D(); d.push(1); d.push(2); \
+             return d.length + ',' + Array.isArray(d); })()"),
+        "2,true"
+    );
+    assert_eq!(
+        run("(function () { class D extends Number {} return new D(3).valueOf() + 1; })()"),
+        "4"
+    );
+    assert_eq!(
+        run("(function () { class D extends String {} var d = new D('ab'); \
+             return d.length + ',' + d[0]; })()"),
+        "2,a"
+    );
+    assert_eq!(
+        run("(function () { class D extends Date {} return new D(0).getTime(); })()"),
+        "0"
+    );
+    // A subclass inherits the parent's prototype methods through the chain rather than by copying,
+    // and may override one — which is the ordinary prototype mechanism and not a special case.
+    assert_eq!(
+        run("(function () { class D extends Error { toString() { return 'mine'; } } \
+             return String(new D('x')); })()"),
+        "mine"
+    );
+}
+
+#[test]
+fn a_built_in_called_without_new_is_unchanged_by_any_of_this() {
+    // The other half of §20.5.1.1 step 1 — no newTarget means the active function object, so a plain
+    // call still builds from the function's own `prototype`. These are the rows that would have broken
+    // had `prototype_from` read the target without a fallback.
+    assert_eq!(
+        run("(function () { var e = Error('x'); \
+             return (e instanceof Error) + ',' + e.message; })()"),
+        "true,x"
+    );
+    assert_eq!(run("typeof Number(3)"), "number");
+    assert_eq!(run("typeof String(3)"), "string");
+    assert_eq!(run("typeof Boolean(0)"), "boolean");
+    assert_eq!(run("typeof new Number(3)"), "object");
+    // §10.1.13 falls back rather than throwing when the constructor's `prototype` is not an object,
+    // which is why this is an ordinary error and not a TypeError.
+    assert_eq!(
+        run("(function () { var kept = Error.prototype; \
+             try { Object.defineProperty(Error, 'prototype', { value: 1 }); } catch (e) {} \
+             return typeof new Error('x'); })()"),
+        "object"
+    );
+}

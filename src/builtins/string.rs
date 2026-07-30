@@ -99,16 +99,17 @@ fn make_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
         // §22.1.1.1 step 2 — a Symbol is spelled rather than refused, and *only* here. `ToString`
         // of one throws, so this is the single door out of the type into text, and it is closed
         // to `new String(sym)`: step 2 applies when `NewTarget` is `undefined` and no other time.
-        Some(Value::Symbol(symbol)) if !call.constructing => {
+        Some(Value::Symbol(symbol)) if !call.constructing() => {
             return Ok(Value::String(super::symbol::descriptive(heap, *symbol)));
         }
         Some(value) => vm.to_string(*value, heap)?,
         None => heap.intern(&[]),
     };
-    match call.constructing {
-        true => Ok(Value::Object(
-            heap.new_string_object(vm.realm().string_prototype(), data),
-        )),
+    match call.constructing() {
+        true => {
+            let prototype = super::prototype_from(heap, call, vm.realm().string_prototype());
+            Ok(Value::Object(heap.new_string_object(prototype, data)))
+        }
         false => Ok(Value::String(data)),
     }
 }

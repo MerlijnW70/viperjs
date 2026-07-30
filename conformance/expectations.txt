@@ -20948,24 +20948,14 @@ language/expressions/class/restricted-properties.js :: it threw an object with n
 language/expressions/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/subclass-builtins/subclass-AggregateError.js :: it threw ReferenceError: AggregateError is not defined
 language/expressions/class/subclass-builtins/subclass-AggregateError.js (strict) :: it threw ReferenceError: AggregateError is not defined
-language/expressions/class/subclass-builtins/subclass-Array.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Array.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/class/subclass-builtins/subclass-ArrayBuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-ArrayBuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-BigInt64Array.js :: it threw ReferenceError: BigInt64Array is not defined
 language/expressions/class/subclass-builtins/subclass-BigInt64Array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 language/expressions/class/subclass-builtins/subclass-BigUint64Array.js :: it threw ReferenceError: BigUint64Array is not defined
 language/expressions/class/subclass-builtins/subclass-BigUint64Array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-language/expressions/class/subclass-builtins/subclass-Boolean.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Boolean.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/class/subclass-builtins/subclass-DataView.js :: it threw ReferenceError: DataView is not defined
 language/expressions/class/subclass-builtins/subclass-DataView.js (strict) :: it threw ReferenceError: DataView is not defined
-language/expressions/class/subclass-builtins/subclass-Date.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Date.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Error.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Error.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-EvalError.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-EvalError.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/class/subclass-builtins/subclass-Float32Array.js :: it threw ReferenceError: Float32Array is not defined
 language/expressions/class/subclass-builtins/subclass-Float32Array.js (strict) :: it threw ReferenceError: Float32Array is not defined
 language/expressions/class/subclass-builtins/subclass-Float64Array.js :: it threw ReferenceError: Float64Array is not defined
@@ -20980,30 +20970,14 @@ language/expressions/class/subclass-builtins/subclass-Int8Array.js :: it threw R
 language/expressions/class/subclass-builtins/subclass-Int8Array.js (strict) :: it threw ReferenceError: Int8Array is not defined
 language/expressions/class/subclass-builtins/subclass-Map.js :: it threw ReferenceError: Map is not defined
 language/expressions/class/subclass-builtins/subclass-Map.js (strict) :: it threw ReferenceError: Map is not defined
-language/expressions/class/subclass-builtins/subclass-Number.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Number.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Object.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-Object.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/class/subclass-builtins/subclass-Promise.js :: it threw ReferenceError: Promise is not defined
 language/expressions/class/subclass-builtins/subclass-Promise.js (strict) :: it threw ReferenceError: Promise is not defined
-language/expressions/class/subclass-builtins/subclass-RangeError.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-RangeError.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-ReferenceError.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-ReferenceError.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/class/subclass-builtins/subclass-RegExp.js :: it threw ReferenceError: RegExp is not defined
 language/expressions/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/expressions/class/subclass-builtins/subclass-Set.js :: it threw ReferenceError: Set is not defined
 language/expressions/class/subclass-builtins/subclass-Set.js (strict) :: it threw ReferenceError: Set is not defined
 language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/expressions/class/subclass-builtins/subclass-String.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-String.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-SyntaxError.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-SyntaxError.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-TypeError.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-TypeError.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-URIError.js :: it threw an object with no name: Expected true but got false
-language/expressions/class/subclass-builtins/subclass-URIError.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/class/subclass-builtins/subclass-Uint16Array.js :: it threw ReferenceError: Uint16Array is not defined
 language/expressions/class/subclass-builtins/subclass-Uint16Array.js (strict) :: it threw ReferenceError: Uint16Array is not defined
 language/expressions/class/subclass-builtins/subclass-Uint32Array.js :: it threw ReferenceError: Uint32Array is not defined
@@ -22387,24 +22361,14 @@ language/statements/class/strict-mode/arguments-callee.js :: it threw an object 
 language/statements/class/strict-mode/arguments-callee.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/subclass-builtins/subclass-AggregateError.js :: it threw ReferenceError: AggregateError is not defined
 language/statements/class/subclass-builtins/subclass-AggregateError.js (strict) :: it threw ReferenceError: AggregateError is not defined
-language/statements/class/subclass-builtins/subclass-Array.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Array.js (strict) :: it threw an object with no name: Expected true but got false
 language/statements/class/subclass-builtins/subclass-ArrayBuffer.js :: it threw ReferenceError: ArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-ArrayBuffer.js (strict) :: it threw ReferenceError: ArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-BigInt64Array.js :: it threw ReferenceError: BigInt64Array is not defined
 language/statements/class/subclass-builtins/subclass-BigInt64Array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 language/statements/class/subclass-builtins/subclass-BigUint64Array.js :: it threw ReferenceError: BigUint64Array is not defined
 language/statements/class/subclass-builtins/subclass-BigUint64Array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-language/statements/class/subclass-builtins/subclass-Boolean.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Boolean.js (strict) :: it threw an object with no name: Expected true but got false
 language/statements/class/subclass-builtins/subclass-DataView.js :: it threw ReferenceError: DataView is not defined
 language/statements/class/subclass-builtins/subclass-DataView.js (strict) :: it threw ReferenceError: DataView is not defined
-language/statements/class/subclass-builtins/subclass-Date.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Date.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Error.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Error.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-EvalError.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-EvalError.js (strict) :: it threw an object with no name: Expected true but got false
 language/statements/class/subclass-builtins/subclass-Float32Array.js :: it threw ReferenceError: Float32Array is not defined
 language/statements/class/subclass-builtins/subclass-Float32Array.js (strict) :: it threw ReferenceError: Float32Array is not defined
 language/statements/class/subclass-builtins/subclass-Float64Array.js :: it threw ReferenceError: Float64Array is not defined
@@ -22419,30 +22383,14 @@ language/statements/class/subclass-builtins/subclass-Int8Array.js :: it threw Re
 language/statements/class/subclass-builtins/subclass-Int8Array.js (strict) :: it threw ReferenceError: Int8Array is not defined
 language/statements/class/subclass-builtins/subclass-Map.js :: it threw ReferenceError: Map is not defined
 language/statements/class/subclass-builtins/subclass-Map.js (strict) :: it threw ReferenceError: Map is not defined
-language/statements/class/subclass-builtins/subclass-Number.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Number.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Object.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-Object.js (strict) :: it threw an object with no name: Expected true but got false
 language/statements/class/subclass-builtins/subclass-Promise.js :: it threw ReferenceError: Promise is not defined
 language/statements/class/subclass-builtins/subclass-Promise.js (strict) :: it threw ReferenceError: Promise is not defined
-language/statements/class/subclass-builtins/subclass-RangeError.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-RangeError.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-ReferenceError.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-ReferenceError.js (strict) :: it threw an object with no name: Expected true but got false
 language/statements/class/subclass-builtins/subclass-RegExp.js :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass-builtins/subclass-Set.js :: it threw ReferenceError: Set is not defined
 language/statements/class/subclass-builtins/subclass-Set.js (strict) :: it threw ReferenceError: Set is not defined
 language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/statements/class/subclass-builtins/subclass-String.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-String.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-SyntaxError.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-SyntaxError.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-TypeError.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-TypeError.js (strict) :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-URIError.js :: it threw an object with no name: Expected true but got false
-language/statements/class/subclass-builtins/subclass-URIError.js (strict) :: it threw an object with no name: Expected true but got false
 language/statements/class/subclass-builtins/subclass-Uint16Array.js :: it threw ReferenceError: Uint16Array is not defined
 language/statements/class/subclass-builtins/subclass-Uint16Array.js (strict) :: it threw ReferenceError: Uint16Array is not defined
 language/statements/class/subclass-builtins/subclass-Uint32Array.js :: it threw ReferenceError: Uint32Array is not defined
@@ -22465,8 +22413,6 @@ language/statements/class/subclass/builtin-objects/DataView/regular-subclassing.
 language/statements/class/subclass/builtin-objects/DataView/regular-subclassing.js (strict) :: it threw ReferenceError: DataView is not defined
 language/statements/class/subclass/builtin-objects/DataView/super-must-be-called.js :: it threw ReferenceError: DataView is not defined
 language/statements/class/subclass/builtin-objects/DataView/super-must-be-called.js (strict) :: it threw ReferenceError: DataView is not defined
-language/statements/class/subclass/builtin-objects/Error/message-property-assignment.js :: it threw an object with no name: Expected SameValue(«""», «"custom-error"») to be true
-language/statements/class/subclass/builtin-objects/Error/message-property-assignment.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-error"») to be true
 language/statements/class/subclass/builtin-objects/Function/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -22479,24 +22425,8 @@ language/statements/class/subclass/builtin-objects/Map/regular-subclassing.js ::
 language/statements/class/subclass/builtin-objects/Map/regular-subclassing.js (strict) :: it threw ReferenceError: Map is not defined
 language/statements/class/subclass/builtin-objects/Map/super-must-be-called.js :: it threw ReferenceError: Map is not defined
 language/statements/class/subclass/builtin-objects/Map/super-must-be-called.js (strict) :: it threw ReferenceError: Map is not defined
-language/statements/class/subclass/builtin-objects/NativeError/EvalError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-eval-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/EvalError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-eval-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/RangeError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-range-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/RangeError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-range-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/ReferenceError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-reference-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/ReferenceError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-reference-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/SyntaxError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-syntax-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/SyntaxError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-syntax-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/TypeError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-type-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/TypeError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-type-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/URIError-message.js :: it threw an object with no name: Expected SameValue(«""», «"custom-uri-error"») to be true
-language/statements/class/subclass/builtin-objects/NativeError/URIError-message.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"custom-uri-error"») to be true
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js :: it threw TypeError: what was called is not a function
 language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js (strict) :: it threw TypeError: what was called is not a function
-language/statements/class/subclass/builtin-objects/Object/regular-subclassing.js :: it threw an object with no name: returns the class prototype Expected SameValue(«[object Object]», «[object Object]») to be false
-language/statements/class/subclass/builtin-objects/Object/regular-subclassing.js (strict) :: it threw an object with no name: returns the class prototype Expected SameValue(«[object Object]», «[object Object]») to be false
-language/statements/class/subclass/builtin-objects/Object/replacing-prototype.js :: it threw an object with no name: Replaces prototype Expected SameValue(«[object Object]», «42») to be true
-language/statements/class/subclass/builtin-objects/Object/replacing-prototype.js (strict) :: it threw an object with no name: Replaces prototype Expected SameValue(«[object Object]», «42») to be true
 language/statements/class/subclass/builtin-objects/Promise/regular-subclassing.js :: it threw ReferenceError: Promise is not defined
 language/statements/class/subclass/builtin-objects/Promise/regular-subclassing.js (strict) :: it threw ReferenceError: Promise is not defined
 language/statements/class/subclass/builtin-objects/Promise/super-must-be-called.js :: it threw ReferenceError: Promise is not defined

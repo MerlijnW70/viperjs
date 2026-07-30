@@ -424,11 +424,15 @@ impl Vm {
             function,
             this_value,
             arguments: &arguments,
-            // §15.7.14 — `class D extends Array {}` reaches its parent through `super()`, and what
-            // the parent has to do is construct: it makes its own object out of its own `prototype`,
-            // which is why a subclass of `Array` does not get the exotic `length` until §10.4.2's
-            // `[[Prototype]]` chain is enough for it. Both ways in are constructions.
-            constructing: matches!(how, Entry::Construct | Entry::Super),
+            // §9.4's `[[NewTarget]]`, and for a `super()` it is the *inherited* one:
+            // `class D extends Error {}` runs `Error` with a target of `D`, which is the only thing
+            // that knows the object must inherit from `D.prototype`. A native is never an arrow, so
+            // there is no captured target that could take precedence over these.
+            new_target: match how {
+                Entry::Construct => Value::Object(function),
+                Entry::Super => self.new_target,
+                Entry::Plain | Entry::Method => Value::Undefined,
+            },
         };
         let answer = native(self, heap, &call);
         // The callee, its receiver and its arguments all go, and the answer takes their place —

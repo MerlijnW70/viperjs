@@ -51,7 +51,9 @@ mod string_edit;
 mod string_index;
 mod wrapper;
 
-use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
+use crate::heap::{
+    Heap, Native, NativeCall, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind,
+};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -175,6 +177,31 @@ pub(crate) fn define_metadata(heap: &mut Heap, function: ObjectId, length: Value
             ..PropertyDescriptor::EMPTY
         };
         let _ = heap.define_own_property(function, key, &descriptor);
+    }
+}
+
+/// §10.1.13 `GetPrototypeFromConstructor` — what an instance of this construction inherits from.
+///
+/// The constructor consulted is **new.target** and not the function being run, which is the whole of
+/// what makes `class D extends Error {}` work: `super()` runs `Error`, and the object has to inherit
+/// from `D.prototype` all the same. A plain call has no target, and §20.5.1.1 step 1 says to use the
+/// active function object then — so `Error("x")` still inherits from `Error.prototype`.
+///
+/// `default` is the clause's *intrinsic default prototype*, used when the constructor's `prototype`
+/// is not an object. §10.1.13 says to fall back rather than to throw, which is why
+/// `Error.prototype = 1; new Error()` is an ordinary error and not a TypeError.
+pub(crate) fn prototype_from(
+    heap: &Heap,
+    call: &NativeCall<'_>,
+    default: ObjectId,
+) -> ObjectId {
+    let constructor = match call.new_target {
+        Value::Object(target) => target,
+        _ => call.function,
+    };
+    match own_value(heap, constructor, "prototype") {
+        Some(Value::Object(prototype)) => prototype,
+        _ => default,
     }
 }
 

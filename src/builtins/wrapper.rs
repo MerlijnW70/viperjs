@@ -159,8 +159,13 @@ fn wrap_or_convert(
     value: Value,
     prototype: ObjectId,
 ) -> Value {
-    match call.constructing {
-        true => Value::Object(heap.new_wrapper(prototype, value)),
+    match call.constructing() {
+        // §10.1.13 again — the prototype comes from new.target, so `class D extends Number {}`
+        // makes wrappers that inherit `D.prototype`. The intrinsic passed in is the default.
+        true => {
+            let prototype = super::prototype_from(heap, call, prototype);
+            Value::Object(heap.new_wrapper(prototype, value))
+        }
         false => value,
     }
 }

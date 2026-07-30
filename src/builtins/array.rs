@@ -22,7 +22,9 @@ use super::{define_method, define_value, key};
 /// A length that is not an integer index is a RangeError rather than a rounding — `Array(1.5)`
 /// throws where `a.length = 1.5` throws for the same reason.
 pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let prototype = vm.realm().array_prototype();
+    // §23.1.1.1 step 1 — `ArrayCreate(…, proto)` where the proto comes from new.target, so a
+    // `class D extends Array {}` makes arrays that inherit `D.prototype`.
+    let prototype = super::prototype_from(heap, call, vm.realm().array_prototype());
     if call.arguments.len() == 1
         && let Value::Number(length) = call.argument(0)
     {

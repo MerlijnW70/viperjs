@@ -21,7 +21,7 @@ use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
-use super::{define_method, define_value, key, own_value, text};
+use super::{define_method, define_value, key, text};
 
 /// §20.5.1.1 `Error(message)`, and §20.5.6.1.1 for every native error.
 ///
@@ -34,12 +34,9 @@ use super::{define_method, define_value, key, own_value, text};
 /// `NewTarget` only to pick a prototype and never to refuse. That is unusual and deliberate:
 /// nearly every other constructor in the language throws when called without `new`.
 pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    // §10.1.13 `GetPrototypeFromConstructor` — the constructor's own `prototype`, and
+    // §10.1.13 `GetPrototypeFromConstructor` — new.target's own `prototype`, and
     // `%Error.prototype%` when a script has replaced it with something that is not an object.
-    let prototype = match own_value(heap, call.function, "prototype") {
-        Some(Value::Object(prototype)) => prototype,
-        _ => vm.realm().error_prototype(),
-    };
+    let prototype = super::prototype_from(heap, call, vm.realm().error_prototype());
     let error = heap.new_object(Some(prototype));
 
     // §20.5.1.1 step 3 — `undefined` is *absent*, not a message. `new Error(undefined)` has no

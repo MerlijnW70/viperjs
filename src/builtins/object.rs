@@ -31,6 +31,16 @@ use super::{define_method, define_value, key, text};
 
 /// §20.1.1.1 `Object(value)`.
 pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // §20.1.1.1 step 1 — the one constructor with a rule of its own about new.target: when it is
+    // present and is *not* this function, the argument is ignored entirely and an ordinary object is
+    // made from the target's `prototype`. That is what `class D extends Object {}` needs, and it is
+    // why `new D(5)` is a `D` and not a Number wrapper.
+    if let Value::Object(target) = call.new_target
+        && target != call.function
+    {
+        let prototype = super::prototype_from(heap, call, vm.realm().object_prototype());
+        return Ok(Value::Object(heap.new_object(Some(prototype))));
+    }
     match call.argument(0) {
         // §20.1.1.1 step 3 — an object is handed back *as it stands*, which is what makes
         // `Object(o) === o` true and why the function is useless as a copy.

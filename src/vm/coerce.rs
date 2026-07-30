@@ -187,7 +187,8 @@ impl Vm {
                 arguments,
                 // `Vm::call_value` is how a built-in calls a function — a callback, a `valueOf`,
                 // a `toString`. None of those is a construction.
-                constructing: false,
+                // §7.1.1 calls `valueOf` and `toString`; neither is a construction.
+                new_target: Value::Undefined,
             };
             return native(self, heap, &call);
         }
