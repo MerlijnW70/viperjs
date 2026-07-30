@@ -33,9 +33,11 @@ mod call;
 mod coerce;
 mod execute;
 mod global;
+mod jobs;
 mod property;
 
 use self::call::Frame;
+pub(crate) use self::jobs::Job;
 
 use crate::ast::UnaryOperator;
 use crate::compile::Chunk;
@@ -148,6 +150,17 @@ pub struct Vm {
     environment: EnvironmentId,
     /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
     completion: Value,
+    /// §9.5's jobs, waiting for the stack to empty — see [`jobs`].
+    ///
+    /// On the VM rather than on the realm because a job is *work in progress*, not an intrinsic:
+    /// it belongs to the execution the way the frame stack does, and a second run of a fresh VM
+    /// over the same heap starts with nothing waiting.
+    ///
+    /// A waiting job holds a handler and a capability that nothing else need be holding. Nothing
+    /// collects while one is waiting — DR-0013 refuses a heap that has grown too far rather than
+    /// collecting — so this is not a root yet, and it is the first thing that must become one when
+    /// the collector is wired to the interpreter.
+    jobs: std::collections::VecDeque<Job>,
     /// Where a nested execution stops — see [`Floor`].
     floor: Floor,
     /// Instructions still to run before the heap budget is looked at again — DR-0013.
@@ -207,6 +220,7 @@ impl Vm {
         Self {
             realm: Realm::new(heap),
             escaped: None,
+            jobs: std::collections::VecDeque::new(),
             stack: Vec::new(),
             handlers: Vec::new(),
             frames: Vec::new(),
@@ -264,6 +278,14 @@ impl Vm {
         // this runs: a backward jump is how a loop will be built, and a script that loops forever
         // is a script that loops forever. DR-0002 is about panics, not about halting.
         self.execute(chunk, heap, &mut current, &mut at)?;
+        // §9.5 — the jobs run when no execution context is running, which for a script is here:
+        // the last statement has finished and the answer has not been handed back yet. This one
+        // line is the whole of what makes `then` asynchronous.
+        //
+        // Before the balance check below, because a job runs compiled code and would leave the
+        // stack looking untidy if it ran after; after `execute`, because a job that ran during the
+        // script would defeat the point of being a job.
+        self.drain_jobs(heap);
         // Nothing should be left. Anything else means the chunk and the compiler disagree about
         // what the instructions do, and saying so here is cheaper than finding out later.
         if let Some(thrown) = self.escaped {
@@ -350,7 +372,7 @@ impl Vm {
     /// carries a value has nothing to decide — it is the one that was thrown, and building a
     /// second object from its parts would hand the program a different error than the one it
     /// raised.
-    fn thrown_value(&self, error: Abrupt, heap: &mut Heap) -> Value {
+    pub(crate) fn thrown_value(&self, error: Abrupt, heap: &mut Heap) -> Value {
         match error {
             Abrupt::Raised(kind, message) => self.realm.error(heap, kind, message),
             Abrupt::Thrown(value) => value,

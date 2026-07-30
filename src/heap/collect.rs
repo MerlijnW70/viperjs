@@ -190,6 +190,59 @@ impl Heap {
                     }
                 }
             }
+            // Everything a promise is holding on behalf of something that has not happened yet, and
+            // it is the *only* thing holding most of it. `Promise.resolve(o).then(f)` leaves `o`
+            // named by nothing but the promise's result and `f` named by nothing but its reaction
+            // list — and a reaction also holds the capability whose promise is settled afterwards,
+            // which is the object a program is usually still waiting on.
+            if let Some(promise) = object.promise() {
+                let reactions = promise.fulfil.iter().chain(promise.reject.iter());
+                let held = std::iter::once(promise.result).chain(reactions.flat_map(|reaction| {
+                    let capability = reaction.capability;
+                    [
+                        reaction.handler.unwrap_or(Value::Undefined),
+                        capability.map_or(Value::Undefined, |it| it.promise),
+                        capability.map_or(Value::Undefined, |it| it.resolve),
+                        capability.map_or(Value::Undefined, |it| it.reject),
+                    ]
+                }));
+                for value in held {
+                    match value {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
+                }
+            }
+            // …and what a resolving function settles, which is the other direction of the same
+            // pair: a program that keeps only the `resolve` it was handed keeps the promise alive
+            // through it, and that is the whole point of holding one.
+            match object.role() {
+                Some(crate::heap::Role::Resolve(settler) | crate::heap::Role::Reject(settler)) => {
+                    pending.push(settler.promise);
+                }
+                Some(crate::heap::Role::Finally {
+                    handler: first,
+                    constructor: second,
+                })
+                | Some(crate::heap::Role::Executor {
+                    resolve: first,
+                    reject: second,
+                }) => {
+                    for value in [*first, *second] {
+                        match value {
+                            Value::Object(reached) => pending.push(reached),
+                            other => self.mark_value(other, marked),
+                        }
+                    }
+                }
+                Some(crate::heap::Role::Thunk(value) | crate::heap::Role::Thrower(value)) => {
+                    match *value {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
+                }
+                None => {}
+            }
             // A method's home object, which nothing else need be holding: a method taken off a class
             // and stored on its own still reads `super.x` through it, so the class's prototype is
             // reachable through the method and by no other path.

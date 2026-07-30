@@ -60,6 +60,14 @@ pub struct Realm {
     /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
     /// property on the constructor would be the script's to move; this is not.
     well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
+    /// %Promise.prototype% — §27.2.5.
+    promise_prototype: ObjectId,
+    /// %Promise% itself — §27.2.4.
+    ///
+    /// Kept because `SpeciesConstructor` needs it as the *default*: a promise whose `constructor`
+    /// is gone falls back to this one, and a fallback that read the global would answer with
+    /// whatever a program had since assigned to `Promise`.
+    promise_constructor: ObjectId,
     /// %IteratorPrototype% — §27.1.2, where `[@@iterator]` answers the receiver.
     ///
     /// Every iterator in the language inherits from this, however it was made, which is what makes
@@ -148,6 +156,7 @@ impl Realm {
         let number_prototype = heap.new_object(Some(object_prototype));
         let date_prototype = heap.new_object(Some(object_prototype));
         let symbol_prototype = heap.new_object(Some(object_prototype));
+        let promise_prototype = heap.new_object(Some(object_prototype));
         let iterator_prototype = heap.new_object(Some(object_prototype));
         let array_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let string_iterator_prototype = heap.new_object(Some(iterator_prototype));
@@ -207,7 +216,7 @@ impl Realm {
             let _ = heap.define_own_property(global, key, &descriptor);
         }
 
-        let realm = Self {
+        let mut realm = Self {
             object_prototype,
             global,
             function_prototype,
@@ -219,6 +228,11 @@ impl Realm {
             string_prototype,
             symbol_prototype,
             well_known,
+            promise_prototype,
+            // Replaced by `builtins::promise::install`, which is where the constructor is made. A
+            // placeholder rather than an `Option`, because every reader wants the real one and a
+            // realm that has not finished being built has no readers.
+            promise_constructor: promise_prototype,
             iterator_prototype,
             array_iterator_prototype,
             string_iterator_prototype,
@@ -229,6 +243,13 @@ impl Realm {
         // here rather than at the first call is what makes `typeof Error` answer `"function"` in
         // a script that never mentions it.
         crate::builtins::install(heap, &realm);
+        // §27.2.4.7's fallback is *the* `%Promise%`, not whatever a program later assigns to the
+        // global `Promise`. It cannot be made before the built-ins run and the built-ins are handed
+        // a finished realm, so it is filled in here — the one intrinsic that is discovered rather
+        // than allocated.
+        if let Some(found) = crate::builtins::promise::constructor_of(heap, &realm) {
+            realm.set_promise_constructor(found);
+        }
         realm
     }
 
@@ -299,6 +320,21 @@ impl Realm {
     /// %ThrowTypeError% — the function that throws whatever it is asked.
     pub fn thrower(&self) -> ObjectId {
         self.thrower
+    }
+
+    /// %Promise.prototype% — §27.2.5.
+    pub fn promise_prototype(&self) -> ObjectId {
+        self.promise_prototype
+    }
+
+    /// %Promise% — the default `SpeciesConstructor` falls back to.
+    pub fn promise_constructor(&self) -> ObjectId {
+        self.promise_constructor
+    }
+
+    /// Record the constructor `builtins::promise::install` made.
+    pub(crate) fn set_promise_constructor(&mut self, constructor: ObjectId) {
+        self.promise_constructor = constructor;
     }
 
     /// %IteratorPrototype% — what every iterator in the realm inherits from.

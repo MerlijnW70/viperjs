@@ -193,6 +193,33 @@ impl Vm {
         arguments: &[Value],
         heap: &mut Heap,
     ) -> Completion<Value> {
+        self.reach(Entry::Method, callee, this_value, arguments, heap)
+    }
+
+    /// `Construct(callee, arguments)` — §7.3.14, with `newTarget` the callee itself.
+    ///
+    /// The same machinery with a different [`Entry`], which is the whole difference: a construction
+    /// takes its receiver from `new.target`'s `prototype` rather than from the stack, and refuses a
+    /// callee that has no `[[Construct]]`. §27.2.1.5 is the first thing in the engine that needs to
+    /// construct from Rust — every other construction is a `new` that the compiler saw.
+    pub(crate) fn construct_value(
+        &mut self,
+        callee: Value,
+        arguments: &[Value],
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        self.reach(Entry::Construct, callee, Value::Undefined, arguments, heap)
+    }
+
+    /// Call or construct `callee` from Rust, and run until it comes back.
+    fn reach(
+        &mut self,
+        how: Entry,
+        callee: Value,
+        this_value: Value,
+        arguments: &[Value],
+        heap: &mut Heap,
+    ) -> Completion<Value> {
         let Value::Object(function) = callee else {
             return Err(Abrupt::type_error("what was called is not a function"));
         };
@@ -207,7 +234,10 @@ impl Vm {
                 // `Vm::call_value` is how a built-in calls a function — a callback, a `valueOf`,
                 // a `toString`. None of those is a construction.
                 // §7.1.1 calls `valueOf` and `toString`; neither is a construction.
-                new_target: Value::Undefined,
+                new_target: match how {
+                    Entry::Construct => callee,
+                    _ => Value::Undefined,
+                },
             };
             return native(self, heap, &call);
         }
@@ -228,7 +258,7 @@ impl Vm {
         self.stack.push(callee);
         self.stack.extend_from_slice(arguments);
         let count = u32::try_from(arguments.len()).unwrap_or(u32::MAX);
-        let answer = self.nested(count, heap);
+        let answer = self.nested(how, count, heap);
         // Whatever happened, the caller's stack is what it was. A throw leaves half-built operands
         // behind, and this is where they go.
         self.stack.truncate(base);
@@ -241,7 +271,7 @@ impl Vm {
     /// from the frame it pops, so the ordinary path needs no help — but a **throw** that nothing
     /// caught does not pop frames one at a time, and would leave the caller running in the
     /// callee's scope. The next variable it read would be a slot that is not there.
-    fn nested(&mut self, count: u32, heap: &mut Heap) -> Completion<Value> {
+    fn nested(&mut self, how: Entry, count: u32, heap: &mut Heap) -> Completion<Value> {
         let floor = std::mem::replace(
             &mut self.floor,
             Floor {
@@ -252,7 +282,7 @@ impl Vm {
         let environment = self.environment;
         let this_value = self.this_value;
         self.reentries += 1;
-        let answer = self.nested_body(count, heap);
+        let answer = self.nested_body(how, count, heap);
         self.reentries -= 1;
         self.environment = environment;
         self.this_value = this_value;
@@ -261,7 +291,7 @@ impl Vm {
     }
 
     /// The nested execution itself, with the bookkeeping already done around it.
-    fn nested_body(&mut self, count: u32, heap: &mut Heap) -> Completion<Value> {
+    fn nested_body(&mut self, how: Entry, count: u32, heap: &mut Heap) -> Completion<Value> {
         // A chunk with no instructions, standing in for "the code that started this" — which is
         // Rust. Nothing executes from it: `enter` records it as the return address, and the loop
         // stops the moment the callee returns, before an instruction could be read here.
@@ -272,7 +302,7 @@ impl Vm {
         // §10.2.1.2's receiver is decided by the caller, and here the caller is Rust — so it is
         // *passed* rather than substituted. `Entry::Method` is the shape that takes one from the
         // stack, which is where `call_value` put it.
-        self.enter(Entry::Method, count, heap, &root, &mut current, &mut at)
+        self.enter(how, count, heap, &root, &mut current, &mut at)
             .map_err(fault)?;
         // `enter` throws rather than faulting when it refuses — the callee is not callable, or
         // the call is too deep — and a throw with nothing above the floor to catch it lands in

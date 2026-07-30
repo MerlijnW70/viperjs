@@ -73,6 +73,7 @@ mod objects;
 mod objects_builtin;
 mod parameters;
 mod private;
+mod promises;
 mod statements;
 mod strict;
 mod string_methods;
@@ -109,6 +110,28 @@ fn run(source: &str) -> String {
     let outcome = Vm::new(&mut heap)
         .run(&chunk, &mut heap)
         .expect("the chunk is well formed"); // same
+    describe(outcome, &mut heap)
+}
+
+/// Run a script, let §9.5's jobs run, and describe what `probe` then evaluates to.
+///
+/// A script's completion value is decided by its last statement, which is *before* any job runs, so
+/// nothing a `then` handler does can be seen through it. An embedder that wants to know asks
+/// afterwards — which is what this is: a second script in the same realm, whose own completion
+/// value is read. Both scripts share a global object, so a `var` the first one declared is a
+/// property the second one reads.
+fn run_settled(source: &str, probe: &str) -> String {
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+    let first = vm.run(&chunk, &mut heap).expect("the chunk is well formed"); // same
+    if let Outcome::Thrown(_) = first {
+        return describe(first, &mut heap);
+    }
+    let after = parse_script(probe).expect("the probe parses"); // same
+    let chunk = compile_script(&after, &mut heap).expect("the probe compiles"); // same
+    let outcome = vm.run(&chunk, &mut heap).expect("the probe is well formed"); // same
     describe(outcome, &mut heap)
 }
 

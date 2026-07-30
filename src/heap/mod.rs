@@ -44,6 +44,7 @@ mod enumerate;
 mod environment;
 mod iteration;
 mod object;
+mod promise;
 mod property;
 mod string_object;
 mod symbol;
@@ -82,6 +83,24 @@ impl From<bool> for DefineOutcome {
 pub use self::collect::{Collected, Roots};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
+pub use self::promise::{Capability, Promise, PromiseState, Reaction, ReactionKind, Role, Settler};
+
+impl Heap {
+    /// §7.2.3 `IsCallable` — whether a *value* is something a call may reach.
+    ///
+    /// On the heap rather than beside the built-ins that ask, because the answer is a fact about an
+    /// object and three modules were about to write it out again.
+    pub fn is_callable(&self, value: crate::value::Value) -> bool {
+        matches!(value, crate::value::Value::Object(id)
+            if self.object(id).is_some_and(Object::is_callable))
+    }
+
+    /// §7.2.4 `IsConstructor` — whether `new` may reach it.
+    pub fn is_constructor(&self, value: crate::value::Value) -> bool {
+        matches!(value, crate::value::Value::Object(id)
+            if self.object(id).is_some_and(Object::is_constructor))
+    }
+}
 pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
 
 use crate::span::Span;

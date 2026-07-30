@@ -35,6 +35,7 @@ use crate::heap::PropertyKind;
 use crate::heap::arguments;
 use crate::heap::arguments::Incoming;
 use crate::heap::define::{Validation, apply, validate};
+use crate::heap::promise::{Promise, Role};
 use crate::heap::string_object;
 use crate::heap::{
     ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Property,
@@ -219,6 +220,20 @@ pub struct Object {
     /// Date(NaN)` is a legal invalid date whose time value *is* NaN. Measured at 176 bytes before
     /// and 192 after; if that matters it is an M8 question, with a number in front of it.
     pub(super) date: Option<f64>,
+    /// The six slots §27.2.6 gives a Promise, if this is one.
+    ///
+    /// Boxed, for the reason the two maps above are: an `Object` sits inline in the arena, so its
+    /// size is charged to every object ever made and a promise's two reaction lists are three words
+    /// each. `None` is every object that is not a promise, which is what §27.2.5.4 step 2 tests
+    /// before it will do anything at all.
+    promise: Option<Box<Promise>>,
+    /// What a promise resolving function settles, or what a capability executor fills in.
+    ///
+    /// §27.2.1.3's resolve and reject functions have a `[[Promise]]`, and §27.2.1.5.1's executor has
+    /// a `[[Capability]]`. Neither can be a captured variable: a built-in's body is a bare function
+    /// pointer holding no state, deliberately, so what the specification captures in a closure is
+    /// carried on the function object exactly as it says it is.
+    role: Option<Box<Role>>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -268,6 +283,8 @@ impl Object {
             iteration: None,
             primitive: None,
             date: None,
+            promise: None,
+            role: None,
             call: None,
             environment: None,
             lexical: None,
@@ -291,6 +308,50 @@ impl Object {
     /// The same, to be moved on by a step.
     pub fn iteration_mut(&mut self) -> Option<&mut Iteration> {
         self.iteration.as_deref_mut()
+    }
+
+    /// Whether this object is something a call may reach — §7.2.3 `IsCallable`, for an object.
+    pub fn is_callable(&self) -> bool {
+        self.call.is_some()
+    }
+
+    /// Whether `new` may reach it — §7.2.4 `IsConstructor`.
+    ///
+    /// Not the same question: every constructor is callable and most callables are not
+    /// constructors. An arrow, a method and a getter each have a `[[Call]]` and no `[[Construct]]`,
+    /// which is why `new ({ m() {} }).m` is a TypeError.
+    pub fn is_constructor(&self) -> bool {
+        self.call.as_ref().is_some_and(super::Callable::constructs)
+    }
+
+    /// The promise state this object holds, if it is a promise.
+    pub fn promise(&self) -> Option<&Promise> {
+        self.promise.as_deref()
+    }
+
+    /// The same, to settle.
+    pub fn promise_mut(&mut self) -> Option<&mut Promise> {
+        self.promise.as_deref_mut()
+    }
+
+    /// Make this object a pending promise — §27.2.3.1 step 3, which is the only caller.
+    pub(super) fn set_promise(&mut self, promise: Promise) {
+        self.promise = Some(Box::new(promise));
+    }
+
+    /// What this function object settles or fills in, if it is one of §27.2's.
+    pub fn role(&self) -> Option<&Role> {
+        self.role.as_deref()
+    }
+
+    /// The same, for a capability executor to write into when it is called.
+    pub fn role_mut(&mut self) -> Option<&mut Role> {
+        self.role.as_deref_mut()
+    }
+
+    /// Give this function object the state §27.2 describes as captured.
+    pub fn set_role(&mut self, role: Role) {
+        self.role = Some(Box::new(role));
     }
 
     /// The primitive this object wraps, if it wraps one.
