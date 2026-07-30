@@ -169,7 +169,6 @@ fn what_functions_cannot_do_yet_says_which_and_where() {
         ("function* g() {}", "an async function or a generator"),
         ("async function f() {}", "an async function or a generator"),
         ("function f(...[a]) {}", "a destructuring rest parameter"),
-        ("var f = function () {}; f?.();", "optional chaining"),
     ];
     let mut heap = Heap::new();
     for (source, what) in cases {
@@ -579,5 +578,40 @@ fn a_spread_argument_keeps_the_receiver_and_works_with_new() {
                return {next: function () { return {done: true}; }}; }; \
              f()(...args); return order.join(','); })()"),
         "call,iterate"
+    );
+}
+
+#[test]
+fn an_optional_call_gives_up_one_link_later_than_an_optional_member() {
+    // §13.3.9 — `a?.()` asks about the *callee* and `a?.b()` asks about `a`, which is one link
+    // earlier. And a method call has copied its receiver by then, so the short circuit has that to
+    // clear away too: it is the one place a link leaves more than the value itself behind.
+    assert_eq!(
+        run("(function () { var o = { m() { return this === o; } }; return o?.m(); })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { var o = null; return String(o?.m()); })()"),
+        "undefined"
+    );
+    // The callee is nullish and the receiver is not — the shape that would strand a value.
+    assert_eq!(
+        run("(function () { var o = {}; return String(o.m?.()); })()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("(function () { var f = null; return String(f?.()); })()"),
+        "undefined"
+    );
+    // …and the arguments are not evaluated when it gives up, which is what says the whole call was
+    // skipped rather than made with nothing.
+    assert_eq!(
+        run("(function () { var n = 0; var o = {}; String(o.m?.(n++, n++)); return n; })()"),
+        "0"
+    );
+    // A callee that is present is called normally, including through several links.
+    assert_eq!(
+        run("(function () { var o = { a: { m() { return 7; } } }; return o?.a?.m?.(); })()"),
+        "7"
     );
 }

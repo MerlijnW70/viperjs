@@ -203,12 +203,7 @@ impl Compiler<'_> {
                 optional,
                 callee,
                 arguments,
-            } => {
-                if *optional {
-                    return Err(unsupported("optional chaining", span));
-                }
-                self.call(callee, arguments, span)
-            }
+            } => self.call(callee, arguments, *optional, span),
             // §13.3.5 — `new f(a)`. The callee is an ordinary expression and never a method:
             // `new o.m()` constructs with `o.m`, and the `o` plays no part.
             ExprKind::New { callee, arguments } => {
@@ -385,7 +380,18 @@ impl Compiler<'_> {
             }
             ExprKind::ImportMeta => Err(unsupported("import.meta", span)),
             ExprKind::ImportCall { .. } => Err(unsupported("a dynamic import", span)),
-            ExprKind::OptionalChain(_) => Err(unsupported("optional chaining", span)),
+            // §13.3.9 — the wrapper is where the short circuit lands, and the only thing it compiles
+            // to is that landing site. Everything else is the ordinary chain underneath it.
+            ExprKind::OptionalChain(inner) => {
+                self.chains.push(Vec::new());
+                let compiled = self.expression(inner);
+                let jumps = self.chains.pop().unwrap_or_default();
+                compiled?;
+                for jump in jumps {
+                    self.chunk.patch(jump)?;
+                }
+                Ok(())
+            }
         }
     }
     /// §13.2.5 — an object literal.
@@ -646,7 +652,12 @@ impl Compiler<'_> {
     /// up on the home object's prototype and the receiver stays `this`, so the receiver is pushed
     /// first and the base after it. Everything above this — reading, calling, assigning, deleting —
     /// then works on a stack of `[receiver?, base, key]` either way.
-    fn base(&mut self, object: &Expr, keep: Keep) -> Result<Reference, CompileError> {
+    fn base(
+        &mut self,
+        object: &Expr,
+        optional: bool,
+        keep: Keep,
+    ) -> Result<Reference, CompileError> {
         if matches!(object.kind, ExprKind::Super) {
             // The receiver §13.3.7.1 keeps, and a copy of it if a call is going to want one under the
             // callee. `keep.receiver` is the same `Duplicate` an ordinary base uses, applied to the
@@ -657,8 +668,63 @@ impl Compiler<'_> {
             return Ok(Reference::Super);
         }
         self.expression(object)?;
+        // §13.3.9 — tested here, *before* the copy a call would want, so that the chain leaves one
+        // value behind whichever kind of link this is. After the copy it would strand a receiver.
+        if optional {
+            self.optional_link()?;
+        }
         keep.receiver(self);
         Ok(Reference::Ordinary)
+    }
+
+    /// §13.3.9 — leave the chain with `undefined` if what is on top of the stack is nullish.
+    ///
+    /// Nothing at all when the value is fine, which is what `JumpKeeping` is for: it *keeps* the value
+    /// on the branch that carries on and takes it on the branch that does not, so the short circuit
+    /// starts with an empty-handed stack and pushes the one value the whole chain evaluates to.
+    pub(super) fn optional_call_link(&mut self, method: bool) -> Result<(), CompileError> {
+        let carry_on = self
+            .chunk
+            .emit_jump(|target| Instruction::JumpKeeping(ShortCircuit::WhenNotNullish, target));
+        // The callee has already gone with the jump's own pop; a method call's *receiver* is still
+        // under it and would be left behind, which is the one asymmetry between the two link kinds.
+        if method {
+            self.chunk.emit(Instruction::Pop);
+        }
+        self.constant(Value::Undefined)?;
+        let out = self.chunk.emit_jump(Instruction::Jump);
+        match self.chains.last_mut() {
+            Some(chain) => chain.push(out),
+            None => {
+                return Err(unsupported(
+                    "`?.` outside an optional chain",
+                    Span::new(0, 0),
+                ));
+            }
+        }
+        self.chunk.patch(carry_on)
+    }
+
+    fn optional_link(&mut self) -> Result<(), CompileError> {
+        let carry_on = self
+            .chunk
+            .emit_jump(|target| Instruction::JumpKeeping(ShortCircuit::WhenNotNullish, target));
+        self.constant(Value::Undefined)?;
+        let out = self.chunk.emit_jump(Instruction::Jump);
+        // The parser refuses `?.` outside an `OptionalExpression`, so there is always a chain to
+        // leave. A tree built by hand could reach this, and dropping the jump would leave it pointing
+        // at the unpatched placeholder — a fault rather than a wrong answer, which is worse than a
+        // refusal with nowhere to point.
+        match self.chains.last_mut() {
+            Some(chain) => chain.push(out),
+            None => {
+                return Err(unsupported(
+                    "`?.` outside an optional chain",
+                    Span::new(0, 0),
+                ));
+            }
+        }
+        self.chunk.patch(carry_on)
     }
 
     /// The base and the key of a property reference, pushed in that order.
@@ -679,10 +745,7 @@ impl Compiler<'_> {
                 object,
                 property,
             } => {
-                if *optional {
-                    return Err(unsupported("optional chaining", target.span));
-                }
-                let reference = self.base(object, keep)?;
+                let reference = self.base(object, *optional, keep)?;
                 // §13.3.7 — `a.#b`'s key is the Private Name the enclosing class minted, read out of
                 // the class scope by the same walk that reaches the class's own name. The parser has
                 // already refused a `#b` no enclosing class binds, so the slot is there.
@@ -700,10 +763,7 @@ impl Compiler<'_> {
                 object,
                 property,
             } => {
-                if *optional {
-                    return Err(unsupported("optional chaining", target.span));
-                }
-                let reference = self.base(object, keep)?;
+                let reference = self.base(object, *optional, keep)?;
                 self.expression(property)?;
                 Ok(reference)
             }

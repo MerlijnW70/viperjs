@@ -21413,6 +21413,12 @@ language/expressions/object/scope-meth-param-elem-var-open.js :: it threw Refere
 language/expressions/object/scope-setter-body-lex-distinc.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/setter-param-arguments-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/object/setter-param-eval-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/optional-chaining/eval-optional-call.js :: it threw ReferenceError: eval is not defined
+language/expressions/optional-chaining/eval-optional-call.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/optional-chaining/new-target-optional-call.js :: it threw ReferenceError: Reflect is not defined
+language/expressions/optional-chaining/new-target-optional-call.js (strict) :: it threw ReferenceError: Reflect is not defined
+language/expressions/optional-chaining/optional-call-preserves-this.js :: it threw TypeError: cannot read a property of something that is not an object
+language/expressions/optional-chaining/optional-call-preserves-this.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 language/expressions/postfix-decrement/S11.3.2_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/postfix-decrement/S11.3.2_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/postfix-decrement/S11.3.2_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error

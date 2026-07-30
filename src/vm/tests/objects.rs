@@ -346,25 +346,49 @@ fn delete_reaches_only_own_properties_and_a_non_reference_is_always_gone() {
 }
 
 #[test]
-fn optional_chaining_and_private_names_are_refused_with_a_span() {
-    let mut heap = Heap::new();
-    for (source, what) in [
-        ("var o = {}; o?.a;", "optional chaining"),
-        ("var o = {}; delete o?.a;", "optional chaining"),
-        ("var o = {}; o?.['a'];", "optional chaining"),
-        ("var o = {}; delete o?.['a'];", "optional chaining"),
-    ] {
-        // Every row here parses; a row that did not would silently test nothing, which is
-        // how a table of refusals stops refusing anything.
-        let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
-
-        let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // the test is about the error
-        assert_eq!(
-            error.kind,
-            crate::compile::ErrorKind::Unsupported(what),
-            "compiling {source:?}"
-        );
-    }
+fn optional_chaining_gives_up_on_the_whole_chain_and_stops_at_the_parenthesis() {
+    // §13.3.9 — the short circuit ends at the **chain**, not at the link, and that boundary is the
+    // whole of what is hard about it. `a?.b.c` gives up on all of it when `a` is nullish; `(a?.b).c`
+    // gives up only on the part inside the parentheses and then reads `.c` of `undefined`, which
+    // throws. An implementation that short-circuited per link would answer `undefined` for both.
+    assert_eq!(
+        run("(function () { var a = null; return String(a?.b.c.d); })()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("(function () { var a = { b: { c: 5 } }; return a?.b.c; })()"),
+        "5"
+    );
+    assert_eq!(
+        run("(function () { var a = { b: { c: 1 } }; return String((a?.b).c); })()"),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "(function () { var a = null;              try { return String((a?.b).c); } catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    // Nothing after the link is *evaluated* either, which is the observable half: a computed key
+    // with a side effect does not run.
+    assert_eq!(
+        run("(function () { var n = 0; var o = null; String(o?.[n++]); return n; })()"),
+        "0"
+    );
+    assert_eq!(
+        run("(function () { var n = 0; var o = null; String(o?.m(n++)); return n; })()"),
+        "0"
+    );
+    // `delete` through a chain short-circuits to `true`, which is §13.5.1.2's answer for a reference
+    // that is not a property reference at all.
+    assert_eq!(
+        run("(function () { var o = null; return delete o?.a; })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { var o = { a: 1 }; return delete o?.a; })()"),
+        "true"
+    );
 }
 
 #[test]

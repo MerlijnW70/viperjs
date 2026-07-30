@@ -48,7 +48,6 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // The parser accepted every one of these. Refusing with a span is the difference between
     // "praxis cannot do this yet" and a wrong answer nobody notices.
     let cases = [
-        ("f?.()", "optional chaining"),
         ("1n", "a BigInt literal"),
         ("delete x", "deleting a name"),
         ("1 ? 2n : 3", "a BigInt literal"),
@@ -171,7 +170,10 @@ fn a_property_reference_the_parser_cannot_build_is_still_refused() {
                 object: object(),
                 property: "x".into(),
             },
-            "optional chaining",
+            // The wrapper is what the jump out of a chain lands on, so a link without one has
+            // nowhere to go. Refused rather than emitted: an unpatched jump carries `u32::MAX` and
+            // would leap off the end of the chunk at run time.
+            "`?.` outside an optional chain",
         ),
         (
             ExprKind::ComputedMember {
@@ -179,7 +181,10 @@ fn a_property_reference_the_parser_cannot_build_is_still_refused() {
                 object: object(),
                 property: object(),
             },
-            "optional chaining",
+            // The wrapper is what the jump out of a chain lands on, so a link without one has
+            // nowhere to go. Refused rather than emitted: an unpatched jump carries `u32::MAX` and
+            // would leap off the end of the chunk at run time.
+            "`?.` outside an optional chain",
         ),
     ];
     for (kind, what) in cases {
@@ -247,8 +252,8 @@ fn a_name_no_scope_declares_is_a_global_however_deeply_it_is_nested() {
 #[test]
 fn an_optional_call_the_parser_cannot_build_is_still_refused() {
     // As with `o?.a`, the parser wraps `f?.()` in an `OptionalChain` and the inner flag never
-    // arrives on its own. The tree can hold it, and a compiler that ignored it would call
-    // through a `null` callee the day the wrapper is handled.
+    // arrives on its own. The tree can hold it, and the short circuit has nowhere to jump to
+    // without the wrapper — so this is refused rather than left pointing at the placeholder.
     let mut heap = Heap::new();
     let callee = Box::new(Expr::new(ExprKind::Number(1.0), Span::new(0, 1)));
     let expression = Expr::new(
@@ -260,7 +265,10 @@ fn an_optional_call_the_parser_cannot_build_is_still_refused() {
         Span::new(0, 5),
     );
     let error = compile_expression(&expression, &mut heap).expect_err("refused"); // the test is about the error
-    assert_eq!(error.kind, ErrorKind::Unsupported("optional chaining"));
+    assert_eq!(
+        error.kind,
+        ErrorKind::Unsupported("`?.` outside an optional chain")
+    );
 }
 
 #[test]

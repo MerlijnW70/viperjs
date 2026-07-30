@@ -206,6 +206,7 @@ impl Compiler<'_> {
         &mut self,
         callee: &Expr,
         arguments: &[Argument],
+        optional: bool,
         span: Span,
     ) -> Result<(), CompileError> {
         // §13.3.6.1 — a method call keeps the object the method was *found on* as the receiver.
@@ -231,6 +232,12 @@ impl Compiler<'_> {
             self.chunk.emit(reference.get());
         } else {
             self.expression(callee)?;
+        }
+        // §13.3.9 — `a?.()` gives up when the *callee* is nullish, which is one link later than
+        // `a?.b()` gives up. The receiver a method call copied is under it and goes with it, which is
+        // the one place a short circuit has more than the value itself to clear away.
+        if optional {
+            self.optional_call_link(method)?;
         }
         // §13.3.8 — a spread has no argument count until it has been iterated, so the list cannot be
         // pushed one value at a time. It is gathered into an array instead, by the same code an array

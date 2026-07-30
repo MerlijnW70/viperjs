@@ -268,6 +268,14 @@ struct Compiler<'a> {
     /// A `break` may not jump past a `finally`, and this is what tells the two cases apart: a
     /// loop opened inside the `try` has a greater depth than the number recorded here.
     finally_guards: Vec<usize>,
+    /// The jumps out of each `OptionalChain` currently being compiled, innermost last.
+    ///
+    /// §13.3.9's short circuit ends at the **chain**, not at the link: `a?.b.c` gives up on the whole
+    /// thing when `a` is nullish, and `(a?.b).c` gives up only on the part inside the parentheses and
+    /// then reads `.c` of `undefined`. The syntax tree marks that boundary with a wrapper, and this is
+    /// where the jumps to it wait — the same shape `breaks` has, for the same reason: the target is
+    /// not compiled yet when the jump is emitted.
+    chains: Vec<Vec<Unpatched>>,
     /// The iterator slot of each `for`-`of` currently being compiled, innermost last.
     ///
     /// §7.4.9 `IteratorClose` has to run on every way out of the loop that is not the iterator
@@ -302,6 +310,7 @@ impl<'a> Compiler<'a> {
             labels: Vec::new(),
             finally_guards: Vec::new(),
             closes: Vec::new(),
+            chains: Vec::new(),
             high_water: 0,
             depth: 0,
             outer: Vec::new(),
