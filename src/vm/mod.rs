@@ -278,17 +278,28 @@ impl Vm {
         // this runs: a backward jump is how a loop will be built, and a script that loops forever
         // is a script that loops forever. DR-0002 is about panics, not about halting.
         self.execute(chunk, heap, &mut current, &mut at)?;
+        // What the *script* did, taken before anything else runs. A throw that nothing caught is
+        // waiting in `escaped`, and it has to come out here: a job's own execution takes that slot
+        // to carry its own throws, so leaving the script's answer in it lets the first job steal it
+        // and report the script's exception as its own. What the script did is then reported as
+        // nothing at all, and the stack it left behind becomes an `UnbalancedStack` fault — which
+        // is what happened, and what the conformance suite found.
+        let escaped = self.escaped.take();
         // §9.5 — the jobs run when no execution context is running, which for a script is here:
         // the last statement has finished and the answer has not been handed back yet. This one
         // line is the whole of what makes `then` asynchronous.
         //
-        // Before the balance check below, because a job runs compiled code and would leave the
-        // stack looking untidy if it ran after; after `execute`, because a job that ran during the
-        // script would defeat the point of being a job.
+        // They run whether or not the script threw. An uncaught exception ends the script and not
+        // the queue: a `then` registered before the throw is still waiting, and a host reports the
+        // error and carries on. Nothing a job does can change the answer below, which is already
+        // decided.
         self.drain_jobs(heap);
+        // §9.5 step 3 — a job's completion is discarded, and so is a throw that escaped one. There
+        // is nowhere for it to go: the script that would have caught it has finished.
+        self.escaped = None;
         // Nothing should be left. Anything else means the chunk and the compiler disagree about
         // what the instructions do, and saying so here is cheaper than finding out later.
-        if let Some(thrown) = self.escaped {
+        if let Some(thrown) = escaped {
             return Ok(Outcome::Thrown(thrown));
         }
         if !self.stack.is_empty() {

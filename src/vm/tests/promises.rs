@@ -310,6 +310,46 @@ fn finally_runs_its_handler_without_changing_the_answer() {
 }
 
 #[test]
+fn a_script_that_throws_still_runs_its_jobs_and_still_reports_its_own_throw() {
+    // An uncaught exception ends the *script*, not the queue: a `then` registered before the throw
+    // is still waiting, and §9.5 says nothing about the script having gone well. So both happen —
+    // the handler runs, and the answer is still the throw.
+    //
+    // Found by the conformance suite, which reported a `Fault` rather than a failure. A job's own
+    // execution uses `escaped` to carry its throws back through Rust, so a script's uncaught throw
+    // left sitting there was taken by the first job that ran; the script then looked as though it
+    // had completed normally, with a stack full of the operands the throw had abandoned, and the
+    // engine reported that its own compiler and interpreter disagreed. Two wrong answers from one
+    // slot being read by two things.
+    assert_eq!(
+        run(
+            "var log = ''; Promise.resolve(1).then(function () { log += 'ran'; }); \
+             throw new Error('from the script');"
+        ),
+        "thrown [object]"
+    );
+    // …and the handler really did run, which the throw above cannot show.
+    assert_eq!(
+        run_settled(
+            "var log = ''; Promise.resolve(1).then(function () { log += 'ran'; }); \
+             try { throw new Error('caught'); } catch (e) {}",
+            "log"
+        ),
+        "ran"
+    );
+    // A job that throws is discarded (§9.5 step 3) and does not become the script's answer, nor
+    // does it stop the jobs behind it.
+    assert_eq!(
+        run_settled(
+            "var log = ''; Promise.resolve().then(function () { throw new Error('in a job'); }); \
+             Promise.resolve().then(function () { log += 'still ran'; });",
+            "log"
+        ),
+        "still ran"
+    );
+}
+
+#[test]
 fn a_promise_is_an_ordinary_object_with_the_properties_the_specification_names() {
     assert_eq!(run("typeof Promise"), "function");
     assert_eq!(run("Promise.length"), "1");
