@@ -226,7 +226,7 @@ impl Compiler<'_> {
             // part of the name rather than as decoration: `d.get.name` is `"get a"`, which test262
             // checks. A *computed* key is not known here — the name would be whatever the expression
             // came to at run time — so it is left unnamed rather than guessed at.
-            self.make_function(&method.function, method_naming(method), span)?;
+            self.make_method_function(&method.function, method_naming(method), true, span)?;
             // §15.7.14's `MethodDefinitionEvaluation` calls `MakeMethod` with the object the method
             // is being put on — the prototype for an instance method and the constructor for a
             // static one, which is exactly what is under the key here. That is what makes `super.x`
@@ -560,7 +560,7 @@ impl Compiler<'_> {
             self.chunk.emit(Instruction::ClassPrototype);
         }
         // §10.2.9 — a private method is named with its `#`, which is part of the name.
-        self.make_function(&method.function, method_naming(method), span)?;
+        self.make_method_function(&method.function, method_naming(method), true, span)?;
         self.chunk.emit(Instruction::MakeMethod(1));
         self.store_private_slot(&private_function_slot(name, method.kind))?;
         // The function and the home, both of which have served their purpose.

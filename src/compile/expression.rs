@@ -520,12 +520,16 @@ impl Compiler<'_> {
                         AstPropertyKey::Identifier(name) => Some(&**name),
                         _ => None,
                     };
-                    self.make_function(
+                    // §15.4.5 — a literal's method is not a constructor either, which is the one
+                    // thing that distinguishes `{ m() {} }` from `{ m: function () {} }` beyond the
+                    // name. `new o.m()` is a TypeError for the first and an object for the second.
+                    self.make_method_function(
                         function,
                         Naming {
                             name: named,
                             prefix,
                         },
+                        true,
                         span,
                     )?;
                     self.chunk.emit(Instruction::MakeMethod(2));

@@ -69,7 +69,9 @@ impl Callable {
     /// cannot be constructed either, and there is no third answer for an object that is neither.
     pub fn constructs(&self) -> bool {
         match self {
-            Self::Bytecode(body) => !body.is_arrow(),
+            // §15.3 for an arrow and §15.4.5 for a method, and they are two facts rather than one:
+            // an arrow has no `this` either, where a method has one and simply does not construct.
+            Self::Bytecode(body) => !body.is_arrow() && !body.is_method(),
             Self::Native { constructs, .. } => *constructs,
             Self::Bound(bound) => bound.constructs,
         }

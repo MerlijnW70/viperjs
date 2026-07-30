@@ -4914,8 +4914,8 @@ built-ins/Function/prototype/Symbol.hasInstance/this-val-bound-target.js :: it t
 built-ins/Function/prototype/Symbol.hasInstance/this-val-bound-target.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js :: it threw TypeError: this property cannot be redefined
-built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js (strict) :: it threw TypeError: this property cannot be redefined
+built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Function/prototype/Symbol.hasInstance/value-negative.js :: it threw TypeError: what was called is not a function
@@ -21398,12 +21398,8 @@ language/expressions/object/method-definition/meth-dflt-params-ref-later.js (str
 language/expressions/object/method-definition/meth-dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/object/method-definition/meth-dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/object/method-definition/meth-eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/expressions/object/method-definition/name-invoke-ctor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/object/method-definition/name-invoke-ctor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/object/method-definition/name-name-prop-symbol.js :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
 language/expressions/object/method-definition/name-name-prop-symbol.js (strict) :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
-language/expressions/object/method-definition/name-prototype-prop.js :: it threw an object with no name: Functions declared as methods do not define a 'prototype' property
-language/expressions/object/method-definition/name-prototype-prop.js (strict) :: it threw an object with no name: Functions declared as methods do not define a 'prototype' property
 language/expressions/object/object-spread-proxy-get-not-called-on-dontenum-keys.js :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/object-spread-proxy-get-not-called-on-dontenum-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/object-spread-proxy-no-excluded-keys.js :: it threw ReferenceError: Proxy is not defined
@@ -21829,8 +21825,6 @@ language/statements/class/decorator/syntax/valid/decorator-member-expr-identifie
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
-language/statements/class/definition/accessors.js :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
-language/statements/class/definition/accessors.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
 language/statements/class/definition/constructor-strict-by-default.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/definition/constructor-strict-by-default.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/definition/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
@@ -21841,18 +21835,10 @@ language/statements/class/definition/fn-name-method.js :: it threw an object wit
 language/statements/class/definition/fn-name-method.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/statements/class/definition/getters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/getters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/getters-prop-desc.js :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
-language/statements/class/definition/getters-prop-desc.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.get` is `false` Expected SameValue(«true», «false») to be true
 language/statements/class/definition/methods-restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/methods-restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/methods.js :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
-language/statements/class/definition/methods.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
-language/statements/class/definition/numeric-property-names.js :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
-language/statements/class/definition/numeric-property-names.js (strict) :: it threw an object with no name: The result of `'prototype' in desc.value` is `false` Expected SameValue(«true», «false») to be true
 language/statements/class/definition/setters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/setters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/setters-prop-desc.js :: it threw an object with no name: The result of `'prototype' in descr.set` is `false` Expected SameValue(«true», «false») to be true
-language/statements/class/definition/setters-prop-desc.js (strict) :: it threw an object with no name: The result of `'prototype' in descr.set` is `false` Expected SameValue(«true», «false») to be true
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined

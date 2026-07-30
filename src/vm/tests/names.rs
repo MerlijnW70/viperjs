@@ -179,3 +179,62 @@ fn the_name_property_has_the_attributes_every_built_in_property_has() {
         "bound named|bound bound named"
     );
 }
+
+#[test]
+fn a_method_is_not_a_constructor_and_has_no_prototype() {
+    // §15.4.5 and §15.7.14 — a `MethodDefinition` is made by `OrdinaryFunctionCreate` *without*
+    // `MakeConstructor`, so it has neither `[[Construct]]` nor the `prototype` object one would
+    // inherit from. praxis gave every non-arrow function both, which was a silent wrong answer: `new
+    // o.m()` produced an object where the specification asks for a TypeError.
+    assert_eq!(
+        run("(function () { var o = { m() {} }; \
+             return ('prototype' in o.m) + ',' + Object.getOwnPropertyNames(o.m).join('|'); })()"),
+        "false,length|name"
+    );
+    assert_eq!(
+        run("(function () { var o = { m() {} }; \
+             try { new o.m(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // The row that says this is about the *production* and not about the spelling: a property whose
+    // value happens to be a function is an ordinary function and constructs.
+    assert_eq!(
+        run("(function () { var o = { m: function () {} }; \
+             return ('prototype' in o.m) + ',' + (typeof new o.m()); })()"),
+        "true,object"
+    );
+    // Every kind of class element that is a method: instance, static, accessor, private.
+    assert_eq!(
+        run(
+            "(function () { class C { m() {} static s() {} get a() {} } \
+             var d = Object.getOwnPropertyDescriptor(C.prototype, 'a'); \
+             return ('prototype' in C.prototype.m) + ',' + ('prototype' in C.s) \
+                  + ',' + ('prototype' in d.get); })()"
+        ),
+        "false,false,false"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { #m() {} take() { return 'prototype' in this.#m; } } \
+             return new C().take(); })()"
+        ),
+        "false"
+    );
+    assert_eq!(
+        run("(function () { class C { m() {} } \
+             try { new C.prototype.m(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // …and the two things in a class body that *are* constructors are untouched: the class itself,
+    // which is the one element that constructs, and an ordinary function written anywhere.
+    assert_eq!(
+        run("(function () { class C {} return ('prototype' in C) + ',' + (typeof new C()); })()"),
+        "true,object"
+    );
+    assert_eq!(
+        run(
+            "(function () { function f() {} return ('prototype' in f) + ',' + (typeof new f()); })()"
+        ),
+        "true,object"
+    );
+}

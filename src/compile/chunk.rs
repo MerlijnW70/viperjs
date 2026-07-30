@@ -67,6 +67,16 @@ pub struct Chunk {
     /// from the same fact: §15.3 makes it a function *expression* over the scope it was written
     /// in rather than a thing you can be inside of, so `this` is whatever it was one line above.
     pub(super) arrow: bool,
+    /// Whether this body is a `MethodDefinition` — §15.4.5 and §15.7.14.
+    ///
+    /// A method has **no `[[Construct]]`** and no `prototype`: `new o.m()` is a TypeError, and
+    /// `'prototype' in o.m` is false. An arrow lacks both for a different reason (§15.3 gives it no
+    /// `this` either), so the two flags are separate — a method has a `this` and is simply not
+    /// constructible.
+    ///
+    /// A class *constructor* is not a method by this flag, whatever the grammar calls it: it is the
+    /// one thing in a class body that constructs.
+    pub(super) method: bool,
     /// Whether this body is a class constructor — §15.7.14.
     ///
     /// It has a `[[Construct]]` and no useful `[[Call]]`: written without `new` it is a TypeError.
@@ -705,6 +715,11 @@ impl Chunk {
     /// call reads this to decide *not* to make one: §10.2.2 leaves that to `super()`.
     pub fn derived_this(&self) -> Option<u32> {
         self.derived_this
+    }
+
+    /// Whether this body is a `MethodDefinition`, and so has no `[[Construct]]` — §15.4.5.
+    pub fn is_method(&self) -> bool {
+        self.method
     }
 
     /// Whether this body is a class constructor, and so refuses a call without `new`.

@@ -31,6 +31,17 @@ impl Compiler<'_> {
         naming: Naming<'_>,
         span: Span,
     ) -> Result<(), CompileError> {
+        self.make_method_function(function, naming, false, span)
+    }
+
+    /// The same, for a `MethodDefinition` — §15.4.5, which has no `[[Construct]]`.
+    pub(super) fn make_method_function(
+        &mut self,
+        function: &Function,
+        naming: Naming<'_>,
+        method: bool,
+        span: Span,
+    ) -> Result<(), CompileError> {
         if function.is_async || function.is_generator {
             return Err(unsupported("an async function or a generator", span));
         }
@@ -47,12 +58,13 @@ impl Compiler<'_> {
             Some(written) => Naming::of(&written.name),
             None => naming,
         };
-        let body = self.compile_nested(
+        let body = self.compile_nested_method(
             &function.parameters,
             Body::Statements(&function.body),
             naming,
             Strict::of(function.is_strict),
             Lexical::No,
+            method,
             span,
         )?;
         self.emit_function(body, span)
@@ -111,6 +123,21 @@ impl Compiler<'_> {
         lexical: Lexical,
         span: Span,
     ) -> Result<Chunk, CompileError> {
+        self.compile_nested_method(parameters, body, naming, strict, lexical, false, span)
+    }
+
+    /// The same, saying whether the body is a `MethodDefinition` — §15.4.5.
+    #[allow(clippy::too_many_arguments)] // one flag per fact the body carries, threaded rather than shared
+    pub(super) fn compile_nested_method(
+        &mut self,
+        parameters: &FormalParameters,
+        body: Body<'_>,
+        naming: Naming<'_>,
+        strict: Strict,
+        lexical: Lexical,
+        method: bool,
+        span: Span,
+    ) -> Result<Chunk, CompileError> {
         let mut outer = self.outer.clone();
         outer.push(self.locals.clone());
         // DR-0015's propagation rule, and the only place it is applied. An arrow reaches outward for
@@ -131,6 +158,7 @@ impl Compiler<'_> {
             body,
             outer,
             Nesting {
+                method,
                 strict: match strict {
                     Strict::Yes => true,
                     Strict::No => false,
@@ -370,6 +398,8 @@ pub(super) enum Body<'a> {
 /// parameters: the second is *computed from* the first, and passing them separately would let a
 /// caller pair an arrow's reach with a function's boundary.
 pub(super) struct Nesting<'a> {
+    /// Whether the body is a `MethodDefinition` — §15.4.5, which decides `[[Construct]]`.
+    method: bool,
     /// Whether the body is strict code — §11.2.1, decided by the parser and carried here.
     ///
     /// Passed in rather than inherited from the enclosing compiler, because a body may *add*
@@ -474,6 +504,7 @@ fn compile_body(
     let mut compiler = Compiler::new(heap);
     // §10.2.9 — interned, so that the hundred `function f` in a program share one String and so that
     // the key made from it is the one the object already has.
+    compiler.chunk.method = nesting.method;
     compiler.chunk.strict = nesting.strict;
     compiler.chunk.name = nesting.naming.spelled().map(|name| {
         compiler

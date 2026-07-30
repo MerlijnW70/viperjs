@@ -421,7 +421,11 @@ impl Vm {
                     //
                     // An arrow gets neither. §15.3 gives it no `[[Construct]]`, so a `prototype`
                     // would be an object nothing could ever inherit from.
-                    if !body.is_arrow() {
+                    // …and a **method** gets neither, for the same reason it has no `[[Construct]]`:
+                    // §15.4.5 makes one that is not a constructor, so a `prototype` would be an object
+                    // nothing could ever inherit from. `Object.getOwnPropertyNames(o.m)` is exactly
+                    // `length` and `name`, which test262 checks by name.
+                    if !body.is_arrow() && !body.is_method() {
                         self.realm.make_constructor(heap, object);
                     }
                     self.stack.push(Value::Object(object));
