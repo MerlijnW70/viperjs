@@ -789,55 +789,14 @@ impl Vm {
                         continue;
                     }
                 }
+                Instruction::AddPrivateMethod | Instruction::AddPrivateAccessor => {
+                    self.add_private(instruction, heap, root, current, at)?;
+                }
                 Instruction::GetPrivate => {
-                    let Value::Symbol(name) = self.pop()? else {
-                        return Err(Fault::NotAnObject);
-                    };
-                    let target = self.pop()?;
-                    // §7.3.31 step 1 — a primitive carries no private elements, so it fails the same
-                    // way an object without the name does. No wrapper is made: a wrapper would have
-                    // none either, and making one to fail with would be work for the same answer.
-                    let found = match target {
-                        Value::Object(object) => heap
-                            .object(object)
-                            .and_then(|held| held.private_element(name)),
-                        _ => None,
-                    };
-                    match found {
-                        Some(value) => self.stack.push(value),
-                        None => {
-                            self.raise(
-                                Abrupt::type_error("this object has no such private field"),
-                                heap,
-                                root,
-                                current,
-                                at,
-                            )?;
-                            continue;
-                        }
-                    }
+                    self.get_private(heap, root, current, at)?;
                 }
                 Instruction::SetPrivate => {
-                    let value = self.pop()?;
-                    let Value::Symbol(name) = self.pop()? else {
-                        return Err(Fault::NotAnObject);
-                    };
-                    let target = self.pop()?;
-                    let written = match target {
-                        Value::Object(object) => heap.set_private_field(object, name, value),
-                        _ => false,
-                    };
-                    if !written {
-                        self.raise(
-                            Abrupt::type_error("this object has no such private field"),
-                            heap,
-                            root,
-                            current,
-                            at,
-                        )?;
-                        continue;
-                    }
-                    self.stack.push(value);
+                    self.set_private(heap, root, current, at)?;
                 }
                 Instruction::HasPrivate => {
                     let Value::Symbol(name) = self.pop()? else {
@@ -1134,6 +1093,197 @@ struct Inheritance {
 }
 
 impl Vm {
+    /// §7.3.30 `PrivateMethodOrAccessorAdd` — give an object a private method or accessor.
+    ///
+    /// Out of line, and every method in this block is out of line for one reason: [`Vm::execute`] is a
+    /// single `match`, so its Rust frame is the sum of every arm's locals — and §7.1.1's conversions
+    /// re-enter the interpreter, paying that frame again per level. `MAX_REENTRY_DEPTH` is a
+    /// *measured* number against a one-mebibyte stack, and writing these three inline was enough to
+    /// break its margin: `a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need` found it by
+    /// overflowing, which is exactly what that guard is for. `inline` is refused for the same reason,
+    /// because a release build that folded them back in would put the frame back with them.
+    #[inline(never)]
+    fn add_private(
+        &mut self,
+        instruction: Instruction,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let element = match instruction {
+            Instruction::AddPrivateAccessor => {
+                let setter = self.pop()?;
+                let getter = self.pop()?;
+                crate::heap::PrivateElement::Accessor { getter, setter }
+            }
+            // Listed rather than defaulted, so a third kind cannot arrive here unnoticed.
+            _ => crate::heap::PrivateElement::Method(self.pop()?),
+        };
+        let Value::Symbol(name) = self.pop()? else {
+            return Err(Fault::NotAnObject);
+        };
+        // Peeked, so one target takes element after element.
+        let Some(&Value::Object(target)) = self.stack.last() else {
+            return Err(Fault::NotAnObject);
+        };
+        // §7.3.30 step 2 — an existing name is a TypeError, with no exception for an accessor. Its two
+        // halves are **one** element built by §15.7.14 at the class definition, so by the time this
+        // runs there is one add per name; merging here instead let the same accessor be added to one
+        // object twice, which the specification refuses and a re-entered constructor reaches.
+        if !heap.add_private_element(target, name, element) {
+            self.raise(
+                Abrupt::type_error("this object already has that private element"),
+                heap,
+                root,
+                current,
+                at,
+            )?;
+        }
+        Ok(())
+    }
+
+    /// §7.3.31 `PrivateGet` — read a private field, method or accessor, or throw.
+    ///
+    /// Out of line; see [`Vm::add_private`].
+    #[inline(never)]
+    fn get_private(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let Value::Symbol(name) = self.pop()? else {
+            return Err(Fault::NotAnObject);
+        };
+        let target = self.pop()?;
+        // §7.3.31 step 1 — a primitive carries no private elements, so it fails the same way an
+        // object without the name does. No wrapper is made: a wrapper would have none either.
+        let found = match target {
+            Value::Object(object) => heap
+                .object(object)
+                .and_then(|held| held.private_element(name)),
+            _ => None,
+        };
+        let Some(element) = found else {
+            self.raise(
+                Abrupt::type_error("this object has no such private field"),
+                heap,
+                root,
+                current,
+                at,
+            )?;
+            return Ok(());
+        };
+        // §7.3.31 step 4 — a field or a method answers directly; an accessor's getter is **called**,
+        // with the object as its receiver, which is why this cannot be the heap's business alone. A
+        // getter-less accessor is a TypeError where a public one would have answered `undefined`.
+        let value = match element {
+            crate::heap::PrivateElement::Accessor { getter, .. } => {
+                if matches!(getter, Value::Undefined) {
+                    self.raise(
+                        Abrupt::type_error("this private accessor has no getter"),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )?;
+                    return Ok(());
+                }
+                match self.call_value(getter, target, &[], heap) {
+                    Ok(value) => value,
+                    Err(error) => {
+                        self.raise(error, heap, root, current, at)?;
+                        return Ok(());
+                    }
+                }
+            }
+            // A field and a method both hold one value, and an accessor was answered above.
+            held => match held.value() {
+                Some(value) => value,
+                None => return Err(Fault::NotAnObject),
+            },
+        };
+        self.stack.push(value);
+        Ok(())
+    }
+
+    /// §7.3.32 `PrivateSet` — write a private field or call a private setter, or throw.
+    ///
+    /// Out of line; see [`Vm::add_private`].
+    #[inline(never)]
+    fn set_private(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        let Value::Symbol(name) = self.pop()? else {
+            return Err(Fault::NotAnObject);
+        };
+        let target = self.pop()?;
+        let element = match target {
+            Value::Object(object) => heap
+                .object(object)
+                .and_then(|held| held.private_element(name)),
+            _ => None,
+        };
+        // §7.3.32 reads the kind before it writes anything, and two of the three never reach the heap:
+        // a **method** refuses assignment outright, which is what makes `#m` unlike a field holding a
+        // function, and an accessor's setter is called.
+        match element {
+            Some(crate::heap::PrivateElement::Accessor { setter, .. }) => {
+                if matches!(setter, Value::Undefined) {
+                    self.raise(
+                        Abrupt::type_error("this private accessor has no setter"),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )?;
+                    return Ok(());
+                }
+                if let Err(error) = self.call_value(setter, target, &[value], heap) {
+                    self.raise(error, heap, root, current, at)?;
+                    return Ok(());
+                }
+            }
+            Some(crate::heap::PrivateElement::Method(_)) => {
+                self.raise(
+                    Abrupt::type_error("a private method cannot be assigned to"),
+                    heap,
+                    root,
+                    current,
+                    at,
+                )?;
+                return Ok(());
+            }
+            Some(crate::heap::PrivateElement::Field(_)) => {
+                let Value::Object(object) = target else {
+                    return Err(Fault::NotAnObject);
+                };
+                if !heap.set_private_field(object, name, value) {
+                    return Err(Fault::NotAnObject);
+                }
+            }
+            None => {
+                self.raise(
+                    Abrupt::type_error("this object has no such private field"),
+                    heap,
+                    root,
+                    current,
+                    at,
+                )?;
+                return Ok(());
+            }
+        }
+        self.stack.push(value);
+        Ok(())
+    }
+
     /// §10.2.2's `GetSuperConstructor` — the running function's `[[Prototype]]`.
     ///
     /// Read now rather than captured when the class was defined, because it is *mutable*:

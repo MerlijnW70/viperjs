@@ -469,6 +469,26 @@ pub enum Instruction {
     /// Pops the value and the name, and *peeks* the target — an instance is given one field after
     /// another, exactly as [`Instruction::DefineField`] does it.
     DefinePrivateField,
+    /// §7.3.30 `PrivateMethodOrAccessorAdd` — give an object a private method or accessor.
+    ///
+    /// One function object is shared by every instance and each instance carries an *entry* for it,
+    /// which is what makes `#m in o` a brand rather than a lookup up a prototype chain. So the method
+    /// is made once at the class definition and this is what runs per construction.
+    ///
+    /// A **TypeError** if the object already carries the name, on the same terms as §7.3.29.
+    ///
+    /// Pops the value — one function, or a getter and a setter for
+    /// [`Instruction::AddPrivateAccessor`] — then the name, and *peeks* the target.
+    AddPrivateMethod,
+    /// The same for an accessor, whose two halves are **one** element (§7.3.30).
+    ///
+    /// Either half may be `undefined`, and then that direction is a TypeError rather than silently
+    /// doing nothing — which is where a private accessor differs from a public one. Two halves written
+    /// separately still make one element, so the second must merge into the first rather than replace
+    /// it, and that is why this is not two adds.
+    ///
+    /// Pops the setter, the getter and the name, and peeks the target.
+    AddPrivateAccessor,
     /// §7.3.31 `PrivateGet` — read a private field, or throw.
     ///
     /// A **TypeError** when the object does not carry the name, and that is what makes a private name
@@ -783,6 +803,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::MakeMethod(_)
         | Instruction::NewPrivateName(_)
         | Instruction::DefinePrivateField
+        | Instruction::AddPrivateMethod
+        | Instruction::AddPrivateAccessor
         | Instruction::GetPrivate
         | Instruction::SetPrivate
         | Instruction::HasPrivate

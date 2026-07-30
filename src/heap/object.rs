@@ -73,6 +73,48 @@ pub struct Lexical {
     pub home: Option<ObjectId>,
 }
 
+/// One entry in §7.3.28's `[[PrivateElements]]` — a field, a method, or an accessor.
+///
+/// The kind is carried rather than inferred, because §7.3.31 and §7.3.32 read it: a private *method*
+/// refuses assignment where a field accepts it, and an accessor calls a function for both. Told apart
+/// by the shape of the value they would otherwise be — a `Value` that happens to be callable is not
+/// the same thing as a method, since `#x = function () {}` is a field holding a function.
+// No `PartialEq`: [`Value`] has none, because JavaScript has three equalities and none is a derive.
+#[derive(Debug, Clone, Copy)]
+pub enum PrivateElement {
+    /// `#x = 1` — per instance, and the only kind a write may reach.
+    Field(Value),
+    /// `#m() {}` — **one** function object shared by every instance, which each carries an entry for.
+    ///
+    /// Shared and not copied, so `new C().m === new C().m` for the function a private method holds; the
+    /// per-instance entry is what makes `#m in o` a brand rather than a lookup on a prototype.
+    Method(Value),
+    /// `get #a() {}` and `set #a(v) {}` — one element with two halves, as §7.3.30 adds it.
+    ///
+    /// Either half may be `undefined`, and then that direction is a TypeError: a private accessor
+    /// with only a getter refuses a write outright rather than silently doing nothing, which is where
+    /// it differs from a public one.
+    Accessor {
+        /// The getter, or `undefined` if only a setter was written.
+        getter: Value,
+        /// The setter, or `undefined` if only a getter was written.
+        setter: Value,
+    },
+}
+
+impl PrivateElement {
+    /// What a read answers with directly, if this kind answers without calling anything.
+    ///
+    /// `None` for an accessor, whose getter the interpreter has to call — the heap cannot, and that
+    /// is the same division `[[Get]]` already makes for a property.
+    pub fn value(self) -> Option<Value> {
+        match self {
+            Self::Field(value) | Self::Method(value) => Some(value),
+            Self::Accessor { .. } => None,
+        }
+    }
+}
+
 /// An ordinary object — §10.1.
 #[derive(Debug, Default)]
 pub struct Object {
@@ -132,7 +174,7 @@ pub struct Object {
     /// a pointer — so boxing one buys three words back and costs a second allocation for every object
     /// that has any private state at all. `Option<Vec<_>>` also has no discriminant, the null pointer
     /// being the niche.
-    pub(super) private: Option<Vec<(SymbolId, Value)>>,
+    pub(super) private: Option<Vec<(SymbolId, PrivateElement)>>,
     /// `[[HomeObject]]` — the object a method was defined *on*, if it is a method.
     ///
     /// `None` for every function that is not one, which is every function expression and every
@@ -317,7 +359,7 @@ impl Object {
     ///
     /// `None` covers both "no private elements at all" and "none under this name", because nothing
     /// distinguishes them: §7.3.31 `PrivateGet` throws for either, and it is the *same* TypeError.
-    pub fn private_element(&self, name: SymbolId) -> Option<Value> {
+    pub fn private_element(&self, name: SymbolId) -> Option<PrivateElement> {
         self.private
             .as_ref()?
             .iter()
@@ -326,7 +368,7 @@ impl Object {
     }
 
     /// Every private element, for the collector — a value here is reachable and nothing else holds it.
-    pub(super) fn private_elements(&self) -> &[(SymbolId, Value)] {
+    pub(super) fn private_elements(&self) -> &[(SymbolId, PrivateElement)] {
         match &self.private {
             Some(elements) => elements,
             None => &[],
@@ -1020,6 +1062,19 @@ impl Heap {
     /// as in `class C { #x; constructor() { C.prototype.constructor.call(this); } }` — so the guard is
     /// not defensive, it is the specification's step 3.
     pub fn add_private_field(&mut self, object: ObjectId, name: SymbolId, value: Value) -> bool {
+        self.add_private_element(object, name, PrivateElement::Field(value))
+    }
+
+    /// §7.3.30 `PrivateMethodOrAccessorAdd` — add a method or accessor, answering as §7.3.29 does.
+    ///
+    /// The same operation and the same one failure, which is why they share a body: the *kind* is all
+    /// that differs, and §7.3.30's own step 2 refuses an existing name in the same words §7.3.29 does.
+    pub fn add_private_element(
+        &mut self,
+        object: ObjectId,
+        name: SymbolId,
+        element: PrivateElement,
+    ) -> bool {
         let Some(object) = self.objects.get_mut(object.0).and_then(Option::as_mut) else {
             return false;
         };
@@ -1027,7 +1082,7 @@ impl Heap {
         if elements.iter().any(|(key, _)| *key == name) {
             return false;
         }
-        elements.push((name, value));
+        elements.push((name, element));
         true
     }
 
@@ -1044,11 +1099,15 @@ impl Heap {
             return false;
         };
         match elements.iter_mut().find(|(key, _)| *key == name) {
-            Some(slot) => {
-                slot.1 = value;
+            // §7.3.32 step 3 — a *field* is the only kind a write may reach through here. A method
+            // refuses outright, and an accessor is the interpreter's business because its setter has
+            // to be called; both are answered before this is reached, so this arm is a field or the
+            // caller has not read the kind.
+            Some((_, PrivateElement::Field(held))) => {
+                *held = value;
                 true
             }
-            None => false,
+            _ => false,
         }
     }
 

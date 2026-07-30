@@ -43,10 +43,20 @@ use std::rc::Rc;
 /// platform with larger frames found it by aborting, which is precisely the failure DR-0002 says
 /// no `Result` can rescue.
 ///
-/// 64 costs about 450 KiB and leaves better than a 2× margin.
-/// `a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need` is the guard, and it is what
-/// makes this a measurement rather than a hope — the parser has had one since DR-0006, and the
-/// two other places in this engine that recurse per level of input did not.
+/// 64 cost about 450 KiB when it was set, and `a_conversion_at_the_cap_fits_in_the_stack_it_claims_
+/// to_need` is the guard that makes it a measurement rather than a hope.
+///
+/// **The guard has since fired, and what moved was not this number.** Every slice that adds an arm to
+/// [`crate::vm::Vm::execute`]'s `match` widens *one* Rust frame — the loop is one function, so its
+/// frame is the sum of every arm's locals — and a re-entry pays that frame again per level. By the
+/// private-element slice, 64 levels no longer fitted in a mebibyte at all: the guard overflowed, which
+/// is precisely the abort DR-0002 says no `Result` can rescue.
+///
+/// The lever is the frame and not the cap. Moving three arms out of line brought 64 back inside a
+/// mebibyte, and the measured cost is now between 12 and 16 KiB a level — a margin nearer 1.3× than
+/// the 2× above, which is the honest figure and is why the arms that follow are `#[inline(never)]`.
+/// The next slice to make the guard fire should take the same lever before reaching for this number:
+/// the fattest arms remaining are `MakeClass`, `MakeFunction` and `CallSpread`.
 const MAX_REENTRY_DEPTH: usize = 64;
 
 impl Vm {

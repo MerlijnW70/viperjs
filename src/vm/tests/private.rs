@@ -101,9 +101,15 @@ fn a_private_field_is_invisible_to_every_way_of_asking_what_an_object_has() {
         ),
         "1,2"
     );
-    // §10.1.4 — a private field may be added to an object that is not extensible, because it is not
-    // a property and extensibility is about properties. `Object.freeze` in a field initialiser is the
-    // only way to reach it, since the fields run before the constructor body.
+    // §7.3.29 — a private field may be added to an object that is not extensible, because it is not a
+    // property and extensibility is about properties: `PrivateFieldAdd` has no extensibility step, only
+    // the duplicate-name check and a host hook for web browsers. `Object.freeze` in a field initialiser
+    // is the only way to reach it, since the fields run before the constructor body.
+    //
+    // **test262 asserts the opposite**, in tests flagged `nonextensible-applies-to-private` — which is
+    // a *proposal* (`tc39/proposal-nonextensible-applies-to-private`) and not ES2023. Those tests are
+    // expectations entries, and this row is why: do not "fix" the engine to match them without
+    // checking that the proposal has landed in the specification first.
     assert_eq!(
         run(
             "(function () { class C { a = Object.freeze(this); #x = 1; read() { return this.#x; } } \
@@ -281,4 +287,319 @@ fn each_evaluation_of_a_class_mints_its_own_private_names() {
         ),
         "true,false"
     );
+}
+
+#[test]
+fn a_private_method_is_one_function_every_instance_carries_an_entry_for() {
+    // §15.7.14 and §7.3.30 — the method is made **once**, at the class definition, and each instance
+    // gets an *entry* pointing at it. That is what makes `#m in o` a brand rather than a lookup up a
+    // prototype chain, and it is why the function is shared rather than copied.
+    assert_eq!(
+        run(
+            "(function () { class C { #m() { return 1; } call() { return this.#m(); } } \
+             return new C().call(); })()"
+        ),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { #m() { return 1; } same(o) { return this.#m === o.#m; } } \
+             return new C().same(new C()); })()"
+        ),
+        "true"
+    );
+    // Not on the prototype and not on the instance, by any way of asking: a private method is not a
+    // property at all, which is the same rule its field siblings follow.
+    assert_eq!(
+        run("(function () { class C { #m() {} } \
+             return Object.getOwnPropertyNames(C.prototype).length + ',' \
+                  + Object.getOwnPropertyNames(new C()).length; })()"),
+        "1,0"
+    );
+    // An *instance* method's entry goes on the instance and nowhere else — in particular not on the
+    // constructor, which is where a static one goes. The two lists are separate, and adding an
+    // instance method to the constructor as well would make `#m in C` true.
+    assert_eq!(
+        run(
+            "(function () { class C { #m() {} static has(o) { return #m in o; } } \
+             return C.has(C) + ',' + C.has(new C()); })()"
+        ),
+        "false,true"
+    );
+    // …and a class may have both kinds at once, each with a function of its own.
+    assert_eq!(
+        run(
+            "(function () { class C { #i() { return 'i'; } static #s() { return 's'; } \
+             static both() { return C.#s(); } inst() { return this.#i(); } } \
+             return C.both() + ',' + new C().inst(); })()"
+        ),
+        "s,i"
+    );
+    // §7.3.30 step 2 — adding a name an object already carries is a TypeError for a method exactly as
+    // for a field, and it is reachable the same way: a parent constructor that answers with an object
+    // it made earlier has the derived class's methods added to it twice.
+    assert_eq!(
+        run("(function () { var first; \
+             class B { constructor() { if (first) return first; first = this; } } \
+             class D extends B { #m() {} } \
+             new D(); try { new D(); return 'no'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // A private method reads private fields of the same instance, which is most of what one is for.
+    assert_eq!(
+        run(
+            "(function () { class C { #x = 1; #m() { return this.#x + 1; } call() { return this.#m(); } } \
+             return new C().call(); })()"
+        ),
+        "2"
+    );
+    // §7.3.32 step 3 — a **method** refuses assignment, which is what makes it unlike a field that
+    // happens to hold a function.
+    assert_eq!(
+        run("(function () { class C { #m() {} bad() { this.#m = 1; } } \
+             try { new C().bad(); return 'no'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { #m = function () {}; fine() { this.#m = 1; return this.#m; } } \
+             return new C().fine(); })()"
+        ),
+        "1"
+    );
+}
+
+#[test]
+fn the_methods_are_added_before_any_field_initialiser_runs() {
+    // §15.7.14's `InitializeInstanceElements` adds every private method *first* and only then
+    // evaluates the fields. The order is observable exactly here: a field initialiser may call one.
+    assert_eq!(
+        run(
+            "(function () { class C { #f = this.#m(); #m() { return 3; } read() { return this.#f; } } \
+             return new C().read(); })()"
+        ),
+        "3"
+    );
+    // …including when the method is written *after* the field, which is the row that says the adds
+    // are not simply interleaved in source order with the fields.
+    assert_eq!(
+        run(
+            "(function () { class C { #m() { return 4; } #f = this.#m(); read() { return this.#f; } } \
+             return new C().read(); })()"
+        ),
+        "4"
+    );
+    // A derived class runs its fields from `super()`, so the methods have to be added there too.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { #f = this.#m(); #m() { return 5; } read() { return this.#f; } } \
+             return new D().read(); })()"),
+        "5"
+    );
+}
+
+#[test]
+fn a_private_accessor_is_one_element_with_two_halves() {
+    // §7.3.30 — `get #a` and `set #a` are two class elements and **one** private element, so the
+    // second has to join the first rather than be refused as a duplicate name. Written the other way
+    // round it would be either a TypeError or a lost half.
+    assert_eq!(
+        run(
+            "(function () { class C { #v = 0; get #a() { return this.#v; } set #a(x) { this.#v = x * 2; } \
+             run() { this.#a = 4; return this.#a; } } return new C().run(); })()"
+        ),
+        "8"
+    );
+    // …and in the other written order, because the merge has to work from either side.
+    assert_eq!(
+        run(
+            "(function () { class C { #v = 0; set #a(x) { this.#v = x * 2; } get #a() { return this.#v; } \
+             run() { this.#a = 4; return this.#a; } } return new C().run(); })()"
+        ),
+        "8"
+    );
+    // The getter is called with the instance as its receiver, which is what lets it read a field.
+    assert_eq!(
+        run(
+            "(function () { class C { #x = 6; get #a() { return this.#x; } read() { return this.#a; } } \
+             return new C().read(); })()"
+        ),
+        "6"
+    );
+    // A half that was not written is a **TypeError** in that direction, where a public accessor would
+    // answer `undefined` for a missing getter and silently do nothing for a missing setter.
+    //
+    // The *message* and not only the constructor, because calling `undefined` is a TypeError as well:
+    // asserting the kind alone cannot tell the guard from its absence, and mutation coverage said so
+    // by surviving the removal of both.
+    assert_eq!(
+        run(
+            "(function () { class C { get #a() { return 1; } bad() { this.#a = 2; } } \
+             try { new C().bad(); return 'no'; } catch (e) { return e.message; } })()"
+        ),
+        "this private accessor has no setter"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { set #a(v) {} bad() { return this.#a; } } \
+             try { new C().bad(); return 'no'; } catch (e) { return e.message; } })()"
+        ),
+        "this private accessor has no getter"
+    );
+}
+
+#[test]
+fn a_static_private_element_belongs_to_the_constructor_and_to_nothing_else() {
+    // §15.7.14 — a static private method or field is added to the *constructor* when the class is
+    // defined, and no instance ever carries it. So the brand check is about `C` itself.
+    assert_eq!(
+        run(
+            "(function () { class C { static #s() { return 's'; } static call() { return C.#s(); } } \
+             return C.call(); })()"
+        ),
+        "s"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { static #x = 7; static read() { return C.#x; } } \
+             return C.read(); })()"
+        ),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "(function () { class C { static #x = 1; static has(o) { return #x in o; } } \
+             return C.has(C) + ',' + C.has(new C()); })()"
+        ),
+        "true,false"
+    );
+    // Reading one off an instance is the ordinary TypeError, which is what that `false` means.
+    assert_eq!(
+        run(
+            "(function () { class C { static #x = 1; static read(o) { return o.#x; } } \
+             try { C.read(new C()); return 'no'; } catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    // A static accessor is one element on the constructor, merged from its two halves like any other.
+    assert_eq!(
+        run(
+            "(function () { class C { static #v = 0; static get #a() { return C.#v; } \
+             static set #a(x) { C.#v = x + 1; } static run() { C.#a = 4; return C.#a; } } \
+             return C.run(); })()"
+        ),
+        "5"
+    );
+    // A static private field written beside a public one does not collide with it.
+    assert_eq!(
+        run(
+            "(function () { class C { static #x = 1; static x = 2; static both() { return C.#x + ',' + C.x; } } \
+             return C.both(); })()"
+        ),
+        "1,2"
+    );
+}
+
+#[test]
+fn a_private_method_is_fresh_per_evaluation_like_the_names_are() {
+    // The same property the fields have, and for the same reason: the Private Name lives in the class
+    // body's scope, which is a new environment each time the definition runs. Two evaluations give two
+    // brands, so an instance of one cannot be read by the other's method.
+    assert_eq!(
+        run(
+            "(function () { function make() { return class { #m() { return 1; } \
+             static has(o) { return #m in o; } }; } \
+             var A = make(), B = make(); \
+             return A.has(new A()) + ',' + A.has(new B()); })()"
+        ),
+        "true,false"
+    );
+    assert_eq!(
+        run(
+            "(function () { function make() { return class { #m() { return 1; } \
+             read(o) { return o.#m(); } }; } var A = make(), B = make(); \
+             try { new A().read(new B()); return 'no'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    // …and the two classes' methods are different function objects, which is the same fact seen from
+    // the other side.
+    assert_eq!(
+        run(
+            "(function () { function make() { return class { #m() {} take() { return this.#m; } }; } \
+             var A = make(), B = make(); \
+             return new A().take() === new B().take(); })()"
+        ),
+        "false"
+    );
+}
+
+#[test]
+fn a_private_methods_home_object_is_where_super_starts_and_not_where_it_lives() {
+    // §15.7.14 gives a private method a `[[HomeObject]]` like any other, and it is the object the
+    // method is *conceptually* defined on: the **prototype** for an instance method, the constructor
+    // for a static one. A private method lives on neither — it is not a property at all — and that is
+    // exactly why the wrong answer sounded reasonable. What a home decides is where `super` starts.
+    assert_eq!(
+        run("(function () { class B { method() { return 'Base'; } } \
+             class C extends B { #m() { return super.method(); } \
+                 access(o) { return this.#m.call(o); } } \
+             var c = new C(); return c.access(c) + ',' + c.access({}); })()"),
+        "Base,Base"
+    );
+    // …including from a private accessor, which is the same home by a different element kind.
+    assert_eq!(
+        run("(function () { class B { method() { return 'B'; } } \
+             class C extends B { get #p() { return super.method(); } read() { return this.#p; } } \
+             return new C().read(); })()"),
+        "B"
+    );
+    // A *static* private method's home is the constructor, so its `super` reaches the parent class's
+    // statics and not its prototype's methods. Both halves of that are stated, because a home set to
+    // the wrong one of the two objects would pass whichever row was written alone.
+    assert_eq!(
+        run("(function () { class B { static s() { return 'Bs'; } } \
+             class C extends B { static #p() { return super.s(); } static go() { return C.#p(); } } \
+             return C.go(); })()"),
+        "Bs"
+    );
+    assert_eq!(
+        run("(function () { class B { m() { return 1; } } \
+             class C extends B { #g() { return super.m(); } \
+                 static #s() { return typeof super.m; } \
+                 static go() { return C.#s(); } run() { return this.#g(); } } \
+             return new C().run() + ',' + C.go(); })()"),
+        "1,undefined"
+    );
+}
+
+#[test]
+fn adding_the_same_private_element_to_one_object_twice_is_refused() {
+    // §7.3.30 step 2 — an existing name is a TypeError, and there is no exception for an accessor. Its
+    // two halves are **one** element, built at the class definition; merging two adds at run time
+    // instead let the same accessor be added to one object twice, and the specification refuses that.
+    //
+    // Reachable through a parent constructor that answers with an object it made earlier, which is
+    // then initialised by the derived class a second time.
+    for element in [
+        "get #p() {}",
+        "set #p(v) {}",
+        "get #p() {} set #p(v) {}",
+        "#p() {}",
+        "#p = 1",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ class Base {{ constructor(o) {{ return o; }} }} \
+                 class C extends Base {{ {element} }} \
+                 var obj = {{}}; new C(obj); \
+                 try {{ new C(obj); return 'no'; }} \
+                 catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError",
+            "twice: {element}"
+        );
+    }
 }

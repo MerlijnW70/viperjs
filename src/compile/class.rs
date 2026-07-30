@@ -109,6 +109,24 @@ impl Compiler<'_> {
             self.chunk.emit(Instruction::Pop);
         }
 
+        // A private method is **one** function object shared by every instance, made here once, with
+        // each instance carrying an entry that points at it. So the function goes in a slot of this
+        // scope too, and the constructor's prologue adds an entry per construction — reading the slot
+        // through the scope chain, exactly as it reads the Private Name beside it.
+        //
+        // A getter and a setter are two class elements and **two** functions, so they take a slot each
+        // — one private *element* is built from them at the definition, which is a separate matter
+        // from where the functions live. A slot per written half, therefore, and this is the one place
+        // that walks the elements themselves rather than the per-name list.
+        for method in class.elements.iter().filter_map(|element| match element {
+            ClassElement::Method(method) => Some(method),
+            _ => None,
+        }) {
+            if let crate::ast::PropertyKey::Private(name) = &method.key {
+                self.declare_shadowing(&private_function_slot(name, method.kind));
+            }
+        }
+
         // §15.7.14 step 8 — the heritage is evaluated **inside** the class scope and after the inner
         // name binding has been made but before it holds anything, so `class C extends C {}` is a
         // ReferenceError from the dead zone rather than a reference to an outer `C`. Its value is
@@ -154,6 +172,14 @@ impl Compiler<'_> {
             if let ClassElement::Field(field) = element
                 && field.is_static
             {
+                // A static *private* field has no `PropertyName` to evaluate and its Private Name
+                // was minted above, so there is nothing to keep for later: the initialiser reads the
+                // name slot by its own name. `u32::MAX` stands for "no key slot", which is honest
+                // because the only thing that reads the slot is the branch that knows the difference.
+                if matches!(field.key, crate::ast::PropertyKey::Private(_)) {
+                    statics.push(StaticElement::Field(field, u32::MAX));
+                    continue;
+                }
                 // The name, now, where the specification evaluates it — interleaved with the methods
                 // and in source order. It is kept in a compiler temporary because the initialiser
                 // that will use it does not run until every element is defined. The name has a space
@@ -175,6 +201,14 @@ impl Compiler<'_> {
             if element.is_constructor() {
                 continue;
             }
+            // A private method is not defined *on* anything: it goes in a slot, and the entry that
+            // makes it reachable is added per instance by the constructor — or, for a static one, to
+            // the constructor here and now. Either way there is no property to define, which is why
+            // this leaves the walk before a target is pushed.
+            if let crate::ast::PropertyKey::Private(name) = &method.key {
+                self.private_method(method, name, span)?;
+                continue;
+            }
             // The target: a copy of the constructor for a static method, its prototype otherwise.
             // Duplicated rather than reloaded, because the class is not bound to any name yet — the
             // stack is the only place it exists.
@@ -191,6 +225,12 @@ impl Compiler<'_> {
             self.chunk.emit(Instruction::MakeMethod(2));
             self.chunk.emit(Instruction::DefineClassMethod(method.kind));
         }
+        // §15.7.14 — a static private element belongs to the constructor and to nothing else, and it
+        // is added once the walk has made every function. Before the static *fields* run, because one
+        // of those may call a static private method.
+        let statics_private = private_elements(class, true);
+        self.add_private_elements(&statics_private)?;
+
         for element in &statics {
             match element {
                 StaticElement::Field(field, slot) => self.static_field(field, *slot, span)?,
@@ -281,9 +321,17 @@ impl Compiler<'_> {
         }
         // The key was evaluated long before this; only its arrangement happens now. `Bury(1)` puts it
         // under the value, in the order `DefineField` reads them.
-        self.chunk.emit(Instruction::LoadVariable(0, slot));
+        match &field.key {
+            // A private one's name is the Private Name in the class scope, minted at the definition
+            // rather than evaluated during the walk — so there is no temporary to read.
+            crate::ast::PropertyKey::Private(name) => self.load_private_name(name)?,
+            _ => self.chunk.emit(Instruction::LoadVariable(0, slot)),
+        }
         self.chunk.emit(Instruction::Bury(1));
-        self.chunk.emit(Instruction::DefineField);
+        self.chunk.emit(match field.key {
+            crate::ast::PropertyKey::Private(_) => Instruction::DefinePrivateField,
+            _ => Instruction::DefineField,
+        });
         self.chunk.emit(Instruction::Pop);
         Ok(())
     }
@@ -337,6 +385,7 @@ impl Compiler<'_> {
                 fields,
                 statements,
                 derived: class.heritage.is_some(),
+                private_methods: instance_private_method_names(class),
             },
             Lexical::No,
             span,
@@ -451,6 +500,174 @@ fn derived_default(span: Span) -> (FormalParameters, Vec<Stmt>) {
             span,
         }],
     )
+}
+
+impl Compiler<'_> {
+    /// Make a private method or accessor and put it where whoever needs it will look.
+    ///
+    /// Two destinations, and the keyword decides. A **static** one belongs to the constructor and
+    /// nothing else ever carries it, so its entry is added here, where the constructor is on the
+    /// stack. An **instance** one is added per construction, so the function is only stored, and
+    /// [`Compiler::instance_private_methods`] is what emits those adds.
+    fn private_method(
+        &mut self,
+        method: &crate::ast::ClassMethod,
+        name: &str,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        // §15.7.14 gives a private method a `[[HomeObject]]` like any other, and it is the object the
+        // method is *conceptually* defined on rather than one it is reachable through: the **prototype**
+        // for an instance method, the constructor for a static one. That is where `super` starts
+        // looking, which is the only thing a home decides — so "a private method is on neither object"
+        // is true and is not an argument for either answer. Getting it wrong sent `super.m()` inside a
+        // private method to the parent *class* instead of its prototype, and the conformance run said so.
+        self.chunk.emit(Instruction::Duplicate);
+        if !method.is_static {
+            self.chunk.emit(Instruction::ClassPrototype);
+        }
+        self.make_function(&method.function, span)?;
+        self.chunk.emit(Instruction::MakeMethod(1));
+        self.store_private_slot(&private_function_slot(name, method.kind))?;
+        // The function and the home, both of which have served their purpose.
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
+    }
+
+    /// §15.7.14 — add one private element per *name* to whatever is on top of the stack.
+    ///
+    /// Per name and not per element, which is the whole correction: a getter and a setter are two class
+    /// elements and **one** private element, built here at the definition. Adding each half separately
+    /// and merging them at run time let the same accessor be added to one object twice, where §7.3.30
+    /// step 2 refuses a name that is already there — and a re-entered constructor reaches exactly that.
+    fn add_private_elements(
+        &mut self,
+        elements: &[(Box<str>, PrivateKind)],
+    ) -> Result<(), CompileError> {
+        for (name, kind) in elements {
+            self.load_private_name(name)?;
+            match kind {
+                PrivateKind::Method => {
+                    self.load_private_slot(&private_function_slot(
+                        name,
+                        crate::ast::MethodKind::Normal,
+                    ))?;
+                    self.chunk.emit(Instruction::AddPrivateMethod);
+                }
+                // A half nobody wrote is `undefined`, and then that direction is a TypeError — which
+                // is where a private accessor differs from a public one.
+                PrivateKind::Accessor { getter, setter } => {
+                    for (present, half) in [
+                        (*getter, crate::ast::MethodKind::Get),
+                        (*setter, crate::ast::MethodKind::Set),
+                    ] {
+                        match present {
+                            true => self.load_private_slot(&private_function_slot(name, half))?,
+                            false => self.constant(crate::value::Value::Undefined)?,
+                        }
+                    }
+                    self.chunk.emit(Instruction::AddPrivateAccessor);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// §15.7.14's `InitializeInstanceElements` steps 1 and 2 — the methods, before the fields.
+    ///
+    /// Before, and the order is observable: a field initialiser may call a private method, and
+    /// §15.7.14 adds every method to the instance before evaluating any field.
+    pub(super) fn instance_private_methods(
+        &mut self,
+        methods: &[(Box<str>, PrivateKind)],
+    ) -> Result<(), CompileError> {
+        // No early return for a class with none, on exactly the terms [`Compiler::instance_fields`]
+        // states below: `LoadThis` followed by `Pop` leaves the stack as it was, so no input can tell
+        // the shortcut from its absence — and a branch nothing can pin is worse than one that was
+        // never written. Mutation coverage reported it, as it did for the fields.
+        self.load_this();
+        self.add_private_elements(methods)?;
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
+    }
+}
+
+/// The private methods and accessors a class body binds, in source order, instance ones only.
+///
+/// Owned names rather than references into the tree, because they have to reach the *constructor's*
+/// compiler and a borrow of the syntax tree cannot — the compiler's lifetime is the heap's. The same
+/// reason the field initialisers became a compiled body rather than a stored list.
+pub(super) fn instance_private_method_names(class: &Class) -> Vec<(Box<str>, PrivateKind)> {
+    private_elements(class, false)
+}
+
+/// The private methods and accessors whose `static` matches, one entry per **name**.
+///
+/// One per name because that is what §15.7.14 builds: `get #a` and `set #a` are two class elements and
+/// one private element, and which halves were written is decided here rather than by merging two adds
+/// at run time.
+fn private_elements(class: &Class, is_static: bool) -> Vec<(Box<str>, PrivateKind)> {
+    let mut elements: Vec<(Box<str>, PrivateKind)> = Vec::new();
+    for method in class.elements.iter().filter_map(|element| match element {
+        ClassElement::Method(method) if method.is_static == is_static => Some(method),
+        _ => None,
+    }) {
+        let crate::ast::PropertyKey::Private(name) = &method.key else {
+            continue;
+        };
+        let (getter, setter) = match method.kind {
+            crate::ast::MethodKind::Normal => {
+                elements.push((name.clone(), PrivateKind::Method));
+                continue;
+            }
+            crate::ast::MethodKind::Get => (true, false),
+            crate::ast::MethodKind::Set => (false, true),
+        };
+        // The other half, if it was written first. §15.7.1 has already refused any duplicate that is
+        // not a getter/setter pair, so an existing entry under this name is that pair.
+        match elements.iter_mut().find(|(held, _)| held == name) {
+            Some((
+                _,
+                PrivateKind::Accessor {
+                    getter: held_getter,
+                    setter: held_setter,
+                },
+            )) => {
+                *held_getter |= getter;
+                *held_setter |= setter;
+            }
+            _ => elements.push((name.clone(), PrivateKind::Accessor { getter, setter })),
+        }
+    }
+    elements
+}
+
+/// Which halves a private element has — §7.3.30's kind, decided at the class definition.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum PrivateKind {
+    /// `#m() {}`, which is one function and refuses assignment.
+    Method,
+    /// `get #a` and `set #a`, which are one element however many of the two were written.
+    Accessor {
+        /// Whether a getter was written; reading without one is a TypeError.
+        getter: bool,
+        /// Whether a setter was written; writing without one is a TypeError.
+        setter: bool,
+    },
+}
+
+/// The slot holding the function for `#name`, told apart by which half of an accessor it is.
+///
+/// A getter and a setter are one private element and two functions, so they cannot share a slot. The
+/// name is derived from the private name and the kind, so the definition and the prologue agree
+/// without either being told.
+fn private_function_slot(name: &str, kind: crate::ast::MethodKind) -> String {
+    let half = match kind {
+        crate::ast::MethodKind::Normal => "method",
+        crate::ast::MethodKind::Get => "getter",
+        crate::ast::MethodKind::Set => "setter",
+    };
+    format!("%private {half} #{name}")
 }
 
 /// Every private name the class body binds, in source order and without duplicates.

@@ -172,13 +172,22 @@ impl Heap {
             // any other way: the name lives in a compiler slot no script can spell, and the value is
             // in a list that no property walk visits — so a collector that skipped this would free
             // what `this.#x` is about to answer with.
-            for (name, value) in object.private_elements() {
+            for (name, element) in object.private_elements() {
                 if let Some(seen) = marked.symbols.get_mut(name.index()) {
                     *seen = true;
                 }
-                match value {
-                    Value::Object(reached) => pending.push(*reached),
-                    other => self.mark_value(*other, marked),
+                // Both halves of an accessor, because either may be the only reference to its
+                // function: a private accessor's getter is reachable through nothing else at all.
+                let held = match element {
+                    crate::heap::PrivateElement::Field(value)
+                    | crate::heap::PrivateElement::Method(value) => [*value, Value::Undefined],
+                    crate::heap::PrivateElement::Accessor { getter, setter } => [*getter, *setter],
+                };
+                for value in held {
+                    match value {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
                 }
             }
             // A method's home object, which nothing else need be holding: a method taken off a class
@@ -721,7 +730,10 @@ mod tests {
         let found = heap
             .object(instance)
             .and_then(|object| object.private_element(name));
-        assert!(matches!(found, Some(Value::Object(reached)) if reached == held));
+        assert!(matches!(
+            found.and_then(crate::heap::PrivateElement::value),
+            Some(Value::Object(reached)) if reached == held
+        ));
     }
 
     #[test]

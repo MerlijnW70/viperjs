@@ -557,6 +557,38 @@ impl<'a> Compiler<'a> {
         Ok(())
     }
 
+    /// Emit a read or a write of one of the compiler's own class-scope slots, or refuse.
+    ///
+    /// The same argument [`Compiler::load_private_name`] makes, for the slots that hold a private
+    /// method's *function* rather than its name. `load_name` and `store_name` fall back to a property
+    /// of the global object for a name they cannot place, which for a `%`-prefixed slot is never what
+    /// was meant — and it fails *quietly*, because a store and a load of the same missing slot both go
+    /// to the same global and agree with each other. Mutation coverage found exactly that: dropping the
+    /// static half of the private-method list left every static method working, through a global.
+    fn private_slot(&mut self, slot: &str, write: bool) -> Result<(), CompileError> {
+        let Some(binding) = self.binding(slot) else {
+            return Err(unsupported(
+                "a private method outside a class body",
+                Span::new(0, 0),
+            ));
+        };
+        match write {
+            true => self.store(binding),
+            false => self.load(binding),
+        }
+        Ok(())
+    }
+
+    /// Read a class-scope slot the compiler reserved, or refuse — see [`Compiler::private_slot`].
+    pub(super) fn load_private_slot(&mut self, slot: &str) -> Result<(), CompileError> {
+        self.private_slot(slot, false)
+    }
+
+    /// Write one, leaving the value on the stack — see [`Compiler::private_slot`].
+    pub(super) fn store_private_slot(&mut self, slot: &str) -> Result<(), CompileError> {
+        self.private_slot(slot, true)
+    }
+
     /// Emit a write of `name`, leaving the value on the stack.
     pub(super) fn store_name(&mut self, name: &str) -> Result<(), CompileError> {
         let binding = self.binding(name);

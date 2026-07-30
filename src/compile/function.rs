@@ -321,6 +321,11 @@ pub(super) enum Body<'a> {
         fields: &'a [&'a crate::ast::ClassField],
         /// What the author wrote.
         statements: &'a [Stmt],
+        /// The private methods and accessors every instance must carry — §15.7.14 steps 1 and 2.
+        ///
+        /// Owned names rather than a borrow of the tree, because this list has to survive into a
+        /// compiler whose lifetime is the heap's. See [`super::class::instance_private_method_names`].
+        private_methods: Vec<(Box<str>, super::class::PrivateKind)>,
         /// Whether the class has an `extends` clause — §10.2.2's `[[ConstructorKind]]`.
         ///
         /// Three things follow from it and nothing else does: `this` becomes a binding that starts
@@ -504,6 +509,7 @@ fn compile_body(
             fields,
             statements,
             derived,
+            private_methods,
         } => {
             // §15.7.14 — a base class initialises its fields before the body's first statement,
             // because `this` is already there to put them on. A derived class cannot: there is no
@@ -529,12 +535,16 @@ fn compile_body(
                         fields,
                         statements: &[],
                         derived: false,
+                        private_methods: private_methods.clone(),
                     },
                     Lexical::No,
                     span,
                 )?;
                 compiler.derived_fields = Some(compiler.file_function(initialiser, span)?);
             } else {
+                // §15.7.14 steps 1 to 4 — the methods first, then the fields. The order is
+                // observable: a field initialiser may call a private method.
+                compiler.instance_private_methods(&private_methods)?;
                 compiler.instance_fields(fields)?;
             }
             for name in var_declared_names(statements) {

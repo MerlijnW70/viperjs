@@ -509,8 +509,28 @@ fn a_foreign_or_missing_object_handle_answers_rather_than_panicking() {
     let name = heap.new_symbol(None);
     assert!(!heap.add_private_field(past_the_end, name, Value::Number(1.0)));
     assert!(!heap.set_private_field(past_the_end, name, Value::Number(1.0)));
+    let method = crate::heap::PrivateElement::Method(Value::Number(1.0));
+    assert!(!heap.add_private_element(past_the_end, name, method));
     // …and one that happens to be in range answers about *this* heap's object at that index.
     let mine = heap.new_object(None);
     assert_eq!(stranger, mine);
     assert!(heap.object(stranger).is_some());
+
+    // The same three operations on an object that is *real*, for the answers they give about a name it
+    // does not carry and a kind that refuses. Reachable only from here, and after the assertion above
+    // because that one is about an object index and a further allocation would move it: the
+    // interpreter reads the kind and finds the entry before it asks any of these, so each is a
+    // contract this test states rather than a branch a script can take.
+    let real = heap.new_object(None);
+    assert!(!heap.set_private_field(real, name, Value::Number(1.0)));
+    assert!(heap.add_private_element(real, name, method));
+    // A name the object does not carry while carrying *others* is a third path, distinct from having
+    // no list at all — and it answers the same way, which is what these two rows together say.
+    let other = heap.new_symbol(None);
+    assert!(!heap.set_private_field(real, other, Value::Number(1.0)));
+    // §7.3.32 refuses a *method*, which is the check the interpreter makes for itself.
+    assert!(!heap.set_private_field(real, name, Value::Number(2.0)));
+    // …and a second add of the same name refuses, which is §7.3.30 step 2 and is what makes an
+    // object's set of private names fixed once it has them.
+    assert!(!heap.add_private_element(real, name, method));
 }

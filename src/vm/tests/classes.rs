@@ -297,19 +297,11 @@ fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
     // near-identical copies of it had also accumulated in this file, each shortened separately; they
     // are one test now, because the second was where a stale row could hide from the first.
     //
-    // What is genuinely left: a private *method* or accessor, and a private *static*, both of which
-    // need §7.3.30's `PrivateMethodOrAccessorAdd` — a private *field* compiles. And a compound
-    // assignment through `super` or through a private name, which both leave a reference of the wrong
-    // shape for the `DuplicateTwo` every compound form reads the old value with.
+    // What is genuinely left is not a class *element* at all — §15.7 is complete. It is the two forms
+    // that read a reference back before writing it: a compound assignment and an update, through
+    // either `super` or a private name, both of which leave a reference of the wrong width for the
+    // `DuplicateTwo` those forms use.
     for (source, named) in [
-        (
-            "class C { #m() {} }",
-            "a private method, accessor or static",
-        ),
-        (
-            "class C { static #x = 1; }",
-            "a private method, accessor or static",
-        ),
         (
             "class C { #x; m() { this.#x += 1; } }",
             "compound assignment to a private field",
