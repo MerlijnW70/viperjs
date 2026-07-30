@@ -413,3 +413,99 @@ fn the_two_kinds_of_field_this_slice_does_not_take_are_refused_by_name() {
     let error = compile_error("class C { static { 1; } }");
     assert!(error.contains("static block"), "got {error:?}");
 }
+
+#[test]
+fn a_class_body_is_a_scope_holding_the_class_name() {
+    // §15.7.14 steps 4 to 7 — the body gets a scope of its own with a binding for the class's own
+    // name. A declaration also has an outer binding, and an expression has none, so this is the only
+    // way either kind can name itself from inside.
+    assert_eq!(
+        run("(function () { var K = class C { m() { return C; } }; return new K().m() === K; })()"),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { class C { m() { return C; } } return new C().m() === C; })()"),
+        "true"
+    );
+    // A static method reaches it too, and so does a computed key — the binding is initialised before
+    // any element is defined, which is what makes both work.
+    assert_eq!(
+        run(
+            "(function () { var K = class C { static who() { return C; } }; return K.who() === K; })()"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { var seen = []; \
+             var K = class C { [(seen.push(typeof C), 'm')]() {} }; return seen.join(''); })()"),
+        "function"
+    );
+    // The name does not escape a class expression: outside it, nothing was declared.
+    assert_eq!(
+        run("(function () { var K = class C {}; return typeof C; })()"),
+        "undefined"
+    );
+    // Each class has its own, so a class made inside a method names itself and not the outer one.
+    assert_eq!(
+        run(
+            "(function () { class Outer { m() { return class Inner { who() { return Inner; } }; } } \
+             var I = new Outer().m(); return new I().who() === I; })()"
+        ),
+        "true"
+    );
+}
+
+#[test]
+fn the_inner_class_binding_is_a_different_one_from_the_outer() {
+    // The observable difference, and the reason this is two bindings rather than one: reassigning the
+    // outer name leaves what the body closed over alone. A single shared binding would answer `1`.
+    assert_eq!(
+        run(
+            "(function () { class C { m() { return C; } } var was = C; C = 1; \
+             return new was().m() === was; })()"
+        ),
+        "true"
+    );
+    // …and the outer one really is writable, which is what makes the row above mean something rather
+    // than merely pass.
+    assert_eq!(run("(function () { class C {} C = 1; return C; })()"), "1");
+    // The inner binding is *immutable* — §15.7.14 creates it with `CreateImmutableBinding`, so a body
+    // that assigns to its own class name is a TypeError rather than a rebinding.
+    assert_eq!(
+        run("(function () { var K = class C { m() { \
+               try { C = 1; return 'assigned'; } catch (e) { return e.constructor.name; } } }; \
+             return new K().m(); })()"),
+        "TypeError"
+    );
+    // Including from a declaration, where an outer *mutable* binding of the same name exists: the
+    // body sees the inner one, so this is a TypeError and not a write to the outer name.
+    assert_eq!(
+        run("(function () { class C { m() { \
+               try { C = 1; return 'assigned'; } catch (e) { return e.constructor.name; } } } \
+             return new C().m() + ',' + (typeof C); })()"),
+        "TypeError,function"
+    );
+}
+
+#[test]
+fn a_class_at_the_top_level_of_a_script_leaves_the_stack_as_it_found_it() {
+    // Every other row in this file wraps its class in `(function () { … })()`, and that hid a real
+    // bug: an extra value left on the stack only trips the end-of-chunk balance check of a *script*,
+    // so a function-wrapped class compiled and ran while 1,084 test262 files failed with
+    // `UnbalancedStack`. A class written where a script's own statements go is the shape that
+    // notices.
+    assert_eq!(run("class C {} typeof C"), "function");
+    assert_eq!(run("class C { m() { return 1; } } new C().m()"), "1");
+    assert_eq!(
+        run("class C { m() { return C; } } new C().m() === C"),
+        "true"
+    );
+    assert_eq!(run("var K = class C {}; typeof K"), "function");
+    assert_eq!(run("class C { x = 1; } new C().x"), "1");
+    assert_eq!(
+        run("class C {} class D {} typeof C + ',' + typeof D"),
+        "function,function"
+    );
+    // …and one after other statements, so the imbalance cannot be absorbed by whatever came before.
+    assert_eq!(run("var a = 1; class C {} a + 1"), "2");
+}

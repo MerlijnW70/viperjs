@@ -20456,10 +20456,6 @@ language/expressions/class/private-static-setter-multiple-evaluations-of-class-e
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw ReferenceError: $262 is not defined
-language/expressions/class/scope-name-lex-close.js :: it threw an object with no name: from instance method Expected SameValue(«"outside"», «[object Function]») to be true
-language/expressions/class/scope-name-lex-close.js (strict) :: it threw an object with no name: from instance method Expected SameValue(«"outside"», «[object Function]») to be true
-language/expressions/class/scope-name-lex-open-no-heritage.js :: it threw an object with no name: inner binding value Expected SameValue(«"outside"», «[object Function]») to be true
-language/expressions/class/scope-name-lex-open-no-heritage.js (strict) :: it threw an object with no name: inner binding value Expected SameValue(«"outside"», «[object Function]») to be true
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -21681,16 +21677,8 @@ language/statements/class/method/dflt-params-ref-later.js :: it threw an object 
 language/statements/class/method/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/method/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/method/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/class/name-binding/const.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/name-binding/const.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/name-binding/expression.js :: it threw ReferenceError: C is not defined
-language/statements/class/name-binding/expression.js (strict) :: it threw ReferenceError: C is not defined
 language/statements/class/name.js :: it threw an object with no name: name should be an own property
 language/statements/class/name.js (strict) :: it threw an object with no name: name should be an own property
-language/statements/class/scope-name-lex-close.js :: it threw an object with no name: from instance method Expected SameValue(«null», «[object Function]») to be true
-language/statements/class/scope-name-lex-close.js (strict) :: it threw an object with no name: from instance method Expected SameValue(«null», «[object Function]») to be true
-language/statements/class/scope-name-lex-open-no-heritage.js :: it threw an object with no name: inner binding value Expected SameValue(«null», «[object Function]») to be true
-language/statements/class/scope-name-lex-open-no-heritage.js (strict) :: it threw an object with no name: inner binding value Expected SameValue(«null», «[object Function]») to be true
 language/statements/class/static-init-arguments-functions.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block

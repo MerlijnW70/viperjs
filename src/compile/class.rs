@@ -64,7 +64,32 @@ impl Compiler<'_> {
             }
         }
 
+        // §15.7.14 steps 4 to 7 — the class body is a scope of its own, holding an **immutable**
+        // binding for the class's own name. That is a different binding from the one a declaration
+        // also creates outside, and the difference is observable: reassigning the outer name does not
+        // change what a method sees, because the method closed over this one.
+        //
+        // It is also what lets a named class *expression* see itself, since an expression has no
+        // outer binding at all.
+        let mark = self.enter_scope();
+        let mut inner = None;
+        if let Some(name) = &class.name {
+            let slot = self.declare_lexical(&name.name, true);
+            self.chunk.emit(Instruction::Uninitialise(slot));
+            inner = Some(slot);
+        }
+
         self.constructor(class, &fields, span)?;
+
+        // Initialised to the constructor before any element is defined — which is the whole reason
+        // the scope exists, and why the binding is uninitialised until now: a computed key evaluated
+        // above this point is in the class name's temporal dead zone.
+        // No `Duplicate` first: `Initialise` *peeks* its value rather than popping it — the same
+        // terms as a store, so that `let a = b = 1` leaves the value for the outer binding — so the
+        // constructor is written into the slot and stays on the stack for the methods below.
+        if let Some(slot) = inner {
+            self.chunk.emit(Instruction::Initialise(slot));
+        }
 
         for element in &class.elements {
             let ClassElement::Method(method) = element else {
@@ -84,6 +109,7 @@ impl Compiler<'_> {
             self.make_function(&method.function, span)?;
             self.chunk.emit(Instruction::DefineClassMethod(method.kind));
         }
+        self.leave_scope(mark);
         Ok(())
     }
 
