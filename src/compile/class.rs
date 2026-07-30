@@ -23,7 +23,7 @@
 
 use super::function::{Body, Lexical};
 use super::{CompileError, ErrorKind, unsupported};
-use crate::ast::{Class, ClassElement, FormalParameters, PropertyKey as AstPropertyKey, Stmt};
+use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
 use crate::span::Span;
