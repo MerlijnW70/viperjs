@@ -503,6 +503,12 @@ fn a_foreign_or_missing_object_handle_answers_rather_than_panicking() {
     assert!(!heap.define_own_property(past_the_end, a, &data(1.0)));
     assert!(heap.find_own(past_the_end, a).is_none());
     assert!(!heap.set_prototype_of(past_the_end, None));
+    // §7.3.29 and §7.3.32 answer the same way, and this is the only place the answer can be reached:
+    // a compiled chunk always names an object it has just seen on the stack, so the guard exists for
+    // a hand-built one and would otherwise be a branch no test could pin.
+    let name = heap.new_symbol(None);
+    assert!(!heap.add_private_field(past_the_end, name, Value::Number(1.0)));
+    assert!(!heap.set_private_field(past_the_end, name, Value::Number(1.0)));
     // …and one that happens to be in range answers about *this* heap's object at that index.
     let mine = heap.new_object(None);
     assert_eq!(stranger, mine);

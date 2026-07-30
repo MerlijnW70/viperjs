@@ -450,6 +450,45 @@ pub enum Instruction {
     /// this is what an arrow's capture does, for a function that is not an arrow and needs its own
     /// `this`.
     InheritHome,
+    /// Push a **fresh** Private Name — §9.2's `PrivateEnvironment`, one entry at a time.
+    ///
+    /// Fresh per execution, which is the whole reason it is an instruction rather than a constant: a
+    /// class evaluated twice has two sets of private names, so an instance of one evaluation is not a
+    /// brand of the other. That is what every `multiple-evaluations-of-class` test in the suite is
+    /// about, and a constant in the chunk would make them all pass by accident and be wrong.
+    ///
+    /// The name is a Symbol, because §6.2.12 asks for exactly what a Symbol has — an identity that is
+    /// itself and a description only a debugger reads — and for nothing a Symbol lacks. It goes into a
+    /// compiler slot no source can spell and never reaches a property table.
+    NewPrivateName(u32),
+    /// §7.3.29 `PrivateFieldAdd` — add a private field to an object.
+    ///
+    /// A **TypeError** if the object already carries the name, which is step 3 rather than a
+    /// defensive check: a constructor re-entered on an object it already initialised reaches it.
+    ///
+    /// Pops the value and the name, and *peeks* the target — an instance is given one field after
+    /// another, exactly as [`Instruction::DefineField`] does it.
+    DefinePrivateField,
+    /// §7.3.31 `PrivateGet` — read a private field, or throw.
+    ///
+    /// A **TypeError** when the object does not carry the name, and that is what makes a private name
+    /// a *brand*: there is no way to ask without risking the throw except [`Instruction::HasPrivate`],
+    /// which exists for exactly that reason.
+    ///
+    /// Pops the name and the target.
+    GetPrivate,
+    /// §7.3.32 `PrivateSet` — write a private field that is already there, or throw.
+    ///
+    /// It does not create one. `this.#x = 1` on an object with no `#x` is a TypeError, which is what
+    /// fixes an object's set of private names at construction.
+    ///
+    /// Pops the value, the name and the target, and leaves the value: an assignment is an expression.
+    SetPrivate,
+    /// `#x in o` — §13.10.1, the one way to ask without risking the throw.
+    ///
+    /// Pops the name and the target and pushes a Boolean. It exists because §7.3.31 throws: without
+    /// it, asking whether an object is one of yours would mean catching a TypeError.
+    HasPrivate,
     /// §10.2.2's `BindThisValue` — bind the derived constructor's `this` to the top value.
     ///
     /// Peeked rather than popped, because §13.3.7.1 step 8 makes the object the value of the
@@ -742,6 +781,11 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::LoadNewTarget
         | Instruction::SuperCall(_)
         | Instruction::MakeMethod(_)
+        | Instruction::NewPrivateName(_)
+        | Instruction::DefinePrivateField
+        | Instruction::GetPrivate
+        | Instruction::SetPrivate
+        | Instruction::HasPrivate
         | Instruction::ThrowSuperDelete
         | Instruction::InheritHome
         | Instruction::LoadSuperBase

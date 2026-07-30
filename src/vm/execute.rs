@@ -758,6 +758,111 @@ impl Vm {
                         heap.set_home_object(function, home);
                     }
                 }
+                Instruction::NewPrivateName(index) => {
+                    // The description is §6.2.12's `[[Description]]`, which only a debugger reads —
+                    // it takes no part in identity, so two names with the same description are two
+                    // names. That is exactly a Symbol's contract.
+                    let description = match running.constant(index) {
+                        Some(Value::String(text)) => Some(text),
+                        _ => return Err(Fault::MissingConstant),
+                    };
+                    let name = heap.new_symbol(description);
+                    self.stack.push(Value::Symbol(name));
+                }
+                Instruction::DefinePrivateField => {
+                    let value = self.pop()?;
+                    let Value::Symbol(name) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    // Peeked, so one target takes field after field.
+                    let Some(&Value::Object(target)) = self.stack.last() else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    if !heap.add_private_field(target, name, value) {
+                        self.raise(
+                            Abrupt::type_error("this object already has that private field"),
+                            heap,
+                            root,
+                            current,
+                            at,
+                        )?;
+                        continue;
+                    }
+                }
+                Instruction::GetPrivate => {
+                    let Value::Symbol(name) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let target = self.pop()?;
+                    // §7.3.31 step 1 — a primitive carries no private elements, so it fails the same
+                    // way an object without the name does. No wrapper is made: a wrapper would have
+                    // none either, and making one to fail with would be work for the same answer.
+                    let found = match target {
+                        Value::Object(object) => heap
+                            .object(object)
+                            .and_then(|held| held.private_element(name)),
+                        _ => None,
+                    };
+                    match found {
+                        Some(value) => self.stack.push(value),
+                        None => {
+                            self.raise(
+                                Abrupt::type_error("this object has no such private field"),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::SetPrivate => {
+                    let value = self.pop()?;
+                    let Value::Symbol(name) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let target = self.pop()?;
+                    let written = match target {
+                        Value::Object(object) => heap.set_private_field(object, name, value),
+                        _ => false,
+                    };
+                    if !written {
+                        self.raise(
+                            Abrupt::type_error("this object has no such private field"),
+                            heap,
+                            root,
+                            current,
+                            at,
+                        )?;
+                        continue;
+                    }
+                    self.stack.push(value);
+                }
+                Instruction::HasPrivate => {
+                    let Value::Symbol(name) = self.pop()? else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    let target = self.pop()?;
+                    // §13.10.1 **step 3** — a non-object right-hand side is a TypeError, exactly as it
+                    // is for an ordinary `in`. This read the other way for one commit, on the guess
+                    // that the production existed to make the question always safe; it exists to make
+                    // it safe for an *object* that lacks the name, where §7.3.31 would throw.
+                    let Value::Object(object) = target else {
+                        self.raise(
+                            Abrupt::type_error("`in` requires an object on the right"),
+                            heap,
+                            root,
+                            current,
+                            at,
+                        )?;
+                        continue;
+                    };
+                    let held = heap
+                        .object(object)
+                        .is_some_and(|held| held.private_element(name).is_some());
+                    self.stack.push(Value::Boolean(held));
+                }
                 Instruction::BindThis(index) => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     // §10.2.2's `BindThisValue` step 2 — already bound is a **ReferenceError**, and

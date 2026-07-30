@@ -516,9 +516,9 @@ impl Compiler<'_> {
                 let held = self.declare_hidden("assigned");
                 self.chunk.emit(Instruction::StoreVariable(0, held));
                 self.chunk.emit(Instruction::Pop);
-                self.property_reference(target, Keep::Nothing)?;
+                let reference = self.property_reference(target, Keep::Nothing)?;
                 self.chunk.emit(Instruction::LoadVariable(0, held));
-                self.chunk.emit(Instruction::SetProperty);
+                self.chunk.emit(reference.set());
                 self.chunk.emit(Instruction::Pop);
                 Ok(())
             }
@@ -749,7 +749,14 @@ impl Compiler<'_> {
             }
             AstPropertyKey::Computed(expression) => self.expression(expression),
             AstPropertyKey::BigInt(_) => Err(unsupported("a BigInt literal", Span::new(0, 0))),
-            AstPropertyKey::Private(_) => Err(unsupported("a private name", Span::new(0, 0))),
+            // A private name is not a `PropertyName` at all — §15.7's `ClassElementName` is one *or*
+            // a `PrivateIdentifier`. A private *field* never reaches here, because its Private Name
+            // is minted at the class definition instead; what does is a private method, accessor or
+            // static, each of which needs §7.3.30's `PrivateMethodOrAccessorAdd`.
+            AstPropertyKey::Private(_) => Err(unsupported(
+                "a private method, accessor or static",
+                Span::new(0, 0),
+            )),
         }
     }
 
@@ -1163,9 +1170,9 @@ impl Compiler<'_> {
                 };
                 match &target.kind {
                     ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
-                        self.property_reference(target, Keep::Nothing)?;
+                        let reference = self.property_reference(target, Keep::Nothing)?;
                         self.chunk.emit(Instruction::LoadVariable(0, current));
-                        self.chunk.emit(Instruction::SetProperty);
+                        self.chunk.emit(reference.set());
                     }
                     ExprKind::Identifier(name) => {
                         self.chunk.emit(Instruction::LoadVariable(0, current));

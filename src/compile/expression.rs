@@ -189,6 +189,15 @@ impl Compiler<'_> {
                 self.load_this();
                 Ok(())
             }
+            // §13.10.1 — `#x in o`, the one way to ask whether an object carries a private field
+            // without §7.3.31's TypeError. The name is not an expression and has no production that
+            // would let it stand alone, which is why it is part of this node.
+            ExprKind::PrivateIn { name, object } => {
+                self.expression(object)?;
+                self.load_private_name(name)?;
+                self.chunk.emit(Instruction::HasPrivate);
+                Ok(())
+            }
             ExprKind::BigInt(_) => Err(unsupported("a BigInt literal", span)),
             ExprKind::Call {
                 optional,
@@ -371,7 +380,6 @@ impl Compiler<'_> {
             ExprKind::ImportMeta => Err(unsupported("import.meta", span)),
             ExprKind::ImportCall { .. } => Err(unsupported("a dynamic import", span)),
             ExprKind::OptionalChain(_) => Err(unsupported("optional chaining", span)),
-            ExprKind::PrivateIn { .. } => Err(unsupported("a private-name in expression", span)),
         }
     }
     /// §13.2.5 — an object literal.
@@ -529,13 +537,17 @@ impl Compiler<'_> {
                 object,
                 property,
             } => {
-                if *private {
-                    return Err(unsupported("a private name", target.span));
-                }
                 if *optional {
                     return Err(unsupported("optional chaining", target.span));
                 }
                 let reference = self.base(object, keep)?;
+                // §13.3.7 — `a.#b`'s key is the Private Name the enclosing class minted, read out of
+                // the class scope by the same walk that reaches the class's own name. The parser has
+                // already refused a `#b` no enclosing class binds, so the slot is there.
+                if *private {
+                    self.load_private_name(property)?;
+                    return Ok(Reference::Private);
+                }
                 let units: Vec<u16> = property.encode_utf16().collect();
                 let id = self.heap.new_string(units);
                 self.constant(Value::String(id))?;
@@ -574,7 +586,11 @@ impl Compiler<'_> {
                 // and *then* refuses, so a `toString` on the key has already had its effect.
                 self.chunk.emit(match reference {
                     Reference::Super => Instruction::ThrowSuperDelete,
-                    Reference::Ordinary => Instruction::DeleteProperty,
+                    // §15.7.1 makes `delete this.#x` an *early* error, so the parser has already
+                    // refused it and this arm is unreachable from source. `DeleteProperty` is the
+                    // honest thing for a hand-built tree: the name is a Symbol that no property table
+                    // holds, so the delete finds nothing and answers `true`.
+                    Reference::Ordinary | Reference::Private => Instruction::DeleteProperty,
                 });
                 Ok(())
             }
@@ -615,6 +631,21 @@ impl Compiler<'_> {
         // and the rest is refused by name: `super.x += 1` is legal and rare, and a refusal with a span
         // is better than an unbalanced stack.
         let reference = self.property_reference(target, Keep::Nothing)?;
+        // §7.3.32 — a private write does not create, and it is refused for the same shape reason a
+        // `super` one is: the compound forms below read the old value with `DuplicateTwo`, and a
+        // private reference's two values are a base and a *name* rather than a base and a key, so the
+        // read would have to go through `GetPrivate`. `#x += 1` is legal and rare.
+        if reference == Reference::Private {
+            if operator != AssignmentOperator::Assign {
+                return Err(unsupported(
+                    "a compound assignment to a private field",
+                    span,
+                ));
+            }
+            self.expression(value)?;
+            self.chunk.emit(Instruction::SetPrivate);
+            return Ok(());
+        }
         if reference == Reference::Super {
             if operator != AssignmentOperator::Assign {
                 return Err(unsupported(
@@ -714,7 +745,16 @@ impl Compiler<'_> {
             ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
                 // §13.4.4.1 step 1 evaluates the reference *once*, so `o[f()]++` calls `f` once —
                 // the same guarantee `o[f()] += 1` needs, and the same instructions.
-                self.property_reference(argument, Keep::Nothing)?;
+                let reference = self.property_reference(argument, Keep::Nothing)?;
+                // §13.4.4.1 reads the old value back, which `DuplicateTwo` does for a two-value
+                // reference and cannot do for either of the others. Refused by name: `super.x++` and
+                // `this.#x++` are legal and rare, and a refusal with a span beats an unbalanced stack.
+                if !reference.is_ordinary() {
+                    return Err(unsupported(
+                        "an update of a `super` property or a private field",
+                        span,
+                    ));
+                }
                 self.chunk.emit(Instruction::DuplicateTwo);
                 self.chunk.emit(Instruction::GetProperty);
                 self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
@@ -966,6 +1006,8 @@ pub(super) enum Reference {
     Ordinary,
     /// `super.x` — §13.3.7.1's two, with the receiver pushed under the base.
     Super,
+    /// `o.#x` — one object and a **Private Name**, which is not a property key at all.
+    Private,
 }
 
 impl Reference {
@@ -974,6 +1016,30 @@ impl Reference {
         match self {
             Self::Ordinary => Instruction::GetProperty,
             Self::Super => Instruction::GetSuperProperty,
+            Self::Private => Instruction::GetPrivate,
         }
+    }
+
+    /// The instruction that writes this reference, with the value pushed on top of it.
+    ///
+    /// All three consume the whole reference and leave the value, so every caller balances without
+    /// knowing which it got — which is the point. Writing `SetProperty` for all of them was a silent
+    /// wrong answer for two of the three: a Private Name *is* a valid property key, so a private
+    /// write through this path quietly made a Symbol-keyed property instead of throwing, and a
+    /// `super` write left its receiver stranded on the stack.
+    pub(super) fn set(self) -> Instruction {
+        match self {
+            Self::Ordinary => Instruction::SetProperty,
+            Self::Super => Instruction::SetSuperProperty,
+            Self::Private => Instruction::SetPrivate,
+        }
+    }
+
+    /// Whether a compound or update form can read this reference back with `DuplicateTwo`.
+    ///
+    /// Only an ordinary one: the other two have a value too many or a key that is not a key, and
+    /// `#x += 1` and `super.x++` are refused by name rather than compiled to an unbalanced stack.
+    pub(super) fn is_ordinary(self) -> bool {
+        matches!(self, Self::Ordinary)
     }
 }

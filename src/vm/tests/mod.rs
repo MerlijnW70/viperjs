@@ -19,6 +19,7 @@
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
 //! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
 //! - `inheritance` — §15.7's `extends` and `super`, and a `this` that starts out unbound.
+//! - `private` — §15.7's `#x`, which is not a property by any test a program can make.
 //! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
 //! - `for_of` — §14.7.5.7, and the four ways out of a loop that have to close its iterator.
 //! - `globals` — §19.2, and why `parseInt` is not `Number`.
@@ -62,6 +63,7 @@ mod object_state;
 mod objects;
 mod objects_builtin;
 mod parameters;
+mod private;
 mod statements;
 mod string_methods;
 mod strings;

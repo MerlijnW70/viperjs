@@ -168,6 +168,19 @@ impl Heap {
                 Some(other) => self.mark_value(other, marked),
                 None => {}
             }
+            // A private field's value and the Private Name it is filed under. Neither is reachable
+            // any other way: the name lives in a compiler slot no script can spell, and the value is
+            // in a list that no property walk visits — so a collector that skipped this would free
+            // what `this.#x` is about to answer with.
+            for (name, value) in object.private_elements() {
+                if let Some(seen) = marked.symbols.get_mut(name.index()) {
+                    *seen = true;
+                }
+                match value {
+                    Value::Object(reached) => pending.push(*reached),
+                    other => self.mark_value(*other, marked),
+                }
+            }
             // A method's home object, which nothing else need be holding: a method taken off a class
             // and stored on its own still reads `super.x` through it, so the class's prototype is
             // reachable through the method and by no other path.
@@ -681,6 +694,34 @@ mod tests {
         };
         assert_eq!(heap.collect(&roots).strings, 0);
         assert!(heap.string(text).is_some());
+    }
+
+    #[test]
+    fn a_private_field_keeps_its_name_and_its_value() {
+        // §7.3.28's list is an edge in the object graph that no property walk visits, and both halves
+        // of each entry are reachable *only* through it: the Private Name lives in a compiler slot no
+        // script can spell, and the value is in the list. A collector that skipped this would free
+        // what `this.#x` is about to answer with, and free the Symbol that finds it — a
+        // use-after-free with the types intact, which is the wrong kind of failure.
+        let mut heap = Heap::new();
+        let instance = heap.new_object(None);
+        let name = heap.new_symbol(None);
+        let held = heap.new_object(None);
+        assert!(heap.add_private_field(instance, name, Value::Object(held)));
+
+        let roots = Roots {
+            values: vec![Value::Object(instance)],
+            ..Roots::default()
+        };
+        let freed = heap.collect(&roots);
+        assert_eq!(freed.symbols, 0);
+        assert!(heap.object(held).is_some());
+        assert!(heap.symbol(name).is_some());
+        // …and the field still answers, which is the property the two assertions above are for.
+        let found = heap
+            .object(instance)
+            .and_then(|object| object.private_element(name));
+        assert!(matches!(found, Some(Value::Object(reached)) if reached == held));
     }
 
     #[test]

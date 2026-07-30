@@ -159,7 +159,11 @@ fn a_property_reference_the_parser_cannot_build_is_still_refused() {
                 object: object(),
                 property: "x".into(),
             },
-            "a private name",
+            // Refused where the *compiler* can be reached with it: the parser makes `#x` outside a
+            // class an early error, so this shape only exists in a tree built by hand. A refusal and
+            // not a fault, which is what it was for one commit — `load_name` fell back to a global of
+            // the same name and handed `undefined` to `GetPrivate` as a Private Name.
+            "a private name outside a class body",
         ),
         (
             ExprKind::Member {

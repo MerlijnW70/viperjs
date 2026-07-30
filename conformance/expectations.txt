@@ -20829,6 +20829,32 @@ language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarge
 language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/arrow-body-private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/arrow-body-private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/class-name-static-initializer-anonymous.js :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
 language/expressions/class/elements/class-name-static-initializer-anonymous.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
 language/expressions/class/elements/class-name-static-initializer-decl.js :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
@@ -20907,6 +20933,64 @@ language/expressions/class/elements/nested-direct-eval-err-contains-newtarget.js
 language/expressions/class/elements/nested-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/nested-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/nested-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/nested-private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/nested-private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-fields-proxy-default-handler-throws.js :: it threw ReferenceError: Proxy is not defined
+language/expressions/class/elements/private-fields-proxy-default-handler-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
+language/expressions/class/elements/private-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/static-field-init-with-this.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/static-field-init-with-this.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
@@ -21717,8 +21801,6 @@ language/expressions/super/prop-expr-cls-val-from-eval.js :: it threw ReferenceE
 language/expressions/super/prop-expr-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/super/prop-expr-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
@@ -22276,6 +22358,32 @@ language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget
 language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/arrow-body-private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/arrow-body-private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw ReferenceError: Proxy is not defined
 language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
@@ -22353,12 +22461,78 @@ language/statements/class/elements/nested-direct-eval-err-contains-newtarget.js 
 language/statements/class/elements/nested-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/nested-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/nested-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/statements/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/statements/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/nested-private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/nested-private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-derived-cls-direct-eval-contains-superproperty-2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-contains-superproperty-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-contains-superproperty-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-contains-superproperty-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-contains-superproperty-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-field-visible-to-direct-eval-on-initializer.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-field-visible-to-direct-eval-on-initializer.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-field-visible-to-direct-eval.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-field-visible-to-direct-eval.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatefield-on-proxy.js :: it threw ReferenceError: Proxy is not defined
+language/statements/class/elements/privatefield-on-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-3.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-3.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-4.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-4.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-5.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/privatename-not-valid-eval-earlyerr-5.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-6.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-6.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError

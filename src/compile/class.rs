@@ -91,6 +91,24 @@ impl Compiler<'_> {
             self.declare_shadowing(&field_name_slot(at));
         }
 
+        // §9.2 — a `PrivateEnvironment` holding one Private Name per `#x` the body binds, created
+        // **per evaluation** of the class. Here that is a slot per name in this scope, filled with a
+        // fresh Symbol: the scope is a fresh environment each time the definition runs, so a class
+        // evaluated twice has two sets of names and an instance of one is not a brand of the other.
+        // Every `multiple-evaluations-of-class` test in the suite is about exactly that, and a
+        // constant in the chunk would make them all pass by accident and be wrong.
+        //
+        // A method reaches these the way it reaches the class's own name — the scope chain — so
+        // nothing has to be threaded into the nested bodies. And the slot name is derived from the
+        // private name, so the definition and every `this.#x` in the body agree without being told.
+        for name in private_names(class) {
+            let slot = self.declare_shadowing(&private_name_slot(&name));
+            let index = self.name(&name)?;
+            self.chunk.emit(Instruction::NewPrivateName(index));
+            self.chunk.emit(Instruction::StoreVariable(0, slot));
+            self.chunk.emit(Instruction::Pop);
+        }
+
         // §15.7.14 step 8 — the heritage is evaluated **inside** the class scope and after the inner
         // name binding has been made but before it holds anything, so `class C extends C {}` is a
         // ReferenceError from the dead zone rather than a reference to an outer `C`. Its value is
@@ -115,6 +133,12 @@ impl Compiler<'_> {
             if let ClassElement::Field(field) = element
                 && !field.is_static
             {
+                // A private field has no `PropertyName` to evaluate — §15.7's `ClassElementName` is
+                // one *or* a `PrivateIdentifier`, not both — and its Private Name was minted above.
+                // So there is nothing to do here, and its `%class field name` slot stays unused.
+                if matches!(field.key, crate::ast::PropertyKey::Private(_)) {
+                    continue;
+                }
                 // Its name, now, where the specification evaluates it — every field's, not only a
                 // computed one's, for the reason the slots are reserved unconditionally. A plain
                 // name is a constant either way, so storing it changes nothing but removes a branch.
@@ -361,14 +385,27 @@ impl Compiler<'_> {
             // Read back out of the slot the walk filled, whatever kind of name it was. Choosing
             // between the slot and a fresh constant here would be a branch with no observable
             // difference for a plain name, since the two hold the same value.
-            self.load_name(&field_name_slot(at))?;
+            // A private field's name is the Private Name in the class scope, not a property key —
+            // the element walk never evaluated one for it, because §15.7 gives it no `PropertyName`
+            // to evaluate. Everything after this is the same shape either way.
+            match &field.key {
+                crate::ast::PropertyKey::Private(name) => {
+                    self.load_name(&private_name_slot(name))?;
+                }
+                _ => self.load_name(&field_name_slot(at))?,
+            }
             match &field.initializer {
                 Some(expression) => self.expression(expression)?,
                 // §15.7.14 — a field written without one is `undefined`, which is not the same as
                 // the field being absent: `x;` makes an own property and `for...in` finds it.
                 None => self.constant(crate::value::Value::Undefined)?,
             }
-            self.chunk.emit(Instruction::DefineField);
+            // §7.3.29 rather than `CreateDataPropertyOrThrow`: a private element is not a property,
+            // so nothing that walks properties will find it.
+            self.chunk.emit(match field.key {
+                crate::ast::PropertyKey::Private(_) => Instruction::DefinePrivateField,
+                _ => Instruction::DefineField,
+            });
         }
         self.chunk.emit(Instruction::Pop);
         Ok(())
@@ -414,6 +451,37 @@ fn derived_default(span: Span) -> (FormalParameters, Vec<Stmt>) {
             span,
         }],
     )
+}
+
+/// Every private name the class body binds, in source order and without duplicates.
+///
+/// §15.7.1 has already refused a duplicate that is not a getter/setter pair, so a name may appear
+/// twice legitimately and needs one slot either way.
+fn private_names(class: &Class) -> Vec<Box<str>> {
+    let mut names: Vec<Box<str>> = Vec::new();
+    for element in &class.elements {
+        let key = match element {
+            ClassElement::Field(field) => &field.key,
+            ClassElement::Method(method) => &method.key,
+            ClassElement::StaticBlock(_) => continue,
+        };
+        if let crate::ast::PropertyKey::Private(name) = key
+            && !names.iter().any(|seen| seen == name)
+        {
+            names.push(name.clone());
+        }
+    }
+    names
+}
+
+/// The name of the compiler temporary holding the Private Name for `#name` — §9.2's environment.
+///
+/// A `%` in front, which is the house convention for a slot no source can spell. Derived from the
+/// private name rather than from a position, because both sides have the name and neither has the
+/// other's count: the class definition fills the slot and a `this.#x` anywhere in the body reads it,
+/// including from inside a nested method whose compiler resolves it through the scope chain.
+pub(super) fn private_name_slot(name: &str) -> String {
+    format!("%private #{name}")
 }
 
 /// The name of the compiler temporary holding the `at`th instance field's evaluated key.

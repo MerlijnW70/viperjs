@@ -297,13 +297,36 @@ fn what_a_class_body_cannot_hold_yet_is_refused_by_name() {
     // near-identical copies of it had also accumulated in this file, each shortened separately; they
     // are one test now, because the second was where a stale row could hide from the first.
     //
-    // What is genuinely left: a private name, and a *compound* assignment through `super`, which
-    // §13.3.7.1 leaves a three-value reference for where every compound form copies two.
+    // What is genuinely left: a private *method* or accessor, and a private *static*, both of which
+    // need §7.3.30's `PrivateMethodOrAccessorAdd` — a private *field* compiles. And a compound
+    // assignment through `super` or through a private name, which both leave a reference of the wrong
+    // shape for the `DuplicateTwo` every compound form reads the old value with.
     for (source, named) in [
-        ("class C { #x = 1; }", "private name"),
+        (
+            "class C { #m() {} }",
+            "a private method, accessor or static",
+        ),
+        (
+            "class C { static #x = 1; }",
+            "a private method, accessor or static",
+        ),
+        (
+            "class C { #x; m() { this.#x += 1; } }",
+            "compound assignment to a private field",
+        ),
         (
             "class B {} class C extends B { m() { super.x += 1; } }",
             "compound assignment to a `super` property",
+        ),
+        // …and `++` on either, which reads the old value back the same way a compound assignment
+        // does and so has the same trouble with a reference of the wrong width.
+        (
+            "class C { #x; m() { this.#x++; } }",
+            "update of a `super` property or a private field",
+        ),
+        (
+            "class B {} class C extends B { m() { super.x--; } }",
+            "update of a `super` property or a private field",
         ),
     ] {
         let error = compile_error(source);

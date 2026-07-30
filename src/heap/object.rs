@@ -38,7 +38,7 @@ use crate::heap::define::{Validation, apply, validate};
 use crate::heap::string_object;
 use crate::heap::{
     ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Property,
-    PropertyDescriptor, PropertyKey, StringId,
+    PropertyDescriptor, PropertyKey, StringId, SymbolId,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -113,6 +113,26 @@ pub struct Object {
     /// the one running when the arrow was made, so recording it here is that walk, done
     /// once and in advance.
     lexical: Option<Lexical>,
+    /// `[[PrivateElements]]` — §7.3.28's list, and **not** properties.
+    ///
+    /// A separate list rather than rows in the property table, because a private element is not a
+    /// property by any test a program can make: `Object.keys`, `getOwnPropertyNames`,
+    /// `getOwnPropertySymbols`, `for...in` and a Proxy trap must all fail to see it. Putting one in
+    /// the table would mean teaching every one of those to skip it, and the one that was forgotten
+    /// would leak `#x` to a script.
+    ///
+    /// Keyed by [`SymbolId`] because a Private Name (§6.2.12) needs exactly what a Symbol has and
+    /// nothing more: an identity that is itself, freshly minted, with a description only a debugger
+    /// would read. The Symbol never reaches the property table, so it cannot be a key by accident,
+    /// and nothing a script can write reaches the slot that holds it.
+    ///
+    /// `None` for every object that has none, which is all of them but instances of a class with a
+    /// private element. **Not** boxed, unlike the parameter map and the iteration state beside it:
+    /// those box a struct, where the indirection genuinely shrinks the field, and a `Vec` is already
+    /// a pointer — so boxing one buys three words back and costs a second allocation for every object
+    /// that has any private state at all. `Option<Vec<_>>` also has no discriminant, the null pointer
+    /// being the niche.
+    pub(super) private: Option<Vec<(SymbolId, Value)>>,
     /// `[[HomeObject]]` — the object a method was defined *on*, if it is a method.
     ///
     /// `None` for every function that is not one, which is every function expression and every
@@ -209,6 +229,7 @@ impl Object {
             call: None,
             environment: None,
             lexical: None,
+            private: None,
             home: None,
             properties: Vec::new(),
             index: None,
@@ -290,6 +311,26 @@ impl Object {
     /// The environment this function was written in, if it is a function at all.
     pub fn environment(&self) -> Option<EnvironmentId> {
         self.environment
+    }
+
+    /// §7.3.28 `PrivateElementFind` — what this object holds under a Private Name, if anything.
+    ///
+    /// `None` covers both "no private elements at all" and "none under this name", because nothing
+    /// distinguishes them: §7.3.31 `PrivateGet` throws for either, and it is the *same* TypeError.
+    pub fn private_element(&self, name: SymbolId) -> Option<Value> {
+        self.private
+            .as_ref()?
+            .iter()
+            .find(|(key, _)| *key == name)
+            .map(|(_, value)| *value)
+    }
+
+    /// Every private element, for the collector — a value here is reachable and nothing else holds it.
+    pub(super) fn private_elements(&self) -> &[(SymbolId, Value)] {
+        match &self.private {
+            Some(elements) => elements,
+            None => &[],
+        }
     }
 
     /// The object this method was defined on — `[[HomeObject]]`, which is the super base minus a step.
@@ -970,6 +1011,45 @@ impl Heap {
             cursor = self.object(at)?.prototype();
         }
         None
+    }
+
+    /// §7.3.29 `PrivateFieldAdd` — add a private field, answering whether it was not already there.
+    ///
+    /// `false` means the object already carries this Private Name, which §7.3.29 makes a TypeError.
+    /// Reachable from source in exactly one way: a constructor that calls itself on the same object,
+    /// as in `class C { #x; constructor() { C.prototype.constructor.call(this); } }` — so the guard is
+    /// not defensive, it is the specification's step 3.
+    pub fn add_private_field(&mut self, object: ObjectId, name: SymbolId, value: Value) -> bool {
+        let Some(object) = self.objects.get_mut(object.0).and_then(Option::as_mut) else {
+            return false;
+        };
+        let elements = object.private.get_or_insert_with(Vec::new);
+        if elements.iter().any(|(key, _)| *key == name) {
+            return false;
+        }
+        elements.push((name, value));
+        true
+    }
+
+    /// §7.3.32 `PrivateSet` — write a private field that is already there, answering whether it was.
+    ///
+    /// It does **not** create. That is the whole difference from a property: `this.#x = 1` on an
+    /// object with no `#x` is a TypeError rather than a new field, which is what makes the set of
+    /// private names an object carries fixed at construction and usable as a brand.
+    pub fn set_private_field(&mut self, object: ObjectId, name: SymbolId, value: Value) -> bool {
+        let Some(object) = self.objects.get_mut(object.0).and_then(Option::as_mut) else {
+            return false;
+        };
+        let Some(elements) = object.private.as_mut() else {
+            return false;
+        };
+        match elements.iter_mut().find(|(key, _)| *key == name) {
+            Some(slot) => {
+                slot.1 = value;
+                true
+            }
+            None => false,
+        }
     }
 
     /// §9.1.1.3's `MakeMethod` — record which object a function was defined on.

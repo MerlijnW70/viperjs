@@ -535,6 +535,28 @@ impl<'a> Compiler<'a> {
         }
     }
 
+    /// Emit a read of the Private Name for `#name`, or refuse — §9.2's `ResolvePrivateIdentifier`.
+    ///
+    /// Not [`Compiler::load_name`], and the difference is the whole reason this exists: that one
+    /// falls back to a *property of the global object* for a name it cannot place, which is right for
+    /// an identifier and silently wrong here. A `#x` with no enclosing class would read a global that
+    /// does not exist, hand `undefined` to `GetPrivate` as a name, and reach the interpreter as a
+    /// fault — the signal reserved for a chunk that disagrees with the compiler.
+    ///
+    /// The parser refuses `#x` outside a class (§15.7.1), so no source arrives here. A hand-built
+    /// tree can, and this is the honest answer for it: a refusal with a span.
+    pub(super) fn load_private_name(&mut self, name: &str) -> Result<(), CompileError> {
+        let slot = crate::compile::class::private_name_slot(name);
+        let Some(binding) = self.binding(&slot) else {
+            return Err(unsupported(
+                "a private name outside a class body",
+                Span::new(0, 0),
+            ));
+        };
+        self.load(binding);
+        Ok(())
+    }
+
     /// Emit a write of `name`, leaving the value on the stack.
     pub(super) fn store_name(&mut self, name: &str) -> Result<(), CompileError> {
         let binding = self.binding(name);
