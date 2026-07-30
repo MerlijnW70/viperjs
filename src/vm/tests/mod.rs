@@ -55,6 +55,7 @@ mod bound;
 mod builtins;
 mod classes;
 mod coercion;
+mod collections;
 mod constructors;
 mod date;
 mod destructuring;

@@ -34,6 +34,7 @@ use crate::compile::Chunk;
 use crate::heap::PropertyKind;
 use crate::heap::arguments;
 use crate::heap::arguments::Incoming;
+use crate::heap::collection::Collection;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::promise::{Promise, Role};
 use crate::heap::string_object;
@@ -220,6 +221,11 @@ pub struct Object {
     /// Date(NaN)` is a legal invalid date whose time value *is* NaN. Measured at 176 bytes before
     /// and 192 after; if that matters it is an M8 question, with a number in front of it.
     pub(super) date: Option<f64>,
+    /// §24.1's `[[MapData]]` or §24.2's `[[SetData]]`, if this is one of those.
+    ///
+    /// Boxed for the reason the promise is: an `Object` sits inline in the arena, so its size is
+    /// charged to every object ever made and a collection is a `Vec` and a count.
+    collection: Option<Box<Collection>>,
     /// The six slots §27.2.6 gives a Promise, if this is one.
     ///
     /// Boxed, for the reason the two maps above are: an `Object` sits inline in the arena, so its
@@ -283,6 +289,7 @@ impl Object {
             iteration: None,
             primitive: None,
             date: None,
+            collection: None,
             promise: None,
             role: None,
             call: None,
@@ -322,6 +329,25 @@ impl Object {
     /// which is why `new ({ m() {} }).m` is a TypeError.
     pub fn is_constructor(&self) -> bool {
         self.call.as_ref().is_some_and(super::Callable::constructs)
+    }
+
+    /// The entries this object holds, if it is a `Map` or a `Set`.
+    ///
+    /// `None` for every other object, which is the test every one of §24's methods makes first:
+    /// `Map.prototype.get.call({})` is a TypeError rather than `undefined`, because the method is
+    /// about the internal slot and not about a shape.
+    pub fn collection(&self) -> Option<&Collection> {
+        self.collection.as_deref()
+    }
+
+    /// The same, to change.
+    pub fn collection_mut(&mut self) -> Option<&mut Collection> {
+        self.collection.as_deref_mut()
+    }
+
+    /// Make this object a `Map` or a `Set` — §24.1.1.1 and §24.2.1.1 step 4.
+    pub fn set_collection(&mut self, collection: Collection) {
+        self.collection = Some(Box::new(collection));
     }
 
     /// The promise state this object holds, if it is a promise.

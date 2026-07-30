@@ -183,7 +183,7 @@ fn indexed(
 }
 
 /// §7.4.13 `CreateIterResultObject` — `{value, done}`, ordinary in every way.
-fn result(vm: &mut Vm, heap: &mut Heap, value: Value, done: bool) -> Completion<Value> {
+pub(super) fn result(vm: &mut Vm, heap: &mut Heap, value: Value, done: bool) -> Completion<Value> {
     let object = heap.new_object(Some(vm.realm().object_prototype()));
     for (name, held) in [("value", value), ("done", Value::Boolean(done))] {
         let name = key(heap, name);

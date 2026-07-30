@@ -18,6 +18,7 @@ pub mod array;
 pub mod array_edit;
 pub mod array_iterate;
 pub mod array_methods;
+mod collection;
 pub(crate) mod date;
 mod date_format;
 mod date_methods;
@@ -77,6 +78,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     json::install(heap, realm, global);
     date::install(heap, realm, global);
     promise::install(heap, realm, global);
+    collection::install(heap, realm, global);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }

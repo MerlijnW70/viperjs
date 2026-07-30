@@ -190,6 +190,19 @@ impl Heap {
                     }
                 }
             }
+            // Every key and value a `Map` or a `Set` holds. Nothing else need be holding them: a
+            // collection is precisely a thing that keeps values alive on purpose.
+            if let Some(collection) = object.collection() {
+                for value in collection
+                    .live_entries()
+                    .flat_map(|(key, value)| [key, value])
+                {
+                    match value {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
+                }
+            }
             // Everything a promise is holding on behalf of something that has not happened yet, and
             // it is the *only* thing holding most of it. `Promise.resolve(o).then(f)` leaves `o`
             // named by nothing but the promise's result and `f` named by nothing but its reaction

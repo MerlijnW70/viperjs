@@ -39,6 +39,7 @@ mod arguments;
 mod array;
 mod callable;
 mod collect;
+mod collection;
 mod define;
 mod enumerate;
 mod environment;
@@ -81,6 +82,7 @@ impl From<bool> for DefineOutcome {
     }
 }
 pub use self::collect::{Collected, Roots};
+pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
 pub use self::promise::{
