@@ -95,7 +95,7 @@ impl Compiler<'_> {
     }
 
     /// File a compiled body under this chunk and emit the instruction that makes an object of it.
-    fn emit_function(&mut self, body: Chunk, span: Span) -> Result<(), CompileError> {
+    pub(super) fn emit_function(&mut self, body: Chunk, span: Span) -> Result<(), CompileError> {
         let index = u32::try_from(self.chunk.functions.len()).map_err(|_| CompileError {
             kind: ErrorKind::TooLong,
             span,

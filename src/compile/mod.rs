@@ -525,7 +525,7 @@ impl Compiler<'_> {
     ///
     /// A catch parameter shadows anything outside it for the length of its block, which is why
     /// this pushes rather than reusing — and why [`Compiler::resolve`] searches from the end.
-    fn declare_shadowing(&mut self, name: &str) -> u32 {
+    pub(super) fn declare_shadowing(&mut self, name: &str) -> u32 {
         let slot = u32::try_from(self.locals.len()).unwrap_or(u32::MAX);
         self.locals.push(Local {
             name: name.into(),

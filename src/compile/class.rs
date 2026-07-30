@@ -39,15 +39,13 @@ impl Compiler<'_> {
             return Err(unsupported("a class with `extends`", span));
         }
         let mut fields: Vec<&crate::ast::ClassField> = Vec::new();
+        // A static field is paired with the slot its evaluated name will be kept in; see
+        // [`Compiler::static_field`] for why the two halves are separated.
+        let mut statics: Vec<(&crate::ast::ClassField, u32)> = Vec::new();
         for element in &class.elements {
             match element {
-                ClassElement::Field(field) if field.is_static => {
-                    // A static field's initialiser is evaluated with `this` bound to the
-                    // *constructor*, at definition time. Emitting it inline here would give it
-                    // whatever `this` the surrounding scope has, which is a wrong answer rather than
-                    // a missing one — so it is refused until there is somewhere to bind it.
-                    return Err(unsupported("a static class field", field.key_span));
-                }
+                // Taken in the element walk below, where the specification evaluates its name.
+                ClassElement::Field(field) if field.is_static => {}
                 ClassElement::Field(field) => match &field.key {
                     AstPropertyKey::Computed(_) => {
                         // A computed name is evaluated once, at definition time, while the
@@ -92,6 +90,20 @@ impl Compiler<'_> {
         }
 
         for element in &class.elements {
+            if let ClassElement::Field(field) = element
+                && field.is_static
+            {
+                // The name, now, where the specification evaluates it — interleaved with the methods
+                // and in source order. It is kept in a compiler temporary because the initialiser
+                // that will use it does not run until every element is defined. The name has a space
+                // in it so that no source can name the same slot.
+                self.property_key(&field.key)?;
+                let slot = self.declare_shadowing("static field name");
+                self.chunk.emit(Instruction::StoreVariable(0, slot));
+                self.chunk.emit(Instruction::Pop);
+                statics.push((field, slot));
+                continue;
+            }
             let ClassElement::Method(method) = element else {
                 continue;
             };
@@ -109,7 +121,61 @@ impl Compiler<'_> {
             self.make_function(&method.function, span)?;
             self.chunk.emit(Instruction::DefineClassMethod(method.kind));
         }
+        for (field, slot) in &statics {
+            self.static_field(field, *slot, span)?;
+        }
         self.leave_scope(mark);
+        Ok(())
+    }
+
+    /// §15.7.14's `DefineField` for a `static` one — the half that runs after every element.
+    ///
+    /// Two things about a static field happen at different times, and that is the whole difficulty.
+    /// Its **name** is evaluated during the walk over the elements, in source order and interleaved
+    /// with the methods; its **initialiser** runs only once every element has been defined. A first
+    /// attempt emitted both here and got `static [k(1)] = order.push(2)` the wrong way round.
+    ///
+    /// So the key was evaluated in the walk and left in a compiler temporary, and this reads it back.
+    /// The initialiser is compiled as a body of its own and **called** with the constructor as its
+    /// receiver, because §15.7.14 binds `this` to the constructor and a call is the only thing that
+    /// binds a receiver — inline code would take whatever `this` the surrounding scope has, which is a
+    /// wrong answer rather than a missing one.
+    fn static_field(
+        &mut self,
+        field: &crate::ast::ClassField,
+        slot: u32,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        // One copy is the property's target, which `DefineField` peeks; one is the receiver.
+        self.chunk.emit(Instruction::Duplicate);
+        match &field.initializer {
+            Some(expression) => {
+                self.chunk.emit(Instruction::Duplicate);
+                let parameters = FormalParameters {
+                    items: Box::new([]),
+                    rest: None,
+                    span,
+                };
+                // `Body::Expression` is evaluated and returned, which is what an initialiser is;
+                // `Lexical::No` gives the body a `this` of its own for the call to bind.
+                let body = self.compile_nested(
+                    &parameters,
+                    Body::Expression(expression),
+                    Lexical::No,
+                    span,
+                )?;
+                self.emit_function(body, span)?;
+                self.chunk.emit(Instruction::CallMethod(0));
+            }
+            // §15.7.14 — written without one it is `undefined`, and there is nothing to call.
+            None => self.constant(crate::value::Value::Undefined)?,
+        }
+        // The key was evaluated long before this; only its arrangement happens now. `Bury(1)` puts it
+        // under the value, in the order `DefineField` reads them.
+        self.chunk.emit(Instruction::LoadVariable(0, slot));
+        self.chunk.emit(Instruction::Bury(1));
+        self.chunk.emit(Instruction::DefineField);
+        self.chunk.emit(Instruction::Pop);
         Ok(())
     }
 

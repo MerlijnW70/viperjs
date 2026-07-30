@@ -399,11 +399,6 @@ fn fields_run_in_source_order_and_before_the_constructor_body() {
 
 #[test]
 fn the_two_kinds_of_field_this_slice_does_not_take_are_refused_by_name() {
-    // A static field's initialiser is evaluated with `this` bound to the constructor, at definition
-    // time. Compiled inline it would take whatever `this` the surrounding scope has, which is a wrong
-    // answer rather than a missing one.
-    let error = compile_error("class C { static x = 1; }");
-    assert!(error.contains("static class field"), "got {error:?}");
     // A computed name is evaluated once at definition time while the initialiser runs per
     // construction, so the one value has to be kept where the constructor can reach it — §15.7.14's
     // `[[Fields]]`, which is a slot this does not have yet.
@@ -508,4 +503,108 @@ fn a_class_at_the_top_level_of_a_script_leaves_the_stack_as_it_found_it() {
     );
     // …and one after other statements, so the imbalance cannot be absorbed by whatever came before.
     assert_eq!(run("var a = 1; class C {} a + 1"), "2");
+}
+
+#[test]
+fn a_static_field_is_defined_on_the_constructor_when_the_class_is() {
+    assert_eq!(run("class C { static x = 1; } C.x"), "1");
+    assert_eq!(
+        run("class C { static x; } C.hasOwnProperty('x') + ',' + (C.x === undefined)"),
+        "true,true"
+    );
+    // On the constructor and nowhere else.
+    assert_eq!(
+        run("class C { static x = 1; } var o = new C(); \
+             C.hasOwnProperty('x') + ',' + C.prototype.hasOwnProperty('x') + ',' \
+             + o.hasOwnProperty('x')"),
+        "true,false,false"
+    );
+    assert_eq!(
+        run(
+            "class C { static x = 1; } var d = Object.getOwnPropertyDescriptor(C, 'x'); \
+             d.writable + ',' + d.enumerable + ',' + d.configurable"
+        ),
+        "true,true,true"
+    );
+    // Once, when the class is defined — not per instance.
+    assert_eq!(
+        run("var n = 0; class C { static x = (n++, 1); } new C(); new C(); n"),
+        "1"
+    );
+    // An instance field and a static one of the same class do not reach each other.
+    assert_eq!(
+        run("class C { x = 1; static y = 2; } var o = new C(); \
+             o.x + ',' + C.y + ',' + (o.y === undefined) + ',' + (C.x === undefined)"),
+        "1,2,true,true"
+    );
+    assert_eq!(
+        run("class C { static a = 1; static b = 2; } C.a + ',' + C.b"),
+        "1,2"
+    );
+}
+
+#[test]
+fn a_static_initialiser_runs_with_this_bound_to_the_constructor() {
+    // §15.7.14 — and the reason the initialiser is compiled as a body and *called* rather than
+    // emitted inline: a call is the only thing that binds a receiver, and inline code would take
+    // whatever `this` the surrounding scope has. A wrong answer, not a missing one.
+    assert_eq!(run("class C { static x = this; } C.x === C"), "true");
+    assert_eq!(
+        run("class C { static m() { return 7; } static x = this.m(); } C.x"),
+        "7"
+    );
+    // The surrounding `this` is something else, which is what makes the rows above mean something.
+    assert_eq!(
+        run("var outer = {}; \
+             var made = function () { class C { static x = this; } return C.x === C; }; \
+             made.call(outer)"),
+        "true"
+    );
+    // The class body's scope holds the name, so a static initialiser can read a static field defined
+    // above it through the class itself.
+    assert_eq!(
+        run("class C { static x = 1; static y = C.x + 1; } C.y"),
+        "2"
+    );
+}
+
+#[test]
+fn a_static_field_evaluates_its_name_in_the_walk_and_its_initialiser_after_it() {
+    // The two halves of one static field happen at different times, and this is the row that says so.
+    // §15.7.14 evaluates a `ClassElementName` during the walk over the elements, and runs a static
+    // initialiser only once every element has been defined. A first attempt emitted both together and
+    // produced `21` here.
+    assert_eq!(
+        run(
+            "var order = []; var k = function (n) { order.push(n); return 'k' + n; }; \
+             class C { static [k(1)] = order.push(2); } order.join('')"
+        ),
+        "12"
+    );
+    // And the name is evaluated *interleaved with the methods*, in source order — not gathered up and
+    // done at the end. Nothing but a method on each side of a static field can show that.
+    assert_eq!(
+        run(
+            "var order = []; var k = function (n) { order.push(n); return 'k' + n; }; \
+             class C { [k(1)]() {} static [k(2)] = 0; [k(3)]() {} } order.join('')"
+        ),
+        "123"
+    );
+    // Two static fields keep their own names apart, which they would not if one temporary were shared.
+    assert_eq!(
+        run("var names = ['a', 'b']; var at = 0; \
+             class C { static [names[at++]] = 1; static [names[at++]] = 2; } \
+             C.a + ',' + C.b"),
+        "1,2"
+    );
+    // Every initialiser runs after every name, so a later name is already evaluated when an earlier
+    // initialiser runs.
+    assert_eq!(
+        run(
+            "var order = []; var k = function (n) { order.push('k' + n); return 'f' + n; }; \
+             var v = function (n) { order.push('v' + n); return n; }; \
+             class C { static [k(1)] = v(1); static [k(2)] = v(2); } order.join(',')"
+        ),
+        "k1,k2,v1,v2"
+    );
 }

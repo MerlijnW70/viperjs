@@ -20387,10 +20387,18 @@ language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarge
 language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/class-name-static-initializer-anonymous.js :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
+language/expressions/class/elements/class-name-static-initializer-anonymous.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
+language/expressions/class/elements/class-name-static-initializer-decl.js :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
+language/expressions/class/elements/class-name-static-initializer-decl.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
+language/expressions/class/elements/class-name-static-initializer-expr.js :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
+language/expressions/class/elements/class-name-static-initializer-expr.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
 language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -20403,6 +20411,8 @@ language/expressions/class/elements/nested-direct-eval-err-contains-newtarget.js
 language/expressions/class/elements/nested-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/nested-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/nested-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/expressions/class/elements/static-field-init-with-this.js :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/static-field-init-with-this.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
 language/expressions/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -21643,6 +21653,10 @@ language/statements/class/elements/direct-eval-err-contains-arguments.js :: it t
 language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -21667,6 +21681,8 @@ language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js :: i
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/statements/class/elements/static-field-init-with-this.js :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/static-field-init-with-this.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
