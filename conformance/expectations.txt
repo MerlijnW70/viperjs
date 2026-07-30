@@ -6601,290 +6601,56 @@ built-ins/Object/assign/source-own-prop-keys-error.js :: it threw ReferenceError
 built-ins/Object/assign/source-own-prop-keys-error.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/assign/strings-and-symbol-order-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/assign/strings-and-symbol-order-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/create/15.2.3.5-4-10.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-10.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-105.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-105.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-106.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-106.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-107.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-107.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-108.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-108.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-109.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-109.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-11.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-11.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-110.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-110.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-111.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-111.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/create/15.2.3.5-4-119.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-119.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-13.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-13.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-14.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-14.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/create/15.2.3.5-4-144.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-144.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-15.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-15.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-157.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-157.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-158.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-158.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-159.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-159.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-160.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-160.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-161.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-161.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-162.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-162.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-163.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-163.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-164.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-164.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/create/15.2.3.5-4-172.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-172.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-184.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-184.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-185.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-185.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-186.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-186.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-187.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-187.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-188.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-188.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-189.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-189.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-19.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-19.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-190.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-190.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/create/15.2.3.5-4-198.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-198.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-223.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-223.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-237.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-237.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-238.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-238.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-239.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-239.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-24.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-24.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-240.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-240.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-241.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-241.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-242.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-242.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-243.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-243.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-25.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-25.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/create/15.2.3.5-4-250.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-250.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-272.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-272.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-273.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-273.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-274.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-274.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-275.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-275.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-276.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-276.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-277.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-277.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-278.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-278.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/create/15.2.3.5-4-286.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-286.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-35.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-35.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-4.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-4.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-40.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Object/create/15.2.3.5-4-40.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Object/create/15.2.3.5-4-5.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-5.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-52.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-52.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-53.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-53.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-54.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-54.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-55.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-55.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-56.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-56.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-57.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-57.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-58.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-58.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/create/15.2.3.5-4-6.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-6.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/create/15.2.3.5-4-66.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-66.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/create/15.2.3.5-4-7.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-7.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-8.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-8.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-9.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/create/15.2.3.5-4-9.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/create/15.2.3.5-4-91.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-91.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/properties-arg-to-object.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-10.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-10.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-11.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-11.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-12.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-12.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-2-13.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-2-13.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-2-14.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-14.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-15.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-15.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-16.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-16.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-2-3.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/defineProperties/15.2.3.7-2-3.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-4.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-4.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-2-5.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/defineProperties/15.2.3.7-2-5.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-6.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-6.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-2-7.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/defineProperties/15.2.3.7-2-7.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-8.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-8.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-9.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-2-9.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-3-4.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-3-4.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-3-8.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-3-8.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-a-14.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-a-14.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-a-3.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-3.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-4.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-4.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-5.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-5.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-6.js :: it threw TypeError: a getter on a property-descriptor list is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-a-6.js (strict) :: it threw TypeError: a getter on a property-descriptor list is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-104.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-104.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-b-118.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-118.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-119.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-119.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-12.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-12.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-120.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-120.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-121.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-121.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-122.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-122.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-123.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-123.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-124.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-124.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-13.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-13.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-132.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-132.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-b-14.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-14.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-144.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-144.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-145.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-145.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-146.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-146.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-147.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-147.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-148.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-148.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-149.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-149.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-15.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-15.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-150.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-150.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-158.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-158.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-b-16.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-16.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-17.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-17.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-18.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-18.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-183.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-183.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-b-197.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-197.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-198.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-198.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-199.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-199.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-200.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-200.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-201.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-201.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-202.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-202.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-203.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-203.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-211.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-211.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-b-231.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-231.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-232.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-232.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-233.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-233.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-234.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-234.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-235.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-235.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-236.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-236.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-237.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-237.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-238.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-238.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-246.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-246.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-26.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-26.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-51.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-51.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/15.2.3.7-5-b-65.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-65.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-66.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-66.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-67.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-67.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-68.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-68.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-69.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-69.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-70.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-70.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-71.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperties/15.2.3.7-5-b-71.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperties/15.2.3.7-5-b-79.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-5-b-79.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-6-a-127.js :: it threw RangeError: an array length must be an integer index
@@ -6927,114 +6693,30 @@ built-ins/Object/defineProperty/15.2.3.6-2-48.js :: it threw TypeError: cannot c
 built-ins/Object/defineProperty/15.2.3.6-2-48.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/defineProperty/15.2.3.6-3-118.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-118.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/15.2.3.6-3-132.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-132.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-133.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-133.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-134.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-134.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-135.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-135.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-136.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-136.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-137.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-137.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-138.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-138.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperty/15.2.3.6-3-146-1.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-146-1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-146.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-146.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/15.2.3.6-3-158.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-158.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-159.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-159.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-160.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-160.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-161.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-161.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-162.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-162.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-163.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-163.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-164.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-164.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperty/15.2.3.6-3-172-1.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-172-1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-172.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-172.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-197.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-197.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/15.2.3.6-3-211.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-211.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-212.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-212.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-213.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-213.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-214.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-214.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-215.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-215.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-216.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-216.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-217.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-217.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperty/15.2.3.6-3-225-1.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-225-1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-225.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-225.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/15.2.3.6-3-241.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-241.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-242.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-242.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-243.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-243.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-244.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-244.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-245.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-245.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-246.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-246.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-247.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-247.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperty/15.2.3.6-3-255-1.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-255-1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-255.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-255.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/15.2.3.6-3-26.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-26.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-27.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-27.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-28.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-28.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-29.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-29.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-30.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-30.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-31.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-31.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-32.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-32.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperty/15.2.3.6-3-40-1.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-40-1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-40.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-40.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-65.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-65.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperty/15.2.3.6-3-79.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-79.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-80.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-80.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-81.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-81.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-82.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-82.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-83.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-83.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-84.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-84.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-85.js :: it threw TypeError: a getter on a property descriptor is not supported yet
-built-ins/Object/defineProperty/15.2.3.6-3-85.js (strict) :: it threw TypeError: a getter on a property descriptor is not supported yet
 built-ins/Object/defineProperty/15.2.3.6-3-93-1.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-93-1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-3-93.js :: it threw ReferenceError: RegExp is not defined

@@ -215,10 +215,10 @@ pub fn get_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
 }
 
 /// §20.1.2.4 `Object.defineProperty`.
-pub fn define_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn define_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = object_argument(call.argument(0), "Object.defineProperty requires an object")?;
     let key = property_key(heap, call.argument(1))?;
-    let descriptor = to_property_descriptor(heap, call.argument(2))?;
+    let descriptor = to_property_descriptor(vm, heap, call.argument(2))?;
     // §20.1.2.4 step 4 is `DefinePropertyOrThrow`: the heap answers what §10.1.6.3's rules made
     // of it, and a refusal here throws rather than doing nothing quietly. That is the difference
     // between `defineProperty` and `Reflect.defineProperty`.
@@ -232,8 +232,7 @@ pub fn define_properties(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) ->
         call.argument(0),
         "Object.defineProperties requires an object",
     )?;
-    let realm = vm.realm();
-    define_each(heap, &realm, object, call.argument(1))?;
+    define_each(vm, heap, object, call.argument(1))?;
     Ok(Value::Object(object))
 }
 
@@ -253,8 +252,7 @@ pub fn create(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     let object = heap.new_object(prototype);
     let properties = call.argument(1);
     if !matches!(properties, Value::Undefined) {
-        let realm = vm.realm();
-        define_each(heap, &realm, object, properties)?;
+        define_each(vm, heap, object, properties)?;
     }
     Ok(Value::Object(object))
 }
@@ -370,8 +368,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 /// The descriptors are all read *before* any is applied, which §20.1.2.3.1 step 4 is explicit
 /// about: a second descriptor that is malformed must not leave the first one applied.
 fn define_each(
+    vm: &mut Vm,
     heap: &mut Heap,
-    _realm: &Realm,
     object: ObjectId,
     properties: Value,
 ) -> Completion<()> {
@@ -379,18 +377,19 @@ fn define_each(
     let keys = heap.own_property_keys(source);
     let mut pending = Vec::new();
     for key in keys {
+        // The *attributes* are read from the table, because step 3.a asks
+        // `GetOwnPropertyDescriptor` and only wants to know whether this key is enumerable.
         let Some(property) = own_property(heap, source, key) else {
             continue;
         };
         if !property.enumerable {
             continue;
         }
-        let PropertyKind::Data { value, .. } = property.kind else {
-            return Err(Abrupt::type_error(
-                "a getter on a property-descriptor list is not supported yet",
-            ));
-        };
-        pending.push((key, to_property_descriptor(heap, value)?));
+        // …and the descriptor itself is read with `Get` (step 3.b.i), which walks nothing here —
+        // the key is already known to be own — but does call a getter. So a list may compute its
+        // descriptors, which this used to refuse.
+        let value = vm.get_property_key(Value::Object(source), key, heap)?;
+        pending.push((key, to_property_descriptor(vm, heap, value)?));
     }
     for (key, descriptor) in pending {
         defined(heap.define_property_outcome(object, key, &descriptor))?;
@@ -445,40 +444,47 @@ fn own_keys(
 /// to `undefined`, and `{}` sets nothing at all. That distinction is the whole reason
 /// [`PropertyDescriptor`]'s fields are `Option`, and it is what makes
 /// `Object.defineProperty(o, "k", {})` leave an existing property alone.
-fn to_property_descriptor(heap: &mut Heap, value: Value) -> Completion<PropertyDescriptor> {
+fn to_property_descriptor(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    value: Value,
+) -> Completion<PropertyDescriptor> {
     let Value::Object(source) = value else {
         return Err(Abrupt::type_error(
             "a property descriptor must be an object",
         ));
     };
     let mut descriptor = PropertyDescriptor::EMPTY;
+    // §6.2.6.5 steps 3 to 20, **in the order the specification reads them** — which is not the
+    // order the fields are declared in anywhere else: `value` comes before `writable`. Nothing can
+    // see that until a field is a getter, and then two of them with side effects can see it
+    // exactly.
     for (name, at) in [
         ("enumerable", 0),
         ("configurable", 1),
-        ("writable", 2),
-        ("value", 3),
+        ("value", 2),
+        ("writable", 3),
         ("get", 4),
         ("set", 5),
     ] {
         let key = self::key(heap, name);
-        // Inherited counts: §6.2.6.5 asks `HasProperty`, so a descriptor may be made by
-        // `Object.create({writable: true})` and the field is found on the prototype.
-        let Some((_, property)) = heap.find_own(source, key) else {
+        // `HasProperty` and then `Get`, which is what the specification says twice per field and
+        // is not the same as reading the property table. `HasProperty` walks the prototype chain,
+        // so a descriptor may be made by `Object.create({writable: true})`; `Get` **calls a
+        // getter**, so a descriptor may compute its own fields — which a property-table read
+        // cannot do and which this used to refuse outright.
+        if !vm.has_property_key(Value::Object(source), key, heap)? {
             continue;
-        };
-        let PropertyKind::Data { value, .. } = property.kind else {
-            return Err(Abrupt::type_error(
-                "a getter on a property descriptor is not supported yet",
-            ));
-        };
+        }
+        let value = vm.get_property_key(Value::Object(source), key, heap)?;
         match at {
             0 => descriptor.enumerable = Some(value.to_boolean(heap)),
             1 => descriptor.configurable = Some(value.to_boolean(heap)),
-            2 => descriptor.writable = Some(value.to_boolean(heap)),
-            3 => descriptor.value = Some(value),
+            2 => descriptor.value = Some(value),
+            3 => descriptor.writable = Some(value.to_boolean(heap)),
             4 => descriptor.getter = Some(value),
             // §6.2.6.5 steps 17 and 20 — `get` and `set` must be callable or `undefined`, and
-            // the check is here rather than in the heap because it is about what a *descriptor*
+            // the check is below rather than in the heap because it is about what a *descriptor*
             // may say rather than about what an object may hold.
             _ => descriptor.setter = Some(value),
         }

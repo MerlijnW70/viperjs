@@ -107,6 +107,43 @@ fn a_descriptor_field_may_be_inherited_because_6_2_6_5_asks_has_property() {
 }
 
 #[test]
+fn a_descriptor_field_may_be_a_getter_because_6_2_6_5_asks_get() {
+    // The other half of the same sentence. §6.2.6.5 reads each field with `HasProperty` and then
+    // **`Get`**, and `Get` calls an accessor — so a descriptor may compute its own fields. Reading
+    // the property table instead finds the accessor and has nothing to do with it; praxis used to
+    // refuse outright, which turned a legal descriptor into a TypeError.
+    assert_eq!(
+        run("var o = {}; Object.defineProperty(o, 'x', { get value() { return 5; } }); o.x"),
+        "5"
+    );
+    // …including through a descriptor *list*, where §20.1.2.3.1 step 3.b.i is the same `Get`.
+    assert_eq!(
+        run("var o = {}; Object.defineProperties(o, { a: { get value() { return 1; } } }); o.a"),
+        "1"
+    );
+    // The fields are read in §6.2.6.5's order, which is **not** the order they are written in
+    // anywhere else: `value` (step 7) comes before `writable` (step 8). Nothing could see that
+    // until a field was allowed to be a getter, and now two of them with side effects can see it
+    // exactly. `enumerable` and `configurable` come before both.
+    assert_eq!(
+        run("var log = ''; Object.defineProperty({}, 'x', { \
+             get writable() { log += 'w'; return true; }, \
+             get value() { log += 'v'; return 1; }, \
+             get configurable() { log += 'c'; return true; }, \
+             get enumerable() { log += 'e'; return true; } }); log"),
+        "ecvw"
+    );
+    // A getter that throws throws from here, which is the point of calling it rather than reading
+    // around it — and it throws before the property is defined.
+    assert_eq!(
+        run("var o = {}; try { Object.defineProperty(o, 'x', \
+             { get value() { throw new RangeError('no'); } }); } \
+             catch (e) { e.constructor.name + ',' + ('x' in o); }"),
+        "RangeError,false"
+    );
+}
+
+#[test]
 fn object_create_is_the_only_way_to_make_an_object_with_no_prototype() {
     assert_eq!(run("Object.getPrototypeOf(Object.create(null))"), "null");
     assert_eq!(run("var p = {x: 1}; Object.create(p).x"), "1");
