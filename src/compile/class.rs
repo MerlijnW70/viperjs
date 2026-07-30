@@ -304,9 +304,13 @@ impl Compiler<'_> {
 
 /// The name of the compiler temporary holding the `at`th instance field's evaluated key.
 ///
-/// A space in it, so that no identifier a program can write names the same slot. Derived from the
-/// position rather than threaded through, so that the walk that fills the slot and the prologue that
-/// reads it cannot disagree about which one they mean.
+/// A `%` in front, which is the house convention for a slot no source can name — see
+/// [`Compiler::declare_hidden`]. That helper is not used here for one reason: it builds its name from
+/// the number of locals at the moment it is called, so the name cannot be worked out again
+/// afterwards. This slot has to be found a second time, from inside the *nested* compiler that
+/// builds the constructor, so the name is derived from the field's position instead. That way the
+/// walk which fills the slot and the prologue which reads it cannot disagree about which one they
+/// mean, without either having to be told.
 fn field_name_slot(at: usize) -> String {
-    format!("class field name {at}")
+    format!("%class field name {at}")
 }
