@@ -418,6 +418,23 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::SpreadProperties);
                 continue;
             }
+            // B.3.1 — `__proto__: v` sets the prototype rather than making a property, and this is
+            // the one Annex B rule praxis implements (DR-0008 says why). The production is exactly
+            // `PropertyName : AssignmentExpression`, so every other way of writing the same spelling
+            // is an ordinary property and those exclusions are the whole difficulty:
+            //
+            //   `{ __proto__: p }`     sets the prototype
+            //   `{ '__proto__': p }`   sets it too — a String literal key has the same StringValue
+            //   `{ ['__proto__']: p }` does **not**: a computed key is a different production
+            //   `{ __proto__ }`        does not: a shorthand is a different production
+            //   `{ __proto__() {} }`   does not: a method is a different production
+            if let PropertyDefinition::KeyValue { key, value } = property
+                && is_proto_key(key)
+            {
+                self.expression(value)?;
+                self.chunk.emit(Instruction::SetLiteralPrototype);
+                continue;
+            }
             // §13.2.5's four productions that make a property, reduced to a key and something to
             // put under it. A shorthand is `{a: a}` — the name is both — and a method is a
             // function expression with the property's name; only an *accessor* is a different
@@ -1023,6 +1040,22 @@ enum Element<'a> {
     Name(&'a str, Span),
     /// `a() {}`, `get a() {}`, `set a(v) {}`.
     Function(&'a crate::ast::Function),
+}
+
+/// Whether this key is B.3.1's `__proto__`, in one of the two spellings the rule covers.
+///
+/// An `IdentifierName` or a `StringLiteral`, because B.3.1 asks about the key's **StringValue** — so
+/// `{ '__proto__': p }` is in and `{ ['__proto__']: p }` is out, the latter being a computed key and a
+/// different production. A numeric or BigInt key cannot spell it at all.
+fn is_proto_key(key: &AstPropertyKey) -> bool {
+    let wanted = "__proto__";
+    match key {
+        AstPropertyKey::Identifier(name) => &**name == wanted,
+        // Compared as code units, because that is what the key is (DR-0004) and because a lone
+        // surrogate in a key is representable where a `str` would not be.
+        AstPropertyKey::String(units) => units.iter().copied().eq(wanted.encode_utf16()),
+        _ => false,
+    }
 }
 
 /// Which of §13.3's two property references was compiled, and so which instruction reads it.

@@ -34,6 +34,34 @@ behaviours for the same source and choosing between them at run time. That is a 
 that depends on how the engine was configured, which is what DR-0006 refused for the nesting limit
 and refuses here for the same reason.
 
+## B.3.1 is the exception, and the two reasons above are what make it one
+
+`__proto__:` in an object initializer — B.3.1, "The `__proto__` Property Name in Object Initializers"
+— **is implemented**, and it is worth spelling out why, because "B.3 is not" reads as covering it.
+
+Neither reason above reaches it.
+
+It is not conditioned on strictness. Every other B.3 rule is, which is the argument that decides the
+close cases: implementing one would mean two behaviours for the same source. `({__proto__: p})` sets
+the prototype in strict and sloppy code alike, so there is one behaviour to implement and nothing to
+choose between at run time.
+
+And leaving it out is not a refusal. B.3.1 extends no grammar: `__proto__: x` is already a
+well-formed property definition, so there is nothing to reject without rejecting a legal property
+name. What praxis did instead was make an ordinary property called `__proto__` and carry on — a
+**silent wrong answer**, which is the one outcome this project ranks below a refusal. Every other
+B.3 shape is refused with a span; this one was mis-compiled.
+
+There is a third, smaller reason. `test/annexB/` is excluded from the conformance run, and B.3.1's
+tests are not in it: test262 files them under `test/language/expressions/object/`, by grammar
+location rather than by clause. So they run, and forty-two of them were expectations entries — the
+cost of this one was being paid in the ratchet rather than recorded in a decision.
+
+The line is therefore not quite "B.1 yes, B.3 no". It is: **an Annex B rule that changes the meaning
+of a program shape the core grammar already accepts is implemented; one that adds a shape is not.**
+That is the same line, stated so that B.3.1 falls on the side it belongs to, and it leaves every
+other B.3 rule exactly where it was.
+
 What follows from this decision:
 
 - `test/annexB/` is excluded from the conformance run at M5, in the same breath as `staging/` and

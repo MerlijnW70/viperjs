@@ -472,6 +472,16 @@ pub enum Instruction {
     /// itself and a description only a debugger reads — and for nothing a Symbol lacks. It goes into a
     /// compiler slot no source can spell and never reaches a property table.
     NewPrivateName(u32),
+    /// `{__proto__: v}` — B.3.1, which sets the prototype instead of making a property.
+    ///
+    /// An **Annex B** rule and the one praxis implements, for the reasons in DR-0008: it is not
+    /// conditioned on strictness, and leaving it out is a silent wrong answer rather than a refusal —
+    /// the grammar already accepts `__proto__: x`, so there is nothing to reject.
+    ///
+    /// A value that is neither an Object nor `null` is **ignored**: `({__proto__: 1})` has no
+    /// prototype-setting effect *and* no `__proto__` property, which is the one shape that surprises
+    /// people. Pops the value and peeks the target, as a definition does.
+    SetLiteralPrototype,
     /// §7.3.29 `PrivateFieldAdd` — add a private field to an object.
     ///
     /// A **TypeError** if the object already carries the name, which is step 3 rather than a
@@ -818,6 +828,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::SuperCall(_)
         | Instruction::MakeMethod(_)
         | Instruction::NewPrivateName(_)
+        | Instruction::SetLiteralPrototype
         | Instruction::DefinePrivateField
         | Instruction::AddPrivateMethod
         | Instruction::AddPrivateAccessor

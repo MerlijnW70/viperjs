@@ -646,3 +646,70 @@ fn a_spread_in_an_object_literal_copies_own_enumerable_properties() {
         "true,true,true"
     );
 }
+
+#[test]
+fn the_proto_key_in_a_literal_sets_the_prototype_and_only_in_one_spelling() {
+    // B.3.1 — the one Annex B rule praxis implements, and DR-0008 says why: it is not conditioned on
+    // strictness, and leaving it out was a *silent wrong answer* rather than a refusal, the grammar
+    // already accepting `__proto__: x` as an ordinary property definition.
+    assert_eq!(
+        run(
+            "(function () { var p = { m() { return 'p'; } }; var o = { __proto__: p }; \
+             return o.m() + ',' + o.hasOwnProperty('__proto__'); })()"
+        ),
+        "p,false"
+    );
+    // A String literal key has the same StringValue, and B.3.1 asks about that rather than about the
+    // production the key was written as.
+    assert_eq!(
+        run(
+            "(function () { var p = { m() { return 'q'; } }; var o = { '__proto__': p }; \
+             return o.m(); })()"
+        ),
+        "q"
+    );
+    assert_eq!(
+        run("(function () { var o = { __proto__: null }; \
+             return Object.getPrototypeOf(o) === null; })()"),
+        "true"
+    );
+    // The shape that surprises people: a value that is neither an Object nor `null` is **ignored** —
+    // no prototype change *and* no property. An implementation that fell through to defining a
+    // property would answer `true` for the second half.
+    assert_eq!(
+        run("(function () { var o = { __proto__: 1 }; \
+             return (Object.getPrototypeOf(o) === Object.prototype) \
+                  + ',' + o.hasOwnProperty('__proto__'); })()"),
+        "true,false"
+    );
+    // Every other way of writing the same spelling is an ordinary property, because B.3.1 covers
+    // exactly `PropertyName : AssignmentExpression`. These three exclusions are the whole difficulty,
+    // and an implementation that matched on the spelling alone would get all three wrong.
+    assert_eq!(
+        run(
+            "(function () { var p = { a: 1 }; var o = { ['__proto__']: p }; \
+             return o.hasOwnProperty('__proto__') \
+                  + ',' + (Object.getPrototypeOf(o) === Object.prototype); })()"
+        ),
+        "true,true"
+    );
+    assert_eq!(
+        run(
+            "(function () { var __proto__ = { a: 1 }; var o = { __proto__ }; \
+             return o.hasOwnProperty('__proto__'); })()"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { var o = { __proto__() { return 1; } }; \
+             return o.hasOwnProperty('__proto__') + ',' + o.__proto__(); })()"),
+        "true,1"
+    );
+    // …and it reaches a prototype's methods through the chain like any other, which is what makes the
+    // rule worth having rather than a curiosity.
+    assert_eq!(
+        run("(function () { var p = { get v() { return this.n; } }; \
+             var o = { __proto__: p, n: 7 }; return o.v; })()"),
+        "7"
+    );
+}

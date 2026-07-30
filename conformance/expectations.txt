@@ -7473,8 +7473,8 @@ built-ins/Object/prototype/propertyIsEnumerable/symbol_property_valueOf.js :: it
 built-ins/Object/prototype/propertyIsEnumerable/symbol_property_valueOf.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/prototype/setPrototypeOf-with-different-values.js :: it threw ReferenceError: Reflect is not defined
 built-ins/Object/prototype/setPrototypeOf-with-different-values.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-same-value.js :: it threw ReferenceError: Reflect is not defined
@@ -21461,16 +21461,6 @@ language/expressions/object/11.1.5_7-3-1.js :: it threw ReferenceError: eval is 
 language/expressions/object/11.1.5_7-3-1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/object/11.1.5_7-3-2.js :: it threw ReferenceError: eval is not defined
 language/expressions/object/11.1.5_7-3-2.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/object/__proto__-duplicate-computed.js :: it threw an object with no name: prototype is defined Expected SameValue(«[object Object]», «[object Object]») to be true
-language/expressions/object/__proto__-duplicate-computed.js (strict) :: it threw an object with no name: prototype is defined Expected SameValue(«[object Object]», «[object Object]») to be true
-language/expressions/object/__proto__-poisoned-object-prototype.js :: it threw an object with no name: Expected true but got false
-language/expressions/object/__proto__-poisoned-object-prototype.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/object/__proto__-value-non-object.js :: it threw an object with no name: property (undefined) Expected SameValue(«[object Object]», «undefined») to be true
-language/expressions/object/__proto__-value-non-object.js (strict) :: it threw an object with no name: property (undefined) Expected SameValue(«[object Object]», «undefined») to be true
-language/expressions/object/__proto__-value-null.js :: it threw an object with no name: Expected SameValue(«[object Object]», «null») to be true
-language/expressions/object/__proto__-value-null.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «null») to be true
-language/expressions/object/__proto__-value-obj.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-language/expressions/object/__proto__-value-obj.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/dstr/object-rest-proxy-get-not-called-on-dontenum-keys.js :: it threw ReferenceError: Proxy is not defined
@@ -21599,14 +21589,6 @@ language/expressions/super/prop-expr-cls-ref-strict.js :: it threw an object wit
 language/expressions/super/prop-expr-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-cls-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-cls-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"ok"») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-compound-assign.js :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-compound-assign.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «2») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/super/prop-expr-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-obj-val-from-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/super/prop-expr-obj-val-from-eval.js (strict) :: it threw ReferenceError: eval is not defined

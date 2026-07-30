@@ -809,6 +809,26 @@ impl Vm {
                     let name = heap.new_symbol(description);
                     self.stack.push(Value::Symbol(name));
                 }
+                Instruction::SetLiteralPrototype => {
+                    let value = self.pop()?;
+                    // Peeked, so the literal goes on defining properties after this.
+                    let Some(&Value::Object(target)) = self.stack.last() else {
+                        return Err(Fault::NotAnObject);
+                    };
+                    // B.3.1 step 2 — an Object or `null` is set, and **anything else is ignored**: no
+                    // prototype change and no property either. The answer is discarded for the same
+                    // reason §10.1.2's is here: a literal's object was made a moment ago and is
+                    // extensible, so nothing can refuse.
+                    match value {
+                        Value::Object(prototype) => {
+                            heap.set_prototype_of(target, Some(prototype));
+                        }
+                        Value::Null => {
+                            heap.set_prototype_of(target, None);
+                        }
+                        _ => {}
+                    }
+                }
                 Instruction::DefinePrivateField => {
                     let value = self.pop()?;
                     let Value::Symbol(name) = self.pop()? else {
