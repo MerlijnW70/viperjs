@@ -46,15 +46,7 @@ impl Compiler<'_> {
             match element {
                 // Taken in the element walk below, where the specification evaluates its name.
                 ClassElement::Field(field) if field.is_static => {}
-                ClassElement::Field(field) => match &field.key {
-                    AstPropertyKey::Computed(_) => {
-                        // A computed name is evaluated once, at definition time, while the
-                        // initialiser runs per construction. Keeping that one value where the
-                        // constructor can find it needs §15.7.14's `[[Fields]]` on the object.
-                        return Err(unsupported("a computed class field name", field.key_span));
-                    }
-                    _ => fields.push(field),
-                },
+                ClassElement::Field(field) => fields.push(field),
                 ClassElement::StaticBlock(block) => {
                     return Err(unsupported("a class static block", block.span));
                 }
@@ -77,6 +69,24 @@ impl Compiler<'_> {
             inner = Some(slot);
         }
 
+        // A computed instance-field name is evaluated once, at definition time, while its initialiser
+        // runs per construction — so the one value has to outlive the definition. It goes in a
+        // compiler temporary in *this* scope, and the constructor reaches it the way any closure
+        // reaches an outer variable: the constructor is compiled inside this scope, so ordinary name
+        // resolution finds the slot at whatever depth it turns out to be.
+        //
+        // The slots are reserved before the constructor is compiled, because the prologue inside it
+        // has to resolve them; the values are stored during the element walk below, which is where
+        // §15.7.14 evaluates the names. The class definition finishes before anything can construct,
+        // so every slot is filled before a prologue reads it.
+        // A slot for every field, not only the computed ones. Reserving them conditionally left a
+        // branch no test could pin: with the condition inverted a missing slot does not fail loudly,
+        // it falls back to a *global* of the same name and keeps working. One slot per field costs
+        // nothing measurable and there is nothing left to get wrong.
+        for at in 0..fields.len() {
+            self.declare_shadowing(&field_name_slot(at));
+        }
+
         self.constructor(class, &fields, span)?;
 
         // Initialised to the constructor before any element is defined — which is the whole reason
@@ -90,6 +100,21 @@ impl Compiler<'_> {
         }
 
         for element in &class.elements {
+            if let ClassElement::Field(field) = element
+                && !field.is_static
+            {
+                // Its name, now, where the specification evaluates it — every field's, not only a
+                // computed one's, for the reason the slots are reserved unconditionally. A plain
+                // name is a constant either way, so storing it changes nothing but removes a branch.
+                let at = fields
+                    .iter()
+                    .position(|other| std::ptr::eq(*other, field))
+                    .unwrap_or_default();
+                self.property_key(&field.key)?;
+                self.store_name(&field_name_slot(at))?;
+                self.chunk.emit(Instruction::Pop);
+                continue;
+            }
             if let ClassElement::Field(field) = element
                 && field.is_static
             {
@@ -259,8 +284,11 @@ impl Compiler<'_> {
         // that. Two instructions per construction is not a cost a benchmark has complained about,
         // and a branch nothing can pin is worse than one that was never written.
         self.chunk.emit(Instruction::LoadThis);
-        for field in fields {
-            self.property_key(&field.key)?;
+        for (at, field) in fields.iter().enumerate() {
+            // Read back out of the slot the walk filled, whatever kind of name it was. Choosing
+            // between the slot and a fresh constant here would be a branch with no observable
+            // difference for a plain name, since the two hold the same value.
+            self.load_name(&field_name_slot(at))?;
             match &field.initializer {
                 Some(expression) => self.expression(expression)?,
                 // §15.7.14 — a field written without one is `undefined`, which is not the same as
@@ -272,4 +300,13 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
         Ok(())
     }
+}
+
+/// The name of the compiler temporary holding the `at`th instance field's evaluated key.
+///
+/// A space in it, so that no identifier a program can write names the same slot. Derived from the
+/// position rather than threaded through, so that the walk that fills the slot and the prologue that
+/// reads it cannot disagree about which one they mean.
+fn field_name_slot(at: usize) -> String {
+    format!("class field name {at}")
 }

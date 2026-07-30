@@ -20393,10 +20393,24 @@ language/expressions/class/elements/class-name-static-initializer-decl.js :: it 
 language/expressions/class/elements/class-name-static-initializer-decl.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
 language/expressions/class/elements/class-name-static-initializer-expr.js :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
 language/expressions/class/elements/class-name-static-initializer-expr.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"C"») to be true
+language/expressions/class/elements/computed-name-toprimitive-symbol.js :: it threw an object with no name
+language/expressions/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
+language/expressions/class/elements/computed-name-toprimitive.js :: it threw an object with no name
+language/expressions/class/elements/computed-name-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/class/elements/evaluation-error/computed-name-toprimitive-err.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-toprimitive-err.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-tostring-err.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-tostring-err.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-valueof-err.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/expressions/class/elements/evaluation-error/computed-name-valueof-err.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
 language/expressions/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
@@ -21649,10 +21663,24 @@ language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget
 language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/computed-name-toprimitive-symbol.js :: it threw an object with no name
+language/statements/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
+language/statements/class/elements/computed-name-toprimitive.js :: it threw an object with no name
+language/statements/class/elements/computed-name-toprimitive.js (strict) :: it threw an object with no name
 language/statements/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/class/elements/evaluation-error/computed-name-toprimitive-err.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-toprimitive-err.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-tostring-err.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-tostring-err.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-valueof-err.js :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
+language/statements/class/elements/evaluation-error/computed-name-valueof-err.js (strict) :: it threw an object with no name: Expected a undefined to be thrown but no exception was thrown at all
 language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all

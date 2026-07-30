@@ -398,15 +398,21 @@ fn fields_run_in_source_order_and_before_the_constructor_body() {
 }
 
 #[test]
-fn the_two_kinds_of_field_this_slice_does_not_take_are_refused_by_name() {
-    // A computed name is evaluated once at definition time while the initialiser runs per
-    // construction, so the one value has to be kept where the constructor can reach it — §15.7.14's
-    // `[[Fields]]`, which is a slot this does not have yet.
-    let error = compile_error("class C { ['a'] = 1; }");
-    assert!(error.contains("computed class field name"), "got {error:?}");
-    // A static block is a third thing again, and still refused.
+fn what_a_class_body_still_cannot_hold_is_refused_by_name() {
+    // A static block is the last class element with no implementation, and it is refused rather than
+    // approximated: the harness reports a refusal as *not run* rather than as a wrong answer.
     let error = compile_error("class C { static { 1; } }");
     assert!(error.contains("static block"), "got {error:?}");
+    // `extends` likewise — the prototype chain, `super`, and a derived constructor's `this` are their
+    // own slice.
+    let error = compile_error("class C extends Object {}");
+    assert!(error.contains("extends"), "got {error:?}");
+    // Fields, static fields and computed field names all compile now, so there is no row for them
+    // here. A refusal row that no longer refuses asserts the opposite of what it says.
+    assert_eq!(
+        run("class C { a = 1; static b = 2; ['c'] = 3; } C.b + ',' + new C().a"),
+        "2,1"
+    );
 }
 
 #[test]
@@ -606,5 +612,55 @@ fn a_static_field_evaluates_its_name_in_the_walk_and_its_initialiser_after_it() 
              class C { static [k(1)] = v(1); static [k(2)] = v(2); } order.join(',')"
         ),
         "k1,k2,v1,v2"
+    );
+}
+
+#[test]
+fn a_computed_field_name_is_evaluated_once_and_kept() {
+    assert_eq!(run("class C { ['a' + 'b'] = 1; } new C().ab"), "1");
+    // The point of keeping it: §15.7.14 evaluates the name once, at definition time, however many
+    // instances are made. An implementation that re-evaluated it per construction would answer 2.
+    assert_eq!(
+        run(
+            "var n = 0; var k = function () { n++; return 'x'; }; class C { [k()] = 1; } new C(); new C(); n"
+        ),
+        "1"
+    );
+    // Every name is evaluated before any initialiser runs, because the names belong to the class
+    // definition and the initialisers to the construction.
+    assert_eq!(
+        run(
+            "var order = []; var k = function (n) { order.push('k' + n); return 'f' + n; }; \
+             class C { [k(1)] = order.push('v1'); [k(2)] = order.push('v2'); } \
+             new C(); order.join(',')"
+        ),
+        "k1,k2,v1,v2"
+    );
+    // Two computed names keep their own values apart, which they would not if one slot were shared.
+    assert_eq!(
+        run("var names = ['a', 'b']; var at = 0; \
+             class C { [names[at++]] = 1; [names[at++]] = 2; } \
+             var o = new C(); o.a + ',' + o.b"),
+        "1,2"
+    );
+    // Computed and plain names side by side, in order.
+    assert_eq!(
+        run(
+            "class C { ['a'] = 1; b = 2; ['c'] = 3; } var o = new C(); o.a + ',' + o.b + ',' + o.c"
+        ),
+        "1,2,3"
+    );
+    // And interleaved with the method keys, in source order — the same rule the static fields follow.
+    assert_eq!(
+        run(
+            "var order = []; var k = function (n) { order.push(n); return 'k' + n; }; \
+             class C { [k(1)]() {} [k(2)] = 0; [k(3)]() {} } order.join('')"
+        ),
+        "123"
+    );
+    // A static and an instance computed name in one class do not disturb each other.
+    assert_eq!(
+        run("class C { static ['s'] = 1; ['i'] = 2; } C.s + ',' + new C().i"),
+        "1,2"
     );
 }
