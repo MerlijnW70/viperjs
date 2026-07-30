@@ -207,8 +207,8 @@ fn a_conversion_may_nest_to_the_cap_and_one_past_it_is_refused() {
             "var d = 0; function make() {{ d = d + 1; return {{toString: function () {{              return d < {depth} ? '' + make() : 'end' }}}}; }}              try {{ '' + make() }} catch (e) {{ e.name }}"
         )
     };
-    assert_eq!(run(&nest(64)), "end");
-    assert_eq!(run(&nest(65)), "RangeError");
+    assert_eq!(run(&nest(32)), "end");
+    assert_eq!(run(&nest(33)), "RangeError");
 }
 
 #[test]
@@ -221,12 +221,17 @@ fn a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need() {
     // One mebibyte is the smallest thread stack in common use, and this is a debug build, whose
     // frames are largest. The cap was 200 and had never been measured against a stack at all;
     // this is what would have said so.
+    //
+    // It has now said so twice. The second time the number was 64 and the margin was 1.3×, measured
+    // on Windows and recorded as thin — and macOS CI, whose frames are larger, aborted on the next
+    // push with no panic and the output cut off mid-run. A margin that only one platform can afford
+    // is not a margin, which is why 32 is what this asks for now.
     let worker = std::thread::Builder::new()
         .stack_size(1024 * 1024)
         .spawn(|| {
             // The cap as a literal rather than through the constant, so that raising the
             // constant without re-measuring makes this fail rather than quietly follow it up.
-            let deep = "var d = 0; function make() { d = d + 1;                  return {toString: function () { return d < 64 ? '' + make() : 'end' }}; }                  '' + make()";
+            let deep = "var d = 0; function make() { d = d + 1;                  return {toString: function () { return d < 32 ? '' + make() : 'end' }}; }                  '' + make()";
             run(deep)
         })
         .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement

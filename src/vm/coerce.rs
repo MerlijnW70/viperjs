@@ -53,11 +53,20 @@ use std::rc::Rc;
 /// is precisely the abort DR-0002 says no `Result` can rescue.
 ///
 /// The lever is the frame and not the cap. Moving three arms out of line brought 64 back inside a
-/// mebibyte, and the measured cost is now between 12 and 16 KiB a level — a margin nearer 1.3× than
-/// the 2× above, which is the honest figure and is why the arms that follow are `#[inline(never)]`.
-/// The next slice to make the guard fire should take the same lever before reaching for this number:
-/// the fattest arms remaining are `MakeClass`, `MakeFunction` and `CallSpread`.
-const MAX_REENTRY_DEPTH: usize = 64;
+/// mebibyte on Windows, at 12 to 16 KiB a level — a margin nearer 1.3× than the 2× above, recorded as
+/// thin, and which is why the arms in [`crate::vm`] are `#[inline(never)]`.
+///
+/// **Thin was not enough.** macOS CI failed on the very next push: exit 101, output truncated
+/// mid-run, no panic — the overflow signature, on a platform whose frames are larger and which
+/// cannot be measured from here. So the number came down as well. 32 costs about 400 KiB by the same
+/// measurement and leaves better than the 2× this comment has claimed twice; the guard runs at the
+/// cap, so a future slice that fattens the frame again will fail it locally rather than in CI.
+///
+/// What the cap costs a program is nothing anyone will meet: it is how deeply `valueOf` may call
+/// something whose `valueOf` calls something else, and thirty-two of those is already a program
+/// nobody wrote by hand. The fattest arms left are `MakeClass`, `MakeFunction` and `CallSpread`, and
+/// moving them is the lever to reach for before this number goes lower still.
+const MAX_REENTRY_DEPTH: usize = 32;
 
 impl Vm {
     /// §7.1.1 `ToPrimitive` — a value with no properties, out of one that may have them.
