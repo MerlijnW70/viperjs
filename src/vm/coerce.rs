@@ -211,6 +211,23 @@ impl Vm {
         self.reach(Entry::Construct, callee, Value::Undefined, arguments, heap)
     }
 
+    /// `Construct(callee, arguments, newTarget)` — §7.3.14 with the third argument given.
+    ///
+    /// `new X()` always passes `X` as its own `new.target`, so until §28.1.2 nothing in the engine
+    /// needed to pass a different one. `Reflect.construct(X, [], Y)` is the only way to say it, and
+    /// what it decides is the prototype of the object made: an X built through Y's `prototype`.
+    pub(crate) fn construct_with_target(
+        &mut self,
+        callee: Value,
+        new_target: Value,
+        arguments: &[Value],
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        // The receiver slot carries it, because a construction makes its own receiver from
+        // `new.target` and so leaves that slot free — see [`Entry::Named`].
+        self.reach(Entry::Named, callee, new_target, arguments, heap)
+    }
+
     /// Call or construct `callee` from Rust, and run until it comes back.
     fn reach(
         &mut self,
@@ -236,6 +253,9 @@ impl Vm {
                 // §7.1.1 calls `valueOf` and `toString`; neither is a construction.
                 new_target: match how {
                     Entry::Construct => callee,
+                    // §28.1.2 — a built-in constructed through `Reflect.construct` is told the
+                    // `new.target` the caller named, which is what its `prototype_from` reads.
+                    Entry::Named => this_value,
                     _ => Value::Undefined,
                 },
             };

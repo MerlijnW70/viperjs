@@ -264,6 +264,22 @@ impl Vm {
         key: PropertyKey,
         heap: &mut Heap,
     ) -> Completion<Value> {
+        self.get_through(base, key, base, heap)
+    }
+
+    /// The same read, with the receiver named separately — §10.1.8.1's third argument.
+    ///
+    /// Every ordinary read passes the same value twice: the object being read *is* the one a getter
+    /// should see as `this`. §28.1.5's `Reflect.get` is the one place they differ, and a `Proxy`'s
+    /// `get` trap is why — it forwards to its target and must not tell the getter that the target
+    /// was what the program asked about.
+    pub(crate) fn get_through(
+        &mut self,
+        base: Value,
+        key: PropertyKey,
+        receiver: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
         // §7.3.2 `GetV` — a primitive is not an error to read from. It is wrapped, and the read
         // goes to the wrapper. A wrapper's *own* properties are only ever the ones its kind gives
         // it, and Number and Boolean give none — so the prototype is consulted directly rather
@@ -305,7 +321,7 @@ impl Vm {
                 getter: Value::Undefined,
                 ..
             } => Ok(Value::Undefined),
-            PropertyKind::Accessor { getter, .. } => self.call_value(getter, base, &[], heap),
+            PropertyKind::Accessor { getter, .. } => self.call_value(getter, receiver, &[], heap),
         }
     }
     /// `[[Set]]` (§10.1.9) — put `value` under `key`, and answer whether it was allowed.
@@ -331,6 +347,23 @@ impl Vm {
         value: Value,
         heap: &mut Heap,
     ) -> Completion<Value> {
+        self.set_through(base, key, value, base, heap)
+    }
+
+    /// The same write, with the receiver named separately — §10.1.9.2's fourth argument.
+    ///
+    /// Two things read it: a setter is called with it as `this`, and a property that shadows an
+    /// inherited one is created *on it*. Every ordinary assignment passes the same value twice;
+    /// §28.1.9's `Reflect.set` is the one place they differ, and it is what lets a `Proxy` forward
+    /// a write to its target while the property lands on the proxy.
+    pub(crate) fn set_through(
+        &mut self,
+        base: Value,
+        key: PropertyKey,
+        value: Value,
+        receiver: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
         let Value::Object(object) = base else {
             return Err(Abrupt::type_error(
                 "cannot set a property of something that is not an object",
@@ -351,7 +384,7 @@ impl Vm {
                 // thrown away: a setter cannot refuse a write, it can only decline to record it.
                 // The receiver is again the object the write went through.
                 PropertyKind::Accessor { setter, .. } => {
-                    self.call_value(setter, base, &[value], heap)?;
+                    self.call_value(setter, receiver, &[value], heap)?;
                     return Ok(Value::Boolean(true));
                 }
                 PropertyKind::Data {
@@ -359,9 +392,14 @@ impl Vm {
                 } => {
                     return Ok(Value::Boolean(false));
                 }
-                PropertyKind::Data { .. } if owner == object => {
-                    // An own writable data property is changed in place, keeping its attributes:
-                    // assignment never makes a property enumerable that was not.
+                // An own writable data property is changed in place, keeping its attributes:
+                // assignment never makes a property enumerable that was not. Only when the write
+                // is going *here* — §10.1.9.2 step 2 looks the property up on the target and then
+                // writes to the **receiver**, and for every ordinary assignment those are the same
+                // object. `Reflect.set` is where they are not.
+                PropertyKind::Data { .. }
+                    if owner == object && matches!(receiver, Value::Object(id) if id == object) =>
+                {
                     let descriptor = PropertyDescriptor {
                         value: Some(value),
                         ..PropertyDescriptor::EMPTY
@@ -372,9 +410,37 @@ impl Vm {
             }
         }
         // A new property, or one that shadows an inherited writable one. Either way it is created
-        // on the receiver with the three attributes assignment always gives.
-        let descriptor = PropertyDescriptor::data(value);
-        stored(heap.define_property_outcome(object, key, &descriptor))
+        // **on the receiver**, which for every ordinary assignment is the object itself and for
+        // `Reflect.set` may be something else entirely — §10.1.9.2 step 3, and the reason a write
+        // forwarded to a target lands where the program asked rather than where it was looked up.
+        let Value::Object(landing) = receiver else {
+            return Ok(Value::Boolean(false));
+        };
+        // §10.1.9.2 step 2.c — what the *receiver* already has decides how it is written. An
+        // accessor or a non-writable property there refuses the write outright: the value came
+        // looking for a home and that one is taken. Anything else keeps its attributes, so a write
+        // through a receiver never makes a property enumerable that was not.
+        let existing = heap
+            .object(landing)
+            .and_then(|found| found.get_own_property(key));
+        let descriptor = match existing.map(|property| property.kind) {
+            Some(
+                PropertyKind::Accessor { .. }
+                | PropertyKind::Data {
+                    writable: false, ..
+                },
+            ) => {
+                return Ok(Value::Boolean(false));
+            }
+            Some(PropertyKind::Data { .. }) => PropertyDescriptor {
+                value: Some(value),
+                ..PropertyDescriptor::EMPTY
+            },
+            // A new property, or one shadowing an inherited writable one. Either way it is created
+            // with the three attributes assignment always gives.
+            None => PropertyDescriptor::data(value),
+        };
+        stored(heap.define_property_outcome(landing, key, &descriptor))
     }
     /// §13.10.2's `InstanceofOperator`, by way of §7.3.22's `OrdinaryHasInstance`.
     ///

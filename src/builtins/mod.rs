@@ -34,6 +34,7 @@ mod object;
 mod object_state;
 pub(crate) mod promise;
 mod promise_group;
+mod reflect;
 mod symbol;
 mod view;
 pub use self::symbol::WELL_KNOWN;
@@ -83,6 +84,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     collection::install(heap, realm, global);
     buffer::install(heap, realm, global);
     view::install(heap, realm, global);
+    reflect::install(heap, realm, global);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }

@@ -444,7 +444,7 @@ fn own_keys(
 /// to `undefined`, and `{}` sets nothing at all. That distinction is the whole reason
 /// [`PropertyDescriptor`]'s fields are `Option`, and it is what makes
 /// `Object.defineProperty(o, "k", {})` leave an existing property alone.
-fn to_property_descriptor(
+pub(super) fn to_property_descriptor(
     vm: &mut Vm,
     heap: &mut Heap,
     value: Value,
@@ -612,7 +612,7 @@ pub(super) fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> O
 }
 
 /// §7.1.19 `ToPropertyKey`.
-fn property_key(heap: &mut Heap, value: Value) -> Completion<PropertyKey> {
+pub(super) fn property_key(heap: &mut Heap, value: Value) -> Completion<PropertyKey> {
     // §7.1.19 step 3 — a Symbol is a key already and must not be spelled: `ToString` of one
     // throws, so without this `Object.getOwnPropertyDescriptor(o, sym)` would be an error rather
     // than an answer about a property that is really there.

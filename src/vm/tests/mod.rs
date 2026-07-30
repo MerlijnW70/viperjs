@@ -76,6 +76,7 @@ mod objects_builtin;
 mod parameters;
 mod private;
 mod promises;
+mod reflection;
 mod statements;
 mod strict;
 mod string_methods;

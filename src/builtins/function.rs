@@ -44,7 +44,7 @@ pub fn apply(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// A hole reads as `undefined` here, unlike in most of §23.1.3: this is a plain `Get` of every
 /// index, so `f.apply(null, [, 1])` passes two arguments and the first is `undefined`.
 #[allow(clippy::manual_clamp)] // `clamp` answers NaN for NaN; §7.1.20 says a NaN length is 0
-fn list_from(vm: &mut Vm, heap: &mut Heap, list: Value) -> Completion<Vec<Value>> {
+pub(super) fn list_from(vm: &mut Vm, heap: &mut Heap, list: Value) -> Completion<Vec<Value>> {
     let Value::Object(object) = list else {
         return Err(Abrupt::type_error(
             "the arguments given to apply must be an object",

@@ -28,7 +28,10 @@ impl Vm {
         at: &mut usize,
     ) -> Result<(), Fault> {
         let count = count as usize;
-        let method = how == Entry::Method;
+        // Which ways in have a value under the callee. A method call has its receiver there, and
+        // §28.1.2's has the `new.target` the caller named — a construction makes its own receiver,
+        // so that slot is free and this is what it is free for.
+        let method = matches!(how, Entry::Method | Entry::Named);
         // The callee sits under its arguments, because it was pushed first — and a
         // method call has its receiver under *that*.
         let Some(callee_at) = self.stack.len().checked_sub(count + 1) else {
@@ -71,7 +74,7 @@ impl Vm {
         // instance of. Asked here, before the bound chain is flattened, because a bound function
         // answers for itself — it is a constructor exactly when its target is, and it recorded
         // that when it was made.
-        if matches!(how, Entry::Construct | Entry::Super) && !callable.constructs() {
+        if matches!(how, Entry::Construct | Entry::Super | Entry::Named) && !callable.constructs() {
             self.raise(
                 Abrupt::type_error("what was used with `new` is not a constructor"),
                 heap,
@@ -124,7 +127,9 @@ impl Vm {
         // refuse. Checked here rather than at the class definition because the two are separated by
         // any amount of program: what arrives at a call site is a function object, and the body it
         // holds is the only thing that still remembers how it was written.
-        if body.is_class_constructor() && !matches!(how, Entry::Construct | Entry::Super) {
+        if body.is_class_constructor()
+            && !matches!(how, Entry::Construct | Entry::Super | Entry::Named)
+        {
             self.raise(
                 Abrupt::type_error("a class constructor cannot be called without `new`"),
                 heap,
@@ -149,6 +154,9 @@ impl Vm {
             None => match how {
                 Entry::Construct => callee,
                 Entry::Super => self.new_target,
+                // The receiver slot carries it: a construction makes its own receiver from
+                // `new.target`, so the slot is free and this is what it is free for.
+                Entry::Named => self.stack[receiver_at],
                 Entry::Plain | Entry::Method => Value::Undefined,
             },
         };
@@ -184,8 +192,8 @@ impl Vm {
             // of the constructor's own `prototype` property. A `prototype` that is not an object
             // — a script may assign anything to it — falls back to `Object.prototype`, which is
             // what §10.1.13 says rather than an error.
-            Entry::Construct | Entry::Super if derived => Value::Undefined,
-            Entry::Construct | Entry::Super => {
+            Entry::Construct | Entry::Super | Entry::Named if derived => Value::Undefined,
+            Entry::Construct | Entry::Super | Entry::Named => {
                 // From **new.target's** `prototype` and not the callee's. For a plain `new` the two
                 // are the same object, which is why this was invisible until `super()` existed: there
                 // the callee is the parent and new.target is the class that was written after `new`,
@@ -275,7 +283,7 @@ impl Vm {
             // `CompleteDerivedReturn` puts the object on the stack, so by the time `Return` runs
             // there is nothing left for the frame to prefer.
             constructed: match how {
-                Entry::Construct | Entry::Super if !derived => Some(receiver),
+                Entry::Construct | Entry::Super | Entry::Named if !derived => Some(receiver),
                 _ => None,
             },
             function: Some(object),
@@ -382,7 +390,10 @@ impl Vm {
         // §10.4.1.2 — `new` on a bound function constructs the *target*, and the bound `this` is
         // not consulted at all: `new` makes its own receiver, so there is nothing for it to say.
         let how = match how {
-            Entry::Construct => Entry::Construct,
+            // A named `new.target` survives the bind, because §10.4.1.2 step 5 passes it through:
+            // `Reflect.construct(f.bind(x), [], G)` makes an object from `G.prototype`, and the
+            // bound receiver is no more consulted than it is for a plain `new`.
+            Entry::Construct | Entry::Named => how,
             _ => {
                 self.stack.push(receiver);
                 Entry::Method
@@ -422,7 +433,7 @@ impl Vm {
         // `Error("x")` and `new Error("x")` come to the same thing.
         let this_value = match how {
             Entry::Method => self.stack[receiver_at],
-            Entry::Plain | Entry::Construct | Entry::Super => Value::Undefined,
+            Entry::Plain | Entry::Construct | Entry::Super | Entry::Named => Value::Undefined,
         };
         let arguments = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
         let call = crate::heap::NativeCall {
@@ -436,6 +447,11 @@ impl Vm {
             new_target: match how {
                 Entry::Construct => Value::Object(function),
                 Entry::Super => self.new_target,
+                // §28.1.2 — the third thing the caller named, carried in the receiver slot because
+                // a construction has no other use for it. This is what a built-in's
+                // `prototype_from` reads, so `Reflect.construct(Array, [], D)` really does make an
+                // array that inherits from `D.prototype`.
+                Entry::Named => self.stack[receiver_at],
                 Entry::Plain | Entry::Method => Value::Undefined,
             },
         };
@@ -558,4 +574,11 @@ pub(super) enum Entry {
     /// derived class's. That is what makes `new E()` an `E` however many `extends` clauses it passes
     /// through, and reading the parent's `prototype` instead would quietly produce a `B`.
     Super,
+    /// §28.1.2's `Reflect.construct(target, args, newTarget)` — a construction whose `new.target`
+    /// is neither the callee nor the running one, but a third thing the caller named.
+    ///
+    /// Its own way in for the reason `Super` is: what it changes is the one thing that decides what
+    /// object is made. It is the only way in the language to build an X whose prototype came from a
+    /// Y, and there is nowhere else the third value could come from — a plain `new` has two.
+    Named,
 }

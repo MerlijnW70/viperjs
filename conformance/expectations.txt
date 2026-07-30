@@ -1049,8 +1049,6 @@ annexB/language/statements/try/catch-redeclared-var-statement.js :: it did not p
 annexB/language/statements/try/catch-redeclared-var-statement.js (strict) :: it did not parse: the catch parameter is already declared in the catch block
 built-ins/AggregateError/cause-property.js :: it threw an object with no name: cause should be an own property
 built-ins/AggregateError/cause-property.js (strict) :: it threw an object with no name: cause should be an own property
-built-ins/AggregateError/is-a-constructor.js :: it threw an object with no name: isConstructor(AggregateError) must return true Expected SameValue(«false», «true») to be true
-built-ins/AggregateError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(AggregateError) must return true Expected SameValue(«false», «true») to be true
 built-ins/AggregateError/message-method-prop-cast.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/message-method-prop-cast.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
@@ -1081,8 +1079,8 @@ built-ins/Array/from/iter-cstm-ctor-err.js :: it threw an object with no name: A
 built-ins/Array/from/iter-cstm-ctor-err.js (strict) :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
 built-ins/Array/from/iter-cstm-ctor.js :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
 built-ins/Array/from/iter-cstm-ctor.js (strict) :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
-built-ins/Array/from/iter-map-fn-err.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Array/from/iter-map-fn-err.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Array/from/iter-map-fn-err.js :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
+built-ins/Array/from/iter-map-fn-err.js (strict) :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
 built-ins/Array/from/iter-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-length-err.js :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -1103,8 +1101,6 @@ built-ins/Array/fromAsync/not-a-constructor.js :: it threw an object with no nam
 built-ins/Array/fromAsync/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Array/fromAsync/prop-desc.js :: it threw an object with no name: Array.fromAsync is callable Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/fromAsync/prop-desc.js (strict) :: it threw an object with no name: Array.fromAsync is callable Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/is-a-constructor.js :: it threw an object with no name: isConstructor(Array) must return true Expected SameValue(«false», «true») to be true
-built-ins/Array/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Array) must return true Expected SameValue(«false», «true») to be true
 built-ins/Array/isArray/15.4.3.2-1-10.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/isArray/15.4.3.2-1-10.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/isArray/proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
@@ -1119,8 +1115,6 @@ built-ins/Array/length/define-own-prop-length-coercion-order-set.js :: it threw 
 built-ins/Array/length/define-own-prop-length-coercion-order-set.js (strict) :: it threw an object with no name: `"use strict"; array.length = length` throws a TypeError exception Expected a TypeError but got a RangeError
 built-ins/Array/length/define-own-prop-length-coercion-order.js :: it threw an object with no name: Object.defineProperty(array, "length", {value: length, writable: true}) throws a TypeError exception Expected a TypeError but got a RangeError
 built-ins/Array/length/define-own-prop-length-coercion-order.js (strict) :: it threw an object with no name: Object.defineProperty(array, "length", {value: length, writable: true}) throws a TypeError exception Expected a TypeError but got a RangeError
-built-ins/Array/length/define-own-prop-length-no-value-order.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Array/length/define-own-prop-length-no-value-order.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Array/length/define-own-prop-length-overflow-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Array/length/define-own-prop-length-overflow-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Array/of/construct-this-with-the-number-of-arguments.js :: it threw an object with no name: The value of len is expected to be 0 Expected SameValue(«undefined», «0») to be true
@@ -2056,10 +2050,8 @@ built-ins/Array/prototype/with/property-descriptor.js :: it threw an object with
 built-ins/Array/prototype/with/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/with/this-value-boolean.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/prototype/with/this-value-boolean.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/ArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/ArrayBuffer/is-a-constructor.js :: it threw an object with no name: isConstructor(ArrayBuffer) must return true Expected SameValue(«false», «true») to be true
-built-ins/ArrayBuffer/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(ArrayBuffer) must return true Expected SameValue(«false», «true») to be true
+built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError
+built-ins/ArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/isView/arg-is-typedarray-buffer.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/arg-is-typedarray-buffer.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/arg-is-typedarray-constructor.js :: it threw ReferenceError: Float64Array is not defined
@@ -2070,14 +2062,12 @@ built-ins/ArrayBuffer/isView/arg-is-typedarray.js :: it threw ReferenceError: Fl
 built-ins/ArrayBuffer/isView/arg-is-typedarray.js (strict) :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/invoked-as-a-fn.js :: it threw ReferenceError: Float64Array is not defined
 built-ins/ArrayBuffer/isView/invoked-as-a-fn.js (strict) :: it threw ReferenceError: Float64Array is not defined
-built-ins/ArrayBuffer/newtarget-prototype-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/ArrayBuffer/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
-built-ins/ArrayBuffer/options-maxbytelength-compared-before-object-creation.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/ArrayBuffer/options-maxbytelength-compared-before-object-creation.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/ArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/ArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a ReferenceError
+built-ins/ArrayBuffer/options-maxbytelength-compared-before-object-creation.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/ArrayBuffer/options-maxbytelength-compared-before-object-creation.js (strict) :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/ArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
+built-ins/ArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/options-maxbytelength-diminuitive.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/options-maxbytelength-diminuitive.js (strict) :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/options-maxbytelength-excessive.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
@@ -2092,8 +2082,8 @@ built-ins/ArrayBuffer/options-maxbytelength-undefined.js :: it threw an object w
 built-ins/ArrayBuffer/options-maxbytelength-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «false») to be true
 built-ins/ArrayBuffer/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/ArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/ArrayBuffer/prototype-from-newtarget.js :: it threw ReferenceError: Reflect is not defined
-built-ins/ArrayBuffer/prototype-from-newtarget.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/ArrayBuffer/prototype-from-newtarget.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object ArrayBuffer]», «») to be true
+built-ins/ArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object ArrayBuffer]», «») to be true
 built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js :: it threw ReferenceError: $262 is not defined
 built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/ArrayBuffer/prototype/byteLength/this-has-no-typedarrayname-internal.js :: it threw ReferenceError: Int8Array is not defined
@@ -2360,8 +2350,8 @@ built-ins/AsyncDisposableStack/length.js :: it threw ReferenceError: AsyncDispos
 built-ins/AsyncDisposableStack/length.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/name.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/name.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
-built-ins/AsyncDisposableStack/newtarget-prototype-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/AsyncDisposableStack/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/AsyncDisposableStack/newtarget-prototype-is-not-object.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prop-desc.js :: it threw an object with no name: AsyncDisposableStack should be an own property
 built-ins/AsyncDisposableStack/prop-desc.js (strict) :: it threw an object with no name: AsyncDisposableStack should be an own property
 built-ins/AsyncDisposableStack/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -2370,8 +2360,8 @@ built-ins/AsyncDisposableStack/proto.js :: it threw ReferenceError: AsyncDisposa
 built-ins/AsyncDisposableStack/proto.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
 built-ins/AsyncDisposableStack/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/AsyncDisposableStack/prototype-from-newtarget-custom.js :: it threw ReferenceError: Reflect is not defined
-built-ins/AsyncDisposableStack/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/AsyncDisposableStack/prototype-from-newtarget-custom.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype-from-newtarget.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype-from-newtarget.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/Symbol.asyncDispose.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -2950,8 +2940,6 @@ built-ins/Boolean/S9.2_A1_T1.js :: it threw ReferenceError: eval is not defined
 built-ins/Boolean/S9.2_A1_T1.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Boolean/S9.2_A6_T1.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Boolean/S9.2_A6_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Boolean/is-a-constructor.js :: it threw an object with no name: isConstructor(Boolean) must return true Expected SameValue(«false», «true») to be true
-built-ins/Boolean/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Boolean) must return true Expected SameValue(«false», «true») to be true
 built-ins/Boolean/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Boolean/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Boolean/prototype/S15.6.3.1_A1.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
@@ -2970,12 +2958,10 @@ built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws.js :: it threw R
 built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws.js (strict) :: it threw ReferenceError: Int8Array is not defined
 built-ins/DataView/buffer-reference-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/buffer-reference-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/byteOffset-validated-against-initial-buffer-length.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/DataView/byteOffset-validated-against-initial-buffer-length.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/DataView/byteoffset-is-negative-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/byteoffset-is-negative-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-access-detaches-buffer.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/DataView/custom-proto-access-detaches-buffer.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/DataView/custom-proto-access-detaches-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/custom-proto-access-detaches-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-resizes-buffer-invalid-by-length.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/custom-proto-access-resizes-buffer-invalid-by-length.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/custom-proto-access-resizes-buffer-invalid-by-offset.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -2986,16 +2972,12 @@ built-ins/DataView/custom-proto-access-resizes-buffer-valid-by-offset.js :: it t
 built-ins/DataView/custom-proto-access-resizes-buffer-valid-by-offset.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/custom-proto-access-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/custom-proto-access-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/DataView/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+built-ins/DataView/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/DataView/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-if-not-object-fallbacks-to-default-prototype-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/custom-proto-if-not-object-fallbacks-to-default-prototype-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-if-not-object-fallbacks-to-default-prototype.js :: it threw ReferenceError: Reflect is not defined
-built-ins/DataView/custom-proto-if-not-object-fallbacks-to-default-prototype.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/DataView/custom-proto-if-object-is-used-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/custom-proto-if-object-is-used-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-if-object-is-used.js :: it threw ReferenceError: Reflect is not defined
-built-ins/DataView/custom-proto-if-object-is-used.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/DataView/defined-bytelength-and-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/defined-bytelength-and-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/defined-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
@@ -3010,8 +2992,6 @@ built-ins/DataView/excessive-byteoffset-throws-sab.js :: it threw ReferenceError
 built-ins/DataView/excessive-byteoffset-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/instance-extensibility-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/instance-extensibility-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/is-a-constructor.js :: it threw an object with no name: isConstructor(DataView) must return true Expected SameValue(«false», «true») to be true
-built-ins/DataView/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(DataView) must return true Expected SameValue(«false», «true») to be true
 built-ins/DataView/negative-bytelength-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/negative-bytelength-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/negative-byteoffset-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
@@ -3440,8 +3420,6 @@ built-ins/DataView/toindex-bytelength-sab.js :: it threw ReferenceError: SharedA
 built-ins/DataView/toindex-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/toindex-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/toindex-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Date/is-a-constructor.js :: it threw an object with no name: isConstructor(Date) must return true Expected SameValue(«false», «true») to be true
-built-ins/Date/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Date) must return true Expected SameValue(«false», «true») to be true
 built-ins/Date/proto-from-ctor-realm-one.js :: it threw ReferenceError: $262 is not defined
 built-ins/Date/proto-from-ctor-realm-one.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Date/proto-from-ctor-realm-two.js :: it threw ReferenceError: $262 is not defined
@@ -3504,8 +3482,6 @@ built-ins/Date/prototype/toTemporalInstant/this-value-invalid-date.js :: it thre
 built-ins/Date/prototype/toTemporalInstant/this-value-invalid-date.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Date/prototype/toTemporalInstant/this-value-non-date.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Date/prototype/toTemporalInstant/this-value-non-date.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Date/subclassing.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Date/subclassing.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Date/value-get-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Date/value-get-symbol-to-prim-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Date/value-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -3538,8 +3514,8 @@ built-ins/DisposableStack/length.js :: it threw ReferenceError: DisposableStack 
 built-ins/DisposableStack/length.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/name.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/name.js (strict) :: it threw ReferenceError: DisposableStack is not defined
-built-ins/DisposableStack/newtarget-prototype-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/DisposableStack/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/DisposableStack/newtarget-prototype-is-not-object.js :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prop-desc.js :: it threw an object with no name: DisposableStack should be an own property
 built-ins/DisposableStack/prop-desc.js (strict) :: it threw an object with no name: DisposableStack should be an own property
 built-ins/DisposableStack/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -3548,8 +3524,8 @@ built-ins/DisposableStack/proto.js :: it threw ReferenceError: DisposableStack i
 built-ins/DisposableStack/proto.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
 built-ins/DisposableStack/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/DisposableStack/prototype-from-newtarget-custom.js :: it threw ReferenceError: Reflect is not defined
-built-ins/DisposableStack/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/DisposableStack/prototype-from-newtarget-custom.js :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype-from-newtarget.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype-from-newtarget.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype/Symbol.dispose.js :: it threw ReferenceError: DisposableStack is not defined
@@ -3718,8 +3694,6 @@ built-ins/Error/cause_property.js :: it threw an object with no name: cause shou
 built-ins/Error/cause_property.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Error/constructor.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Error/constructor.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Error/is-a-constructor.js :: it threw an object with no name: isConstructor(Error) must return true Expected SameValue(«false», «true») to be true
-built-ins/Error/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Error) must return true Expected SameValue(«false», «true») to be true
 built-ins/Error/isError/error-subclass.js :: it threw TypeError: what was called is not a function
 built-ins/Error/isError/error-subclass.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Error/isError/errors-other-realm.js :: it threw ReferenceError: $262 is not defined
@@ -3826,8 +3800,8 @@ built-ins/FinalizationRegistry/length.js :: it threw ReferenceError: Finalizatio
 built-ins/FinalizationRegistry/length.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/name.js :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/name.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/newtarget-prototype-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/FinalizationRegistry/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/FinalizationRegistry/newtarget-prototype-is-not-object.js :: it threw ReferenceError: FinalizationRegistry is not defined
+built-ins/FinalizationRegistry/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/prop-desc.js :: it threw an object with no name: FinalizationRegistry should be an own property
 built-ins/FinalizationRegistry/prop-desc.js (strict) :: it threw an object with no name: FinalizationRegistry should be an own property
 built-ins/FinalizationRegistry/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -3836,8 +3810,8 @@ built-ins/FinalizationRegistry/proto.js :: it threw ReferenceError: Finalization
 built-ins/FinalizationRegistry/proto.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw ReferenceError: Reflect is not defined
-built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw ReferenceError: FinalizationRegistry is not defined
+built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/prototype-from-newtarget.js :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/prototype-from-newtarget.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/FinalizationRegistry/prototype/Symbol.toStringTag.js :: it threw ReferenceError: FinalizationRegistry is not defined
@@ -4080,8 +4054,8 @@ built-ins/Function/internals/Construct/derived-return-val-realm.js :: it threw R
 built-ins/Function/internals/Construct/derived-return-val-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/Function/is-a-constructor.js :: it threw an object with no name: isConstructor(Function) must return true Expected SameValue(«false», «true») to be true
-built-ins/Function/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Function) must return true Expected SameValue(«false», «true») to be true
+built-ins/Function/is-a-constructor.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Function/is-a-constructor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/length/S15.3.5.1_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/length/S15.3.5.1_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/length/S15.3.5.1_A1_T2.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -4216,12 +4190,10 @@ built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw Referenc
 built-ins/Function/prototype/bind/get-fn-realm-recursive.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Function/prototype/bind/get-fn-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Function/prototype/bind/get-fn-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
+built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js (strict) :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
+built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
+built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js (strict) :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
 built-ins/Function/prototype/bind/instance-length-tointeger.js :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-length-tointeger.js (strict) :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -5138,8 +5110,6 @@ built-ins/Map/groupBy/string.js :: it threw TypeError: what was called is not a 
 built-ins/Map/groupBy/string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/groupBy/toPropertyKey.js :: it threw TypeError: what was called is not a function
 built-ins/Map/groupBy/toPropertyKey.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/is-a-constructor.js :: it threw an object with no name: isConstructor(Map) must return true Expected SameValue(«false», «true») to be true
-built-ins/Map/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Map) must return true Expected SameValue(«false», «true») to be true
 built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
@@ -5261,48 +5231,36 @@ built-ins/Math/sumPrecise/sum-is-minus-zero.js :: it threw TypeError: what was c
 built-ins/Math/sumPrecise/sum-is-minus-zero.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/sum.js :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/sum.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/EvalError/is-a-constructor.js :: it threw an object with no name: isConstructor(EvalError) must return true Expected SameValue(«false», «true») to be true
-built-ins/NativeErrors/EvalError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(EvalError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/EvalError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/EvalError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/EvalError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/EvalError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/RangeError/is-a-constructor.js :: it threw an object with no name: isConstructor(RangeError) must return true Expected SameValue(«false», «true») to be true
-built-ins/NativeErrors/RangeError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(RangeError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/RangeError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/RangeError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/RangeError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/RangeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/ReferenceError/is-a-constructor.js :: it threw an object with no name: isConstructor(ReferenceError) must return true Expected SameValue(«false», «true») to be true
-built-ins/NativeErrors/ReferenceError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(ReferenceError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/ReferenceError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/ReferenceError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/ReferenceError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/ReferenceError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/SyntaxError/is-a-constructor.js :: it threw an object with no name: isConstructor(SyntaxError) must return true Expected SameValue(«false», «true») to be true
-built-ins/NativeErrors/SyntaxError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(SyntaxError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/SyntaxError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/SyntaxError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/SyntaxError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/SyntaxError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/TypeError/is-a-constructor.js :: it threw an object with no name: isConstructor(TypeError) must return true Expected SameValue(«false», «true») to be true
-built-ins/NativeErrors/TypeError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(TypeError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/TypeError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/TypeError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/NativeErrors/TypeError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/TypeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/URIError/is-a-constructor.js :: it threw an object with no name: isConstructor(URIError) must return true Expected SameValue(«false», «true») to be true
-built-ins/NativeErrors/URIError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(URIError) must return true Expected SameValue(«false», «true») to be true
 built-ins/NativeErrors/URIError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/URIError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/URIError/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -5321,8 +5279,6 @@ built-ins/Number/S9.1_A1_T1.js :: it threw TypeError: cannot convert an object t
 built-ins/Number/S9.1_A1_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Number/S9.3_A5_T1.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Number/S9.3_A5_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/is-a-constructor.js :: it threw an object with no name: isConstructor(Number) must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Number) must return true Expected SameValue(«false», «true») to be true
 built-ins/Number/parseFloat.js :: it threw an object with no name: Expected SameValue(«undefined», «[object Function]») to be true
 built-ins/Number/parseFloat.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object Function]») to be true
 built-ins/Number/parseFloat/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -5851,14 +5807,8 @@ built-ins/Object/hasOwn/symbol_property_toString.js :: it threw TypeError: canno
 built-ins/Object/hasOwn/symbol_property_toString.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/hasOwn/symbol_property_valueOf.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/hasOwn/symbol_property_valueOf.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Object/internals/DefineOwnProperty/consistent-value-function-arguments.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/internals/DefineOwnProperty/consistent-value-function-arguments.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/internals/DefineOwnProperty/consistent-value-function-caller.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/internals/DefineOwnProperty/consistent-value-function-caller.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/internals/DefineOwnProperty/consistent-writable-regexp-dollar1.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/internals/DefineOwnProperty/consistent-writable-regexp-dollar1.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/is-a-constructor.js :: it threw an object with no name: isConstructor(Object) must return true Expected SameValue(«false», «true») to be true
-built-ins/Object/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Object) must return true Expected SameValue(«false», «true») to be true
+built-ins/Object/internals/DefineOwnProperty/consistent-writable-regexp-dollar1.js :: it threw ReferenceError: RegExp is not defined
+built-ins/Object/internals/DefineOwnProperty/consistent-writable-regexp-dollar1.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isExtensible/15.2.3.13-2-10.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isExtensible/15.2.3.13-2-10.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isExtensible/15.2.3.13-2-20.js :: it threw ReferenceError: RegExp is not defined
@@ -6053,14 +6003,10 @@ built-ins/Object/prototype/propertyIsEnumerable/symbol_property_toString.js :: i
 built-ins/Object/prototype/propertyIsEnumerable/symbol_property_toString.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/prototype/propertyIsEnumerable/symbol_property_valueOf.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/prototype/propertyIsEnumerable/symbol_property_valueOf.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Object/prototype/setPrototypeOf-with-different-values.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/prototype/setPrototypeOf-with-different-values.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/setPrototypeOf-with-same-value.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/prototype/setPrototypeOf-with-same-value.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Object/prototype/toLocaleString/S15.2.4.3_A1.js :: it threw an object with no name: The value of `typeof Object.prototype.toLocaleString` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Object/prototype/toLocaleString/S15.2.4.3_A1.js (strict) :: it threw an object with no name: The value of `typeof Object.prototype.toLocaleString` is expected to be "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Object/prototype/toLocaleString/S15.2.4.3_A10.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -6163,8 +6109,6 @@ built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is 
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/subclass-object-arg.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Object/subclass-object-arg.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Object/values/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/values/order-after-define-property.js :: it threw ReferenceError: Proxy is not defined
@@ -6365,12 +6309,8 @@ built-ins/Promise/any/invoke-then-error-close.js :: the test called $DONE with T
 built-ins/Promise/any/invoke-then-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
 built-ins/Promise/any/invoke-then-get-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
 built-ins/Promise/any/invoke-then-get-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/Promise/get-prototype-abrupt-executor-not-callable.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Promise/get-prototype-abrupt-executor-not-callable.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Promise/get-prototype-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Promise/get-prototype-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Promise/is-a-constructor.js :: it threw an object with no name: isConstructor(Promise) must return true Expected SameValue(«false», «true») to be true
-built-ins/Promise/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Promise) must return true Expected SameValue(«false», «true») to be true
+built-ins/Promise/get-prototype-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Promise/get-prototype-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Promise/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Promise/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
@@ -7000,312 +6940,42 @@ built-ins/Proxy/setPrototypeOf/trap-is-undefined-or-null.js :: it threw Referenc
 built-ins/Proxy/setPrototypeOf/trap-is-undefined-or-null.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/setPrototypeOf/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/setPrototypeOf/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/Symbol.toStringTag.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/Symbol.toStringTag.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/apply.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/apply.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Reflect/apply/arguments-list-is-not-array-like.js :: it threw an object with no name: `Reflect.apply(fn, null, {get length() {throw new Test262Error();}})` throws a Test262Error exception Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/apply/arguments-list-is-not-array-like.js (strict) :: it threw an object with no name: `Reflect.apply(fn, null, {get length() {throw new Test262Error();}})` throws a Test262Error exception Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/apply/call-target.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/call-target.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/return-target-call-result.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/return-target-call-result.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/apply/target-is-not-callable-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/apply/target-is-not-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/construct/arguments-list-is-not-array-like.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/construct/arguments-list-is-not-array-like.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/construct/construct.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/construct.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/newtarget-is-not-constructor-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/construct/newtarget-is-not-constructor-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/construct/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/return-with-newtarget-argument.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/return-with-newtarget-argument.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/return-without-newtarget-argument.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/return-without-newtarget-argument.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/target-is-not-constructor-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/construct/target-is-not-constructor-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/construct/use-arguments-list.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/construct/use-arguments-list.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/define-properties.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/define-properties.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/define-symbol-properties.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/define-symbol-properties.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/defineProperty.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/defineProperty.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/return-abrupt-from-attributes.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/defineProperty/return-abrupt-from-attributes.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/defineProperty/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/defineProperty/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/defineProperty/return-boolean.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/return-boolean.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/defineProperty/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/defineProperty/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/defineProperty/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/defineProperty/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/deleteProperty/delete-properties.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/delete-properties.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/delete-symbol-properties.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/delete-symbol-properties.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/deleteProperty.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/deleteProperty.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/deleteProperty/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/deleteProperty/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/deleteProperty/return-boolean.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/return-boolean.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/deleteProperty/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/deleteProperty/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/deleteProperty/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/deleteProperty/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/enumerate/undefined.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/enumerate/undefined.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/get.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/get.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/get/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/get/return-abrupt-from-result.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/get/return-abrupt-from-result.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/get/return-value-from-receiver.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/return-value-from-receiver.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/return-value-from-symbol-key.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/return-value-from-symbol-key.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/return-value.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/return-value.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/get/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/get/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/get/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/get/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getOwnPropertyDescriptor/getOwnPropertyDescriptor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/getOwnPropertyDescriptor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+built-ins/Reflect/get/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/get/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/return-from-accessor-descriptor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/return-from-accessor-descriptor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/return-from-data-descriptor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/return-from-data-descriptor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/symbol-property.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/symbol-property.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getOwnPropertyDescriptor/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getOwnPropertyDescriptor/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getOwnPropertyDescriptor/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getOwnPropertyDescriptor/undefined-own-property.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/undefined-own-property.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/undefined-property.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/undefined-property.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/getPrototypeOf.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/getPrototypeOf.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/null-prototype.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/null-prototype.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/getPrototypeOf/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/getPrototypeOf/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/getPrototypeOf/return-prototype.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/return-prototype.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/skip-own-properties.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/skip-own-properties.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/getPrototypeOf/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getPrototypeOf/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getPrototypeOf/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/getPrototypeOf/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/has/has.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/has.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/has/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+built-ins/Reflect/has/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/has/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/has/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/has/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/has/return-boolean.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/return-boolean.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/symbol-property.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/symbol-property.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/has/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/has/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/has/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/has/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/isExtensible/isExtensible.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/isExtensible.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/isExtensible/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/isExtensible/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/isExtensible/return-boolean.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/return-boolean.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/isExtensible/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/isExtensible/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/isExtensible/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/isExtensible/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/object-prototype.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/object-prototype.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/order-after-define-property.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/order-after-define-property.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/ownKeys.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/ownKeys.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/ownKeys/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/ownKeys/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/ownKeys/return-array-with-own-keys-only.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-array-with-own-keys-only.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-empty-array.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-empty-array.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-non-enumerable-keys.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-non-enumerable-keys.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-on-corresponding-order.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/return-on-corresponding-order.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/ownKeys/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/ownKeys/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/ownKeys/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/ownKeys/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/preventExtensions/always-return-true-from-ordinary-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/always-return-true-from-ordinary-object.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/prevent-extensions.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/prevent-extensions.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/preventExtensions.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/preventExtensions/preventExtensions.js (strict) :: it threw ReferenceError: Reflect is not defined
 built-ins/Reflect/preventExtensions/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/preventExtensions/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/preventExtensions/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/preventExtensions/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/preventExtensions/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/preventExtensions/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
-built-ins/Reflect/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
-built-ins/Reflect/set/call-prototype-property-set.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/call-prototype-property-set.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/creates-a-data-descriptor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/creates-a-data-descriptor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/different-property-descriptors.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/different-property-descriptors.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/receiver-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/receiver-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/set/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/set/return-abrupt-from-result.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/set/return-abrupt-from-result.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Reflect/set/return-false-if-receiver-is-not-writable.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/return-false-if-receiver-is-not-writable.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/return-false-if-target-is-not-writable.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/return-false-if-target-is-not-writable.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set-value-on-accessor-descriptor-with-receiver.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set-value-on-accessor-descriptor-with-receiver.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set-value-on-accessor-descriptor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set-value-on-accessor-descriptor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set-value-on-data-descriptor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set-value-on-data-descriptor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/set.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/symbol-property.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/symbol-property.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/set/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/set/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/set/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/set/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/length.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/length.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/name.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/name.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/not-a-constructor.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/not-a-constructor.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/proto-is-not-object-and-not-null-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/proto-is-not-object-and-not-null-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/proto-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/proto-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Reflect/set/receiver-is-not-object.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
+built-ins/Reflect/set/receiver-is-not-object.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
+built-ins/Reflect/set/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Reflect/set/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/setPrototypeOf/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/setPrototypeOf/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/setPrototypeOf/return-false-if-target-and-proto-are-the-same.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-false-if-target-and-proto-are-the-same.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-false-if-target-is-not-extensible.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-false-if-target-is-not-extensible.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-false-if-target-is-prototype-of-proto.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-false-if-target-is-prototype-of-proto.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-true-if-new-prototype-is-set.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-true-if-new-prototype-is-set.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-true-if-proto-is-current.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/return-true-if-proto-is-current.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/setPrototypeOf.js :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/setPrototypeOf.js (strict) :: it threw ReferenceError: Reflect is not defined
-built-ins/Reflect/setPrototypeOf/target-is-not-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/target-is-not-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/target-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Reflect/setPrototypeOf/target-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/RegExp/15.10.2.15-6-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/RegExp/15.10.2.15-6-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/RegExp/15.10.2.5-3-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -8224,8 +7894,6 @@ built-ins/Set/Symbol.species/symbol-species-name.js :: it threw TypeError: canno
 built-ins/Set/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Set/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Set/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/is-a-constructor.js :: it threw an object with no name: isConstructor(Set) must return true Expected SameValue(«false», «true») to be true
-built-ins/Set/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(Set) must return true Expected SameValue(«false», «true») to be true
 built-ins/Set/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/Set/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/Set/prototype/add/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -8620,8 +8288,8 @@ built-ins/SharedArrayBuffer/length.js :: it threw ReferenceError: SharedArrayBuf
 built-ins/SharedArrayBuffer/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/SharedArrayBuffer/negative-length-throws.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
 built-ins/SharedArrayBuffer/negative-length-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/newtarget-prototype-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/SharedArrayBuffer/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/SharedArrayBuffer/newtarget-prototype-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/SharedArrayBuffer/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError but got a ReferenceError
 built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError but got a ReferenceError
 built-ins/SharedArrayBuffer/options-maxbytelength-compared-before-object-creation.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
@@ -8642,8 +8310,8 @@ built-ins/SharedArrayBuffer/options-maxbytelength-undefined.js :: it threw Refer
 built-ins/SharedArrayBuffer/options-maxbytelength-undefined.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/SharedArrayBuffer/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/SharedArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
-built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw ReferenceError: Reflect is not defined
-built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/SharedArrayBuffer/prototype/Symbol.toStringTag.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/SharedArrayBuffer/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/SharedArrayBuffer/prototype/byteLength/invoked-as-accessor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -8812,8 +8480,6 @@ built-ins/String/S15.5.1.1_A1_T6.js :: it threw ReferenceError: eval is not defi
 built-ins/String/S15.5.1.1_A1_T6.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/String/S9.8_A1_T1.js :: it threw ReferenceError: eval is not defined
 built-ins/String/S9.8_A1_T1.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/String/is-a-constructor.js :: it threw an object with no name: isConstructor(String) must return true Expected SameValue(«false», «true») to be true
-built-ins/String/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(String) must return true Expected SameValue(«false», «true») to be true
 built-ins/String/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
 built-ins/String/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: $262 is not defined
 built-ins/String/prototype/charAt/S15.5.4.4_A1.1.js :: it threw ReferenceError: eval is not defined
@@ -17303,8 +16969,8 @@ built-ins/WeakRef/length.js :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/length.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/name.js :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/name.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/newtarget-prototype-is-not-object.js :: it threw ReferenceError: Reflect is not defined
-built-ins/WeakRef/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/WeakRef/newtarget-prototype-is-not-object.js :: it threw ReferenceError: WeakRef is not defined
+built-ins/WeakRef/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/prop-desc.js :: it threw an object with no name: WeakRef should be an own property
 built-ins/WeakRef/prop-desc.js (strict) :: it threw an object with no name: WeakRef should be an own property
 built-ins/WeakRef/proto-from-ctor-realm.js :: it threw ReferenceError: $262 is not defined
@@ -17313,8 +16979,8 @@ built-ins/WeakRef/proto.js :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/proto.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
 built-ins/WeakRef/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw ReferenceError: Reflect is not defined
-built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: Reflect is not defined
+built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw ReferenceError: WeakRef is not defined
+built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/prototype-from-newtarget.js :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/prototype-from-newtarget.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/WeakRef/prototype/Symbol.toStringTag.js :: it threw ReferenceError: WeakRef is not defined
@@ -18607,10 +18273,6 @@ language/expressions/class/elements/private-getter-is-not-a-own-property.js (str
 language/expressions/class/elements/private-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/expressions/class/elements/private-methods/prod-private-method-initialize-order.js :: it threw ReferenceError: Reflect is not defined
-language/expressions/class/elements/private-methods/prod-private-method-initialize-order.js (strict) :: it threw ReferenceError: Reflect is not defined
-language/expressions/class/elements/private-methods/prod-private-method.js :: it threw ReferenceError: Reflect is not defined
-language/expressions/class/elements/private-methods/prod-private-method.js (strict) :: it threw ReferenceError: Reflect is not defined
 language/expressions/class/elements/private-setter-is-not-a-own-property.js :: it threw TypeError: what was called is not a function
 language/expressions/class/elements/private-setter-is-not-a-own-property.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/class/elements/static-field-anonymous-function-name.js :: it threw an object with no name: Expected SameValue(«""», «"#field"») to be true
@@ -19263,10 +18925,6 @@ language/expressions/multiplication/S11.5.1_A1.js :: it threw ReferenceError: ev
 language/expressions/multiplication/S11.5.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/new.target/value-via-reflect-apply.js :: it threw ReferenceError: Reflect is not defined
-language/expressions/new.target/value-via-reflect-apply.js (strict) :: it threw ReferenceError: Reflect is not defined
-language/expressions/new.target/value-via-reflect-construct.js :: it threw ReferenceError: Reflect is not defined
-language/expressions/new.target/value-via-reflect-construct.js (strict) :: it threw ReferenceError: Reflect is not defined
 language/expressions/new/S11.2.2_A1.1.js :: it threw ReferenceError: eval is not defined
 language/expressions/new/S11.2.2_A1.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/new/S11.2.2_A1.2.js :: it threw ReferenceError: eval is not defined
@@ -19333,8 +18991,6 @@ language/expressions/object/setter-param-arguments-strict-inside.js :: expected 
 language/expressions/object/setter-param-eval-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/optional-chaining/eval-optional-call.js :: it threw ReferenceError: eval is not defined
 language/expressions/optional-chaining/eval-optional-call.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/optional-chaining/new-target-optional-call.js :: it threw ReferenceError: Reflect is not defined
-language/expressions/optional-chaining/new-target-optional-call.js (strict) :: it threw ReferenceError: Reflect is not defined
 language/expressions/optional-chaining/optional-call-preserves-this.js :: it threw TypeError: cannot read a property of something that is not an object
 language/expressions/optional-chaining/optional-call-preserves-this.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 language/expressions/postfix-decrement/S11.3.2_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
@@ -19405,8 +19061,6 @@ language/expressions/subtraction/S11.6.2_A1.js :: it threw ReferenceError: eval 
 language/expressions/subtraction/S11.6.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/super/call-construct-invocation.js :: it threw ReferenceError: Reflect is not defined
-language/expressions/super/call-construct-invocation.js (strict) :: it threw ReferenceError: Reflect is not defined
 language/expressions/super/prop-dot-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-dot-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-dot-cls-val-from-eval.js :: it threw ReferenceError: eval is not defined
@@ -19449,8 +19103,6 @@ language/expressions/this/S11.1.1_A4.2.js :: it threw TypeError: building a func
 language/expressions/this/S11.1.1_A4.2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/typeof/built-in-exotic-objects-no-call.js :: it threw ReferenceError: RegExp is not defined
 language/expressions/typeof/built-in-exotic-objects-no-call.js (strict) :: it threw ReferenceError: RegExp is not defined
-language/expressions/typeof/built-in-ordinary-objects-no-call.js :: it threw an object with no name: typeof Reflect === "object" Expected SameValue(«"undefined"», «"object"») to be true
-language/expressions/typeof/built-in-ordinary-objects-no-call.js (strict) :: it threw an object with no name: typeof Reflect === "object" Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/typeof/native-call.js :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/typeof/native-call.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/typeof/null.js :: it threw ReferenceError: RegExp is not defined
@@ -20098,10 +19750,6 @@ language/statements/class/elements/private-method-visible-to-direct-eval-on-init
 language/statements/class/elements/private-method-visible-to-direct-eval-on-initializer.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/private-method-visible-to-direct-eval.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/private-method-visible-to-direct-eval.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/class/elements/private-methods/prod-private-method-initialize-order.js :: it threw ReferenceError: Reflect is not defined
-language/statements/class/elements/private-methods/prod-private-method-initialize-order.js (strict) :: it threw ReferenceError: Reflect is not defined
-language/statements/class/elements/private-methods/prod-private-method.js :: it threw ReferenceError: Reflect is not defined
-language/statements/class/elements/private-methods/prod-private-method.js (strict) :: it threw ReferenceError: Reflect is not defined
 language/statements/class/elements/private-setter-is-not-a-own-property.js :: it threw TypeError: what was called is not a function
 language/statements/class/elements/private-setter-is-not-a-own-property.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/class/elements/private-setter-visible-to-direct-eval-on-initializer.js :: it threw ReferenceError: eval is not defined
