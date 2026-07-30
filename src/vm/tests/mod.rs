@@ -18,6 +18,7 @@
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
 //! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
+//! - `inheritance` — §15.7's `extends` and `super`, and a `this` that starts out unbound.
 //! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
 //! - `for_of` — §14.7.5.7, and the four ways out of a loop that have to close its iterator.
 //! - `globals` — §19.2, and why `parseInt` is not `Number`.
@@ -52,6 +53,7 @@ mod for_in;
 mod for_of;
 mod functions;
 mod globals;
+mod inheritance;
 mod iterators;
 mod json;
 mod lexical;

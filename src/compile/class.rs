@@ -15,11 +15,20 @@
 //! of what [`Instruction::DefineClassMethod`] adds over [`Instruction::DefineField`], and it is why
 //! the two cannot share an instruction.
 //!
+//! # What `extends` adds, and where
+//!
+//! Three things, and none of them is in this file's happy path. The heritage is evaluated *inside*
+//! the class scope and left on the stack for [`Instruction::MakeClass`], which reads it three ways
+//! (§15.7.14 steps 9 to 11). A derived class with no constructor written gets a forwarding one,
+//! synthesised here as a syntax tree so that its rest parameter and its spread are §15.1's and
+//! §13.3.8's rather than a second implementation of either. And a derived constructor's `this`
+//! becomes a *binding* — DR-0015 — which is [`super::function`]'s doing, because the body compiler is
+//! what declares it.
+//!
 //! # What is not here yet
 //!
-//! Fields and static blocks, `extends` and `super`, and private names. Each is refused by name
-//! rather than mis-compiled, because a class that silently dropped its fields would be worse than
-//! one that would not compile.
+//! Private names. Refused by name rather than mis-compiled, because a class that silently dropped a
+//! `#x` would be worse than one that would not compile.
 
 use super::CompileError;
 use super::function::{Body, Lexical};
