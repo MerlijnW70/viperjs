@@ -80,6 +80,8 @@ pub struct Realm {
     weak_ref_prototype: ObjectId,
     /// %FinalizationRegistry.prototype% — §26.2.3.
     finalization_registry_prototype: ObjectId,
+    /// %SharedArrayBuffer.prototype% — §25.2.4.
+    shared_buffer_prototype: ObjectId,
     /// %IteratorHelperPrototype% — §27.1.5.1, which inherits from %IteratorPrototype%.
     iterator_helper_prototype: ObjectId,
     /// %WrapForValidIteratorPrototype% — §27.1.3.2.1, what `Iterator.from` wraps with.
@@ -205,6 +207,7 @@ impl Realm {
         let weak_map_prototype = heap.new_object(Some(object_prototype));
         let weak_set_prototype = heap.new_object(Some(object_prototype));
         let weak_ref_prototype = heap.new_object(Some(object_prototype));
+        let shared_buffer_prototype = heap.new_object(Some(object_prototype));
         let iterator_helper_prototype = heap.new_object(Some(iterator_prototype));
         let wrap_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let finalization_registry_prototype = heap.new_object(Some(object_prototype));
@@ -288,6 +291,7 @@ impl Realm {
             weak_map_prototype,
             weak_set_prototype,
             weak_ref_prototype,
+            shared_buffer_prototype,
             iterator_helper_prototype,
             wrap_iterator_prototype,
             finalization_registry_prototype,
@@ -432,6 +436,12 @@ impl Realm {
     #[must_use]
     pub fn weak_ref_prototype(&self) -> ObjectId {
         self.weak_ref_prototype
+    }
+
+    /// %SharedArrayBuffer.prototype% — §25.2.4.
+    #[must_use]
+    pub fn shared_buffer_prototype(&self) -> ObjectId {
+        self.shared_buffer_prototype
     }
 
     /// %IteratorHelperPrototype% — §27.1.5.1.

@@ -43,6 +43,7 @@ pub(crate) mod promise;
 mod promise_group;
 mod reflect;
 mod set_ops;
+mod shared;
 mod symbol;
 mod typed;
 mod typed_methods;
@@ -99,6 +100,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     weak::install(heap, realm, global);
     weak_ref::install(heap, realm, global);
     buffer::install(heap, realm, global);
+    shared::install(heap, realm, global);
     view::install(heap, realm, global);
     typed::install(heap, realm, global);
     reflect::install(heap, realm, global);

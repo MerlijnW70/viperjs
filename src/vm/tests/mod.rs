@@ -20,6 +20,7 @@
 //! - `annex_b` — §B.2.2's four accessor methods, and how they differ from a descriptor.
 //! - `species` — §7.3.23, and what a copying method answers *with*.
 //! - `set_ops` — §24.2.4's seven, and the size that decides which side is walked.
+//! - `shared` — §25.2's buffer and §25.4's `Atomics`, and the two brands that refuse each other.
 //! - `number_format` — §21.1.3's three spellings, and the two exactnesses they need.
 //! - `iterator_helpers` — §27.1's `Iterator`, and the methods that consume one.
 //! - `iterator_lazy` — §27.1.4's five that *make* one, and why nothing runs until asked.
@@ -96,6 +97,7 @@ mod private;
 mod promises;
 mod reflection;
 mod set_ops;
+mod shared;
 mod species;
 mod statements;
 mod strict;

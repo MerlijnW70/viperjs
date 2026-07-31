@@ -153,8 +153,12 @@ fn buffer_of(heap: &Heap, this: Value) -> Completion<ObjectId> {
         return Err(Abrupt::type_error("this is not an ArrayBuffer"));
     };
     match heap.object(object).and_then(crate::heap::Object::buffer) {
-        Some(_) => Ok(object),
-        None => Err(Abrupt::type_error("this is not an ArrayBuffer")),
+        // §25.1.5's methods each require an **unshared** buffer, and §25.2.4's require a shared
+        // one — so neither family answers about the other, however alike the bytes underneath are.
+        // Checking only "is there a buffer" would let `ArrayBuffer.prototype.slice` copy a
+        // `SharedArrayBuffer` and hand back something of the wrong kind.
+        Some(found) if !found.shared() => Ok(object),
+        _ => Err(Abrupt::type_error("this is not an ArrayBuffer")),
     }
 }
 

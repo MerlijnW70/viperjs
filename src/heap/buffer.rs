@@ -24,6 +24,15 @@
 pub struct Buffer {
     /// `[[ArrayBufferData]]`, or `None` once `[[ArrayBufferDetachKey]]` has done its work.
     bytes: Option<Vec<u8>>,
+    /// Whether this is §25.2's `SharedArrayBuffer` rather than §25.1's `ArrayBuffer`.
+    ///
+    /// One flag rather than two types, because the bytes and every operation over them are the
+    /// same. What differs is the *brand*: `ArrayBuffer.prototype.byteLength` requires an unshared
+    /// buffer and `SharedArrayBuffer.prototype.byteLength` a shared one, so neither answers about
+    /// the other — and `transfer` refuses a shared buffer outright, because §25.2 has no
+    /// `[[ArrayBufferDetachKey]]` at all. A shared buffer can never be detached, which is the
+    /// whole of what "shared" means to an engine with one agent.
+    shared: bool,
 }
 
 impl Buffer {
@@ -35,12 +44,26 @@ impl Buffer {
     #[must_use]
     pub fn new(length: usize) -> Self {
         Self {
+            shared: false,
             bytes: Some(vec![0; length]),
         }
     }
 
-    /// The bytes, or `None` if this buffer is detached.
+    /// The same, as §25.2.2.1's `SharedArrayBuffer` — bytes that nothing can take away.
     #[must_use]
+    pub fn new_shared(length: usize) -> Self {
+        let mut made = Self::new(length);
+        made.shared = true;
+        made
+    }
+
+    /// Whether this is a `SharedArrayBuffer`.
+    #[must_use]
+    pub fn shared(&self) -> bool {
+        self.shared
+    }
+
+    /// The bytes, or `None` once the buffer has been detached.
     pub fn bytes(&self) -> Option<&[u8]> {
         self.bytes.as_deref()
     }

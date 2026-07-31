@@ -1444,12 +1444,6 @@ built-ins/ArrayBuffer/proto-from-ctor-realm.js :: it threw TypeError: what was c
 built-ins/ArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype-from-newtarget.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object ArrayBuffer]», «») to be true
 built-ins/ArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object ArrayBuffer]», «») to be true
-built-ins/ArrayBuffer/prototype/byteLength/this-is-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/byteLength/this-is-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/detached/this-is-sharedarraybuffer-resizable.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/detached/this-is-sharedarraybuffer-resizable.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/detached/this-is-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/detached/this-is-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/ArrayBuffer/prototype/immutable/prop-desc.js :: it threw an object with no name: ArrayBuffer.prototype.immutable getter should be a function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/ArrayBuffer/prototype/immutable/prop-desc.js (strict) :: it threw an object with no name: ArrayBuffer.prototype.immutable getter should be a function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/ArrayBuffer/prototype/immutable/return-immutable.js :: it threw an object with no name: Expected SameValue(«undefined», «false») to be true
@@ -1542,12 +1536,8 @@ built-ins/ArrayBuffer/prototype/resize/this-is-not-arraybuffer-object.js :: it t
 built-ins/ArrayBuffer/prototype/resize/this-is-not-arraybuffer-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/ArrayBuffer/prototype/resize/this-is-not-resizable-arraybuffer-object.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/ArrayBuffer/prototype/resize/this-is-not-resizable-arraybuffer-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/ArrayBuffer/prototype/resize/this-is-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/resize/this-is-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/ArrayBuffer/prototype/slice/this-is-sharedarraybuffer.js :: it threw an object with no name: `this` value cannot be a SharedArrayBuffer Expected a TypeError but got a ReferenceError
-built-ins/ArrayBuffer/prototype/slice/this-is-sharedarraybuffer.js (strict) :: it threw an object with no name: `this` value cannot be a SharedArrayBuffer Expected a TypeError but got a ReferenceError
 built-ins/ArrayBuffer/prototype/sliceToImmutable/modify-source-after-return.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/modify-source-after-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -1584,8 +1574,6 @@ built-ins/ArrayBuffer/prototype/transfer/from-resizable-to-zero.js :: it threw a
 built-ins/ArrayBuffer/prototype/transfer/from-resizable-to-zero.js (strict) :: it threw an object with no name: dest.resizable Expected SameValue(«undefined», «true») to be true
 built-ins/ArrayBuffer/prototype/transfer/this-is-immutable-arraybuffer.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/transfer/this-is-immutable-arraybuffer.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayBuffer/prototype/transfer/this-is-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/transfer/this-is-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/ArrayBuffer/prototype/transferToFixedLength/descriptor.js :: it threw an object with no name: transferToFixedLength should be an own property
 built-ins/ArrayBuffer/prototype/transferToFixedLength/descriptor.js (strict) :: it threw an object with no name: transferToFixedLength should be an own property
 built-ins/ArrayBuffer/prototype/transferToFixedLength/extensible.js :: it threw an object with no name: Expected true but got false
@@ -1630,8 +1618,6 @@ built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-immutable-arraybuf
 built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-immutable-arraybuffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-not-arraybuffer-object.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-not-arraybuffer-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/ArrayBuffer/prototype/transferToImmutable/new-length-coercion.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/transferToImmutable/new-length-coercion.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/transferToImmutable/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -1804,120 +1790,46 @@ built-ins/AsyncGeneratorFunction/is-a-constructor.js :: it threw an object with 
 built-ins/AsyncGeneratorFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %AsyncGeneratorFunction%
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Atomics/Symbol.toStringTag.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/Symbol.toStringTag.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/add/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Atomics/add/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/add/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/add/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/add/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/add/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.add(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/add/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.add(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/add/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/add/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/add/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/add/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/add/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/and/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/and/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/add/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.add(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/add/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.add(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/add/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/add/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/add/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/add/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/and/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/and/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/and/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/and/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/and/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.and(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/and/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.and(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/and/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/and/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/and/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/and/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/and/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/and/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.and(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/and/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.and(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/and/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/and/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/and/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/and/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/compareExchange/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/compareExchange/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/compareExchange/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/compareExchange/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/compareExchange/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.compareExchange(new Float64Array(buffer), 0, 0, 0) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/compareExchange/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.compareExchange(new Float64Array(buffer), 0, 0, 0) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/compareExchange/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/compareExchange/validate-arraytype-before-expectedValue-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/validate-arraytype-before-expectedValue-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/validate-arraytype-before-replacementValue-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/compareExchange/validate-arraytype-before-replacementValue-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/exchange/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/exchange/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/compareExchange/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.compareExchange(new Uint8ClampedArray(buffer), 0, 0, 0) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/compareExchange/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.compareExchange(new Uint8ClampedArray(buffer), 0, 0, 0) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/compareExchange/validate-arraytype-before-expectedValue-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/compareExchange/validate-arraytype-before-expectedValue-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/compareExchange/validate-arraytype-before-replacementValue-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/compareExchange/validate-arraytype-before-replacementValue-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/exchange/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/exchange/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/exchange/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/exchange/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/exchange/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.exchange(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/exchange/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.exchange(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/exchange/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/exchange/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/exchange/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/exchange/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/exchange/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/exchange/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.exchange(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/exchange/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.exchange(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/exchange/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/exchange/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/exchange/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/exchange/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/isLockFree/bigint/expected-return-value.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/isLockFree/bigint/expected-return-value.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Atomics/isLockFree/corner-cases.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/corner-cases.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/expected-return-value.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/expected-return-value.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/isLockFree/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/load/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/load/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makePassthrough.)
-built-ins/Atomics/load/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makePassthrough.)
-built-ins/Atomics/load/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.load(new Float64Array(buffer), 0) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/load/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.load(new Float64Array(buffer), 0) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/load/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/load/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/load/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/load/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.load(new Uint8ClampedArray(buffer), 0) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/load/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.load(new Uint8ClampedArray(buffer), 0) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/load/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/load/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/notify/bigint/non-bigint64-typedarray-throws.js :: it threw ReferenceError: BigUint64Array is not defined
 built-ins/Atomics/notify/bigint/non-bigint64-typedarray-throws.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
 built-ins/Atomics/notify/bigint/non-shared-bufferdata-count-evaluation-throws.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1930,264 +1842,178 @@ built-ins/Atomics/notify/bigint/non-shared-bufferdata-returns-0.js :: it threw R
 built-ins/Atomics/notify/bigint/non-shared-bufferdata-returns-0.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/notify/bigint/null-bufferdata-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/notify/bigint/null-bufferdata-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Atomics/notify/count-boundary-cases.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-boundary-cases.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-from-nans.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-from-nans.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-symbol-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-symbol-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
+built-ins/Atomics/notify/count-boundary-cases.js :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/count-boundary-cases.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/count-from-nans.js :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/count-from-nans.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/descriptor.js :: it threw an object with no name: notify should be an own property
+built-ins/Atomics/notify/descriptor.js (strict) :: it threw an object with no name: notify should be an own property
 built-ins/Atomics/notify/immutable-buffer-returns-0.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/notify/immutable-buffer-returns-0.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/notify/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/negative-index-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/negative-index-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/non-int32-typedarray-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/non-int32-typedarray-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-index-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-index-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-non-shared-int-views-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-non-shared-int-views-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/non-shared-int-views.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/non-shared-int-views.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/not-a-typedarray-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/not-a-typedarray-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/not-an-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/not-an-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/null-bufferdata-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/null-bufferdata-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/notify/out-of-range-index-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/out-of-range-index-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-resize-to-zero.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-resize-to-zero.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/Atomics/notify/retrieve-length-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/retrieve-length-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/symbol-for-index-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/symbol-for-index-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/validate-arraytype-before-count-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/validate-arraytype-before-count-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/notify/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/or/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/or/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/notify/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/notify/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/notify/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/notify/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/notify/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/non-shared-bufferdata-index-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/non-shared-bufferdata-index-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Atomics/notify/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Atomics/notify/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-resize-to-zero.js :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-resize-to-zero.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/notify/symbol-for-index-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/symbol-for-index-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/or/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/or/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/or/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/or/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/or/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.or(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/or/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.or(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/or/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/or/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/or/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/or/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/or/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/pause/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/returns-undefined.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/pause/returns-undefined.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/prop-desc.js :: it threw an object with no name: The value of `typeof Atomics` is "object" Expected SameValue(«"undefined"», «"object"») to be true
-built-ins/Atomics/prop-desc.js (strict) :: it threw an object with no name: The value of `typeof Atomics` is "object" Expected SameValue(«"undefined"», «"object"») to be true
-built-ins/Atomics/proto.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/proto.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/expected-return-value-negative-zero.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/store/expected-return-value-negative-zero.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/store/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/store/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/or/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.or(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/or/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.or(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/or/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/or/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/or/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/or/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/pause/descriptor.js :: it threw an object with no name: pause should be an own property
+built-ins/Atomics/pause/descriptor.js (strict) :: it threw an object with no name: pause should be an own property
+built-ins/Atomics/pause/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/pause/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/pause/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/pause/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/pause/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Atomics/pause/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Atomics/pause/returns-undefined.js :: it threw TypeError: what was called is not a function
+built-ins/Atomics/pause/returns-undefined.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/store/expected-return-value-negative-zero.js :: it threw an object with no name: Atomics.store(i32a, 0, -0) normalizes -0 to +0
+built-ins/Atomics/store/expected-return-value-negative-zero.js (strict) :: it threw an object with no name: Atomics.store(i32a, 0, -0) normalizes -0 to +0
 built-ins/Atomics/store/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/store/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/store/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/store/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/store/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.store(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/store/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.store(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/store/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/store/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/store/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/store/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/store/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/sub/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/sub/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/store/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.store(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/store/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.store(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/store/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/store/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/store/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/store/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/sub/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/sub/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/sub/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/sub/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/sub/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.sub(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/sub/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.sub(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/sub/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/sub/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/sub/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/sub/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/sub/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/sub/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.sub(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/sub/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.sub(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/sub/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/sub/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/sub/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/sub/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/wait/bigint/negative-index-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/negative-index-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/null-bufferdata-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/null-bufferdata-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/out-of-range-index-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/out-of-range-index-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Atomics/wait/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/wait/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/wait/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/wait/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/wait/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/wait/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/wait/negative-index-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/negative-index-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/non-int32-typedarray-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/non-int32-typedarray-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/non-shared-bufferdata-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/non-shared-bufferdata-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/not-a-typedarray-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/not-a-typedarray-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/not-an-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/not-an-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/null-bufferdata-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/null-bufferdata-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Atomics/wait/out-of-range-index-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/out-of-range-index-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/retrieve-length-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/retrieve-length-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/symbol-for-index-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/symbol-for-index-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/symbol-for-timeout-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/symbol-for-timeout-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/symbol-for-value-throws.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/symbol-for-value-throws.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/validate-arraytype-before-timeout-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/validate-arraytype-before-timeout-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/wait/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/waitAsync/bigint/negative-index-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/negative-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/non-bigint64-typedarray-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/non-bigint64-typedarray-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/not-an-object-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/not-an-object-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/null-bufferdata-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/null-bufferdata-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/out-of-range-index-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/out-of-range-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/false-for-timeout.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/false-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/is-function.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/is-function.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/negative-index-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/negative-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/negative-timeout.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/negative-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/non-shared-bufferdata-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/non-shared-bufferdata-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/not-a-typedarray-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/not-a-typedarray-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/not-an-object-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/not-an-object-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/null-bufferdata-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/null-bufferdata-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/null-for-timeout.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/null-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/object-for-timeout.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/object-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/out-of-range-index-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/out-of-range-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/symbol-for-index-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/symbol-for-index-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/symbol-for-value-throws.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/symbol-for-value-throws.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/undefined-for-timeout.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/undefined-for-timeout.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/value-not-equal.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/waitAsync/value-not-equal.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/descriptor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/descriptor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/expected-return-value.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/xor/expected-return-value.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/wait/descriptor.js :: it threw an object with no name: wait should be an own property
+built-ins/Atomics/wait/descriptor.js (strict) :: it threw an object with no name: wait should be an own property
+built-ins/Atomics/wait/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/wait/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/wait/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/wait/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/wait/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/symbol-for-index-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-index-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-timeout-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-timeout-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-value-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-value-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/waitAsync/bigint/negative-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/negative-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/non-bigint64-typedarray-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/non-bigint64-typedarray-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/not-an-object-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/not-an-object-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/null-bufferdata-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/null-bufferdata-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/out-of-range-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/out-of-range-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/descriptor.js :: it threw an object with no name: waitAsync should be an own property
+built-ins/Atomics/waitAsync/descriptor.js (strict) :: it threw an object with no name: waitAsync should be an own property
+built-ins/Atomics/waitAsync/false-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/false-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/is-function.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/is-function.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/waitAsync/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/waitAsync/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/waitAsync/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/waitAsync/negative-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/negative-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/negative-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/negative-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/non-shared-bufferdata-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/non-shared-bufferdata-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/not-a-typedarray-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/not-a-typedarray-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/not-an-object-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/not-an-object-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/null-bufferdata-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/null-bufferdata-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/null-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/null-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/object-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/object-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/out-of-range-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/out-of-range-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-value-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-value-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/undefined-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/undefined-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/value-not-equal.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/value-not-equal.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/xor/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/xor/length.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/length.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/name.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/name.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/non-shared-bufferdata.js :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/xor/non-shared-bufferdata.js (strict) :: it threw ReferenceError: Atomics is not defined (Testing with Int32Array and makeArrayBuffer.)
-built-ins/Atomics/xor/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.xor(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/xor/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.xor(new Float64Array(buffer), 0, 1) throws TypeError Expected a TypeError but got a ReferenceError (Testing with Float64Array and makeArrayBuffer.)
-built-ins/Atomics/xor/not-a-constructor.js :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/not-a-constructor.js (strict) :: it threw ReferenceError: Atomics is not defined
-built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/xor/validate-arraytype-before-value-coercion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Atomics/xor/validate-arraytype-before-value-coercion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/Atomics/xor/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.xor(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/xor/non-shared-int-views-throws.js (strict) :: it threw an object with no name: Atomics.xor(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
+built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/xor/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Atomics/xor/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/BigInt/asIntN/asIntN.js :: it threw ReferenceError: BigInt is not defined
 built-ins/BigInt/asIntN/asIntN.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/BigInt/asIntN/bigint-tobigint-errors.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -2272,12 +2098,6 @@ built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T1.js :: it threw TypeError: Bo
 built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T1.js (strict) :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
 built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T2.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
 built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T2.js (strict) :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/buffer-reference-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/buffer-reference-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/byteoffset-is-negative-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/byteoffset-is-negative-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/custom-proto-access-detaches-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-detaches-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-resizes-buffer-invalid-by-length.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -2288,60 +2108,32 @@ built-ins/DataView/custom-proto-access-resizes-buffer-valid-by-length.js :: it t
 built-ins/DataView/custom-proto-access-resizes-buffer-valid-by-length.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/custom-proto-access-resizes-buffer-valid-by-offset.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/custom-proto-access-resizes-buffer-valid-by-offset.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/custom-proto-access-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-access-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/DataView/custom-proto-access-throws-sab.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/DataView/custom-proto-access-throws-sab.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/DataView/custom-proto-if-not-object-fallbacks-to-default-prototype-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-if-not-object-fallbacks-to-default-prototype-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-if-object-is-used-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/custom-proto-if-object-is-used-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/defined-bytelength-and-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/defined-bytelength-and-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/defined-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/defined-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/defined-byteoffset-undefined-bytelength-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/defined-byteoffset-undefined-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/excessive-bytelength-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/excessive-bytelength-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/excessive-byteoffset-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/excessive-byteoffset-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/instance-extensibility-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/instance-extensibility-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/negative-bytelength-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/negative-bytelength-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/negative-byteoffset-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/negative-byteoffset-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/newtarget-undefined-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/newtarget-undefined-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/proto-from-ctor-realm-sab.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/buffer/return-buffer-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/buffer/return-buffer-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/buffer/this-has-no-dataview-internal-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/buffer/this-has-no-dataview-internal-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/DataView/prototype/buffer/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/buffer/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/buffer/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/buffer/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-auto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/byteLength/return-bytelength-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/byteLength/return-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-auto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/byteOffset/return-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/byteOffset/return-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/getBigInt64/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
@@ -2416,30 +2208,12 @@ built-ins/DataView/prototype/getInt16/resizable-buffer.js :: it threw an object 
 built-ins/DataView/prototype/getInt16/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt16/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getInt16/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt32/index-is-out-of-range-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/index-is-out-of-range-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/negative-byteoffset-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/negative-byteoffset-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/prototype/getInt32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getInt32/return-abrupt-from-tonumber-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-abrupt-from-tonumber-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-abrupt-from-tonumber-byteoffset-symbol-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-abrupt-from-tonumber-byteoffset-symbol-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-value-clean-arraybuffer-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-value-clean-arraybuffer-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-values-custom-offset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-values-custom-offset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-values-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/return-values-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
+built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt32/to-boolean-littleendian-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/to-boolean-littleendian-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/toindex-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/prototype/getInt32/toindex-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/DataView/prototype/getInt8/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt8/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt8/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
@@ -2564,20 +2338,6 @@ built-ins/DataView/prototype/setUint8/resizable-buffer.js :: it threw an object 
 built-ins/DataView/prototype/setUint8/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setUint8/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setUint8/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/return-abrupt-tonumber-bytelength-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-bytelength-symbol-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-bytelength-symbol-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-byteoffset-symbol-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-abrupt-tonumber-byteoffset-symbol-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-instance-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/return-instance-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/toindex-bytelength-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/toindex-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/toindex-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/DataView/toindex-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Date/proto-from-ctor-realm-one.js :: it threw TypeError: what was called is not a function
 built-ins/Date/proto-from-ctor-realm-one.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Date/proto-from-ctor-realm-two.js :: it threw TypeError: what was called is not a function
@@ -4455,8 +4215,6 @@ built-ins/Object/seal/seal-proxy.js :: it threw ReferenceError: Proxy is not def
 built-ins/Object/seal/seal-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/seal-regexp.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/seal-regexp.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/seal/seal-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Object/seal/seal-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
@@ -6370,210 +6128,110 @@ built-ins/ShadowRealm/prototype/importValue/validates-realm-object.js :: it thre
 built-ins/ShadowRealm/prototype/importValue/validates-realm-object.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/proto.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/proto.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
-built-ins/SharedArrayBuffer/allocation-limit.js :: it threw an object with no name: `length` parameter is 7 PiB Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/allocation-limit.js (strict) :: it threw an object with no name: `length` parameter is 7 PiB Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/SharedArrayBuffer/init-zero.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/init-zero.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/is-a-constructor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/is-a-constructor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/length-is-absent.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/length-is-absent.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/length-is-too-large-throws.js :: it threw an object with no name: `length` parameter is too large Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/length-is-too-large-throws.js (strict) :: it threw an object with no name: `length` parameter is too large Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/negative-length-throws.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/negative-length-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/newtarget-prototype-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-compared-before-object-creation.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-compared-before-object-creation.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-diminuitive.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-diminuitive.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-excessive.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-excessive.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-negative.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-negative.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/SharedArrayBuffer/options-maxbytelength-undefined.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/options-maxbytelength-undefined.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError
+built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a RangeError
+built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-compared-before-object-creation.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-compared-before-object-creation.js (strict) :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-diminuitive.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-diminuitive.js (strict) :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-excessive.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-excessive.js (strict) :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-negative.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-negative.js (strict) :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-object.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-object.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/options-maxbytelength-undefined.js :: it threw an object with no name: Expected SameValue(«undefined», «false») to be true
+built-ins/SharedArrayBuffer/options-maxbytelength-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «false») to be true
 built-ins/SharedArrayBuffer/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/SharedArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/Symbol.toStringTag.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/invoked-as-accessor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/byteLength/invoked-as-accessor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/byteLength/invoked-as-func.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/invoked-as-func.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/name.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/name.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/prop-desc.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/prop-desc.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/return-bytelength.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/return-bytelength.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/this-has-no-typedarrayname-internal.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/this-has-no-typedarrayname-internal.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/this-is-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/this-is-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/this-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/byteLength/this-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/constructor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/constructor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/descriptor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/descriptor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/extensible.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/extensible.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/grow-larger-size.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/grow-larger-size.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/grow-same-size.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/grow-same-size.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/grow-smaller-size.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/grow-smaller-size.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/name.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/name.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/new-length-excessive.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/new-length-excessive.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/new-length-negative.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/new-length-negative.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/new-length-non-number.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/new-length-non-number.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/nonconstructor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/nonconstructor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/this-is-not-arraybuffer-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/this-is-not-arraybuffer-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/this-is-not-resizable-arraybuffer-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/this-is-not-resizable-arraybuffer-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/grow/this-is-sharedarraybuffer.js :: it threw an object with no name: `this` value cannot be an ArrayBuffer Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/grow/this-is-sharedarraybuffer.js (strict) :: it threw an object with no name: `this` value cannot be an ArrayBuffer Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/growable/invoked-as-accessor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/growable/invoked-as-accessor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/growable/invoked-as-func.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/invoked-as-func.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/name.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/name.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/prop-desc.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/prop-desc.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/return-growable.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/return-growable.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/this-has-no-arraybufferdata-internal.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/this-has-no-arraybufferdata-internal.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/this-is-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/this-is-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/this-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/growable/this-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-accessor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-accessor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-func.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-func.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/name.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/name.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/prop-desc.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/prop-desc.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-growable.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-growable.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-non-growable.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-non-growable.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/this-has-no-arraybufferdata-internal.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/this-has-no-arraybufferdata-internal.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/prop-desc.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/prop-desc.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/context-is-not-arraybuffer-object.js :: it threw an object with no name: `this` value is Object Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/slice/context-is-not-arraybuffer-object.js (strict) :: it threw an object with no name: `this` value is Object Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/slice/context-is-not-object.js :: it threw an object with no name: `this` value is undefined Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/slice/context-is-not-object.js (strict) :: it threw an object with no name: `this` value is undefined Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/slice/descriptor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/descriptor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/end-default-if-absent.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/end-default-if-absent.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/end-default-if-undefined.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/end-default-if-undefined.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/end-exceeds-length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/end-exceeds-length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/extensible.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/extensible.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/name.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/name.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/negative-end.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/negative-end.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/negative-start.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/negative-start.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/nonconstructor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/nonconstructor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/not-a-constructor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/not-a-constructor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/number-conversion.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/number-conversion.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-undefined.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-undefined.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-constructor.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-constructor.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-object.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-object.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-null.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-null.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-undefined.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-is-undefined.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/species.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-default-if-absent.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-default-if-absent.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-default-if-undefined.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-default-if-undefined.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-exceeds-end.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-exceeds-end.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-exceeds-length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/start-exceeds-length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/this-is-arraybuffer.js :: it threw an object with no name: `this` value cannot be an ArrayBuffer Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/slice/this-is-arraybuffer.js (strict) :: it threw an object with no name: `this` value cannot be an ArrayBuffer Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/prototype/slice/tointeger-conversion-end.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/tointeger-conversion-end.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/tointeger-conversion-start.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/prototype/slice/tointeger-conversion-start.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/return-abrupt-from-length-symbol.js :: it threw an object with no name: `length` parameter is a Symbol Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/return-abrupt-from-length-symbol.js (strict) :: it threw an object with no name: `length` parameter is a Symbol Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/return-abrupt-from-length.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/SharedArrayBuffer/return-abrupt-from-length.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/SharedArrayBuffer/toindex-length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/toindex-length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/undefined-newtarget-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/SharedArrayBuffer/zero-length.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/SharedArrayBuffer/zero-length.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
+built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
+built-ins/SharedArrayBuffer/prototype/grow/descriptor.js :: it threw an object with no name: grow should be an own property
+built-ins/SharedArrayBuffer/prototype/grow/descriptor.js (strict) :: it threw an object with no name: grow should be an own property
+built-ins/SharedArrayBuffer/prototype/grow/extensible.js :: it threw an object with no name: Expected true but got false
+built-ins/SharedArrayBuffer/prototype/grow/extensible.js (strict) :: it threw an object with no name: Expected true but got false
+built-ins/SharedArrayBuffer/prototype/grow/grow-larger-size.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/grow-larger-size.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/grow-same-size.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/grow-same-size.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/grow-smaller-size.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/grow-smaller-size.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/SharedArrayBuffer/prototype/grow/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/SharedArrayBuffer/prototype/grow/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/SharedArrayBuffer/prototype/grow/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/SharedArrayBuffer/prototype/grow/new-length-excessive.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/SharedArrayBuffer/prototype/grow/new-length-excessive.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/SharedArrayBuffer/prototype/grow/new-length-negative.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/SharedArrayBuffer/prototype/grow/new-length-negative.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/SharedArrayBuffer/prototype/grow/new-length-non-number.js :: it threw an object with no name: Expected SameValue(«0», «2») to be true
+built-ins/SharedArrayBuffer/prototype/grow/new-length-non-number.js (strict) :: it threw an object with no name: Expected SameValue(«0», «2») to be true
+built-ins/SharedArrayBuffer/prototype/grow/nonconstructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/SharedArrayBuffer/prototype/grow/nonconstructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/SharedArrayBuffer/prototype/grow/this-is-not-arraybuffer-object.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/this-is-not-arraybuffer-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/this-is-not-resizable-arraybuffer-object.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/grow/this-is-not-resizable-arraybuffer-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/SharedArrayBuffer/prototype/growable/invoked-as-accessor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/growable/invoked-as-accessor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/growable/invoked-as-func.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/invoked-as-func.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/length.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/name.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/return-growable.js :: it threw an object with no name: Expected SameValue(«undefined», «false») to be true
+built-ins/SharedArrayBuffer/prototype/growable/return-growable.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «false») to be true
+built-ins/SharedArrayBuffer/prototype/growable/this-has-no-arraybufferdata-internal.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/this-has-no-arraybufferdata-internal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/this-is-arraybuffer.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/this-is-arraybuffer.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/this-is-not-object.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/growable/this-is-not-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-accessor.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-accessor.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-func.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/invoked-as-func.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/length.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/name.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-growable.js :: it threw an object with no name: Expected SameValue(«undefined», «0») to be true
+built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-growable.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «0») to be true
+built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-non-growable.js :: it threw an object with no name: Expected SameValue(«undefined», «0») to be true
+built-ins/SharedArrayBuffer/prototype/maxByteLength/return-maxbytelength-non-growable.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «0») to be true
+built-ins/SharedArrayBuffer/prototype/maxByteLength/this-has-no-arraybufferdata-internal.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/this-has-no-arraybufferdata-internal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-arraybuffer.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-arraybuffer.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-not-object.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/maxByteLength/this-is-not-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-not-object.js :: it threw an object with no name: `constructor` value is null Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-not-object.js (strict) :: it threw an object with no name: `constructor` value is null Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-is-not-constructor.js :: it threw an object with no name: `constructor[Symbol.species]` value is Object Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-is-not-constructor.js (strict) :: it threw an object with no name: `constructor[Symbol.species]` value is Object Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-is-not-object.js :: it threw an object with no name: `constructor[Symbol.species]` value is Boolean Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-is-not-object.js (strict) :: it threw an object with no name: `constructor[Symbol.species]` value is Boolean Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js :: it threw an object with no name: Expected SameValue(«8», «10») to be true
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«8», «10») to be true
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/SharedArrayBuffer/prototype/slice/species.js :: it threw an object with no name: Expected SameValue(«[object SharedArrayBuffer]», «undefined») to be true
+built-ins/SharedArrayBuffer/prototype/slice/species.js (strict) :: it threw an object with no name: Expected SameValue(«[object SharedArrayBuffer]», «undefined») to be true
 built-ins/String/S15.5.1.1_A1_T6.js :: it threw ReferenceError: eval is not defined
 built-ins/String/S15.5.1.1_A1_T6.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/String/S9.8_A1_T1.js :: it threw ReferenceError: eval is not defined
@@ -11790,16 +11448,8 @@ built-ins/TypedArray/prototype/set/target-shrink-mid-iteration.js :: it threw Re
 built-ins/TypedArray/prototype/set/target-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/set/target-shrink-source-length-getter.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/set/target-shrink-source-length-getter.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-other-type-conversions-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int16Array and makePassthrough.)
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-other-type-conversions-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int16Array and makePassthrough.)
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-other-type-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int8Array and makePassthrough.)
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-other-type-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int8Array and makePassthrough.)
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-same-type-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int8Array and makePassthrough.)
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-diff-buffer-same-type-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int8Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/typedarray-arg-set-values-same-buffer-same-type-resized.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/set/typedarray-arg-set-values-same-buffer-same-type-resized.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-same-buffer-same-type-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int8Array and makePassthrough.)
-built-ins/TypedArray/prototype/set/typedarray-arg-set-values-same-buffer-same-type-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Int8Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/typedarray-arg-src-range-greather-than-target-throws-rangeerror.js :: it threw an object with no name: 2 + Infinity > 2 Expected a RangeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/typedarray-arg-src-range-greather-than-target-throws-rangeerror.js (strict) :: it threw an object with no name: 2 + Infinity > 2 Expected a RangeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/typedarray-arg-srcbuffer-detached-during-tointeger-offset-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -12102,34 +11752,34 @@ built-ins/TypedArrayConstructors/BigUint64Array/prototype/not-typedarray-object.
 built-ins/TypedArrayConstructors/BigUint64Array/prototype/not-typedarray-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArrayConstructors/BigUint64Array/prototype/proto.js :: it threw ReferenceError: BigUint64Array is not defined
 built-ins/TypedArrayConstructors/BigUint64Array/prototype/proto.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero-sab.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-symbol-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-symbol-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-symbol-throws-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-symbol-throws-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-symbol-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-symbol-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-throws-from-modulo-element-size-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-throws-from-modulo-element-size-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-throws-from-modulo-element-size-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-throws-from-modulo-element-size-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-throws-from-modulo-element-size.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-throws-from-modulo-element-size.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-detachbuffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-detachbuffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-throws-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-throws-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-to-number-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-length-and-offset-sab.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12140,8 +11790,8 @@ built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-length-sab.js :
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-length-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-length.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-length.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-offset-sab.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12166,12 +11816,12 @@ built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/is-referenced-sab.js ::
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/is-referenced-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/is-referenced.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/is-referenced.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-access-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-access-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-access-throws-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-access-throws-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-access-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-access-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-is-symbol-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-is-symbol-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-is-symbol-throws-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-is-symbol-throws-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-is-symbol-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-is-symbol-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/length-to-number-detachbuffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12188,22 +11838,22 @@ built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/returns-new-instance-sa
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/returns-new-instance-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/returns-new-instance.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/returns-new-instance.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-bytelength-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-bytelength-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-bytelength-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-bytelength.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-bytelength.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/typedarray-backed-by-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/typedarray-backed-by-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-custom-proto-if-object-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-custom-proto-if-object-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/typedarray-backed-by-sharedarraybuffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/typedarray-backed-by-sharedarraybuffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-custom-proto-if-object-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-custom-proto-if-object-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-custom-proto-if-object.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-custom-proto-if-object.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/length-arg/custom-proto-access-throws.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12296,60 +11946,16 @@ built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/src-typedarray-not-
 built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/src-typedarray-not-big-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/undefined-newtarget-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/undefined-newtarget-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-negative-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-negative-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-negative-zero-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-negative-zero-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-symbol-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-symbol-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-throws-from-modulo-element-size-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-throws-from-modulo-element-size-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-to-number-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-to-number-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws-sab.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws-sab.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-length-and-offset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-length-and-offset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-length-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-length-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-negative-length-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-negative-length-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-offset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-offset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/excessive-length-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/excessive-length-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/excessive-offset-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/excessive-offset-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/invoked-with-undefined-newtarget-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/invoked-with-undefined-newtarget-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/is-referenced-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/is-referenced-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/length-access-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/length-access-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/length-is-symbol-throws-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/length-is-symbol-throws-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/new-instance-extensibility-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/new-instance-extensibility-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/buffer-arg/returns-new-instance-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/returns-new-instance-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/toindex-bytelength-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/toindex-bytelength-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/toindex-byteoffset-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/toindex-byteoffset-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/typedarray-backed-by-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/typedarray-backed-by-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/use-custom-proto-if-object-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/use-custom-proto-if-object-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
+built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js (strict) :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/length-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -12452,8 +12058,6 @@ built-ins/TypedArrayConstructors/internals/Delete/BigInt/detached-buffer.js :: i
 built-ins/TypedArrayConstructors/internals/Delete/BigInt/detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/Delete/BigInt/indexed-value-ab-non-strict.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/Delete/BigInt/indexed-value-ab-strict.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/internals/Delete/BigInt/indexed-value-sab-non-strict.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Delete/BigInt/indexed-value-sab-strict.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Delete/BigInt/infinity-detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/Delete/BigInt/infinity-detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/Delete/BigInt/key-is-not-canonical-index-non-strict.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12472,8 +12076,6 @@ built-ins/TypedArrayConstructors/internals/Delete/detached-buffer-realm.js :: it
 built-ins/TypedArrayConstructors/internals/Delete/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Delete/detached-buffer.js :: it threw an object with no name: The value of `delete sample[0]` is true Expected SameValue(«false», «true») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Delete/detached-buffer.js (strict) :: it threw TypeError: this property cannot be deleted (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Delete/indexed-value-sab-non-strict.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Delete/indexed-value-sab-strict.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12486,8 +12088,6 @@ built-ins/TypedArrayConstructors/internals/Get/BigInt/key-is-not-numeric-index-g
 built-ins/TypedArrayConstructors/internals/Get/BigInt/key-is-not-numeric-index-get-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/Get/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Get/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Get/indexed-value-sab.js :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Get/indexed-value-sab.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -13974,8 +13574,6 @@ language/expressions/class/subclass-builtins/subclass-Function.js :: it threw Ty
 language/expressions/class/subclass-builtins/subclass-Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/subclass-builtins/subclass-RegExp.js :: it threw ReferenceError: RegExp is not defined
 language/expressions/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
-language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -15414,8 +15012,6 @@ language/statements/class/subclass-builtins/subclass-Function.js :: it threw Typ
 language/statements/class/subclass-builtins/subclass-Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass-builtins/subclass-RegExp.js :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
-language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/statements/class/subclass/builtin-objects/Function/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
