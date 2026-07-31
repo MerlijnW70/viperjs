@@ -27,6 +27,48 @@ pub fn call(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     vm.call_value(call.this_value, call.argument(0), &arguments, heap)
 }
 
+/// §20.2.3.5 `Function.prototype.toString`.
+///
+/// # Why every function answers the `[native code]` form
+///
+/// Step 2 answers a function's `[[SourceText]]` — but only when `HostHasSourceTextAvailable` says
+/// so, and a host is allowed to say no. praxis says no for everything: a compiled chunk does not
+/// keep the text it came from, and retaining it would mean holding every script alive for as long
+/// as any function in it. So step 3's `NativeFunction` form is what comes back, for a function
+/// written in JavaScript as much as for a built-in.
+///
+/// That is a real limitation and not a reading of the clause: a program using `String(f)` to
+/// re-parse a function gets nothing useful. It is written down here because the alternative — a
+/// plausible-looking reconstruction — would be worse, and because keeping the source is a change
+/// to the compiler rather than to this function.
+///
+/// The name goes in as the `name` *property* reads it, so an accessor's `"get x"` produces
+/// `function get x() { [native code] }` — which is what §20.2.3.5's grammar calls a
+/// `NativeFunctionAccessor`, and is why the two spellings need no case of their own.
+fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 5 — anything that is not callable is a TypeError. `Function.prototype.toString.call({})`
+    // has nothing to answer about, and answering `"[object Object]"` would be a lie about what it
+    // was asked.
+    if !heap.is_callable(call.this_value) {
+        return Err(Abrupt::type_error(
+            "Function.prototype.toString requires a function",
+        ));
+    }
+    let name = key(heap, "name");
+    let held = vm.get_property_key(call.this_value, name, heap)?;
+    let spelled = match held {
+        Value::Undefined => Vec::new(),
+        given => {
+            let text = vm.to_string(given, heap)?;
+            heap.string(text).unwrap_or(&[]).to_vec()
+        }
+    };
+    let mut text: Vec<u16> = "function ".encode_utf16().collect();
+    text.extend_from_slice(&spelled);
+    text.extend("() { [native code] }".encode_utf16());
+    Ok(Value::String(heap.intern(&text)))
+}
+
 /// §20.2.3.1 `Function.prototype.apply`.
 ///
 /// The same, with the arguments in a list. `null` and `undefined` mean *no* arguments rather than
@@ -168,6 +210,7 @@ fn construct(_vm: &mut Vm, _heap: &mut Heap, _call: &NativeCall<'_>) -> Completi
 /// Build `Function`, and `Function.prototype`'s methods, into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.function_prototype();
+    define_method(heap, realm, prototype, "toString", 0, to_string);
     define_method(heap, realm, prototype, "apply", 2, apply);
     define_method(heap, realm, prototype, "call", 1, call);
     define_method(heap, realm, prototype, "bind", 1, bind);

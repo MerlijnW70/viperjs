@@ -14,224 +14,9 @@
 //! only then is the body parsed — which is also how `\k<name>` can be an error for naming nothing
 //! while `\1` with no groups at all is one too.
 
+use super::syntax::{Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern};
+use crate::unicode_id::{is_id_continue, is_id_start};
 use std::collections::HashSet;
-
-/// Why a pattern could not be read.
-///
-/// One type rather than a code and a message, because every one of these becomes the same
-/// `SyntaxError` to a program and the text is the only part it sees.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Error {
-    /// What was wrong, in the words a `SyntaxError` will carry.
-    pub message: &'static str,
-}
-
-impl Error {
-    /// The error carrying this message.
-    fn at(message: &'static str) -> Self {
-        Self { message }
-    }
-}
-
-/// §22.2.1.5's flags, as the set they are.
-///
-/// A struct rather than a bitmask so that each is named where it is read. `d`, `v` and the Unicode
-/// property forms are accepted and recorded; what depends on them is the matcher's business.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Flags {
-    /// `d` — `hasIndices`, which adds the `indices` property to a match.
-    pub indices: bool,
-    /// `g` — `global`, which makes `lastIndex` advance between matches.
-    pub global: bool,
-    /// `i` — `ignoreCase`.
-    pub ignore_case: bool,
-    /// `m` — `multiline`, which makes `^` and `$` see line terminators.
-    pub multiline: bool,
-    /// `s` — `dotAll`, which makes `.` match a line terminator too.
-    pub dot_all: bool,
-    /// `u` — `unicode`, which matches by code point rather than by code unit.
-    pub unicode: bool,
-    /// `v` — `unicodeSets`, which implies everything `u` does and adds set notation.
-    pub unicode_sets: bool,
-    /// `y` — `sticky`, which anchors every attempt at `lastIndex`.
-    pub sticky: bool,
-}
-
-impl Flags {
-    /// §22.2.1.5 — the flags as written, or a `SyntaxError`.
-    ///
-    /// A repeated flag is an error, not an idempotent no-op, and so is any letter that is not one
-    /// of the eight. `u` and `v` are mutually exclusive: they disagree about what a character class
-    /// means, so a pattern claiming both has no reading.
-    pub fn parse(text: &str) -> Result<Self, Error> {
-        let mut flags = Self::default();
-        for letter in text.chars() {
-            let seen = match letter {
-                'd' => &mut flags.indices,
-                'g' => &mut flags.global,
-                'i' => &mut flags.ignore_case,
-                'm' => &mut flags.multiline,
-                's' => &mut flags.dot_all,
-                'u' => &mut flags.unicode,
-                'v' => &mut flags.unicode_sets,
-                'y' => &mut flags.sticky,
-                _ => return Err(Error::at("this is not a regular expression flag")),
-            };
-            if *seen {
-                return Err(Error::at("a regular expression flag is repeated"));
-            }
-            *seen = true;
-        }
-        if flags.unicode && flags.unicode_sets {
-            return Err(Error::at("the u and v flags cannot be used together"));
-        }
-        Ok(flags)
-    }
-
-    /// Whether the pattern is read in one of the two Unicode modes — §22.2.1's `[+U]` parameter.
-    ///
-    /// `v` implies everything `u` does, so nearly every rule that asks about `u` means this. The
-    /// two are told apart only where `v`'s set notation differs.
-    #[must_use]
-    pub fn unicode_mode(self) -> bool {
-        self.unicode || self.unicode_sets
-    }
-
-    /// The flags as `RegExp.prototype.flags` spells them — §22.2.6.4's fixed order.
-    #[must_use]
-    pub fn spelled(self) -> String {
-        let mut text = String::new();
-        for (present, letter) in [
-            (self.indices, 'd'),
-            (self.global, 'g'),
-            (self.ignore_case, 'i'),
-            (self.multiline, 'm'),
-            (self.dot_all, 's'),
-            (self.unicode, 'u'),
-            (self.unicode_sets, 'v'),
-            (self.sticky, 'y'),
-        ] {
-            if present {
-                text.push(letter);
-            }
-        }
-        text
-    }
-}
-
-/// §22.2.1's `Assertion`, in the four forms that consume nothing and look nowhere.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Assertion {
-    /// `^`.
-    Start,
-    /// `$`.
-    End,
-    /// `\b`.
-    WordBoundary,
-    /// `\B`.
-    NotWordBoundary,
-}
-
-/// The six `CharacterClassEscape`s — §22.2.1's `d`, `D`, `s`, `S`, `w`, `W`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ClassEscape {
-    /// `\d` and `\D`, where the flag is whether it is the negated spelling.
-    Digit(bool),
-    /// `\s` and `\S` — §22.2.2.9's `WhiteSpace` and `LineTerminator` together.
-    Space(bool),
-    /// `\w` and `\W` — the ASCII word characters, and nothing else without `i` and `u`.
-    Word(bool),
-}
-
-/// One entry inside `[…]`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ClassItem {
-    /// A single code point.
-    Single(u32),
-    /// `a-z`, inclusive at both ends.
-    Range(u32, u32),
-    /// A class escape, which stands for a set and so cannot be an end of a range.
-    Escape(ClassEscape),
-}
-
-/// What a `(` opened.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum GroupKind {
-    /// `(…)` — capturing, numbered from one in the order the `(` appear.
-    Capturing(u32),
-    /// `(?:…)`.
-    NonCapturing,
-    /// `(?<name>…)` — capturing *and* named; both spellings reach the same group.
-    Named(u32, String),
-    /// `(?=…)` and `(?!…)`, where the flag is whether it is the negated form.
-    Lookahead(bool),
-    /// `(?<=…)` and `(?<!…)`.
-    Lookbehind(bool),
-}
-
-/// A parsed pattern.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Node {
-    /// An `Alternative` with no `Term`s — what `//` and the halves of `(a|)` are.
-    Empty,
-    /// `a|b|c` — tried left to right, and the **first** that matches wins even if a later one
-    /// would match more. §22.2.2.3 is explicit about that, and it is why `/a|ab/` matches `a`.
-    Alternation(Vec<Node>),
-    /// `abc` — every term in order.
-    Sequence(Vec<Node>),
-    /// One code point, matched as itself.
-    Character(u32),
-    /// `.` — every code point but a line terminator, unless `s` says otherwise.
-    Any,
-    /// `[…]` and `[^…]`.
-    Class {
-        /// Whether the class was written `[^…]`.
-        negated: bool,
-        /// What is in it, in the order written.
-        items: Vec<ClassItem>,
-    },
-    /// One of the six single-letter class escapes, outside a class.
-    Escape(ClassEscape),
-    /// `(…)` in any of its five forms.
-    Group {
-        /// Which form.
-        kind: GroupKind,
-        /// What is inside it.
-        body: Box<Node>,
-    },
-    /// `\1` — what a numbered group captured, or nothing if it has not captured yet.
-    Backreference(u32),
-    /// `\k<name>` — the same, by name.
-    NamedBackreference(String),
-    /// `^`, `$`, `\b`, `\B`.
-    Assert(Assertion),
-    /// A quantified term.
-    Repeat {
-        /// What is repeated.
-        node: Box<Node>,
-        /// The least number of times, which may be zero.
-        min: u32,
-        /// The most, or `None` for unbounded.
-        max: Option<u32>,
-        /// Whether the quantifier was written without a trailing `?`. A greedy quantifier tries
-        /// the longest count first; a lazy one the shortest. Both can match the same strings, so
-        /// this decides only *which* match is found — and that is observable through the captures.
-        greedy: bool,
-    },
-}
-
-/// A pattern and everything about it a matcher needs that is not the tree.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Pattern {
-    /// The tree.
-    pub node: Node,
-    /// How many capturing groups there are, which fixes the length of a match's capture list.
-    pub groups: u32,
-    /// Every group name, paired with the group it names, in the order written.
-    pub names: Vec<(String, u32)>,
-    /// The flags it was parsed under, since several of them change what the tree means.
-    pub flags: Flags,
-}
 
 /// §22.2.1 — read `source` under `flags`.
 ///
@@ -312,6 +97,9 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
                 let name: String = text[at..end].iter().collect();
                 if name.is_empty() {
                     return Err(Error::at("a group name is empty"));
+                }
+                if !is_identifier(&name) {
+                    return Err(Error::at("a group name is not an identifier"));
                 }
                 groups += 1;
                 names.push((name, groups));
@@ -598,6 +386,18 @@ impl Reader<'_> {
                 }
                 Some(_) => {}
             }
+            // §22.2.1's `ClassSetReservedDoublePunctuator` — `v` reserves a *doubled* punctuator
+            // inside a class for set notation it does not have yet, so `/[&&]/v` is a Syntax Error
+            // where `/[&&]/u` is a class holding two ampersands. Checked before the atom is read,
+            // because either character alone is fine and it is the pair that is reserved.
+            if self.flags.unicode_sets
+                && matches!(self.text[self.at..], [here, next, ..] if here == next
+                    && is_reserved_double(here))
+            {
+                return Err(Error::at(
+                    "this punctuator is doubled, which a v pattern reserves inside a class",
+                ));
+            }
             let first = self.class_atom()?;
             // `-` between two atoms makes a range, but a `-` before the closing `]` is itself an
             // atom: `[a-]` is `a` and `-`, not an unfinished range.
@@ -627,6 +427,15 @@ impl Reader<'_> {
             return Err(Error::at("a character class is not closed"));
         };
         if next != '\\' {
+            // §22.2.1's `ClassSetSyntaxCharacter` — `v` reserves these inside a class for its set
+            // notation, so `/[(]/v` is a Syntax Error where `/[(]/u` is a class holding a
+            // parenthesis. It is the one place `v` is stricter than `u` rather than merely more
+            // capable, and the reason the two flags cannot both be set.
+            if self.flags.unicode_sets && is_class_set_syntax(next) {
+                return Err(Error::at(
+                    "this character must be escaped inside a class in a v pattern",
+                ));
+            }
             self.at += 1;
             return Ok(ClassItem::Single(next as u32));
         }
@@ -803,6 +612,36 @@ impl Reader<'_> {
     }
 }
 
+/// §22.2.1's `ClassSetReservedDoublePunctuator` — the twenty pairs `v` keeps for itself.
+fn is_reserved_double(letter: char) -> bool {
+    matches!(
+        letter,
+        '&' | '!'
+            | '#'
+            | '$'
+            | '%'
+            | '*'
+            | '+'
+            | ','
+            | '.'
+            | ':'
+            | ';'
+            | '<'
+            | '='
+            | '>'
+            | '?'
+            | '@'
+            | '^'
+            | '`'
+            | '~'
+    )
+}
+
+/// §22.2.1's `ClassSetSyntaxCharacter` — what `v` reserves inside a class.
+fn is_class_set_syntax(letter: char) -> bool {
+    matches!(letter, '(' | ')' | '[' | '{' | '}' | '/' | '-' | '|')
+}
+
 /// The six class escapes, by their letter.
 fn class_escape(letter: char) -> Option<ClassEscape> {
     match letter {
@@ -814,6 +653,24 @@ fn class_escape(letter: char) -> Option<ClassEscape> {
         'W' => Some(ClassEscape::Word(true)),
         _ => None,
     }
+}
+
+/// §22.2.1's `RegExpIdentifierName` — whether a group may be called this.
+///
+/// An `IdentifierName` by §12.7's rules, so `(?<1a>…)` and `(?<a-b>…)` are Syntax Errors rather
+/// than groups with surprising names. `$` and `_` are allowed anywhere in one, and the zero-width
+/// joiners are allowed after the first character — §12.7.1's two exceptions, which exist for
+/// scripts whose words need them.
+fn is_identifier(name: &str) -> bool {
+    let mut characters = name.chars();
+    // `is_id_start` and `is_id_continue` *are* §12.7's `IdentifierStartChar` and
+    // `IdentifierPartChar`, `$` and `_` and the zero-width joiners included — see their own docs,
+    // one of which says outright not to add the joiners back. Repeating any of it here would be a
+    // second answer that could disagree with the first.
+    characters
+        .next()
+        .is_some_and(|first| is_id_start(first as u32))
+        && characters.all(|next| is_id_continue(next as u32))
 }
 
 /// §22.2.1's `SyntaxCharacter` — the twelve a Unicode pattern may escape for their own sake.
@@ -1142,34 +999,6 @@ mod tests {
     }
 
     #[test]
-    fn flags_are_a_set_and_a_repeat_is_an_error() {
-        assert_eq!(
-            Flags::parse("gimsuy").map(|f| f.spelled()).as_deref(),
-            Ok("gimsuy")
-        );
-        // Spelled in §22.2.6.4's fixed order, whatever order they were written in.
-        assert_eq!(
-            Flags::parse("yus").map(|f| f.spelled()).as_deref(),
-            Ok("suy")
-        );
-        assert_eq!(Flags::parse("").map(|f| f.spelled()).as_deref(), Ok(""));
-        assert_eq!(
-            Flags::parse("gg").err().map(|e| e.message),
-            Some("a regular expression flag is repeated")
-        );
-        assert_eq!(
-            Flags::parse("x").err().map(|e| e.message),
-            Some("this is not a regular expression flag")
-        );
-        // `u` and `v` disagree about what a class means, so a pattern claiming both has no reading.
-        assert_eq!(
-            Flags::parse("uv").err().map(|e| e.message),
-            Some("the u and v flags cannot be used together")
-        );
-        assert!(Flags::parse("v").is_ok_and(|f| f.unicode_mode() && !f.unicode));
-    }
-
-    #[test]
     fn a_range_whose_ends_are_the_same_character_is_a_range_of_one() {
         // `[a-a]` is well formed: §22.2.1.1 refuses a range only when the low end is *above* the
         // high one, and equal ends are the boundary case that says which comparison it is.
@@ -1292,6 +1121,57 @@ mod tests {
         // An unterminated name is reported as that rather than as whatever the body parse makes of
         // the rest.
         assert_eq!(refused("(?<n"), "a group name is not closed");
+    }
+
+    #[test]
+    fn the_v_flag_reserves_inside_a_class_what_the_u_flag_allows() {
+        // §22.2.1's `ClassSetSyntaxCharacter` and `ClassSetReservedDoublePunctuator`. `v` is the
+        // one flag that makes *fewer* patterns valid rather than more, which is why the two cannot
+        // be set together — and it is the difference the suite calls a breaking change.
+        let sets = |source: &str| {
+            parse(
+                source,
+                Flags {
+                    unicode_sets: true,
+                    ..Flags::default()
+                },
+            )
+            .map(|pattern| pattern.node)
+            .map_err(|error| error.message)
+        };
+        assert!(unicode("[(]").is_ok());
+        assert_eq!(
+            sets("[(]"),
+            Err("this character must be escaped inside a class in a v pattern")
+        );
+        assert!(unicode("[&&]").is_ok());
+        assert_eq!(
+            sets("[&&]"),
+            Err("this punctuator is doubled, which a v pattern reserves inside a class")
+        );
+        // One of a reserved pair on its own is an ordinary member, and so is a doubled character
+        // that is not one of the twenty.
+        assert!(sets("[&x]").is_ok());
+        assert!(sets("[aa]").is_ok());
+        // …and escaping it is how a `v` pattern says it meant the character.
+        assert!(sets(r"[\(]").is_ok());
+    }
+
+    #[test]
+    fn a_group_name_has_to_be_an_identifier() {
+        // §22.2.1's `RegExpIdentifierName`. Without this every run of characters up to the `>` is
+        // a name, and `(?<1a>x)` becomes a group nothing can refer to.
+        assert!(parse("(?<a>x)", Flags::default()).is_ok());
+        assert!(parse("(?<$a>x)", Flags::default()).is_ok());
+        assert!(parse("(?<_a>x)", Flags::default()).is_ok());
+        assert!(parse("(?<a1>x)", Flags::default()).is_ok());
+        for bad in ["(?<1a>x)", "(?<a-b>x)", "(?<a b>x)", "(?<a.b>x)"] {
+            assert_eq!(
+                parse(bad, Flags::default()).err().map(|e| e.message),
+                Some("a group name is not an identifier"),
+                "{bad}"
+            );
+        }
     }
 
     #[test]

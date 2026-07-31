@@ -272,6 +272,11 @@ impl Heap {
             // §10.5's target and handler. A proxy is very often the only thing naming either —
             // `new Proxy({}, {})` leaves both reachable through it and nowhere else — and a
             // *revoked* proxy names neither, which is what lets both be collected once it is.
+            // §22.2.9 — an iterator holds the regular expression it is walking with, which
+            // nothing else may be pointing at once the `for`-`of` owns it.
+            if let Some(matches) = object.matches() {
+                pending.push(matches.regexp);
+            }
             if let Some(proxy) = object.proxy()
                 && let Some((target, handler)) = proxy.parts()
             {

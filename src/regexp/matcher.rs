@@ -30,7 +30,7 @@
 //! abandoned. Abandoning reports *no match*, which the specification does not authorise; it is the
 //! least bad of three bad answers and it is written down here rather than hidden.
 
-use super::parser::{Assertion, ClassEscape, ClassItem, GroupKind, Node, Pattern};
+use super::syntax::{Assertion, ClassEscape, ClassItem, GroupKind, Node, Pattern};
 
 /// How much work one match attempt may cost before it is abandoned.
 ///
@@ -607,7 +607,8 @@ fn matches_escape(escape: ClassEscape, code: u32) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{Match, Matcher};
-    use crate::regexp::parser::{Flags, parse};
+    use crate::regexp::parser::parse;
+    use crate::regexp::syntax::Flags;
 
     /// What `source` under `flags` finds in `subject`, from position `start`.
     fn find(source: &str, flags: &str, subject: &str, start: usize) -> Option<Match> {

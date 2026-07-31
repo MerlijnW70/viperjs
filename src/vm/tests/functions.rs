@@ -615,3 +615,44 @@ fn an_optional_call_gives_up_one_link_later_than_an_optional_member() {
         "7"
     );
 }
+
+#[test]
+fn a_function_stringifies_in_the_native_code_form_whatever_it_was_written_as() {
+    // §20.2.3.5 step 2 answers a function's source text *when the host has it*, and praxis's host
+    // does not: a compiled chunk does not keep the text it came from. So step 3's `NativeFunction`
+    // form comes back for every function, which the clause allows and which is a real limitation
+    // rather than a reading of it.
+    assert_eq!(run("String(Math.max)"), "function max() { [native code] }");
+    assert_eq!(
+        run("String(function f(a) { return a; })"),
+        "function f() { [native code] }"
+    );
+    assert_eq!(
+        run("String(function () {})"),
+        "function () { [native code] }"
+    );
+    // An accessor's name already carries its `get`, which is exactly §20.2.3.5's
+    // `NativeFunctionAccessor` — so the two spellings need no case of their own.
+    assert_eq!(
+        run("var o = { get x() { return 1; } }; \
+             String(Object.getOwnPropertyDescriptor(o, 'x').get)"),
+        "function get x() { [native code] }"
+    );
+    assert_eq!(
+        run("String(function () {}.bind(null))"),
+        "function bound () { [native code] }"
+    );
+    // Step 5 — something that is not callable has nothing to answer about, and saying
+    // `[object Object]` would be a lie about what was asked.
+    assert_eq!(
+        run("try { Function.prototype.toString.call({}) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { Function.prototype.toString.call(undefined) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and it is what `String(f)` and `f + ''` both reach, because §7.1.1 finds it before
+    // `Object.prototype.toString`.
+    assert_eq!(run("Math.max + ''"), "function max() { [native code] }");
+}

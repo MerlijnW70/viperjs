@@ -162,21 +162,17 @@ fn replace_all_and_match_all_demand_a_global_pattern() {
 }
 
 #[test]
-fn the_three_that_need_a_pattern_say_so_rather_than_answering_wrongly() {
-    // §22.1.3.14, .15 and .21 all end "make a RegExp out of the argument". There is nothing to make
-    // one with yet, so they refuse — and the refusal names the reason rather than reporting some
-    // unrelated failure further along.
-    for source in [
-        "'abc'.match('b')",
-        "'abc'.matchAll('b')",
-        "'abc'.search('b')",
-    ] {
-        assert_eq!(
-            run(&format!("try {{ {source} }} catch (e) {{ e.message }}")),
-            "this needs a regular expression, and RegExp is not implemented yet",
-            "{source} should say what it wanted"
-        );
-    }
+fn the_three_that_need_a_pattern_make_one_out_of_what_they_were_given() {
+    // §22.1.3.14, .15 and .21 all end "let rx be `RegExpCreate(argument)`, and invoke its Symbol
+    // method". So a *string* argument becomes a pattern rather than being searched for as text,
+    // which is why `"a.c".match(".")` finds `a` and not the dot.
+    assert_eq!(run("'abc'.match('b')[0]"), "b");
+    assert_eq!(run("'abc'.match('.')[0]"), "a");
+    assert_eq!(run("'abc'.search('c')"), "2");
+    assert_eq!(run("'abc'.search('z')"), "-1");
+    assert_eq!(run("String('abc'.match('z'))"), "null");
+    // An absent argument makes the *empty* pattern, which matches at once.
+    assert_eq!(run("'abc'.match().index + ',' + 'abc'.search()"), "0,0");
     // …and the receiver is still checked first, so `null` is refused for being `null`.
     assert_eq!(
         run("try { String.prototype.match.call(null, {}) } catch (e) { e.constructor.name }"),
@@ -292,14 +288,18 @@ fn match_all_delegates_on_the_same_terms_replace_all_does() {
              o[Symbol.matchAll] = function () { return 'delegated'; }; 'x'.matchAll(o)"),
         "delegated"
     );
+    // §22.1.3.15 step 3.c — the pattern this makes is **global** whatever it was handed, so an
+    // absent argument becomes `/(?:)/g` and matches between every pair of characters.
     assert_eq!(
-        run("try { 'x'.matchAll(undefined) } catch (e) { e.message }"),
-        "this needs a regular expression, and RegExp is not implemented yet"
+        run("Array.from('ab'.matchAll(undefined), function (m) { return m.index; }).join()"),
+        "0,1,2"
     );
-    // …and `null` skips the delegation exactly as `undefined` does.
+    // `null` is *not* `undefined` here: it skips the delegation and is then converted, so the
+    // pattern is `/null/g` and matches the word. Only `undefined` means "no pattern".
+    assert_eq!(run("Array.from('ab'.matchAll(null)).length"), "0");
     assert_eq!(
-        run("try { 'x'.matchAll(null) } catch (e) { e.message }"),
-        "this needs a regular expression, and RegExp is not implemented yet"
+        run("Array.from('xnully'.matchAll(null), function (m) { return m.index; }).join()"),
+        "1"
     );
 }
 

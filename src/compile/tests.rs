@@ -50,7 +50,6 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     let cases = [
         ("1n", "a BigInt literal"),
         ("1 ? 2n : 3", "a BigInt literal"),
-        ("/re/", "a regular expression literal"),
     ];
     for (source, what) in cases {
         let error = compile(source).expect_err("not implemented yet"); // the test is about the error

@@ -368,7 +368,34 @@ impl Compiler<'_> {
             ExprKind::Class(class) => self.class(class, Naming::default(), span),
             ExprKind::Template(template) => self.template(template),
             ExprKind::TaggedTemplate { tag, quasi } => self.tagged_template(tag, quasi, span),
-            ExprKind::RegExp(_) => Err(unsupported("a regular expression literal", span)),
+            // §12.9.5 read the literal's *shape* without reading it as a pattern, so the source
+            // and flags travel as text and are parsed when the instruction runs. That is also when
+            // a bad pattern becomes the SyntaxError §22.2.3.1 throws.
+            ExprKind::RegExp(literal) => {
+                // §22.2.1.1's early errors, checked **here** rather than when the literal is
+                // evaluated. A pattern that does not parse makes the whole script a SyntaxError,
+                // so a bad one inside a branch that never runs still stops the program — which is
+                // the difference between an early error and an ordinary one.
+                let flags =
+                    crate::regexp::Flags::parse(&literal.flags).map_err(|error| CompileError {
+                        kind: ErrorKind::BadPattern(error.message),
+                        span,
+                    })?;
+                crate::regexp::parse(&literal.body, flags).map_err(|error| CompileError {
+                    kind: ErrorKind::BadPattern(error.message),
+                    span,
+                })?;
+                let source = self
+                    .heap
+                    .new_string(literal.body.encode_utf16().collect::<Vec<_>>());
+                self.constant(Value::String(source))?;
+                let spelled = self
+                    .heap
+                    .new_string(literal.flags.encode_utf16().collect::<Vec<_>>());
+                self.constant(Value::String(spelled))?;
+                self.chunk.emit(Instruction::RegExpLiteral);
+                Ok(())
+            }
             ExprKind::Await(_) => Err(unsupported("await", span)),
             ExprKind::Yield(_) => Err(unsupported("yield", span)),
             ExprKind::Super => Err(unsupported("super", span)),

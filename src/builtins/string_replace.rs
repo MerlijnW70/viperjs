@@ -29,7 +29,7 @@ use crate::vm::Vm;
 /// to the string path when `x` has no `Symbol.replace`. Anything else that is not callable is a
 /// TypeError rather than a silent fall through, so a misspelled method is reported rather than
 /// ignored.
-fn method_of(
+pub(super) fn method_of(
     vm: &mut Vm,
     heap: &mut Heap,
     value: Value,
@@ -100,6 +100,25 @@ fn index_of(haystack: &[u16], needle: &[u16], from: usize) -> Option<usize> {
 /// entries costs more to build than it saves.
 type Named<'a> = &'a [(Vec<u16>, Option<Vec<u16>>)];
 
+/// The same list, owned — what reading one back out of a match produces.
+type OwnedNamed = Vec<(Vec<u16>, Option<Vec<u16>>)>;
+
+/// Everything §22.2.6.9 reads out of one `exec` result.
+///
+/// A struct rather than four parameters, because they travel together everywhere: what matched,
+/// where it began, its numbered groups and its named ones. Splitting them apart is what made the
+/// replacement path take eight arguments and read like a coincidence.
+pub(super) struct Found {
+    /// What matched.
+    pub matched: Vec<u16>,
+    /// Where it began, in code units, clamped into the subject.
+    pub position: usize,
+    /// Each numbered group, `None` for one that did not participate.
+    pub captures: Vec<Option<Vec<u16>>>,
+    /// The named groups, or `None` when the pattern has none at all.
+    pub named: Option<OwnedNamed>,
+}
+
 /// §22.1.3.19.1 `GetSubstitution` — a replacement template with its `$` forms filled in.
 ///
 /// `captures` is empty and `named` absent for a string search value: there is nothing to capture
@@ -110,7 +129,7 @@ type Named<'a> = &'a [(Vec<u16>, Option<Vec<u16>>)];
 /// Anything after `$` that is not one of the forms below is left alone, `$` included: `"$x"`
 /// replaces as `$x` and a trailing `$` as `$`. That is a rule about *not* erroring, and it is the
 /// part a hand-rolled version usually gets wrong.
-fn substitute(
+pub(super) fn fill_in(
     matched: &[u16],
     string: &[u16],
     position: usize,
@@ -237,7 +256,121 @@ fn replacement(
     }
     let template = vm.to_string(with, heap)?;
     let template = heap.string(template).unwrap_or(&[]).to_vec();
-    Ok(substitute(matched, string, position, &[], None, &template))
+    Ok(fill_in(matched, string, position, &[], None, &template))
+}
+
+/// The four things §22.2.6.9 reads back out of an `exec` result.
+///
+/// A match is an *Array* with extra properties, and every one of them is read with `Get` — so an
+/// overriding `exec` that answers a hand-made object works, which is the whole reason the shape is
+/// a convention rather than a slot.
+pub(super) fn parts_of(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    result: crate::heap::ObjectId,
+    subject: &[u16],
+) -> Completion<Found> {
+    let zero = heap.index_key(0);
+    let matched = vm.get_property_key(Value::Object(result), zero, heap)?;
+    let matched = vm.to_string(matched, heap)?;
+    let matched = heap.string(matched).unwrap_or(&[]).to_vec();
+    let index = key(heap, "index");
+    let position = vm.get_property_key(Value::Object(result), index, heap)?;
+    let position = vm.to_number(position, heap)?;
+    // §22.2.6.9 step 12 clamps the position into the subject, because an overriding `exec` may
+    // answer any number at all and the slicing below must not be asked to reach past the end.
+    let position = usize::try_from(position.max(0.0) as u64)
+        .unwrap_or(usize::MAX)
+        .min(subject.len());
+    let length = key(heap, "length");
+    let count = vm.get_property_key(Value::Object(result), length, heap)?;
+    let count = vm.to_number(count, heap)?;
+    let count = (count.max(1.0) as u64).min(1000) as u32;
+    let mut captures = Vec::new();
+    for at in 1..count {
+        let slot = heap.index_key(at);
+        let held = vm.get_property_key(Value::Object(result), slot, heap)?;
+        captures.push(match held {
+            Value::Undefined => None,
+            given => {
+                let text = vm.to_string(given, heap)?;
+                Some(heap.string(text).unwrap_or(&[]).to_vec())
+            }
+        });
+    }
+    let groups_key = key(heap, "groups");
+    let groups = vm.get_property_key(Value::Object(result), groups_key, heap)?;
+    let named = match groups {
+        Value::Object(holder) => {
+            let mut listed = Vec::new();
+            for found in vm.own_keys_through(holder, heap)? {
+                let Some(text) = found.as_string() else {
+                    continue;
+                };
+                let name = heap.string(text).unwrap_or(&[]).to_vec();
+                let held = vm.get_property_key(Value::Object(holder), found, heap)?;
+                let value = match held {
+                    Value::Undefined => None,
+                    given => {
+                        let text = vm.to_string(given, heap)?;
+                        Some(heap.string(text).unwrap_or(&[]).to_vec())
+                    }
+                };
+                listed.push((name, value));
+            }
+            Some(listed)
+        }
+        _ => None,
+    };
+    Ok(Found {
+        matched,
+        position,
+        captures,
+        named,
+    })
+}
+
+/// §22.2.6.9 step 14.l — a replacement *function*, handed the match, its groups, where it was, the
+/// subject, and the named groups as an object when there are any.
+pub(super) fn from_function(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    with: Value,
+    found: &Found,
+    subject: &[u16],
+) -> Completion<Vec<u16>> {
+    let mut arguments = vec![Value::String(heap.intern(&found.matched))];
+    for capture in &found.captures {
+        arguments.push(match capture {
+            Some(text) => Value::String(heap.intern(text)),
+            None => Value::Undefined,
+        });
+    }
+    arguments.push(Value::Number(f64::from(
+        u32::try_from(found.position).unwrap_or(u32::MAX),
+    )));
+    arguments.push(Value::String(heap.intern(subject)));
+    // The named groups arrive as a *last* argument and only when the pattern has any, which is why
+    // a function written for a pattern without them sees the arity it expects.
+    if let Some(listed) = &found.named {
+        let holder = heap.new_object(Some(vm.realm().object_prototype()));
+        for (name, value) in listed.clone() {
+            let slot = crate::heap::PropertyKey::from_units(heap, &name);
+            let held = match value {
+                Some(text) => Value::String(heap.intern(&text)),
+                None => Value::Undefined,
+            };
+            let _ = heap.define_own_property(
+                holder,
+                slot,
+                &crate::heap::PropertyDescriptor::data(held),
+            );
+        }
+        arguments.push(Value::Object(holder));
+    }
+    let answered = vm.call_value(with, Value::Undefined, &arguments, heap)?;
+    let text = vm.to_string(answered, heap)?;
+    Ok(heap.string(text).unwrap_or(&[]).to_vec())
 }
 
 /// §22.1.3.19 `String.prototype.replace`.
@@ -329,9 +462,13 @@ fn replace_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
 /// Each ends "let `rx` be `RegExpCreate(argument)`, and invoke its Symbol method". There is nothing
 /// to create one with, so this refuses and says which method wanted it, rather than answering
 /// something wrong. Everything before it is real: the delegation above is what a pattern uses.
-fn without_a_pattern(name: &'static str) -> Abrupt {
-    let _ = name;
-    Abrupt::type_error("this needs a regular expression, and RegExp is not implemented yet")
+fn pattern_from(vm: &mut Vm, heap: &mut Heap, given: Value) -> Completion<crate::heap::ObjectId> {
+    let empty = Value::String(heap.intern(&[]));
+    let source = match given {
+        Value::Undefined => empty,
+        held => held,
+    };
+    super::regexp::make(vm, heap, source, Value::Undefined)
 }
 
 /// §22.1.3.14 `String.prototype.match`.
@@ -342,8 +479,31 @@ fn string_match(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
     {
         return vm.call_value(matcher, pattern, &[call.this_value], heap);
     }
-    receiver(vm, heap, call)?;
-    Err(without_a_pattern("match"))
+    let subject = receiver(vm, heap, call)?;
+    // Step 4 — `RegExpCreate(regexp, undefined)`, then its own `Symbol.match`. So `"ab".match("b")`
+    // makes a pattern out of the string rather than searching for it as text.
+    let made = pattern_from(vm, heap, pattern)?;
+    invoke_symbol(vm, heap, made, "match", &subject, None)
+}
+
+/// Call a well-known Symbol method on a freshly made pattern — the last step of all three.
+fn invoke_symbol(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    pattern: crate::heap::ObjectId,
+    symbol: &str,
+    subject: &[u16],
+    extra: Option<Value>,
+) -> Completion<Value> {
+    let Some(method) = method_of(vm, heap, Value::Object(pattern), symbol)? else {
+        return Err(Abrupt::type_error("a pattern is missing its method"));
+    };
+    let text = Value::String(heap.intern(subject));
+    let mut arguments = vec![text];
+    if let Some(given) = extra {
+        arguments.push(given);
+    }
+    vm.call_value(method, Value::Object(pattern), &arguments, heap)
 }
 
 /// §22.1.3.15 `String.prototype.matchAll`.
@@ -375,8 +535,16 @@ fn match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             return vm.call_value(matcher, pattern, &[call.this_value], heap);
         }
     }
-    receiver(vm, heap, call)?;
-    Err(without_a_pattern("matchAll"))
+    let subject = receiver(vm, heap, call)?;
+    // Step 3.c — the pattern this one makes is **global**, whatever it was given, because
+    // iterating every match is what the method is for.
+    let source = match pattern {
+        Value::Undefined => Value::String(heap.intern(&[])),
+        held => held,
+    };
+    let global = Value::String(heap.intern(&[u16::from(b'g')]));
+    let made = super::regexp::make(vm, heap, source, global)?;
+    invoke_symbol(vm, heap, made, "matchAll", &subject, None)
 }
 
 /// §22.1.3.21 `String.prototype.search`.
@@ -387,8 +555,9 @@ fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
     {
         return vm.call_value(searcher, pattern, &[call.this_value], heap);
     }
-    receiver(vm, heap, call)?;
-    Err(without_a_pattern("search"))
+    let subject = receiver(vm, heap, call)?;
+    let made = pattern_from(vm, heap, pattern)?;
+    invoke_symbol(vm, heap, made, "search", &subject, None)
 }
 
 /// Every method this module defines, with the `length` §22.1.3 gives it.
@@ -402,14 +571,14 @@ pub(super) const METHODS: [(&str, u32, crate::heap::Native); 5] = [
 
 #[cfg(test)]
 mod pieces {
-    use super::{index_of, substitute};
+    use super::{fill_in, index_of};
 
     fn units(text: &str) -> Vec<u16> {
         text.encode_utf16().collect()
     }
 
     fn filled(matched: &str, string: &str, position: usize, template: &str) -> String {
-        String::from_utf16_lossy(&substitute(
+        String::from_utf16_lossy(&fill_in(
             &units(matched),
             &units(string),
             position,
@@ -465,7 +634,7 @@ mod pieces {
         // wrong for every pattern with fewer than twelve groups.
         let one = vec![Some(units("X"))];
         let filled = |captures: &[Option<Vec<u16>>], template: &str| {
-            String::from_utf16_lossy(&substitute(
+            String::from_utf16_lossy(&fill_in(
                 &units("b"),
                 &units("abc"),
                 1,
@@ -493,7 +662,7 @@ mod pieces {
     fn a_named_capture_is_read_when_there_are_named_captures_to_read() {
         let named = vec![(units("who"), Some(units("world")))];
         let filled = |template: &str| {
-            String::from_utf16_lossy(&substitute(
+            String::from_utf16_lossy(&fill_in(
                 &units("b"),
                 &units("abc"),
                 1,

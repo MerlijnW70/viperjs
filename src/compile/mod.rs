@@ -66,6 +66,13 @@ pub enum ErrorKind {
     TooLong,
     /// An expression nested deeper than the compiler will walk.
     TooDeep,
+    /// §22.2.1.1 — a regular expression literal whose pattern is not one.
+    ///
+    /// An **early** error, and that is the whole point of it being here. §12.9.5 accepts the
+    /// literal's shape without reading it as a pattern, and then says the body must parse as one
+    /// *at parse time* — so `if (false) { /(/ }` is a script that does not run at all, and a
+    /// version that threw when the literal was evaluated would run it.
+    BadPattern(&'static str),
 }
 
 impl CompileError {
@@ -73,6 +80,7 @@ impl CompileError {
     pub fn message(&self) -> String {
         match self.kind {
             ErrorKind::Unsupported(what) => format!("{what} is not implemented yet"),
+            ErrorKind::BadPattern(why) => why.to_string(),
             ErrorKind::TooManyConstants => "too many constants in one unit of code".to_string(),
             ErrorKind::TooLong => "too many instructions in one unit of code".to_string(),
             ErrorKind::TooDeep => "an expression nested too deeply to compile".to_string(),

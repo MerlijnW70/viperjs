@@ -97,6 +97,8 @@ mod private;
 mod promises;
 mod proxy;
 mod reflection;
+mod regexp;
+mod regexp_symbols;
 mod set_ops;
 mod shared;
 mod species;
@@ -141,6 +143,16 @@ fn run(source: &str) -> String {
         .run(&chunk, &mut heap)
         .expect("the chunk is well formed"); // same
     describe(outcome, &mut heap)
+}
+
+/// Whether a script gets as far as being a chunk at all.
+///
+/// For the early errors — the ones §22.2.1.1 and its neighbours make a property of the *text*
+/// rather than of running it. A construct refused here is one no `try` can reach, and that is the
+/// whole difference between an early error and an ordinary one.
+fn compiles(source: &str) -> bool {
+    let mut heap = Heap::new();
+    parse_script(source).is_ok_and(|script| compile_script(&script, &mut heap).is_ok())
 }
 
 /// Run a script, let §9.5's jobs run, and describe what `probe` then evaluates to.

@@ -25,8 +25,8 @@
 
 mod matcher;
 mod parser;
+mod syntax;
 
 pub use self::matcher::{Capture, Match, Matcher};
-pub use self::parser::{
-    Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern, parse,
-};
+pub use self::parser::parse;
+pub use self::syntax::{Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern};

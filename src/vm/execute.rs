@@ -728,6 +728,25 @@ impl Vm {
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
+                Instruction::RegExpLiteral => {
+                    // §13.2.7.3 `InstantiateRegExpLiteral` — a new object each time, so a pattern
+                    // written inside a loop does not carry `lastIndex` between turns.
+                    let flags = self.pop()?;
+                    let source = self.pop()?;
+                    let (Value::String(source), Value::String(flags)) = (source, flags) else {
+                        // The compiler pushes two string constants and nothing else can reach here,
+                        // so this is a chunk that does not make sense as instructions.
+                        return Err(Fault::MissingFunction);
+                    };
+                    let source = String::from_utf16_lossy(heap.string(source).unwrap_or(&[]));
+                    let flags = String::from_utf16_lossy(heap.string(flags).unwrap_or(&[]));
+                    let made = crate::builtins::regexp::from_literal(self, heap, &source, &flags)
+                        .map(Value::Object);
+                    match self.settle(made, heap, root, current, at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
                 Instruction::TemplateObject(index) => {
                     let site = TemplateSite {
                         chunk: std::ptr::from_ref(running) as usize,

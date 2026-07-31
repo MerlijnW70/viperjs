@@ -274,6 +274,13 @@ pub struct Object {
     /// Two ids and a discriminant, so it sits inline rather than boxed — a pointer to it would
     /// cost as much as the thing itself.
     proxy: Option<Proxy>,
+    /// §22.2.9's slots, if this is a RegExp String Iterator. Inline: five small fields.
+    matches: Option<crate::heap::Matches>,
+    /// §22.2.3's internal slots, if this is a regular expression.
+    ///
+    /// Boxed, because a compiled pattern owns a tree and every object would otherwise carry room
+    /// for one.
+    regexp: Option<Box<crate::heap::RegExp>>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -332,6 +339,8 @@ impl Object {
             weak: None,
             helper: None,
             proxy: None,
+            matches: None,
+            regexp: None,
             call: None,
             environment: None,
             lexical: None,
@@ -457,6 +466,34 @@ impl Object {
     /// Make this object an Iterator Helper, which nothing undoes.
     pub fn set_helper(&mut self, helper: Helper) {
         self.helper = Some(Box::new(helper));
+    }
+
+    /// §22.2.9's walk, if this object is a RegExp String Iterator.
+    pub fn matches(&self) -> Option<crate::heap::Matches> {
+        self.matches
+    }
+
+    /// The same, to move it on.
+    pub fn matches_mut(&mut self) -> Option<&mut crate::heap::Matches> {
+        self.matches.as_mut()
+    }
+
+    /// Make this object one — §22.2.9.1 `CreateRegExpStringIterator`.
+    pub fn set_matches(&mut self, matches: crate::heap::Matches) {
+        self.matches = Some(matches);
+    }
+
+    /// The compiled pattern this object holds, if it is a regular expression — §22.2.3.
+    pub fn regexp(&self) -> Option<&crate::heap::RegExp> {
+        self.regexp.as_deref()
+    }
+
+    /// Make this object a regular expression, or replace the pattern it already held.
+    ///
+    /// Replacing is what §22.2.3.1 does: `RegExp.prototype.compile` re-initialises an object that
+    /// is already one, and nothing else in the language changes a pattern after it is made.
+    pub fn set_regexp(&mut self, regexp: crate::heap::RegExp) {
+        self.regexp = Some(Box::new(regexp));
     }
 
     /// The target and handler this object proxies, if it is a Proxy — §10.5.

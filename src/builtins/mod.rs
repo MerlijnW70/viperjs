@@ -43,6 +43,8 @@ pub(crate) mod promise;
 mod promise_group;
 mod proxy;
 mod reflect;
+pub mod regexp;
+mod regexp_symbols;
 mod set_ops;
 mod shared;
 mod symbol;
@@ -107,6 +109,8 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     typed::install(heap, realm, global);
     reflect::install(heap, realm, global);
     proxy::install(heap, realm, global);
+    regexp::install(heap, realm, global);
+    regexp_symbols::install(heap, realm);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }

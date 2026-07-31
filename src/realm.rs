@@ -70,6 +70,8 @@ pub struct Realm {
     typed_array_prototype: ObjectId,
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
+    regexp_prototype: ObjectId,
+    regexp_string_iterator_prototype: ObjectId,
     /// %Set.prototype% — §24.2.3.
     set_prototype: ObjectId,
     /// %WeakMap.prototype% — §24.3.3.
@@ -203,6 +205,8 @@ impl Realm {
         let data_view_prototype = heap.new_object(Some(object_prototype));
         let typed_array_prototype = heap.new_object(Some(object_prototype));
         let map_prototype = heap.new_object(Some(object_prototype));
+        let regexp_prototype = heap.new_object(Some(object_prototype));
+        let regexp_string_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let set_prototype = heap.new_object(Some(object_prototype));
         let weak_map_prototype = heap.new_object(Some(object_prototype));
         let weak_set_prototype = heap.new_object(Some(object_prototype));
@@ -287,6 +291,8 @@ impl Realm {
             data_view_prototype,
             typed_array_prototype,
             map_prototype,
+            regexp_prototype,
+            regexp_string_iterator_prototype,
             set_prototype,
             weak_map_prototype,
             weak_set_prototype,
@@ -416,6 +422,17 @@ impl Realm {
     }
 
     /// %Map.prototype% — §24.1.3.
+    pub fn regexp_prototype(&self) -> ObjectId {
+        self.regexp_prototype
+    }
+
+    /// §22.2.9.3 — `%RegExpStringIteratorPrototype%`, which inherits from `%IteratorPrototype%`
+    /// and so is iterable itself.
+    pub fn regexp_string_iterator_prototype(&self) -> ObjectId {
+        self.regexp_string_iterator_prototype
+    }
+
+    /// §22.2.5 — `%RegExp.prototype%`, an ordinary object and *not* a regular expression itself.
     pub fn map_prototype(&self) -> ObjectId {
         self.map_prototype
     }

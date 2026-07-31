@@ -142,6 +142,12 @@ pub struct Template {
 pub enum Instruction {
     /// Push the constant at this index.
     Constant(u32),
+    /// Replace a source and a flags string with a new `RegExp` object — §13.2.7.3.
+    ///
+    /// A **new** object every time, which is why a regular expression written inside a loop does
+    /// not carry `lastIndex` from one turn to the next. ES3 shared one object per literal and the
+    /// change is observable, so this is an instruction rather than a constant.
+    RegExpLiteral,
     /// Replace the value on top of the stack with the result of a unary operator.
     Unary(UnaryOperator),
     /// Replace the top two values with the result of a binary operator, left below right.
@@ -870,6 +876,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         // to make one — so these are unreachable, and are listed rather than swept into a
         // catch-all so that a new jump cannot hide among them.
         Instruction::Constant(_)
+        | Instruction::RegExpLiteral
         | Instruction::Unary(_)
         | Instruction::Binary(_)
         | Instruction::Pop
