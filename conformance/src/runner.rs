@@ -165,6 +165,11 @@ impl Runner {
                 }
             }
         }
+        // §INTERPRETING.md's host object, as much of it as this host can honestly answer. Before
+        // the test and after the includes, so that a harness file asking for it finds it.
+        if !block.has("raw") {
+            program.push_str(HOST);
+        }
         // Before the test and after the includes, because `asyncHelpers.js` asks whether `$DONE`
         // is an **own property of the global object** and refuses to run if it is not — which a
         // function declaration at the top level of a script is, and nothing else here would be.
@@ -175,6 +180,23 @@ impl Runner {
         evaluate(&program, block, asynchronous)
     }
 }
+
+/// `$262`, with the two members this host can answer honestly.
+///
+/// INTERPRETING.md names seven, and providing one this engine cannot really do would be worse than
+/// providing none: a test that asked for `createRealm` and got something that pretended would
+/// report a failure about the wrong thing entirely. So there are two.
+///
+/// `detachArrayBuffer` is §25.1.5.5's `transfer`, which is the operation the host API *is* — it
+/// throws the bytes away and leaves the object. Written in JavaScript rather than as a native
+/// because it already exists in the language, and a second implementation of it in Rust would be a
+/// second thing that could disagree with the first.
+///
+/// The five that are missing — `createRealm`, `evalScript`, `agent`, `gc`, `IsHTMLDDA` — are absent
+/// rather than stubbed, so a test that needs one fails saying so.
+const HOST: &str =
+    "var $262 = { global: this,      detachArrayBuffer: function (buffer) { buffer.transfer(); } };
+";
 
 /// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
 ///
@@ -588,6 +610,30 @@ Promise.resolve().then(function () { $DONE(); });"
         let done = run(&root, "/*---\nflags: [async]\n---*/\n$DONE();");
         assert!(matches!(&done[0].verdict, Verdict::Passed), "{done:?}");
 
+        // §INTERPRETING.md's `$262`, with the two members this host can answer. `detachArrayBuffer`
+        // is what `harness/detachArrayBuffer.js` looks for, and without it every test about a
+        // buffer going away reports that the *harness* is missing something rather than testing
+        // what it came to test.
+        let host = run(
+            &root,
+            "/*---\ndescription: host\n---*/\n\
+             if (typeof $262.detachArrayBuffer !== 'function') { throw new Error('missing'); }\n\
+             var b = new ArrayBuffer(8); $262.detachArrayBuffer(b);\n\
+             if (!b.detached) { throw new Error('not detached'); }\n\
+             if ($262.global !== this) { throw new Error('not the global'); }",
+        );
+        assert!(matches!(&host[0].verdict, Verdict::Passed), "{host:?}");
+
+        // …and the five it cannot are *absent* rather than stubbed, so a test that needs one fails
+        // saying so rather than reporting a failure about the wrong thing entirely.
+        let absent = run(
+            &root,
+            "/*---\ndescription: absent\n---*/\n\
+             if (typeof $262.createRealm !== 'undefined') { throw new Error('pretending'); }\n\
+             if (typeof $262.evalScript !== 'undefined') { throw new Error('pretending'); }",
+        );
+        assert!(matches!(&absent[0].verdict, Verdict::Passed), "{absent:?}");
+
         // A test that is **not** async gets no `$DONE` at all. The host provides it for the tests
         // that report through it and for no others: a global that appeared in every test would be
         // one more thing the suite could accidentally come to depend on, and `asyncHelpers.js`
@@ -625,6 +671,15 @@ description: plain
         assert_eq!(outcomes.len(), 1);
         assert!(!outcomes[0].strict);
         assert_eq!(outcomes[0].verdict, Verdict::Passed);
+        // Nothing at all, which includes `$262`. "Exactly the text" is the whole meaning of the
+        // flag, and a host object appearing in a test written to check what the global object has
+        // would change the answer it came to check.
+        let bare = run(
+            &root,
+            "/*---\nflags: [raw]\n---*/\n\
+             if (typeof $262 !== 'undefined') { throw new Error('the host got in'); }",
+        );
+        assert_eq!(bare[0].verdict, Verdict::Passed, "{bare:?}");
         let _ = std::fs::remove_dir_all(&root);
     }
 
