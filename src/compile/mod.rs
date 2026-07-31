@@ -26,10 +26,12 @@
 
 use crate::ast::{Expr, Script, Stmt};
 use crate::value::Value;
+mod binding;
 mod chunk;
 mod class;
 mod expression;
 mod function;
+mod pattern;
 mod statement;
 
 pub use self::chunk::{Chunk, Instruction, ShortCircuit, SpreadCall, Template};
