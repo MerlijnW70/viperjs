@@ -23,6 +23,80 @@ use crate::heap::{Heap, Iterated, Iteration, NativeCall, PropertyDescriptor};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
+/// §7.4.2's Iterator Record, as much of it as a built-in walk needs.
+///
+/// Held rather than drained, so a walk can stop as soon as it knows the answer and tell the
+/// iterator it did — §24.2.4's `isDisjointFrom` and §27.1.4's `some` both need that, and collecting
+/// the values into a list first would call `next` more times than either specifies and would hang
+/// on an iterator that never ends.
+///
+/// `next` is read **once** and kept, which is what §7.4.3 does: replacing it part-way through a
+/// walk does not change the walk.
+pub(super) struct Walk {
+    /// The iterator object, which is also the receiver `next` is called on.
+    iterator: Value,
+    /// Its `next` method, read once.
+    next: Value,
+}
+
+impl Walk {
+    /// §7.4.10 `GetIteratorDirect` — the object *is* the iterator, and only its `next` is read.
+    ///
+    /// What every method on `Iterator.prototype` uses. It does **not** ask for `[@@iterator]`, so a
+    /// helper works on anything with a `next` and does not care whether it is iterable — which is
+    /// why `Iterator.prototype.toArray.call({next() {…}})` is meaningful.
+    pub(super) fn direct(vm: &mut Vm, heap: &mut Heap, iterator: Value) -> Completion<Self> {
+        let name = key(heap, "next");
+        let next = vm.get_property_key(iterator, name, heap)?;
+        Ok(Self { iterator, next })
+    }
+
+    /// §7.4.4 `GetIteratorFromMethod` — call the method, and keep what it answered.
+    pub(super) fn from_method(
+        vm: &mut Vm,
+        heap: &mut Heap,
+        object: Value,
+        method: Value,
+    ) -> Completion<Self> {
+        let iterator = vm.call_value(method, object, &[], heap)?;
+        let Value::Object(_) = iterator else {
+            return Err(Abrupt::type_error("an iterator must be an object"));
+        };
+        let name = key(heap, "next");
+        let next = vm.get_property_key(iterator, name, heap)?;
+        Ok(Self { iterator, next })
+    }
+
+    /// §7.4.8 `IteratorStepValue` — the next value, or `None` once it is done.
+    pub(super) fn step(&self, vm: &mut Vm, heap: &mut Heap) -> Completion<Option<Value>> {
+        let step = vm.call_value(self.next, self.iterator, &[], heap)?;
+        let Value::Object(_) = step else {
+            return Err(Abrupt::type_error("an iterator must answer an object"));
+        };
+        let done = key(heap, "done");
+        if vm.get_property_key(step, done, heap)?.to_boolean(heap) {
+            return Ok(None);
+        }
+        let value = key(heap, "value");
+        Ok(Some(vm.get_property_key(step, value, heap)?))
+    }
+
+    /// §7.4.9 `IteratorClose` — tell the iterator the walk stopped early.
+    ///
+    /// A `return` that throws is swallowed. Every caller here is already answering a question and
+    /// has one of its own to report; §7.4.9 step 6 keeps the original completion when the walk was
+    /// abandoned for a *value* rather than an error, and that is every use here.
+    pub(super) fn close(&self, vm: &mut Vm, heap: &mut Heap) {
+        let name = key(heap, "return");
+        let Ok(method) = vm.get_property_key(self.iterator, name, heap) else {
+            return;
+        };
+        // No guard for an absent `return`: calling `undefined` is already an error, and the error
+        // is discarded here anyway — so the check and its absence do exactly the same thing, which
+        // makes it a branch nothing can test. §7.4.9 wants both cases silent and both are.
+        let _ = vm.call_value(method, self.iterator, &[], heap);
+    }
+}
 
 /// Build the three iterator prototypes into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm) {

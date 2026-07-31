@@ -28,66 +28,12 @@
 //! the specification says, which a counting test sees.
 
 use super::collection::collection_of;
+use super::iterator::Walk;
 use super::{define_method, key};
 use crate::heap::{Collection, CollectionKind, Heap, Native, NativeCall, ObjectId};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
-
-/// §7.4.2's iterator record, as much of it as §24.2.4 needs.
-///
-/// Held rather than drained, so a walk can stop as soon as it knows the answer — see the module
-/// documentation. `next` is read once and kept, which is what §7.4.3 does: replacing it part-way
-/// through a walk does not change the walk.
-struct Walk {
-    /// The iterator object, which is also the receiver `next` is called on.
-    iterator: Value,
-    /// Its `next` method, read once.
-    next: Value,
-}
-
-impl Walk {
-    /// §7.4.4 `GetIteratorFromMethod` — call the method, and keep what it answered.
-    fn from_method(vm: &mut Vm, heap: &mut Heap, object: Value, method: Value) -> Completion<Self> {
-        let iterator = vm.call_value(method, object, &[], heap)?;
-        let Value::Object(_) = iterator else {
-            return Err(Abrupt::type_error("an iterator must be an object"));
-        };
-        let name = key(heap, "next");
-        let next = vm.get_property_key(iterator, name, heap)?;
-        Ok(Self { iterator, next })
-    }
-
-    /// §7.4.8 `IteratorStepValue` — the next value, or `None` once it is done.
-    fn step(&self, vm: &mut Vm, heap: &mut Heap) -> Completion<Option<Value>> {
-        let step = vm.call_value(self.next, self.iterator, &[], heap)?;
-        let Value::Object(_) = step else {
-            return Err(Abrupt::type_error("an iterator must answer an object"));
-        };
-        let done = key(heap, "done");
-        if vm.get_property_key(step, done, heap)?.to_boolean(heap) {
-            return Ok(None);
-        }
-        let value = key(heap, "value");
-        Ok(Some(vm.get_property_key(step, value, heap)?))
-    }
-
-    /// §7.4.9 `IteratorClose` — tell the iterator the walk stopped early.
-    ///
-    /// A `return` that throws is swallowed. Every caller here is already answering a question and
-    /// has one of its own to report; §7.4.9 step 6 keeps the original completion when the walk was
-    /// abandoned for a *value* rather than an error, and that is every use here.
-    fn close(&self, vm: &mut Vm, heap: &mut Heap) {
-        let name = key(heap, "return");
-        let Ok(method) = vm.get_property_key(self.iterator, name, heap) else {
-            return;
-        };
-        // No guard for an absent `return`: calling `undefined` is already an error, and the error
-        // is discarded here anyway — so the check and its absence do exactly the same thing, which
-        // makes it a branch nothing can test. §7.4.9 wants both cases silent and both are.
-        let _ = vm.call_value(method, self.iterator, &[], heap);
-    }
-}
 
 /// §24.2.1.2's Set Record — what an argument has to offer to be treated as a set.
 struct SetLike {

@@ -1052,7 +1052,7 @@ built-ins/Array/from/iter-cstm-ctor-err.js (strict) :: it threw an object with n
 built-ins/Array/from/iter-cstm-ctor.js :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
 built-ins/Array/from/iter-cstm-ctor.js (strict) :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
 built-ins/Array/from/iter-map-fn-err.js :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
-built-ins/Array/from/iter-map-fn-err.js (strict) :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
+built-ins/Array/from/iter-map-fn-err.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Array/from/iter-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-length-err.js :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -3346,92 +3346,78 @@ built-ins/GeneratorFunction/is-a-constructor.js :: it threw an object with no na
 built-ins/GeneratorFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %GeneratorFunction%
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/concat/fresh-iterator-result.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/fresh-iterator-result.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/get-iterator-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/get-iterator-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/get-iterator-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/concat/get-iterator-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/concat/get-value-after-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/get-value-after-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/inner-iterator-created-in-order.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/inner-iterator-created-in-order.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/many-arguments.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/many-arguments.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-called-with-zero-arguments.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-called-with-zero-arguments.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/non-constructible.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/concat/non-constructible.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/concat/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/result-is-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/result-is-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-is-not-forwarded-before-initial-start.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-is-not-forwarded-before-initial-start.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-method-called-with-zero-arguments.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/return-method-called-with-zero-arguments.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/single-argument.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/single-argument.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-return.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-return.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/zero-arguments.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/concat/zero-arguments.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/constructor.js :: it threw an object with no name: The value of `typeof Iterator` is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Iterator/constructor.js (strict) :: it threw an object with no name: The value of `typeof Iterator` is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Iterator/from/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/from/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/from/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/return-method-returns-iterator-result.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/return-method-returns-iterator-result.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/supports-iterable.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/from/supports-iterable.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/newtarget-or-active-function-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/newtarget-or-active-function-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Iterator/concat/fresh-iterator-result.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/fresh-iterator-result.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/get-iterator-method-only-once.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/get-iterator-method-only-once.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/get-iterator-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/concat/get-iterator-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/concat/get-value-after-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/get-value-after-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/inner-iterator-created-in-order.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/inner-iterator-created-in-order.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/is-function.js :: it threw an object with no name: The value of `typeof Iterator.concat` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/concat/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.concat` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/concat/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/concat/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/concat/many-arguments.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/many-arguments.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/concat/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/concat/next-method-called-with-zero-arguments.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-called-with-zero-arguments.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-non-object.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-non-object.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-throwing-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-throwing-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-throwing-value-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-throwing-value-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-throwing-value.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-returns-throwing-value.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/next-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/prop-desc.js :: it threw an object with no name: concat should be an own property
+built-ins/Iterator/concat/prop-desc.js (strict) :: it threw an object with no name: concat should be an own property
+built-ins/Iterator/concat/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/concat/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/concat/result-is-iterator.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/result-is-iterator.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-is-forwarded.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-is-forwarded.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-is-not-forwarded-after-exhaustion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-is-not-forwarded-before-initial-start.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-is-not-forwarded-before-initial-start.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-method-called-with-zero-arguments.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/return-method-called-with-zero-arguments.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/single-argument.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/single-argument.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-next.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-next.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/throws-typeerror-when-generator-is-running-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/zero-arguments.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/zero-arguments.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/from/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/from/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/from/is-function.js :: it threw an object with no name: The value of `typeof Iterator.from` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/from/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.from` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/from/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/from/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/from/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/from/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/from/prop-desc.js :: it threw an object with no name: from should be an own property
+built-ins/Iterator/from/prop-desc.js (strict) :: it threw an object with no name: from should be an own property
+built-ins/Iterator/from/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/from/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/from/return-method-returns-iterator-result.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/from/return-method-returns-iterator-result.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/from/supports-iterable.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/from/supports-iterable.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
 built-ins/Iterator/prototype/Symbol.dispose/invokes-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/invokes-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -3444,296 +3430,168 @@ built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js :: it threw an object w
 built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js (strict) :: it threw an object with no name: undefined should be an own property
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/Symbol.toStringTag/weird-setter.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/Symbol.toStringTag/weird-setter.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/constructor/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/constructor/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/constructor/weird-setter.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/constructor/weird-setter.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/argument-effect-order.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/drop/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/drop/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/every/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/every/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/every/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/every/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/every/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/every/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/every/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/every/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/filter/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/filter/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/filter/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/filter/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/filter/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/find/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/find/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/find/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/find/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/find/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/find/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/find/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/find/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/flatMap/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/flatMap/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/mapper-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/mapper-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/mapper-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/mapper-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-underlying-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-underlying-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/flatMap/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/flatMap/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/flatMap/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/forEach/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/forEach/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/fn-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/fn-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/fn-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/fn-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/forEach/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/forEach/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/forEach/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/forEach/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/forEach/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/initial-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/initial-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/closes-on-separator-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/closes-on-separator-coercion-exception.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+built-ins/Iterator/prototype/drop/argument-effect-order.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/drop/argument-effect-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Iterator/prototype/drop/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/drop/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/drop/get-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/get-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/drop/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/drop/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/drop/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/drop/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/drop/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/drop/next-method-returns-non-object.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-non-object.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-returns-throwing-value.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/next-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/prop-desc.js :: it threw an object with no name: drop should be an own property
+built-ins/Iterator/prototype/drop/prop-desc.js (strict) :: it threw an object with no name: drop should be an own property
+built-ins/Iterator/prototype/drop/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/drop/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/drop/return-is-forwarded.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/return-is-forwarded.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/return-is-not-forwarded-after-exhaustion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/this-non-callable-next.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/drop/this-non-callable-next.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/drop/this-plain-iterator.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/drop/this-plain-iterator.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/every/argument-effect-order.js :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/every/argument-effect-order.js (strict) :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/every/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/every/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/every/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/every/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/every/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/filter/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/filter/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/filter/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/filter/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/filter/get-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/get-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/filter/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/filter/iterator-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/iterator-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/filter/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/filter/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/filter/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/filter/next-method-returns-non-object.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-non-object.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-returns-throwing-value.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/next-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/predicate-throws-then-closing-iterator-also-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/predicate-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/predicate-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/prop-desc.js :: it threw an object with no name: filter should be an own property
+built-ins/Iterator/prototype/filter/prop-desc.js (strict) :: it threw an object with no name: filter should be an own property
+built-ins/Iterator/prototype/filter/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/filter/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/filter/return-is-forwarded.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/return-is-forwarded.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/filter/this-non-callable-next.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/filter/this-non-callable-next.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/filter/this-plain-iterator.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/filter/this-plain-iterator.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/find/argument-effect-order.js :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/find/argument-effect-order.js (strict) :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/find/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/find/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/find/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/find/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/find/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/flatMap/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/flatMap/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/flatMap/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/flatMap/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/flatMap/get-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/get-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/flatMap/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/flatMap/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/flatMap/mapper-throws-then-closing-iterator-also-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/mapper-throws-then-closing-iterator-also-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/mapper-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/mapper-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/flatMap/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/flatMap/next-method-returns-non-object.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-non-object.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-returns-throwing-value.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/next-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/prop-desc.js :: it threw an object with no name: flatMap should be an own property
+built-ins/Iterator/prototype/flatMap/prop-desc.js (strict) :: it threw an object with no name: flatMap should be an own property
+built-ins/Iterator/prototype/flatMap/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/flatMap/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-underlying-iterator.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-underlying-iterator.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/flatMap/this-non-callable-next.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/flatMap/this-non-callable-next.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/flatMap/this-plain-iterator.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/flatMap/this-plain-iterator.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/forEach/argument-effect-order.js :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/forEach/argument-effect-order.js (strict) :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/forEach/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/forEach/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/closes-on-separator-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/closes-on-separator-coercion-exception.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Iterator/prototype/join/contents-nullish.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/contents-nullish.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/contents-tostring.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/contents-tostring.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/join/descriptor.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/descriptor.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/does-not-close-on-iterator-error.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/does-not-close-on-iterator-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/does-not-close-on-iterator-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/does-not-close-on-iterator-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/does-not-close-on-iterator-protocol-violation.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/join/does-not-close-on-iterator-protocol-violation.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/join/does-not-close-on-next-getter-error.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/does-not-close-on-next-getter-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/Iterator/prototype/join/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/next-lookup-after-separator-tostring.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/next-lookup-after-separator-tostring.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/not-a-constructor.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/join/not-a-constructor.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/join/descriptor.js :: it threw an object with no name: join should be an own property
+built-ins/Iterator/prototype/join/descriptor.js (strict) :: it threw an object with no name: join should be an own property
+built-ins/Iterator/prototype/join/does-not-close-on-iterator-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/does-not-close-on-iterator-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/does-not-close-on-iterator-exhaustion.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/join/does-not-close-on-iterator-exhaustion.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/join/does-not-close-on-next-getter-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/does-not-close-on-next-getter-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/join/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/join/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/join/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/join/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/join/next-lookup-after-separator-tostring.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/join/next-lookup-after-separator-tostring.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/join/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Iterator/prototype/join/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Iterator/prototype/join/results-empty-separator.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/results-empty-separator.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/results-no-separator.js :: it threw TypeError: what was called is not a function
@@ -3742,336 +3600,222 @@ built-ins/Iterator/prototype/join/results-nonempty-separator.js :: it threw Type
 built-ins/Iterator/prototype/join/results-nonempty-separator.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/separator-tostring.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/join/separator-tostring.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/map/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/map/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/map/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/mapper-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/mapper-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/mapper-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/mapper-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/return-is-forwarded-to-underlying-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/return-is-forwarded-to-underlying-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/map/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/map/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/map/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/reduce/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/reduce/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/reducer-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/reducer-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/reducer-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/reducer-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/reduce/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/reduce/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/reduce/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/reduce/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/reduce/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/argument-effect-order.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/some/argument-effect-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/iterator-has-no-return.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/some/iterator-has-no-return.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/some/iterator-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/iterator-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/predicate-throws-then-closing-iterator-also-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/predicate-throws-then-closing-iterator-also-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/predicate-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/predicate-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/some/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/some/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/some/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/some/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/some/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/argument-effect-order.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/argument-effect-order.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/get-return-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/get-return-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/return-is-forwarded.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/return-is-forwarded.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/this-non-callable-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/this-non-callable-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/take/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/take/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/get-next-method-only-once.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/get-next-method-only-once.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/get-next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/get-next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-non-object.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-non-object.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-throwing-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-throwing-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-returns-throwing-value.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-throws.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/next-method-throws.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/this-non-callable-next.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/toArray/this-non-callable-next.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/toArray/this-non-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/toArray/this-non-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/prototype/toArray/this-plain-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/prototype/toArray/this-plain-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/subclassable.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/subclassable.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterables-containing-string-objects.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterables-containing-string-objects.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterables-iteration-after-reading-options.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterables-iteration-after-reading-options.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/iterables-iteration-iterator-step-value-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/iterables-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/iterator-non-iterable.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/iterator-non-iterable.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/iterator-zip-iteration-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-iterator-close-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-iterator-step-value-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-checks-remaining-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-checks-remaining-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/iterator-zip-iteration.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/non-constructible.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/non-constructible.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration-get-iterator-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration-get-iterator-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration-iterator-close-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration-iterator-close-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration-iterator-step-value-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/padding-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zip/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/result-arrays-are-fresh.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/result-arrays-are-fresh.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/result-is-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/result-is-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-start-iterator-close-calls-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-start-iterator-close-calls-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-start-iterator-close-calls-return.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-start-iterator-close-calls-return.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-yield-iterator-close-calls-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-yield-iterator-close-calls-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-yield-iterator-close-calls-return.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zip/suspended-yield-iterator-close-calls-return.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/is-function.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/is-function.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/prototype/map/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/map/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/map/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/map/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/map/get-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/get-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/map/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/map/iterator-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/iterator-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/map/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/map/mapper-throws-then-closing-iterator-also-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/mapper-throws-then-closing-iterator-also-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/mapper-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/mapper-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/map/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/map/next-method-returns-non-object.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-non-object.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-throwing-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-throwing-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-returns-throwing-value.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/next-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/prop-desc.js :: it threw an object with no name: map should be an own property
+built-ins/Iterator/prototype/map/prop-desc.js (strict) :: it threw an object with no name: map should be an own property
+built-ins/Iterator/prototype/map/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/map/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/map/return-is-forwarded-to-underlying-iterator.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/return-is-forwarded-to-underlying-iterator.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/map/this-non-callable-next.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/map/this-non-callable-next.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/map/this-plain-iterator.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/map/this-plain-iterator.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/reduce/argument-effect-order.js :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/reduce/argument-effect-order.js (strict) :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/reduce/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/reduce/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/some/argument-effect-order.js :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/some/argument-effect-order.js (strict) :: it threw an object with no name: Actual [get next] and expected [] should have the same contents.
+built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/some/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/Iterator/prototype/some/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/some/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/some/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/some/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/take/argument-effect-order.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/take/argument-effect-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Iterator/prototype/take/get-next-method-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/take/get-next-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Iterator/prototype/take/get-return-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/get-return-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/take/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/prototype/take/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/take/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/take/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/take/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/take/next-method-returns-non-object.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-non-object.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-throws.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/next-method-throws.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/prop-desc.js :: it threw an object with no name: take should be an own property
+built-ins/Iterator/prototype/take/prop-desc.js (strict) :: it threw an object with no name: take should be an own property
+built-ins/Iterator/prototype/take/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/take/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/prototype/take/return-is-forwarded.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/return-is-forwarded.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/this-non-callable-next.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/take/this-non-callable-next.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/take/this-plain-iterator.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/take/this-plain-iterator.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/is-function.js :: it threw an object with no name: The value of `typeof Iterator.zip` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/zip/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.zip` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/zip/iterables-containing-string-objects.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterables-containing-string-objects.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterables-iteration-after-reading-options.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterables-iteration-after-reading-options.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Actual [] and expected [call next, call next, call next, close second iterator, close first iterator, close iterables iterator] should have the same contents.
+built-ins/Iterator/zip/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Actual [] and expected [call next, call next, call next, close second iterator, close first iterator, close iterables iterator] should have the same contents.
+built-ins/Iterator/zip/iterables-iteration-iterator-step-value-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/iterables-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/iterator-zip-iteration-iterator-close-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-iterator-close-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-iterator-step-value-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-checks-remaining-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-checks-remaining-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/iterator-zip-iteration.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zip/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zip/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zip/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zip/padding-iteration-get-iterator-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/padding-iteration-get-iterator-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/padding-iteration-iterator-close-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/padding-iteration-iterator-close-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/padding-iteration-iterator-step-value-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/padding-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zip/padding-iteration.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zip/padding-iteration.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zip/prop-desc.js :: it threw an object with no name: zip should be an own property
+built-ins/Iterator/zip/prop-desc.js (strict) :: it threw an object with no name: zip should be an own property
+built-ins/Iterator/zip/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zip/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zip/result-arrays-are-fresh.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/result-arrays-are-fresh.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/result-is-iterator.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/result-is-iterator.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-start-iterator-close-calls-next.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-start-iterator-close-calls-next.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-start-iterator-close-calls-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-start-iterator-close-calls-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-yield-iterator-close-calls-next.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-yield-iterator-close-calls-next.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-yield-iterator-close-calls-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/suspended-yield-iterator-close-calls-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/is-function.js :: it threw an object with no name: The value of `typeof Iterator.zipKeyed` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/zipKeyed/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.zipKeyed` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-iteration-after-reading-options.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-after-reading-options.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Actual [] and expected [close second iterator, close first iterator] should have the same contents.
+built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Actual [] and expected [close second iterator, close first iterator] should have the same contents.
 built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-symbol-key.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-symbol-key.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-undefined.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-undefined.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-close-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-step-value-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-checks-remaining-done.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-checks-remaining-done.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/iterator-zip-iteration.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/length.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/length.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/name.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/name.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/non-constructible.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zipKeyed/non-constructible.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Iterator/zipKeyed/padding-iteration-get-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
-built-ins/Iterator/zipKeyed/padding-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a ReferenceError
+built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-symbol-key.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-undefined.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-undefined.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-close-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-close-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-step-value-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-longest-iterator-close-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-shortest-iterator-close-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-checks-remaining-done.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-checks-remaining-done.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-not-zero-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-close-i-is-zero-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration-strict-iterator-step-abrupt-completion.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterator-zip-iteration.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zipKeyed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zipKeyed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zipKeyed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zipKeyed/padding-iteration-get-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zipKeyed/padding-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
 built-ins/Iterator/zipKeyed/padding-iteration.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Iterator/zipKeyed/padding-iteration.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zipKeyed/prop-desc.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/prop-desc.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/proto.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/proto.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/result-is-iterator.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/result-is-iterator.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/result-objects-are-fresh.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/result-objects-are-fresh.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/results-object-from-array.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/results-object-from-array.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/results-object-has-default-attributes.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/results-object-has-default-attributes.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/results-object-has-no-undefined-iterables-properties.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/results-object-has-no-undefined-iterables-properties.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-return.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-return.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-next.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-next.js (strict) :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-return.js :: it threw ReferenceError: Iterator is not defined
-built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-return.js (strict) :: it threw ReferenceError: Iterator is not defined
+built-ins/Iterator/zipKeyed/prop-desc.js :: it threw an object with no name: zipKeyed should be an own property
+built-ins/Iterator/zipKeyed/prop-desc.js (strict) :: it threw an object with no name: zipKeyed should be an own property
+built-ins/Iterator/zipKeyed/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zipKeyed/proto.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Iterator/zipKeyed/result-is-iterator.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/result-is-iterator.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/result-objects-are-fresh.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/result-objects-are-fresh.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/results-object-from-array.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/results-object-from-array.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/results-object-has-default-attributes.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/results-object-has-default-attributes.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/results-object-has-no-undefined-iterables-properties.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/results-object-has-no-undefined-iterables-properties.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-next.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-next.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-start-iterator-close-calls-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-next.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-next.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-return.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/suspended-yield-iterator-close-calls-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/JSON/isRawJSON/basic.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/isRawJSON/basic.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/JSON/isRawJSON/builtin.js :: it threw an object with no name: JSON.isRawJSON is extensible
@@ -4873,18 +4617,10 @@ built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js :: it threw
 built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/symbol-tag-array-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-array-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-map-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-map-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-override-bigint.js :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-override-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/Object/prototype/toString/symbol-tag-set-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-set-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-string-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-string-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.prototype.valueOf requires an object

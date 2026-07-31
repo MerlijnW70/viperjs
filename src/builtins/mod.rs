@@ -31,6 +31,7 @@ pub mod error;
 pub mod function;
 pub mod global;
 mod iterator;
+mod iterator_helpers;
 mod json;
 mod json_write;
 mod math;
@@ -89,6 +90,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     math::install(heap, realm, global);
     wrapper::install(heap, realm, global);
     iterator::install(heap, realm);
+    iterator_helpers::install(heap, realm, global);
     json::install(heap, realm, global);
     date::install(heap, realm, global);
     promise::install(heap, realm, global);
