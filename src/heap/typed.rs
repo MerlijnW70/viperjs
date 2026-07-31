@@ -135,8 +135,10 @@ impl Heap {
 
     /// Where `key` points in this object, if it is a TypedArray and `key` is a numeric index.
     ///
-    /// `None` means "this is an ordinary property", `Some(Err)` means "canonical and absent", and
-    /// `Some(Ok)` is an element — see [`index_of`], which is where the three answers are explained.
+    /// Three answers, and the middle one is the one that matters. `None` means this key is an
+    /// ordinary property. `Some(Err)` means it is a canonical numeric index the view does not have,
+    /// which §10.4.5 treats as *absent*: the read answers `undefined` and the write is discarded,
+    /// neither of them consulting the prototype. `Some(Ok)` is an element.
     pub fn typed_index(&self, object: ObjectId, key: PropertyKey) -> Option<Result<usize, ()>> {
         let view = self.typed_view(object)?;
         index_of(self, key, view.count())
