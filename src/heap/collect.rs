@@ -269,6 +269,38 @@ impl Heap {
             // targets and the unregister tokens beside them are the weak half, and §26.2.3.1
             // step 5 refuses a held value that is the target for exactly this reason — holding it
             // strongly would keep the target alive through its own registration.
+            // §27.1.5's helper holds its source iterator, its callback and — part-way through a
+            // `flatMap` — the inner iterator it is drawing from. Nothing else may be holding any
+            // of them: `[1, 2].values().map(f)` leaves both the array's iterator and `f` named by
+            // the helper alone.
+            if let Some(helper) = object.helper() {
+                for held in [Some(helper.source), Some(helper.next)]
+                    .into_iter()
+                    .chain(
+                        helper
+                            .inner
+                            .map(|(iterator, next)| [iterator, next])
+                            .into_iter()
+                            .flatten()
+                            .map(Some),
+                    )
+                    .flatten()
+                {
+                    match held {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
+                }
+                let callback = match &helper.what {
+                    crate::heap::Step::Map(function)
+                    | crate::heap::Step::Filter(function)
+                    | crate::heap::Step::FlatMap(function) => Some(*function),
+                    crate::heap::Step::Take(_) | crate::heap::Step::Drop(_) => None,
+                };
+                if let Some(Value::Object(reached)) = callback {
+                    pending.push(reached);
+                }
+            }
             if let Some(Weak::Registry(registry)) = object.weak() {
                 self.mark_value(registry.cleanup, marked);
                 for cell in &registry.cells {

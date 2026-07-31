@@ -41,8 +41,8 @@ use crate::heap::promise::{Promise, Role};
 use crate::heap::string_object;
 use crate::heap::typed;
 use crate::heap::{
-    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Property,
-    PropertyDescriptor, PropertyKey, StringId, SymbolId, Weak,
+    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Helper, Iteration, Native,
+    Property, PropertyDescriptor, PropertyKey, StringId, SymbolId, Weak,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -264,6 +264,11 @@ pub struct Object {
     /// Boxed for the reason the collection beside it is: an `Object` sits inline in the arena, so
     /// whatever this costs is charged to every object ever made, and a registry is a `Vec`.
     weak: Option<Box<Weak>>,
+    /// §27.1.5's Iterator Helper state, if this is one.
+    ///
+    /// Boxed like the collection beside it, and for the same reason: an `Object` sits inline in
+    /// the arena, so whatever this costs is charged to every object ever made.
+    helper: Option<Box<Helper>>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -320,6 +325,7 @@ impl Object {
             promise: None,
             role: None,
             weak: None,
+            helper: None,
             call: None,
             environment: None,
             lexical: None,
@@ -430,6 +436,21 @@ impl Object {
     /// Make this object one of §26's two, which nothing undoes.
     pub fn set_weak(&mut self, weak: Weak) {
         self.weak = Some(Box::new(weak));
+    }
+
+    /// The §27.1.5 helper state this object holds, if it is an Iterator Helper.
+    pub fn helper(&self) -> Option<&Helper> {
+        self.helper.as_deref()
+    }
+
+    /// The same, to change — a helper is state that moves as it is walked.
+    pub fn helper_mut(&mut self) -> Option<&mut Helper> {
+        self.helper.as_deref_mut()
+    }
+
+    /// Make this object an Iterator Helper, which nothing undoes.
+    pub fn set_helper(&mut self, helper: Helper) {
+        self.helper = Some(Box::new(helper));
     }
 
     /// The promise state this object holds, if it is a promise.

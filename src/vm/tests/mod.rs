@@ -22,6 +22,7 @@
 //! - `set_ops` — §24.2.4's seven, and the size that decides which side is walked.
 //! - `number_format` — §21.1.3's three spellings, and the two exactnesses they need.
 //! - `iterator_helpers` — §27.1's `Iterator`, and the methods that consume one.
+//! - `iterator_lazy` — §27.1.4's five that *make* one, and why nothing runs until asked.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
@@ -80,6 +81,7 @@ mod functions;
 mod globals;
 mod inheritance;
 mod iterator_helpers;
+mod iterator_lazy;
 mod iterators;
 mod json;
 mod lexical;

@@ -44,6 +44,7 @@ mod collection;
 mod define;
 mod enumerate;
 mod environment;
+mod helper;
 mod iteration;
 mod object;
 mod promise;
@@ -88,6 +89,7 @@ pub use self::buffer::{Buffer, Element, View};
 pub use self::collect::{Collected, Roots};
 pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Environment, EnvironmentId};
+pub use self::helper::{Helper, Step};
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
 pub use self::promise::{
     Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,

@@ -44,11 +44,14 @@ fn consuming(
         return Err(Abrupt::type_error("this is not an iterator"));
     };
     let callback = call.argument(0);
-    let walk = Walk::direct(vm, heap, call.this_value)?;
+    // The callback is judged *before* `GetIteratorDirect`, so a bad one closes the iterator with
+    // `next` still unread — §27.1.4 makes the Iterator Record with an undefined `[[NextMethod]]`
+    // for exactly this window.
     if !heap.is_callable(callback) {
-        walk.close(vm, heap);
+        Walk::close_unread(vm, heap, call.this_value);
         return Err(Abrupt::type_error(wants));
     }
+    let walk = Walk::direct(vm, heap, call.this_value)?;
     Ok((walk, callback))
 }
 
@@ -307,6 +310,9 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     super::define_function_metadata(heap, constructor, "Iterator", 0);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     super::define_value(heap, global, "Iterator", Value::Object(constructor));
+    // §27.1.4's five that *make* an iterator, and §27.1.3.2's `from`, which need the helper
+    // object this module deliberately does not.
+    super::iterator_lazy::install(heap, realm, constructor);
 
     for (name, length, native) in [
         ("every", 1, every as Native),

@@ -80,6 +80,10 @@ pub struct Realm {
     weak_ref_prototype: ObjectId,
     /// %FinalizationRegistry.prototype% — §26.2.3.
     finalization_registry_prototype: ObjectId,
+    /// %IteratorHelperPrototype% — §27.1.5.1, which inherits from %IteratorPrototype%.
+    iterator_helper_prototype: ObjectId,
+    /// %WrapForValidIteratorPrototype% — §27.1.3.2.1, what `Iterator.from` wraps with.
+    wrap_iterator_prototype: ObjectId,
     /// %MapIteratorPrototype% — §24.1.5, which inherits from %IteratorPrototype% and so is handed
     /// `[@@iterator]` by it.
     map_iterator_prototype: ObjectId,
@@ -201,6 +205,8 @@ impl Realm {
         let weak_map_prototype = heap.new_object(Some(object_prototype));
         let weak_set_prototype = heap.new_object(Some(object_prototype));
         let weak_ref_prototype = heap.new_object(Some(object_prototype));
+        let iterator_helper_prototype = heap.new_object(Some(iterator_prototype));
+        let wrap_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let finalization_registry_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let set_iterator_prototype = heap.new_object(Some(iterator_prototype));
@@ -282,6 +288,8 @@ impl Realm {
             weak_map_prototype,
             weak_set_prototype,
             weak_ref_prototype,
+            iterator_helper_prototype,
+            wrap_iterator_prototype,
             finalization_registry_prototype,
             map_iterator_prototype,
             set_iterator_prototype,
@@ -424,6 +432,18 @@ impl Realm {
     #[must_use]
     pub fn weak_ref_prototype(&self) -> ObjectId {
         self.weak_ref_prototype
+    }
+
+    /// %IteratorHelperPrototype% — §27.1.5.1.
+    #[must_use]
+    pub fn iterator_helper_prototype(&self) -> ObjectId {
+        self.iterator_helper_prototype
+    }
+
+    /// %WrapForValidIteratorPrototype% — §27.1.3.2.1.
+    #[must_use]
+    pub fn wrap_iterator_prototype(&self) -> ObjectId {
+        self.wrap_iterator_prototype
     }
 
     /// %FinalizationRegistry.prototype% — §26.2.3.

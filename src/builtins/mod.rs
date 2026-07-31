@@ -32,6 +32,7 @@ pub mod function;
 pub mod global;
 mod iterator;
 mod iterator_helpers;
+mod iterator_lazy;
 mod json;
 mod json_write;
 mod math;

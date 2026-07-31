@@ -40,6 +40,30 @@ pub(super) struct Walk {
 }
 
 impl Walk {
+    /// §7.4.9 `IteratorClose` on an iterator whose `next` has **not** been read.
+    ///
+    /// §27.1.4's methods all check their argument *before* `GetIteratorDirect`, and close the
+    /// iterator when it is wrong — so the close happens with an Iterator Record whose
+    /// `[[NextMethod]]` is still undefined, and `next` is never touched. A test that logs property
+    /// reads sees the difference between that and reading `next` first; six of them do.
+    pub(super) fn close_unread(vm: &mut Vm, heap: &mut Heap, iterator: Value) {
+        Self {
+            iterator,
+            next: Value::Undefined,
+        }
+        .close(vm, heap);
+    }
+
+    /// A record for an iterator whose `next` was read earlier — what a stored helper holds.
+    pub(super) fn of(iterator: Value, next: Value) -> Self {
+        Self { iterator, next }
+    }
+
+    /// The `next` this record is holding, for a caller that has to store it.
+    pub(super) fn next_method(&self) -> Value {
+        self.next
+    }
+
     /// §7.4.10 `GetIteratorDirect` — the object *is* the iterator, and only its `next` is read.
     ///
     /// What every method on `Iterator.prototype` uses. It does **not** ask for `[@@iterator]`, so a

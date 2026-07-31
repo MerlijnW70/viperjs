@@ -216,6 +216,18 @@ pub(super) fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Va
     let _ = heap.define_own_property(object, name, &descriptor);
 }
 
+/// Put a value under a name of an object being built — §7.3.5, for a key that is not an index.
+pub(super) fn define_named(heap: &mut Heap, object: ObjectId, name: PropertyKey, value: Value) {
+    let descriptor = PropertyDescriptor {
+        value: Some(value),
+        writable: Some(true),
+        enumerable: Some(true),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(object, name, &descriptor);
+}
+
 /// `this` as an object — §7.1.18 `ToObject`, which wraps rather than refuses.
 ///
 /// Every method in §23.1.3 opens with `Let O be ? ToObject(this value)`, and the difference
