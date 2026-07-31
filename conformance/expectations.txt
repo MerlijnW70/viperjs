@@ -11610,40 +11610,6 @@ built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arrayleng
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/toReversed/ignores-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/ignores-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/immutable.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/immutable.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/length-property-ignored.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/length-property-ignored.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toReversed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toReversed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toReversed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toReversed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/TypedArray/prototype/toReversed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/TypedArray/prototype/toReversed/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/toReversed/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/toReversed/reverses.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toReversed/reverses.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/comparefn-controls-sort.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/comparefn-controls-sort.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/comparefn-default.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/comparefn-default.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/ignores-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/ignores-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/immutable.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/immutable.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/length-property-ignored.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/length-property-ignored.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toSorted/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toSorted/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toSorted/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toSorted/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/toSorted/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/TypedArray/prototype/toSorted/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/TypedArray/prototype/toSorted/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/toSorted/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toString.js :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
 built-ins/TypedArray/prototype/toString.js (strict) :: it threw an object with no name: Expected SameValue(«[object Function]», «[object Function]») to be true
 built-ins/TypedArray/prototype/toString/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -11660,46 +11626,14 @@ built-ins/TypedArray/prototype/values/resizable-buffer-grow-mid-iteration.js :: 
 built-ins/TypedArray/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/values/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/values/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/with/early-type-coercion.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/early-type-coercion.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/ignores-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/ignores-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/immutable.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/immutable.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-bigger-or-eq-than-length.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-bigger-or-eq-than-length.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-casted-to-number.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-casted-to-number.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-negative.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-negative.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-smaller-than-minus-length.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-smaller-than-minus-length.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-throw-completion.js :: it threw an object with no name: Expected a MyError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/index-throw-completion.js (strict) :: it threw an object with no name: Expected a MyError but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/with/length-property-ignored.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/length-property-ignored.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/with/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/with/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/with/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/TypedArray/prototype/with/negative-fractional-index-truncated-to-zero.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/negative-fractional-index-truncated-to-zero.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/with/negative-index-resize-to-in-bounds.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/with/negative-index-resize-to-in-bounds.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/with/negative-index-resize-to-out-of-bounds.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/with/negative-index-resize-to-out-of-bounds.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/TypedArray/prototype/with/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/TypedArray/prototype/with/order-of-evaluation.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/order-of-evaluation.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/with/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/with/valid-typedarray-index-checked-after-coercions.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/with/valid-typedarray-index-checked-after-coercions.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/value-throw-completion.js :: it threw an object with no name: Positive too large index Expected a MyError but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/with/value-throw-completion.js (strict) :: it threw an object with no name: Positive too large index Expected a MyError but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/resizable-buffer-length-tracking-1.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/resizable-buffer-length-tracking-1.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/resizable-buffer-length-tracking-2.js :: it threw TypeError: what was called is not a function

@@ -1094,3 +1094,79 @@ fn the_iterator_property_has_the_attributes_a_built_in_method_gets() {
         "TypeError"
     );
 }
+
+#[test]
+fn the_change_copies_answer_the_intrinsic_kind_where_the_others_answer_the_species() {
+    // §23.2.3.32, §23.2.3.33 and §23.2.3.36 make their copy with `TypedArrayCreateSameType`, which
+    // uses the **intrinsic** constructor for the element kind. `map`, `filter` and `slice` sitting
+    // beside them consult `@@species` instead. So one receiver gives two different answers, and
+    // that is the row that says the two operations are not the same one written twice.
+    assert_eq!(
+        run(
+            "class Sub extends Uint8Array {} var s = new Sub(2);              (s.toReversed() instanceof Sub) + ',' + (s.toSorted() instanceof Sub)              + ',' + (s.with(0, 1) instanceof Sub) + '|'              + (s.map(function (x) { return x; }) instanceof Sub)              + ',' + (s.slice() instanceof Sub)"
+        ),
+        "false,false,false|true,true"
+    );
+    // …and what they answer is still the right kind, just not the subclass.
+    assert_eq!(
+        run(
+            "class Sub extends Uint8Array {}              Object.prototype.toString.call(new Sub(2).toReversed()) + ','              + (new Sub(2).toReversed() instanceof Uint8Array)"
+        ),
+        "[object Uint8Array],true"
+    );
+    // Each leaves the array it was given alone — the whole point of the three.
+    assert_eq!(
+        run(
+            "var a = new Int8Array([3, 1, 2]);              a.toReversed().join(',') + '|' + a.toSorted().join(',') + '|'              + a.with(0, 9).join(',') + '|' + a.join(',')"
+        ),
+        "2,1,3|1,2,3|9,1,2|3,1,2"
+    );
+    // §23.2.3.33's default order is **numeric**, where §23.1.3.34's is the spelling — so a
+    // TypedArray sorts 10 after 9 and an Array does not.
+    assert_eq!(
+        run(
+            "new Int8Array([10, 9, 1]).toSorted().join(',') + '|'              + [10, 9, 1].toSorted().join(',')"
+        ),
+        "1,9,10|1,10,9"
+    );
+    assert_eq!(
+        run("new Int8Array([3, 1, 2]).toSorted(function (a, b) { return b - a; }).join(',')"),
+        "3,2,1"
+    );
+    // §23.2.3.36 step 7 — an index outside the array is a RangeError, and a negative counts back.
+    assert_eq!(
+        run("new Int8Array([1, 2, 3]).with(-1, 9).join(',')"),
+        "1,2,9"
+    );
+    for bad in ["3", "-4", "Infinity", "-Infinity"] {
+        assert_eq!(
+            run(&format!(
+                "try {{ new Int8Array([1, 2, 3]).with({bad}, 0); }} catch (e) {{ e.constructor.name }}"
+            )),
+            "RangeError",
+            "with({bad})"
+        );
+    }
+    // The value is stored as the element kind stores it, so 300 into a `Uint8Array` is 44.
+    assert_eq!(run("new Uint8Array([1, 2]).with(0, 300).join(',')"), "44,2");
+    // §23.2.3.33 step 1 comes **before** `ValidateTypedArray`, so a bad comparator is reported as
+    // one even when `this` is not a TypedArray at all — which is the only way to tell the order.
+    assert_eq!(
+        run("try { Int8Array.prototype.toSorted.call([1, 2], 1); } catch (e) { e.message }"),
+        "the comparator is not a function"
+    );
+    assert_eq!(
+        run("try { Int8Array.prototype.toSorted.call([1, 2]); } catch (e) { e.message }"),
+        "this is not a TypedArray"
+    );
+    // A detached buffer is refused by all three.
+    for method in ["toReversed()", "toSorted()", "with(0, 1)"] {
+        assert_eq!(
+            run(&format!(
+                "var b = new ArrayBuffer(8); var a = new Int8Array(b); b.transfer();                  try {{ a.{method}; }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{method} on a detached buffer"
+        );
+    }
+}

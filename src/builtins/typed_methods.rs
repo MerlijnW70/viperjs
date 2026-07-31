@@ -56,7 +56,10 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, const
         ("some", 1, some),
         ("sort", 1, sort),
         ("subarray", 2, subarray),
+        ("toReversed", 0, to_reversed),
+        ("toSorted", 1, to_sorted),
         ("toString", 0, to_string),
+        ("with", 2, with),
         ("values", 0, values),
     ] {
         define_method(heap, realm, prototype, name, length, native);
@@ -206,6 +209,109 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
         }
     }
     Ok(made)
+}
+
+/// §23.2.4.3 `TypedArrayCreateSameType` — a new array of the *same kind*, this many elements long.
+///
+/// The **intrinsic** constructor for that kind, and deliberately not `@@species`. §23.2.3.32,
+/// §23.2.3.33 and §23.2.3.36 make their copy this way, so a subclass of `Uint8Array` gets a plain
+/// `Uint8Array` back — while `map`, `filter` and `slice` sitting beside them *do* consult species
+/// and answer the subclass. Two spellings for the same-looking thing, and the difference is
+/// visible from one receiver.
+fn same_kind(vm: &mut Vm, heap: &mut Heap, object: ObjectId, count: usize) -> Completion<ObjectId> {
+    let element = heap.typed_view(object).and_then(|view| view.element);
+    let clamped = heap
+        .object(object)
+        .is_some_and(crate::heap::Object::is_clamped);
+    let named = crate::heap::KINDS
+        .iter()
+        .find(|(_, kind, clamps)| Some(*kind) == element && *clamps == clamped)
+        .map(|(name, _, _)| *name);
+    let found = named.and_then(|name| super::global_object(heap, &vm.realm(), name));
+    let Some(constructor) = found else {
+        return Err(Abrupt::type_error("this TypedArray has no kind"));
+    };
+    let made = vm.construct_value(
+        Value::Object(constructor),
+        &[Value::Number(count as f64)],
+        heap,
+    )?;
+    match made {
+        Value::Object(id) => Ok(id),
+        _ => Err(Abrupt::type_error(
+            "that constructor did not make a TypedArray",
+        )),
+    }
+}
+
+/// §23.2.3.36 — `with`, one index replaced and everything else copied.
+fn with(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let count = view.count();
+    let asked = super::string::to_integer_or_infinity(vm.to_number(call.argument(0), heap)?);
+    let index = if asked < 0.0 {
+        count as f64 + asked
+    } else {
+        asked
+    };
+    // Step 6 before step 7 — the *value* is converted before the index is judged, so a `valueOf`
+    // that throws is what a program sees even when the index was out of range as well.
+    let replacement = vm.to_number(call.argument(1), heap)?;
+    let Ok(index) = usize::try_from(index as i64) else {
+        return Err(Abrupt::range_error("that index is not in the TypedArray"));
+    };
+    if index >= count {
+        return Err(Abrupt::range_error("that index is not in the TypedArray"));
+    }
+    let values = elements(heap, view);
+    let made = same_kind(vm, heap, object, count)?;
+    for (at, value) in values.into_iter().enumerate() {
+        let held = if at == index { replacement } else { value };
+        heap.write_element(made, at, held);
+    }
+    Ok(Value::Object(made))
+}
+
+/// §23.2.3.32 — `toReversed`, which leaves the array it was given alone.
+fn to_reversed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let count = view.count();
+    let values = elements(heap, view);
+    let made = same_kind(vm, heap, object, count)?;
+    for (at, value) in values.into_iter().rev().enumerate() {
+        heap.write_element(made, at, value);
+    }
+    Ok(Value::Object(made))
+}
+
+/// §23.2.3.33 — `toSorted`, which is `sort` without the mutation.
+fn to_sorted(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 comes **before** `ValidateTypedArray`, so a bad comparator is reported as one even
+    // when `this` is not a TypedArray at all.
+    let comparator = call.argument(0);
+    if !matches!(comparator, Value::Undefined) && !heap.is_callable(comparator) {
+        return Err(Abrupt::type_error("the comparator is not a function"));
+    }
+    let (object, view) = validate(heap, call.this_value)?;
+    let count = view.count();
+    let values = elements(heap, view);
+    let sorted = match matches!(comparator, Value::Undefined) {
+        true => {
+            let mut numeric = values;
+            numeric.sort_by(|left, right| {
+                numeric_order(*left)
+                    .partial_cmp(&numeric_order(*right))
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+            numeric
+        }
+        false => sorted_by(vm, heap, values, comparator)?,
+    };
+    let made = same_kind(vm, heap, object, count)?;
+    for (at, value) in sorted.into_iter().enumerate() {
+        heap.write_element(made, at, value);
+    }
+    Ok(Value::Object(made))
 }
 
 /// §23.2.3.30 — `subarray`, which makes another **window onto the same buffer**.
