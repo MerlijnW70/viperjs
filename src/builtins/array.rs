@@ -58,7 +58,7 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 /// The array a built-in hands back when it has computed a list rather than been given one. Its
 /// elements are ordinary in every way, which is what §7.3.18 means by an array "whose elements are
 /// the elements of list".
-pub(super) fn from_values(vm: &Vm, heap: &mut Heap, values: &[Value]) -> Completion<Value> {
+pub(crate) fn from_values(vm: &Vm, heap: &mut Heap, values: &[Value]) -> Completion<Value> {
     let array = heap.new_array(vm.realm().array_prototype(), 0);
     for (at, value) in values.iter().enumerate() {
         let key = key(heap, &at.to_string());

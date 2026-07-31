@@ -805,6 +805,17 @@ impl Heap {
         id
     }
 
+    /// Give an object that already exists a `[[Call]]` running `native`.
+    ///
+    /// For §10.5 alone. Every other callable is *made* callable, because what it runs is decided
+    /// with it; a proxy is made first and then finds out whether its target was a function, and
+    /// §10.5 says it has a `[[Call]]` exactly when the target did.
+    pub fn make_callable(&mut self, object: ObjectId, native: Native, constructs: bool) {
+        if let Some(found) = self.object_mut(object) {
+            found.call = Some(Callable::Native { native, constructs });
+        }
+    }
+
     /// Put a bound function on the heap — `BoundFunctionCreate` (§10.4.1.3).
     ///
     /// Its prototype is the *target's*, not `Function.prototype`: §10.4.1.3 step 1 takes it from

@@ -164,6 +164,32 @@ impl Vm {
         // and `super()` creates it, which is DR-0015; making one here would be an object the
         // constructor could never see and the parent would make a second.
         let derived = body.derived_this().is_some();
+        // §10.2.2 step 5's `OrdinaryCreateFromConstructor`: `new` *makes* the receiver, out of
+        // **new.target's** `prototype` property. For a plain `new` new.target and the callee are
+        // the same object, which is why this was invisible until `super()` existed: there the
+        // callee is the parent and new.target is the class written after `new`, and only the
+        // second has the prototype the instance must inherit from.
+        //
+        // Built here rather than in the `match` below because reading that property is a `[[Get]]`
+        // — a getter, or a proxy's trap — and so may throw, which an arm producing a value cannot.
+        let made = if matches!(how, Entry::Construct | Entry::Super | Entry::Named) && !derived {
+            let from = match new_target {
+                Value::Object(target) => target,
+                // Unreachable from source — a construction always has one — and `object` is what
+                // §10.2.2 would fall back to, since it is the constructor being entered.
+                _ => object,
+            };
+            match self.prototype_property(from, heap) {
+                Ok(prototype) => Some(Value::Object(heap.new_object(Some(prototype)))),
+                Err(error) => {
+                    self.raise(error, heap, chunk, current, at)?;
+                    return Ok(());
+                }
+            }
+        } else {
+            None
+        };
+
         // §10.2.1.2 and §10.2.2 — where the receiver comes from, and it comes from somewhere
         // different in each of the ways in.
         let receiver = match how {
@@ -193,20 +219,12 @@ impl Vm {
             // — a script may assign anything to it — falls back to `Object.prototype`, which is
             // what §10.1.13 says rather than an error.
             Entry::Construct | Entry::Super | Entry::Named if derived => Value::Undefined,
-            Entry::Construct | Entry::Super | Entry::Named => {
-                // From **new.target's** `prototype` and not the callee's. For a plain `new` the two
-                // are the same object, which is why this was invisible until `super()` existed: there
-                // the callee is the parent and new.target is the class that was written after `new`,
-                // and only the second one has the prototype the instance must inherit from.
-                let from = match new_target {
-                    Value::Object(target) => target,
-                    // Unreachable from source — a construction always has one — and `object` is what
-                    // §10.2.2 would fall back to, since it is the constructor being entered.
-                    _ => object,
-                };
-                let prototype = self.prototype_property(from, heap)?;
-                Value::Object(heap.new_object(Some(prototype)))
-            }
+            Entry::Construct | Entry::Super | Entry::Named => match made {
+                Some(receiver) => receiver,
+                // `made` is filled in for exactly these entries, so this is a shape the types
+                // cannot rule out and nothing produces.
+                None => Value::Undefined,
+            },
         };
         if self.frames.len() >= MAX_CALL_DEPTH {
             let thrown = self
@@ -477,20 +495,20 @@ impl Vm {
         &mut self,
         constructor: crate::heap::ObjectId,
         heap: &mut Heap,
-    ) -> Result<crate::heap::ObjectId, Fault> {
+    ) -> crate::value::Completion<crate::heap::ObjectId> {
         let key = crate::heap::PropertyKey::from_units(
             heap,
             &"prototype".encode_utf16().collect::<Vec<_>>(),
         );
-        let found = heap
-            .find_own(constructor, key)
-            .map(|(_, property)| property);
-        let value = match found.map(|property| property.kind) {
-            Some(crate::heap::PropertyKind::Data { value, .. }) => value,
-            _ => Value::Undefined,
-        };
+        // §10.1.13's `GetPrototypeFromConstructor` asks `Get(constructor, "prototype")`, which is
+        // a full `[[Get]]`: a getter runs, and a proxy `new.target` answers with its trap. Reading
+        // the property table instead finds nothing on a proxy, and every instance built through
+        // one then inherited from `Object.prototype`.
+        let value = self.get_property_key(Value::Object(constructor), key, heap)?;
         Ok(match value {
             Value::Object(prototype) => prototype,
+            // A `prototype` that is not an object — a script may assign anything to it — falls
+            // back to `Object.prototype`, which is what §10.1.13 says rather than an error.
             _ => self.realm.object_prototype(),
         })
     }

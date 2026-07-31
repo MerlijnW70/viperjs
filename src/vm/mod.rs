@@ -36,6 +36,7 @@ mod global;
 mod jobs;
 mod property;
 mod proxy;
+mod proxy_call;
 mod proxy_shape;
 
 use self::call::Frame;

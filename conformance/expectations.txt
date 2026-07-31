@@ -1033,8 +1033,8 @@ built-ins/AggregateError/message-method-prop-cast.js :: it threw TypeError: cann
 built-ins/AggregateError/message-method-prop-cast.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
 built-ins/AggregateError/message-tostring-abrupt.js (strict) :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
-built-ins/AggregateError/newtarget-proto-custom.js :: it threw TypeError: Reflect.construct needs a constructor as its new.target
-built-ins/AggregateError/newtarget-proto-custom.js (strict) :: it threw TypeError: Reflect.construct needs a constructor as its new.target
+built-ins/AggregateError/newtarget-proto-custom.js :: it threw an object with no name: Expected SameValue(«AggregateError», «[object Object]») to be true
+built-ins/AggregateError/newtarget-proto-custom.js (strict) :: it threw an object with no name: Expected SameValue(«AggregateError», «[object Object]») to be true
 built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -2911,8 +2911,8 @@ built-ins/Function/internals/Call/class-ctor-realm.js :: it threw TypeError: wha
 built-ins/Function/internals/Call/class-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
-built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
+built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/derived-return-val-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/derived-return-val-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js :: it threw TypeError: what was called is not a function
@@ -4395,38 +4395,14 @@ built-ins/Promise/withResolvers/result.js :: it threw TypeError: what was called
 built-ins/Promise/withResolvers/result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/call-parameters.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/call-parameters.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/call-result.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/call-result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/return-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Proxy/apply/return-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Proxy/apply/trap-is-missing-target-is-proxy.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-missing-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-null-target-is-proxy.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-null-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-null.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-null.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-undefined-no-property.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-undefined-no-property.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-undefined.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-undefined.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/call-parameters-new-target.js :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/call-parameters-new-target.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/call-parameters.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/call-parameters.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/call-result.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/call-result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/null-handler-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-is-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Proxy/construct/return-is-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-null-realm.js :: it threw TypeError: what was called is not a function
@@ -4439,28 +4415,14 @@ built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js :: it threw T
 built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-null-target-is-proxy.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-null-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-null.js :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/trap-is-null.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/trap-is-undefined-no-property.js :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/trap-is-undefined-no-property.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
 built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/trap-is-undefined.js :: it threw TypeError: Reflect.construct needs a constructor
-built-ins/Proxy/construct/trap-is-undefined.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
 built-ins/Proxy/create-target-is-not-a-constructor.js :: it threw ReferenceError: eval is not defined
 built-ins/Proxy/create-target-is-not-a-constructor.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/Proxy/create-target-is-revoked-function-proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
-built-ins/Proxy/create-target-is-revoked-function-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 built-ins/Proxy/defineProperty/desc-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/desc-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/null-handler-realm.js :: it threw TypeError: what was called is not a function
@@ -4511,8 +4473,6 @@ built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js :: it threw TypeError: wha
 built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/revocable/target-is-revoked-function-proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
-built-ins/Proxy/revocable/target-is-revoked-function-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 built-ins/Proxy/revocable/tco-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js :: it threw an object with no name: Actual [] and expected [0, 0, 0] should have the same contents. getOwnPropertyDescriptor: key present on [[ProxyTarget]]
 built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js (strict) :: it threw an object with no name: Actual [] and expected [0, 0, 0] should have the same contents. getOwnPropertyDescriptor: key present on [[ProxyTarget]]
@@ -13677,8 +13637,6 @@ language/expressions/typeof/native-call.js :: it threw TypeError: building a fun
 language/expressions/typeof/native-call.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/typeof/null.js :: it threw ReferenceError: RegExp is not defined
 language/expressions/typeof/null.js (strict) :: it threw ReferenceError: RegExp is not defined
-language/expressions/typeof/proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
-language/expressions/typeof/proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 language/expressions/typeof/syntax.js :: it threw ReferenceError: eval is not defined
 language/expressions/typeof/syntax.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js :: it threw ReferenceError: eval is not defined

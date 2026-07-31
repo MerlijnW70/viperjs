@@ -969,3 +969,189 @@ fn the_listings_that_ask_for_a_descriptor_and_the_ones_that_do_not() {
         "a|0"
     );
 }
+
+#[test]
+fn a_proxy_is_callable_exactly_when_the_target_it_was_made_with_was() {
+    // §10.5 — a proxy has a `[[Call]]` only if the *initial* target had one, and a `[[Construct]]`
+    // only if the target was a constructor. Decided when the proxy is made and never revisited,
+    // which is why an `apply` trap in front of a plain object does nothing at all: there is no
+    // `[[Call]]` for it to be the body of.
+    assert_eq!(run("typeof new Proxy(function () {}, {})"), "function");
+    assert_eq!(run("typeof new Proxy({}, {})"), "object");
+    assert_eq!(
+        run("typeof new Proxy({}, {apply: function () { return 1; }})"),
+        "object"
+    );
+    assert_eq!(
+        run("Object.prototype.toString.call(new Proxy(function () {}, {}))"),
+        "[object Function]"
+    );
+    // An arrow has a `[[Call]]` and no `[[Construct]]`, and a proxy over one answers the same.
+    assert_eq!(
+        run(
+            "try { new (new Proxy(function () {}, {}))(); 'constructed' } \
+             catch (e) { e.constructor.name }"
+        ),
+        "constructed"
+    );
+    assert_eq!(
+        run("try { new (new Proxy(Math.max, {}))() } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn calling_a_proxy_with_no_apply_trap_calls_its_target() {
+    assert_eq!(
+        run("new Proxy(function (a, b) { return a + b; }, {})(2, 3)"),
+        "5"
+    );
+    assert_eq!(
+        run("[3, 1, 2].sort(new Proxy(function (a, b) { return a - b; }, {})).join()"),
+        "1,2,3"
+    );
+    // A built-in behind a proxy is reached the same way, which is what says the fall-through is
+    // `Call` and not a re-implementation of one kind of function.
+    assert_eq!(run("new Proxy(Math.max, {})(1, 5, 3)"), "5");
+    // The receiver goes through untouched — §10.5.12 passes `thisArgument` along.
+    assert_eq!(
+        run("new Proxy(function () { return this.tag; }, {}).call({tag: 'here'})"),
+        "here"
+    );
+}
+
+#[test]
+fn an_apply_trap_is_handed_the_target_the_receiver_and_the_arguments_as_an_array() {
+    // §10.5.12 step 7 — an **array**, not an argument list, which is what lets one trap stand in
+    // front of functions of any arity.
+    assert_eq!(
+        run(
+            "new Proxy(function () {}, {apply: function (t, self, args) { \
+             return Array.isArray(args) + ':' + args.join('-'); }})(1, 2, 3)"
+        ),
+        "true:1-2-3"
+    );
+    assert_eq!(
+        run(
+            "new Proxy(function () {}, {apply: function (t, self) { return self.tag; }})\
+             .call({tag: 'given'})"
+        ),
+        "given"
+    );
+    assert_eq!(
+        run("var f = function () { return 'target'; }; \
+             new Proxy(f, {apply: function (t) { return t === f; }})()"),
+        "true"
+    );
+    // A call with no arguments hands the trap an empty array rather than `undefined`.
+    assert_eq!(
+        run(
+            "new Proxy(function () {}, {apply: function (t, self, args) { \
+             return args.length; }})()"
+        ),
+        "0"
+    );
+}
+
+#[test]
+fn constructing_through_a_proxy_keeps_new_target_pointing_at_the_proxy() {
+    // §10.5.13 with no trap is `Construct(target, args, newTarget)`, and `newTarget` is the proxy
+    // — so §10.1.13 reads `prototype` off *it*, which §10.5.8 answers from the target. Reading the
+    // property table instead finds nothing on a proxy, and every instance then inherited from
+    // `Object.prototype` rather than from the constructor.
+    assert_eq!(
+        run(
+            "function C() { this.made = 1; } var p = new Proxy(C, {}); var o = new p(); \
+             (o instanceof C) + ',' + (Object.getPrototypeOf(o) === C.prototype) + ',' + o.made"
+        ),
+        "true,true,1"
+    );
+    // …and a `get` trap that answers a different `prototype` decides what the instance inherits
+    // from, which is the observable half of that being a `[[Get]]`.
+    assert_eq!(
+        run("function C() {} \
+             var p = new Proxy(C, {get: function (t, k) { \
+             return k === 'prototype' ? Array.prototype : t[k]; }}); \
+             Object.getPrototypeOf(new p()) === Array.prototype"),
+        "true"
+    );
+    assert_eq!(
+        run("class B { constructor() { this.b = 1; } } new (new Proxy(B, {}))().b"),
+        "1"
+    );
+}
+
+#[test]
+fn a_construct_trap_decides_what_new_evaluates_to_and_must_answer_an_object() {
+    assert_eq!(
+        run(
+            "new (new Proxy(function () {}, {construct: function (t, args) { \
+             return {made: args[0]}; }}))(5).made"
+        ),
+        "5"
+    );
+    // Step 9 — a primitive is refused. `new` evaluating to a number is something no other
+    // construction in the language can do, and a trap that forgets to return is the common case.
+    for answer in ["1", "undefined", "'text'", "null"] {
+        assert_eq!(
+            run(&format!(
+                "try {{ new (new Proxy(function () {{}}, \
+                 {{construct: function () {{ return {answer}; }}}}))() }} \
+                 catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "a construct trap answering {answer} should be refused"
+        );
+    }
+    // Step 8 — the trap is handed the target, the arguments as an array, and `new.target`.
+    assert_eq!(
+        run("var f = function () {}; \
+             var p = new Proxy(f, {construct: function (t, args, nt) { \
+             return {seen: (t === f) + ',' + Array.isArray(args) + ',' + (nt === p)}; }}); \
+             new p(1).seen"),
+        "true,true,true"
+    );
+}
+
+#[test]
+fn a_revoked_callable_proxy_is_still_a_function_and_refuses_to_run() {
+    // Revocation empties the target and handler; it does not take the `[[Call]]` away. So `typeof`
+    // still says `"function"` and calling it is a TypeError, and both halves are observable.
+    assert_eq!(
+        run("var r = Proxy.revocable(function () { return 1; }, {}); \
+             var before = r.proxy(); r.revoke(); \
+             typeof r.proxy + ',' + before + ',' + \
+             (function () { try { r.proxy() } catch (e) { return e.constructor.name } })()"),
+        "function,1,TypeError"
+    );
+    assert_eq!(
+        run("var r = Proxy.revocable(function () {}, {}); r.revoke(); \
+             try { new r.proxy() } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_plain_call_never_reads_the_callee_s_prototype() {
+    // §10.2.1 does not make a receiver, so it has no reason to ask for `prototype` — only
+    // §10.2.2's construction does. An ordinary function's own `prototype` is a plain data property
+    // and reading it costs nothing visible, so the read is caught where there is no own one to
+    // find: an arrow has none, the lookup walks to `Function.prototype`, and an accessor put there
+    // records every read that happens.
+    assert_eq!(
+        run("var log = []; \
+             Object.defineProperty(Function.prototype, 'prototype', \
+             {get: function () { log.push('read'); return {}; }, configurable: true}); \
+             var f = () => 1; f(); log.length"),
+        "0"
+    );
+    // …and a construction through a proxy reads it exactly once, which is what says the read
+    // belongs to the construction rather than having been removed altogether.
+    assert_eq!(
+        run("var log = []; \
+             var p = new Proxy(function () {}, \
+             {get: function (t, k) { log.push(k); return t[k]; }}); \
+             new p(); log.join()"),
+        "prototype"
+    );
+}

@@ -129,7 +129,7 @@ of M6: classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`, `Ar
 `DataView` and the TypedArrays. **`RegExp` is what remains of M4**, and the regular expression
 engine is ours to write — no dependency.
 
-Conformance as of this commit is **51.01% of test262** — 47,521 of 93,161 runs. Treat that number as
+Conformance as of this commit is **51.72% of test262** — 48,179 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -144,7 +144,10 @@ Let the failure buckets choose the next slice, not intuition. The largest right 
 | 838 | `BigInt64Array` and `BigUint64Array`, which need `BigInt` first |
 | 830 | modules |
 | 779 | `RegExp` as a *global*, on top of the 6,896 literals |
-| 770 | `Proxy` and `Reflect`'s other half |
+
+`Proxy` is in as of this commit — eleven of §6.1.7.2's thirteen internal methods, with §10.5's
+invariants. `[[Call]]` and `[[Construct]]` are not, which is 95 of the 137 failures left under
+`built-ins/Proxy` and is the obvious next slice there.
 
 **Read the *failure* buckets, not only that table.** The list above is what stopped the tests that
 never ran, and it is all architecture. Sorting the ~17,000 that **run and fail** by reason is what

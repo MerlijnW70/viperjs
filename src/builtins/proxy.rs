@@ -35,8 +35,34 @@ fn create(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Obj
     if let Some(found) = heap.object_mut(object) {
         found.set_proxy(Proxy::new(target, handler));
     }
+    // §10.5 — a proxy has a `[[Call]]` only if the *initial* target had one, and a `[[Construct]]`
+    // only if the target was a constructor. Decided here and never revisited, which is why an
+    // `apply` trap on a handler whose target is a plain object does nothing: there is no
+    // `[[Call]]` for it to be the body of. It is also what makes `typeof` answer without asking
+    // the handler anything.
+    let callable = heap
+        .object(target)
+        .and_then(crate::heap::Object::call)
+        .is_some();
+    if callable {
+        let constructs = heap
+            .object(target)
+            .is_some_and(crate::heap::Object::is_constructor);
+        heap.make_callable(object, through, constructs);
+    }
     let _ = vm;
     Ok(object)
+}
+
+/// §10.5.12 and §10.5.13 — a callable proxy's body.
+///
+/// One function for both, because a call and a construction differ only in `[[NewTarget]]` and
+/// `NativeCall` already carries it. The work is in [`crate::vm::Vm`], where the trap can be called.
+fn through(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    if call.constructing() {
+        return vm.proxy_construct(call.function, call.arguments, call.new_target, heap);
+    }
+    vm.proxy_call(call.function, call.this_value, call.arguments, heap)
 }
 
 /// §28.2.1.1 `Proxy(target, handler)`.
