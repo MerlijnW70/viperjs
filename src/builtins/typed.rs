@@ -79,6 +79,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         );
     }
 
+    super::typed_methods::install(heap, realm, prototype, abstract_constructor);
+
     // §23.2.5 — the nine, each inheriting from `%TypedArray%` in *both* directions: the constructor
     // from the abstract constructor, and its prototype from `%TypedArray%.prototype`. That second
     // link is what makes every method shared rather than copied nine times.

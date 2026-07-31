@@ -481,3 +481,616 @@ fn a_typed_array_is_refused_before_it_is_allocated_when_it_is_too_large() {
         "RangeError"
     );
 }
+
+#[test]
+fn the_methods_answer_a_typed_array_where_an_arrays_would_answer_an_array() {
+    // §23.2.3.21 and §23.2.3.10 — `map` and `filter` and `slice` make one of the *same kind*
+    // through `@@species`, which is the most visible difference from §23.1.3's generic methods.
+    assert_eq!(
+        run(
+            "var m = new Int8Array([1, 2, 3]).map(function (v) { return v * 2; }); \
+             m.join(',') + '|' + (m instanceof Int8Array) + ',' + Array.isArray(m)"
+        ),
+        "2,4,6|true,false"
+    );
+    assert_eq!(
+        run("new Int8Array([1, 2, 3]).filter(function (v) { return v > 1; }).join(',')"),
+        "2,3"
+    );
+    assert_eq!(
+        run("new Int8Array([1, 2, 3, 4]).slice(1, 3).join(',')"),
+        "2,3"
+    );
+    // …and the answer is converted by the *kind*, so a mapper returning a fraction into an
+    // `Int8Array` truncates where an Array would have kept it.
+    assert_eq!(
+        run("new Int8Array([1]).map(function () { return 1.9; }).join(',')"),
+        "1"
+    );
+    // §23.2.3.30 — `subarray` is the one that does **not** copy: another window onto the same
+    // buffer, so writing through it is visible through the original. That is the whole reason both
+    // it and `slice` exist.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8); var a = new Int32Array(b); var s = a.subarray(1); \
+             s[0] = 9; a[1] + ',' + s.length + ',' + (s.buffer === b)"
+        ),
+        "9,1,true"
+    );
+    assert_eq!(
+        run("var a = new Int32Array([1, 2]); var s = a.slice(1); s[0] = 9; a[1] + ',' + s[0]"),
+        "2,9"
+    );
+}
+
+#[test]
+fn sort_orders_numbers_where_an_arrays_sort_orders_their_spellings() {
+    // §23.2.3.29 — the default comparison is **numeric**. `Array.prototype.sort` renders each
+    // element as a String first, which puts 10 before 9; these elements *are* numbers and there is
+    // nothing to render.
+    assert_eq!(
+        run("new Float64Array([10, 9, 2]).sort().join(',')"),
+        "2,9,10"
+    );
+    // Where sorting the same three as an Array gives 10, 2, 9, because `Array.prototype.sort`
+    // compares `"10" < "2"`. Stated rather than run: §23.1.3.30 is not implemented here yet.
+
+    // `NaN` sorts last and `-0` before `+0`, neither of which an ordinary comparison can say.
+    assert_eq!(
+        run("var a = new Float64Array([NaN, 1, NaN, 0]); a.sort(); \
+             a[0] + ',' + a[1] + ',' + a[2] + ',' + a[3]"),
+        "0,1,NaN,NaN"
+    );
+    assert_eq!(
+        run("var a = new Float64Array([0, -0]); a.sort(); (1 / a[0]) + ',' + (1 / a[1])"),
+        "-Infinity,Infinity"
+    );
+    // A comparator is used when there is one, and it sees numbers rather than strings.
+    assert_eq!(
+        run("new Int8Array([1, 2, 3]).sort(function (a, b) { return b - a; }).join(',')"),
+        "3,2,1"
+    );
+    // …and one that answers nonsense still terminates with *some* permutation, which is all
+    // §23.2.3.29 requires of an inconsistent comparator.
+    assert_eq!(
+        run("new Int8Array([3, 1, 2]).sort(function () { return NaN; }).length"),
+        "3"
+    );
+    assert_eq!(
+        run("try { new Int8Array([1]).sort(1); } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // In place, answering the same array rather than a copy.
+    assert_eq!(
+        run("var a = new Int8Array([2, 1]); (a.sort() === a) + ',' + a.join(',')"),
+        "true,1,2"
+    );
+}
+
+#[test]
+fn a_walk_reads_the_length_from_the_slot_and_not_from_a_property() {
+    // §23.2.3's methods take the length from `[[ArrayLength]]` where §23.1.3's read a `length`
+    // *property*. A program that assigns one changes nothing, and a generic algorithm would then
+    // iterate zero elements.
+    assert_eq!(
+        run("var a = new Int8Array([1, 2, 3]); a.length = 0; \
+             a.join(',') + '|' + a.map(function (v) { return v; }).length"),
+        "1,2,3|3"
+    );
+    // The callback is handed the element, the index and the array — three arguments, in that order.
+    assert_eq!(
+        run(
+            "var seen = ''; new Int8Array([7, 8]).forEach(function (v, i, a) { \
+               seen += v + '@' + i + (a instanceof Int8Array) + ';'; }); seen"
+        ),
+        "7@0true;8@1true;"
+    );
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).every(function (v) { return v > 0; }) + ',' \
+             + new Int8Array([1, 2, 3]).some(function (v) { return v > 2; }) + ',' \
+             + new Int8Array([]).every(function () { return false; })"
+        ),
+        "true,true,true"
+    );
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).find(function (v) { return v > 1; }) + ',' \
+             + new Int8Array([1, 2, 3]).findIndex(function (v) { return v > 1; }) + ',' \
+             + new Int8Array([1, 2, 3]).findLast(function (v) { return v > 1; }) + ',' \
+             + new Int8Array([1, 2, 3]).findLastIndex(function (v) { return v > 1; })"
+        ),
+        "2,1,3,2"
+    );
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).reduce(function (a, b) { return a + b; }) + ',' \
+             + new Int8Array([1, 2, 3]).reduce(function (a, b) { return a + b; }, 10) + ',' \
+             + new Int8Array([1, 2, 3]).reduceRight(function (a, b) { return a + '' + b; })"
+        ),
+        "6,16,321"
+    );
+    // §23.2.3.22 step 5 — an empty array with no initial value is a TypeError, because there is no
+    // answer to give. With one, the initial value is the answer.
+    assert_eq!(
+        run("try { new Int8Array([]).reduce(function () {}); } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("new Int8Array([]).reduce(function () {}, 'start')"),
+        "start"
+    );
+    // Every one of them refuses a callback that is not a function, before it walks.
+    for name in [
+        "forEach", "map", "filter", "every", "some", "find", "reduce",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ new Int8Array([1]).{name}(1); }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn the_element_wise_methods_do_what_their_array_counterparts_do() {
+    assert_eq!(run("new Int8Array([1, 2, 3]).join('-')"), "1-2-3");
+    assert_eq!(run("new Int8Array([1, 2]).join()"), "1,2");
+    assert_eq!(run("String(new Int8Array([1, 2]))"), "1,2");
+    assert_eq!(run("new Int8Array([]).join(',')"), "");
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).at(-1) + ',' + new Int8Array([1, 2, 3]).at(0) + ',' \
+             + new Int8Array([1, 2, 3]).at(9)"
+        ),
+        "3,1,undefined"
+    );
+    assert_eq!(run("new Int32Array(4).fill(7).join(',')"), "7,7,7,7");
+    assert_eq!(run("new Int32Array(4).fill(7, 1, 3).join(',')"), "0,7,7,0");
+    assert_eq!(run("new Int8Array([1, 2, 3]).reverse().join(',')"), "3,2,1");
+    assert_eq!(
+        run("new Int8Array([1, 2, 3, 4, 5]).copyWithin(0, 3).join(',')"),
+        "4,5,3,4,5"
+    );
+    // §23.2.3.13 finds `NaN` where §23.2.3.14 cannot — `includes` uses `SameValueZero` and
+    // `indexOf` uses strict equality, which is the one difference between them.
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).indexOf(2) + ',' + new Int8Array([1, 2, 1]).lastIndexOf(1) \
+             + ',' + new Int8Array([1]).indexOf(9)"
+        ),
+        "1,2,-1"
+    );
+    assert_eq!(
+        run("new Float64Array([NaN]).includes(NaN) + ',' + new Float64Array([NaN]).indexOf(NaN)"),
+        "true,-1"
+    );
+    // §23.2.3.24 — `set` copies a source over this array at an offset, and refuses one that would
+    // not fit rather than writing the part of it that would.
+    assert_eq!(
+        run("var a = new Int8Array(4); a.set([1, 2], 1); a.join(',')"),
+        "0,1,2,0"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(4); a.set(new Int8Array([9, 8])); a.join(',')"),
+        "9,8,0,0"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(2); try { a.set([1, 2, 3]); } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(2); try { a.set([1], -1); } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+}
+
+#[test]
+fn a_typed_array_iterates_its_elements_and_says_so_three_ways() {
+    // §23.2.3.36 — `[@@iterator]` is the *same function object* as `values`, which a program can
+    // see and which follows from a TypedArray's iteration being over its elements and nothing else.
+    assert_eq!(
+        run("var p = Object.getPrototypeOf(Int8Array.prototype); \
+             p[Symbol.iterator] === p.values"),
+        "true"
+    );
+    assert_eq!(
+        run("var out = ''; for (var v of new Int8Array([1, 2, 3])) { out += v; } out"),
+        "123"
+    );
+    assert_eq!(
+        run("Array.from(new Int8Array([5, 6])).join(',') + '|' \
+             + Array.from(new Int8Array([5, 6]).keys()).join(',') + '|' \
+             + Array.from(new Int8Array([5, 6]).entries()) \
+                 .map(function (e) { return e.join(':'); }).join(' ')"),
+        "5,6|0,1|0:5 1:6"
+    );
+    // §23.2.2.1 and §23.2.2.2 — `from` takes an iterable or an array-like and an optional mapper,
+    // and `of` takes the elements it was handed.
+    assert_eq!(
+        run("Int8Array.from([1, 2, 3], function (v) { return v * 2; }).join(',')"),
+        "2,4,6"
+    );
+    assert_eq!(
+        run("Int8Array.from({ length: 2, 0: 7, 1: 8 }).join(',')"),
+        "7,8"
+    );
+    assert_eq!(run("Int8Array.of(9, 8).join(',')"), "9,8");
+    assert_eq!(
+        run("(Int8Array.of(1) instanceof Int8Array) + ',' \
+             + (Int8Array.from([1]) instanceof Int8Array)"),
+        "true,true"
+    );
+}
+
+#[test]
+fn every_method_refuses_something_that_is_not_one_or_whose_buffer_has_gone() {
+    // §23.2.4.1 `ValidateTypedArray` opens every one of them and asks two questions: is this a
+    // TypedArray, and are its bytes still there. The second is asked *first* rather than at the
+    // first element, so an empty walk over a detached buffer throws rather than quietly doing
+    // nothing — which is what tells a program its data went away.
+    for source in [
+        "join()",
+        "at(0)",
+        "map(function () {})",
+        "sort()",
+        "fill(1)",
+        "slice(0)",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ Object.getPrototypeOf(Int8Array.prototype).{source}; }} \
+                 catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{source}"
+        );
+        assert_eq!(
+            run(&format!(
+                "var b = new ArrayBuffer(8); var a = new Int32Array(b); b.transfer(); \
+                 try {{ a.{source}; }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "detached {source}"
+        );
+    }
+    // §23.2.3.30 asks a *different* question and arrives at the same place: `subarray` makes no
+    // element access, so it does not validate — but it builds another view over the same buffer,
+    // and a view over a detached one cannot be made. The refusal comes from the constructor rather
+    // than from the method, which is why the two are worth telling apart.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8); var a = new Int32Array(b); b.transfer();              try { a.subarray(0); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_conversion_may_detach_the_buffer_and_a_species_may_answer_anything() {
+    // §23.2.3.8 step 10 — `fill` converts three arguments and then asks about the buffer *again*,
+    // because each of those conversions runs a `valueOf` and a `valueOf` is a program. Without the
+    // second check the writes are simply discarded and nothing tells the program its data went.
+    for argument in ["a.fill(n)", "a.fill(1, n)", "a.fill(1, 0, n)"] {
+        assert_eq!(
+            run(&format!(
+                "var b = new ArrayBuffer(8); var a = new Int32Array(b);                  var n = {{ valueOf: function () {{ b.transfer(); return 1; }} }};                  try {{ {argument}; }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{argument}"
+        );
+    }
+    // §23.2.4.3 and §23.2.4.4 — a species, or a constructor `from` was called on, may answer
+    // anything at all. What it answered has to be a TypedArray, or the writes below it would go
+    // nowhere in silence and the caller would receive something it did not ask for.
+    assert_eq!(
+        run(
+            "var a = new Int8Array(4);              a.constructor = { [Symbol.species]: function () { return {}; } };              try { a.subarray(0); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var a = new Int8Array(4);              a.constructor = { [Symbol.species]: function () { return {}; } };              try { a.map(function (v) { return v; }); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "try { Int8Array.from.call(function () { return {}; }, [1]); }              catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "try { Int8Array.of.call(function () { return 1; }, 1); }              catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and so is a constructor that answers a TypedArray that is too *short*: the elements would
+    // be written into indices it does not have, which §10.4.5.5 discards in silence, and the
+    // caller would receive a short array and no complaint.
+    assert_eq!(
+        run(
+            "try { Int8Array.from.call(function () { return new Int8Array(1); }, [1, 2]); }              catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "try { Int8Array.of.call(function () { return new Int8Array(1); }, 1, 2); }              catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and a species that answers a TypedArray that is too short is refused too, because the
+    // elements would not fit in what it made.
+    assert_eq!(
+        run(
+            "var a = new Int8Array(4);              a.constructor = { [Symbol.species]: function () { return new Int8Array(1); } };              try { a.map(function (v) { return v; }); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_search_takes_its_direction_and_its_starting_point_from_the_arguments() {
+    // §23.2.3.14 and §23.2.3.18 — a `fromIndex` counts back from the end when it is negative, and
+    // the two directions start at opposite ends. Every one of these numbers is a boundary: an
+    // implementation off by one in either direction agrees with the others.
+    assert_eq!(
+        run("var a = new Int8Array([1, 2, 1, 2]); \
+             a.indexOf(2) + ',' + a.indexOf(2, 2) + ',' + a.indexOf(2, -1) + ',' + a.indexOf(2, -9)"),
+        "1,3,3,1"
+    );
+    assert_eq!(
+        run("var a = new Int8Array([1, 2, 1, 2]); \
+             a.lastIndexOf(1) + ',' + a.lastIndexOf(1, 1) + ',' + a.lastIndexOf(1, -3) \
+             + ',' + a.lastIndexOf(1, -9)"),
+        "2,0,0,-1"
+    );
+    // A `fromIndex` past the end finds nothing forwards and everything backwards, which is what
+    // the two clamps are for.
+    assert_eq!(
+        run("var a = new Int8Array([1, 2]); a.indexOf(1, 9) + ',' + a.lastIndexOf(2, 9)"),
+        "-1,1"
+    );
+    // The first and last elements themselves, which the bounds have to include.
+    assert_eq!(
+        run("var a = new Int8Array([7, 8, 7]); \
+             a.indexOf(7) + ',' + a.lastIndexOf(7) + ',' + a.indexOf(8, 1) + ',' + a.lastIndexOf(8, 1)"),
+        "0,2,1,1"
+    );
+    // §23.2.3.13's `SameValueZero` and §23.2.3.14's strict equality agree about everything except
+    // `NaN`, and neither finds a value that is not a number at all — a TypedArray holds numbers,
+    // so a string can never be one of them however it would compare.
+    assert_eq!(
+        run("var a = new Int8Array([1]); \
+             a.indexOf('1') + ',' + a.includes('1') + ',' + a.includes(undefined) \
+             + ',' + a.indexOf(1) + ',' + a.includes(1)"),
+        "-1,false,false,0,true"
+    );
+    assert_eq!(
+        run("var a = new Float64Array([1, NaN]); \
+             a.includes(NaN) + ',' + a.includes(1) + ',' + a.includes(9) + ',' + a.indexOf(NaN)"),
+        "true,true,false,-1"
+    );
+    // An empty array finds nothing, whichever way it is asked.
+    assert_eq!(
+        run("var a = new Int8Array([]); \
+             a.indexOf(1) + ',' + a.lastIndexOf(1) + ',' + a.includes(1)"),
+        "-1,-1,false"
+    );
+}
+
+#[test]
+fn a_range_that_is_relative_clamps_at_both_ends() {
+    // §7.1.5 with a relative index, which `fill`, `slice`, `subarray` and `copyWithin` all use: a
+    // negative counts back from the end, anything past the end is the end, and a backwards range
+    // is empty rather than reversed.
+    assert_eq!(
+        run("new Int8Array([1, 2, 3, 4]).slice(-2).join(',') + '|' \
+             + new Int8Array([1, 2, 3, 4]).slice(0, -2).join(',') + '|' \
+             + new Int8Array([1, 2, 3, 4]).slice(-9).join(',') + '|' \
+             + new Int8Array([1, 2, 3, 4]).slice(9).length + '|' \
+             + new Int8Array([1, 2, 3, 4]).slice(3, 1).length"),
+        "3,4|1,2|1,2,3,4|0|0"
+    );
+    assert_eq!(
+        run(
+            "new Int32Array(4).fill(7, -2).join(',') + '|' + new Int32Array(4).fill(7, 9).join(',')"
+        ),
+        "0,0,7,7|0,0,0,0"
+    );
+    assert_eq!(
+        run("var b = new ArrayBuffer(16); var a = new Int32Array(b); \
+             a.subarray(-2).length + ',' + a.subarray(2, 1).length + ',' + a.subarray(1, 3).length"),
+        "2,0,2"
+    );
+    // §23.2.3.24 — `set` fits exactly at the end and refuses one element more, which is the
+    // boundary the length check is about.
+    assert_eq!(
+        run("var a = new Int8Array(3); a.set([1, 2], 1); a.join(',')"),
+        "0,1,2"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(3); try { a.set([1, 2], 2); } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(3); a.set([1, 2, 3], 0); a.join(',')"),
+        "1,2,3"
+    );
+}
+
+#[test]
+fn a_comparator_decides_the_order_and_may_be_asked_many_times() {
+    // §23.2.3.29 — the comparator's *sign* is what is read: negative or zero keeps the order it
+    // was given, positive swaps. A sort that read it the other way round reverses everything, and
+    // one that never advanced would loop or place every element at the front.
+    assert_eq!(
+        run("new Int8Array([3, 1, 2]).sort(function (a, b) { return a - b; }).join(',')"),
+        "1,2,3"
+    );
+    assert_eq!(
+        run("new Int8Array([3, 1, 2]).sort(function (a, b) { return b - a; }).join(',')"),
+        "3,2,1"
+    );
+    // A comparator that says everything is equal keeps the order it was given, which is what "zero
+    // means keep" has to mean — and is only visible with more than two elements.
+    assert_eq!(
+        run("new Int8Array([3, 1, 2]).sort(function () { return 0; }).join(',')"),
+        "3,1,2"
+    );
+    // …and one that says everything is greater reverses it, which is the other end of the same
+    // reading.
+    assert_eq!(
+        run("new Int8Array([1, 2, 3]).sort(function () { return 1; }).join(',')"),
+        "3,2,1"
+    );
+    assert_eq!(
+        run("new Int8Array([1, 2, 3]).sort(function () { return -1; }).join(',')"),
+        "1,2,3"
+    );
+    // The comparator sees the elements as numbers, in the order the sort chose to compare them,
+    // and it is called at all — a sort that ignored it would still answer something plausible.
+    assert_eq!(
+        run(
+            "var seen = 0; new Int8Array([3, 1, 2]).sort(function () { seen++; return 0; }); seen > 0"
+        ),
+        "true"
+    );
+    // Five elements, so the answer cannot come out right by accident.
+    assert_eq!(
+        run("new Int8Array([5, 3, 1, 4, 2]).sort(function (a, b) { return a - b; }).join(',')"),
+        "1,2,3,4,5"
+    );
+}
+
+#[test]
+fn to_string_goes_through_join_and_a_walk_reads_its_callbacks_answer() {
+    // §23.2.3.31 is `Array.prototype.toString`, which calls whatever `join` currently *is* — so
+    // replacing it changes what `toString` answers, and a `join` that is not callable is refused
+    // rather than falling back to something else.
+    assert_eq!(
+        run(
+            "var a = new Int8Array([1, 2]); a.join = function () { return 'replaced'; }; \
+             a.toString()"
+        ),
+        "replaced"
+    );
+    assert_eq!(
+        run("var a = new Int8Array([1, 2]); a.join = 1; \
+             try { a.toString(); } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // §23.2.3.7 and §23.2.3.28 — the two that stop early, and the two answers each gives.
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).every(function (v) { return v < 3; }) + ',' \
+             + new Int8Array([1, 2, 3]).every(function (v) { return v < 9; }) + ',' \
+             + new Int8Array([1, 2, 3]).some(function (v) { return v > 9; }) + ',' \
+             + new Int8Array([]).some(function () { return true; })"
+        ),
+        "false,true,false,false"
+    );
+    // …and they stop as soon as they know, which is what "at the first" means.
+    assert_eq!(
+        run(
+            "var seen = 0; new Int8Array([1, 2, 3]).every(function () { seen++; return false; }); seen"
+        ),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "var seen = 0; new Int8Array([1, 2, 3]).some(function () { seen++; return true; }); seen"
+        ),
+        "1"
+    );
+    // §23.2.3.22 and §23.2.3.23 differ in direction and in nothing else, which only shows when the
+    // callback is not commutative.
+    assert_eq!(
+        run(
+            "new Int8Array([1, 2, 3]).reduce(function (a, b) { return a + '' + b; }) + ',' \
+             + new Int8Array([1, 2, 3]).reduceRight(function (a, b) { return a + '' + b; })"
+        ),
+        "123,321"
+    );
+    // §23.2.2.1 — a mapper that is not callable is refused before anything is read.
+    assert_eq!(
+        run("try { Int8Array.from([1], 1); } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(run("Int8Array.from([1, 2]).join(',')"), "1,2");
+}
+
+#[test]
+fn what_must_be_callable_says_which_argument_was_wrong() {
+    // Without these checks the call below fails anyway and says "what was called is not a
+    // function" — true, and unhelpful when the thing handed over was a function often enough that
+    // the useful sentence names the argument. Each is a different mistake and reads as one.
+    assert_eq!(
+        run("var a = new Int8Array([1, 2]); a.join = 1; \
+             try { a.toString(); } catch (e) { e.message }"),
+        "join is not a function"
+    );
+    assert_eq!(
+        run("try { new Int8Array([1]).map(1); } catch (e) { e.message }"),
+        "the callback is not a function"
+    );
+    assert_eq!(
+        run("try { new Int8Array([1]).reduce(1); } catch (e) { e.message }"),
+        "the callback is not a function"
+    );
+    assert_eq!(
+        run("try { Int8Array.from([1], 1); } catch (e) { e.message }"),
+        "the mapper is not a function"
+    );
+    assert_eq!(
+        run("try { new Int8Array([1]).sort(1); } catch (e) { e.message }"),
+        "the comparator is not a function"
+    );
+}
+
+#[test]
+fn at_counts_back_from_the_end_and_answers_nothing_outside_it() {
+    // §23.2.3.1 — a negative index counts back, and one that lands before the start is *absent*
+    // rather than the first element. The distinction matters because the arithmetic that produces
+    // it is unsigned underneath: an index of -6 into a three-element array is not index 0.
+    assert_eq!(
+        run("var a = new Int8Array([7, 8, 9]); \
+             a.at(0) + ',' + a.at(2) + ',' + a.at(-1) + ',' + a.at(-3)"),
+        "7,9,9,7"
+    );
+    assert_eq!(
+        run("var a = new Int8Array([7, 8, 9]); \
+             a.at(3) + ',' + a.at(-4) + ',' + a.at(-9) + ',' + a.at(9)"),
+        "undefined,undefined,undefined,undefined"
+    );
+    assert_eq!(run("new Int8Array([]).at(0)"), "undefined");
+    // A fraction truncates toward zero rather than rounding, and `undefined` is 0.
+    assert_eq!(
+        run("var a = new Int8Array([7, 8]); a.at(1.9) + ',' + a.at() + ',' + a.at(-1.9)"),
+        "8,7,8"
+    );
+}
+
+#[test]
+fn the_iterator_property_has_the_attributes_a_built_in_method_gets() {
+    // §17's convention: writable, not enumerable, configurable — which is what makes it
+    // replaceable, and it is the *same function object* as `values` rather than a copy.
+    assert_eq!(
+        run("var p = Object.getPrototypeOf(Int8Array.prototype); \
+             var d = Object.getOwnPropertyDescriptor(p, Symbol.iterator); \
+             d.writable + ',' + d.enumerable + ',' + d.configurable + ',' + (d.value === p.values)"),
+        "true,false,true,true"
+    );
+    // Replaceable, which is the only reason to say so: taking it off stops `for`-`of` working.
+    assert_eq!(
+        run("var p = Object.getPrototypeOf(Int8Array.prototype); \
+             delete p[Symbol.iterator]; \
+             try { for (var v of new Int8Array([1])) { } } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}

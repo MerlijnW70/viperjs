@@ -135,7 +135,7 @@ fn tagged(
 }
 
 /// `"[object " + tag + "]"`, for a tag that is already a String on the heap.
-fn text_of(heap: &mut Heap, tag: crate::heap::StringId) -> crate::heap::StringId {
+pub(super) fn text_of(heap: &mut Heap, tag: crate::heap::StringId) -> crate::heap::StringId {
     let mut units: Vec<u16> = "[object ".encode_utf16().collect();
     units.extend_from_slice(heap.string(tag).unwrap_or(&[]));
     units.push(u16::from(b']'));

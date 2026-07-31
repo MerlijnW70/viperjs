@@ -1,0 +1,835 @@
+//! §23.2.3 — what a TypedArray can do, which is nearly what an Array can and never by the same
+//! algorithm.
+//!
+//! # Why these are not `Array.prototype`'s
+//!
+//! Every one of §23.1.3's methods is *generic*: it reads a `length` property and then `Get`s each
+//! index, so it works on anything array-like. §23.2.3's are not. They begin with
+//! `ValidateTypedArray`, take the length from the internal slot, and read elements directly — which
+//! shows in three places a program can see:
+//!
+//! - **`length` is not consulted.** Assigning `ta.length = 0` changes nothing, and a generic
+//!   algorithm would then iterate nothing.
+//! - **The answer is a TypedArray.** `map` and `filter` and `slice` make one of the same kind
+//!   through `@@species`, not an Array.
+//! - **A detached buffer is a TypeError**, checked at the start, where a generic walk would simply
+//!   find every index absent and answer an array of `undefined`.
+//!
+//! # The two orderings
+//!
+//! `sort` without a comparator is **numeric** here and lexicographic on `Array.prototype`. That is
+//! not a convenience: the elements are numbers and there is no reason to render them as strings
+//! first, and a TypedArray sorted as strings would put 10 before 9.
+
+use super::{define_method, key};
+use crate::heap::{Heap, Iterated, Iteration, Native, NativeCall, ObjectId, PropertyKey, View};
+use crate::realm::Realm;
+use crate::value::{Abrupt, Completion, Value};
+use crate::vm::Vm;
+
+/// Put §23.2.3's methods on `%TypedArray%.prototype`.
+pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, constructor: ObjectId) {
+    for (name, length, native) in [
+        ("at", 1, at as Native),
+        ("copyWithin", 2, copy_within),
+        ("entries", 0, entries),
+        ("every", 1, every),
+        ("fill", 1, fill),
+        ("filter", 1, filter),
+        ("find", 1, find),
+        ("findIndex", 1, find_index),
+        ("findLast", 1, find_last),
+        ("findLastIndex", 1, find_last_index),
+        ("forEach", 1, for_each),
+        ("includes", 1, includes),
+        ("indexOf", 1, index_of),
+        ("join", 1, join),
+        ("keys", 0, keys),
+        ("lastIndexOf", 1, last_index_of),
+        ("map", 1, map),
+        ("reduce", 1, reduce),
+        ("reduceRight", 1, reduce_right),
+        ("reverse", 0, reverse),
+        ("set", 1, set),
+        ("slice", 2, slice),
+        ("some", 1, some),
+        ("sort", 1, sort),
+        ("subarray", 2, subarray),
+        ("toString", 0, to_string),
+        ("values", 0, values),
+    ] {
+        define_method(heap, realm, prototype, name, length, native);
+    }
+    // §23.2.3.36 — `[@@iterator]` is the *same function object* as `values`, which a program can
+    // see. It follows from a TypedArray's iteration being over its elements and nothing else.
+    if let Some(symbol) = realm.well_known(super::well_known_at("iterator"))
+        && let Some(found) = super::own_value(heap, prototype, "values")
+    {
+        let _ = heap.define_own_property(
+            prototype,
+            PropertyKey::from_symbol(symbol),
+            &crate::heap::PropertyDescriptor {
+                value: Some(found),
+                writable: Some(true),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+    }
+    // §23.2.2 — the two statics every kind inherits, and the species accessor `map` and `filter`
+    // and `slice` read to decide what to answer with.
+    for (name, length, native) in [("from", 1, from as Native), ("of", 0, of)] {
+        define_method(heap, realm, constructor, name, length, native);
+    }
+    super::buffer::define_species(heap, realm, constructor);
+}
+
+/// §23.2.4.1 `ValidateTypedArray` — the view, or the TypeError every method here begins with.
+///
+/// Two questions in one: is this a TypedArray at all, and are its bytes still there. The second is
+/// asked *first* in every method rather than at the first element, so an empty walk over a detached
+/// buffer throws rather than quietly doing nothing.
+fn validate(heap: &Heap, this: Value) -> Completion<(ObjectId, View)> {
+    let Value::Object(object) = this else {
+        return Err(Abrupt::type_error("this is not a TypedArray"));
+    };
+    let Some(view) = heap.typed_view(object) else {
+        return Err(Abrupt::type_error("this is not a TypedArray"));
+    };
+    if heap
+        .object(view.buffer)
+        .and_then(crate::heap::Object::buffer)
+        .is_none_or(crate::heap::Buffer::detached)
+    {
+        return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
+    }
+    Ok((object, view))
+}
+
+/// The elements of a view, as numbers, in order.
+///
+/// Taken once because every method that walks them may run a callback, and a callback can detach
+/// the buffer — §23.2.3.7 and its neighbours are explicit that the walk carries on with what it
+/// had. Reading each element afresh would make a detached buffer turn the rest of the walk into
+/// `undefined`s, which is a different answer.
+fn elements(heap: &Heap, view: View) -> Vec<f64> {
+    (0..view.count())
+        .filter_map(|at| heap.element_at(view, at))
+        .collect()
+}
+
+/// §7.3.20 `SpeciesConstructor` applied to a TypedArray, and a new one of `count` elements.
+fn species_array(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    count: usize,
+) -> Completion<Value> {
+    let default = kind_constructor(vm, heap, object)?;
+    let species = super::promise::species_of(vm, heap, object, default)?;
+    let made = vm.construct_value(Value::Object(species), &[Value::Number(count as f64)], heap)?;
+    // §23.2.4.2 step 4 — what came back has to be a TypedArray, and a long enough one. A species
+    // that answered something else would make every write below go nowhere in silence.
+    let Value::Object(id) = made else {
+        return Err(Abrupt::type_error("the species did not make a TypedArray"));
+    };
+    match heap.typed_view(id) {
+        Some(view) if view.count() >= count => Ok(made),
+        _ => Err(Abrupt::type_error("the species did not make a TypedArray")),
+    }
+}
+
+/// The constructor of the kind `object` is — its `constructor` property, or `%Int8Array%` if it has
+/// none, which is what `SpeciesConstructor`'s default is for.
+fn kind_constructor(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<ObjectId> {
+    let name = key(heap, "constructor");
+    let found = vm.get_property_key(Value::Object(object), name, heap)?;
+    match found {
+        Value::Object(id) => Ok(id),
+        _ => Err(Abrupt::type_error("this TypedArray has no constructor")),
+    }
+}
+
+/// §23.2.3.1 — `at`, which counts back from the end for a negative index.
+fn at(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (_, view) = validate(heap, call.this_value)?;
+    let count = view.count() as f64;
+    let asked = super::string::to_integer_or_infinity(vm.to_number(call.argument(0), heap)?);
+    let index = if asked < 0.0 { count + asked } else { asked };
+    // `try_from` rather than a comparison against the count: past the end `element_at` already
+    // answers nothing, so a bound here would decide nothing — but a *negative* index has to be
+    // caught, because `-6.0 as usize` is 0 in Rust and would answer the first element.
+    let Ok(index) = usize::try_from(index as i64) else {
+        return Ok(Value::Undefined);
+    };
+    Ok(heap
+        .element_at(view, index)
+        .map_or(Value::Undefined, Value::Number))
+}
+
+/// §23.2.3.9 — `fill`, which writes one value over a range.
+fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let count = view.count();
+    // §23.2.3.9 step 4 — the *value* is converted before the ends are, which a `valueOf` on any of
+    // the three can observe.
+    let value = vm.to_number(call.argument(0), heap)?;
+    let from = relative(vm, heap, call.argument(1), count, 0.0)?;
+    let to = relative(vm, heap, call.argument(2), count, count as f64)?;
+    // Step 10 — asked **again**, because all three conversions above can run a `valueOf` and a
+    // `valueOf` is a program: it can transfer the buffer out from under the fill that is still
+    // reading its own arguments. Without this the writes are simply discarded and the program is
+    // never told its data went away.
+    validate(heap, call.this_value)?;
+    for index in from..to {
+        heap.write_element(object, index, value);
+    }
+    Ok(call.this_value)
+}
+
+/// §23.2.3.26 — `slice`, which copies into a **new** TypedArray of the species' kind.
+fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let count = view.count();
+    let from = relative(vm, heap, call.argument(0), count, 0.0)?;
+    let to = relative(vm, heap, call.argument(1), count, count as f64)?;
+    let taken = to.saturating_sub(from);
+    let values: Vec<f64> = (from..from + taken)
+        .filter_map(|index| heap.element_at(view, index))
+        .collect();
+    let made = species_array(vm, heap, object, taken)?;
+    if let Value::Object(id) = made {
+        for (index, value) in values.into_iter().enumerate() {
+            heap.write_element(id, index, value);
+        }
+    }
+    Ok(made)
+}
+
+/// §23.2.3.30 — `subarray`, which makes another **window onto the same buffer**.
+///
+/// The one method here that does not copy, and the difference from `slice` is the whole reason both
+/// exist: writing through what `subarray` answered is visible through the original.
+fn subarray(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::Object(object) = call.this_value else {
+        return Err(Abrupt::type_error("this is not a TypedArray"));
+    };
+    let Some(view) = heap.typed_view(object) else {
+        return Err(Abrupt::type_error("this is not a TypedArray"));
+    };
+    // Not `validate`: §23.2.3.30 does *not* check for a detached buffer, because it makes no
+    // element access at all. A subarray of a detached array is an empty one.
+    let count = view.count();
+    let from = relative(vm, heap, call.argument(0), count, 0.0)?;
+    let to = relative(vm, heap, call.argument(1), count, count as f64)?;
+    let taken = to.saturating_sub(from);
+    let width = view.element.map_or(1, crate::heap::Element::width);
+    let default = kind_constructor(vm, heap, object)?;
+    let species = super::promise::species_of(vm, heap, object, default)?;
+    let made = vm.construct_value(
+        Value::Object(species),
+        &[
+            Value::Object(view.buffer),
+            Value::Number((view.offset + from * width) as f64),
+            Value::Number(taken as f64),
+        ],
+        heap,
+    )?;
+    // §23.2.4.3 step 4 — a species may answer anything at all, and what it answered has to be a
+    // TypedArray. One that is not would be handed back as though it were, and every later use of
+    // it would fail somewhere else entirely.
+    match made {
+        Value::Object(id) if heap.typed_view(id).is_some() => Ok(made),
+        _ => Err(Abrupt::type_error("the species did not make a TypedArray")),
+    }
+}
+
+/// §23.2.3.24 — `set`, which copies a source over this array starting at an offset.
+fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let offset = super::string::to_integer_or_infinity(vm.to_number(call.argument(1), heap)?);
+    if offset < 0.0 {
+        return Err(Abrupt::range_error("the offset of set may not be negative"));
+    }
+    let offset = offset as usize;
+    let source = call.argument(0);
+    // Every element is read *before* any is written, which matters when the two overlap: a source
+    // that is a view onto the same buffer would otherwise be read through what had just been
+    // written over it.
+    let values: Vec<f64> = match source {
+        Value::Object(id) if heap.typed_view(id).is_some() => {
+            let other = heap.typed_view(id).unwrap_or(view);
+            elements(heap, other)
+        }
+        _ => {
+            let taken = super::promise_group::iterable_to_list(vm, heap, source)
+                .or_else(|_| array_like(vm, heap, source))?;
+            let mut numbers = Vec::with_capacity(taken.len());
+            for value in taken {
+                numbers.push(vm.to_number(value, heap)?);
+            }
+            numbers
+        }
+    };
+    if offset + values.len() > view.count() {
+        return Err(Abrupt::range_error(
+            "this source is too long for this TypedArray",
+        ));
+    }
+    for (index, value) in values.into_iter().enumerate() {
+        heap.write_element(object, offset + index, value);
+    }
+    Ok(Value::Undefined)
+}
+
+/// An object with a `length` and no iterator — §7.3.19.
+fn array_like(vm: &mut Vm, heap: &mut Heap, source: Value) -> Completion<Vec<Value>> {
+    let Value::Object(object) = source else {
+        return Err(Abrupt::type_error("this is not something to copy from"));
+    };
+    let name = key(heap, "length");
+    let length = vm.get_property_key(Value::Object(object), name, heap)?;
+    let count = super::array_methods::to_length(vm.to_number(length, heap)?);
+    let mut taken = Vec::new();
+    for index in 0..count {
+        let at = super::array_methods::index_key(heap, index);
+        taken.push(vm.get_property_key(Value::Object(object), at, heap)?);
+        super::array_methods::within_budget(heap)?;
+    }
+    Ok(taken)
+}
+
+/// §23.2.3.6 — `copyWithin`, which moves a run of elements inside one array.
+fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let count = view.count();
+    let target = relative(vm, heap, call.argument(0), count, 0.0)?;
+    let from = relative(vm, heap, call.argument(1), count, 0.0)?;
+    let to = relative(vm, heap, call.argument(2), count, count as f64)?;
+    // Read first, then write — the two runs may overlap, and copying element by element would read
+    // through what it had already written.
+    let taken: Vec<f64> = (from..to)
+        .filter_map(|index| heap.element_at(view, index))
+        .take(count.saturating_sub(target))
+        .collect();
+    for (index, value) in taken.into_iter().enumerate() {
+        heap.write_element(object, target + index, value);
+    }
+    Ok(call.this_value)
+}
+
+/// §23.2.3.23 — `reverse`, in place.
+fn reverse(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let mut values = elements(heap, view);
+    values.reverse();
+    for (index, value) in values.into_iter().enumerate() {
+        heap.write_element(object, index, value);
+    }
+    Ok(call.this_value)
+}
+
+/// §23.2.3.29 — `sort`, whose default order is **numeric**.
+///
+/// Where `Array.prototype.sort` renders each element as a String first, this compares the numbers:
+/// the elements *are* numbers and there is nothing to render. Sorting them as strings would put 10
+/// before 9, which is right for an Array of anything and wrong for an array of numbers.
+fn sort(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let comparator = call.argument(0);
+    if !matches!(comparator, Value::Undefined) && !heap.is_callable(comparator) {
+        return Err(Abrupt::type_error("the comparator is not a function"));
+    }
+    let (object, view) = validate(heap, call.this_value)?;
+    let mut values = elements(heap, view);
+    if matches!(comparator, Value::Undefined) {
+        // §23.2.3.29's default: ascending, with `NaN` last and `-0` before `+0`. `sort_by` with a
+        // partial comparison cannot say either, so the key does it — every `NaN` sorts above every
+        // number, and the sign of a zero breaks the tie between two of them.
+        values.sort_by(|left, right| numeric_order(*left).total_cmp(&numeric_order(*right)));
+    } else {
+        // A comparator may run arbitrary code, so the values are sorted outside the heap and
+        // written back afterwards: a comparator that detached the buffer would otherwise be
+        // writing into bytes that had gone.
+        values = sorted_by(vm, heap, values, comparator)?;
+    }
+    for (index, value) in values.into_iter().enumerate() {
+        heap.write_element(object, index, value);
+    }
+    Ok(call.this_value)
+}
+
+/// The key that puts `NaN` last and `-0` before `+0` — §23.2.3.29's ordering, as one number.
+fn numeric_order(value: f64) -> f64 {
+    match value {
+        found if found.is_nan() => f64::INFINITY,
+        // `total_cmp` already separates the zeroes by sign and in the right direction, so nothing
+        // else is needed: this is only about lifting `NaN` above every number rather than leaving
+        // it wherever an unordered comparison put it.
+        found => found,
+    }
+}
+
+/// An insertion sort driven by a program's comparator.
+///
+/// Insertion rather than anything cleverer because the comparator may lie — return a different
+/// answer for the same pair each time — and a sort that assumed consistency could then read outside
+/// its own slice. §23.2.3.29 requires only that the result be *some* permutation when that happens,
+/// and this gives one for any comparator at all.
+fn sorted_by(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    values: Vec<f64>,
+    comparator: Value,
+) -> Completion<Vec<f64>> {
+    let mut sorted: Vec<f64> = Vec::with_capacity(values.len());
+    for value in values {
+        let mut at = 0;
+        while at < sorted.len() {
+            let answer = vm.call_value(
+                comparator,
+                Value::Undefined,
+                &[sorted[at], value].map(Value::Number),
+                heap,
+            )?;
+            let order = vm.to_number(answer, heap)?;
+            // §23.2.3.29 step 4 — `NaN` from a comparator is treated as 0, which is "these are
+            // equal", so a comparator that answers nonsense still terminates.
+            if order.is_nan() || order > 0.0 {
+                break;
+            }
+            at += 1;
+        }
+        sorted.insert(at, value);
+        super::array_methods::within_budget(heap)?;
+    }
+    Ok(sorted)
+}
+
+/// §23.2.3.16 — `join`.
+fn join(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (_, view) = validate(heap, call.this_value)?;
+    let separator = match call.argument(0) {
+        Value::Undefined => ",".to_string(),
+        given => {
+            let id = given.to_string(heap)?;
+            let units = heap.string(id).unwrap_or(&[]).to_vec();
+            char::decode_utf16(units)
+                .map(|found| found.unwrap_or(char::REPLACEMENT_CHARACTER))
+                .collect()
+        }
+    };
+    let joined: Vec<String> = elements(heap, view)
+        .into_iter()
+        .map(crate::value::number_to_string)
+        .collect();
+    Ok(super::text(heap, &joined.join(&separator)))
+}
+
+/// §23.2.3.31 — `toString`, which is `join` with the default separator and nothing else.
+fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let name = key(heap, "join");
+    let found = vm.get_property_key(call.this_value, name, heap)?;
+    // Through the *property*, because §23.2.3.31 is `Array.prototype.toString` and that one calls
+    // whatever `join` currently is — so replacing `join` changes what `toString` answers.
+    if !heap.is_callable(found) {
+        return Err(Abrupt::type_error("join is not a function"));
+    }
+    vm.call_value(found, call.this_value, &[], heap)
+}
+
+/// §23.2.3.14 — `indexOf`.
+fn index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    search(vm, heap, call, Search::First)
+}
+
+/// §23.2.3.18 — `lastIndexOf`.
+fn last_index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    search(vm, heap, call, Search::Last)
+}
+
+/// §23.2.3.13 — `includes`, which differs from `indexOf` in finding `NaN`.
+fn includes(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    search(vm, heap, call, Search::Includes)
+}
+
+/// Which of the three searches this is.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Search {
+    /// `indexOf` — strict equality, forwards.
+    First,
+    /// `lastIndexOf` — strict equality, backwards.
+    Last,
+    /// `includes` — `SameValueZero`, forwards, so it finds `NaN`.
+    Includes,
+}
+
+/// The body all three share.
+fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> Completion<Value> {
+    let (_, view) = validate(heap, call.this_value)?;
+    let values = elements(heap, view);
+    let wanted = call.argument(0);
+    let from = match call.arguments.len() {
+        0..=1 => None,
+        _ => Some(super::string::to_integer_or_infinity(
+            vm.to_number(call.argument(1), heap)?,
+        )),
+    };
+    // §23.2.3.13 and §23.2.3.14 differ in exactly one thing and it is not the direction: `includes`
+    // uses `SameValueZero`, which finds `NaN`, and the other two use strict equality, which cannot.
+    let matches = |found: f64| match (how, wanted) {
+        (Search::Includes, Value::Number(number)) => {
+            (found.is_nan() && number.is_nan()) || found == number
+        }
+        (_, Value::Number(number)) => found == number,
+        _ => false,
+    };
+    let count = values.len();
+    let start = |default: f64| -> f64 {
+        let given = from.unwrap_or(default);
+        if given < 0.0 {
+            count as f64 + given
+        } else {
+            given
+        }
+    };
+    let answer = match how {
+        Search::Last => {
+            // The last index, named once. Written out twice — once as the default and once as the
+            // clamp — a change to either was hidden by the `min` of the two.
+            let last = (count as f64) - 1.0;
+            let end = start(last).min(last);
+            (0..=end.max(-1.0) as isize)
+                .rev()
+                .find(|index| *index >= 0 && matches(values[*index as usize]))
+        }
+        _ => {
+            let begin = start(0.0).max(0.0) as usize;
+            (begin..count)
+                .find(|index| matches(values[*index]))
+                .map(|index| index as isize)
+        }
+    };
+    Ok(match how {
+        Search::Includes => Value::Boolean(answer.is_some()),
+        _ => Value::Number(answer.map_or(-1.0, |index| index as f64)),
+    })
+}
+
+/// §7.1.5 with a relative index — negative counts back from the end, and both ends clamp.
+fn relative(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    value: Value,
+    count: usize,
+    default: f64,
+) -> Completion<usize> {
+    let number = match value {
+        Value::Undefined => default,
+        other => super::string::to_integer_or_infinity(vm.to_number(other, heap)?),
+    };
+    let at = if number < 0.0 {
+        (count as f64 + number).max(0.0)
+    } else {
+        number.min(count as f64)
+    };
+    Ok(at as usize)
+}
+
+/// §23.2.3.20 — `keys`.
+fn keys(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    iterator(vm, heap, call, Iterated::Keys)
+}
+
+/// §23.2.3.35 — `values`, which is also `[@@iterator]`.
+fn values(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    iterator(vm, heap, call, Iterated::Values)
+}
+
+/// §23.2.3.8 — `entries`.
+fn entries(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    iterator(vm, heap, call, Iterated::Entries)
+}
+
+/// An Array Iterator over this array — the same one §23.1.5 makes, because a TypedArray is
+/// array-like and the iterator reads it by index like any other.
+fn iterator(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    kind: Iterated,
+) -> Completion<Value> {
+    validate(heap, call.this_value)?;
+    let made = heap.new_iterator(
+        vm.realm().array_iterator_prototype(),
+        Iteration {
+            over: call.this_value,
+            at: 0,
+            kind,
+            done: false,
+        },
+    );
+    Ok(Value::Object(made))
+}
+
+/// What a callback-driven walk is looking for — §23.2.3.7 and its eight neighbours.
+///
+/// All nine read the elements once, call the same callback with the same three arguments, and
+/// differ only in what they do with the answers. Written as one walk with this saying which, rather
+/// than nine walks that would drift apart at the first bug fixed in one of them.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Walk {
+    /// `every` — false at the first falsy answer.
+    Every,
+    /// `some` — true at the first truthy one.
+    Any,
+    /// `forEach` — nothing at all.
+    Each,
+    /// `map` — a new array of the answers.
+    Map,
+    /// `filter` — a new array of the elements whose answer was truthy.
+    Filter,
+    /// `find` — the first element whose answer was truthy.
+    Find,
+    /// `findIndex` — its index.
+    FindIndex,
+    /// `findLast` — the last, walking backwards.
+    FindLast,
+    /// `findLastIndex` — its index.
+    FindLastIndex,
+}
+
+/// §23.2.3.7 — `every`.
+fn every(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::Every)
+}
+
+/// §23.2.3.28 — `some`.
+fn some(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::Any)
+}
+
+/// §23.2.3.12 — `forEach`.
+fn for_each(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::Each)
+}
+
+/// §23.2.3.21 — `map`, which answers a TypedArray of the species' kind rather than an Array.
+fn map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::Map)
+}
+
+/// §23.2.3.10 — `filter`, likewise.
+fn filter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::Filter)
+}
+
+/// §23.2.3.10 — `find`.
+fn find(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::Find)
+}
+
+/// §23.2.3.11 — `findIndex`.
+fn find_index(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::FindIndex)
+}
+
+/// §23.2.3.10 — `findLast`, which walks backwards.
+fn find_last(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::FindLast)
+}
+
+/// §23.2.3.11 — `findLastIndex`.
+fn find_last_index(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    walk(vm, heap, call, Walk::FindLastIndex)
+}
+
+/// The walk all nine share.
+fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    let callback = call.argument(0);
+    if !heap.is_callable(callback) {
+        return Err(Abrupt::type_error("the callback is not a function"));
+    }
+    let receiver = call.argument(1);
+    // Taken once, because a callback may detach the buffer and §23.2.3.7 carries on with what it
+    // had rather than turning the rest of the walk into `undefined`s.
+    let values = elements(heap, view);
+    let backwards = matches!(how, Walk::FindLast | Walk::FindLastIndex);
+    let order: Vec<usize> = match backwards {
+        true => (0..values.len()).rev().collect(),
+        false => (0..values.len()).collect(),
+    };
+    let mut kept: Vec<f64> = Vec::new();
+    for index in order {
+        let element = Value::Number(values[index]);
+        let answer = vm.call_value(
+            callback,
+            receiver,
+            &[element, Value::Number(index as f64), call.this_value],
+            heap,
+        )?;
+        let truthy = answer.to_boolean(heap);
+        match how {
+            Walk::Every if !truthy => return Ok(Value::Boolean(false)),
+            Walk::Any if truthy => return Ok(Value::Boolean(true)),
+            Walk::Find | Walk::FindLast if truthy => return Ok(element),
+            Walk::FindIndex | Walk::FindLastIndex if truthy => {
+                return Ok(Value::Number(index as f64));
+            }
+            // §23.2.3.21 step 6.c — the *answer* is converted and kept, in order, and the array to
+            // put them in is made afterwards: `filter` knows its length only when the walk is over.
+            Walk::Map => {
+                let number = vm.to_number(answer, heap)?;
+                kept.push(number);
+            }
+            Walk::Filter if truthy => kept.push(values[index]),
+            _ => {}
+        }
+        super::array_methods::within_budget(heap)?;
+    }
+    match how {
+        Walk::Every => Ok(Value::Boolean(true)),
+        Walk::Any => Ok(Value::Boolean(false)),
+        Walk::Find | Walk::FindLast => Ok(Value::Undefined),
+        Walk::FindIndex | Walk::FindLastIndex => Ok(Value::Number(-1.0)),
+        Walk::Each => Ok(Value::Undefined),
+        Walk::Map | Walk::Filter => {
+            let made = species_array(vm, heap, object, kept.len())?;
+            if let Value::Object(id) = made {
+                for (index, value) in kept.into_iter().enumerate() {
+                    heap.write_element(id, index, value);
+                }
+            }
+            Ok(made)
+        }
+    }
+}
+
+/// §23.2.3.22 — `reduce`.
+fn reduce(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    fold(vm, heap, call, false)
+}
+
+/// §23.2.3.23 — `reduceRight`.
+fn reduce_right(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    fold(vm, heap, call, true)
+}
+
+/// Both folds, which differ in direction and in nothing else.
+fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, backwards: bool) -> Completion<Value> {
+    let (_, view) = validate(heap, call.this_value)?;
+    let callback = call.argument(0);
+    if !heap.is_callable(callback) {
+        return Err(Abrupt::type_error("the callback is not a function"));
+    }
+    let values = elements(heap, view);
+    let order: Vec<usize> = match backwards {
+        true => (0..values.len()).rev().collect(),
+        false => (0..values.len()).collect(),
+    };
+    let mut steps = order.into_iter();
+    // §23.2.3.22 step 5 — with no initial value the *first element* is one, and an empty array with
+    // no initial value is a TypeError rather than `undefined`: there is no answer to give.
+    let mut total = match call.arguments.len() {
+        0..=1 => match steps.next() {
+            Some(index) => Value::Number(values[index]),
+            None => {
+                return Err(Abrupt::type_error(
+                    "reduce of an empty TypedArray with no initial value",
+                ));
+            }
+        },
+        _ => call.argument(1),
+    };
+    for index in steps {
+        total = vm.call_value(
+            callback,
+            Value::Undefined,
+            &[
+                total,
+                Value::Number(values[index]),
+                Value::Number(index as f64),
+                call.this_value,
+            ],
+            heap,
+        )?;
+        super::array_methods::within_budget(heap)?;
+    }
+    Ok(total)
+}
+
+/// §23.2.2.1 — `%TypedArray%.from`, which takes an iterable or an array-like and a mapper.
+fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::Object(constructor) = call.this_value else {
+        return Err(Abrupt::type_error("from must be called on a constructor"));
+    };
+    let mapper = call.argument(1);
+    if !matches!(mapper, Value::Undefined) && !heap.is_callable(mapper) {
+        return Err(Abrupt::type_error("the mapper is not a function"));
+    }
+    let source = call.argument(0);
+    let taken = super::promise_group::iterable_to_list(vm, heap, source)
+        .or_else(|_| array_like(vm, heap, source))?;
+    let made = vm.construct_value(
+        Value::Object(constructor),
+        &[Value::Number(taken.len() as f64)],
+        heap,
+    )?;
+    let id = made_typed_array(heap, made, taken.len())?;
+    for (index, value) in taken.into_iter().enumerate() {
+        let mapped = match matches!(mapper, Value::Undefined) {
+            true => value,
+            false => vm.call_value(
+                mapper,
+                Value::Undefined,
+                &[value, Value::Number(index as f64)],
+                heap,
+            )?,
+        };
+        let number = vm.to_number(mapped, heap)?;
+        heap.write_element(id, index, number);
+    }
+    Ok(made)
+}
+
+/// §23.2.2.2 — `%TypedArray%.of`, which is `from` for arguments already in hand.
+fn of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::Object(constructor) = call.this_value else {
+        return Err(Abrupt::type_error("of must be called on a constructor"));
+    };
+    let made = vm.construct_value(
+        Value::Object(constructor),
+        &[Value::Number(call.arguments.len() as f64)],
+        heap,
+    )?;
+    let id = made_typed_array(heap, made, call.arguments.len())?;
+    for (index, value) in call.arguments.iter().enumerate() {
+        let number = vm.to_number(*value, heap)?;
+        heap.write_element(id, index, number);
+    }
+    Ok(made)
+}
+
+/// §23.2.4.4 `TypedArrayCreateFromConstructor` step 3 — what a constructor answered, if it is one.
+///
+/// `from` and `of` call a constructor a program named, and it may answer anything: a plain object,
+/// a number, a `DataView`. Checking that it is a TypedArray is what stops the writes below going
+/// nowhere in silence and the caller receiving something that is not what it asked for.
+fn made_typed_array(heap: &Heap, made: Value, count: usize) -> Completion<ObjectId> {
+    match made {
+        // Step 4 — and long enough. A constructor called with a length may answer a *shorter*
+        // array, and the elements would then be written into indices it does not have, which
+        // §10.4.5.5 discards in silence: the caller would receive a short array and no complaint.
+        Value::Object(id)
+            if heap
+                .typed_view(id)
+                .is_some_and(|view| view.count() >= count) =>
+        {
+            Ok(id)
+        }
+        _ => Err(Abrupt::type_error(
+            "this constructor did not make a long enough TypedArray",
+        )),
+    }
+}

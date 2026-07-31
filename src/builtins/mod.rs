@@ -37,6 +37,7 @@ mod promise_group;
 mod reflect;
 mod symbol;
 mod typed;
+mod typed_methods;
 mod view;
 pub use self::symbol::WELL_KNOWN;
 
