@@ -403,12 +403,16 @@ impl Vm {
                         new_target: self.new_target,
                         home,
                     });
-                    let object = heap.new_function(
-                        self.realm.function_prototype(),
-                        body.clone(),
-                        self.environment,
-                        lexical,
-                    );
+                    // §27.3.3 — a generator function's `[[Prototype]]` is
+                    // %GeneratorFunction.prototype% rather than %Function.prototype%, which is
+                    // where `Object.getPrototypeOf(function* () {})` lands and the only way a
+                    // script can reach that object at all.
+                    let inherits = match body.is_generator() {
+                        true => self.realm.generator_function_prototype(),
+                        false => self.realm.function_prototype(),
+                    };
+                    let object =
+                        heap.new_function(inherits, body.clone(), self.environment, lexical);
                     // §20.2.4.1 — `length` is what the function says it needs, which stops at the
                     // first default and never counts a rest parameter. Not writable and not
                     // enumerable, and *configurable*, which is what lets a decorator replace it.
@@ -458,7 +462,15 @@ impl Vm {
                     // §15.4.5 makes one that is not a constructor, so a `prototype` would be an object
                     // nothing could ever inherit from. `Object.getOwnPropertyNames(o.m)` is exactly
                     // `length` and `name`, which test262 checks by name.
-                    if !body.is_arrow() && !body.is_method() {
+                    // …and a **generator** gets neither, for a third reason: §15.5.3 gives it no
+                    // `[[Construct]]` either. What it gets instead is a `prototype` whose object
+                    // inherits from %GeneratorPrototype% and which points back at nothing — every
+                    // generator this function makes inherits from it, and §15.5.4 gives it no
+                    // `constructor`, so `g().constructor` finds %GeneratorFunction.prototype% up
+                    // the chain rather than `g` itself.
+                    if body.is_generator() {
+                        self.realm.make_generator_function(heap, object);
+                    } else if !body.is_arrow() && !body.is_method() {
                         self.realm.make_constructor(heap, object);
                     }
                     self.stack.push(Value::Object(object));
@@ -718,6 +730,15 @@ impl Vm {
                     let answer = match (frame.constructed, value) {
                         (Some(_), Value::Object(_)) | (None, _) => value,
                         (Some(made), _) => made,
+                    };
+                    // §27.5.3.2 step 5 — a generator's body does not answer with what it returned:
+                    // the resumption that entered it answers with `{ value, done: true }`, and the
+                    // generator is finished for good. Nothing put its execution back, so this is
+                    // the last of it, and the frame is the only thing that still knows which
+                    // object it belonged to.
+                    let answer = match frame.generator {
+                        Some(generator) => self.complete_generator(generator, answer, heap),
+                        None => answer,
                     };
                     self.stack.push(answer);
                     self.environment = frame.environment;

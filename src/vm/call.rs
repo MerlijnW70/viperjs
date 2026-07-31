@@ -106,6 +106,23 @@ impl Vm {
         let body = match callable {
             // Answered above; listed so that a third kind cannot arrive here unnoticed.
             Callable::Bound(_) => return Err(Fault::MissingFunction),
+            // §27.5.1's three resumptions, which are not functions with bodies at all: what they
+            // enter is a generator's parked execution. Answered here, beside the built-ins, because
+            // like a built-in they push no frame of the callee's own — and unlike one, they may
+            // leave the loop running inside a body.
+            Callable::Resume(kind) => {
+                return self.enter_resume(
+                    kind,
+                    how,
+                    callee_at,
+                    receiver_at,
+                    count,
+                    heap,
+                    chunk,
+                    current,
+                    at,
+                );
+            }
             Callable::Native { native, .. } => {
                 return self.enter_native(
                     native,
@@ -285,6 +302,27 @@ impl Vm {
             );
             heap.set_variable(environment, slot, Value::Object(arguments));
         }
+        // §15.5.4 `EvaluateGeneratorBody` — everything above this line is
+        // `FunctionDeclarationInstantiation`, which a generator performs exactly as an ordinary
+        // function does. What it does *not* do is run the body: from here the two part company.
+        if body.is_generator() {
+            let this_value = match lexical {
+                Some(captured) => captured.this_value,
+                None => receiver,
+            };
+            return self.enter_generator(
+                body,
+                object,
+                this_value,
+                new_target,
+                environment,
+                receiver_at,
+                heap,
+                chunk,
+                current,
+                at,
+            );
+        }
         self.stack.truncate(receiver_at);
         self.frames.push(Frame {
             code: (*current).take(),
@@ -305,6 +343,9 @@ impl Vm {
                 _ => None,
             },
             function: Some(object),
+            // An ordinary call, entered from the top of its body. A generator's frame is not
+            // pushed here at all — see [`Vm::enter_generator`].
+            generator: None,
         });
         self.environment = environment;
         // §10.2.1.2 step 1 — an arrow's `[[ThisMode]]` is `lexical`, so `OrdinaryCallBindThis`
@@ -496,6 +537,20 @@ impl Vm {
         constructor: crate::heap::ObjectId,
         heap: &mut Heap,
     ) -> crate::value::Completion<crate::heap::ObjectId> {
+        self.prototype_for(constructor, self.realm.object_prototype(), heap)
+    }
+
+    /// The same, with the intrinsic §10.1.13 falls back to named by the caller.
+    ///
+    /// `new f()` falls back to `%Object.prototype%` and a generator to `%GeneratorPrototype%`, and
+    /// the clause is the same one both times: `GetPrototypeFromConstructor` takes the intrinsic as
+    /// an argument. Two callers, one walk, and the fallback is the only thing that differs.
+    pub(super) fn prototype_for(
+        &mut self,
+        constructor: crate::heap::ObjectId,
+        fallback: crate::heap::ObjectId,
+        heap: &mut Heap,
+    ) -> crate::value::Completion<crate::heap::ObjectId> {
         let key = crate::heap::PropertyKey::from_units(
             heap,
             &"prototype".encode_utf16().collect::<Vec<_>>(),
@@ -508,8 +563,9 @@ impl Vm {
         Ok(match value {
             Value::Object(prototype) => prototype,
             // A `prototype` that is not an object — a script may assign anything to it — falls
-            // back to `Object.prototype`, which is what §10.1.13 says rather than an error.
-            _ => self.realm.object_prototype(),
+            // back to the intrinsic the caller named, which is what §10.1.13 says rather than an
+            // error.
+            _ => fallback,
         })
     }
 }
@@ -538,6 +594,13 @@ pub(super) struct Frame {
     /// `super()` reaches. So the answer cannot be compiled in and the frame is the only thing that
     /// still knows which function is running.
     pub(super) function: Option<crate::heap::ObjectId>,
+    /// The generator whose body this frame runs, if it runs one — §27.5.1's other direction.
+    ///
+    /// `None` for every ordinary call, which is nearly all of them. What needs it is `Return`: a
+    /// generator's body answers with an iterator result rather than with the value it returned, and
+    /// the generator has to be marked completed — and by then the frame is the only thing that
+    /// still knows which object this execution belongs to.
+    pub(super) generator: Option<crate::heap::ObjectId>,
     /// The `this` to go back to.
     pub(super) this_value: Value,
     /// The `new.target` to go back to.

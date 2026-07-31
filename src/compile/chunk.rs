@@ -77,6 +77,15 @@ pub struct Chunk {
     /// A class *constructor* is not a method by this flag, whatever the grammar calls it: it is the
     /// one thing in a class body that constructs.
     pub(super) method: bool,
+    /// Whether this body is a generator's — §15.5, the `*` after `function`.
+    ///
+    /// A generator function does not run its body when it is called: §15.5.4 binds the parameters,
+    /// makes the generator object, and answers with it. So the *call* has to know, and the chunk
+    /// is what still knows by then — the same argument as `strict` two fields up.
+    ///
+    /// It is not a constructor either (§15.5.3 gives it no `[[Construct]]`), and its `prototype`
+    /// property is an object inheriting %GeneratorPrototype% rather than %Object.prototype%.
+    pub(super) generator: bool,
     /// Whether this body is a class constructor — §15.7.14.
     ///
     /// It has a `[[Construct]]` and no useful `[[Call]]`: written without `new` it is a TypeError.
@@ -745,6 +754,11 @@ impl Chunk {
     /// Whether this body is strict code — §11.2.1.
     pub fn is_strict(&self) -> bool {
         self.strict
+    }
+
+    /// Whether this body belongs to a generator function — §15.5.
+    pub fn is_generator(&self) -> bool {
+        self.generator
     }
 
     /// Whether the parameter list is simple — §15.1.4, and which arguments object to build.

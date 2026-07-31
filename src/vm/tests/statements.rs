@@ -144,7 +144,7 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
             "for (let i = 0; i < 1; i++) { (() => i); }",
             "a function that closes over a `let` or `const` declared in a loop",
         ),
-        ("function* g() {}", "an async function or a generator"),
+        ("async function f() {}", "an async function"),
     ];
     for (source, what) in cases {
         let mut heap = Heap::new();

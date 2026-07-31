@@ -51,6 +51,7 @@
 //! - `weak` — §24.3 and §24.4, and the methods they deliberately do not have.
 //! - `weak_ref` — §26.1 and §26.2, and the registration that would defeat itself.
 //! - `suspension` — DR-0017's parked frame, out of chunks no compiler emits yet.
+//! - `generators` — §15.5 and §27.5, over a body that does not yield yet.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
@@ -80,6 +81,7 @@ mod destructuring;
 mod for_in;
 mod for_of;
 mod functions;
+mod generators;
 mod globals;
 mod inheritance;
 mod iterator_helpers;

@@ -42,8 +42,8 @@ impl Compiler<'_> {
         method: bool,
         span: Span,
     ) -> Result<(), CompileError> {
-        if function.is_async || function.is_generator {
-            return Err(unsupported("an async function or a generator", span));
+        if function.is_async {
+            return Err(unsupported("an async function", span));
         }
         if self.would_capture_a_per_iteration_binding() {
             return Err(unsupported(
@@ -65,6 +65,7 @@ impl Compiler<'_> {
             Strict::of(function.is_strict),
             Lexical::No,
             method,
+            Generator::of(function.is_generator),
             span,
         )?;
         self.emit_function(body, span)
@@ -123,7 +124,16 @@ impl Compiler<'_> {
         lexical: Lexical,
         span: Span,
     ) -> Result<Chunk, CompileError> {
-        self.compile_nested_method(parameters, body, naming, strict, lexical, false, span)
+        self.compile_nested_method(
+            parameters,
+            body,
+            naming,
+            strict,
+            lexical,
+            false,
+            Generator::No,
+            span,
+        )
     }
 
     /// The same, saying whether the body is a `MethodDefinition` — §15.4.5.
@@ -136,6 +146,7 @@ impl Compiler<'_> {
         strict: Strict,
         lexical: Lexical,
         method: bool,
+        generator: Generator,
         span: Span,
     ) -> Result<Chunk, CompileError> {
         let mut outer = self.outer.clone();
@@ -159,6 +170,7 @@ impl Compiler<'_> {
             outer,
             Nesting {
                 method,
+                generator: generator == Generator::Yes,
                 strict: match strict {
                     Strict::Yes => true,
                     Strict::No => false,
@@ -407,6 +419,8 @@ pub(super) enum Body<'a> {
 pub(super) struct Nesting<'a> {
     /// Whether the body is a `MethodDefinition` — §15.4.5, which decides `[[Construct]]`.
     method: bool,
+    /// Whether the body is a generator's — §15.5, which decides whether calling it runs it.
+    generator: bool,
     /// Whether the body is strict code — §11.2.1, decided by the parser and carried here.
     ///
     /// Passed in rather than inherited from the enclosing compiler, because a body may *add*
@@ -481,6 +495,29 @@ impl Strict {
     }
 }
 
+/// Whether the body is a generator's — §15.5's `*`.
+///
+/// A named flag rather than a `bool` beside the two others, for the reason [`Lexical`] is one: the
+/// call sites pass three booleans in a row, and three `true`s in a row is a place to make a mistake
+/// that compiles.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Generator {
+    /// An ordinary function: calling it runs its body.
+    No,
+    /// A generator: calling it makes a generator object and runs nothing — §15.5.4.
+    Yes,
+}
+
+impl Generator {
+    /// What the parser recorded, as this enum.
+    pub(super) fn of(is_generator: bool) -> Self {
+        match is_generator {
+            true => Self::Yes,
+            false => Self::No,
+        }
+    }
+}
+
 /// Whether the body binds `this` itself, or takes the one around it.
 ///
 /// One flag rather than two near-identical compilers. The whole of §15.3's difference from §15.2
@@ -512,6 +549,7 @@ fn compile_body(
     // §10.2.9 — interned, so that the hundred `function f` in a program share one String and so that
     // the key made from it is the one the object already has.
     compiler.chunk.method = nesting.method;
+    compiler.chunk.generator = nesting.generator;
     compiler.chunk.strict = nesting.strict;
     compiler.chunk.name = nesting.naming.spelled().map(|name| {
         compiler

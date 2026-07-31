@@ -29,6 +29,7 @@ mod date_format;
 mod date_methods;
 pub mod error;
 pub mod function;
+mod generator;
 pub mod global;
 mod iterator;
 mod iterator_helpers;
@@ -96,6 +97,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     math::install(heap, realm, global);
     wrapper::install(heap, realm, global);
     iterator::install(heap, realm);
+    generator::install(heap, realm);
     iterator_helpers::install(heap, realm, global);
     json::install(heap, realm, global);
     date::install(heap, realm, global);

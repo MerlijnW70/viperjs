@@ -41,6 +41,12 @@ pub(crate) struct Suspended {
     environment: EnvironmentId,
     /// The function object this execution is running — §10.2.2's *active function object*.
     function: Option<ObjectId>,
+    /// The generator this execution belongs to, if it is a generator's body.
+    ///
+    /// §27.5.1's other direction: the generator holds the execution and the execution knows which
+    /// generator it is. Both are needed, and at different moments — a resumption starts from the
+    /// object, and a `return` inside the body has only the frame to ask.
+    generator: Option<ObjectId>,
     /// The operands it had built, from its own floor upwards.
     stack: Vec<Value>,
     /// The handlers it had installed, each rebased to that floor.
@@ -59,6 +65,7 @@ impl Suspended {
             .copied()
             .chain([self.this_value, self.new_target])
             .chain(self.function.map(Value::Object))
+            .chain(self.generator.map(Value::Object))
     }
 
     /// The environment its next instruction will read a variable from.
@@ -67,6 +74,33 @@ impl Suspended {
     /// frames that would have named it are gone.
     pub(crate) fn environment(&self) -> EnvironmentId {
         self.environment
+    }
+
+    /// An execution that has not begun — §15.5.4's `GeneratorStart`, as a parked frame.
+    ///
+    /// Instruction zero, an empty operand stack and no handlers, which is exactly what a frame the
+    /// loop has never run would look like. That is the whole trick behind a generator function
+    /// answering without running anything: there is no separate "not started yet" state, only a
+    /// suspension that happens to be at the beginning.
+    pub(super) fn started(
+        code: Rc<Chunk>,
+        environment: EnvironmentId,
+        this_value: Value,
+        new_target: Value,
+        function: ObjectId,
+        generator: ObjectId,
+    ) -> Self {
+        Self {
+            code: Some(code),
+            at: 0,
+            this_value,
+            new_target,
+            environment,
+            function: Some(function),
+            generator: Some(generator),
+            stack: Vec::new(),
+            handlers: Vec::new(),
+        }
     }
 }
 
@@ -131,6 +165,7 @@ impl Vm {
             new_target: self.new_target,
             environment: self.environment,
             function: frame.function,
+            generator: frame.generator,
             stack: self.stack.split_off(operands),
             handlers: self
                 .handlers
@@ -189,6 +224,7 @@ impl Vm {
             // whatever made this execution decided that once, and it is not being decided again.
             constructed: None,
             function: parked.function,
+            generator: parked.generator,
         });
         self.stack.truncate(base);
         self.stack.extend_from_slice(&parked.stack);

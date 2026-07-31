@@ -108,6 +108,18 @@ pub struct Realm {
     /// is gone falls back to this one, and a fallback that read the global would answer with
     /// whatever a program had since assigned to `Promise`.
     promise_constructor: ObjectId,
+    /// %GeneratorFunction.prototype% — §27.3.3, the `[[Prototype]]` of every generator *function*.
+    ///
+    /// Not a constructor and not reachable by name: §27.3 makes `GeneratorFunction` itself
+    /// unreachable except through `Object.getPrototypeOf(function* () {}).constructor`, so this is
+    /// held by the realm rather than by a property on the global object.
+    generator_function_prototype: ObjectId,
+    /// %GeneratorPrototype% — §27.5.1, what every generator *object* inherits from.
+    ///
+    /// Its `[[Prototype]]` is %IteratorPrototype%, which is what makes a generator iterable: the
+    /// `[@@iterator]` it inherits answers the generator itself, so `for (const x of gen())` walks
+    /// the generator rather than looking for something else.
+    generator_prototype: ObjectId,
     /// %IteratorPrototype% — §27.1.2, where `[@@iterator]` answers the receiver.
     ///
     /// Every iterator in the language inherits from this, however it was made, which is what makes
@@ -217,6 +229,12 @@ impl Realm {
         let finalization_registry_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let set_iterator_prototype = heap.new_object(Some(iterator_prototype));
+        // §27.5.1 — a generator object inherits from %GeneratorPrototype%, which inherits from
+        // %IteratorPrototype%. That second link is the whole of what makes a generator iterable.
+        let generator_prototype = heap.new_object(Some(iterator_prototype));
+        // §27.3.3 — and a generator *function* inherits from this, which is an ordinary object
+        // whose `[[Prototype]]` is %Function.prototype%: a generator function is still a function.
+        let generator_function_prototype = heap.new_object(Some(function_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
         // rather than in a builtin module because it is not reachable by name from any script:
         // its only appearances are as an accessor pair the specification puts in place.
@@ -292,6 +310,8 @@ impl Realm {
             typed_array_prototype,
             map_prototype,
             regexp_prototype,
+            generator_prototype,
+            generator_function_prototype,
             regexp_string_iterator_prototype,
             set_prototype,
             weak_map_prototype,
@@ -519,6 +539,16 @@ impl Realm {
         self.iterator_prototype
     }
 
+    /// %GeneratorPrototype% — §27.5.1, what a generator object inherits from.
+    pub fn generator_prototype(&self) -> ObjectId {
+        self.generator_prototype
+    }
+
+    /// %GeneratorFunction.prototype% — §27.3.3, what a generator function inherits from.
+    pub fn generator_function_prototype(&self) -> ObjectId {
+        self.generator_function_prototype
+    }
+
     /// %ArrayIteratorPrototype% — §23.1.5.2.
     pub fn array_iterator_prototype(&self) -> ObjectId {
         self.array_iterator_prototype
@@ -562,6 +592,25 @@ impl Realm {
         };
         let _ = heap.define_own_property(prototype, constructor, &descriptor);
 
+        let key = PropertyKey::from_units(heap, &"prototype".encode_utf16().collect::<Vec<_>>());
+        let descriptor = PropertyDescriptor {
+            value: Some(Value::Object(prototype)),
+            writable: Some(true),
+            enumerable: Some(false),
+            configurable: Some(false),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(function, key, &descriptor);
+    }
+
+    /// §15.5.4's `prototype` for a generator function, which is not `MakeConstructor`'s.
+    ///
+    /// Two differences and both matter. The object inherits from %GeneratorPrototype% rather than
+    /// from %Object.prototype%, which is what puts `next` on every generator this function makes.
+    /// And there is **no `constructor` back-pointer**: a generator function is not a constructor,
+    /// so a property saying it was would be a lie a script can read.
+    pub fn make_generator_function(&self, heap: &mut Heap, function: ObjectId) {
+        let prototype = heap.new_object(Some(self.generator_prototype));
         let key = PropertyKey::from_units(heap, &"prototype".encode_utf16().collect::<Vec<_>>());
         let descriptor = PropertyDescriptor {
             value: Some(Value::Object(prototype)),

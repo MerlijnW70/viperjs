@@ -58,7 +58,7 @@ mod typed;
 mod weak_ref;
 
 pub use self::arguments::{ArgumentsMap, Incoming};
-pub use self::callable::{Bound, Callable, Native, NativeCall};
+pub use self::callable::{Bound, Callable, Native, NativeCall, Resumption};
 pub use self::iteration::{Iterated, Iteration};
 pub use self::symbol::{Symbol, SymbolId};
 
@@ -95,7 +95,7 @@ pub use self::environment::{Environment, EnvironmentId};
 pub use self::helper::{Helper, Step};
 pub use self::matches::Matches;
 pub(crate) use self::object::MAX_PROTOTYPE_CHAIN;
-pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
+pub use self::object::{GeneratorState, Lexical, Object, ObjectId, PrivateElement};
 pub use self::promise::{
     Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
 };

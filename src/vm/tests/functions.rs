@@ -166,8 +166,7 @@ fn what_a_function_evaluates_to_is_not_the_scripts_completion_value() {
 #[test]
 fn what_functions_cannot_do_yet_says_which_and_where() {
     let cases = [
-        ("function* g() {}", "an async function or a generator"),
-        ("async function f() {}", "an async function or a generator"),
+        ("async function f() {}", "an async function"),
         ("function f(...[a]) {}", "a destructuring rest parameter"),
     ];
     let mut heap = Heap::new();

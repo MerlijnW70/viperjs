@@ -21,6 +21,8 @@
 //!   `[[Delete]]` and `[[HasProperty]]`, each of which can throw.
 //! - `suspend` — taking an execution out of the loop and putting it back, which is what a
 //!   generator and an `async` function are both made of.
+//! - `generator` — §15.5.4 and §27.5.1, which are the two ends of that: making a generator, and
+//!   resuming one.
 //! - here — the loop, the frames, and the two kinds of failure.
 //!
 //! # A throw is an answer, not a failure
@@ -34,6 +36,7 @@
 mod call;
 mod coerce;
 mod execute;
+mod generator;
 mod global;
 mod jobs;
 mod property;

@@ -54,6 +54,32 @@ pub enum Callable {
     /// A third variant rather than a Rust closure, because a [`Native`] is a plain `fn` pointer
     /// and has nowhere to keep the three things this needs.
     Bound(Bound),
+    /// One of §27.5.1's three resumption methods — `next`, `return` and `throw`.
+    ///
+    /// **Not** a [`Native`], and that is the whole reason this variant exists. Resuming a generator
+    /// means running its body, and a native runs inside DR-0011's nested execution — a Rust call
+    /// waiting mid-instruction, which DR-0017 says a suspension may not be handed back to. So the
+    /// body cannot be entered from Rust at all; it has to be entered by the interpreter's own loop,
+    /// which is what [`crate::vm::Vm`]'s `enter` does when it meets one of these.
+    ///
+    /// A variant beside [`Callable::Bound`] rather than a flag on a native, for the same reason
+    /// that one is: what is actually entered is not this function.
+    Resume(Resumption),
+}
+
+/// Which of §27.5.1's three ways a generator is resumed.
+///
+/// The three differ in the *completion* the body is resumed with, and in nothing else: `next`
+/// resumes with a normal one, `return` with a return, and `throw` with a throw. §27.5.3.2's
+/// `GeneratorResume` and §27.5.3.4's `GeneratorResumeAbrupt` are that difference and no other.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Resumption {
+    /// §27.5.1.2 `next` — carry on, with the argument as the value of the `yield`.
+    Next,
+    /// §27.5.1.3 `return` — carry on as though a `return` had been written at the `yield`.
+    Return,
+    /// §27.5.1.4 `throw` — carry on as though a `throw` had been written there.
+    Throw,
 }
 
 impl Callable {
@@ -71,9 +97,16 @@ impl Callable {
         match self {
             // §15.3 for an arrow and §15.4.5 for a method, and they are two facts rather than one:
             // an arrow has no `this` either, where a method has one and simply does not construct.
-            Self::Bytecode(body) => !body.is_arrow() && !body.is_method(),
+            // …and §15.5.3 for a generator, which is a third reason and not the same as either:
+            // a generator function has a `this` and is written like an ordinary declaration, and
+            // `new g()` is still a TypeError because what it would construct is an object nothing
+            // ever inherits from — a generator's instances come from calling it, not from `new`.
+            Self::Bytecode(body) => !body.is_arrow() && !body.is_method() && !body.is_generator(),
             Self::Native { constructs, .. } => *constructs,
             Self::Bound(bound) => bound.constructs,
+            // §27.5.1 gives none of the three a `[[Construct]]`, as it gives none to any method:
+            // `new gen.next()` is a TypeError.
+            Self::Resume(_) => false,
         }
     }
 }
