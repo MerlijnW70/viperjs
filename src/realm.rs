@@ -66,6 +66,8 @@ pub struct Realm {
     array_buffer_constructor: ObjectId,
     /// %DataView.prototype% — §25.3.4.
     data_view_prototype: ObjectId,
+    /// %TypedArray.prototype% — §23.2.3, which every one of the nine inherits from.
+    typed_array_prototype: ObjectId,
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
     /// %Set.prototype% — §24.2.3.
@@ -185,6 +187,7 @@ impl Realm {
         let string_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let array_buffer_prototype = heap.new_object(Some(object_prototype));
         let data_view_prototype = heap.new_object(Some(object_prototype));
+        let typed_array_prototype = heap.new_object(Some(object_prototype));
         let map_prototype = heap.new_object(Some(object_prototype));
         let set_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
@@ -261,6 +264,7 @@ impl Realm {
             // Replaced by `builtins::buffer::install`, which is where the constructor is made.
             array_buffer_constructor: array_buffer_prototype,
             data_view_prototype,
+            typed_array_prototype,
             map_prototype,
             set_prototype,
             map_iterator_prototype,
@@ -376,6 +380,11 @@ impl Realm {
     /// %DataView.prototype% — §25.3.4.
     pub fn data_view_prototype(&self) -> ObjectId {
         self.data_view_prototype
+    }
+
+    /// %TypedArray.prototype% — §23.2.3.
+    pub fn typed_array_prototype(&self) -> ObjectId {
+        self.typed_array_prototype
     }
 
     /// %Map.prototype% — §24.1.3.

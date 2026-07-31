@@ -369,6 +369,23 @@ impl Vm {
                 "cannot set a property of something that is not an object",
             ));
         };
+        // §10.4.5.5 — a write to a canonical numeric index goes into the buffer, and one that is
+        // out of range is **discarded**: not an error, in strict mode or sloppy, because a
+        // TypedArray's length cannot change and there is nowhere for the value to go. It is the one
+        // assignment in the language that fails silently by design.
+        //
+        // Before the receiver is consulted at all, because §10.4.5.5 step 1 does not consult it:
+        // the element belongs to the buffer and no receiver can move it elsewhere.
+        if let Some(index) = heap.typed_index(object, key) {
+            let number = self.to_number(value, heap)?;
+            // The conversion can detach the buffer, so the write is attempted afterwards and
+            // simply finds nothing to write to — which is the same answer as an out-of-range index
+            // and is what §10.4.5.5 step 1.b.i means by "return unused".
+            if let Ok(at) = index {
+                heap.write_element(object, at, number);
+            }
+            return Ok(Value::Boolean(true));
+        }
         // §10.1.9.2 — an *inherited* accessor is called, and an inherited non-writable data
         // property refuses the write. An inherited writable one does not: the value is filed on
         // the receiver, which is what makes a prototype's property shadowable.

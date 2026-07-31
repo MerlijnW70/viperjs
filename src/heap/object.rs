@@ -39,6 +39,7 @@ use crate::heap::collection::Collection;
 use crate::heap::define::{Validation, apply, validate};
 use crate::heap::promise::{Promise, Role};
 use crate::heap::string_object;
+use crate::heap::typed;
 use crate::heap::{
     ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Property,
     PropertyDescriptor, PropertyKey, StringId, SymbolId,
@@ -227,6 +228,13 @@ pub struct Object {
     /// Boxed like the others, and unlike the others it holds no `Value` at all: a buffer is bytes,
     /// so the collector has nothing to follow through one.
     buffer: Option<Box<Buffer>>,
+    /// Whether this TypedArray is the one kind that saturates — `Uint8ClampedArray`.
+    ///
+    /// A flag rather than a tenth [`Element`], because it is not a different *type*: the bytes are
+    /// a `Uint8`'s and every read of them is identical. What differs is one conversion on the way
+    /// in, §7.1.11 rather than §7.1.9, so the difference belongs beside the write and not beside
+    /// the storage.
+    pub(super) clamped: bool,
     /// §25.3's view slots, if this is a `DataView`.
     ///
     /// Three `usize`s and an id, so it is inline rather than boxed: a pointer to it would cost as
@@ -302,6 +310,7 @@ impl Object {
             date: None,
             buffer: None,
             view: None,
+            clamped: false,
             collection: None,
             promise: None,
             role: None,
@@ -342,6 +351,20 @@ impl Object {
     /// which is why `new ({ m() {} }).m` is a TypeError.
     pub fn is_constructor(&self) -> bool {
         self.call.as_ref().is_some_and(super::Callable::constructs)
+    }
+
+    /// Whether this is a `Uint8ClampedArray`.
+    pub fn is_clamped(&self) -> bool {
+        self.clamped
+    }
+
+    /// Say that it is — §23.2.5's `Uint8ClampedArray` and nothing else.
+    ///
+    /// Takes no argument, so it is only ever called for the kind that *is* clamped. Written to take
+    /// a Boolean it was called for all nine, and the eight that passed `false` were writing the
+    /// value that was already there — which made the field's own default unreachable by any test.
+    pub fn set_clamped(&mut self) {
+        self.clamped = true;
     }
 
     /// The window this object is, if it is a `DataView`.
@@ -805,6 +828,20 @@ impl Heap {
         let stored = self
             .object(object)
             .map_or_else(Vec::new, |found| found.own_property_keys(self));
+        // §10.4.5.6 — a TypedArray's indices, which nothing stored, ahead of everything that was.
+        // In order and complete: §10.1.11 wants the integer indices first and ascending, and no
+        // stored key can sort in among them because a define at an index never stores anything.
+        if let Some(view) = self.object(object).and_then(Object::view)
+            && view.element.is_some()
+        {
+            let count = view.count();
+            let mut keys = Vec::new();
+            for index in 0..u32::try_from(count).unwrap_or(u32::MAX) {
+                keys.push(self.index_key(index));
+            }
+            keys.extend(stored);
+            return keys;
+        }
         let Some(data) = self.object(object).and_then(Object::string_data) else {
             return stored;
         };
@@ -826,6 +863,16 @@ impl Heap {
     /// removes nothing. [`Object::delete`] cannot tell: it looks for a stored property, finds none,
     /// and says `true` on the grounds that what is not there cannot be in the way.
     pub fn delete_own_property(&mut self, object: ObjectId, key: PropertyKey) -> bool {
+        // §10.4.5.4 — an index the view *has* cannot be deleted, and one it has not is already
+        // gone. Both answers come from the same place and they are opposite: `delete ta[0]` is
+        // false on a non-empty array and `delete ta[99]` is true, because deleting nothing
+        // succeeded vacuously.
+        if let Some(view) = self.object(object).and_then(Object::view)
+            && view.element.is_some()
+            && let Some(index) = typed::index_of(self, key, view.count())
+        {
+            return index.is_err();
+        }
         if let Some(data) = self.object(object).and_then(Object::string_data)
             && string_object::character(self, data, key).is_some()
         {
@@ -951,6 +998,42 @@ impl Heap {
         if self.object(object).is_some_and(Object::is_array) {
             return self.define_array_property(object, key, descriptor);
         }
+        // §10.4.5.3 — a define at a canonical numeric index of a TypedArray. An index the view
+        // does not have is **refused** rather than stored, which is where this differs from every
+        // ordinary object: `Object.defineProperty(ta, "99", …)` on a short array fails, because a
+        // TypedArray's length cannot change and a property there would be a length that lied.
+        if let Some(view) = self.object(object).and_then(Object::view)
+            && view.element.is_some()
+            && let Some(index) = typed::index_of(self, key, view.count())
+        {
+            let Ok(at) = index else {
+                return DefineOutcome::Refused;
+            };
+            // An element is a writable, enumerable, configurable data property and can be nothing
+            // else, so a descriptor asking for an accessor or for any other attributes is refused.
+            // One that asks only for a *value* is the ordinary write.
+            if descriptor.getter.is_some()
+                || descriptor.setter.is_some()
+                || descriptor.writable == Some(false)
+                || descriptor.enumerable == Some(false)
+                || descriptor.configurable == Some(false)
+            {
+                return DefineOutcome::Refused;
+            }
+            if let Some(value) = descriptor.value {
+                let number = match value {
+                    crate::value::Value::Number(number) => number,
+                    // A define carries a value that is already a Value, so there is no conversion
+                    // to run here and nothing that could throw — anything that is not a Number
+                    // writes as `NaN` would, which is what `ToNumber` of it would give for the
+                    // types a define can carry without a coercion step of its own.
+                    _ => f64::NAN,
+                };
+                let clamped = self.object(object).is_some_and(Object::is_clamped);
+                self.set_element(view, at, number, clamped);
+            }
+            return DefineOutcome::Defined;
+        }
         // §10.4.3.3 — a define at one of a String object's characters never stores anything. It
         // is allowed only when it describes the property that is already there, and refused
         // otherwise, which is what makes `s[0] = "z"` do nothing at all.
@@ -1027,6 +1110,15 @@ impl Heap {
     /// accessor the specification's own note implements the map with.
     pub fn own_property(&self, object: ObjectId, key: PropertyKey) -> Option<Property> {
         let found = self.object(object)?;
+        // §10.4.5.1 — a TypedArray's elements are answered from the buffer and are never stored, so
+        // this comes *before* the table rather than after it: a canonical numeric index is an
+        // element whatever the table happens to hold, and one out of range is absent.
+        if let Some(view) = found.view()
+            && view.element.is_some()
+            && let Some(at) = typed::index_of(self, key, view.count())
+        {
+            return at.ok().and_then(|at| self.element_property(view, at));
+        }
         let Some(property) = found.get_own_property(key).copied() else {
             // §10.4.3.5 — nothing stored, which for a String object is where its characters are.
             return string_object::character(self, found.string_data()?, key);
@@ -1166,6 +1258,20 @@ impl Heap {
     /// Asked through [`Heap::own_property`] rather than the object's own table, so that a joined
     /// argument index answers with its parameter's value however the read arrived.
     pub fn find_own(&self, object: ObjectId, key: PropertyKey) -> Option<(ObjectId, Property)> {
+        // §10.4.5.4 — a canonical numeric index of a TypedArray never reaches the prototype, even
+        // when the array does not have it. `ta[99]` on a short array is `undefined` and not an
+        // inherited property, which is the whole reason this stops here rather than answering
+        // `None` and letting the walk continue: a program that puts something at
+        // `Int32Array.prototype[9]` must not have it show up as an element.
+        if let Some(view) = self.object(object)?.view()
+            && view.element.is_some()
+            && let Some(index) = typed::index_of(self, key, view.count())
+        {
+            return index
+                .ok()
+                .and_then(|at| self.element_property(view, at))
+                .map(|property| (object, property));
+        }
         let mut cursor = Some(object);
         // The chain cannot be a cycle — nothing can build one — and this counts anyway. DR-0002
         // is not a claim about the code being right; it is a claim that being wrong does not

@@ -83,6 +83,7 @@ mod string_methods;
 mod strings;
 mod symbols;
 mod templates;
+mod typed;
 mod values;
 mod wrapper;
 

@@ -50,6 +50,7 @@ mod promise;
 mod property;
 mod string_object;
 mod symbol;
+mod typed;
 
 pub use self::arguments::{ArgumentsMap, Incoming};
 pub use self::callable::{Bound, Callable, Native, NativeCall};
@@ -82,7 +83,7 @@ impl From<bool> for DefineOutcome {
         }
     }
 }
-pub use self::buffer::{Buffer, View};
+pub use self::buffer::{Buffer, Element, View};
 pub use self::collect::{Collected, Roots};
 pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Environment, EnvironmentId};
@@ -90,6 +91,7 @@ pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
 pub use self::promise::{
     Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
 };
+pub use self::typed::{KINDS, clamp_if};
 
 impl Heap {
     /// §7.2.3 `IsCallable` — whether a *value* is something a call may reach.
