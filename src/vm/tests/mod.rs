@@ -103,6 +103,7 @@ mod species;
 mod statements;
 mod strict;
 mod string_methods;
+mod string_replace;
 mod strings;
 mod symbols;
 mod templates;

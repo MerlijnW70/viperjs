@@ -3975,12 +3975,6 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-35.js :: it threw TypeError
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-35.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-69.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-69.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js :: it threw an object with no name: result1[expResult[p1]] !== true
@@ -5692,86 +5686,58 @@ built-ins/String/prototype/isWellFormed/to-string.js :: it threw an object with 
 built-ins/String/prototype/isWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
-built-ins/String/prototype/match/S15.5.4.10_A1_T10.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T10.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T11.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T12.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T12.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T13.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T13.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/match/S15.5.4.10_A1_T10.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T10.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T11.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T12.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T12.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T13.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T13.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
 built-ins/String/prototype/match/S15.5.4.10_A1_T14.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/match/S15.5.4.10_A1_T14.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/match/S15.5.4.10_A1_T3.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A1_T3.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A1_T4.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T4.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T5.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T5.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T6.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T6.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T7.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T7.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T8.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T8.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T9.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A1_T9.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A2_T1.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A2_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/S15.5.4.10_A6.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A6.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A8.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A8.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A9.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/S15.5.4.10_A9.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/cstm-matcher-get-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/match/cstm-matcher-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/match/cstm-matcher-invocation.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-invocation.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-is-null.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-is-null.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/match/S15.5.4.10_A1_T3.js :: it threw ReferenceError: eval is not defined
+built-ins/String/prototype/match/S15.5.4.10_A1_T3.js (strict) :: it threw ReferenceError: eval is not defined
+built-ins/String/prototype/match/S15.5.4.10_A1_T4.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T4.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T5.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T5.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T6.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T6.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T7.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T7.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T8.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T8.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T9.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A1_T9.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A2_T1.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/S15.5.4.10_A2_T1.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/cstm-matcher-is-null.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/cstm-matcher-is-null.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/invoke-builtin-match.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/match/invoke-builtin-match.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/match/length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/match/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/match/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/match/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/match/this-val-bool.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/this-val-bool.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/this-val-obj.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/match/this-val-obj.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/cstm-matchall-on-boolean-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/cstm-matchall-on-boolean-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/matchAll/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/matchAll/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/matchAll/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/matchAll/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/matchAll/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/matchAll/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/matchAll/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/matchAll/regexp-is-null.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/regexp-is-null.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/match/this-val-bool.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/this-val-bool.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/this-val-obj.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/match/this-val-obj.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/matchAll/cstm-matchall-on-boolean-primitive.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/matchAll/cstm-matchall-on-boolean-primitive.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/matchAll/regexp-is-null.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/matchAll/regexp-is-null.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
 built-ins/String/prototype/matchAll/regexp-is-undefined-or-null-invokes-matchAll.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/matchAll/regexp-is-undefined-or-null-invokes-matchAll.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/matchAll/regexp-is-undefined.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/regexp-is-undefined.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/regexp-matchAll-invocation.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/regexp-matchAll-invocation.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/matchAll/this-val-non-obj-coercible.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/matchAll/this-val-non-obj-coercible.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/String/prototype/matchAll/regexp-is-undefined.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/matchAll/regexp-is-undefined.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
 built-ins/String/prototype/normalize/form-is-not-valid-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/String/prototype/normalize/form-is-not-valid-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/String/prototype/normalize/length.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -5794,194 +5760,82 @@ built-ins/String/prototype/normalize/return-normalized-string.js :: it threw Typ
 built-ins/String/prototype/normalize/return-normalized-string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/repeat/repeat-string-n-times.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/String/prototype/repeat/repeat-string-n-times.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/String/prototype/replace/S15.5.4.11_A1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T10.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T10.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T11.js :: it threw an object with no name: #1.1: Exception === "insearchValue". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "insearchValue". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T12.js :: it threw an object with no name: #1.1: Exception === "insearchValue". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T12.js (strict) :: it threw an object with no name: #1.1: Exception === "insearchValue". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T13.js :: it threw an object with no name: #1.1: Exception === "inreplaceValue". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T13.js (strict) :: it threw an object with no name: #1.1: Exception === "inreplaceValue". Actual: TypeError: what was called is not a function
 built-ins/String/prototype/replace/S15.5.4.11_A1_T14.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replace/S15.5.4.11_A1_T14.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replace/S15.5.4.11_A1_T17.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replace/S15.5.4.11_A1_T17.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/replace/S15.5.4.11_A1_T2.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T4.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T4.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/replace/S15.5.4.11_A1_T5.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/replace/S15.5.4.11_A1_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/replace/S15.5.4.11_A1_T6.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/replace/S15.5.4.11_A1_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/String/prototype/replace/S15.5.4.11_A1_T7.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T7.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T9.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A1_T9.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/S15.5.4.11_A6.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/replace/S15.5.4.11_A6.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/replace/cstm-replace-get-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replace/cstm-replace-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replace/cstm-replace-invocation.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-invocation.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-is-null.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-is-null.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replace/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replace/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replace/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replace/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/replace/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/replace/replaceValue-evaluation-order.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/replaceValue-evaluation-order.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replace/this-value-not-obj-coercible.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replace/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0024.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0024.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0026.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0026.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0027.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0027.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0060.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0060.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/getSubstitution-0x0024.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replaceAll/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replaceAll/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replaceAll/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/replaceAll/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/replaceAll/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/replaceAll/replaceAll.js :: it threw an object with no name: `typeof String.prototype.replaceAll` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/replaceAll.js (strict) :: it threw an object with no name: `typeof String.prototype.replaceAll` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/replaceValue-call-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/replaceValue-call-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/replaceValue-call-each-match-position.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-call-each-match-position.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-call-matching-empty.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-call-matching-empty.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-call-skip-no-match.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-call-skip-no-match.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-call-tostring-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/replaceValue-call-tostring-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/replaceValue-fn-skip-toString.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-fn-skip-toString.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-tostring-abrupt.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/replaceValue-tostring-abrupt.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/replaceValue-value-replaces-string.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-value-replaces-string.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-empty-string-this-empty-string.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-empty-string-this-empty-string.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-empty-string.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-empty-string.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-flags-null-undefined-throws.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/searchValue-flags-null-undefined-throws.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js :: it threw the string poison
+built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js (strict) :: it threw the string poison
 built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/replaceAll/searchValue-replacer-call-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/searchValue-replacer-call-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/searchValue-replacer-is-null.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-replacer-is-null.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/replaceAll/searchValue-replacer-method-abrupt.js :: it threw an object with no name: custom abrupt Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/searchValue-replacer-method-abrupt.js (strict) :: it threw an object with no name: custom abrupt Expected a Test262Error but got a TypeError
-built-ins/String/prototype/replaceAll/searchValue-tostring-abrupt.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/searchValue-tostring-abrupt.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-is-null-throws.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-is-null-throws.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-is-undefined-throws.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-is-undefined-throws.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-tostring-abrupt.js :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-tostring-abrupt.js (strict) :: it threw an object with no name: function must exist Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/replaceAll/this-tostring.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/replaceAll/this-tostring.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A1.1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1.1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A10.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A11.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A11.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T10.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T10.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T11.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T12.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T12.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T13.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T13.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/replaceAll/this-tostring.js :: it threw the string poison
+built-ins/String/prototype/replaceAll/this-tostring.js (strict) :: it threw the string poison
+built-ins/String/prototype/search/S15.5.4.12_A1.1_T1.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1.1_T1.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T1.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T1.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T10.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T10.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T11.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T11.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T12.js :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T12.js (strict) :: it threw an object with no name: #1.1: Exception === "intostr". Actual: TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T13.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T13.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
 built-ins/String/prototype/search/S15.5.4.12_A1_T14.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/search/S15.5.4.12_A1_T14.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/search/S15.5.4.12_A1_T2.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T4.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T4.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T5.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T5.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T6.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T6.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T7.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T7.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T8.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T8.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T9.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A1_T9.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T1.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T2.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T6.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T6.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T7.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A2_T7.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/S15.5.4.12_A6.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A6.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A8.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A8.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A9.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/S15.5.4.12_A9.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/search/cstm-search-get-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/search/cstm-search-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/search/cstm-search-invocation.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-invocation.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-is-null.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-is-null.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-on-number-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-on-number-primitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-on-string-primitive.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/search/cstm-search-on-string-primitive.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/search/S15.5.4.12_A1_T2.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T2.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T4.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T4.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T5.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T5.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T6.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T6.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T7.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T7.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T8.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T8.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T9.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A1_T9.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T1.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T1.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T2.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T2.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T6.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T6.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T7.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/S15.5.4.12_A2_T7.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/cstm-search-is-null.js :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/cstm-search-is-null.js (strict) :: it threw TypeError: this needs a regular expression, and RegExp is not implemented yet
+built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/search/cstm-search-on-number-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/search/cstm-search-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/search/cstm-search-on-string-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/search/cstm-search-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/search/invoke-builtin-search-searcher-undef.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/search/invoke-builtin-search-searcher-undef.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/search/invoke-builtin-search.js :: it threw ReferenceError: RegExp is not defined
 built-ins/String/prototype/search/invoke-builtin-search.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/String/prototype/search/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/search/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/search/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/search/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/String/prototype/slice/S15.5.4.13_A1_T5.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/slice/S15.5.4.13_A1_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/split/argument-is-new-reg-exp-and-instance-is-string-hello.js :: it threw ReferenceError: RegExp is not defined
@@ -13652,16 +13506,6 @@ language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it 
 language/expressions/void/S11.4.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
-language/function-code/10.4.3-1-100-s.js :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-100-s.js (strict) :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-100gs.js :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-100gs.js (strict) :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-101-s.js :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-101gs.js :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-102-s.js :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-102-s.js (strict) :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-102gs.js :: it threw TypeError: what was called is not a function
-language/function-code/10.4.3-1-102gs.js (strict) :: it threw TypeError: what was called is not a function
 language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
 language/function-code/10.4.3-1-13-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-13gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet

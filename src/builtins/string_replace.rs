@@ -1,0 +1,511 @@
+//! §22.1.3's five methods that hand the work to a *pattern* — `replace`, `replaceAll`, `match`,
+//! `matchAll` and `search`.
+//!
+//! # Why these are one module and not five
+//!
+//! Each begins the same way: look for a well-known Symbol method on the argument and, if there is
+//! one, hand the whole operation over to it. That is the extension point regular expressions use —
+//! `RegExp.prototype[Symbol.replace]` is where a replacement involving a pattern actually happens —
+//! and it is open to anything else that supplies the method. So all five are, in their own right,
+//! *delegation*, and only `replace` and `replaceAll` do work of their own after it.
+//!
+//! # What is here without `RegExp`
+//!
+//! `replace` and `replaceAll` are complete: a plain string search value needs no pattern engine,
+//! and neither does `$&`, `` $` ``, `$'`, `$$` or `$<name>` in the replacement template. `match`,
+//! `matchAll` and `search` are complete up to the point where the specification says "make a
+//! RegExp out of the argument" — there is nothing to make one with yet, so they refuse there and
+//! say so. Everything before that point, including the delegation, is real: an object with a
+//! `Symbol.match` method works today.
+
+use super::{key, string};
+use crate::heap::{Heap, NativeCall};
+use crate::value::{Abrupt, Completion, Value};
+use crate::vm::Vm;
+
+/// §7.3.11 `GetMethod` — a property that must be callable if it is there at all.
+///
+/// `undefined` **and** null both mean "absent", which is what lets `"a".replace(x, y)` fall through
+/// to the string path when `x` has no `Symbol.replace`. Anything else that is not callable is a
+/// TypeError rather than a silent fall through, so a misspelled method is reported rather than
+/// ignored.
+fn method_of(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    value: Value,
+    symbol: &str,
+) -> Completion<Option<Value>> {
+    // As above: a Symbol the realm has not got names no property, so the answer is the one an
+    // absent property gives.
+    let found = match vm.realm().well_known(super::well_known_at(symbol)) {
+        Some(id) => vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(id), heap)?,
+        None => Value::Undefined,
+    };
+    if matches!(found, Value::Undefined | Value::Null) {
+        return Ok(None);
+    }
+    if !heap.is_callable(found) {
+        return Err(Abrupt::type_error(
+            "this pattern's method is not a function",
+        ));
+    }
+    Ok(Some(found))
+}
+
+/// §7.2.8 `IsRegExp` — whether something claims to be a pattern.
+///
+/// Asks `Symbol.match` **first** and believes whatever it finds, so an ordinary object saying
+/// `{[Symbol.match]: true}` counts as one. That is deliberate in the specification: the question is
+/// "does this behave as a pattern", not "was this made by `RegExp`", and `replaceAll` uses the
+/// answer to decide whether to demand a `g` flag.
+fn is_pattern(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<bool> {
+    if !matches!(value, Value::Object(_)) {
+        return Ok(false);
+    }
+    // A well-known Symbol the realm does not have is one nothing can be keyed by, so the lookup
+    // answers exactly as an absent property does.
+    let matcher = match vm.realm().well_known(super::well_known_at("match")) {
+        Some(id) => vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(id), heap)?,
+        None => Value::Undefined,
+    };
+    // §7.2.8's steps 3 to 5 are one expression while nothing has a `[[RegExpMatcher]]`: step 3
+    // answers `ToBoolean(matcher)`, and steps 4 and 5 answer `false` — which is what
+    // `ToBoolean(undefined)` is. When `RegExp` arrives step 4 becomes a real question and this
+    // becomes a branch again; writing the branch now would be one no test could distinguish.
+    Ok(matcher.to_boolean(heap))
+}
+
+/// The receiver as characters, after `RequireObjectCoercible` — §22.1.3's opening step.
+fn receiver(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Vec<u16>> {
+    string::characters(vm, heap, call)
+}
+
+/// `StringIndexOf` (§6.1.4.1) — the first position at or after `from` where `needle` sits.
+///
+/// An **empty** needle is found at `from` itself rather than nowhere, which is what makes
+/// `"abc".replaceAll("", "-")` produce `-a-b-c-` and not loop forever: the caller advances past a
+/// zero-length match by one unit, and this reports each position exactly once.
+fn index_of(haystack: &[u16], needle: &[u16], from: usize) -> Option<usize> {
+    // No guard for a `from` past the end: the range below is then empty and the search answers
+    // `None` of its own accord, which is the same answer one more branch would have given.
+    (from..=haystack.len().saturating_sub(needle.len()))
+        .find(|at| haystack[*at..].starts_with(needle))
+}
+
+/// The named capture groups a match produced, in the order the pattern declares them.
+///
+/// A name and what it captured, where `None` is a group that did not participate — which reads as
+/// the empty string in a replacement and as `undefined` everywhere else. A list rather than a map
+/// because §22.2.7.2 builds one per match and the counts here are single digits: a hash of three
+/// entries costs more to build than it saves.
+type Named<'a> = &'a [(Vec<u16>, Option<Vec<u16>>)];
+
+/// §22.1.3.19.1 `GetSubstitution` — a replacement template with its `$` forms filled in.
+///
+/// `captures` is empty and `named` absent for a string search value: there is nothing to capture
+/// without a pattern. Both are taken anyway, because this is the operation `RegExp`'s own
+/// `Symbol.replace` will call, and writing it twice is how the two spellings of `$1` come to
+/// disagree.
+///
+/// Anything after `$` that is not one of the forms below is left alone, `$` included: `"$x"`
+/// replaces as `$x` and a trailing `$` as `$`. That is a rule about *not* erroring, and it is the
+/// part a hand-rolled version usually gets wrong.
+fn substitute(
+    matched: &[u16],
+    string: &[u16],
+    position: usize,
+    captures: &[Option<Vec<u16>>],
+    named: Option<Named<'_>>,
+    template: &[u16],
+) -> Vec<u16> {
+    const DOLLAR: u16 = b'$' as u16;
+    let tail = position.saturating_add(matched.len()).min(string.len());
+    let mut out = Vec::with_capacity(template.len());
+    let mut at = 0;
+    while at < template.len() {
+        if template[at] != DOLLAR || at + 1 >= template.len() {
+            out.push(template[at]);
+            at += 1;
+            continue;
+        }
+        let next = template[at + 1];
+        match next {
+            // `$$` is the only way to write a literal dollar before one of the forms below.
+            DOLLAR => {
+                out.push(DOLLAR);
+                at += 2;
+            }
+            // `$&` — what matched.
+            0x26 => {
+                out.extend_from_slice(matched);
+                at += 2;
+            }
+            // `` $` `` — everything before the match.
+            0x60 => {
+                out.extend_from_slice(&string[..position.min(string.len())]);
+                at += 2;
+            }
+            // `$'` — everything after it.
+            0x27 => {
+                out.extend_from_slice(&string[tail..]);
+                at += 2;
+            }
+            // `$<name>` — a named capture, and *only* when there are named captures at all. With
+            // none, §22.1.3.19.1 leaves the four characters alone rather than reading ahead, so
+            // `"a".replace("a", "$<x>")` is the literal `$<x>`.
+            0x3C if named.is_some() => {
+                let groups = named.unwrap_or(&[]);
+                let Some(end) = template[at + 2..].iter().position(|unit| *unit == 0x3E) else {
+                    // No closing `>`: the whole rest is literal.
+                    out.push(template[at]);
+                    at += 1;
+                    continue;
+                };
+                let name = &template[at + 2..at + 2 + end];
+                if let Some((_, value)) = groups.iter().find(|(had, _)| had == name) {
+                    // A group that did not participate reads as the empty string, not `undefined`.
+                    out.extend_from_slice(value.as_deref().unwrap_or(&[]));
+                }
+                at += 2 + end + 1;
+            }
+            _ => {
+                // `$n` and `$nn` — one or two digits, and the two-digit reading is preferred only
+                // when it names a group that exists. `$12` with one capture is capture 1 followed
+                // by a literal `2`, which is why this cannot simply take both digits.
+                let Some(first) = digit(next) else {
+                    out.push(template[at]);
+                    at += 1;
+                    continue;
+                };
+                let second = template.get(at + 2).copied().and_then(digit);
+                let two = second.map(|low| first * 10 + low);
+                let (number, width) = match two {
+                    Some(both) if both >= 1 && both as usize <= captures.len() => (both, 3),
+                    _ => (first, 2),
+                };
+                let Some(capture) = usize::from(number)
+                    .checked_sub(1)
+                    .and_then(|index| captures.get(index))
+                else {
+                    // `$0`, or a number past the last group: left alone, dollar and all.
+                    out.push(template[at]);
+                    at += 1;
+                    continue;
+                };
+                out.extend_from_slice(capture.as_deref().unwrap_or(&[]));
+                at += width;
+            }
+        }
+    }
+    out
+}
+
+/// A decimal digit's value, for the `$n` forms.
+fn digit(unit: u16) -> Option<u8> {
+    (0x30..=0x39)
+        .contains(&unit)
+        .then(|| u8::try_from(unit - 0x30).unwrap_or(0))
+}
+
+/// One replacement's text — a function's answer, or the template with its `$` forms filled in.
+fn replacement(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    with: Value,
+    matched: &[u16],
+    string: &[u16],
+    position: usize,
+) -> Completion<Vec<u16>> {
+    if heap.is_callable(with) {
+        // §22.1.3.19 step 14.a — the function is handed the match, where it was, and the whole
+        // string, and its answer is used as-is: no `$` form is interpreted in it.
+        let text = heap.intern(matched);
+        let whole = heap.intern(string);
+        let position = f64::from(u32::try_from(position).unwrap_or(u32::MAX));
+        let answered = vm.call_value(
+            with,
+            Value::Undefined,
+            &[
+                Value::String(text),
+                Value::Number(position),
+                Value::String(whole),
+            ],
+            heap,
+        )?;
+        let text = vm.to_string(answered, heap)?;
+        return Ok(heap.string(text).unwrap_or(&[]).to_vec());
+    }
+    let template = vm.to_string(with, heap)?;
+    let template = heap.string(template).unwrap_or(&[]).to_vec();
+    Ok(substitute(matched, string, position, &[], None, &template))
+}
+
+/// §22.1.3.19 `String.prototype.replace`.
+fn replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let pattern = call.argument(0);
+    let with = call.argument(1);
+    // Step 2 — the Symbol method is looked for **before** the receiver is converted, so a pattern
+    // that handles the whole operation sees an unconverted `this`.
+    if !matches!(pattern, Value::Undefined | Value::Null)
+        && let Some(replacer) = method_of(vm, heap, pattern, "replace")?
+    {
+        return vm.call_value(replacer, pattern, &[call.this_value, with], heap);
+    }
+    let string = receiver(vm, heap, call)?;
+    let needle = vm.to_string(pattern, heap)?;
+    let needle = heap.string(needle).unwrap_or(&[]).to_vec();
+    // Step 6 — a non-callable replacement is converted to a String *now*, before the search, which
+    // is observable when it has a `toString` that throws.
+    let with = match heap.is_callable(with) {
+        true => with,
+        false => Value::String(vm.to_string(with, heap)?),
+    };
+    let Some(position) = index_of(&string, &needle, 0) else {
+        return Ok(Value::String(heap.intern(&string)));
+    };
+    let text = replacement(vm, heap, with, &needle, &string, position)?;
+    let mut built = string[..position].to_vec();
+    built.extend_from_slice(&text);
+    built.extend_from_slice(&string[position + needle.len()..]);
+    Ok(Value::String(heap.intern(&built)))
+}
+
+/// §22.1.3.20 `String.prototype.replaceAll`.
+fn replace_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let pattern = call.argument(0);
+    let with = call.argument(1);
+    if !matches!(pattern, Value::Undefined | Value::Null) {
+        // Step 2.b — a pattern that is *not* global is refused outright, because replacing all of
+        // something with a pattern that stops at the first match could not do what was asked. The
+        // check is here rather than in the delegate so that it happens whatever the delegate does.
+        if is_pattern(vm, heap, pattern)? {
+            let flags = vm.get_property_key(pattern, key(heap, "flags"), heap)?;
+            if matches!(flags, Value::Undefined | Value::Null) {
+                return Err(Abrupt::type_error(
+                    "a pattern given to replaceAll must have flags",
+                ));
+            }
+            let spelled = vm.to_string(flags, heap)?;
+            if !heap
+                .string(spelled)
+                .unwrap_or(&[])
+                .contains(&u16::from(b'g'))
+            {
+                return Err(Abrupt::type_error(
+                    "a pattern given to replaceAll must be global",
+                ));
+            }
+        }
+        if let Some(replacer) = method_of(vm, heap, pattern, "replace")? {
+            return vm.call_value(replacer, pattern, &[call.this_value, with], heap);
+        }
+    }
+    let string = receiver(vm, heap, call)?;
+    let needle = vm.to_string(pattern, heap)?;
+    let needle = heap.string(needle).unwrap_or(&[]).to_vec();
+    let with = match heap.is_callable(with) {
+        true => with,
+        false => Value::String(vm.to_string(with, heap)?),
+    };
+    // Step 11's advance — one past the match, or one *unit* when the match was empty. Without the
+    // second, an empty needle would be found at the same position forever.
+    let step = needle.len().max(1);
+    let mut built = Vec::with_capacity(string.len());
+    let mut copied = 0;
+    let mut from = 0;
+    while let Some(position) = index_of(&string, &needle, from) {
+        let text = replacement(vm, heap, with, &needle, &string, position)?;
+        built.extend_from_slice(&string[copied..position]);
+        built.extend_from_slice(&text);
+        copied = position + needle.len();
+        from = position + step;
+    }
+    built.extend_from_slice(&string[copied.min(string.len())..]);
+    Ok(Value::String(heap.intern(&built)))
+}
+
+/// The three that have nothing to do once there is no Symbol method — §22.1.3.14, .15 and .21.
+///
+/// Each ends "let `rx` be `RegExpCreate(argument)`, and invoke its Symbol method". There is nothing
+/// to create one with, so this refuses and says which method wanted it, rather than answering
+/// something wrong. Everything before it is real: the delegation above is what a pattern uses.
+fn without_a_pattern(name: &'static str) -> Abrupt {
+    let _ = name;
+    Abrupt::type_error("this needs a regular expression, and RegExp is not implemented yet")
+}
+
+/// §22.1.3.14 `String.prototype.match`.
+fn string_match(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let pattern = call.argument(0);
+    if !matches!(pattern, Value::Undefined | Value::Null)
+        && let Some(matcher) = method_of(vm, heap, pattern, "match")?
+    {
+        return vm.call_value(matcher, pattern, &[call.this_value], heap);
+    }
+    receiver(vm, heap, call)?;
+    Err(without_a_pattern("match"))
+}
+
+/// §22.1.3.15 `String.prototype.matchAll`.
+fn match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let pattern = call.argument(0);
+    if !matches!(pattern, Value::Undefined | Value::Null) {
+        // Step 2.b — the same global-flag demand `replaceAll` makes, and for the same reason:
+        // iterating every match with a pattern that stops at the first is not a thing to allow
+        // quietly.
+        if is_pattern(vm, heap, pattern)? {
+            let flags = vm.get_property_key(pattern, key(heap, "flags"), heap)?;
+            if matches!(flags, Value::Undefined | Value::Null) {
+                return Err(Abrupt::type_error(
+                    "a pattern given to matchAll must have flags",
+                ));
+            }
+            let spelled = vm.to_string(flags, heap)?;
+            if !heap
+                .string(spelled)
+                .unwrap_or(&[])
+                .contains(&u16::from(b'g'))
+            {
+                return Err(Abrupt::type_error(
+                    "a pattern given to matchAll must be global",
+                ));
+            }
+        }
+        if let Some(matcher) = method_of(vm, heap, pattern, "matchAll")? {
+            return vm.call_value(matcher, pattern, &[call.this_value], heap);
+        }
+    }
+    receiver(vm, heap, call)?;
+    Err(without_a_pattern("matchAll"))
+}
+
+/// §22.1.3.21 `String.prototype.search`.
+fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let pattern = call.argument(0);
+    if !matches!(pattern, Value::Undefined | Value::Null)
+        && let Some(searcher) = method_of(vm, heap, pattern, "search")?
+    {
+        return vm.call_value(searcher, pattern, &[call.this_value], heap);
+    }
+    receiver(vm, heap, call)?;
+    Err(without_a_pattern("search"))
+}
+
+/// Every method this module defines, with the `length` §22.1.3 gives it.
+pub(super) const METHODS: [(&str, u32, crate::heap::Native); 5] = [
+    ("match", 1, string_match),
+    ("matchAll", 1, match_all),
+    ("replace", 2, replace),
+    ("replaceAll", 2, replace_all),
+    ("search", 1, search),
+];
+
+#[cfg(test)]
+mod pieces {
+    use super::{index_of, substitute};
+
+    fn units(text: &str) -> Vec<u16> {
+        text.encode_utf16().collect()
+    }
+
+    fn filled(matched: &str, string: &str, position: usize, template: &str) -> String {
+        String::from_utf16_lossy(&substitute(
+            &units(matched),
+            &units(string),
+            position,
+            &[],
+            None,
+            &units(template),
+        ))
+    }
+
+    #[test]
+    fn an_empty_needle_is_found_at_every_position_including_the_end() {
+        // §6.1.4.1 — and it is why `replaceAll` advances by one *unit* rather than by the match:
+        // reporting the same position twice would not terminate.
+        assert_eq!(index_of(&units("abc"), &units(""), 0), Some(0));
+        assert_eq!(index_of(&units("abc"), &units(""), 3), Some(3));
+        assert_eq!(index_of(&units("abc"), &units(""), 4), None);
+    }
+
+    #[test]
+    fn a_needle_longer_than_what_is_left_is_not_found() {
+        assert_eq!(index_of(&units("abc"), &units("bcd"), 0), None);
+        assert_eq!(index_of(&units("abc"), &units("bc"), 1), Some(1));
+        assert_eq!(index_of(&units("abc"), &units("bc"), 2), None);
+        assert_eq!(index_of(&units("abcabc"), &units("bc"), 2), Some(4));
+    }
+
+    #[test]
+    fn the_four_positional_dollar_forms_read_around_the_match() {
+        assert_eq!(filled("b", "abc", 1, "[$&]"), "[b]");
+        assert_eq!(filled("b", "abc", 1, "[$`]"), "[a]");
+        assert_eq!(filled("b", "abc", 1, "[$']"), "[c]");
+        assert_eq!(filled("b", "abc", 1, "[$$]"), "[$]");
+    }
+
+    #[test]
+    fn a_dollar_that_names_nothing_is_left_exactly_as_written() {
+        // §22.1.3.19.1's last step — this is a rule about *not* erroring, and the one a
+        // hand-rolled substitution usually gets wrong.
+        assert_eq!(filled("b", "abc", 1, "$x"), "$x");
+        assert_eq!(filled("b", "abc", 1, "$"), "$");
+        assert_eq!(filled("b", "abc", 1, "$0"), "$0");
+        // With no named captures at all, `$<` is four literal characters rather than the start of
+        // a name — the specification does not read ahead for a `>` in that case.
+        assert_eq!(filled("b", "abc", 1, "$<x>"), "$<x>");
+        // …and a capture number past the last group is left alone too, there being none here.
+        assert_eq!(filled("b", "abc", 1, "$1"), "$1");
+    }
+
+    #[test]
+    fn a_two_digit_group_is_read_as_two_digits_only_when_that_group_exists() {
+        // `$12` with one capture is capture 1 followed by a literal `2`, and with twelve it is
+        // capture 12. Taking both digits unconditionally is the obvious implementation and is
+        // wrong for every pattern with fewer than twelve groups.
+        let one = vec![Some(units("X"))];
+        let filled = |captures: &[Option<Vec<u16>>], template: &str| {
+            String::from_utf16_lossy(&substitute(
+                &units("b"),
+                &units("abc"),
+                1,
+                captures,
+                None,
+                &units(template),
+            ))
+        };
+        assert_eq!(filled(&one, "$12"), "X2");
+        // Lettered rather than numbered, because with capture 1 holding `"1"` the wrong reading of
+        // `$12` also spells `12` and the test would pass either way.
+        let twelve: Vec<Option<Vec<u16>>> =
+            ('a'..='l').map(|c| Some(units(&c.to_string()))).collect();
+        assert_eq!(filled(&twelve, "$12"), "l");
+        assert_eq!(filled(&twelve, "$1"), "a");
+        // `$01` is the two-digit form too — §22.1.3.19.1 says 01 to 99, so a leading zero names
+        // group 1 and does not fall back to the one-digit reading of `$0`, which names nothing.
+        assert_eq!(filled(&one, "$01"), "X");
+        assert_eq!(filled(&one, "$99"), "$99");
+        // A group that did not participate reads as the empty string rather than `undefined`.
+        assert_eq!(filled(&[None], "[$1]"), "[]");
+    }
+
+    #[test]
+    fn a_named_capture_is_read_when_there_are_named_captures_to_read() {
+        let named = vec![(units("who"), Some(units("world")))];
+        let filled = |template: &str| {
+            String::from_utf16_lossy(&substitute(
+                &units("b"),
+                &units("abc"),
+                1,
+                &[],
+                Some(&named),
+                &units(template),
+            ))
+        };
+        assert_eq!(filled("hello $<who>"), "hello world");
+        // A name that is not among them contributes nothing at all, and is not left literal.
+        assert_eq!(filled("[$<missing>]"), "[]");
+        // An unterminated `$<` is literal, because there is no name to have read.
+        assert_eq!(filled("$<who"), "$<who");
+    }
+}

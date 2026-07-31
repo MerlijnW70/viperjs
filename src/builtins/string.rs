@@ -53,6 +53,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         .into_iter()
         .chain(string_index::METHODS)
         .chain(string_edit::METHODS)
+        .chain(super::string_replace::METHODS)
     {
         define_method(heap, realm, prototype, name, length, native);
     }
