@@ -124,11 +124,12 @@ a commit, and none may cost a single conformance test.
 M1, M2, M3 and M5 are done: the lexer, the parser, the value and object model, a bytecode compiler
 and an interpreter that runs code — and the conformance harness that measures it, which from here is
 what says what to build next. **M4 is what is in progress.** `Object`, `Function`, `Array`, `String`,
-`Number`, `Boolean`, `Math`, `JSON`, `Date` and the `Error` hierarchy are in, and so are classes,
-`Promise` and §9.5's job queue from M6; **`RegExp` is what remains of M4**, and the regular
-expression engine is ours to write — no dependency.
+`Number`, `Boolean`, `Math`, `JSON`, `Date` and the `Error` hierarchy are in, and so is a good deal
+of M6: classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`, `ArrayBuffer`,
+`DataView` and the TypedArrays. **`RegExp` is what remains of M4**, and the regular expression
+engine is ours to write — no dependency.
 
-Conformance as of this commit is **43.32% of test262** — 40,357 of 93,161 runs. Treat that number as
+Conformance as of this commit is **48.19% of test262** — 44,893 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -136,20 +137,39 @@ Let the failure buckets choose the next slice, not intuition. The largest right 
 | --- | --- |
 | 17,069 | `async` functions and generators |
 | 6,896 | regular expression literals |
+| 3,474 | `Temporal` — a Stage 3 proposal, and **not** ES2023 core |
 | 3,137 | `BigInt` literals |
+| 1,339 | `eval`, and 412 more for `new Function` — both need compiling at run time |
 | 872 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
+| 838 | `BigInt64Array` and `BigUint64Array`, which need `BigInt` first |
 | 830 | modules |
+| 779 | `RegExp` as a *global*, on top of the 6,896 literals |
+| 770 | `Proxy` and `Reflect`'s other half |
 
 Note what that list says about order. The parser already accepts generators and `async`, so that
 bucket is compiler and runtime work rather than grammar — and it is *one* piece of work, because
 both need the same thing: an interpreter whose frames can be suspended and resumed. That is the
 largest single change left in the engine and it is worth planning before starting.
 
-The `$DONE` bucket is gone, and what it was hiding is the reason the table above looks different
-from the one that stood here before: 10,737 runs were skipped because an async test reports through
-a host function this harness did not provide. It provides one now, and those tests report their real
-reasons — most of which is the first row. A bucket that large is worth being suspicious of; it was
-one missing host function standing in front of a fifth of the suite.
+Two things about reading that table. **`Temporal` is not ES2023** — it is a Stage 3 proposal with a
+surface larger than `Date`, `Intl` and `RegExp` combined, and building it would raise the number
+while making the engine no more of a JavaScript engine. Leave it.
+
+And a bucket whose reason names the *harness* rather than the engine is worth being suspicious of.
+10,737 runs were once skipped for "an async test reports through `$DONE`" — one missing host
+function standing in front of a fifth of the suite. Providing it moved +786 to passing and revealed
+that the real top blocker was async and generators all along.
+
+**The two mistakes this session made twice**, both worth knowing about before the next slice:
+
+- A test can *pass for the wrong reason*. `Promise.all.call(eval)` threw a TypeError because
+  `Promise.all` was undefined, which is what the test asked for and not why; and six TypedArray
+  tests passed because `testTypedArray.js` runs its body once per constructor and there were none.
+  Both only became visible when the thing they were about arrived, and both look like regressions.
+- The local loop is `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` **and**
+  `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not
+  cover the third: a public item's doc linking to a private one is an error in CI and nowhere else,
+  and it reddened a build.
 
 Read [`GOAL.md`](GOAL.md) first — it is binding and it outranks this file — then `src/span.rs` to
 calibrate on the bar. `cargo run --release --example parse -- --commonjs <dir>` over a real
