@@ -71,6 +71,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         number_to_string_method,
     );
     define_method(heap, realm, number_prototype, "valueOf", 0, number_value_of);
+    // §21.1.3.2, §21.1.3.3 and §21.1.3.5 — the three spellings that need exact decimals.
+    super::number_format::install(heap, realm, number_prototype);
     define_method(
         heap,
         realm,

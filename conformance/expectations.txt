@@ -4345,94 +4345,16 @@ built-ins/Number/prototype/S15.7.3.1_A3.js :: it threw TypeError: Number.prototy
 built-ins/Number/prototype/S15.7.3.1_A3.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Number/prototype/S15.7.4_A1.js :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Number/prototype/S15.7.4_A1.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/S15.7.4_A3.5.js :: it threw an object with no name: Number.prototype.hasOwnProperty("toFixed") must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/prototype/S15.7.4_A3.5.js (strict) :: it threw an object with no name: Number.prototype.hasOwnProperty("toFixed") must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/prototype/S15.7.4_A3.6.js :: it threw an object with no name: Number.prototype.hasOwnProperty("toExponential") must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/prototype/S15.7.4_A3.6.js (strict) :: it threw an object with no name: Number.prototype.hasOwnProperty("toExponential") must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/prototype/S15.7.4_A3.7.js :: it threw an object with no name: Number.prototype.hasOwnProperty("toPrecision") must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/prototype/S15.7.4_A3.7.js (strict) :: it threw an object with no name: Number.prototype.hasOwnProperty("toPrecision") must return true Expected SameValue(«false», «true») to be true
-built-ins/Number/prototype/toExponential/infinity.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/infinity.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toExponential/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toExponential/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toExponential/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toExponential/nan.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/nan.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/prototype/toExponential/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/prototype/toExponential/prop-desc.js :: it threw an object with no name: toExponential should be an own property
-built-ins/Number/prototype/toExponential/prop-desc.js (strict) :: it threw an object with no name: toExponential should be an own property
-built-ins/Number/prototype/toExponential/range.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/range.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/return-abrupt-tointeger-fractiondigits.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/toExponential/return-abrupt-tointeger-fractiondigits.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/toExponential/return-values.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/return-values.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-0.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-0.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-not-0.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-not-0.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/tointeger-fractiondigits.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/tointeger-fractiondigits.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/undefined-fractiondigits.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toExponential/undefined-fractiondigits.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T01.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T01.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T02.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T02.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.3_T01.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.3_T01.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.3_T02.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.3_T02.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.4_T01.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.4_T01.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/S15.7.4.5_A2_T01.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Number/prototype/toFixed/S15.7.4.5_A2_T01.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Number/prototype/toFixed/exactness.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/exactness.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toFixed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toFixed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toFixed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toFixed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/prototype/toFixed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/prototype/toFixed/prop-desc.js :: it threw an object with no name: toFixed should be an own property
-built-ins/Number/prototype/toFixed/prop-desc.js (strict) :: it threw an object with no name: toFixed should be an own property
-built-ins/Number/prototype/toFixed/range.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/range.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/return-type.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toFixed/return-type.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/exponential.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/exponential.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/infinity.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/infinity.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toPrecision/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toPrecision/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toPrecision/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Number/prototype/toPrecision/nan.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/nan.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/prototype/toPrecision/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/prototype/toPrecision/precision-cannot-be-coerced-to-a-number-in-range.js :: it threw an object with no name: `function() {}` doesn't coerce into a number in range (1-100) Expected a RangeError but got a TypeError
-built-ins/Number/prototype/toPrecision/precision-cannot-be-coerced-to-a-number-in-range.js (strict) :: it threw an object with no name: `function() {}` doesn't coerce into a number in range (1-100) Expected a RangeError but got a TypeError
-built-ins/Number/prototype/toPrecision/prop-desc.js :: it threw an object with no name: toPrecision should be an own property
-built-ins/Number/prototype/toPrecision/prop-desc.js (strict) :: it threw an object with no name: toPrecision should be an own property
-built-ins/Number/prototype/toPrecision/range.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/range.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-0.js :: it threw TypeError: Number.prototype.toExponential requires a number
+built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-0.js (strict) :: it threw TypeError: Number.prototype.toExponential requires a number
+built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T01.js :: it threw TypeError: Number.prototype.toFixed requires a number
+built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T01.js (strict) :: it threw TypeError: Number.prototype.toFixed requires a number
 built-ins/Number/prototype/toPrecision/return-abrupt-tointeger-precision.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
 built-ins/Number/prototype/toPrecision/return-abrupt-tointeger-precision.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/toPrecision/return-values.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/return-values.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/this-is-0-precision-is-1.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/this-is-0-precision-is-1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/this-is-0-precision-is-gter-than-1.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/this-is-0-precision-is-gter-than-1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/tointeger-precision.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/tointeger-precision.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/undefined-precision-arg.js :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/toPrecision/undefined-precision-arg.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Number/prototype/toPrecision/this-is-0-precision-is-1.js :: it threw TypeError: Number.prototype.toPrecision requires a number
+built-ins/Number/prototype/toPrecision/this-is-0-precision-is-1.js (strict) :: it threw TypeError: Number.prototype.toPrecision requires a number
+built-ins/Number/prototype/toPrecision/undefined-precision-arg.js :: it threw TypeError: Number.prototype.toPrecision requires a number
+built-ins/Number/prototype/toPrecision/undefined-precision-arg.js (strict) :: it threw TypeError: Number.prototype.toPrecision requires a number
 built-ins/Number/prototype/toString/S15.7.4.2_A1_T01.js :: it threw TypeError: Number.prototype.toString requires a number
 built-ins/Number/prototype/toString/S15.7.4.2_A1_T01.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
 built-ins/Number/prototype/toString/S15.7.4.2_A1_T02.js :: it threw TypeError: Number.prototype.toString requires a number
@@ -4763,12 +4685,6 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js :: it threw TypeError
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-91.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-91.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-92.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-92.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-93.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-93.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptors/observable-operations.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/getOwnPropertyDescriptors/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/getOwnPropertyDescriptors/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
@@ -15185,8 +15101,6 @@ language/expressions/property-accessors/S11.2.1_A1.1.js :: it threw ReferenceErr
 language/expressions/property-accessors/S11.2.1_A1.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/property-accessors/S11.2.1_A1.2.js :: it threw ReferenceError: eval is not defined
 language/expressions/property-accessors/S11.2.1_A1.2.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/property-accessors/S11.2.1_A3_T2.js :: it threw TypeError: what was called is not a function
-language/expressions/property-accessors/S11.2.1_A3_T2.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/property-accessors/S11.2.1_A4_T3.js :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
 language/expressions/property-accessors/S11.2.1_A4_T3.js (strict) :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
 language/expressions/right-shift/S11.7.2_A1.js :: it threw ReferenceError: eval is not defined
@@ -15966,8 +15880,6 @@ language/statements/class/subclass/builtin-objects/Function/regular-subclassing.
 language/statements/class/subclass/builtin-objects/Function/regular-subclassing.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js :: it threw TypeError: what was called is not a function
-language/statements/class/subclass/builtin-objects/Number/regular-subclassing.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/class/subclass/builtin-objects/Proxy/no-prototype-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/statements/class/subclass/builtin-objects/Proxy/no-prototype-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/statements/class/subclass/builtin-objects/RegExp/lastIndex.js :: it threw ReferenceError: RegExp is not defined

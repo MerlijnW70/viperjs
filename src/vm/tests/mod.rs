@@ -20,6 +20,7 @@
 //! - `annex_b` — §B.2.2's four accessor methods, and how they differ from a descriptor.
 //! - `species` — §7.3.23, and what a copying method answers *with*.
 //! - `set_ops` — §24.2.4's seven, and the size that decides which side is walked.
+//! - `number_format` — §21.1.3's three spellings, and the two exactnesses they need.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
@@ -82,6 +83,7 @@ mod json;
 mod lexical;
 mod math;
 mod names;
+mod number_format;
 mod object_state;
 mod objects;
 mod objects_builtin;

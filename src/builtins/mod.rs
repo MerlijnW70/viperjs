@@ -34,6 +34,7 @@ mod iterator;
 mod json;
 mod json_write;
 mod math;
+mod number_format;
 mod object;
 mod object_state;
 pub(crate) mod promise;
