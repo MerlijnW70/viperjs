@@ -129,7 +129,7 @@ of M6: classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`, `Ar
 `DataView` and the TypedArrays. **`RegExp` is what remains of M4**, and the regular expression
 engine is ours to write — no dependency.
 
-Conformance as of this commit is **49.92% of test262** — 46,507 of 93,161 runs. Treat that number as
+Conformance as of this commit is **50.30% of test262** — 46,859 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -145,7 +145,7 @@ Let the failure buckets choose the next slice, not intuition. The largest right 
 | 830 | modules |
 | 779 | `RegExp` as a *global*, on top of the 6,896 literals |
 | 770 | `Proxy` and `Reflect`'s other half |
-| 592 | the `Iterator` global — and it is really its *helpers*: `map`, `filter`, `take`, `drop`, `flatMap` and the six that consume |
+| 228 | the *lazy* `Iterator` helpers — `map`, `filter`, `take`, `drop`, `flatMap` and `Iterator.from`, each of which needs a helper object carrying state |
 | 408 | `SharedArrayBuffer`, and 182 more for `Atomics` |
 
 **Read the *failure* buckets, not only that table.** The list above is what stopped the tests that
