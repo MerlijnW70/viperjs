@@ -54,10 +54,7 @@ fn property_list(
     let Value::Object(object) = replacer else {
         return Ok(None);
     };
-    if !heap
-        .object(object)
-        .is_some_and(crate::heap::Object::is_array)
-    {
+    if !heap.is_array_through(object)? {
         return Ok(None);
     }
     let name = key(heap, "length");
@@ -223,10 +220,7 @@ impl Writer {
         }
         self.open.push(object);
         self.depth += 1;
-        let written = match heap
-            .object(object)
-            .is_some_and(crate::heap::Object::is_array)
-        {
+        let written = match heap.is_array_through(object)? {
             true => self.list(vm, heap, object),
             false => self.members(vm, heap, object),
         };
@@ -261,15 +255,21 @@ impl Writer {
             // §25.5.2.5 step 5 `EnumerableOwnProperties(value, key)` — two conditions that exclude
             // different properties. A Symbol key has no name JSON could write, and a
             // non-enumerable one is not the caller's to see.
-            None => heap
-                .own_property_keys(object)
-                .into_iter()
-                .filter_map(|found| found.as_string().map(|_| found))
-                .filter(|found| {
-                    heap.own_property(object, *found)
+            None => {
+                let mut listed = Vec::new();
+                for found in vm.own_keys_through(object, heap)? {
+                    if found.as_string().is_none() {
+                        continue;
+                    }
+                    if vm
+                        .own_property_through(object, found, heap)?
                         .is_some_and(|property| property.enumerable)
-                })
-                .collect(),
+                    {
+                        listed.push(found);
+                    }
+                }
+                listed
+            }
         };
         let mut parts = Vec::new();
         for name in names {

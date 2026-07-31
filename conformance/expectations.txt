@@ -1033,8 +1033,8 @@ built-ins/AggregateError/message-method-prop-cast.js :: it threw TypeError: cann
 built-ins/AggregateError/message-method-prop-cast.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
 built-ins/AggregateError/message-tostring-abrupt.js (strict) :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
-built-ins/AggregateError/newtarget-proto-custom.js :: it threw ReferenceError: Proxy is not defined
-built-ins/AggregateError/newtarget-proto-custom.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/AggregateError/newtarget-proto-custom.js :: it threw TypeError: Reflect.construct needs a constructor as its new.target
+built-ins/AggregateError/newtarget-proto-custom.js (strict) :: it threw TypeError: Reflect.construct needs a constructor as its new.target
 built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -1075,10 +1075,6 @@ built-ins/Array/fromAsync/prop-desc.js :: it threw an object with no name: Array
 built-ins/Array/fromAsync/prop-desc.js (strict) :: it threw an object with no name: Array.fromAsync is callable Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/isArray/15.4.3.2-1-10.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/isArray/15.4.3.2-1-10.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/isArray/proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/isArray/proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/isArray/proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/isArray/proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/length/S15.4.5.1_A1.3_T1.js :: it threw RangeError: an array length must be an integer index
 built-ins/Array/length/S15.4.5.1_A1.3_T1.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Array/length/S15.4.5.1_A1.3_T2.js :: it threw RangeError: an array length must be an integer index
@@ -1170,30 +1166,20 @@ built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/concat/create-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/concat/is-concat-spreadable-get-err.js :: it threw an object with no name: Array.prototype.concat.call(o) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/is-concat-spreadable-get-err.js (strict) :: it threw an object with no name: Array.prototype.concat.call(o) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/is-concat-spreadable-get-order.js :: it threw an object with no name: Actual [constructor] and expected [constructor, isConcatSpreadable] should have the same contents. The value of calls is expected to be ["constructor", "isConcatSpreadable"]
 built-ins/Array/prototype/concat/is-concat-spreadable-get-order.js (strict) :: it threw an object with no name: Actual [constructor] and expected [constructor, isConcatSpreadable] should have the same contents. The value of calls is expected to be ["constructor", "isConcatSpreadable"]
-built-ins/Array/prototype/concat/is-concat-spreadable-is-array-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/is-concat-spreadable-is-array-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/is-concat-spreadable-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/is-concat-spreadable-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/is-concat-spreadable-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/is-concat-spreadable-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Array/prototype/concat/is-concat-spreadable-is-array-proxy-revoked.js :: it threw an object with no name: [].concat(handle.proxy) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Array/prototype/concat/is-concat-spreadable-is-array-proxy-revoked.js (strict) :: it threw an object with no name: [].concat(handle.proxy) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Array/prototype/concat/is-concat-spreadable-proxy.js :: it threw an object with no name: The value of [].concat(spreadableProxy).length is expected to be 0 Expected SameValue(«1», «0») to be true
+built-ins/Array/prototype/concat/is-concat-spreadable-proxy.js (strict) :: it threw an object with no name: The value of [].concat(spreadableProxy).length is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js :: it threw an object with no name: The value of result.length is expected to be 1 Expected SameValue(«2», «1») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js (strict) :: it threw an object with no name: The value of result.length is expected to be 1 Expected SameValue(«2», «1») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js (strict) :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/copyWithin/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/copyWithin/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/copyWithin/return-abrupt-from-has-start.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/copyWithin/return-abrupt-from-has-start.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/entries/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/entries/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
@@ -1232,10 +1218,6 @@ built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/filter/create-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/filter/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/filter/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/filter/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1262,12 +1244,8 @@ built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/flat/proxy-access-count.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/flat/proxy-access-count.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js (strict) :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/proxy-access-count.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/flatMap/proxy-access-count.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with no name: result !== true
@@ -1284,8 +1262,6 @@ built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js :: it t
 built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/includes/get-prop.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/includes/get-prop.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/includes/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1294,8 +1270,6 @@ built-ins/Array/prototype/includes/resizable-buffer.js :: it threw ReferenceErro
 built-ins/Array/prototype/includes/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/indexOf/15.4.4.14-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/indexOf/15.4.4.14-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/indexOf/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1312,8 +1286,6 @@ built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-8.js :: it threw ReferenceErro
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-8.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/lastIndexOf/calls-only-has-on-prototype-after-length-zeroed.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/lastIndexOf/calls-only-has-on-prototype-after-length-zeroed.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1332,12 +1304,6 @@ built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw 
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/map/create-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-species-undef-invalid-len.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-species-undef-invalid-len.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/map/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/map/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -1366,22 +1332,96 @@ built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :
 built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [
+  // Initial get length operation.
+  "Get:length",
+
+  // Lower and upper index are both present.
+  "Has:0",
+  "Get:0",
+  "Has:9007199254740990",
+  "Get:9007199254740990",
+  "Set:0",
+  "GetOwnPropertyDescriptor:0",
+  "DefineProperty:0",
+  "Set:9007199254740990",
+  "GetOwnPropertyDescriptor:9007199254740990",
+  "DefineProperty:9007199254740990",
+
+  // Lower and upper index are both absent.
+  "Has:1",
+  "Has:9007199254740989",
+
+  // Lower index is present, upper index is absent.
+  "Has:2",
+  "Get:2",
+  "Has:9007199254740988",
+  "Delete:2",
+  "Set:9007199254740988",
+  "GetOwnPropertyDescriptor:9007199254740988",
+  "DefineProperty:9007199254740988",
+
+  // Lower index is absent, upper index is present.
+  "Has:3",
+  "Has:9007199254740987",
+  "Get:9007199254740987",
+  "Set:3",
+  "GetOwnPropertyDescriptor:3",
+  "DefineProperty:3",
+  "Delete:9007199254740987",
+
+  // Stop exception.
+  "Has:4",
+  "Get:4",
+]
+built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [
+  // Initial get length operation.
+  "Get:length",
+
+  // Lower and upper index are both present.
+  "Has:0",
+  "Get:0",
+  "Has:9007199254740990",
+  "Get:9007199254740990",
+  "Set:0",
+  "GetOwnPropertyDescriptor:0",
+  "DefineProperty:0",
+  "Set:9007199254740990",
+  "GetOwnPropertyDescriptor:9007199254740990",
+  "DefineProperty:9007199254740990",
+
+  // Lower and upper index are both absent.
+  "Has:1",
+  "Has:9007199254740989",
+
+  // Lower index is present, upper index is absent.
+  "Has:2",
+  "Get:2",
+  "Has:9007199254740988",
+  "Delete:2",
+  "Set:9007199254740988",
+  "GetOwnPropertyDescriptor:9007199254740988",
+  "DefineProperty:9007199254740988",
+
+  // Lower index is absent, upper index is present.
+  "Has:3",
+  "Has:9007199254740987",
+  "Get:9007199254740987",
+  "Set:3",
+  "GetOwnPropertyDescriptor:3",
+  "DefineProperty:3",
+  "Delete:9007199254740987",
+
+  // Stop exception.
+  "Has:4",
+  "Get:4",
+]
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/slice/create-proxied-array-invalid-len.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-proxied-array-invalid-len.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/slice/create-species.js :: it threw an object with no name: Expected SameValue(«0», «3») to be true
 built-ins/Array/prototype/slice/create-species.js (strict) :: it threw an object with no name: Expected SameValue(«0», «3») to be true
-built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/slice/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/slice/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/15.4.4.17-1-10.js :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
@@ -1408,16 +1448,9 @@ built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species-undef-invalid-len.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species-undef-invalid-len.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it did not finish within 10 seconds
+built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
+built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError
@@ -2606,8 +2639,8 @@ built-ins/DisposableStack/prototype/use/throws-if-value-not-object.js :: it thre
 built-ins/DisposableStack/prototype/use/throws-if-value-not-object.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/undefined-newtarget-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/DisposableStack/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Error/cause_abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Error/cause_abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Error/cause_abrupt.js :: it threw an object with no name: HasProperty Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Error/cause_abrupt.js (strict) :: it threw an object with no name: HasProperty Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Error/cause_property.js :: it threw an object with no name: cause should be an own property
 built-ins/Error/cause_property.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Error/constructor.js :: it threw TypeError: cannot convert an object to a primitive value
@@ -2878,8 +2911,8 @@ built-ins/Function/internals/Call/class-ctor-realm.js :: it threw TypeError: wha
 built-ins/Function/internals/Call/class-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
+built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 built-ins/Function/internals/Construct/derived-return-val-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/derived-return-val-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js :: it threw TypeError: what was called is not a function
@@ -2942,8 +2975,8 @@ built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js :: it t
 built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Function/prototype/Symbol.hasInstance/value-negative.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/Symbol.hasInstance/value-negative.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js :: it threw TypeError: what was called is not a function
@@ -3100,8 +3133,8 @@ built-ins/Function/prototype/toString/S15.3.4.2_A16.js :: it threw an object wit
 built-ins/Function/prototype/toString/S15.3.4.2_A16.js (strict) :: it threw an object with no name: String(obj) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js (strict) :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
-built-ins/Function/prototype/toString/proxy-non-callable-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Function/prototype/toString/proxy-non-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/Function/prototype/toString/proxy-non-callable-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Function/prototype/toString/proxy-non-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/GeneratorFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %GeneratorFunction%
 built-ins/GeneratorFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %GeneratorFunction%
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
@@ -3296,8 +3329,8 @@ built-ins/Iterator/zip/padding-iteration-iterator-close-abrupt-completion.js :: 
 built-ins/Iterator/zip/padding-iteration-iterator-close-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
 built-ins/Iterator/zip/padding-iteration-iterator-step-value-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
 built-ins/Iterator/zip/padding-iteration-iterator-step-value-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
-built-ins/Iterator/zip/padding-iteration.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zip/padding-iteration.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zip/padding-iteration.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/padding-iteration.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zip/prop-desc.js :: it threw an object with no name: zip should be an own property
 built-ins/Iterator/zip/prop-desc.js (strict) :: it threw an object with no name: zip should be an own property
 built-ins/Iterator/zip/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -3318,8 +3351,8 @@ built-ins/Iterator/zipKeyed/is-function.js :: it threw an object with no name: T
 built-ins/Iterator/zipKeyed/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.zipKeyed` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/zipKeyed/iterables-iteration-after-reading-options.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-after-reading-options.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zipKeyed/iterables-iteration-after-reading-options.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/iterables-iteration-after-reading-options.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-iteration-deleted.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-iteration-enumerable.js :: it threw TypeError: what was called is not a function
@@ -3328,8 +3361,8 @@ built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js :: it t
 built-ins/Iterator/zipKeyed/iterables-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
 built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js :: it threw an object with no name: Actual [] and expected [close second iterator, close first iterator] should have the same contents.
 built-ins/Iterator/zipKeyed/iterables-iteration-get-iterator-flattenable-abrupt-completion.js (strict) :: it threw an object with no name: Actual [] and expected [close second iterator, close first iterator] should have the same contents.
-built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
+built-ins/Iterator/zipKeyed/iterables-iteration-get-own-property-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
 built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-iteration-inherited.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/iterables-iteration-symbol-key.js :: it threw TypeError: what was called is not a function
@@ -3360,8 +3393,8 @@ built-ins/Iterator/zipKeyed/name.js :: it threw TypeError: undefined and null ca
 built-ins/Iterator/zipKeyed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Iterator/zipKeyed/padding-iteration-get-abrupt-completion.js :: it threw an object with no name: Expected a ExpectedError but got a TypeError
 built-ins/Iterator/zipKeyed/padding-iteration-get-abrupt-completion.js (strict) :: it threw an object with no name: Expected a ExpectedError but got a TypeError
-built-ins/Iterator/zipKeyed/padding-iteration.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Iterator/zipKeyed/padding-iteration.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Iterator/zipKeyed/padding-iteration.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/padding-iteration.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/prop-desc.js :: it threw an object with no name: zipKeyed should be an own property
 built-ins/Iterator/zipKeyed/prop-desc.js (strict) :: it threw an object with no name: zipKeyed should be an own property
 built-ins/Iterator/zipKeyed/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -3396,18 +3429,11 @@ built-ins/JSON/isRawJSON/not-a-constructor.js :: it threw an object with no name
 built-ins/JSON/isRawJSON/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/JSON/isRawJSON/prop-desc.js :: it threw an object with no name: isRawJSON should be an own property
 built-ins/JSON/isRawJSON/prop-desc.js (strict) :: it threw an object with no name: isRawJSON should be an own property
-built-ins/JSON/parse/revived-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/revived-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/revived-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/revived-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-define-prop-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-define-prop-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-delete-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-delete-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-length-coerce-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-length-coerce-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-length-get-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-array-length-get-err.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/JSON/parse/reviver-array-define-prop-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-array-define-prop-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-array-delete-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-array-delete-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-array-length-coerce-err.js :: it did not finish within 10 seconds
 built-ins/JSON/parse/reviver-call-args-after-forward-modification.js :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/parse/reviver-call-args-after-forward-modification.js (strict) :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/parse/reviver-context-source-array-literal.js :: it threw an object with no name: context should be an object Expected SameValue(«"undefined"», «"object"») to be true
@@ -3416,12 +3442,10 @@ built-ins/JSON/parse/reviver-context-source-object-literal.js :: it threw an obj
 built-ins/JSON/parse/reviver-context-source-object-literal.js (strict) :: it threw an object with no name: context should be an object Expected SameValue(«"undefined"», «"object"») to be true
 built-ins/JSON/parse/reviver-context-source-primitive-literal.js :: it threw an object with no name: context should be an object Expected SameValue(«"undefined"», «"object"») to be true
 built-ins/JSON/parse/reviver-context-source-primitive-literal.js (strict) :: it threw an object with no name: context should be an object Expected SameValue(«"undefined"», «"object"») to be true
-built-ins/JSON/parse/reviver-object-define-prop-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-object-define-prop-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-object-delete-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-object-delete-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-object-own-keys-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/parse/reviver-object-own-keys-err.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/JSON/parse/reviver-object-define-prop-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-object-define-prop-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-object-delete-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/JSON/parse/reviver-object-delete-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/JSON/rawJSON/basic.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/rawJSON/basic.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/JSON/rawJSON/builtin.js :: it threw an object with no name: JSON.rawJSON is extensible
@@ -3438,28 +3462,10 @@ built-ins/JSON/rawJSON/prop-desc.js :: it threw an object with no name: rawJSON 
 built-ins/JSON/rawJSON/prop-desc.js (strict) :: it threw an object with no name: rawJSON should be an own property
 built-ins/JSON/rawJSON/returns-expected-object.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/rawJSON/returns-expected-object.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/replacer-array-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/replacer-array-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/replacer-array-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/replacer-array-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/replacer-array-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/replacer-array-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/replacer-array-wrong-type.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/replacer-array-wrong-type.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-array-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-array-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-array-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-array-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-array-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-array-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/JSON/stringify/value-bigint-cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/stringify/value-bigint-cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/value-object-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-object-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-object-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/JSON/stringify/value-object-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Map/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Map/Symbol.species/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Map/Symbol.species/return-value.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -3749,14 +3755,6 @@ built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js :: it threw TypeError: Nu
 built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Number/return-abrupt-tonumber-value.js :: it threw an object with no name: NewTarget is undefined, {}.valueOf Expected a Test262Error but got a TypeError
 built-ins/Number/return-abrupt-tonumber-value.js (strict) :: it threw an object with no name: NewTarget is undefined, {}.valueOf Expected a Test262Error but got a TypeError
-built-ins/Object/assign/source-own-prop-desc-missing.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/source-own-prop-desc-missing.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/source-own-prop-error.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/source-own-prop-error.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/source-own-prop-keys-error.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/source-own-prop-keys-error.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/strings-and-symbol-order-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/assign/strings-and-symbol-order-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/create/15.2.3.5-4-119.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-119.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/create/15.2.3.5-4-12.js :: it threw ReferenceError: RegExp is not defined
@@ -3825,8 +3823,6 @@ built-ins/Object/defineProperties/15.2.3.7-6-a-147.js :: it threw RangeError: an
 built-ins/Object/defineProperties/15.2.3.7-6-a-147.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Object/defineProperties/15.2.3.7-6-a-19.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperties/15.2.3.7-6-a-19.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/defineProperties/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/defineProperties/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/defineProperty/15.2.3.6-2-39.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/defineProperty/15.2.3.6-2-39.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/defineProperty/15.2.3.6-2-40.js :: it threw TypeError: cannot convert an object to a primitive value
@@ -3901,20 +3897,10 @@ built-ins/Object/defineProperty/15.2.3.6-4-409.js :: it threw ReferenceError: Re
 built-ins/Object/defineProperty/15.2.3.6-4-409.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-4-585.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/defineProperty/15.2.3.6-4-585.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/entries/observable-operations.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/entries/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/entries/tamper-with-global-object.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/entries/tamper-with-global-object.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/freeze/15.2.3.9-2-d-7.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/freeze/15.2.3.9-2-d-7.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/freeze/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/proxy-with-defineProperty-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/proxy-with-defineProperty-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/freeze/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/fromEntries/evaluation-order.js :: it threw an object with no name: Actual [] and expected [get Symbol.iterator, next 0, access property "0" of first entry, access property "1" of first entry, toString of first key, next 1, access property "0" of second entry, access property "1" of second entry, toString of second key, next 2] should have the same contents. Object.fromEntries evaluation order
 built-ins/Object/fromEntries/evaluation-order.js (strict) :: it threw an object with no name: Actual [] and expected [get Symbol.iterator, next 0, access property "0" of first entry, access property "1" of first entry, toString of first key, next 1, access property "0" of second entry, access property "1" of second entry, toString of second key, next 2] should have the same contents. Object.fromEntries evaluation order
 built-ins/Object/fromEntries/iterator-closed-for-null-entry.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -3997,30 +3983,8 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js :: it threw TypeError
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-70.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptors/observable-operations.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyDescriptors/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyDescriptors/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyDescriptors/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyDescriptors/proxy-undefined-descriptor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyDescriptors/proxy-undefined-descriptor.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js :: it threw an object with no name: result1[expResult[p1]] !== true
 built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js (strict) :: it threw an object with no name: result1[expResult[p1]] !== true
-built-ins/Object/getOwnPropertyNames/proxy-invariant-absent-not-configurable-symbol-key.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-absent-not-configurable-symbol-key.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-duplicate-symbol-entry.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-duplicate-symbol-entry.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-not-extensible-absent-symbol-key.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-not-extensible-absent-symbol-key.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-not-extensible-extra-symbol-key.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertyNames/proxy-invariant-not-extensible-extra-symbol-key.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-absent-not-configurable-string-key.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-absent-not-configurable-string-key.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-duplicate-string-entry.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-duplicate-string-entry.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-not-extensible-absent-string-key.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-not-extensible-absent-string-key.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-not-extensible-extra-string-key.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/getOwnPropertySymbols/proxy-invariant-not-extensible-extra-string-key.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/getPrototypeOf/15.2.3.2-2-10.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/getPrototypeOf/15.2.3.2-2-10.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/getPrototypeOf/15.2.3.2-2-26.js :: it threw ReferenceError: RegExp is not defined
@@ -4065,62 +4029,46 @@ built-ins/Object/isFrozen/15.2.3.12-3-17.js :: it threw ReferenceError: RegExp i
 built-ins/Object/isFrozen/15.2.3.12-3-17.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isFrozen/15.2.3.12-3-18.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isFrozen/15.2.3.12-3-18.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/isFrozen/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/isFrozen/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/isSealed/15.2.3.11-4-17.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isSealed/15.2.3.11-4-17.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isSealed/15.2.3.11-4-18.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/isSealed/15.2.3.11-4-18.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/isSealed/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/isSealed/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/property-traps-order-with-proxied-array.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/property-traps-order-with-proxied-array.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-keys.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-non-enumerable-prop-invariant-1.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-non-enumerable-prop-invariant-1.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-non-enumerable-prop-invariant-2.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-non-enumerable-prop-invariant-2.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-non-enumerable-prop-invariant-3.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/keys/proxy-non-enumerable-prop-invariant-3.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected SameValue(«12», «10») to be true
+built-ins/Object/keys/proxy-keys.js (strict) :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/preventExtensions/15.2.3.10-3-19.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/preventExtensions/15.2.3.10-3-19.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/preventExtensions/15.2.3.10-3-9.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/preventExtensions/15.2.3.10-3-9.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/preventExtensions/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/preventExtensions/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/preventExtensions/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/preventExtensions/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Object/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/prototype/__defineGetter__/define-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__defineGetter__/define-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/prototype/__defineGetter__/define-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__defineGetter__/define-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__defineGetter__/key-invalid.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/prototype/__defineGetter__/key-invalid.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/prototype/__defineSetter__/define-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__defineSetter__/define-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/prototype/__defineSetter__/define-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__defineSetter__/define-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__defineSetter__/key-invalid.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/prototype/__defineSetter__/key-invalid.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/prototype/__lookupGetter__/key-invalid.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/prototype/__lookupGetter__/key-invalid.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/prototype/__lookupGetter__/lookup-own-get-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-own-get-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-own-proto-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-own-proto-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-get-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-get-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-proto-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-proto-err.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/prototype/__lookupGetter__/lookup-own-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-own-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-own-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-own-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-proto-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-proto-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-proto-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupGetter__/lookup-proto-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__lookupSetter__/key-invalid.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/prototype/__lookupSetter__/key-invalid.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/prototype/__lookupSetter__/lookup-own-get-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-own-get-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-own-proto-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-own-proto-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-get-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-get-err.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-proto-err.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-proto-err.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/prototype/__lookupSetter__/lookup-own-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-own-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-own-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-own-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-proto-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-proto-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-proto-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__lookupSetter__/lookup-proto-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__proto__/get-abrupt.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/get-abrupt.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/get-fn-name.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -4131,10 +4079,10 @@ built-ins/Object/prototype/__proto__/get-to-obj-abrupt.js :: it threw TypeError:
 built-ins/Object/prototype/__proto__/get-to-obj-abrupt.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__proto__/set-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__proto__/set-cycle-shadowed.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/__proto__/set-cycle-shadowed.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/prototype/__proto__/set-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__proto__/set-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Object/prototype/__proto__/set-cycle-shadowed.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Object/prototype/__proto__/set-cycle-shadowed.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Object/prototype/__proto__/set-cycle.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__proto__/set-cycle.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__proto__/set-fn-name.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -4159,8 +4107,6 @@ built-ins/Object/prototype/hasOwnProperty/symbol_property_valueOf.js :: it threw
 built-ins/Object/prototype/hasOwnProperty/symbol_property_valueOf.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/prototype/hasOwnProperty/topropertykey_before_toobject.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/prototype/hasOwnProperty/topropertykey_before_toobject.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/prototype/isPrototypeOf/arg-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/isPrototypeOf/arg-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js (strict) :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/isPrototypeOf/undefined-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
@@ -4179,12 +4125,6 @@ built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js :: i
 built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js (strict) :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/prototype/toString/proxy-array.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/proxy-array.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/proxy-revoked-during-get-call.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/prototype/toString/proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-override-bigint.js :: it threw ReferenceError: BigInt is not defined
@@ -4193,16 +4133,10 @@ built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.p
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
-built-ins/Object/seal/abrupt-completion.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/abrupt-completion.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/object-seal-o-is-a-reg-exp-object.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/object-seal-o-is-a-reg-exp-object.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/object-seal-p-is-own-property-of-a-reg-exp-object-that-uses-object-s-get-own-property.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/object-seal-p-is-own-property-of-a-reg-exp-object-that-uses-object-s-get-own-property.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/seal/proxy-no-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/proxy-no-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/proxy-with-defineProperty-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/proxy-with-defineProperty-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/seal-arrowfunction.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-arrowfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-bigint64array.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -4211,18 +4145,10 @@ built-ins/Object/seal/seal-biguint64array.js :: it threw ReferenceError: BigUint
 built-ins/Object/seal/seal-biguint64array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
 built-ins/Object/seal/seal-function.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/seal-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/seal-regexp.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/seal-regexp.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/setPrototypeOf/set-error.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/values/observable-operations.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/values/observable-operations.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/values/order-after-define-property.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Object/values/order-after-define-property.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Object/values/order-after-define-property.js :: it threw an object with no name: Actual [a] and expected [a, b] should have the same contents.
+built-ins/Object/values/order-after-define-property.js (strict) :: it threw an object with no name: Actual [a] and expected [a, b] should have the same contents.
 built-ins/Object/values/tamper-with-global-object.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/values/tamper-with-global-object.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Promise/all/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
@@ -4253,10 +4179,10 @@ built-ins/Promise/allKeyed/get-value-throws-reject.js :: the test called $DONE w
 built-ins/Promise/allKeyed/get-value-throws-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/getownproperty-not-enumerable.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/getownproperty-not-enumerable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/allKeyed/getownproperty-returns-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allKeyed/getownproperty-returns-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allKeyed/getownproperty-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allKeyed/getownproperty-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allKeyed/getownproperty-returns-undefined.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/getownproperty-returns-undefined.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/getownproperty-throws.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/getownproperty-throws.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/invoke-resolve-custom.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/invoke-resolve-custom.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allKeyed/invoke-resolve-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
@@ -4285,8 +4211,8 @@ built-ins/Promise/allKeyed/non-enumerable-properties-only.js :: the test called 
 built-ins/Promise/allKeyed/non-enumerable-properties-only.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Promise/allKeyed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/allKeyed/ownkeys-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allKeyed/ownkeys-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allKeyed/ownkeys-throws.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allKeyed/ownkeys-throws.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/prop-desc.js :: it threw an object with no name: allKeyed should be an own property
 built-ins/Promise/allKeyed/prop-desc.js (strict) :: it threw an object with no name: allKeyed should be an own property
 built-ins/Promise/allKeyed/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -4349,10 +4275,10 @@ built-ins/Promise/allSettledKeyed/get-value-throws-reject.js :: the test called 
 built-ins/Promise/allSettledKeyed/get-value-throws-reject.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/getownproperty-not-enumerable.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/getownproperty-not-enumerable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/allSettledKeyed/getownproperty-returns-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allSettledKeyed/getownproperty-returns-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allSettledKeyed/getownproperty-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allSettledKeyed/getownproperty-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allSettledKeyed/getownproperty-returns-undefined.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/getownproperty-returns-undefined.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/getownproperty-throws.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/getownproperty-throws.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/invoke-resolve-custom.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/invoke-resolve-custom.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Promise/allSettledKeyed/invoke-resolve-error-reject.js :: the test called $DONE with TypeError: what was called is not a function
@@ -4381,8 +4307,8 @@ built-ins/Promise/allSettledKeyed/non-enumerable-properties-only.js :: the test 
 built-ins/Promise/allSettledKeyed/non-enumerable-properties-only.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Promise/allSettledKeyed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/allSettledKeyed/ownkeys-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/allSettledKeyed/ownkeys-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Promise/allSettledKeyed/ownkeys-throws.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Promise/allSettledKeyed/ownkeys-throws.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/prop-desc.js :: it threw an object with no name: allSettledKeyed should be an own property
 built-ins/Promise/allSettledKeyed/prop-desc.js (strict) :: it threw an object with no name: allSettledKeyed should be an own property
 built-ins/Promise/allSettledKeyed/proto.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -4427,8 +4353,6 @@ built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js :
 built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
-built-ins/Promise/prototype/finally/this-value-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Promise/prototype/finally/this-value-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Promise/race/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/race/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/race/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -4471,621 +4395,157 @@ built-ins/Promise/withResolvers/result.js :: it threw TypeError: what was called
 built-ins/Promise/withResolvers/result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/call-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/call-result.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/apply/call-parameters.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/call-parameters.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/call-result.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/call-result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/return-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/return-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/apply/return-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Proxy/apply/return-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Proxy/apply/trap-is-missing-target-is-proxy.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-missing-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-null.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-null.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-undefined-no-property.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-undefined-no-property.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/apply/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/apply/trap-is-null-target-is-proxy.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-null-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-null.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-null.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-undefined-no-property.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-undefined-no-property.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-undefined.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/apply/trap-is-undefined.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/call-parameters-new-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/call-parameters-new-target.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/call-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/call-result.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/call-parameters-new-target.js :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/call-parameters-new-target.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/call-parameters.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/call-parameters.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/call-result.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/call-result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/null-handler-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/return-is-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Proxy/construct/return-is-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-boolean.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-not-object-throws-boolean.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/return-not-object-throws-null-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-null-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-null.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-not-object-throws-null.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/return-not-object-throws-number-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-number-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-number.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-not-object-throws-number.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/return-not-object-throws-string-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-string-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-string.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-not-object-throws-string.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-symbol.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-not-object-throws-symbol.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/return-not-object-throws-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/trap-is-missing-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-null.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-null.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-undefined-no-property.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-undefined-no-property.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-null-target-is-proxy.js :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/trap-is-null-target-is-proxy.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/trap-is-null.js :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/trap-is-null.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/trap-is-undefined-no-property.js :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/trap-is-undefined-no-property.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
 built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/construct/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/constructor.js :: it threw an object with no name: `typeof Proxy` is `'function'` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Proxy/constructor.js (strict) :: it threw an object with no name: `typeof Proxy` is `'function'` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Proxy/create-handler-is-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-handler-is-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-handler-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-handler-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-is-not-a-constructor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-not-a-constructor.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-revoked-function-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-revoked-function-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-is-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/create-target-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/create-target-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/defineProperty/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/trap-is-undefined-target-is-proxy.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/trap-is-undefined.js :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/construct/trap-is-undefined.js (strict) :: it threw TypeError: Reflect.construct needs a constructor
+built-ins/Proxy/create-target-is-not-a-constructor.js :: it threw ReferenceError: eval is not defined
+built-ins/Proxy/create-target-is-not-a-constructor.js (strict) :: it threw ReferenceError: eval is not defined
+built-ins/Proxy/create-target-is-revoked-function-proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
+built-ins/Proxy/create-target-is-revoked-function-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 built-ins/Proxy/defineProperty/desc-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/desc-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/null-handler-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/return-boolean-and-define-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/return-boolean-and-define-target.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-not-configurable-writable-desc-not-writable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-not-configurable-writable-desc-not-writable.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-return-is-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/defineProperty/trap-return-is-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/boolean-trap-result-boolean-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/boolean-trap-result-boolean-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/boolean-trap-result-boolean-true.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/boolean-trap-result-boolean-true.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/return-false-not-strict.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/return-false-strict.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/targetdesc-is-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/targetdesc-is-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/targetdesc-is-undefined-return-true.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/targetdesc-is-undefined-return-true.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/deleteProperty/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-undefined-not-strict.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-undefined-strict.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/deleteProperty/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/enumerate/removed-does-not-trigger.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/enumerate/removed-does-not-trigger.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/function-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/function-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/get-fn-realm-recursive.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/get-fn-realm-recursive.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/get-fn-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/get-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get/accessor-get-is-undefined-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/accessor-get-is-undefined-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/not-same-value-configurable-false-writable-false-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/not-same-value-configurable-false-writable-false-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-accessor-property.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-accessor-property.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-configurable-false-writable-true.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-configurable-false-writable-true.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-configurable-true-assessor-get-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-configurable-true-assessor-get-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-configurable-true-writable-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-configurable-true-writable-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-same-value-configurable-false-writable-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result-same-value-configurable-false-writable-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/return-trap-result.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/get/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/get/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined-no-property.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined-no-property.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined-receiver.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined-receiver.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/get/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined-target-is-not-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined-target-is-not-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined-targetdesc-is-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined-targetdesc-is-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined-targetdesc-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined-targetdesc-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-invalid-descriptor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-invalid-descriptor.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-not-writable-targetdesc-is-writable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-not-writable-targetdesc-is-writable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-targetdesc-is-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-targetdesc-is-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-targetdesc-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-targetdesc-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-return-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-return-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-return-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-return-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js :: it threw an object with no name: 0 should be an own property
+built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js (strict) :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/extensible-target-return-handlerproto.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/extensible-target-return-handlerproto.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/instanceof-custom-return-accepted.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/instanceof-custom-return-accepted.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/instanceof-target-not-extensible-not-same-proto-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/instanceof-target-not-extensible-not-same-proto-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/not-extensible-not-same-proto-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/not-extensible-not-same-proto-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/not-extensible-same-proto.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/not-extensible-same-proto.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js :: it threw an object with no name: foo should be an own property
+built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js (strict) :: it threw an object with no name: foo should be an own property
+built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js :: it threw an object with no name: attr should be an own property
+built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js (strict) :: it threw an object with no name: attr should be an own property
 built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getPrototypeOf/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-boolean.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-boolean.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-number.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-number.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-string.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-string.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-symbol.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-symbol.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/getPrototypeOf/trap-result-neither-object-nor-null-throws-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-in-prototype-index.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-in-prototype-index.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-in-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-in-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-in.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-in.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-object-create.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/call-object-create.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-false-target-not-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-false-target-not-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-false-target-prop-exists.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-false-target-prop-exists.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-false-targetdesc-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-false-targetdesc-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-is-abrupt-in.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-is-abrupt-in.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-true-target-prop-exists.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-true-target-prop-exists.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-true-without-same-target-prop.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/return-true-without-same-target-prop.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/has/return-false-target-not-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Proxy/has/return-false-target-not-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Proxy/has/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/has/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/has/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/has/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-is-boolean.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-is-boolean.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-is-different-from-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-is-different-from-target.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-same-result-from-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/return-same-result-from-target.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/isExtensible/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/isExtensible/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/length.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/length.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/name.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/name.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/call-parameters-object-getownpropertynames.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/call-parameters-object-getownpropertynames.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/call-parameters-object-keys.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/call-parameters-object-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/extensible-return-trap-result-absent-not-configurable-keys.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/extensible-return-trap-result-absent-not-configurable-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/extensible-return-trap-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/extensible-return-trap-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/not-extensible-missing-keys-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/not-extensible-missing-keys-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/not-extensible-new-keys-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/not-extensible-new-keys-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/not-extensible-return-keys.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/not-extensible-return-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-all-non-configurable-keys.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-all-non-configurable-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/ownKeys/return-not-list-object-throws.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-not-list-object-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-array.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-array.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-boolean.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-boolean.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-null.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-null.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-number.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-number.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-object.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-object.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/return-type-throws-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/ownKeys/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/ownKeys/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-true-target-is-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-true-target-is-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-true-target-is-not-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/return-true-target-is-not-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/preventExtensions/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/preventExtensions/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/property-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/property-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/proxy-newtarget.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/proxy-newtarget.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/proxy-no-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/proxy-no-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/proxy-undefined-newtarget.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/proxy-undefined-newtarget.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/proxy.js :: it threw an object with no name: Proxy should be an own property
-built-ins/Proxy/proxy.js (strict) :: it threw an object with no name: Proxy should be an own property
-built-ins/Proxy/revocable/builtin.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/builtin.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/handler-is-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/handler-is-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/length.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/length.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/name.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/name.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/not-a-constructor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/not-a-constructor.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-length.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-length.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-name.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-name.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-not-a-constructor.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-not-a-constructor.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-property-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-property-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revocation-function-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revoke-consecutive-call-returns-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revoke-consecutive-call-returns-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revoke-returns-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revoke-returns-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revoke.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/revoke.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/target-is-revoked-function-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/target-is-revoked-function-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/target-is-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/revocable/target-is-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/revocable/target-is-revoked-function-proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
+built-ins/Proxy/revocable/target-is-revoked-function-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 built-ins/Proxy/revocable/tco-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/set/boolean-trap-result-is-false-boolean-return-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-boolean-return-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-null-return-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-null-return-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-number-return-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-number-return-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-string-return-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-string-return-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-undefined-return-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/boolean-trap-result-is-false-undefined-return-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters-prototype-dunder-proto.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters-prototype-dunder-proto.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters-prototype-index.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters-prototype-index.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-is-abrupt.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-is-abrupt.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-accessor-is-configurable-set-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-accessor-is-configurable-set-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-accessor-is-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-accessor-is-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-is-not-configurable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-is-not-configurable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-is-not-writable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/return-true-target-property-is-not-writable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/target-property-is-accessor-not-configurable-set-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/target-property-is-accessor-not-configurable-set-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/target-property-is-not-configurable-not-writable-not-equal-to-v.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/target-property-is-not-configurable-not-writable-not-equal-to-v.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js :: it threw an object with no name: Actual [] and expected [0, 0, 0] should have the same contents. getOwnPropertyDescriptor: key present on [[ProxyTarget]]
+built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js (strict) :: it threw an object with no name: Actual [] and expected [0, 0, 0] should have the same contents. getOwnPropertyDescriptor: key present on [[ProxyTarget]]
+built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls.js :: it threw an object with no name: Actual [] and expected [foo, foo, foo] should have the same contents. getOwnPropertyDescriptor: key present on [[ProxyTarget]]
+built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls.js (strict) :: it threw an object with no name: Actual [] and expected [foo, foo, foo] should have the same contents. getOwnPropertyDescriptor: key present on [[ProxyTarget]]
 built-ins/Proxy/set/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/set/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/set/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-null-receiver.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-null-receiver.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-undefined-no-property.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-undefined-no-property.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-undefined.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/set/trap-is-undefined.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/call-parameters.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/call-parameters.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/internals-call-order.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/internals-call-order.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/not-extensible-target-not-same-target-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/not-extensible-target-not-same-target-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/not-extensible-target-same-target-prototype.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/not-extensible-target-same-target-prototype.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/null-handler.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/null-handler.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-get-trap.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-get-trap.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-isextensible-target.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-isextensible-target.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-target-getprototypeof.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-target-getprototypeof.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-trap.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/return-abrupt-from-trap.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/toboolean-trap-result-true-target-is-extensible.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/toboolean-trap-result-true-target-is-extensible.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-missing-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-missing-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Proxy/set/trap-is-null-target-is-proxy.js :: it threw an object with no name: Actual [1, 2, 3] and expected [] should have the same contents.
+built-ins/Proxy/set/trap-is-null-target-is-proxy.js (strict) :: it threw an object with no name: Actual [1, 2, 3] and expected [] should have the same contents.
+built-ins/Proxy/set/trap-is-undefined-no-property.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+built-ins/Proxy/set/trap-is-undefined-no-property.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+built-ins/Proxy/set/trap-is-undefined-target-is-proxy.js :: it threw an object with no name: Expected SameValue(«[object Object]», «null») to be true
+built-ins/Proxy/set/trap-is-undefined-target-is-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «null») to be true
+built-ins/Proxy/set/trap-is-undefined.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+built-ins/Proxy/set/trap-is-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/setPrototypeOf/trap-is-not-callable.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-not-callable.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-null-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-null-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-undefined-or-null.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-undefined-or-null.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-undefined-target-is-proxy.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Proxy/setPrototypeOf/trap-is-undefined-target-is-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Reflect/defineProperty/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/defineProperty/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Reflect/deleteProperty/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/deleteProperty/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/get/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/get/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/getOwnPropertyDescriptor/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/getPrototypeOf/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/getPrototypeOf/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/has/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/has/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Reflect/has/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/has/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/isExtensible/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/isExtensible/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/ownKeys/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/ownKeys/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/preventExtensions/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/preventExtensions/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Reflect/set/receiver-is-not-object.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Reflect/set/receiver-is-not-object.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Reflect/set/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/set/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Reflect/setPrototypeOf/return-abrupt-from-result.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Reflect/setPrototypeOf/return-abrupt-from-result.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/RegExp/15.10.2.15-6-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/RegExp/15.10.2.15-6-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 built-ins/RegExp/15.10.2.5-3-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -6690,8 +6150,8 @@ built-ins/SuppressedError/name.js :: it threw ReferenceError: SuppressedError is
 built-ins/SuppressedError/name.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/newtarget-is-undefined.js :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/newtarget-is-undefined.js (strict) :: it threw ReferenceError: SuppressedError is not defined
-built-ins/SuppressedError/newtarget-proto-custom.js :: it threw ReferenceError: Proxy is not defined
-built-ins/SuppressedError/newtarget-proto-custom.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/SuppressedError/newtarget-proto-custom.js :: it threw ReferenceError: SuppressedError is not defined
+built-ins/SuppressedError/newtarget-proto-custom.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/newtarget-proto.js :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/newtarget-proto.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/order-of-args-evaluation.js :: it threw ReferenceError: SuppressedError is not defined
@@ -6763,8 +6223,6 @@ built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-symbol.js :: it threw Typ
 built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-symbol.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/prototype/description/is-not-own-property.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Symbol/prototype/description/is-not-own-property.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/Symbol/prototype/description/this-val-non-symbol.js :: it threw an object with no name: getter.call(new Proxy({}, {})) throws TypeError Expected a TypeError but got a ReferenceError
-built-ins/Symbol/prototype/description/this-val-non-symbol.js (strict) :: it threw an object with no name: getter.call(new Proxy({}, {})) throws TypeError Expected a TypeError but got a ReferenceError
 built-ins/Symbol/prototype/toString/toString-default-attributes-non-strict.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Symbol/replace/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/replace/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
@@ -7146,8 +6604,8 @@ built-ins/Temporal/Duration/prototype/toJSON/negative-components.js :: it threw 
 built-ins/Temporal/Duration/prototype/toJSON/negative-components.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toJSON/not-a-constructor.js :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
 built-ins/Temporal/Duration/prototype/toJSON/not-a-constructor.js (strict) :: it threw an object with no name: Calling as constructor Expected a TypeError but got a ReferenceError
-built-ins/Temporal/Duration/prototype/toJSON/options.js :: it threw ReferenceError: Proxy is not defined
-built-ins/Temporal/Duration/prototype/toJSON/options.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/Temporal/Duration/prototype/toJSON/options.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/toJSON/options.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toJSON/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toJSON/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/toLocaleString/branding.js :: it threw ReferenceError: Temporal is not defined
@@ -12030,8 +11488,8 @@ built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/enumerate-detac
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/enumerate-detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/abrupt-from-ordinary-has-parent-hasproperty.js :: it threw ReferenceError: Proxy is not defined
-built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/abrupt-from-ordinary-has-parent-hasproperty.js (strict) :: it threw ReferenceError: Proxy is not defined
+built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/abrupt-from-ordinary-has-parent-hasproperty.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/abrupt-from-ordinary-has-parent-hasproperty.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -12050,8 +11508,6 @@ built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/key-is-not-numeric
 built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/key-is-not-numeric-index.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/key-is-symbol.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/key-is-symbol.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArrayConstructors/internals/HasProperty/abrupt-from-ordinary-has-parent-hasproperty.js :: it threw ReferenceError: Proxy is not defined
-built-ins/TypedArrayConstructors/internals/HasProperty/abrupt-from-ordinary-has-parent-hasproperty.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/HasProperty/resizable-array-buffer-auto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -12082,8 +11538,8 @@ built-ins/TypedArrayConstructors/internals/Set/BigInt/undefined-tobigint.js :: i
 built-ins/TypedArrayConstructors/internals/Set/BigInt/undefined-tobigint.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-prototype-chain-set.js :: it threw an object with no name: 1 setter should be unreachable! (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-prototype-chain-set.js (strict) :: it threw an object with no name: 1 setter should be unreachable! (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-prototype-chain-set.js :: it threw an object with no name: receiver[1] should not be created (receiver: empty object) (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-prototype-chain-set.js (strict) :: it threw an object with no name: receiver[1] should not be created (receiver: empty object) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-reflect-set.js :: it threw an object with no name: value should not be coerced Expected SameValue(«144», «0») to be true
 built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-reflect-set.js (strict) :: it threw an object with no name: value should not be coerced Expected SameValue(«144», «0») to be true
 built-ins/TypedArrayConstructors/internals/Set/key-is-in-bounds-receiver-is-not-typed-array.js :: it threw an object with no name: valueOf is not called Expected SameValue(«1», «0») to be true
@@ -12094,8 +11550,8 @@ built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds-receiver-is-
 built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds-receiver-is-not-typed-array.js (strict) :: it threw an object with no name: valueOf is not called Expected SameValue(«1», «0») to be true
 built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds-receiver-is-proto.js :: it threw an object with no name: [[Set]] succeeeds
 built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds-receiver-is-proto.js (strict) :: it threw an object with no name: [[Set]] succeeeds
-built-ins/TypedArrayConstructors/internals/Set/key-is-valid-index-prototype-chain-set.js :: it threw ReferenceError: Proxy is not defined (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Set/key-is-valid-index-prototype-chain-set.js (strict) :: it threw ReferenceError: Proxy is not defined (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/internals/Set/key-is-valid-index-prototype-chain-set.js :: it threw an object with no name: receiver[0] should be created (receiver: proxy of an empty object) Expected SameValue(«0», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/internals/Set/key-is-valid-index-prototype-chain-set.js (strict) :: it threw an object with no name: receiver[0] should be created (receiver: proxy of an empty object) Expected SameValue(«0», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/key-is-valid-index-reflect-set.js :: it threw an object with no name: target[0] should remain unchanged (receiver: empty object) Expected SameValue(«2.3», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/key-is-valid-index-reflect-set.js (strict) :: it threw an object with no name: target[0] should remain unchanged (receiver: empty object) Expected SameValue(«2.3», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/resized-out-of-bounds-to-in-bounds-index.js :: it threw TypeError: what was called is not a function
@@ -13347,8 +12803,6 @@ language/expressions/class/elements/evaluation-error/computed-name-valueof-err.j
 language/expressions/class/elements/evaluation-error/computed-name-valueof-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/elements/fields-multiple-definitions-static-private-methods-proxy.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/class/elements/fields-multiple-definitions-static-private-methods-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/class/elements/indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -13434,8 +12888,6 @@ language/expressions/class/elements/private-direct-eval-err-contains-arguments.j
 language/expressions/class/elements/private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/private-direct-eval-err-contains-newtarget.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/class/elements/private-fields-proxy-default-handler-throws.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/class/elements/private-fields-proxy-default-handler-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/class/elements/private-indirect-eval-contains-arguments.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/class/elements/private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -13443,10 +12895,6 @@ language/expressions/class/elements/static-field-anonymous-function-name.js :: i
 language/expressions/class/elements/static-field-anonymous-function-name.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"#field"») to be true
 language/expressions/class/elements/static-field-init-with-this.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/static-field-init-with-this.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/class/elements/static-private-fields-proxy-default-handler-throws.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/class/elements/static-private-fields-proxy-default-handler-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/expressions/class/elements/static-private-methods-proxy-default-handler-throws.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/class/elements/static-private-methods-proxy-default-handler-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
 language/expressions/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -14087,12 +13535,6 @@ language/expressions/object/11.1.5_7-3-2.js :: it threw ReferenceError: eval is 
 language/expressions/object/11.1.5_7-3-2.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
-language/expressions/object/dstr/object-rest-proxy-get-not-called-on-dontenum-keys.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/dstr/object-rest-proxy-get-not-called-on-dontenum-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/dstr/object-rest-proxy-gopd-not-called-on-excluded-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/dstr/object-rest-proxy-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/dstr/object-rest-proxy-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
@@ -14114,12 +13556,6 @@ language/expressions/object/method-definition/meth-dflt-params-ref-self.js (stri
 language/expressions/object/method-definition/meth-eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/method-definition/name-name-prop-symbol.js :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
 language/expressions/object/method-definition/name-name-prop-symbol.js (strict) :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
-language/expressions/object/object-spread-proxy-get-not-called-on-dontenum-keys.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/object-spread-proxy-get-not-called-on-dontenum-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/object-spread-proxy-no-excluded-keys.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/object-spread-proxy-no-excluded-keys.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/object-spread-proxy-ownkeys-returned-keys-order.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/object/object-spread-proxy-ownkeys-returned-keys-order.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/expressions/object/scope-getter-body-lex-distinc.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/scope-meth-body-lex-distinct.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/object/scope-meth-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
@@ -14241,8 +13677,8 @@ language/expressions/typeof/native-call.js :: it threw TypeError: building a fun
 language/expressions/typeof/native-call.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/typeof/null.js :: it threw ReferenceError: RegExp is not defined
 language/expressions/typeof/null.js (strict) :: it threw ReferenceError: RegExp is not defined
-language/expressions/typeof/proxy.js :: it threw ReferenceError: Proxy is not defined
-language/expressions/typeof/proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+language/expressions/typeof/proxy.js :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
+language/expressions/typeof/proxy.js (strict) :: it threw an object with no name: Expected SameValue(«"object"», «"function"») to be true
 language/expressions/typeof/syntax.js :: it threw ReferenceError: eval is not defined
 language/expressions/typeof/syntax.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js :: it threw ReferenceError: eval is not defined
@@ -14730,8 +14166,8 @@ language/statements/class/elements/arrow-body-private-direct-eval-err-contains-n
 language/statements/class/elements/arrow-body-private-direct-eval-err-contains-newtarget.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-private-indirect-eval-err-contains-newtarget.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/arrow-body-private-indirect-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
+language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
+language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
 language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/computed-name-toprimitive-symbol.js :: it threw an object with no name
 language/statements/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
@@ -14888,12 +14324,6 @@ language/statements/class/elements/private-static-method-visible-to-direct-eval.
 language/statements/class/elements/private-static-method-visible-to-direct-eval.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/private-static-setter-visible-to-direct-eval.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/private-static-setter-visible-to-direct-eval.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/class/elements/privatefield-on-proxy.js :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/privatefield-on-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/privategetter-on-proxy.js :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/privategetter-on-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/privatemethods-on-proxy.js :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/privatemethods-on-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-1.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-2.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -14910,14 +14340,12 @@ language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js :: i
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-7.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/class/elements/privatename-not-valid-eval-earlyerr-8.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
+language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/statements/class/elements/static-field-anonymous-function-name.js :: it threw an object with no name: Expected SameValue(«""», «"#field"») to be true
 language/statements/class/elements/static-field-anonymous-function-name.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"#field"») to be true
 language/statements/class/elements/static-field-init-with-this.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/static-field-init-with-this.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/class/elements/static-private-fields-proxy-default-handler-throws.js :: it threw ReferenceError: Proxy is not defined
-language/statements/class/elements/static-private-fields-proxy-default-handler-throws.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/statements/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/class/method-static/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -14954,8 +14382,6 @@ language/statements/class/subclass/builtin-objects/Function/regular-subclassing.
 language/statements/class/subclass/builtin-objects/Function/regular-subclassing.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Proxy/no-prototype-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-language/statements/class/subclass/builtin-objects/Proxy/no-prototype-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 language/statements/class/subclass/builtin-objects/RegExp/lastIndex.js :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass/builtin-objects/RegExp/lastIndex.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass/builtin-objects/RegExp/regular-subclassing.js :: it threw ReferenceError: RegExp is not defined
@@ -14969,8 +14395,6 @@ language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extend
 language/statements/class/subclass/default-constructor-spread-override.js :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/default-constructor-spread-override.js (strict) :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/subclass/superclass-arrow-function.js :: it threw ReferenceError: Proxy is not defined
-language/statements/class/subclass/superclass-arrow-function.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/class/subclass/superclass-bound-function.js :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/class/subclass/superclass-bound-function.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/const/cptn-value.js :: it threw ReferenceError: eval is not defined
@@ -15187,8 +14611,6 @@ language/statements/for-of/head-using-bound-names-fordecl-tdz.js :: it did not p
 language/statements/for-of/head-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-fresh-binding-per-iteration.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-fresh-binding-per-iteration.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/for-of/iterator-as-proxy.js :: it threw ReferenceError: Proxy is not defined
-language/statements/for-of/iterator-as-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 language/statements/for-of/iterator-close-throw-get-method-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a Object
 language/statements/for-of/iterator-close-throw-get-method-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a Object
 language/statements/for-of/iterator-close-throw-get-method-non-callable.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -15571,8 +14993,8 @@ language/types/reference/get-value-prop-base-primitive-realm.js :: it threw Type
 language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/types/reference/put-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function
 language/types/reference/put-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
-language/types/reference/put-value-prop-base-primitive.js :: it threw ReferenceError: Proxy is not defined
-language/types/reference/put-value-prop-base-primitive.js (strict) :: it threw ReferenceError: Proxy is not defined
+language/types/reference/put-value-prop-base-primitive.js :: it threw TypeError: cannot set a property of something that is not an object
+language/types/reference/put-value-prop-base-primitive.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
 language/white-space/comment-multi-form-feed.js :: it threw ReferenceError: eval is not defined
 language/white-space/comment-multi-form-feed.js (strict) :: it threw ReferenceError: eval is not defined
 language/white-space/comment-multi-horizontal-tab.js :: it threw ReferenceError: eval is not defined

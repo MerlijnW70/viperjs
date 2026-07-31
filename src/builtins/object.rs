@@ -72,11 +72,13 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
         // `Object.prototype.toString.call([])` says `[object Array]` and one on an object merely
         // *given* `Array.prototype` does not. `Error` and `RegExp` read internal slots that do
         // not exist yet; `Date` reads one that does.
+        // Step 4's `IsArray` looks through a proxy to its target, so a proxy over an array tags as
+        // `[object Array]` — and a *revoked* one throws here rather than tagging as anything.
+        Value::Object(object) if heap.is_array_through(object)? => "Array",
         Value::Object(object) => match heap.object(object) {
             // Step 8 — an arguments object is tagged by its parameter map, which is the only
             // thing that tells it from an ordinary object with numeric keys.
             Some(found) if found.arguments_map().is_some() => "Arguments",
-            Some(found) if found.is_array() => "Array",
             Some(found) if found.call().is_some() => "Function",
             // Step 12 — a `[[DateValue]]` tags as Date, and it has to be asked *before* the
             // wrapper rows below: a time value is a Number, and a Date reaching those would be
@@ -199,16 +201,18 @@ pub fn property_is_enumerable(
 }
 
 /// §20.1.3.3 `Object.prototype.isPrototypeOf`.
-pub fn is_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn is_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = this_object(call, "Object.prototype.isPrototypeOf requires an object")?;
     // Step 1 — a primitive argument is `false` rather than an error, because the question is
     // about *its* chain and a primitive has none of its own.
     let Value::Object(mut walk) = call.argument(0) else {
         return Ok(Value::Boolean(false));
     };
-    // Step 3's loop, iteratively: a chain is as long as a program makes it (DR-0002).
+    // Step 3's loop, iteratively: a chain is as long as a program makes it (DR-0002). Step 3.a is
+    // `[[GetPrototypeOf]]`, so a proxy in the chain answers with its trap — and may throw, which is
+    // why this walk returns a completion at all.
     loop {
-        let Some(next) = heap.object(walk).and_then(|found| found.prototype()) else {
+        let Some(next) = vm.prototype_through(walk, heap)? else {
             return Ok(Value::Boolean(false));
         };
         if next == object {
@@ -221,12 +225,10 @@ pub fn is_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
 /// §20.1.2.12 `Object.getPrototypeOf`.
 pub fn get_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
-    Ok(
-        match heap.object(object).and_then(|found| found.prototype()) {
-            Some(prototype) => Value::Object(prototype),
-            None => Value::Null,
-        },
-    )
+    Ok(match vm.prototype_through(object, heap)? {
+        Some(prototype) => Value::Object(prototype),
+        None => Value::Null,
+    })
 }
 
 /// §20.1.2.4 `Object.defineProperty`.
@@ -237,7 +239,8 @@ pub fn define_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> C
     // §20.1.2.4 step 4 is `DefinePropertyOrThrow`: the heap answers what §10.1.6.3's rules made
     // of it, and a refusal here throws rather than doing nothing quietly. That is the difference
     // between `defineProperty` and `Reflect.defineProperty`.
-    defined(heap.define_property_outcome(object, key, &descriptor))?;
+    let outcome = vm.define_through(object, key, &descriptor, heap)?;
+    defined(outcome)?;
     Ok(Value::Object(object))
 }
 
@@ -282,7 +285,7 @@ pub fn get_own_property_descriptor(
     let key = property_key(heap, call.argument(1))?;
     // §6.2.6.4 — a property that is not there is `undefined`, not an empty descriptor, which is
     // how a caller tells "absent" from "present and undefined".
-    let Some(property) = own_property(heap, object, key) else {
+    let Some(property) = vm.own_property_through(object, key, heap)? else {
         return Ok(Value::Undefined);
     };
     Ok(describe(heap, &vm.realm(), property))
@@ -304,7 +307,7 @@ pub fn get_own_property_names(
 
 /// §20.1.2.19 `Object.preventExtensions`.
 pub fn prevent_extensions(
-    _vm: &mut Vm,
+    vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
@@ -312,24 +315,25 @@ pub fn prevent_extensions(
     // Step 1 — a primitive is handed straight back rather than refused, because it was never
     // extensible in the first place and the request is already satisfied.
     if let Value::Object(object) = value
-        && let Some(found) = heap.object_mut(object)
+        && !vm.prevent_through(object, heap)?
     {
-        found.prevent_extensions();
+        // Step 3 — a refusal is a TypeError, which only a proxy can produce: an ordinary object
+        // always accepts.
+        return Err(Abrupt::type_error(
+            "Object.preventExtensions could not make this object non-extensible",
+        ));
     }
     Ok(value)
 }
 
 /// §20.1.2.16 `Object.isExtensible`.
-pub fn is_extensible(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn is_extensible(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Step 1 — a primitive is `false` rather than an error: it is not extensible, which is a
     // true answer to the question asked.
     let Value::Object(object) = call.argument(0) else {
         return Ok(Value::Boolean(false));
     };
-    let answer = heap
-        .object(object)
-        .is_some_and(|found| found.is_extensible());
-    Ok(Value::Boolean(answer))
+    Ok(Value::Boolean(vm.extensible_through(object, heap)?))
 }
 
 /// Build `Object` into `heap`.
@@ -390,12 +394,12 @@ fn define_each(
     properties: Value,
 ) -> Completion<()> {
     let source = to_object(properties, "a property-descriptor list must be an object")?;
-    let keys = heap.own_property_keys(source);
+    let keys = vm.own_keys_through(source, heap)?;
     let mut pending = Vec::new();
     for key in keys {
         // The *attributes* are read from the table, because step 3.a asks
         // `GetOwnPropertyDescriptor` and only wants to know whether this key is enumerable.
-        let Some(property) = own_property(heap, source, key) else {
+        let Some(property) = vm.own_property_through(source, key, heap)? else {
             continue;
         };
         if !property.enumerable {
@@ -408,7 +412,8 @@ fn define_each(
         pending.push((key, to_property_descriptor(vm, heap, value)?));
     }
     for (key, descriptor) in pending {
-        defined(heap.define_property_outcome(object, key, &descriptor))?;
+        let outcome = vm.define_through(object, key, &descriptor, heap)?;
+        defined(outcome)?;
     }
     Ok(())
 }
@@ -421,13 +426,19 @@ fn own_keys(
     enumerable_only: bool,
 ) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
-    let keys = heap.own_property_keys(object);
+    let keys = vm.own_keys_through(object, heap)?;
     let mut names = Vec::new();
     for key in keys {
-        let Some(property) = own_property(heap, object, key) else {
-            continue;
-        };
-        if enumerable_only && !property.enumerable {
+        // §20.1.2.11.1 `GetOwnPropertyKeys` filters by *type* and nothing else, so
+        // `getOwnPropertyNames` never asks for a descriptor. §20.1.2.17's `Object.keys` goes
+        // through §7.3.24 `EnumerableOwnProperties`, which does — and for a proxy that is a second
+        // trap call, observably: an `ownKeys` trap that lists a key its
+        // `getOwnPropertyDescriptor` trap then hides is left out of one listing and not the other.
+        if enumerable_only
+            && !vm
+                .own_property_through(object, key, heap)?
+                .is_some_and(|property| property.enumerable)
+        {
             continue;
         }
         // §20.1.2.10 step 3 and §20.1.2.17 step 3 — String keys only. A Symbol key is not
@@ -460,7 +471,7 @@ fn own_keys(
 /// to `undefined`, and `{}` sets nothing at all. That distinction is the whole reason
 /// [`PropertyDescriptor`]'s fields are `Option`, and it is what makes
 /// `Object.defineProperty(o, "k", {})` leave an existing property alone.
-pub(super) fn to_property_descriptor(
+pub(crate) fn to_property_descriptor(
     vm: &mut Vm,
     heap: &mut Heap,
     value: Value,
@@ -562,6 +573,50 @@ pub(super) fn describe(heap: &mut Heap, realm: &Realm, property: Property) -> Va
     Value::Object(object)
 }
 
+/// §6.2.6.4 `FromPropertyDescriptor` — a *partial* descriptor written out as an object.
+///
+/// Unlike [`describe`], only the fields that are present are written. §10.5.6 needs exactly this:
+/// a `defineProperty` trap is handed what the caller asked for, so a handler can tell
+/// `defineProperty(p, "x", {value: 1})` from one that also asked for `{enumerable: false}`. Filling
+/// the gaps in would make those two indistinguishable to every trap ever written.
+pub(crate) fn from_property_descriptor(
+    heap: &mut Heap,
+    realm: &Realm,
+    descriptor: &PropertyDescriptor,
+) -> Value {
+    let object = heap.new_object(Some(realm.object_prototype()));
+    let put = |heap: &mut Heap, name: &str, value: Value| {
+        let key = self::key(heap, name);
+        let field = PropertyDescriptor {
+            value: Some(value),
+            writable: Some(true),
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        };
+        let _ = heap.define_own_property(object, key, &field);
+    };
+    if let Some(value) = descriptor.value {
+        put(heap, "value", value);
+    }
+    if let Some(writable) = descriptor.writable {
+        put(heap, "writable", Value::Boolean(writable));
+    }
+    if let Some(getter) = descriptor.getter {
+        put(heap, "get", getter);
+    }
+    if let Some(setter) = descriptor.setter {
+        put(heap, "set", setter);
+    }
+    if let Some(enumerable) = descriptor.enumerable {
+        put(heap, "enumerable", Value::Boolean(enumerable));
+    }
+    if let Some(configurable) = descriptor.configurable {
+        put(heap, "configurable", Value::Boolean(configurable));
+    }
+    Value::Object(object)
+}
+
 /// `this` as an object, or the TypeError carrying `wanted`.
 pub(super) fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Completion<ObjectId> {
     to_object(call.this_value, wanted)
@@ -608,7 +663,7 @@ fn object_argument(value: Value, wanted: &'static str) -> Completion<ObjectId> {
 /// Two different errors, because they are two different mistakes: a rule that would not allow the
 /// property is a TypeError, and a value that is not a length at all is §10.4.2.4 step 2's
 /// RangeError. Written once so `defineProperty` and `defineProperties` cannot drift apart.
-pub(super) fn defined(outcome: DefineOutcome) -> Completion<()> {
+pub(crate) fn defined(outcome: DefineOutcome) -> Completion<()> {
     match outcome {
         DefineOutcome::Defined => Ok(()),
         DefineOutcome::Refused => Err(Abrupt::type_error("this property cannot be redefined")),
@@ -643,6 +698,10 @@ pub(super) fn property_key(heap: &mut Heap, value: Value) -> Completion<Property
 ///
 /// Every listing needs this, and each would otherwise hold a borrow across the `[[Get]]` that
 /// follows — which can run a getter, which can change the object being listed.
-pub(super) fn keys_of(heap: &mut Heap, object: ObjectId) -> Vec<PropertyKey> {
-    heap.own_property_keys(object)
+pub(super) fn keys_of(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+) -> Completion<Vec<PropertyKey>> {
+    vm.own_keys_through(object, heap)
 }

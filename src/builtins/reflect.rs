@@ -74,7 +74,12 @@ fn apply(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     }
     // §28.1.1 step 3 — `CreateListFromArrayLike`, which requires an object: `Reflect.apply(f, x)`
     // with no list is a TypeError where `f.apply(x)` is a call with no arguments.
-    let arguments = super::function::list_from(vm, heap, call.argument(2))?;
+    let arguments = super::function::list_from(
+        vm,
+        heap,
+        call.argument(2),
+        "the arguments given to Reflect.apply must be an object",
+    )?;
     vm.call_value(target, call.argument(1), &arguments, heap)
 }
 
@@ -99,7 +104,12 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             given
         }
     };
-    let arguments = super::function::list_from(vm, heap, call.argument(1))?;
+    let arguments = super::function::list_from(
+        vm,
+        heap,
+        call.argument(1),
+        "the arguments given to Reflect.construct must be an object",
+    )?;
     vm.construct_with_target(target, new_target, &arguments, heap)
 }
 
@@ -112,10 +122,11 @@ fn define_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
     )?;
     let name = super::object::property_key(heap, call.argument(1))?;
     let descriptor = super::object::to_property_descriptor(vm, heap, call.argument(2))?;
-    Ok(Value::Boolean(heap.define_own_property(
-        object,
-        name,
-        &descriptor,
+    // §28.1.3 answers the refusal rather than throwing it, which is the whole difference from
+    // `Object.defineProperty` — but a `RangeError` from an array's `length` is still a throw.
+    Ok(Value::Boolean(matches!(
+        vm.define_through(object, name, &descriptor, heap)?,
+        crate::heap::DefineOutcome::Defined
     )))
 }
 
@@ -176,25 +187,25 @@ fn get_own_property_descriptor(
     let name = super::object::property_key(heap, call.argument(1))?;
     // §6.2.6.4 — a property that is not there is `undefined` and not an empty descriptor, which is
     // how a caller tells "absent" from "present and holding undefined".
-    let Some(property) = super::object::own_property(heap, object, name) else {
+    let Some(property) = vm.own_property_through(object, name, heap)? else {
         return Ok(Value::Undefined);
     };
     Ok(super::object::describe(heap, &vm.realm(), property))
 }
 
 /// §28.1.7 — `Reflect.getPrototypeOf`, which does **not** convert a primitive first.
-fn get_prototype_of(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn get_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(
         heap,
         call.argument(0),
         "Reflect.getPrototypeOf needs an object",
     )?;
-    let prototype = heap.object(object).and_then(crate::heap::Object::prototype);
+    let prototype = vm.prototype_through(object, heap)?;
     Ok(prototype.map_or(Value::Null, Value::Object))
 }
 
 /// §28.1.13 — `Reflect.setPrototypeOf`, which answers whether it was allowed.
-fn set_prototype_of(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn set_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(
         heap,
         call.argument(0),
@@ -210,7 +221,9 @@ fn set_prototype_of(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
             return Err(Abrupt::type_error("a prototype must be an object or null"));
         }
     };
-    Ok(Value::Boolean(heap.set_prototype_of(object, prototype)))
+    Ok(Value::Boolean(
+        vm.set_prototype_through(object, prototype, heap)?,
+    ))
 }
 
 /// §28.1.8 — `Reflect.has`, which is `in` without requiring the operator's operand order.
@@ -222,29 +235,23 @@ fn has(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
 }
 
 /// §28.1.10 — `Reflect.isExtensible`.
-fn is_extensible(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn is_extensible(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(
         heap,
         call.argument(0),
         "Reflect.isExtensible needs an object",
     )?;
-    let open = heap
-        .object(object)
-        .is_some_and(crate::heap::Object::is_extensible);
-    Ok(Value::Boolean(open))
+    Ok(Value::Boolean(vm.extensible_through(object, heap)?))
 }
 
 /// §28.1.12 — `Reflect.preventExtensions`, which answers `true` rather than the object.
-fn prevent_extensions(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn prevent_extensions(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(
         heap,
         call.argument(0),
         "Reflect.preventExtensions needs an object",
     )?;
-    if let Some(found) = heap.object_mut(object) {
-        found.prevent_extensions();
-    }
-    Ok(Value::Boolean(true))
+    Ok(Value::Boolean(vm.prevent_through(object, heap)?))
 }
 
 /// §28.1.11 — `Reflect.ownKeys`, which answers **Symbols too**.
@@ -254,7 +261,7 @@ fn prevent_extensions(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Com
 /// what a `Proxy`'s `ownKeys` trap has to answer, so it has to be able to say everything.
 fn own_keys(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(heap, call.argument(0), "Reflect.ownKeys needs an object")?;
-    let keys = heap.own_property_keys(object);
+    let keys = vm.own_keys_through(object, heap)?;
     let values: Vec<Value> = keys
         .into_iter()
         .map(|found| match found {

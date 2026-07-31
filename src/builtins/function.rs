@@ -34,7 +34,12 @@ pub fn call(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 pub fn apply(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let arguments = match call.argument(1) {
         Value::Undefined | Value::Null => Vec::new(),
-        list => list_from(vm, heap, list)?,
+        list => list_from(
+            vm,
+            heap,
+            list,
+            "the arguments given to apply must be an object",
+        )?,
     };
     vm.call_value(call.this_value, call.argument(0), &arguments, heap)
 }
@@ -44,11 +49,14 @@ pub fn apply(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// A hole reads as `undefined` here, unlike in most of §23.1.3: this is a plain `Get` of every
 /// index, so `f.apply(null, [, 1])` passes two arguments and the first is `undefined`.
 #[allow(clippy::manual_clamp)] // `clamp` answers NaN for NaN; §7.1.20 says a NaN length is 0
-pub(super) fn list_from(vm: &mut Vm, heap: &mut Heap, list: Value) -> Completion<Vec<Value>> {
+pub(crate) fn list_from(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    list: Value,
+    wanted: &'static str,
+) -> Completion<Vec<Value>> {
     let Value::Object(object) = list else {
-        return Err(Abrupt::type_error(
-            "the arguments given to apply must be an object",
-        ));
+        return Err(Abrupt::type_error(wanted));
     };
     let name = key(heap, "length");
     let value = vm.get_property_key(Value::Object(object), name, heap)?;

@@ -698,3 +698,27 @@ fn a_compound_assignment_and_an_update_work_through_super() {
         "5"
     );
 }
+
+#[test]
+fn a_prototype_chain_longer_than_the_engine_walks_answers_as_if_it_ended() {
+    // DR-0002 — nothing an input chooses may cost unbounded work, and a chain is as long as a
+    // program makes it. Every walk counts to the same bound and then answers as though the chain
+    // had ended: `undefined` for a read, `false` for `in`. That is a deliberate floor rather than
+    // a correct answer, and it is here so that reaching it is a recorded decision and not a hang.
+    assert_eq!(
+        run(
+            "var o = {}; for (var i = 0; i < 100001; i++) { o = Object.create(o); } \
+             ('missing' in o) + ',' + (o.missing === undefined)"
+        ),
+        "false,true"
+    );
+    // A chain of ordinary length is unaffected, which is what says the bound is a bound and not a
+    // shortcut.
+    assert_eq!(
+        run(
+            "var o = {found: 1}; for (var i = 0; i < 1000; i++) { o = Object.create(o); } \
+             ('found' in o) + ',' + o.found"
+        ),
+        "true,1"
+    );
+}

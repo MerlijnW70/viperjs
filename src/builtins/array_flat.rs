@@ -114,12 +114,16 @@ fn flatten(
         }
         // Step 3.c.iv — only a real Array is flattened. An array-*like* is not, however many
         // indices it has, which is what makes `[{length: 2}].flat()` answer a one-element array.
+        let nested_array = match element {
+            Value::Object(id) => heap.is_array_through(id)?.then_some(id),
+            _ => None,
+        };
         let deeper = levels
             .last()
             .and_then(Level::descend)
-            .filter(|_| matches!(element, Value::Object(id) if heap.object(id).is_some_and(|found| found.is_array())));
-        match (deeper, element) {
-            (Some(depth), Value::Object(nested)) => {
+            .filter(|_| nested_array.is_some());
+        match (deeper, nested_array) {
+            (Some(depth), Some(nested)) => {
                 let length = length_of(vm, heap, nested)?;
                 levels.push(Level {
                     source: nested,

@@ -266,14 +266,14 @@ pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     let mut sources = vec![Value::Object(object)];
     sources.extend_from_slice(call.arguments);
     for source in sources {
-        let spreadable = matches!(source, Value::Object(id)
-            if heap.object(id).is_some_and(crate::heap::Object::is_array));
         let Value::Object(id) = source else {
             create_index(heap, joined, at, source)?;
             at += 1;
             continue;
         };
-        if !spreadable {
+        // §23.1.3.1 step 5.b — `IsConcatSpreadable` falls back to `IsArray`, which sees through a
+        // proxy to its target rather than asking a trap.
+        if !heap.is_array_through(id)? {
             create_index(heap, joined, at, source)?;
             at += 1;
             continue;

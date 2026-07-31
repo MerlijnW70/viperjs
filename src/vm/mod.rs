@@ -35,6 +35,8 @@ mod execute;
 mod global;
 mod jobs;
 mod property;
+mod proxy;
+mod proxy_shape;
 
 use self::call::Frame;
 pub(crate) use self::jobs::Job;
@@ -320,7 +322,7 @@ impl Vm {
         keys: u32,
         index: u32,
         heap: &mut Heap,
-    ) -> Result<Value, Fault> {
+    ) -> Result<Completion<Value>, Fault> {
         loop {
             let at = match heap.variable(self.environment, index) {
                 Some(Some(Value::Number(at))) => at,
@@ -337,7 +339,7 @@ impl Vm {
                 .object(list)
                 .and_then(|found| found.get_own_property(slot))
             else {
-                return Ok(Value::Undefined);
+                return Ok(Ok(Value::Undefined));
             };
             let PropertyKind::Data { value, .. } = next.kind else {
                 return Err(Fault::MissingLocal);
@@ -348,14 +350,18 @@ impl Vm {
             let Value::String(name) = value else {
                 return Err(Fault::MissingLocal);
             };
-            // Still there? A `delete` inside the body reaches this before the name does.
+            // Still there? A `delete` inside the body reaches this before the name does — and the
+            // question is §7.3.11 `HasProperty`, so a proxy answers it with its `has` trap and may
+            // throw, which is why this hands back a completion rather than a value.
             let key = PropertyKey::from_string(heap, name);
-            if let Value::Object(source) = object
-                && !heap.has_property(source, key)
-            {
-                continue;
+            if let Value::Object(_) = object {
+                match self.has_property_key(object, key, heap) {
+                    Ok(false) => continue,
+                    Ok(true) => {}
+                    Err(error) => return Ok(Err(error)),
+                }
             }
-            return Ok(value);
+            return Ok(Ok(value));
         }
     }
 

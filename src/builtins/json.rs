@@ -96,7 +96,9 @@ fn revive(
 ) -> Completion<Value> {
     let value = vm.get_property_key(Value::Object(holder), name, heap)?;
     if let Value::Object(object) = value {
-        for key in heap.own_property_keys(object) {
+        // §25.5.1.1 step 2.b — `EnumerableOwnPropertyNames` on the holder, which for a proxy is
+        // its `ownKeys` trap.
+        for key in vm.own_keys_through(object, heap)? {
             let revived = revive(vm, heap, object, key, reviver)?;
             // Step 2.b.ii.2 — a reviver answering `undefined` *deletes* the property rather than
             // setting it to `undefined`, which is the only way it can remove one.

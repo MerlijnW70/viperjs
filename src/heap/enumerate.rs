@@ -60,6 +60,16 @@ impl Heap {
     /// step, which belongs to the heap.
     pub fn new_enumeration(&mut self, prototype: ObjectId, object: ObjectId) -> ObjectId {
         let keys = self.enumerable_keys(object);
+        self.enumeration_of(prototype, &keys)
+    }
+
+    /// The same list, already gathered — for §10.5, whose walk needs an interpreter.
+    ///
+    /// A proxy's enumerable keys come from its `ownKeys` and `getOwnPropertyDescriptor` traps, so
+    /// [`Heap::enumerable_keys`] cannot gather them and [`crate::vm::Vm`] does it instead. The
+    /// array is still built here, because filling it uses the exotic define that keeps `length` in
+    /// step.
+    pub fn enumeration_of(&mut self, prototype: ObjectId, keys: &[PropertyKey]) -> ObjectId {
         let array = self.new_array(prototype, 0);
         for (at, key) in keys.iter().enumerate() {
             // Bounded by how many properties an object has, which is bounded by what fits in

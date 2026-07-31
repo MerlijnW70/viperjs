@@ -95,6 +95,7 @@ mod objects_builtin;
 mod parameters;
 mod private;
 mod promises;
+mod proxy;
 mod reflection;
 mod set_ops;
 mod shared;

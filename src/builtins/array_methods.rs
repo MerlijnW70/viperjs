@@ -142,10 +142,7 @@ pub(super) fn array_species_create(
     original: ObjectId,
     length: u64,
 ) -> Completion<Value> {
-    if !heap
-        .object(original)
-        .is_some_and(crate::heap::Object::is_array)
-    {
+    if !heap.is_array_through(original)? {
         return Ok(Value::Object(new_array_checked(vm, heap, length)?));
     }
     let name = key(heap, "constructor");

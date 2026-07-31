@@ -187,6 +187,12 @@ pub struct Gather {
 /// specification says it is anyway, these being ordinary function objects with internal slots.
 #[derive(Debug, Clone)]
 pub enum Role {
+    /// §28.2.2.1.1's `[[RevocableProxy]]` — the proxy a revocation function turns off.
+    ///
+    /// Here rather than in a type of its own for the reason the two below it are: a built-in's body
+    /// is a bare function pointer holding no state, so what the specification captures in a closure
+    /// is carried on the function object.
+    Revoke(crate::heap::ObjectId),
     /// A resolve function — §27.2.1.3.2.
     Resolve(Settler),
     /// A reject function — §27.2.1.3.1.

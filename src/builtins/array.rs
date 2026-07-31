@@ -83,10 +83,7 @@ pub fn is_array(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     let Value::Object(object) = call.argument(0) else {
         return Ok(Value::Boolean(false));
     };
-    let answer = heap
-        .object(object)
-        .is_some_and(crate::heap::Object::is_array);
-    Ok(Value::Boolean(answer))
+    Ok(Value::Boolean(heap.is_array_through(object)?))
 }
 
 /// Build `Array` into `heap`.

@@ -37,10 +37,11 @@ mod json;
 mod json_write;
 mod math;
 mod number_format;
-mod object;
+pub(crate) mod object;
 mod object_state;
 pub(crate) mod promise;
 mod promise_group;
+mod proxy;
 mod reflect;
 mod set_ops;
 mod shared;
@@ -104,6 +105,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     view::install(heap, realm, global);
     typed::install(heap, realm, global);
     reflect::install(heap, realm, global);
+    proxy::install(heap, realm, global);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
 }

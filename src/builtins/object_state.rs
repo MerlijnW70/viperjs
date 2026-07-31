@@ -16,7 +16,7 @@
 //! property that could disagree, and §7.3.15 asks about the properties that are there rather than
 //! about a promise that was made.
 
-use super::object::{coerced, keys_of, own_property};
+use super::object::{coerced, keys_of};
 use super::{define_method, key};
 use crate::heap::{Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKind};
 use crate::realm::Realm;
@@ -56,12 +56,15 @@ enum Level {
 ///
 /// Extensions are prevented **first**, and that ordering is observable: a getter run by one of the
 /// defines below cannot add a property that then escapes being sealed.
-fn shut(heap: &mut Heap, object: ObjectId, level: Level) {
-    if let Some(found) = heap.object_mut(object) {
-        found.prevent_extensions();
+fn shut(vm: &mut Vm, heap: &mut Heap, object: ObjectId, level: Level) -> Completion<bool> {
+    // Step 3 — `[[PreventExtensions]]` answering `false` stops the whole operation, and
+    // `Object.freeze` then throws. Only a proxy can answer `false` here, which is why this used to
+    // be a step with no branch.
+    if !vm.prevent_through(object, heap)? {
+        return Ok(false);
     }
-    for key in heap.own_property_keys(object) {
-        let Some(property) = own_property(heap, object, key) else {
+    for key in vm.own_keys_through(object, heap)? {
+        let Some(property) = vm.own_property_through(object, key, heap)? else {
             continue;
         };
         // Step 3.b.ii — an accessor keeps its functions and only loses its configurability, even
@@ -75,8 +78,9 @@ fn shut(heap: &mut Heap, object: ObjectId, level: Level) {
             configurable: Some(false),
             ..PropertyDescriptor::EMPTY
         };
-        let _ = heap.define_own_property(object, key, &descriptor);
+        crate::builtins::object::defined(vm.define_through(object, key, &descriptor, heap)?)?;
     }
+    Ok(true)
 }
 
 /// §7.3.15 `TestIntegrityLevel` — whether an object is already shut to this level.
@@ -84,17 +88,21 @@ fn shut(heap: &mut Heap, object: ObjectId, level: Level) {
 /// Derived rather than remembered. An object is frozen when *every* property says so and nothing
 /// may be added, so an object that was never frozen but happens to satisfy both is frozen, and
 /// answering otherwise would need a flag the specification does not have.
-fn is_shut(heap: &mut Heap, object: ObjectId, level: Level) -> bool {
-    if heap
-        .object(object)
-        .is_none_or(crate::heap::Object::is_extensible)
-    {
-        return false;
+fn is_shut(vm: &mut Vm, heap: &mut Heap, object: ObjectId, level: Level) -> Completion<bool> {
+    // Step 3 — an extensible object is shut to no level at all, and the question is answered
+    // without looking at a single property.
+    if vm.extensible_through(object, heap)? {
+        return Ok(false);
     }
-    heap.own_property_keys(object)
-        .into_iter()
-        .filter_map(|key| own_property(heap, object, key))
-        .all(|property| shut_enough(property, level))
+    for key in vm.own_keys_through(object, heap)? {
+        let Some(property) = vm.own_property_through(object, key, heap)? else {
+            continue;
+        };
+        if !shut_enough(property, level) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
 
 /// Whether one property is as shut as this level requires.
@@ -113,17 +121,25 @@ fn shut_enough(property: Property, level: Level) -> bool {
 /// A primitive is handed straight back rather than refused — it has no properties to freeze, so
 /// the request is already satisfied. That is step 1, and it is the same shrug `preventExtensions`
 /// gives.
-fn freeze(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    if let Value::Object(object) = call.argument(0) {
-        shut(heap, object, Level::Frozen);
+fn freeze(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    if let Value::Object(object) = call.argument(0)
+        && !shut(vm, heap, object, Level::Frozen)?
+    {
+        // Step 3 — `SetIntegrityLevel` answering `false` is a TypeError here, unlike
+        // `Reflect.preventExtensions`, which reports it.
+        return Err(Abrupt::type_error(
+            "Object.freeze could not freeze this object",
+        ));
     }
     Ok(call.argument(0))
 }
 
 /// §20.1.2.20 `Object.seal`.
-fn seal(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    if let Value::Object(object) = call.argument(0) {
-        shut(heap, object, Level::Sealed);
+fn seal(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    if let Value::Object(object) = call.argument(0)
+        && !shut(vm, heap, object, Level::Sealed)?
+    {
+        return Err(Abrupt::type_error("Object.seal could not seal this object"));
     }
     Ok(call.argument(0))
 }
@@ -133,19 +149,19 @@ fn seal(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 /// A primitive is **true**: it has no properties that could be changed, so it satisfies the
 /// question. The asymmetry with `freeze` is only apparent — both answer "there is nothing here to
 /// do", one by doing nothing and one by saying so.
-fn is_frozen(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn is_frozen(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let Value::Object(object) = call.argument(0) else {
         return Ok(Value::Boolean(true));
     };
-    Ok(Value::Boolean(is_shut(heap, object, Level::Frozen)))
+    Ok(Value::Boolean(is_shut(vm, heap, object, Level::Frozen)?))
 }
 
 /// §20.1.2.15 `Object.isSealed`.
-fn is_sealed(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn is_sealed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let Value::Object(object) = call.argument(0) else {
         return Ok(Value::Boolean(true));
     };
-    Ok(Value::Boolean(is_shut(heap, object, Level::Sealed)))
+    Ok(Value::Boolean(is_shut(vm, heap, object, Level::Sealed)?))
 }
 
 /// §20.1.2.14 `Object.is` — `SameValue` (§7.2.10), which is neither `==` nor `===`.
@@ -161,7 +177,7 @@ fn is(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
 ///
 /// Refuses anything but an object or `null` as the new prototype, and answers its *first* argument
 /// rather than the object it changed — which is what makes it chainable.
-fn set_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn set_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let target = call.argument(0);
     if matches!(target, Value::Undefined | Value::Null) {
         return Err(Abrupt::type_error(
@@ -183,7 +199,7 @@ fn set_prototype_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Com
     // §10.1.2's refusals — a non-extensible object, and a chain that would come back here — are
     // the heap's, because they are what every prototype walk in the engine depends on. Here they
     // become the TypeError step 5 asks for, which is the only part that belongs to this function.
-    if !heap.set_prototype_of(object, prototype) {
+    if !vm.set_prototype_through(object, prototype, heap)? {
         return Err(Abrupt::type_error(
             "this object's prototype may not be changed",
         ));
@@ -208,8 +224,11 @@ fn assign(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
         let Value::Object(from) = from else {
             continue;
         };
-        for key in heap.own_property_keys(from) {
-            if !own_property(heap, from, key).is_some_and(|property| property.enumerable) {
+        for key in vm.own_keys_through(from, heap)? {
+            if !vm
+                .own_property_through(from, key, heap)?
+                .is_some_and(|property| property.enumerable)
+            {
                 continue;
             }
             let value = vm.get_property_key(Value::Object(from), key, heap)?;
@@ -235,12 +254,16 @@ enum Half {
 fn listed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
     let mut listed = Vec::new();
-    for key in keys_of(heap, object) {
+    for key in keys_of(vm, heap, object)? {
         // §7.3.24 step 4 — String keys only, so a Symbol-keyed property is not among the values
         // either. Filtered before the `[[Get]]`, because that would run a getter for something
         // the answer will not hold.
-        if key.as_string().is_none()
-            || !own_property(heap, object, key).is_some_and(|property| property.enumerable)
+        if key.as_string().is_none() {
+            continue;
+        }
+        if !vm
+            .own_property_through(object, key, heap)?
+            .is_some_and(|property| property.enumerable)
         {
             continue;
         }
@@ -269,7 +292,7 @@ fn get_own_property_symbols(
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
-    let found: Vec<Value> = keys_of(heap, object)
+    let found: Vec<Value> = keys_of(vm, heap, object)?
         .into_iter()
         .filter_map(|key| key.as_symbol().map(Value::Symbol))
         .collect();
@@ -335,8 +358,8 @@ fn get_own_property_descriptors(
     let object = coerced(vm, heap, call.argument(0))?;
     let realm = vm.realm();
     let built = heap.new_object(Some(realm.object_prototype()));
-    for key in keys_of(heap, object) {
-        let Some(property) = own_property(heap, object, key) else {
+    for key in keys_of(vm, heap, object)? {
+        let Some(property) = vm.own_property_through(object, key, heap)? else {
             continue;
         };
         let described = super::object::describe(heap, &realm, property);

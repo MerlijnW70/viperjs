@@ -350,3 +350,28 @@ fn a_primitive_receiver_is_wrapped_rather_than_refused() {
         "undefined and null cannot be converted to an object"
     );
 }
+
+#[test]
+fn array_species_create_ignores_the_constructor_of_something_that_is_not_an_array() {
+    // §7.3.23 step 3 — `IsArray(originalArray)` is the *first* question, and a false answer means
+    // a plain Array is made without `constructor` being read at all. So an array-like borrowing an
+    // Array method cannot redirect where the result goes, however its constructor is written.
+    assert_eq!(
+        run(
+            "var o = {length: 1, 0: 7}; o.constructor = function () {}; \
+             o.constructor[Symbol.species] = function () { return {tagged: 1}; }; \
+             var r = Array.prototype.map.call(o, function (x) { return x; }); \
+             Array.isArray(r) + ',' + r[0]"
+        ),
+        "true,7"
+    );
+    // …and a real array with the same constructor does redirect, which is what says the check is
+    // about `IsArray` and not about the species being unreadable.
+    assert_eq!(
+        run("var a = [7]; a.constructor = function () {}; \
+             a.constructor[Symbol.species] = function () { return {tagged: 1}; }; \
+             var r = Array.prototype.map.call(a, function (x) { return x; }); \
+             Array.isArray(r) + ',' + r.tagged"),
+        "false,1"
+    );
+}

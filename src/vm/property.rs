@@ -207,12 +207,12 @@ impl Vm {
         for key in excluded {
             refused.push(self.property_key(*key, heap)?);
         }
-        for key in heap.own_property_keys(from) {
+        for key in self.own_keys_through(from, heap)? {
             if refused.contains(&key) {
                 continue;
             }
-            if !heap
-                .own_property(from, key)
+            if !self
+                .own_property_through(from, key, heap)?
                 .is_some_and(|property| property.enumerable)
             {
                 continue;
@@ -306,23 +306,50 @@ impl Vm {
                 ));
             }
         };
-        // §10.1.8.1 step 3 — a property that is nowhere on the chain is `undefined`, not an
-        // error. That is the whole reason `o.missing` is a value and `missing` is a ReferenceError.
-        let Some((_, property)) = heap.find_own(object, key) else {
-            return Ok(Value::Undefined);
-        };
-        match property.kind {
-            PropertyKind::Data { value, .. } => Ok(value),
-            // §10.1.8.1 steps 5 and 6 — an accessor with no getter answers `undefined`, and one
-            // with a getter has it **called**, with the object the property was read *through*
-            // as its receiver rather than the one it was found on. That is what makes an accessor
-            // on a prototype see the instance, and it is the whole reason a getter is useful.
-            PropertyKind::Accessor {
-                getter: Value::Undefined,
-                ..
-            } => Ok(Value::Undefined),
-            PropertyKind::Accessor { getter, .. } => self.call_value(getter, receiver, &[], heap),
+        // §10.1.8.1 step 3 — the chain, walked here rather than in the heap, because §10.5.8
+        // says a proxy *anywhere* on it answers the whole `[[Get]]` with its trap. The heap's own
+        // walk cannot ask a trap, and a proxy is invisible to it: it has no own properties, so a
+        // chain running through one would simply read past it.
+        //
+        // A loop rather than the specification's recursion into the parent's `[[Get]]`, because a
+        // chain is as long as a program makes it (DR-0002). The receiver does not change as it
+        // goes, which is what makes the two shapes the same.
+        let mut walk = object;
+        // Counted for the same reason [`crate::heap::Heap::find_own`] counts: the chain cannot be
+        // a cycle, and DR-0002 is a claim that being wrong about that does not hang.
+        for _ in 0..crate::heap::MAX_PROTOTYPE_CHAIN {
+            if let Some(answer) = self.proxy_get(walk, key, receiver, heap)? {
+                return Ok(answer);
+            }
+            if let Some(property) = heap.own_property(walk, key) {
+                return match property.kind {
+                    PropertyKind::Data { value, .. } => Ok(value),
+                    // §10.1.8.1 steps 5 and 6 — an accessor with no getter answers `undefined`,
+                    // and one with a getter has it **called**, with the object the property was
+                    // read *through* as its receiver rather than the one it was found on. That is
+                    // what makes an accessor on a prototype see the instance.
+                    PropertyKind::Accessor {
+                        getter: Value::Undefined,
+                        ..
+                    } => Ok(Value::Undefined),
+                    PropertyKind::Accessor { getter, .. } => {
+                        self.call_value(getter, receiver, &[], heap)
+                    }
+                };
+            }
+            // §10.4.5.4 — a canonical numeric index of a TypedArray never reaches the prototype,
+            // even when the array does not have it.
+            if heap.walk_stops_here(walk, key) {
+                return Ok(Value::Undefined);
+            }
+            // A property that is nowhere on the chain is `undefined`, not an error. That is the
+            // whole reason `o.missing` is a value and `missing` is a ReferenceError.
+            let Some(next) = heap.object(walk).and_then(crate::heap::Object::prototype) else {
+                return Ok(Value::Undefined);
+            };
+            walk = next;
         }
+        Ok(Value::Undefined)
     }
     /// `[[Set]]` (§10.1.9) — put `value` under `key`, and answer whether it was allowed.
     ///
@@ -369,6 +396,11 @@ impl Vm {
                 "cannot set a property of something that is not an object",
             ));
         };
+        // §10.5.9 — the same, and the answer is whether the write was accepted rather than the
+        // value, which is what §6.2.5.5's `Set` reports.
+        if let Some(accepted) = self.proxy_set(object, key, value, receiver, heap)? {
+            return Ok(Value::Boolean(accepted));
+        }
         // §10.4.5.5 — a write to a canonical numeric index goes into the buffer, and one that is
         // out of range is **discarded**: not an error, in strict mode or sloppy, because a
         // TypedArray's length cannot change and there is nowhere for the value to go. It is the one
@@ -389,7 +421,28 @@ impl Vm {
         // §10.1.9.2 — an *inherited* accessor is called, and an inherited non-writable data
         // property refuses the write. An inherited writable one does not: the value is filed on
         // the receiver, which is what makes a prototype's property shadowable.
-        if let Some((owner, property)) = heap.find_own(object, key) {
+        // The chain is walked here for the same reason `get_through` walks it: §10.5.9 says a
+        // proxy on it answers the whole `[[Set]]`, and the heap's walk would read straight past
+        // one. `find_own`'s answer, gathered with the traps in the way.
+        let mut found = None;
+        let mut walk = object;
+        for _ in 0..crate::heap::MAX_PROTOTYPE_CHAIN {
+            if let Some(accepted) = self.proxy_set(walk, key, value, receiver, heap)? {
+                return Ok(Value::Boolean(accepted));
+            }
+            if let Some(property) = heap.own_property(walk, key) {
+                found = Some((walk, property));
+                break;
+            }
+            if heap.walk_stops_here(walk, key) {
+                break;
+            }
+            let Some(next) = heap.object(walk).and_then(crate::heap::Object::prototype) else {
+                break;
+            };
+            walk = next;
+        }
+        if let Some((owner, property)) = found {
             match property.kind {
                 PropertyKind::Accessor {
                     setter: Value::Undefined,
@@ -510,7 +563,7 @@ impl Vm {
         // Iterative, because a prototype chain is as long as a program makes it and DR-0002 does
         // not let input decide how much Rust stack is used.
         loop {
-            let Some(next) = heap.object(walk).and_then(|object| object.prototype()) else {
+            let Some(next) = self.prototype_through(walk, heap)? else {
                 return Ok(Value::Boolean(false));
             };
             if next == prototype {
@@ -548,6 +601,13 @@ impl Vm {
         key: PropertyKey,
         heap: &mut Heap,
     ) -> Completion<Value> {
+        // §10.5.10 — a proxy's `deleteProperty` trap, before the ordinary delete. Its answer is a
+        // boolean, which is what `delete` evaluates to anyway.
+        if let Value::Object(object) = base
+            && let Some(answer) = self.proxy_delete(object, key, heap)?
+        {
+            return Ok(Value::Boolean(answer));
+        }
         let Value::Object(object) = base else {
             return Err(Abrupt::type_error(
                 "cannot delete a property of something that is not an object",
@@ -596,6 +656,26 @@ impl Vm {
                 "the right operand of in must be an object",
             ));
         };
-        Ok(heap.has_property(object, key))
+        // §10.1.7.1's chain, walked here so that §10.5.7's trap is reached wherever the proxy is:
+        // as the object asked about, or as something further along its prototype chain.
+        let mut walk = object;
+        for _ in 0..crate::heap::MAX_PROTOTYPE_CHAIN {
+            if let Some(answer) = self.proxy_has(walk, key, heap)? {
+                return Ok(answer);
+            }
+            if heap.own_property(walk, key).is_some() {
+                return Ok(true);
+            }
+            // §10.4.5.2 — the same stop as `[[Get]]`'s: an index a TypedArray does not have is
+            // absent rather than inherited.
+            if heap.walk_stops_here(walk, key) {
+                return Ok(false);
+            }
+            let Some(next) = heap.object(walk).and_then(crate::heap::Object::prototype) else {
+                return Ok(false);
+            };
+            walk = next;
+        }
+        Ok(false)
     }
 }

@@ -42,7 +42,7 @@ use crate::heap::string_object;
 use crate::heap::typed;
 use crate::heap::{
     ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Helper, Iteration, Native,
-    Property, PropertyDescriptor, PropertyKey, StringId, SymbolId, Weak,
+    Property, PropertyDescriptor, PropertyKey, Proxy, StringId, SymbolId, Weak,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -269,6 +269,11 @@ pub struct Object {
     /// Boxed like the collection beside it, and for the same reason: an `Object` sits inline in
     /// the arena, so whatever this costs is charged to every object ever made.
     helper: Option<Box<Helper>>,
+    /// §10.5's `[[ProxyTarget]]` and `[[ProxyHandler]]`, if this is a Proxy.
+    ///
+    /// Two ids and a discriminant, so it sits inline rather than boxed — a pointer to it would
+    /// cost as much as the thing itself.
+    proxy: Option<Proxy>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -326,6 +331,7 @@ impl Object {
             role: None,
             weak: None,
             helper: None,
+            proxy: None,
             call: None,
             environment: None,
             lexical: None,
@@ -451,6 +457,21 @@ impl Object {
     /// Make this object an Iterator Helper, which nothing undoes.
     pub fn set_helper(&mut self, helper: Helper) {
         self.helper = Some(Box::new(helper));
+    }
+
+    /// The target and handler this object proxies, if it is a Proxy — §10.5.
+    pub fn proxy(&self) -> Option<Proxy> {
+        self.proxy
+    }
+
+    /// The same, to revoke.
+    pub fn proxy_mut(&mut self) -> Option<&mut Proxy> {
+        self.proxy.as_mut()
+    }
+
+    /// Make this object a Proxy, which nothing undoes — revoking empties it rather than removing it.
+    pub fn set_proxy(&mut self, proxy: Proxy) {
+        self.proxy = Some(proxy);
     }
 
     /// The promise state this object holds, if it is a promise.
@@ -1023,6 +1044,51 @@ impl Heap {
         }
     }
 
+    /// §7.2.2 `IsArray` — an Array, or a proxy standing in front of one.
+    ///
+    /// The one question about a proxy that needs no interpreter: §7.2.2 does not consult the
+    /// handler at all, it looks straight through to `[[ProxyTarget]]`. So `Array.isArray` of a
+    /// proxy over an array is `true` however the handler is written, and there is no trap that can
+    /// change it — which is what lets `JSON.stringify` tell an array from an object safely.
+    ///
+    /// A revoked proxy is a TypeError rather than `false`, because there is no target left to ask.
+    /// Iterative, because a proxy's target may be another proxy and a program chooses how many.
+    pub fn is_array_through(&self, object: ObjectId) -> crate::value::Completion<bool> {
+        let mut walk = object;
+        loop {
+            // No guard for an id this heap has not got: it is not an array, and it is not a proxy
+            // standing in front of one either, so both answers below are already right.
+            let Some(proxy) = self.object(walk).and_then(Object::proxy) else {
+                return Ok(self.object(walk).is_some_and(Object::is_array));
+            };
+            let Some(target) = proxy.target() else {
+                return Err(crate::value::Abrupt::type_error(
+                    "Array.isArray cannot ask a revoked proxy what it stands in front of",
+                ));
+            };
+            walk = target;
+        }
+    }
+
+    /// `IsCompatiblePropertyDescriptor` (§6.2.6.4) — would this change be allowed, without making it?
+    ///
+    /// §6.2.6.4 is `ValidateAndApplyPropertyDescriptor` with no object to write to, and it exists
+    /// for §10.5 alone: a proxy trap describes a property the *target* does not have to hold, and
+    /// the only question is whether that description could have been true of the target. Nothing
+    /// else in the language needs to ask a question about a property it is not about to change.
+    #[must_use]
+    pub fn is_compatible_descriptor(
+        &self,
+        descriptor: &PropertyDescriptor,
+        current: Option<&Property>,
+        extensible: bool,
+    ) -> bool {
+        !matches!(
+            crate::heap::define::validate(descriptor, current, extensible, self),
+            crate::heap::define::Validation::Reject
+        )
+    }
+
     /// `[[DefineOwnProperty]]`, with the one answer a Boolean cannot carry.
     ///
     /// §10.4.2.4 step 2's bad array length is a **RangeError** and every other refusal is a
@@ -1292,6 +1358,22 @@ impl Heap {
         object
     }
 
+    /// §10.4.5.4 — whether a prototype walk for `key` must stop at this object.
+    ///
+    /// True only for a canonical numeric index of a TypedArray, which is an *element* whether or
+    /// not the array has one: `ta[99]` on a short array is `undefined` and never the property
+    /// somebody put at `Int32Array.prototype[99]`. Every walk in the engine has to know this, and
+    /// the ones in [`crate::vm::Vm`] cannot use [`Heap::find_own`] to learn it because they have a
+    /// proxy trap to ask at each step.
+    #[must_use]
+    pub fn walk_stops_here(&self, object: ObjectId, key: PropertyKey) -> bool {
+        self.object(object).is_some_and(|found| {
+            found.view().is_some_and(|view| {
+                view.element.is_some() && typed::index_of(self, key, view.count()).is_some()
+            })
+        })
+    }
+
     /// The object along `object`'s prototype chain that owns `key`, if any.
     ///
     /// The property *and* which object it came from, since an accessor's getter is called with
@@ -1454,7 +1536,7 @@ impl Heap {
 /// and "the cycle check is correct" is exactly the kind of claim that should not be the only thing
 /// standing between an engine and one. Every chain a program actually builds is a handful long;
 /// the figure is deliberately far above that and deliberately not a guess about correctness.
-const MAX_PROTOTYPE_CHAIN: usize = 100_000;
+pub(crate) const MAX_PROTOTYPE_CHAIN: usize = 100_000;
 
 #[cfg(test)]
 #[path = "tests.rs"]

@@ -49,6 +49,7 @@ mod iteration;
 mod object;
 mod promise;
 mod property;
+mod proxy;
 mod string_object;
 mod symbol;
 mod typed;
@@ -90,10 +91,12 @@ pub use self::collect::{Collected, Roots};
 pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Environment, EnvironmentId};
 pub use self::helper::{Helper, Step};
+pub(crate) use self::object::MAX_PROTOTYPE_CHAIN;
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
 pub use self::promise::{
     Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
 };
+pub use self::proxy::Proxy;
 pub use self::typed::{KINDS, clamp_if};
 pub use self::weak_ref::{Cell, Holdable, Registry, Weak};
 

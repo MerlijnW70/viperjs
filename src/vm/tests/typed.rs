@@ -1170,3 +1170,28 @@ fn the_change_copies_answer_the_intrinsic_kind_where_the_others_answer_the_speci
         );
     }
 }
+
+#[test]
+fn a_canonical_index_stops_the_walk_for_every_operation_and_not_only_a_read() {
+    // §10.4.5.2 and §10.4.5.5 — an index a TypedArray does not have is *absent*, not inherited.
+    // The read has always said so; `in` and assignment have to say the same, and they say it in
+    // their own walks now that a proxy on a chain means the heap cannot do the walking.
+    assert_eq!(
+        run("Int32Array.prototype[9] = 'inherited'; 9 in new Int32Array(2)"),
+        "false"
+    );
+    // A non-canonical key is an ordinary one and does reach the prototype.
+    assert_eq!(
+        run("Int32Array.prototype.tag = 'inherited'; 'tag' in new Int32Array(2)"),
+        "true"
+    );
+    // An assignment stops there too, so the write lands on the receiver rather than being refused
+    // by a non-writable property further along the chain.
+    assert_eq!(
+        run(
+            "Object.defineProperty(Int32Array.prototype, 9, {value: 'fixed', writable: false}); \
+             var child = Object.create(new Int32Array(2)); child[9] = 5; child[9]"
+        ),
+        "5"
+    );
+}

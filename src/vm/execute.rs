@@ -213,15 +213,29 @@ impl Vm {
                     // is the same answer for all of them but a String — whose wrapper has an own
                     // enumerable property per index (§10.4.3), and which waits for wrappers.
                     let keys = match value {
-                        Value::Object(object) => heap.new_enumeration(prototype, object),
-                        _ => heap.new_array(prototype, 0),
+                        Value::Object(object) => {
+                            // §14.7.5.10's walk can now throw, because a proxy anywhere in the
+                            // chain answers it with traps — so this goes through the handler
+                            // search like any other operation that may raise.
+                            let walked = self
+                                .enumerable_keys_through(object, heap)
+                                .map(|names| heap.enumeration_of(prototype, &names));
+                            match self.settle(walked.map(Value::Object), heap, root, current, at)? {
+                                Some(list) => list,
+                                None => continue,
+                            }
+                        }
+                        _ => Value::Object(heap.new_array(prototype, 0)),
                     };
-                    self.stack.push(Value::Object(keys));
+                    self.stack.push(keys);
                 }
                 Instruction::EnumerateNext(keys, index) => {
                     let object = self.pop()?;
                     let next = self.enumerate_next(object, keys, index, heap)?;
-                    self.stack.push(next);
+                    match self.settle(next, heap, root, current, at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
                 }
                 Instruction::Uninitialise(index) => {
                     // Always the running scope's own binding, so no depth: a block puts *its*

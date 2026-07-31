@@ -269,6 +269,15 @@ impl Heap {
             // targets and the unregister tokens beside them are the weak half, and §26.2.3.1
             // step 5 refuses a held value that is the target for exactly this reason — holding it
             // strongly would keep the target alive through its own registration.
+            // §10.5's target and handler. A proxy is very often the only thing naming either —
+            // `new Proxy({}, {})` leaves both reachable through it and nowhere else — and a
+            // *revoked* proxy names neither, which is what lets both be collected once it is.
+            if let Some(proxy) = object.proxy()
+                && let Some((target, handler)) = proxy.parts()
+            {
+                pending.push(target);
+                pending.push(handler);
+            }
             // §27.1.5's helper holds its source iterator, its callback and — part-way through a
             // `flatMap` — the inner iterator it is drawing from. Nothing else may be holding any
             // of them: `[1, 2].values().map(f)` leaves both the array's iterator and `f` named by
@@ -353,6 +362,10 @@ impl Heap {
                 Some(crate::heap::Role::Resolve(settler) | crate::heap::Role::Reject(settler)) => {
                     pending.push(settler.promise);
                 }
+                // §28.2.2.1.1 — a revocation function keeps its proxy alive, because it is the only
+                // thing that can still do anything to it: `Proxy.revocable(t, h).revoke` handed out
+                // on its own is a function whose whole purpose is that one object.
+                Some(crate::heap::Role::Revoke(proxy)) => pending.push(*proxy),
                 Some(crate::heap::Role::Finally {
                     handler: first,
                     constructor: second,

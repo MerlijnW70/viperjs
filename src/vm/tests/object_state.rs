@@ -284,3 +284,25 @@ fn a_prototype_may_be_replaced_unless_that_would_close_a_loop() {
         "TypeError"
     );
 }
+
+#[test]
+fn values_and_entries_leave_a_symbol_keyed_property_out() {
+    // §7.3.24 step 4 — `EnumerableOwnProperties` lists String keys only, so a Symbol-keyed
+    // property is absent from the values as well as from the names. Filtered before the `[[Get]]`,
+    // because running a getter for something the answer will not hold would be observable.
+    assert_eq!(
+        run("var o = {a: 1}; o[Symbol('s')] = 2; Object.values(o).join()"),
+        "1"
+    );
+    assert_eq!(
+        run("var o = {a: 1}; o[Symbol('s')] = 2; Object.entries(o).length"),
+        "1"
+    );
+    assert_eq!(
+        run("var ran = false; var o = {}; \
+             Object.defineProperty(o, Symbol('s'), \
+             {get: function () { ran = true; }, enumerable: true}); \
+             Object.values(o).length + ',' + ran"),
+        "0,false"
+    );
+}
