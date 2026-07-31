@@ -726,6 +726,39 @@ impl Vm {
                     *current = frame.code;
                     *at = frame.at;
                 }
+                Instruction::Suspend => {
+                    let value = self.pop()?;
+                    let holder = self.pop()?;
+                    // Parked before the holder is looked at, because parking is what decides
+                    // whether this is legal at all — DR-0017's check lives in there, and a holder
+                    // that cannot hold is a chunk that does not make sense either way.
+                    let parked = self.park(current, at)?;
+                    if !heap.park_into(holder, parked) {
+                        return Err(Fault::NotAnObject);
+                    }
+                    // Where a `Return` would have left the returned value, and for the same
+                    // reason: the call that entered this function is answered either way, and only
+                    // the fate of the execution differs.
+                    self.stack.push(value);
+                }
+                Instruction::Revive => {
+                    let sent = self.pop()?;
+                    let holder = self.pop()?;
+                    // Both operands are gone, so this is where the revived execution's own answer
+                    // will land — the same place a call leaves one.
+                    let base = self.stack.len();
+                    // No recursion limit of its own, unlike [`Vm::enter`], and it is not missing.
+                    // A revival pushes a frame that a suspension popped, so the two conserve the
+                    // frame stack between them; what could nest revivals is a *call* to whatever
+                    // performs one, and that is bounded where every other call is. What is left is
+                    // a chunk holding many suspensions at once and reviving them one inside
+                    // another — and each of those is a heap object, so DR-0013's budget is the
+                    // bound on it. Adding a second one here would be a branch nothing can reach.
+                    let Some(parked) = heap.take_parked(holder) else {
+                        return Err(Fault::NothingToRevive);
+                    };
+                    self.revive(parked, sent, base, current, at);
+                }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
                 Instruction::RegExpLiteral => {

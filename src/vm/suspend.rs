@@ -1,0 +1,209 @@
+//! Parking an execution and reviving it — DR-0017's suspended frame, as data.
+//!
+//! A generator suspends at `yield` and is revived by `next`; an `async` function suspends at
+//! `await` and is revived by a job. Both need the same thing and neither is here yet: what is here
+//! is the thing underneath both, which is an execution that can be taken out of the interpreter,
+//! held as a value, and put back.
+//!
+//! That it can be taken out at all is a property of [`super::call::Frame`] — a plain record,
+//! borrowing nothing — and of the loop above it, which does not recurse for a JavaScript call. The
+//! one place that *is* a Rust call is DR-0011's nested execution, and DR-0017 is the rule that a
+//! suspension may not cross one. It is checked rather than assumed; see [`Vm::park`].
+
+use super::call::Frame;
+use super::{Fault, Handler, Vm};
+use crate::compile::Chunk;
+use crate::heap::{EnvironmentId, ObjectId};
+use crate::value::Value;
+use std::rc::Rc;
+
+/// One execution, out of the interpreter and kept whole — §27.5.1's `[[GeneratorContext]]`.
+///
+/// Everything the loop was using and nothing it was borrowing: where the code had got to, the
+/// three registers a call decides, the operands it had built, and the handlers it had installed.
+/// Put back by [`Vm::revive`], it carries on at the instruction after the one that parked it.
+///
+/// The two stacks are its *own* slices, taken from the marks the frame already carried — which is
+/// what makes this a record of one execution rather than of the machine. The handlers in it are
+/// rebased to those marks for the same reason: a [`Handler`] names an absolute depth, and a
+/// revival almost never happens at the depth the suspension did.
+#[derive(Debug)]
+pub(crate) struct Suspended {
+    /// The code that was running, and the instruction to carry on at.
+    ///
+    /// `None` is the shape a [`Frame`] uses for the root chunk, which the caller owns. Nothing the
+    /// compiler emits parks one — a suspension is only ever inside a function body — and a
+    /// hand-built chunk that managed it would revive into the root rather than crashing.
+    code: Option<Rc<Chunk>>,
+    at: usize,
+    this_value: Value,
+    new_target: Value,
+    environment: EnvironmentId,
+    /// The function object this execution is running — §10.2.2's *active function object*.
+    function: Option<ObjectId>,
+    /// The operands it had built, from its own floor upwards.
+    stack: Vec<Value>,
+    /// The handlers it had installed, each rebased to that floor.
+    handlers: Vec<Handler>,
+}
+
+impl Suspended {
+    /// Every value this parked execution can still reach.
+    ///
+    /// The collector's view of it, and the reason a parked execution is safe to hold: nothing in
+    /// here is reachable any other way. The operands are on no stack the machine owns any more,
+    /// and a `this` captured mid-call may be the only reference to the object it names.
+    pub(crate) fn reachable(&self) -> impl Iterator<Item = Value> + '_ {
+        self.stack
+            .iter()
+            .copied()
+            .chain([self.this_value, self.new_target])
+            .chain(self.function.map(Value::Object))
+    }
+
+    /// The environment its next instruction will read a variable from.
+    ///
+    /// Kept alive by this and by nothing else once the call that made it has been parked: the
+    /// frames that would have named it are gone.
+    pub(crate) fn environment(&self) -> EnvironmentId {
+        self.environment
+    }
+}
+
+impl Vm {
+    /// Take the running execution out of the machine, leaving its caller running.
+    ///
+    /// A [`Instruction::Return`](crate::compile::Instruction::Return) in every respect but one:
+    /// the callee's operands, handlers and position are kept instead of being dropped. What is
+    /// left behind is exactly what a return leaves — the caller's registers, its code, and its
+    /// stack truncated to where the call began — so the instruction that parks may push the value
+    /// the call answers with and carry on.
+    ///
+    /// # DR-0017
+    ///
+    /// What may not be parked is the frame a **nested execution** entered — DR-0011's, where a
+    /// native called back into JavaScript from the middle of an instruction and a Rust call is
+    /// waiting for the answer. Parking that one hands control straight back to Rust, and the
+    /// coercion, trap or comparator that is waiting reads the suspension's value as though the
+    /// function had *returned* it.
+    ///
+    /// It is the bottom frame that is forbidden and not the nested execution as a whole:
+    /// `[1].map(() => gen.next())` is an ordinary program, and there the generator's frame sits
+    /// above the callback's, so `next` returns to the callback in the usual way. What the check
+    /// refuses is `arr.sort(gen.next.bind(gen))`, where the resumed body *is* what the comparator
+    /// call entered.
+    ///
+    /// A [`Fault`] rather than a RangeError, because the grammar already rules it out for
+    /// generators: `yield` is only ever in the body of the `function*` that owns it, and `await`
+    /// in an `async` one. The check is what keeps the next native that grows a callback from
+    /// breaking that silently.
+    ///
+    /// The frame is popped before the check because a fault ends the execution: there is no state
+    /// left for the pop to have damaged, and this way `self.frames.len()` is the depth to compare.
+    pub(super) fn park(
+        &mut self,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<Suspended, Fault> {
+        let Some(frame) = self.frames.pop() else {
+            return Err(Fault::SuspendWithNoCall);
+        };
+        // `reentries` is non-zero exactly when a nested execution is running, and its floor is the
+        // depth it started at — so the two together say "the frame just popped was the one that
+        // execution entered". Equality rather than `<=`: the nested loop stops the moment its
+        // entry frame is gone, so nothing can pop past the floor and come back here.
+        if self.reentries > 0 && self.frames.len() == self.floor.frames {
+            return Err(Fault::SuspendAcrossReentry);
+        }
+        // Where this frame sat, now that it is gone — the depth every handler in it was installed
+        // at or above, and so what makes their `frames` marks relative rather than absolute.
+        let floor = self.frames.len();
+        // Clamped because a body is not obliged to leave its own floor alone: `pop` answers for
+        // the stack as a whole, so a chunk that takes more than it pushed reaches under the mark.
+        // The compiler emits no such body; splitting at an index past the end would panic, and
+        // DR-0002 does not allow a chunk to decide that.
+        let operands = frame.stack_base.min(self.stack.len());
+        let installed = frame.handlers_base.min(self.handlers.len());
+        let parked = Suspended {
+            code: current.take(),
+            at: *at,
+            this_value: self.this_value,
+            new_target: self.new_target,
+            environment: self.environment,
+            function: frame.function,
+            stack: self.stack.split_off(operands),
+            handlers: self
+                .handlers
+                .split_off(installed)
+                .into_iter()
+                .map(|handler| Handler {
+                    target: handler.target,
+                    frames: handler.frames.saturating_sub(floor),
+                    depth: handler.depth.saturating_sub(operands),
+                })
+                .collect(),
+        };
+        // …and the caller comes back, which is the half this shares with a return.
+        self.environment = frame.environment;
+        self.this_value = frame.this_value;
+        self.new_target = frame.new_target;
+        *current = frame.code;
+        *at = frame.at;
+        Ok(parked)
+    }
+
+    /// Put a parked execution back and carry on inside it.
+    ///
+    /// The mirror of [`Vm::park`], and an entry into a call in every respect but one: there is no
+    /// body to start at the beginning, because this one is half-run. `base` is where its operands
+    /// belong — the stack index the value it eventually returns will be left at, exactly as a call
+    /// leaves its answer where the callee sat.
+    ///
+    /// `sent` is pushed on top of the operands it had built, so it becomes the value of the
+    /// expression that parked. That is what makes `gen.next(v)` an argument rather than a signal:
+    /// the `yield` that suspended evaluates to `v` when the body starts moving again.
+    ///
+    /// There is no recursion limit here, and that is not an omission: this pushes the frame a
+    /// suspension popped, so the pair conserves the frame stack, and the calls that could nest one
+    /// revival inside another are bounded where [`Vm::enter`] bounds every call.
+    pub(super) fn revive(
+        &mut self,
+        parked: Suspended,
+        sent: Value,
+        base: usize,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) {
+        // Read before the push, so that it is the index the revived frame is about to occupy —
+        // the same number `park` recorded the handlers against.
+        let floor = self.frames.len();
+        self.frames.push(Frame {
+            code: (*current).take(),
+            at: *at,
+            this_value: self.this_value,
+            new_target: self.new_target,
+            environment: self.environment,
+            stack_base: base,
+            handlers_base: self.handlers.len(),
+            // §10.2.2 step 13's preference belongs to a construction, and a revival is not one:
+            // whatever made this execution decided that once, and it is not being decided again.
+            constructed: None,
+            function: parked.function,
+        });
+        self.stack.truncate(base);
+        self.stack.extend_from_slice(&parked.stack);
+        self.stack.push(sent);
+        for handler in parked.handlers {
+            self.handlers.push(Handler {
+                target: handler.target,
+                frames: handler.frames + floor,
+                depth: handler.depth + base,
+            });
+        }
+        self.this_value = parked.this_value;
+        self.new_target = parked.new_target;
+        self.environment = parked.environment;
+        *current = parked.code;
+        *at = parked.at;
+    }
+}

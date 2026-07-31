@@ -50,6 +50,7 @@
 //! - `math` — §21.3, and the four places it is not what a CPU does.
 //! - `weak` — §24.3 and §24.4, and the methods they deliberately do not have.
 //! - `weak_ref` — §26.1 and §26.2, and the registration that would defeat itself.
+//! - `suspension` — DR-0017's parked frame, out of chunks no compiler emits yet.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
@@ -107,6 +108,7 @@ mod strict;
 mod string_methods;
 mod string_replace;
 mod strings;
+mod suspension;
 mod symbols;
 mod templates;
 mod typed;
@@ -143,6 +145,16 @@ fn run(source: &str) -> String {
         .run(&chunk, &mut heap)
         .expect("the chunk is well formed"); // same
     describe(outcome, &mut heap)
+}
+
+/// Run a chunk on a machine that already exists, and describe what it came to.
+///
+/// For the chunks that are built by hand rather than compiled: those need a heap prepared in
+/// advance — a function object holding the body under test, an object to park in — so the machine
+/// and the heap come from the caller instead of being made here.
+fn describe_run(chunk: &Chunk, vm: &mut Vm, heap: &mut Heap) -> String {
+    let outcome = vm.run(chunk, heap).expect("the chunk is well formed"); // the test is about what it evaluates to
+    describe(outcome, heap)
 }
 
 /// Whether a script gets as far as being a chunk at all.

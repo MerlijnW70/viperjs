@@ -19,6 +19,8 @@
 //! - `execute` — the loop itself, which is one `match` and long enough to want its own file.
 //! - `property` — the object's internal methods a running program reaches: `[[Get]]`, `[[Set]]`,
 //!   `[[Delete]]` and `[[HasProperty]]`, each of which can throw.
+//! - `suspend` — taking an execution out of the loop and putting it back, which is what a
+//!   generator and an `async` function are both made of.
 //! - here — the loop, the frames, and the two kinds of failure.
 //!
 //! # A throw is an answer, not a failure
@@ -38,9 +40,11 @@ mod property;
 mod proxy;
 mod proxy_call;
 mod proxy_shape;
+mod suspend;
 
 use self::call::Frame;
 pub(crate) use self::jobs::Job;
+pub(crate) use self::suspend::Suspended;
 
 use crate::ast::UnaryOperator;
 use crate::compile::Chunk;
@@ -72,6 +76,26 @@ pub enum Fault {
     MissingFunction,
     /// A `Return` with no call to return from.
     ReturnWithNoCall,
+    /// A `Suspend` with no call to suspend.
+    ///
+    /// A suspension parks the running *function*, so at the top level of a script there is nothing
+    /// for it to take. The compiler emits one only inside a body, which is where the grammar puts
+    /// `yield` and `await` too.
+    SuspendWithNoCall,
+    /// A `Suspend` in the very frame a nested execution entered — DR-0017.
+    ///
+    /// Under that frame is a Rust call still waiting for an answer: a coercion, a proxy trap, a
+    /// comparator. Parking it hands control straight back to that call, which then reads the
+    /// suspension's value as though the function had returned it. Unreachable from any source
+    /// text, because a `yield` is only ever in the body of the `function*` that owns it — which is
+    /// why this is a fault and not a RangeError.
+    SuspendAcrossReentry,
+    /// A `Revive` naming something that holds no parked execution.
+    ///
+    /// Either not an object at all, or one that has never suspended or has already been revived. A
+    /// generator answers for all three itself — §27.5.1.2 has a state to consult before it does
+    /// anything — so nothing above this may reach it.
+    NothingToRevive,
     /// A `DefineField` on something that is not an object.
     ///
     /// Only an object literal emits one, and it emits `NewObject` first, so no chunk the compiler

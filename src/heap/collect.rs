@@ -277,6 +277,19 @@ impl Heap {
             if let Some(matches) = object.matches() {
                 pending.push(matches.regexp);
             }
+            // §27.5.1's parked execution, which is the one place a value can be *on a stack* and
+            // still be nowhere the roots reach: the operands a generator had half-built are not on
+            // the machine's stack any more, and its environment is named by no frame. Collecting
+            // either would leave the generator to resume into rubbish.
+            if let Some(parked) = object.suspension() {
+                for value in parked.reachable() {
+                    match value {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
+                }
+                self.mark_environment(parked.environment(), marked);
+            }
             if let Some(proxy) = object.proxy()
                 && let Some((target, handler)) = proxy.parts()
             {

@@ -276,6 +276,16 @@ pub struct Object {
     proxy: Option<Proxy>,
     /// §22.2.9's slots, if this is a RegExp String Iterator. Inline: five small fields.
     matches: Option<crate::heap::Matches>,
+    /// §27.5.1's `[[GeneratorContext]]` — an execution parked in this object, if one is.
+    ///
+    /// `None` for every object that is not holding one, which is every object so far: nothing
+    /// parks yet but a hand-written chunk. Boxed for the reason the collection beside it is — an
+    /// `Object` sits inline in the arena, so whatever this costs is charged to every object ever
+    /// made, and a suspension owns two `Vec`s and an `Rc`.
+    ///
+    /// The interpreter's, and deliberately opaque here: what is in it is frames and operands, and
+    /// the heap's only business with it is holding it and letting the collector walk it.
+    suspension: Option<Box<crate::vm::Suspended>>,
     /// §22.2.3's internal slots, if this is a regular expression.
     ///
     /// Boxed, because a compiled pattern owns a tree and every object would otherwise carry room
@@ -340,6 +350,7 @@ impl Object {
             helper: None,
             proxy: None,
             matches: None,
+            suspension: None,
             regexp: None,
             call: None,
             environment: None,
@@ -494,6 +505,11 @@ impl Object {
     /// is already one, and nothing else in the language changes a pattern after it is made.
     pub fn set_regexp(&mut self, regexp: crate::heap::RegExp) {
         self.regexp = Some(Box::new(regexp));
+    }
+
+    /// The execution parked in this object, if one is — §27.5.1's `[[GeneratorContext]]`.
+    pub(crate) fn suspension(&self) -> Option<&crate::vm::Suspended> {
+        self.suspension.as_deref()
     }
 
     /// The target and handler this object proxies, if it is a Proxy — §10.5.
@@ -1031,6 +1047,42 @@ impl Heap {
     /// The object `id` refers to, to be changed.
     pub fn object_mut(&mut self, id: ObjectId) -> Option<&mut Object> {
         self.objects.get_mut(id.0)?.as_mut()
+    }
+
+    /// Park `parked` in whatever `holder` names, and answer whether anything could hold it.
+    ///
+    /// `false` for a value that is not an object, which is the only way the answer is interesting:
+    /// nothing in the language can name an object this heap does not have, so the other half of
+    /// the lookup is a shape only a hand-written chunk reaches.
+    ///
+    /// Whatever was there is replaced. A holder that is already parked is not a state the
+    /// generator machinery above this can produce — §27.5.1.2 refuses to resume one twice — so
+    /// there is nothing here to refuse.
+    pub(crate) fn park_into(&mut self, holder: Value, parked: crate::vm::Suspended) -> bool {
+        let Some(object) = self.holder_mut(holder) else {
+            return false;
+        };
+        object.suspension = Some(Box::new(parked));
+        true
+    }
+
+    /// Take the execution parked in `holder`, leaving it holding none.
+    ///
+    /// `None` for a value that is not an object and for an object that has nothing parked — which
+    /// includes one that was parked and has already been revived, since a suspension is *moved*
+    /// out. That is the property the state machine above this rests on: an execution cannot be
+    /// entered twice, because after the first entry it is no longer anywhere to be found.
+    pub(crate) fn take_parked(&mut self, holder: Value) -> Option<crate::vm::Suspended> {
+        let parked = self.holder_mut(holder)?.suspension.take()?;
+        Some(*parked)
+    }
+
+    /// The object a value names, to be changed — `None` if it names none.
+    fn holder_mut(&mut self, holder: Value) -> Option<&mut Object> {
+        match holder {
+            Value::Object(id) => self.object_mut(id),
+            _ => None,
+        }
     }
 
     /// How many objects this heap holds.
