@@ -42,7 +42,7 @@ use crate::heap::string_object;
 use crate::heap::typed;
 use crate::heap::{
     ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Property,
-    PropertyDescriptor, PropertyKey, StringId, SymbolId,
+    PropertyDescriptor, PropertyKey, StringId, SymbolId, Weak,
 };
 use crate::value::Value;
 use std::collections::HashMap;
@@ -259,6 +259,11 @@ pub struct Object {
     /// pointer holding no state, deliberately, so what the specification captures in a closure is
     /// carried on the function object exactly as it says it is.
     role: Option<Box<Role>>,
+    /// §26.1's `[[WeakRefTarget]]` or §26.2's `[[Cells]]`, if this is one of those.
+    ///
+    /// Boxed for the reason the collection beside it is: an `Object` sits inline in the arena, so
+    /// whatever this costs is charged to every object ever made, and a registry is a `Vec`.
+    weak: Option<Box<Weak>>,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -314,6 +319,7 @@ impl Object {
             collection: None,
             promise: None,
             role: None,
+            weak: None,
             call: None,
             environment: None,
             lexical: None,
@@ -409,6 +415,21 @@ impl Object {
     /// Make this object a `Map` or a `Set` — §24.1.1.1 and §24.2.1.1 step 4.
     pub fn set_collection(&mut self, collection: Collection) {
         self.collection = Some(Box::new(collection));
+    }
+
+    /// What this object holds weakly, if it is a `WeakRef` or a `FinalizationRegistry`.
+    pub fn weak(&self) -> Option<&Weak> {
+        self.weak.as_deref()
+    }
+
+    /// The same, to change.
+    pub fn weak_mut(&mut self) -> Option<&mut Weak> {
+        self.weak.as_deref_mut()
+    }
+
+    /// Make this object one of §26's two, which nothing undoes.
+    pub fn set_weak(&mut self, weak: Weak) {
+        self.weak = Some(Box::new(weak));
     }
 
     /// The promise state this object holds, if it is a promise.

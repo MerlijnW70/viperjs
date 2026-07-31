@@ -33,7 +33,7 @@
 //! and picking a moment needs a measurement of what allocation costs — an M8 experiment. What is
 //! here is the operation, and an embedder that calls it.
 
-use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, StringId};
+use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, StringId, Weak};
 use crate::value::Value;
 
 /// Whether the walk reached this value, for the two questions weakness asks about a key.
@@ -264,6 +264,20 @@ impl Heap {
             // here instead would make the weak collections strong ones with a different name —
             // every test would still pass, and a program that used one as a cache would never free
             // anything.
+            // §26.1's target is *not* marked, which is the whole of what a `WeakRef` is. A
+            // registry's callback and its held values are, because it will hand them over: the
+            // targets and the unregister tokens beside them are the weak half, and §26.2.3.1
+            // step 5 refuses a held value that is the target for exactly this reason — holding it
+            // strongly would keep the target alive through its own registration.
+            if let Some(Weak::Registry(registry)) = object.weak() {
+                self.mark_value(registry.cleanup, marked);
+                for cell in &registry.cells {
+                    match cell.held {
+                        Value::Object(reached) => pending.push(reached),
+                        other => self.mark_value(other, marked),
+                    }
+                }
+            }
             if let Some(collection) = object.collection()
                 && !collection.kind().weak()
             {
@@ -448,6 +462,13 @@ impl Heap {
             {
                 collection.retain_keys(|key| reachable(key, marked));
             }
+            // §26.2's cells go the same way and for the same reason: a cell whose target the walk
+            // could not reach is a cell nothing can ask about again. A `WeakRef`'s target needs no
+            // pruning — DR-0010 leaves the freed slot empty and never reuses it, so the handle
+            // itself becomes the answer `deref` gives.
+            if let Some(Weak::Registry(registry)) = object.as_mut().and_then(Object::weak_mut) {
+                registry.retain_cells(|target| reachable(target.as_value(), marked));
+            }
         }
         // Zipped rather than indexed. The marks were sized from the arenas and nothing allocates
         // between, so the two are the same length — and `zip` says that rather than an index with
@@ -557,7 +578,9 @@ impl Slot for EnvironmentId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::heap::{Collection, CollectionKind, PropertyDescriptor, PropertyKey};
+    use crate::heap::{
+        Cell, Collection, CollectionKind, Holdable, PropertyDescriptor, PropertyKey, Registry,
+    };
 
     fn define(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
         let key = PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
@@ -1188,6 +1211,125 @@ mod tests {
         // Only the entry this heap issued a key for survives, which says both arenas were read as
         // "past the end is not reached" rather than one of them defaulting the other way.
         assert_eq!(entries_of(&heap, map), 1);
+    }
+
+    #[test]
+    fn a_weak_ref_does_not_keep_its_target_and_leaves_a_slot_that_answers() {
+        // §26.1 -- the target is not marked, so a `WeakRef` is the only thing naming it and it goes.
+        // What is left is the handle addressing an empty slot, which is what `deref` reads: DR-0010
+        // never reuses a slot, so an empty one means collected and can never come to mean anything
+        // else. A collector that marked the target would make `deref` an ordinary reference.
+        let mut heap = Heap::new();
+        let target = heap.new_object(None);
+        let reference = heap.new_object(None);
+        if let Some(found) = heap.object_mut(reference) {
+            found.set_weak(Weak::Ref(Holdable::Object(target)));
+        }
+        let roots = Roots {
+            values: vec![Value::Object(reference)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(reference).is_some(), "the reference itself");
+        assert!(
+            heap.object(target).is_none(),
+            "nothing else named the target"
+        );
+
+        // ...and while something else does name it, it stays -- which is the other half, and says
+        // the reference is not somehow *preventing* the target from being marked.
+        let mut heap = Heap::new();
+        let target = heap.new_object(None);
+        let reference = heap.new_object(None);
+        if let Some(found) = heap.object_mut(reference) {
+            found.set_weak(Weak::Ref(Holdable::Object(target)));
+        }
+        let roots = Roots {
+            values: vec![Value::Object(reference), Value::Object(target)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(target).is_some());
+    }
+
+    #[test]
+    fn a_registry_holds_its_callback_and_what_it_would_hand_over_but_not_its_target() {
+        // §26.2's three kinds of reference in one arrangement. The callback and the held value are
+        // strong -- the registry will hand them over, so it must still have them -- and the target
+        // and the unregister token are weak. Each is named by nothing else, so each row is about
+        // that one edge and no other.
+        let mut heap = Heap::new();
+        let cleanup = heap.new_object(None);
+        let held = heap.new_object(None);
+        let target = heap.new_object(None);
+        let token = heap.new_object(None);
+        let registry = heap.new_object(None);
+        if let Some(found) = heap.object_mut(registry) {
+            found.set_weak(Weak::Registry(Registry {
+                cleanup: Value::Object(cleanup),
+                cells: vec![Cell {
+                    target: Holdable::Object(target),
+                    held: Value::Object(held),
+                    token: Some(Holdable::Object(token)),
+                }],
+            }));
+        }
+        let roots = Roots {
+            values: vec![Value::Object(registry)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(cleanup).is_some(), "the callback is strong");
+        assert!(heap.object(held).is_some(), "the held value is strong");
+        assert!(heap.object(target).is_none(), "the target is weak");
+        assert!(heap.object(token).is_none(), "the token is weak");
+        // §26.2's liveness rule -- the cell went with its target, because nothing can ask about it
+        // again: a program that could still name the target is a program the cell was kept for.
+        let cells = match heap.object(registry).and_then(Object::weak) {
+            Some(Weak::Registry(found)) => found.cells.len(),
+            _ => usize::MAX,
+        };
+        assert_eq!(cells, 0);
+    }
+
+    #[test]
+    fn a_registry_keeps_the_cell_of_a_target_something_still_names() {
+        // The other half again, and the row that says the pruning is per cell rather than per
+        // registry: one target is a root and one is not.
+        let mut heap = Heap::new();
+        let cleanup = heap.new_object(None);
+        let kept = heap.new_object(None);
+        let dropped = heap.new_object(None);
+        let registry = heap.new_object(None);
+        if let Some(found) = heap.object_mut(registry) {
+            found.set_weak(Weak::Registry(Registry {
+                cleanup: Value::Object(cleanup),
+                cells: vec![
+                    Cell {
+                        target: Holdable::Object(kept),
+                        held: Value::Number(1.0),
+                        token: None,
+                    },
+                    Cell {
+                        target: Holdable::Object(dropped),
+                        held: Value::Number(2.0),
+                        token: None,
+                    },
+                ],
+            }));
+        }
+        let roots = Roots {
+            values: vec![Value::Object(registry), Value::Object(kept)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(kept).is_some());
+        assert!(heap.object(dropped).is_none());
+        let remaining = match heap.object(registry).and_then(Object::weak) {
+            Some(Weak::Registry(found)) => found.cells.len(),
+            _ => usize::MAX,
+        };
+        assert_eq!(remaining, 1, "one cell went and one stayed");
     }
 
     #[test]

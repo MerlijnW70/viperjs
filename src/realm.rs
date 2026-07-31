@@ -76,6 +76,10 @@ pub struct Realm {
     weak_map_prototype: ObjectId,
     /// %WeakSet.prototype% — §24.4.3.
     weak_set_prototype: ObjectId,
+    /// %WeakRef.prototype% — §26.1.3.
+    weak_ref_prototype: ObjectId,
+    /// %FinalizationRegistry.prototype% — §26.2.3.
+    finalization_registry_prototype: ObjectId,
     /// %MapIteratorPrototype% — §24.1.5, which inherits from %IteratorPrototype% and so is handed
     /// `[@@iterator]` by it.
     map_iterator_prototype: ObjectId,
@@ -196,6 +200,8 @@ impl Realm {
         let set_prototype = heap.new_object(Some(object_prototype));
         let weak_map_prototype = heap.new_object(Some(object_prototype));
         let weak_set_prototype = heap.new_object(Some(object_prototype));
+        let weak_ref_prototype = heap.new_object(Some(object_prototype));
+        let finalization_registry_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let set_iterator_prototype = heap.new_object(Some(iterator_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
@@ -275,6 +281,8 @@ impl Realm {
             set_prototype,
             weak_map_prototype,
             weak_set_prototype,
+            weak_ref_prototype,
+            finalization_registry_prototype,
             map_iterator_prototype,
             set_iterator_prototype,
             aggregate_error_prototype,
@@ -410,6 +418,18 @@ impl Realm {
     #[must_use]
     pub fn weak_set_prototype(&self) -> ObjectId {
         self.weak_set_prototype
+    }
+
+    /// %WeakRef.prototype% — §26.1.3.
+    #[must_use]
+    pub fn weak_ref_prototype(&self) -> ObjectId {
+        self.weak_ref_prototype
+    }
+
+    /// %FinalizationRegistry.prototype% — §26.2.3.
+    #[must_use]
+    pub fn finalization_registry_prototype(&self) -> ObjectId {
+        self.finalization_registry_prototype
     }
 
     /// %Set.prototype% — §24.2.3.

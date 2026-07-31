@@ -51,6 +51,7 @@ mod property;
 mod string_object;
 mod symbol;
 mod typed;
+mod weak_ref;
 
 pub use self::arguments::{ArgumentsMap, Incoming};
 pub use self::callable::{Bound, Callable, Native, NativeCall};
@@ -92,6 +93,7 @@ pub use self::promise::{
     Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
 };
 pub use self::typed::{KINDS, clamp_if};
+pub use self::weak_ref::{Cell, Holdable, Registry, Weak};
 
 impl Heap {
     /// §7.2.3 `IsCallable` — whether a *value* is something a call may reach.

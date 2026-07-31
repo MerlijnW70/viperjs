@@ -3125,100 +3125,12 @@ built-ins/Error/tostring-1.js :: it threw an object with no name: new Error.toSt
 built-ins/Error/tostring-1.js (strict) :: it threw an object with no name: new Error.toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Error/tostring-2.js :: it threw an object with no name: Error().toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Error/tostring-2.js (strict) :: it threw an object with no name: Error().toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/FinalizationRegistry/constructor.js :: it threw an object with no name: typeof FinalizationRegistry is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/FinalizationRegistry/constructor.js (strict) :: it threw an object with no name: typeof FinalizationRegistry is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/FinalizationRegistry/instance-extensible.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/instance-extensible.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/is-a-constructor.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/is-a-constructor.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/length.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/length.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/name.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/name.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/newtarget-prototype-is-not-object.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prop-desc.js :: it threw an object with no name: FinalizationRegistry should be an own property
-built-ins/FinalizationRegistry/prop-desc.js (strict) :: it threw an object with no name: FinalizationRegistry should be an own property
 built-ins/FinalizationRegistry/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/FinalizationRegistry/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/FinalizationRegistry/proto.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/proto.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype-from-newtarget.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype-from-newtarget.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/Symbol.toStringTag.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/constructor.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/constructor.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/prop-desc.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/prop-desc.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/proto.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/proto.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/custom-this.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/custom-this.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/heldValue-same-as-target.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/heldValue-same-as-target.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/holdings-any-value-type.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/holdings-any-value-type.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/length.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/length.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/name.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/name.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/not-a-constructor.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/not-a-constructor.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/prop-desc.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/prop-desc.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/return-undefined-register-itself.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/return-undefined-register-itself.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/return-undefined-register-object.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/return-undefined-register-object.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/return-undefined-register-symbol.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/return-undefined-register-symbol.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/this-does-not-have-internal-target-throws.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/this-does-not-have-internal-target-throws.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/this-not-object-throws.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/this-not-object-throws.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/throws-when-target-cannot-be-held-weakly.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/throws-when-target-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/throws-when-unregisterToken-not-undefined-and-cannot-be-held-weakly.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/throws-when-unregisterToken-not-undefined-and-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/unregisterToken-same-as-holdings-and-target.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/unregisterToken-same-as-holdings-and-target.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/unregisterToken-same-as-holdings.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/unregisterToken-same-as-holdings.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/unregisterToken-same-as-target.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/register/unregisterToken-same-as-target.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/custom-this.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/custom-this.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/length.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/length.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/name.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/name.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/not-a-constructor.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/not-a-constructor.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/prop-desc.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/prop-desc.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/this-does-not-have-internal-cells-throws.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/this-does-not-have-internal-cells-throws.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/this-not-object-throws.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/this-not-object-throws.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/throws-when-unregisterToken-cannot-be-held-weakly.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/throws-when-unregisterToken-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/unregister-object-token.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/unregister-object-token.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/unregister-symbol-token.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/prototype/unregister/unregister-symbol-token.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/returns-new-object-from-constructor.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/returns-new-object-from-constructor.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/target-not-callable-throws.js :: it threw an object with no name: typeof FinalizationRegistry is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/FinalizationRegistry/target-not-callable-throws.js (strict) :: it threw an object with no name: typeof FinalizationRegistry is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/FinalizationRegistry/undefined-newtarget-throws.js :: it threw an object with no name: typeof FinalizationRegistry is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/FinalizationRegistry/undefined-newtarget-throws.js (strict) :: it threw an object with no name: typeof FinalizationRegistry is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/FinalizationRegistry/unnaffected-by-poisoned-cleanupCallback.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/FinalizationRegistry/unnaffected-by-poisoned-cleanupCallback.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
+built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
+built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
 built-ins/Function/15.3.2.1-10-6gs.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
 built-ins/Function/15.3.2.1-11-1-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
 built-ins/Function/15.3.2.1-11-1.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -5378,8 +5290,6 @@ built-ins/Object/seal/seal-bigint64array.js :: it threw ReferenceError: BigInt64
 built-ins/Object/seal/seal-bigint64array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Object/seal/seal-biguint64array.js :: it threw ReferenceError: BigUint64Array is not defined
 built-ins/Object/seal/seal-biguint64array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-built-ins/Object/seal/seal-finalizationregistry.js :: it threw ReferenceError: FinalizationRegistry is not defined
-built-ins/Object/seal/seal-finalizationregistry.js (strict) :: it threw ReferenceError: FinalizationRegistry is not defined
 built-ins/Object/seal/seal-function.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-proxy.js :: it threw ReferenceError: Proxy is not defined
@@ -5388,8 +5298,6 @@ built-ins/Object/seal/seal-regexp.js :: it threw ReferenceError: RegExp is not d
 built-ins/Object/seal/seal-regexp.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/seal-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Object/seal/seal-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Object/seal/seal-weakref.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/Object/seal/seal-weakref.js (strict) :: it threw ReferenceError: WeakRef is not defined
 built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
@@ -14024,64 +13932,12 @@ built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakRef/constructor.js :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakRef/constructor.js (strict) :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakRef/instance-extensible.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/instance-extensible.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/is-a-constructor.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/is-a-constructor.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/length.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/length.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/name.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/name.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/newtarget-prototype-is-not-object.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prop-desc.js :: it threw an object with no name: WeakRef should be an own property
-built-ins/WeakRef/prop-desc.js (strict) :: it threw an object with no name: WeakRef should be an own property
 built-ins/WeakRef/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakRef/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakRef/proto.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/proto.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakRef/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype-from-newtarget.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype-from-newtarget.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/Symbol.toStringTag.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/constructor.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/constructor.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/custom-this.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/custom-this.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/length.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/length.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/name.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/name.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/not-a-constructor.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/not-a-constructor.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/prop-desc.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/prop-desc.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/return-object-target.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/return-object-target.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/return-symbol-target.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/return-symbol-target.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/this-does-not-have-internal-target-throws.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/this-does-not-have-internal-target-throws.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/this-not-object-throws.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/deref/this-not-object-throws.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/prop-desc.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/prop-desc.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/proto.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/prototype/proto.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/returns-new-object-from-constructor-with-object-target.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/returns-new-object-from-constructor-with-object-target.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/returns-new-object-from-constructor-with-symbol-target.js :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/returns-new-object-from-constructor-with-symbol-target.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/WeakRef/throws-when-target-cannot-be-held-weakly.js :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakRef/throws-when-target-cannot-be-held-weakly.js (strict) :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakRef/undefined-newtarget-throws.js :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakRef/undefined-newtarget-throws.js (strict) :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/WeakRef/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/WeakRef/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
+built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
 built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -15239,8 +15095,6 @@ language/expressions/class/subclass-builtins/subclass-RegExp.js :: it threw Refe
 language/expressions/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/expressions/class/subclass-builtins/subclass-WeakRef.js :: it threw ReferenceError: WeakRef is not defined
-language/expressions/class/subclass-builtins/subclass-WeakRef.js (strict) :: it threw ReferenceError: WeakRef is not defined
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -16687,8 +16541,6 @@ language/statements/class/subclass-builtins/subclass-RegExp.js :: it threw Refer
 language/statements/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/statements/class/subclass-builtins/subclass-WeakRef.js :: it threw ReferenceError: WeakRef is not defined
-language/statements/class/subclass-builtins/subclass-WeakRef.js (strict) :: it threw ReferenceError: WeakRef is not defined
 language/statements/class/subclass/builtin-objects/Function/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet

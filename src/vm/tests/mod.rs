@@ -41,6 +41,7 @@
 //! - `bound` — §20.2's `Function`, and §10.4.1's bound functions.
 //! - `math` — §21.3, and the four places it is not what a CPU does.
 //! - `weak` — §24.3 and §24.4, and the methods they deliberately do not have.
+//! - `weak_ref` — §26.1 and §26.2, and the registration that would defeat itself.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
@@ -91,6 +92,7 @@ mod templates;
 mod typed;
 mod values;
 mod weak;
+mod weak_ref;
 mod wrapper;
 
 use super::call::MAX_CALL_DEPTH;
