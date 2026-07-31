@@ -129,7 +129,7 @@ of M6: classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`, `Ar
 `DataView` and the TypedArrays. **`RegExp` is what remains of M4**, and the regular expression
 engine is ours to write — no dependency.
 
-Conformance as of this commit is **48.19% of test262** — 44,893 of 93,161 runs. Treat that number as
+Conformance as of this commit is **49.30% of test262** — 45,924 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -145,6 +145,25 @@ Let the failure buckets choose the next slice, not intuition. The largest right 
 | 830 | modules |
 | 779 | `RegExp` as a *global*, on top of the 6,896 literals |
 | 770 | `Proxy` and `Reflect`'s other half |
+| 592 | the `Iterator` global — and it is really its *helpers*: `map`, `filter`, `take`, `drop`, `flatMap` and the six that consume |
+| 408 | `SharedArrayBuffer`, and 182 more for `Atomics` |
+| 170 | `Set.prototype`'s seven set operations |
+
+**Read the *failure* buckets, not only that table.** The list above is what stopped the tests that
+never ran, and it is all architecture. Sorting the ~17,000 that **run and fail** by reason is what
+finds the slices worth a day, and none of this session's were visible above:
+
+    grep -av '^#' conformance/expectations.txt | sed 's/.* :: //' | sort | uniq -c | sort -rn | head -25
+
+That is how `Array.prototype.sort` (85 runs), the four change-copy methods (~130), `ToObject` on a
+primitive receiver (116) and the weak collections (~570) were found. Bucket by *path* too
+(`awk -F/ '{print $1"/"$2}'`) to see which area is worth a slice rather than a method.
+
+**And ECMA-262 cannot be read with a fetch tool.** Both the multipage and single-page builds answer
+with their table of contents whatever anchor is asked for, so "read the clause first" is not
+available that way. The vendored suite is the oracle instead: implement, run `--only <area>`, and
+read the failing tests' `info:` frontmatter — which quotes the numbered steps verbatim, and is how
+a wrong reading gets caught.
 
 Note what that list says about order. The parser already accepts generators and `async`, so that
 bucket is compiler and runtime work rather than grammar — and it is *one* piece of work, because
