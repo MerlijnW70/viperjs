@@ -23,8 +23,10 @@
 //! `\8` as an identity escape — are refused for the same reason DR-0008 gives: Annex B's lexical
 //! extensions are in and its syntactic ones are not.
 
+mod matcher;
 mod parser;
 
+pub use self::matcher::{Capture, Match, Matcher};
 pub use self::parser::{
     Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern, parse,
 };
