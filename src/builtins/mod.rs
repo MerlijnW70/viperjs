@@ -39,6 +39,7 @@ mod object_state;
 pub(crate) mod promise;
 mod promise_group;
 mod reflect;
+mod set_ops;
 mod symbol;
 mod typed;
 mod typed_methods;

@@ -107,7 +107,11 @@ fn build(
     );
     match map {
         true => define_method(heap, realm, prototype, "keys", 0, map_keys),
-        false => alias(heap, prototype, "keys", "values"),
+        false => {
+            alias(heap, prototype, "keys", "values");
+            // §24.2.4's seven, which only a `Set` has.
+            super::set_ops::install(heap, realm, prototype);
+        }
     }
     // §24.1.3.12 and §24.2.3.11 — `[@@iterator]` is `entries` for a `Map` and `values` for a
     // `Set`, and is the same function object as the one it names.
