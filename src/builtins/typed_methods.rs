@@ -44,6 +44,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, const
         ("includes", 1, includes),
         ("indexOf", 1, index_of),
         ("join", 1, join),
+        ("toLocaleString", 0, to_locale_string),
         ("keys", 0, keys),
         ("lastIndexOf", 1, last_index_of),
         ("map", 1, map),
@@ -404,6 +405,19 @@ fn sorted_by(
         super::array_methods::within_budget(heap)?;
     }
     Ok(sorted)
+}
+
+/// §23.2.3.29 `%TypedArray%.prototype.toLocaleString`.
+///
+/// §23.1.3.32's body with `ValidateTypedArray` in front of it, and that check is the whole reason
+/// this exists as a separate function. The Array method opens with `ToObject`, which happily
+/// answers about a plain object — so without one of its own, `%TypedArray%.prototype` would
+/// inherit `Object.prototype`'s and a TypedArray method would work on things that are not
+/// TypedArrays. That is exactly what happened when `Object.prototype.toLocaleString` arrived and
+/// four tests stopped throwing.
+fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    validate(heap, call.this_value)?;
+    super::array_flat::to_locale_string(vm, heap, call)
 }
 
 /// §23.2.3.16 — `join`.

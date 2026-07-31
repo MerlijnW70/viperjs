@@ -71,6 +71,14 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         number_to_string_method,
     );
     define_method(heap, realm, number_prototype, "valueOf", 0, number_value_of);
+    define_method(
+        heap,
+        realm,
+        number_prototype,
+        "toLocaleString",
+        0,
+        number_to_locale_string,
+    );
 
     // §21.1.2 — the constants, none of them writable, enumerable or configurable.
     for (name, value) in [
@@ -224,6 +232,19 @@ fn number_value_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
         |value| matches!(value, Value::Number(_)),
         "Number.prototype.valueOf requires a number",
     )
+}
+
+/// §21.1.3.4 `Number.prototype.toLocaleString`.
+///
+/// Without ECMA-402 there is no locale to be aware of, so this is `toString` with no radix — which
+/// §21.1.3.4's note allows outright. Its own function rather than an alias of `toString`, because
+/// the two are distinct objects that a program can compare.
+fn number_to_locale_string(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    number_to_string_method(vm, heap, call)
 }
 
 /// §21.1.3.6 `Number.prototype.toString([radix])`.

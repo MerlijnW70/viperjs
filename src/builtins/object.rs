@@ -142,6 +142,21 @@ pub(super) fn text_of(heap: &mut Heap, tag: crate::heap::StringId) -> crate::hea
     heap.intern(&units)
 }
 
+/// §20.1.3.4 `Object.prototype.toLocaleString`.
+///
+/// The whole of what the core language says: call the object's **own** `toString` and answer that.
+/// It exists so that ECMA-402 and the built-ins that override it have somewhere to override, and
+/// so that `[1, {}].toLocaleString()` reaches something on every element rather than a TypeError on
+/// the ones with no locale-aware spelling of their own.
+///
+/// `Invoke`, so the `toString` the object has — inherited or given — is what runs, not the
+/// intrinsic one.
+fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let name = super::key(heap, "toString");
+    let method = vm.get_property_key(call.this_value, name, heap)?;
+    vm.call_value(method, call.this_value, &[], heap)
+}
+
 /// §20.1.3.7 `Object.prototype.valueOf` — `ToObject(this)`, which for an object is itself.
 pub fn value_of(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     match call.this_value {
@@ -339,6 +354,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
     for (name, length, native) in [
         ("toString", 0, to_string as crate::heap::Native),
+        ("toLocaleString", 0, to_locale_string),
         ("valueOf", 0, value_of),
         ("hasOwnProperty", 1, has_own_property),
         ("isPrototypeOf", 1, is_prototype_of),
@@ -547,7 +563,7 @@ pub(super) fn describe(heap: &mut Heap, realm: &Realm, property: Property) -> Va
 }
 
 /// `this` as an object, or the TypeError carrying `wanted`.
-fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Completion<ObjectId> {
+pub(super) fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Completion<ObjectId> {
     to_object(call.this_value, wanted)
 }
 
@@ -592,7 +608,7 @@ fn object_argument(value: Value, wanted: &'static str) -> Completion<ObjectId> {
 /// Two different errors, because they are two different mistakes: a rule that would not allow the
 /// property is a TypeError, and a value that is not a length at all is §10.4.2.4 step 2's
 /// RangeError. Written once so `defineProperty` and `defineProperties` cannot drift apart.
-fn defined(outcome: DefineOutcome) -> Completion<()> {
+pub(super) fn defined(outcome: DefineOutcome) -> Completion<()> {
     match outcome {
         DefineOutcome::Defined => Ok(()),
         DefineOutcome::Refused => Err(Abrupt::type_error("this property cannot be redefined")),

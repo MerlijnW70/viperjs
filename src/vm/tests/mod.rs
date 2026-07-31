@@ -16,6 +16,8 @@
 //! - `array_more` — the rest of §23.1.3: folding, quantifying, and moving elements.
 //! - `array_sort` — §23.1.3.30 and §23.1.3.34, and the order that compares spellings.
 //! - `array_copy` — §23.1.3's change-copies, and the index that throws rather than clamps.
+//! - `array_flat` — §23.1.3's flattening, and the nesting that would exhaust a stack.
+//! - `annex_b` — §B.2.2's four accessor methods, and how they differ from a descriptor.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
@@ -50,8 +52,10 @@
 //! refusals outlives the refusals it describes, and this one had to be shortened eight times.
 
 mod accessors;
+mod annex_b;
 mod arguments;
 mod array_copy;
+mod array_flat;
 mod array_methods;
 mod array_more;
 mod array_sort;

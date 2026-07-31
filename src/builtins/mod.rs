@@ -14,9 +14,11 @@
 //! an exception it should be visible next to the built-ins it governs — not buried in a heap
 //! method that also serves object literals.
 
+mod annex_b;
 pub mod array;
 pub mod array_copy;
 pub mod array_edit;
+pub mod array_flat;
 pub mod array_iterate;
 pub mod array_methods;
 pub mod array_sort;
@@ -77,6 +79,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // before it would inherit from a prototype with no methods on it yet.
     global::install(heap, realm, global);
     object::install(heap, realm, global);
+    annex_b::install(heap, realm);
     error::install(heap, realm, global);
     array::install(heap, realm, global);
     array_methods::install(heap, realm);
