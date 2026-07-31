@@ -29,12 +29,12 @@
 //! decision taken here, and it is what the suite's `Symbol.species` rows are about.
 
 use super::array_methods::{
-    callback, get_index, has_index, length_of, new_array_checked, set_index, this_object,
+    array_species_create, callback, create_index, get_index, has_index, length_of, this_object,
     within_budget,
 };
 use super::{key, set_or_throw};
 use crate::heap::{Heap, NativeCall, ObjectId};
-use crate::value::{Completion, Value};
+use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
 /// One level of §23.1.3.13.1, part-way through.
@@ -129,7 +129,7 @@ fn flatten(
                 });
             }
             _ => {
-                set_index(heap, target, written, element);
+                create_index(heap, target, written, element)?;
                 written += 1;
             }
         }
@@ -167,7 +167,11 @@ pub fn flat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
             integer as u64
         }
     };
-    let flattened = new_array_checked(vm, heap, 0)?;
+    let Value::Object(flattened) = array_species_create(vm, heap, object, 0)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     let written = flatten(vm, heap, flattened, object, length, depth, None)?;
     finish(vm, heap, flattened, written)
 }
@@ -178,7 +182,11 @@ pub fn flat_map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
     let length = length_of(vm, heap, object)?;
     // Step 3 — checked before anything is read, so an empty array with a bad mapper still throws.
     let mapper = callback(call, heap)?;
-    let flattened = new_array_checked(vm, heap, 0)?;
+    let Value::Object(flattened) = array_species_create(vm, heap, object, 0)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     // A depth of exactly one: `flatMap` maps and then flattens once, and never further, whatever
     // the mapper answered.
     let written = flatten(

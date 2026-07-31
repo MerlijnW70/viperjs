@@ -115,6 +115,11 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     ] {
         define_method(heap, realm, function, name, length, native);
     }
+    // §23.1.2.5 `get Array [@@species]` — an accessor answering `this`, which is what makes
+    // `ArraySpeciesCreate` hand a subclass of Array its own kind back from `map` and `filter` and
+    // `slice`. Without it every one of those answers a plain Array, and a subclass silently loses
+    // its type on the first method call.
+    super::buffer::define_species(heap, realm, function);
 }
 
 /// §23.1.2.1 `Array.from(items[, mapfn[, thisArg]])`.

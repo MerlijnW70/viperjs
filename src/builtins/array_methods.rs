@@ -126,6 +126,83 @@ pub(super) fn within_budget(heap: &Heap) -> Completion<()> {
     Ok(())
 }
 
+/// §7.3.23 `ArraySpeciesCreate` — the array a method that copies should answer with.
+///
+/// Not `ArrayCreate`. §23.1.3's copying methods ask the array they were given what *kind* of thing
+/// to make: a subclass of Array gets its own kind back from `map` and `filter` and `slice`, which
+/// is what `Symbol.species` is for. Only an Array is asked — step 2 answers a plain Array for any
+/// other array-like, so `Array.prototype.map.call({length: 1})` is not affected by anything the
+/// object's `constructor` says.
+///
+/// The realm check in step 4 is not written: praxis has one realm, so "the constructor came from
+/// another realm" is a condition no program here can produce.
+pub(super) fn array_species_create(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    original: ObjectId,
+    length: u64,
+) -> Completion<Value> {
+    if !heap
+        .object(original)
+        .is_some_and(crate::heap::Object::is_array)
+    {
+        return Ok(Value::Object(new_array_checked(vm, heap, length)?));
+    }
+    let name = key(heap, "constructor");
+    let mut constructor = vm.get_property_key(Value::Object(original), name, heap)?;
+    // Step 5 — the species is read off the constructor *only* when the constructor is an object.
+    // A primitive one is left alone and refused by step 7, which is why `a.constructor = 1` is a
+    // TypeError rather than quietly making a plain Array.
+    if let Value::Object(_) = constructor {
+        let Some(species) = vm.realm().well_known(super::well_known_at("species")) else {
+            return Ok(Value::Object(new_array_checked(vm, heap, length)?));
+        };
+        constructor = vm.get_property_key(constructor, PropertyKey::from_symbol(species), heap)?;
+        // Step 5.b — `null` becomes `undefined`, so both spellings of "no opinion" reach step 6.
+        if matches!(constructor, Value::Null) {
+            constructor = Value::Undefined;
+        }
+    }
+    if matches!(constructor, Value::Undefined) {
+        return Ok(Value::Object(new_array_checked(vm, heap, length)?));
+    }
+    if !heap.is_constructor(constructor) {
+        return Err(Abrupt::type_error(
+            "the species of this array is not a constructor",
+        ));
+    }
+    vm.construct_value(constructor, &[Value::Number(length as f64)], heap)
+}
+
+/// §7.3.5 `CreateDataPropertyOrThrow` — put a value at this index, or say why it could not go.
+///
+/// The half of [`set_index`] that a species result needs. When the target is a fresh Array the
+/// define cannot be refused and the two are the same; when it is whatever a `Symbol.species`
+/// handed back it may be non-extensible, or already have a non-configurable property at that
+/// index, and §23.1.3 says to throw rather than to carry on writing into something that is not
+/// listening.
+pub(super) fn create_index(
+    heap: &mut Heap,
+    object: ObjectId,
+    index: u64,
+    value: Value,
+) -> Completion<()> {
+    let name = index_key(heap, index);
+    let descriptor = PropertyDescriptor {
+        value: Some(value),
+        writable: Some(true),
+        enumerable: Some(true),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    match heap.define_own_property(object, name, &descriptor) {
+        true => Ok(()),
+        false => Err(Abrupt::type_error(
+            "this index could not be added to the array",
+        )),
+    }
+}
+
 /// Put a value at this index of an object being built — §7.3.5 `CreateDataPropertyOrThrow`.
 pub(super) fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Value) {
     let name = index_key(heap, index);
@@ -336,8 +413,13 @@ pub fn map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
-    let prototype = vm.realm().array_prototype();
-    let mapped = heap.new_array(prototype, to_index(length));
+    // §23.1.3.21 step 5 — the *species* decides what comes back, so a subclass of Array gets
+    // its own kind from `map` rather than a plain one.
+    let Value::Object(mapped) = array_species_create(vm, heap, object, length)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     for index in 0..length {
         if !has_index(vm, heap, object, index)? {
             continue;
@@ -345,7 +427,7 @@ pub fn map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
         let element = get_index(vm, heap, object, index)?;
         let arguments = [element, Value::Number(index as f64), Value::Object(object)];
         let answer = vm.call_value(function, receiver, &arguments, heap)?;
-        set_index(heap, mapped, index, answer);
+        create_index(heap, mapped, index, answer)?;
     }
     Ok(Value::Object(mapped))
 }
@@ -356,8 +438,11 @@ pub fn filter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
-    let prototype = vm.realm().array_prototype();
-    let kept = heap.new_array(prototype, 0);
+    let Value::Object(kept) = array_species_create(vm, heap, object, 0)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     let mut at = 0_u64;
     for index in 0..length {
         if !has_index(vm, heap, object, index)? {
@@ -369,7 +454,7 @@ pub fn filter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
         if answer.to_boolean(heap) {
             // The result is packed: the indices of what was kept are consecutive, whatever they
             // were in the original. That is why `filter` cannot answer with holes.
-            set_index(heap, kept, at, element);
+            create_index(heap, kept, at, element)?;
             at += 1;
         }
     }
@@ -385,15 +470,18 @@ pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         Value::Undefined => length,
         value => start_index(vm, heap, value, length)?,
     };
-    let prototype = vm.realm().array_prototype();
-    let taken = heap.new_array(prototype, 0);
+    let Value::Object(taken) = array_species_create(vm, heap, object, 0)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     let mut at = 0_u64;
     for index in from..to.max(from) {
         // §23.1.3.25 step 9.b — a hole stays a hole, so `slice` is one of the few that can
         // answer with one.
         if has_index(vm, heap, object, index)? {
             let element = get_index(vm, heap, object, index)?;
-            set_index(heap, taken, at, element);
+            create_index(heap, taken, at, element)?;
         }
         at += 1;
     }
@@ -417,15 +505,6 @@ pub(super) fn new_array_checked(vm: &mut Vm, heap: &mut Heap, length: u64) -> Co
     };
     let prototype = vm.realm().array_prototype();
     Ok(heap.new_array(prototype, size))
-}
-
-/// A length as the count an Array's `length` property can hold.
-///
-/// `LengthOfArrayLike` allows up to `2^53 - 1` and an Array's `length` stops at `2^32 - 1`, so an
-/// array-like longer than an Array can be is clamped rather than refused — the methods that build
-/// a result would otherwise fail on an object no Array could have been.
-pub(super) fn to_index(length: u64) -> u32 {
-    u32::try_from(length).unwrap_or(u32::MAX - 1)
 }
 
 /// Build `Array.prototype`'s methods into `heap`.

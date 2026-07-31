@@ -12,8 +12,8 @@
 //! `1 in a` answer differently, which is exactly the difference a hole exists to record.
 
 use super::array_methods::{
-    fits, get_index, has_index, index_key, length_of, set_index, spliced_length, start_index,
-    this_object,
+    array_species_create, create_index, fits, get_index, has_index, index_key, length_of,
+    spliced_length, start_index, this_object,
 };
 use super::{delete_or_throw, key, set_or_throw};
 use crate::heap::{Heap, NativeCall, ObjectId};
@@ -185,12 +185,15 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     };
     // What was taken out, as an Array of its own — holes included, since it is built the same way
     // `slice` builds one.
-    let prototype = vm.realm().array_prototype();
-    let removed = heap.new_array(prototype, 0);
+    let Value::Object(removed) = array_species_create(vm, heap, object, removed_count)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     for offset in 0..removed_count {
         if has_index(vm, heap, object, start + offset)? {
             let element = get_index(vm, heap, object, start + offset)?;
-            set_index(heap, removed, offset, element);
+            create_index(heap, removed, offset, element)?;
         }
     }
     write_length(vm, heap, removed, removed_count)?;
@@ -254,8 +257,11 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 /// inside an array stays an array, which is why `flat` had to be added later.
 pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = this_object(vm, heap, call)?;
-    let prototype = vm.realm().array_prototype();
-    let joined = heap.new_array(prototype, 0);
+    let Value::Object(joined) = array_species_create(vm, heap, object, 0)? else {
+        return Err(Abrupt::type_error(
+            "the species of this array did not make an object",
+        ));
+    };
     let mut at = 0_u64;
     let mut sources = vec![Value::Object(object)];
     sources.extend_from_slice(call.arguments);
@@ -263,12 +269,12 @@ pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
         let spreadable = matches!(source, Value::Object(id)
             if heap.object(id).is_some_and(crate::heap::Object::is_array));
         let Value::Object(id) = source else {
-            set_index(heap, joined, at, source);
+            create_index(heap, joined, at, source)?;
             at += 1;
             continue;
         };
         if !spreadable {
-            set_index(heap, joined, at, source);
+            create_index(heap, joined, at, source)?;
             at += 1;
             continue;
         }
@@ -278,7 +284,7 @@ pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
             // its gap rather than filling it with `undefined`.
             if has_index(vm, heap, id, index)? {
                 let element = get_index(vm, heap, id, index)?;
-                set_index(heap, joined, at, element);
+                create_index(heap, joined, at, element)?;
             }
             at += 1;
         }

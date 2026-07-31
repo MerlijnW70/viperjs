@@ -1041,14 +1041,6 @@ built-ins/AggregateError/proto-from-ctor-realm.js :: it threw TypeError: what wa
 built-ins/AggregateError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/S15.4.5.2_A3_T2.js :: it threw RangeError: an array length must be an integer index
 built-ins/Array/S15.4.5.2_A3_T2.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Array/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/return-value.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/return-value.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/symbol-species-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/elements-deleted-after.js :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
@@ -1174,10 +1166,6 @@ built-ins/Array/prototype/concat/arg-length-exceeding-integer-limit.js :: it thr
 built-ins/Array/prototype/concat/arg-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: [1].concat(spreadableLengthOutOfRange) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/arg-length-near-integer-limit.js :: it threw an object with no name: [].concat(spreadableHasPoisonedIndex) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/arg-length-near-integer-limit.js (strict) :: it threw an object with no name: [].concat(spreadableHasPoisonedIndex) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-ctor-non-object.js :: it threw an object with no name: a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-ctor-non-object.js (strict) :: it threw an object with no name: a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-ctor-poisoned.js :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-ctor-poisoned.js (strict) :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -1186,26 +1174,10 @@ built-ins/Array/prototype/concat/create-proxy.js :: it threw ReferenceError: Pro
 built-ins/Array/prototype/concat/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/concat/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/concat/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/concat/create-species-abrupt.js :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-abrupt.js (strict) :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-non-ctor.js :: it threw an object with no name: a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-non-ctor.js (strict) :: it threw an object with no name: a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-non-extensible-spreadable.js :: it threw an object with no name: arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-non-extensible-spreadable.js (strict) :: it threw an object with no name: arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-non-extensible.js :: it threw an object with no name: arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-non-extensible.js (strict) :: it threw an object with no name: arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-poisoned.js :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-poisoned.js (strict) :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-with-non-configurable-property-spreadable.js :: it threw an object with no name: arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-with-non-configurable-property-spreadable.js (strict) :: it threw an object with no name: arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-with-non-configurable-property.js :: it threw an object with no name: arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species-with-non-configurable-property.js (strict) :: it threw an object with no name: arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/create-species.js :: it threw an object with no name: The value of callCount is expected to be 1 Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/concat/create-species.js (strict) :: it threw an object with no name: The value of callCount is expected to be 1 Expected SameValue(«0», «1») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-get-err.js :: it threw an object with no name: Array.prototype.concat.call(o) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/is-concat-spreadable-get-err.js (strict) :: it threw an object with no name: Array.prototype.concat.call(o) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/is-concat-spreadable-get-order.js :: it threw an object with no name: Actual [] and expected [constructor, isConcatSpreadable] should have the same contents. The value of calls is expected to be ["constructor", "isConcatSpreadable"]
-built-ins/Array/prototype/concat/is-concat-spreadable-get-order.js (strict) :: it threw an object with no name: Actual [] and expected [constructor, isConcatSpreadable] should have the same contents. The value of calls is expected to be ["constructor", "isConcatSpreadable"]
+built-ins/Array/prototype/concat/is-concat-spreadable-get-order.js :: it threw an object with no name: Actual [constructor] and expected [constructor, isConcatSpreadable] should have the same contents. The value of calls is expected to be ["constructor", "isConcatSpreadable"]
+built-ins/Array/prototype/concat/is-concat-spreadable-get-order.js (strict) :: it threw an object with no name: Actual [constructor] and expected [constructor, isConcatSpreadable] should have the same contents. The value of calls is expected to be ["constructor", "isConcatSpreadable"]
 built-ins/Array/prototype/concat/is-concat-spreadable-is-array-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/concat/is-concat-spreadable-is-array-proxy-revoked.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/concat/is-concat-spreadable-proxy-revoked.js :: it threw ReferenceError: Proxy is not defined
@@ -1256,10 +1228,6 @@ built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-23.js :: it threw ReferenceEr
 built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-23.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/filter/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/filter/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-ctor-non-object.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-ctor-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-ctor-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -1268,22 +1236,10 @@ built-ins/Array/prototype/filter/create-proxy.js :: it threw ReferenceError: Pro
 built-ins/Array/prototype/filter/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/filter/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/filter/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/filter/create-species-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-species-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-species-non-ctor.js :: it threw an object with no name: a.filter(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-species-non-ctor.js (strict) :: it threw an object with no name: a.filter(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-species-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-species-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/create-species.js :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/filter/create-species.js (strict) :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
 built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/filter/target-array-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/filter/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1306,32 +1262,14 @@ built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/flat/non-object-ctor-throws.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flat/non-object-ctor-throws.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flat/proxy-access-count.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/flat/proxy-access-count.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/flat/target-array-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flat/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flat/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flat/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js (strict) :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/proxy-access-count.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/flatMap/proxy-access-count.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/flatMap/target-array-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-non-object.js :: it threw an object with no name: a.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-non-object.js (strict) :: it threw an object with no name: a.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.js :: it threw an object with no name: arr.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.js (strict) :: it threw an object with no name: arr.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.js :: it threw an object with no name: Return abrupt completion from species custom ctor Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.js (strict) :: it threw an object with no name: Return abrupt completion from species custom ctor Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: returned value is an instance of custom ctor
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: returned value is an instance of custom ctor
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species.js :: it threw an object with no name: The value of called is expected to be 1 Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/flatMap/this-value-ctor-object-species.js (strict) :: it threw an object with no name: The value of called is expected to be 1 Expected SameValue(«0», «1») to be true
+built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
+built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with no name: result !== true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js (strict) :: it threw an object with no name: result !== true
 built-ins/Array/prototype/forEach/15.4.4.18-1-12.js :: it threw ReferenceError: RegExp is not defined
@@ -1390,10 +1328,6 @@ built-ins/Array/prototype/map/15.4.4.19-5-7.js :: it threw ReferenceError: eval 
 built-ins/Array/prototype/map/15.4.4.19-5-7.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/map/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/map/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/map/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-ctor-non-object.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-ctor-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-ctor-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -1402,22 +1336,10 @@ built-ins/Array/prototype/map/create-proxy.js :: it threw ReferenceError: Proxy 
 built-ins/Array/prototype/map/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/map/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/map/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-species-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-species-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-species-non-ctor.js :: it threw an object with no name: a.map(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-species-non-ctor.js (strict) :: it threw an object with no name: a.map(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-species-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/create-species-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/map/create-species-undef-invalid-len.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/map/create-species-undef-invalid-len.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/map/create-species.js :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/map/create-species.js (strict) :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
 built-ins/Array/prototype/map/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/map/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/map/target-array-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/map/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/throws-if-integer-limit-exceeded.js :: it threw an object with no name: Length is 2**53 - 1 Expected a TypeError to be thrown but no exception was thrown at all
@@ -1446,10 +1368,6 @@ built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an o
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-ctor-non-object.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-ctor-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-ctor-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -1460,24 +1378,12 @@ built-ins/Array/prototype/slice/create-proxy.js :: it threw ReferenceError: Prox
 built-ins/Array/prototype/slice/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/slice/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/slice/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/slice/create-species-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-species-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-species-neg-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/slice/create-species-neg-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/slice/create-species-non-ctor.js :: it threw an object with no name: a.slice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-species-non-ctor.js (strict) :: it threw an object with no name: a.slice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-species-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-species-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/create-species.js :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/slice/create-species.js (strict) :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
+built-ins/Array/prototype/slice/create-species.js :: it threw an object with no name: Expected SameValue(«0», «3») to be true
+built-ins/Array/prototype/slice/create-species.js (strict) :: it threw an object with no name: Expected SameValue(«0», «3») to be true
 built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/slice/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/slice/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/slice/target-array-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/slice/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/some/15.4.4.17-1-10.js :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
 built-ins/Array/prototype/some/15.4.4.17-1-10.js (strict) :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
 built-ins/Array/prototype/some/15.4.4.17-1-12.js :: it threw ReferenceError: RegExp is not defined
@@ -1498,10 +1404,6 @@ built-ins/Array/prototype/sort/comparefn-grow.js :: it threw ReferenceError: Big
 built-ins/Array/prototype/sort/comparefn-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/splice/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-ctor-non-object.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-ctor-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-ctor-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -1510,26 +1412,12 @@ built-ins/Array/prototype/splice/create-proxy.js :: it threw ReferenceError: Pro
 built-ins/Array/prototype/splice/create-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/splice/create-revoked-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/splice/create-revoked-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-species-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species-neg-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/splice/create-species-neg-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/splice/create-species-non-ctor.js :: it threw an object with no name: a.splice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-species-non-ctor.js (strict) :: it threw an object with no name: a.splice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-species-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/create-species-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/splice/create-species-undef-invalid-len.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/splice/create-species-undef-invalid-len.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/splice/create-species.js :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/splice/create-species.js (strict) :: it threw an object with no name: Constructor invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [] should have the same contents.
-built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [] should have the same contents.
-built-ins/Array/prototype/splice/target-array-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/splice/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw ReferenceError: Proxy is not defined
+built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError

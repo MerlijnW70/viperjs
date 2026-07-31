@@ -18,6 +18,7 @@
 //! - `array_copy` — §23.1.3's change-copies, and the index that throws rather than clamps.
 //! - `array_flat` — §23.1.3's flattening, and the nesting that would exhaust a stack.
 //! - `annex_b` — §B.2.2's four accessor methods, and how they differ from a descriptor.
+//! - `species` — §7.3.23, and what a copying method answers *with*.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
@@ -87,6 +88,7 @@ mod parameters;
 mod private;
 mod promises;
 mod reflection;
+mod species;
 mod statements;
 mod strict;
 mod string_methods;
