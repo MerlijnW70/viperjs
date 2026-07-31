@@ -165,6 +165,7 @@ fn this_regexp(heap: &Heap, receiver: Value) -> Completion<ObjectId> {
 }
 
 /// §22.2.7.2 `RegExpBuiltinExec`.
+#[allow(clippy::manual_clamp)] // `clamp` answers NaN for NaN; §7.1.20 says a NaN index is 0
 pub(super) fn builtin_exec(
     vm: &mut Vm,
     heap: &mut Heap,
