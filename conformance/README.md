@@ -12,8 +12,16 @@ on" was a judgement call; now it is a number with a work list attached.
 test262 is vendored, never committed:
 
 ```
-git clone --depth 1 https://github.com/tc39/test262 conformance/test262
+git clone --depth 1 https://github.com/tc39/test262 ../test262
+export TEST262=../test262        # or pass --test262 on every run
 ```
+
+**Clone it outside the working tree.** `conformance/test262/` is gitignored and the runner has
+always taken a path, so either location works for the suite — but mutation testing copies the whole
+working tree into up to nine throwaway worktrees, and test262 is 42,000 files. Measured on this
+machine: 42.7 seconds to copy it with an eight-thread copy against 0.3 seconds for the whole of
+`src/`, which is six to nine minutes of file copying before the first mutant compiles. Keeping it
+outside is the difference between a mutation run you wait for and one you plan around.
 
 The runner records the checkout's commit in `expectations.txt`'s header and says so when a later
 run disagrees. The suite moves; a conformance number without a suite revision is not a number.
