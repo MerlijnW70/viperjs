@@ -4457,16 +4457,6 @@ built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw an obj
 built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Map/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Map/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/prototype/clear/context-is-weakmap-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/clear/context-is-weakmap-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/delete/context-is-weakmap-object-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/delete/context-is-weakmap-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/entries/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/entries/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/forEach/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/forEach/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/get/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/get/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values.js :: it threw TypeError: what was called is not a function
@@ -4504,8 +4494,6 @@ built-ins/Map/prototype/getOrInsertComputed/different-types-function-callbackfn-
 built-ins/Map/prototype/getOrInsertComputed/different-types-function-callbackfn-does-not-throw.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/does-not-evaluate-callbackfn-if-key-present.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/does-not-evaluate-callbackfn-if-key-present.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/prototype/getOrInsertComputed/does-not-have-mapdata-internal-slot-weakmap.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/Map/prototype/getOrInsertComputed/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw ReferenceError: WeakMap is not defined
 built-ins/Map/prototype/getOrInsertComputed/getOrInsertComputed.js :: it threw an object with no name: getOrInsertComputed should be a function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Map/prototype/getOrInsertComputed/getOrInsertComputed.js (strict) :: it threw an object with no name: getOrInsertComputed should be a function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Map/prototype/getOrInsertComputed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -4518,16 +4506,6 @@ built-ins/Map/prototype/getOrInsertComputed/returns-value-if-key-is-present-diff
 built-ins/Map/prototype/getOrInsertComputed/returns-value-if-key-is-present-different-key-types.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/returns-value-normalized-zero-key.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/returns-value-normalized-zero-key.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/prototype/has/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/has/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/keys/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/keys/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/set/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/set/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/size/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/size/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/values/does-not-have-mapdata-internal-slot-weakmap.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Map/prototype/values/does-not-have-mapdata-internal-slot-weakmap.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Math/Symbol.toStringTag.js :: it threw an object with no name: Expected SameValue(«undefined», «"Math"») to be true
 built-ins/Math/Symbol.toStringTag.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"Math"») to be true
 built-ins/Math/f16round/length.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -5380,10 +5358,6 @@ built-ins/Object/prototype/toString/symbol-tag-set-builtin.js :: it threw an obj
 built-ins/Object/prototype/toString/symbol-tag-set-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-string-builtin.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-string-builtin.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Iterator]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-weakmap-builtin.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/Object/prototype/toString/symbol-tag-weakmap-builtin.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/Object/prototype/toString/symbol-tag-weakset-builtin.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/Object/prototype/toString/symbol-tag-weakset-builtin.js (strict) :: it threw ReferenceError: WeakSet is not defined
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.prototype.valueOf requires an object
@@ -5414,12 +5388,8 @@ built-ins/Object/seal/seal-regexp.js :: it threw ReferenceError: RegExp is not d
 built-ins/Object/seal/seal-regexp.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Object/seal/seal-sharedarraybuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 built-ins/Object/seal/seal-sharedarraybuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-built-ins/Object/seal/seal-weakmap.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/Object/seal/seal-weakmap.js (strict) :: it threw ReferenceError: WeakMap is not defined
 built-ins/Object/seal/seal-weakref.js :: it threw ReferenceError: WeakRef is not defined
 built-ins/Object/seal/seal-weakref.js (strict) :: it threw ReferenceError: WeakRef is not defined
-built-ins/Object/seal/seal-weakset.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/Object/seal/seal-weakset.js (strict) :: it threw ReferenceError: WeakSet is not defined
 built-ins/Object/seal/throws-when-false.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/seal/throws-when-false.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Object/setPrototypeOf/set-error.js :: it threw ReferenceError: Proxy is not defined
@@ -7211,12 +7181,6 @@ built-ins/Set/Symbol.species/symbol-species.js :: it threw TypeError: cannot rea
 built-ins/Set/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Set/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Set/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Set/prototype/add/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/add/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/clear/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/clear/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/delete/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/delete/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/difference/add-not-called.js :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/difference/add-not-called.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/difference/builtins.js :: it threw an object with no name: Built-in objects must be extensible. Expected SameValue(«false», «true») to be true
@@ -7255,12 +7219,6 @@ built-ins/Set/prototype/difference/subclass-symbol-species.js :: it threw TypeEr
 built-ins/Set/prototype/difference/subclass-symbol-species.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/difference/subclass.js :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/difference/subclass.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/forEach/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/forEach/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/has/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/has/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/prototype/intersection/add-not-called.js :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/intersection/add-not-called.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/intersection/builtins.js :: it threw an object with no name: Built-in objects must be extensible. Expected SameValue(«false», «true») to be true
@@ -7463,8 +7421,6 @@ built-ins/Set/prototype/union/subclass.js :: it threw TypeError: what was called
 built-ins/Set/prototype/union/subclass.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/union/union.js :: it threw an object with no name: `typeof Set.prototype.union` is `'function'` Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Set/prototype/union/union.js (strict) :: it threw an object with no name: `typeof Set.prototype.union` is `'function'` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-weakset.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Set/prototype/values/does-not-have-setdata-internal-slot-weakset.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Set/set-iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Error but got a RangeError
 built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Error but got a RangeError
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -14011,285 +13967,63 @@ built-ins/Uint8Array/prototype/toHex/nonconstructor.js :: it threw an object wit
 built-ins/Uint8Array/prototype/toHex/nonconstructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Uint8Array/prototype/toHex/results.js :: it threw TypeError: what was called is not a function
 built-ins/Uint8Array/prototype/toHex/results.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakMap/constructor.js :: it threw an object with no name: typeof WeakMap is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakMap/constructor.js (strict) :: it threw an object with no name: typeof WeakMap is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakMap/empty-iterable.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/empty-iterable.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/get-set-method-failure.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/get-set-method-failure.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/is-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/is-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterable-failure.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/iterable-failure.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/iterable-with-object-keys.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterable-with-object-keys.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterable-with-symbol-keys.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterable-with-symbol-keys.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterator-close-after-set-failure.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterator-close-after-set-failure.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/iterator-items-keys-cannot-be-held-weakly.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/iterator-items-keys-cannot-be-held-weakly.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/iterator-next-failure.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-next-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-value-failure.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/iterator-value-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakMap/length.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/length.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/name.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/name.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/no-iterable.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/no-iterable.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/properties-of-map-instances.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/properties-of-map-instances.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/properties-of-the-weakmap-prototype-object.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/properties-of-the-weakmap-prototype-object.js (strict) :: it threw ReferenceError: WeakMap is not defined
+built-ins/WeakMap/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/WeakMap/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakMap/prototype-of-weakmap.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype-of-weakmap.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/Symbol.toStringTag.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-object-key-initial-iterable.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-object-key-initial-iterable.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-symbol-key-initial-iterable.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-symbol-key-initial-iterable.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete-entry-with-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/delete.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/length.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/length.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/name.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/name.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/not-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/not-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/returns-false-if-key-cannot-be-held-weakly.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/returns-false-if-key-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/returns-false-when-object-key-not-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/returns-false-when-object-key-not-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/returns-false-when-symbol-key-not-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/returns-false-when-symbol-key-not-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/delete/this-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/delete/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/get/does-not-have-weakmapdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/get/does-not-have-weakmapdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/get/does-not-have-weakmapdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/get/does-not-have-weakmapdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/get/does-not-have-weakmapdata-internal-slot.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/does-not-have-weakmapdata-internal-slot.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/get.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/get.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/length.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/length.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/name.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/name.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/not-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/not-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-undefined-if-key-cannot-be-held-weakly.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-undefined-if-key-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-undefined-with-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-undefined-with-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-undefined-with-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-undefined-with-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-value-with-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-value-with-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-value-with-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/returns-value-with-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/get/this-not-object-throw.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/get/this-not-object-throw.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/adds-symbol-element.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/adds-symbol-element.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsert/getOrInsert.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/getOrInsert.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/length.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/length.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/name.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/name.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/not-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/not-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/this-not-object-throw.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/this-not-object-throw.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/throw-if-key-cannot-be-held-weakly.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsert/throw-if-key-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/adds-object-element.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/adds-object-element.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/adds-symbol-element.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/adds-symbol-element.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/adds-value-different-callbackfn.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/adds-value-different-callbackfn.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/callbackfn-throws.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/callbackfn-throws.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/check-callback-fn-args.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-evaluate-callbackfn-if-key-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-evaluate-callbackfn-if-key-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/getOrInsertComputed/getOrInsertComputed.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/getOrInsertComputed.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/not-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/not-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/not-a-function-callbackfn-throws.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/not-a-function-callbackfn-throws.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/overwrites-mutation-from-callbackfn.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/overwrites-mutation-from-callbackfn.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/this-not-object-throw.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/getOrInsertComputed/this-not-object-throw.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/has.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/has.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/length.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/length.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/name.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/name.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/not-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/not-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-false-when-key-cannot-be-held-weakly.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-false-when-key-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-false-when-object-key-not-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-false-when-object-key-not-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-false-when-symbol-key-not-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-false-when-symbol-key-not-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-true-when-object-key-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-true-when-object-key-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-true-when-symbol-key-present.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/returns-true-when-symbol-key-present.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/has/this-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/has/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/prototype-attributes.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/prototype-attributes.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/adds-object-element.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/adds-object-element.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/adds-symbol-element.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/adds-symbol-element.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/does-not-have-weakmapdata-internal-slot-weakmap-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/length.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/length.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/name.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/name.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/not-a-constructor.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/not-a-constructor.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/returns-this-when-ignoring-duplicate.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/returns-this-when-ignoring-duplicate.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/returns-this.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/returns-this.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/set.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/set.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/this-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/prototype/set/throw-if-key-cannot-be-held-weakly.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/prototype/set/throw-if-key-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/set-not-callable-throws.js :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/set-not-callable-throws.js (strict) :: it threw ReferenceError: WeakMap is not defined
-built-ins/WeakMap/undefined-newtarget.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/undefined-newtarget.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakMap/weakmap.js :: it threw an object with no name: WeakMap should be an own property
-built-ins/WeakMap/weakmap.js (strict) :: it threw an object with no name: WeakMap should be an own property
+built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/adds-symbol-element.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/adds-symbol-element.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/getOrInsert.js :: it threw an object with no name: typeof WeakMap.prototype.getOrInsert is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/WeakMap/prototype/getOrInsert/getOrInsert.js (strict) :: it threw an object with no name: typeof WeakMap.prototype.getOrInsert is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/WeakMap/prototype/getOrInsert/length.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/WeakMap/prototype/getOrInsert/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/WeakMap/prototype/getOrInsert/name.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/WeakMap/prototype/getOrInsert/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/WeakMap/prototype/getOrInsert/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/WeakMap/prototype/getOrInsert/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-object-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-symbol-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-not-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-object-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-symbol-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsert/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/adds-object-element.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/adds-object-element.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/adds-symbol-element.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/adds-symbol-element.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/adds-value-different-callbackfn.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/adds-value-different-callbackfn.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/callbackfn-throws.js :: it threw an object with no name: [object Function] Expected a Error but got a TypeError
+built-ins/WeakMap/prototype/getOrInsertComputed/callbackfn-throws.js (strict) :: it threw an object with no name: [object Function] Expected a Error but got a TypeError
+built-ins/WeakMap/prototype/getOrInsertComputed/check-callback-fn-args.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js :: it threw an object with no name: Expected a Error but got a TypeError
+built-ins/WeakMap/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js (strict) :: it threw an object with no name: Expected a Error but got a TypeError
+built-ins/WeakMap/prototype/getOrInsertComputed/does-not-evaluate-callbackfn-if-key-present.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/does-not-evaluate-callbackfn-if-key-present.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/getOrInsertComputed.js :: it threw an object with no name: getOrInsertComputed should be a function Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/WeakMap/prototype/getOrInsertComputed/getOrInsertComputed.js (strict) :: it threw an object with no name: getOrInsertComputed should be a function Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/WeakMap/prototype/getOrInsertComputed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/WeakMap/prototype/getOrInsertComputed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/WeakMap/prototype/getOrInsertComputed/overwrites-mutation-from-callbackfn.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/overwrites-mutation-from-callbackfn.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-object-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-symbol-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-not-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakRef/constructor.js :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/WeakRef/constructor.js (strict) :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/WeakRef/instance-extensible.js :: it threw ReferenceError: WeakRef is not defined
@@ -14348,176 +14082,10 @@ built-ins/WeakRef/throws-when-target-cannot-be-held-weakly.js :: it threw an obj
 built-ins/WeakRef/throws-when-target-cannot-be-held-weakly.js (strict) :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/WeakRef/undefined-newtarget-throws.js :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/WeakRef/undefined-newtarget-throws.js (strict) :: it threw an object with no name: typeof WeakRef is function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakSet/add-not-callable-throws.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/add-not-callable-throws.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/constructor.js :: it threw an object with no name: typeof WeakSet is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakSet/constructor.js (strict) :: it threw an object with no name: typeof WeakSet is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/WeakSet/empty-iterable.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/empty-iterable.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/get-add-method-failure.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/get-add-method-failure.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/is-a-constructor.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/is-a-constructor.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterable-failure.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/iterable-failure.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/iterable-with-object-values.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterable-with-object-values.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterable-with-symbol-values.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterable-with-symbol-values.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/iterator-next-failure.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakSet/iterator-next-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakSet/iterator-value-failure.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakSet/iterator-value-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/WeakSet/length.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/length.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/name.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/name.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/no-iterable.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/no-iterable.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/properties-of-the-weakset-prototype-object.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/properties-of-the-weakset-prototype-object.js (strict) :: it threw ReferenceError: WeakSet is not defined
+built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakSet/prototype-of-weakset.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype-of-weakset.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/Symbol.toStringTag.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/add.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/add.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/adds-object-element.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/adds-object-element.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/adds-symbol-element.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/adds-symbol-element.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-weakset-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/does-not-have-weaksetdata-internal-slot-weakset-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/length.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/length.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/name.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/name.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/not-a-constructor.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/not-a-constructor.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this-symbol.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this-symbol.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this-when-ignoring-duplicate-symbol.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this-when-ignoring-duplicate-symbol.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this-when-ignoring-duplicate.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this-when-ignoring-duplicate.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/returns-this.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/this-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/add/throw-when-value-cannot-be-held-weakly.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/add/throw-when-value-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/constructor/weakset-prototype-constructor-intrinsic.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/constructor/weakset-prototype-constructor-intrinsic.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/constructor/weakset-prototype-constructor.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/constructor/weakset-prototype-constructor.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete-entry-initial-iterable.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete-entry-initial-iterable.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete-object-entry.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete-object-entry.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete-symbol-entry.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete-symbol-entry.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/delete.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-weakset-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/does-not-have-weaksetdata-internal-slot-weakset-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/length.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/length.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/name.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/name.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/not-a-constructor.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/not-a-constructor.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/returns-false-when-delete-is-noop.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/returns-false-when-delete-is-noop.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/returns-false-when-value-cannot-be-held-weakly.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/returns-false-when-value-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/delete/this-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/delete/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-array.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-array.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-map.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-map.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-object.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-object.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-set.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-set.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-weakset-prototype.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/does-not-have-weaksetdata-internal-slot-weakset-prototype.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/has.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/has.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/length.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/length.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/name.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/name.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/not-a-constructor.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/not-a-constructor.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-false-when-object-value-not-present.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-false-when-object-value-not-present.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-false-when-symbol-value-not-present.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-false-when-symbol-value-not-present.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-false-when-value-cannot-be-held-weakly.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-false-when-value-cannot-be-held-weakly.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-true-when-object-value-present.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-true-when-object-value-present.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-true-when-symbol-value-present.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/returns-true-when-symbol-value-present.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/has/this-not-object-throw-boolean.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-boolean.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-null.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-null.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-number.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-number.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-string.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-string.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-undefined.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/has/this-not-object-throw-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/prototype/prototype-attributes.js :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/prototype/prototype-attributes.js (strict) :: it threw ReferenceError: WeakSet is not defined
-built-ins/WeakSet/undefined-newtarget.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/undefined-newtarget.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/WeakSet/weakset.js :: it threw an object with no name: WeakSet should be an own property
-built-ins/WeakSet/weakset.js (strict) :: it threw an object with no name: WeakSet should be an own property
 built-ins/decodeURI/S15.1.3.1_A1.10_T1.js :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
 built-ins/decodeURI/S15.1.3.1_A1.10_T1.js (strict) :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
 built-ins/decodeURI/S15.1.3.1_A1.11_T1.js :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
@@ -15671,12 +15239,8 @@ language/expressions/class/subclass-builtins/subclass-RegExp.js :: it threw Refe
 language/expressions/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/expressions/class/subclass-builtins/subclass-WeakMap.js :: it threw ReferenceError: WeakMap is not defined
-language/expressions/class/subclass-builtins/subclass-WeakMap.js (strict) :: it threw ReferenceError: WeakMap is not defined
 language/expressions/class/subclass-builtins/subclass-WeakRef.js :: it threw ReferenceError: WeakRef is not defined
 language/expressions/class/subclass-builtins/subclass-WeakRef.js (strict) :: it threw ReferenceError: WeakRef is not defined
-language/expressions/class/subclass-builtins/subclass-WeakSet.js :: it threw ReferenceError: WeakSet is not defined
-language/expressions/class/subclass-builtins/subclass-WeakSet.js (strict) :: it threw ReferenceError: WeakSet is not defined
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -17123,12 +16687,8 @@ language/statements/class/subclass-builtins/subclass-RegExp.js :: it threw Refer
 language/statements/class/subclass-builtins/subclass-RegExp.js (strict) :: it threw ReferenceError: RegExp is not defined
 language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js :: it threw ReferenceError: SharedArrayBuffer is not defined
 language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js (strict) :: it threw ReferenceError: SharedArrayBuffer is not defined
-language/statements/class/subclass-builtins/subclass-WeakMap.js :: it threw ReferenceError: WeakMap is not defined
-language/statements/class/subclass-builtins/subclass-WeakMap.js (strict) :: it threw ReferenceError: WeakMap is not defined
 language/statements/class/subclass-builtins/subclass-WeakRef.js :: it threw ReferenceError: WeakRef is not defined
 language/statements/class/subclass-builtins/subclass-WeakRef.js (strict) :: it threw ReferenceError: WeakRef is not defined
-language/statements/class/subclass-builtins/subclass-WeakSet.js :: it threw ReferenceError: WeakSet is not defined
-language/statements/class/subclass-builtins/subclass-WeakSet.js (strict) :: it threw ReferenceError: WeakSet is not defined
 language/statements/class/subclass/builtin-objects/Function/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/class/subclass/builtin-objects/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -17151,14 +16711,6 @@ language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-
 language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js (strict) :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js (strict) :: it threw TypeError: a class may only extend a constructor or null
-language/statements/class/subclass/builtin-objects/WeakMap/regular-subclassing.js :: it threw ReferenceError: WeakMap is not defined
-language/statements/class/subclass/builtin-objects/WeakMap/regular-subclassing.js (strict) :: it threw ReferenceError: WeakMap is not defined
-language/statements/class/subclass/builtin-objects/WeakMap/super-must-be-called.js :: it threw ReferenceError: WeakMap is not defined
-language/statements/class/subclass/builtin-objects/WeakMap/super-must-be-called.js (strict) :: it threw ReferenceError: WeakMap is not defined
-language/statements/class/subclass/builtin-objects/WeakSet/regular-subclassing.js :: it threw ReferenceError: WeakSet is not defined
-language/statements/class/subclass/builtin-objects/WeakSet/regular-subclassing.js (strict) :: it threw ReferenceError: WeakSet is not defined
-language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.js :: it threw ReferenceError: WeakSet is not defined
-language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.js (strict) :: it threw ReferenceError: WeakSet is not defined
 language/statements/class/subclass/default-constructor-spread-override.js :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/default-constructor-spread-override.js (strict) :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all

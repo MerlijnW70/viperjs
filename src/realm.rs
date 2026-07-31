@@ -72,6 +72,10 @@ pub struct Realm {
     map_prototype: ObjectId,
     /// %Set.prototype% — §24.2.3.
     set_prototype: ObjectId,
+    /// %WeakMap.prototype% — §24.3.3.
+    weak_map_prototype: ObjectId,
+    /// %WeakSet.prototype% — §24.4.3.
+    weak_set_prototype: ObjectId,
     /// %MapIteratorPrototype% — §24.1.5, which inherits from %IteratorPrototype% and so is handed
     /// `[@@iterator]` by it.
     map_iterator_prototype: ObjectId,
@@ -190,6 +194,8 @@ impl Realm {
         let typed_array_prototype = heap.new_object(Some(object_prototype));
         let map_prototype = heap.new_object(Some(object_prototype));
         let set_prototype = heap.new_object(Some(object_prototype));
+        let weak_map_prototype = heap.new_object(Some(object_prototype));
+        let weak_set_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let set_iterator_prototype = heap.new_object(Some(iterator_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
@@ -267,6 +273,8 @@ impl Realm {
             typed_array_prototype,
             map_prototype,
             set_prototype,
+            weak_map_prototype,
+            weak_set_prototype,
             map_iterator_prototype,
             set_iterator_prototype,
             aggregate_error_prototype,
@@ -390,6 +398,18 @@ impl Realm {
     /// %Map.prototype% — §24.1.3.
     pub fn map_prototype(&self) -> ObjectId {
         self.map_prototype
+    }
+
+    /// %WeakMap.prototype% — §24.3.3.
+    #[must_use]
+    pub fn weak_map_prototype(&self) -> ObjectId {
+        self.weak_map_prototype
+    }
+
+    /// %WeakSet.prototype% — §24.4.3.
+    #[must_use]
+    pub fn weak_set_prototype(&self) -> ObjectId {
+        self.weak_set_prototype
     }
 
     /// %Set.prototype% — §24.2.3.

@@ -283,7 +283,7 @@ fn construct(
 /// Every method starts here, and the check is about the *internal slot* rather than the prototype:
 /// `Map.prototype.get.call({})` throws because the object is not a Map, not because it is missing a
 /// method. That is what makes these methods safe to borrow onto a subclass and unsafe to fake.
-fn collection_of(
+pub(super) fn collection_of(
     heap: &Heap,
     this: Value,
     kind: CollectionKind,
@@ -359,7 +359,7 @@ fn add(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> 
 /// Two statements rather than one, because the lookup asks the heap about String contents and the
 /// change writes to the heap: holding the collection open across both would be borrowing the heap
 /// to read while it is borrowed to write.
-fn place(heap: &mut Heap, object: ObjectId, key: Value, value: Value) {
+pub(super) fn place(heap: &mut Heap, object: ObjectId, key: Value, value: Value) {
     let at = heap
         .object(object)
         .and_then(crate::heap::Object::collection)

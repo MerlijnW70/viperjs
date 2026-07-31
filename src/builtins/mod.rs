@@ -41,6 +41,7 @@ mod symbol;
 mod typed;
 mod typed_methods;
 mod view;
+mod weak;
 pub use self::symbol::WELL_KNOWN;
 
 /// Where a well-known Symbol sits in [`WELL_KNOWN`], by name.
@@ -86,6 +87,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     date::install(heap, realm, global);
     promise::install(heap, realm, global);
     collection::install(heap, realm, global);
+    weak::install(heap, realm, global);
     buffer::install(heap, realm, global);
     view::install(heap, realm, global);
     typed::install(heap, realm, global);

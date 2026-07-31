@@ -33,8 +33,22 @@
 //! and picking a moment needs a measurement of what allocation costs — an M8 experiment. What is
 //! here is the operation, and an embedder that calls it.
 
-use crate::heap::{EnvironmentId, Heap, ObjectId, PropertyKind, StringId};
+use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, StringId};
 use crate::value::Value;
+
+/// Whether the walk reached this value, for the two questions weakness asks about a key.
+///
+/// A key that is neither an Object nor a Symbol cannot be held weakly at all — §7.2.10 refuses to
+/// store one — so the last arm is a shape no weak collection contains. It answers "reachable",
+/// which keeps the entry: of the two ways to be wrong about a value that cannot be there, keeping
+/// something alive too long is the one that is not a use-after-free.
+fn reachable(value: Value, marked: &Marked) -> bool {
+    match value {
+        Value::Object(id) => marked.objects.get(id.index()).copied().unwrap_or(false),
+        Value::Symbol(id) => marked.symbols.get(id.index()).copied().unwrap_or(false),
+        _ => true,
+    }
+}
 
 /// Everything a running program can still reach, handed to the collector by its owner.
 ///
@@ -100,7 +114,53 @@ impl Heap {
         for environment in &roots.environments {
             self.mark_environment(*environment, &mut marked);
         }
+        // Last, because it can only be answered once everything else has been: a weak entry's
+        // value is reachable exactly when its key is, and whether the key is reachable is what the
+        // walk above was working out.
+        self.mark_weak_entries(&mut marked);
         self.sweep(&marked)
+    }
+
+    /// Mark what §24.3's weak collections keep alive, which is less than what they hold.
+    ///
+    /// A `WeakMap` entry keeps its **value** alive for as long as its **key** is alive, and keeps
+    /// neither alive on its own. That is an ephemeron, and it cannot be settled in one pass: the
+    /// value of a live entry may itself be the key of an entry in another weak map, whose value is
+    /// the key of a third, and marking the first is what makes the second live. So this repeats
+    /// until a pass marks nothing new.
+    ///
+    /// It terminates because `settled` only ever grows and there are finitely many entries — a
+    /// pass that adds nothing to it ends the loop.
+    ///
+    /// A `WeakSet` has nothing to mark, because its entry *is* its key and the key is exactly what
+    /// must not be kept alive. It is walked all the same, and the marking is a no-op on a key that
+    /// is already marked — one branch fewer than saying so, and the sweep is where a weak set's
+    /// entries actually go.
+    fn mark_weak_entries(&self, marked: &mut Marked) {
+        let mut settled: std::collections::HashSet<(usize, usize)> =
+            std::collections::HashSet::new();
+        loop {
+            let mut grew = false;
+            for (slot, object) in self.objects.iter().enumerate() {
+                let Some(collection) = object.as_ref().and_then(Object::collection) else {
+                    continue;
+                };
+                if !collection.kind().weak() {
+                    continue;
+                }
+                for (at, (key, value)) in collection.live_entries().enumerate() {
+                    if settled.contains(&(slot, at)) || !reachable(key, marked) {
+                        continue;
+                    }
+                    settled.insert((slot, at));
+                    self.mark_value(value, marked);
+                    grew = true;
+                }
+            }
+            if !grew {
+                return;
+            }
+        }
     }
 
     /// Mark a value and everything it leads to.
@@ -198,7 +258,15 @@ impl Heap {
             }
             // Every key and value a `Map` or a `Set` holds. Nothing else need be holding them: a
             // collection is precisely a thing that keeps values alive on purpose.
-            if let Some(collection) = object.collection() {
+            //
+            // …and a `WeakMap` or a `WeakSet` is precisely a thing that does not, so its entries
+            // are skipped here and settled afterwards by [`Heap::mark_weak_entries`]. Marking them
+            // here instead would make the weak collections strong ones with a different name —
+            // every test would still pass, and a program that used one as a cache would never free
+            // anything.
+            if let Some(collection) = object.collection()
+                && !collection.kind().weak()
+            {
                 for value in collection
                     .live_entries()
                     .flat_map(|(key, value)| [key, value])
@@ -366,6 +434,21 @@ impl Heap {
             strings: 0,
             symbols: 0,
         };
+        // Before anything is freed, because a weak collection that *survives* has to lose the
+        // entries whose keys do not — that is the whole observable effect of weakness, and it is
+        // observable only as memory that comes back.
+        //
+        // A collection that is itself about to be freed is pruned too, and skipping those would be
+        // an optimisation with no test behind it: the entries are dropped either way a moment
+        // later, so no input could tell the guard from its absence. Cheaper to walk them than to
+        // carry a branch nothing can justify.
+        for object in self.objects.iter_mut() {
+            if let Some(collection) = object.as_mut().and_then(Object::collection_mut)
+                && collection.kind().weak()
+            {
+                collection.retain_keys(|key| reachable(key, marked));
+            }
+        }
         // Zipped rather than indexed. The marks were sized from the arenas and nothing allocates
         // between, so the two are the same length — and `zip` says that rather than an index with
         // a default for a case that cannot happen.
@@ -474,7 +557,7 @@ impl Slot for EnvironmentId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::heap::{PropertyDescriptor, PropertyKey};
+    use crate::heap::{Collection, CollectionKind, PropertyDescriptor, PropertyKey};
 
     fn define(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
         let key = PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
@@ -867,6 +950,244 @@ mod tests {
         let again = heap.intern(&"gone".encode_utf16().collect::<Vec<_>>());
         assert_ne!(again, name);
         assert!(heap.string(again).is_some());
+    }
+
+    /// A collection of `kind` on the heap, with its entries already in it.
+    fn holding(heap: &mut Heap, kind: CollectionKind, entries: &[(Value, Value)]) -> ObjectId {
+        let object = heap.new_object(None);
+        let mut collection = Collection::new(kind);
+        for (key, value) in entries {
+            collection.push(*key, *value);
+        }
+        if let Some(found) = heap.object_mut(object) {
+            found.set_collection(collection);
+        }
+        object
+    }
+
+    /// How many entries a collection still has, for the rows that check one was pruned.
+    fn entries_of(heap: &Heap, object: ObjectId) -> usize {
+        heap.object(object)
+            .and_then(Object::collection)
+            .map_or(0, Collection::size)
+    }
+
+    #[test]
+    fn a_weak_map_does_not_keep_its_key_alive_and_a_map_does() {
+        // The one difference between §24.1 and §24.3, and it is invisible to a program: an entry
+        // whose key nothing else can name goes away. The same arrangement with a `Map` keeps both,
+        // which is what says the collector reads the kind rather than freeing indiscriminately.
+        for (kind, expected) in [(CollectionKind::Map, 1), (CollectionKind::WeakMap, 0)] {
+            let mut heap = Heap::new();
+            let key = heap.new_object(None);
+            let value = heap.new_object(None);
+            let map = holding(
+                &mut heap,
+                kind,
+                &[(Value::Object(key), Value::Object(value))],
+            );
+            // Only the collection is a root. Nothing else names the key, so a weak map is the one
+            // of the two that may let go of it.
+            let roots = Roots {
+                values: vec![Value::Object(map)],
+                ..Roots::default()
+            };
+            heap.collect(&roots);
+            assert_eq!(
+                usize::from(heap.object(key).is_some()),
+                expected,
+                "{kind:?} key"
+            );
+            // ...and the value goes with it, because a weak entry keeps its value only while its
+            // key lives. It does not keep it on its own.
+            assert_eq!(
+                usize::from(heap.object(value).is_some()),
+                expected,
+                "{kind:?} value"
+            );
+            // The entry is gone from the surviving collection rather than left as a pair of
+            // handles addressing empty slots.
+            assert_eq!(entries_of(&heap, map), expected, "{kind:?} size");
+        }
+    }
+
+    #[test]
+    fn a_weak_entry_whose_key_is_still_named_keeps_its_value() {
+        // The other half of the rule. The key is a root, so the entry is live and its value is
+        // reachable *through* it -- nothing else names the value at all, which is exactly the case
+        // a collector that skipped weak entries altogether would get wrong.
+        let mut heap = Heap::new();
+        let key = heap.new_object(None);
+        let value = heap.new_object(None);
+        let map = holding(
+            &mut heap,
+            CollectionKind::WeakMap,
+            &[(Value::Object(key), Value::Object(value))],
+        );
+        let roots = Roots {
+            values: vec![Value::Object(map), Value::Object(key)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(key).is_some());
+        assert!(heap.object(value).is_some());
+        assert_eq!(entries_of(&heap, map), 1);
+    }
+
+    #[test]
+    fn a_weak_value_that_is_another_weak_key_is_settled_by_repeating() {
+        // Why one pass is not enough. The near map's entry is live, and its *value* is the far
+        // map's **key** -- so marking it is what makes the far entry live. A collector that walked
+        // the weak entries once would free the far end of that chain, and a program would find
+        // `get` answering `undefined` for a key it was still holding.
+        //
+        // The far map is built first so that it sits earlier in the arena than the entry that
+        // makes it live: the pass reaches it before it can be settled, which is the ordering that
+        // makes a single pass visibly wrong rather than accidentally right.
+        let mut heap = Heap::new();
+        let first = heap.new_object(None);
+        let second = heap.new_object(None);
+        let third = heap.new_object(None);
+        let far = holding(
+            &mut heap,
+            CollectionKind::WeakMap,
+            &[(Value::Object(second), Value::Object(third))],
+        );
+        let near = holding(
+            &mut heap,
+            CollectionKind::WeakMap,
+            &[(Value::Object(first), Value::Object(second))],
+        );
+        let roots = Roots {
+            values: vec![
+                Value::Object(near),
+                Value::Object(far),
+                Value::Object(first),
+            ],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(first).is_some(), "the root itself");
+        assert!(heap.object(second).is_some(), "reached through one entry");
+        assert!(heap.object(third).is_some(), "reached through two");
+        assert_eq!(entries_of(&heap, near), 1, "near");
+        assert_eq!(entries_of(&heap, far), 1, "far");
+    }
+
+    #[test]
+    fn a_weak_set_lets_go_of_a_value_nothing_else_names() {
+        // A weak set's entry *is* its key, so there is nothing for the repeating pass to mark and
+        // the whole of its weakness is the sweep. One value is a root and one is not, so this also
+        // says the pruning is per entry rather than per collection.
+        let mut heap = Heap::new();
+        let kept = heap.new_object(None);
+        let dropped = heap.new_object(None);
+        let set = holding(
+            &mut heap,
+            CollectionKind::WeakSet,
+            &[
+                (Value::Object(kept), Value::Object(kept)),
+                (Value::Object(dropped), Value::Object(dropped)),
+            ],
+        );
+        let roots = Roots {
+            values: vec![Value::Object(set), Value::Object(kept)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(kept).is_some());
+        assert!(heap.object(dropped).is_none());
+        assert_eq!(entries_of(&heap, set), 1);
+    }
+
+    #[test]
+    fn the_repeating_pass_leaves_a_strong_collection_alone() {
+        // The guard that keeps the ephemeron pass to weak collections, and it is not merely an
+        // optimisation. A `Map` that is itself unreachable is never walked by the mark phase, so
+        // its entries are dead however live their keys are elsewhere -- and a pass that looked at
+        // it would see a marked key, mark the value, and keep alive an object whose only path ran
+        // through a map nothing can name.
+        let mut heap = Heap::new();
+        let key = heap.new_object(None);
+        let value = heap.new_object(None);
+        let orphan = holding(
+            &mut heap,
+            CollectionKind::Map,
+            &[(Value::Object(key), Value::Object(value))],
+        );
+        // The key is a root; the map is not, and the value is reachable only through it.
+        let roots = Roots {
+            values: vec![Value::Object(key)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(key).is_some(), "the root itself");
+        assert!(heap.object(orphan).is_none(), "nothing names the map");
+        assert!(
+            heap.object(value).is_none(),
+            "its only path ran through the map"
+        );
+    }
+
+    #[test]
+    fn a_weak_key_no_builtin_could_have_stored_keeps_its_entry() {
+        // §7.2.10 lets only an Object or an unregistered Symbol be a weak key, so `set` refuses
+        // everything else and a collection built by running JavaScript can never hold one. A
+        // collection built *here* can, and the collector still has to answer about it -- the two
+        // ways to be wrong are dropping a live entry and keeping a dead one, and only the first is
+        // a use-after-free. So a key it cannot reason about is treated as reachable.
+        let mut heap = Heap::new();
+        let value = heap.new_object(None);
+        let map = holding(
+            &mut heap,
+            CollectionKind::WeakMap,
+            &[(Value::Number(1.0), Value::Object(value))],
+        );
+        let roots = Roots {
+            values: vec![Value::Object(map)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert_eq!(entries_of(&heap, map), 1, "the entry is kept");
+        assert!(heap.object(value).is_some(), "and so is what it holds");
+    }
+
+    #[test]
+    fn a_weak_key_this_heap_never_issued_is_not_reachable() {
+        // The same narrow promise every handle here makes (DR-0010): a handle from another heap
+        // addresses nothing, and asking about it answers rather than panicking. For a weak key the
+        // answer has to be "not reachable" -- a foreign index is past the end of the marks, and
+        // reading past the end as *reached* would pin every such entry for ever.
+        //
+        // Both arenas are asked, because an object and a Symbol are marked in different vectors and
+        // an implementation can get one right while getting the other wrong.
+        let mut other = Heap::new();
+        for _ in 0..8 {
+            other.new_object(None);
+            other.new_symbol(None);
+        }
+        let foreign_object = other.new_object(None);
+        let foreign_symbol = other.new_symbol(None);
+
+        let mut heap = Heap::new();
+        let kept = heap.new_object(None);
+        let map = holding(
+            &mut heap,
+            CollectionKind::WeakMap,
+            &[
+                (Value::Object(kept), Value::Undefined),
+                (Value::Object(foreign_object), Value::Undefined),
+                (Value::Symbol(foreign_symbol), Value::Undefined),
+            ],
+        );
+        let roots = Roots {
+            values: vec![Value::Object(map), Value::Object(kept)],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        // Only the entry this heap issued a key for survives, which says both arenas were read as
+        // "past the end is not reached" rather than one of them defaulting the other way.
+        assert_eq!(entries_of(&heap, map), 1);
     }
 
     #[test]

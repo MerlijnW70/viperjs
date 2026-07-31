@@ -34,13 +34,52 @@
 use crate::heap::Heap;
 use crate::value::Value;
 
-/// Which of §24's two collections this is.
+/// Which of §24's four collections this is.
+///
+/// Four rather than two because the weak pair are a different *brand*, not a flag on the same one.
+/// §24.3.3.3's `WeakMap.prototype.get` requires a `[[WeakMapData]]` and §24.1.3.6's `Map.prototype
+/// .get` requires a `[[MapData]]`, so `Map.prototype.get.call(new WeakMap())` is a TypeError — and
+/// making them separate kinds is what gets that right without a second check anywhere.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CollectionKind {
     /// §24.1 — keys with values.
     Map,
     /// §24.2 — values alone, each of which is also its own key.
     Set,
+    /// §24.3 — keys with values, and holding a key does not keep it alive.
+    WeakMap,
+    /// §24.4 — values alone, and holding one does not keep it alive.
+    WeakSet,
+}
+
+impl CollectionKind {
+    /// Whether an entry has a value of its own, or is its own value.
+    #[must_use]
+    pub fn keyed(self) -> bool {
+        matches!(self, Self::Map | Self::WeakMap)
+    }
+
+    /// Whether holding a key keeps it reachable.
+    ///
+    /// The one question the collector asks. A strong collection is *precisely* a thing that keeps
+    /// values alive on purpose; a weak one is precisely a thing that does not, and the difference
+    /// is unobservable to a program except by running out of memory — which is why it has to be
+    /// right in the collector rather than checked by a test.
+    #[must_use]
+    pub fn weak(self) -> bool {
+        matches!(self, Self::WeakMap | Self::WeakSet)
+    }
+
+    /// What a diagnostic calls it.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Map => "Map",
+            Self::Set => "Set",
+            Self::WeakMap => "WeakMap",
+            Self::WeakSet => "WeakSet",
+        }
+    }
 }
 
 /// `[[MapData]]` or `[[SetData]]`, and which of the two it is.
@@ -164,6 +203,28 @@ impl Collection {
             *entry = None;
             self.live -= 1;
         }
+    }
+
+    /// Drop every entry whose key the collector could not reach — §24.3's liveness rule.
+    ///
+    /// Only ever called on a weak collection, and only by the sweep. A program cannot see this
+    /// happen: an entry goes only when nothing else can name its key, so nothing is left that
+    /// could ask about it. That is what makes the rule safe to apply and also what makes it
+    /// impossible to test from JavaScript — the tests for it are in the collector, on a heap whose
+    /// roots are named by hand.
+    pub fn retain_keys(&mut self, reachable: impl Fn(Value) -> bool) {
+        let mut dropped = 0;
+        for entry in &mut self.entries {
+            if let Some((key, _)) = *entry
+                && !reachable(key)
+            {
+                *entry = None;
+                dropped += 1;
+            }
+        }
+        // Counted and subtracted once rather than decremented in the loop, because `self.live` and
+        // `self.entries` are two fields and the loop is holding one of them.
+        self.live -= dropped;
     }
 
     /// Empty it — §24.1.3.1 and §24.2.3.2.
