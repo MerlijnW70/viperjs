@@ -126,28 +126,27 @@ and an interpreter that runs code — and the conformance harness that measures 
 what says what to build next. **M4 is what is in progress.** `Object`, `Function`, `Array`, `String`,
 `Number`, `Boolean`, `Math`, `JSON`, `Date` and the `Error` hierarchy are in, and so is a good deal
 of M6: classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`, `ArrayBuffer`,
-`DataView` and the TypedArrays. **`RegExp` is what remains of M4**, and the regular expression
-engine is ours to write — no dependency.
+`DataView` and the TypedArrays. **M4 is finished**: `RegExp` is ours, written as
+§22.2.1's grammar, §22.2.2's backtracking matcher and the object on top, with no dependency.
 
-Conformance as of this commit is **51.72% of test262** — 48,179 of 93,161 runs. Treat that number as
+Conformance as of this commit is **54.74% of test262** — 50,992 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Let the failure buckets choose the next slice, not intuition. The largest right now:
 
 | Runs | What stops them |
 | --- | --- |
 | 17,069 | `async` functions and generators |
-| 6,896 | regular expression literals |
 | 3,474 | `Temporal` — a Stage 3 proposal, and **not** ES2023 core |
 | 3,137 | `BigInt` literals |
 | 1,339 | `eval`, and 412 more for `new Function` — both need compiling at run time |
 | 872 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
 | 838 | `BigInt64Array` and `BigUint64Array`, which need `BigInt` first |
 | 830 | modules |
-| 779 | `RegExp` as a *global*, on top of the 6,896 literals |
 
-`Proxy` is in as of this commit — eleven of §6.1.7.2's thirteen internal methods, with §10.5's
-invariants. `[[Call]]` and `[[Construct]]` are not, which is 95 of the 137 failures left under
-`built-ins/Proxy` and is the obvious next slice there.
+**`Proxy` and `RegExp` are both done**, which finishes M4. Everything left in the table is
+architectural, and 75% of the suite means async/generators plus BigInt — there is no other path to
+it. The three ratchets are the reason that number is worth quoting; see
+[[praxis-conformance-baseline]] for how to bless without laundering one.
 
 **Read the *failure* buckets, not only that table.** The list above is what stopped the tests that
 never ran, and it is all architecture. Sorting the ~17,000 that **run and fail** by reason is what
