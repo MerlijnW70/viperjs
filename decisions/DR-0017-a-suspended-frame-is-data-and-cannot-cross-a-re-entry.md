@@ -1,74 +1,70 @@
 ---
 id: DR-0017
-title: A suspended frame is data, and the frame a re-entry entered may not be parked
+title: A suspended frame is data, and it carries no return address
 status: prose-only
 ---
 
 A generator and an `async` function both need one thing: an execution that can be **parked** and
-revived later. praxis can do that because `Frame` (`src/vm/call.rs`) is a plain record — a chunk,
-an instruction index, a `this`, a `new.target`, an environment id, and two stack marks. Nothing in
-it borrows, so a parked execution is a value the heap can hold and the collector can trace. That
-is `Suspended` (`src/vm/suspend.rs`), which is that record plus the two stack *slices* the marks
-already delimited.
+revived later. praxis can do that because `Frame` (`src/vm/call.rs`) is a plain record — a chunk, an
+instruction index, a `this`, a `new.target`, an environment id, and two stack marks. Nothing in it
+borrows, so a parked execution is a value the heap can hold and the collector can trace. That is
+`Suspended` (`src/vm/suspend.rs`): the record plus the two stack *slices* the marks already
+delimited.
 
-The invariant this record fixes is the other half of that, and it is the one a reader will not
-guess:
+The invariant is what it does **not** hold:
 
-> **The frame a nested execution entered may not be parked.** A nested execution (DR-0011's
-> re-entry) is a Rust call waiting mid-instruction for an answer — a coercion, a proxy trap, a
-> `sort` comparator. Parking the frame it entered hands control straight back to that call, which
-> then reads the suspension's value as though the function had *returned* it.
+> **A parked execution has no return address.** `Suspended` keeps where the body had got to and
+> nothing about who was waiting for it. The caller's code, instruction and registers stay in the
+> frame, which is discarded; `Vm::revive` writes a fresh one from wherever the revival happens. So a
+> suspension is portable — it may be parked in one execution and revived in another, and the two
+> need have nothing to do with each other.
 
-## It is one frame, not the whole nested execution
+## Why that is the whole of it
 
-The first way this was written down said no suspension may be reached through a re-entry at all,
-and that is too strong: it refuses ordinary programs. `[1].map(() => gen.next())` reaches a
-generator's body through `map`'s callback, which is a nested execution — but the generator's frame
-sits *above* the callback's, so parking it returns to the callback in the usual way, `next`
-answers, and the callback returns to `map` having really returned. Nothing is stranded.
+A `yield` leaves an iterator result where the *resumption's* answer goes, exactly as a `Return`
+leaves a returned value: the call being answered is `gen.next()`, and it is answered. What happens
+to the parked body afterwards is a separate question with a separate answer, which is why the two
+can be separated at all.
 
-What the rule refuses is `arr.sort(gen.next.bind(gen))`, where the resumed body **is** what the
-comparator call entered. There the park pops the only frame the nested execution has, the loop
-falls off the end of its empty root chunk, and the comparator receives the yielded value as its
-answer. That is reachable from ordinary JavaScript, which is why the check has to exist rather than
-being a property of the grammar.
+The handlers are the one thing that has to be adjusted, and only because a [`Handler`] names an
+absolute depth: they are stored relative to the frame's own two floors and rebased on the way back
+in. Everything else in the record is already independent of where it was.
 
-## Why the language mostly guarantees it anyway
+## Two things this record used to say, and neither was true
 
-§27.5.3.7's `GeneratorYield` suspends *the generator's own execution context*, and a `yield` is
-syntactically only ever in the body of the `function*` that owns it. The same holds for `await`. So
-the specification never asks for a suspension inside a coercion's own body: a nested execution is
-entered from a *native* — `ToPrimitive`, a trap, a callback — and a native's body is Rust.
+Recorded because both were written down with confidence and both cost a session.
 
-What the grammar does **not** rule out is the case above, where the thing a native calls is itself
-the resumption of a generator. That is the gap the check closes.
+**"A suspension may not be reached through a re-entry."** DR-0011's nested execution is a Rust call
+waiting mid-instruction, and the fear was that parking through one would strand it. It does not: the
+Rust call is waiting for a *value*, the suspension leaves one, and `nested_body` reads it and
+returns normally. The parked body is revived later from somewhere else entirely, which it can be
+because of the invariant above.
 
-## What has to be true in the code
+**"Only the frame a nested execution entered may not be parked."** The second attempt, narrower and
+still wrong for the same reason. It was checked in code, and the check refused ordinary programs:
 
-`Vm::reentries` is non-zero exactly when a nested execution is running, and `Vm::floor.frames` is
-the frame depth it started at. Together they say whether the frame just popped was the one that
-execution entered:
-
-```rust
-if self.reentries > 0 && self.frames.len() == self.floor.frames { … }
+```js
+const it = g();
+[1].map(it.next.bind(it));      // TypeError, and should be the iterator result
+arr.sort(it.next.bind(it));     // TypeError, and should sort
+({ valueOf: it.next.bind(it) }) + 0;   // TypeError, and should be "[object Object]0"
 ```
 
-Refusing is a `Fault` — an engine bug the types cannot encode — rather than a JavaScript error,
-because nothing a program can write should reach it once the machinery above answers first: §27.5's
-state machine can refuse a resumption, and a comparator that resumes a generator will get an
-iterator result rather than a stranded frame.
+All three work with the check removed, and the whole suite stays green. What misled both attempts
+was reading `Frame` as one thing: it holds the *caller's* state and the *callee's* together, and
+only the second half is the execution. Once the halves are separated the question answers itself.
 
-Note what the fault does *not* do. A nested execution answers with a completion, so a fault met
-inside one becomes a TypeError on the way out rather than escaping past the Rust call that is
-waiting. That is deliberate and it is why the check has to be here: by the time the fault would be
-visible as a fault, the frame it was about is gone.
+## What this still rules out
 
-Writing the check down is the point. Without it the invariant is a sentence in a commit message,
-and the first native that grows a callback into generator code breaks it silently.
+An implementation of `yield` as a Rust-level coroutine, a thread, or a stack copy. All three make
+the suspension a thing on the Rust stack rather than a value, which is what would make the return
+address real and the portability above impossible — and all three cost either `unsafe` or a runtime
+dependency, which GOAL.md does not allow. The frame stays data.
 
-## What this rules out
+## What it costs
 
-An implementation of `yield` as a Rust-level coroutine, a thread, or a stack copy. All three would
-make the suspension work *through* a re-entry and so would remove the reason to state this — and
-all three cost either `unsafe` or a runtime dependency, which GOAL.md does not allow. The frame
-stays data.
+`Vm::park` is `O(1)` in the operands and handlers it takes with it, and a revival is `O(1)` in the
+ones it puts back. `Suspended` owns two `Vec`s, so a generator that suspends inside a deep
+expression pays for that expression's operands once per suspension — which is the same allocation an
+engine that copied a stack segment would make, and unlike that one it is bounded by what the body
+actually built rather than by the stack's size.

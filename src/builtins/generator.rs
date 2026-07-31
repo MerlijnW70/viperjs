@@ -3,17 +3,16 @@
 //! # Why `next` is not a built-in like every other method here
 //!
 //! Every other module in `builtins` installs a [`crate::heap::Native`]: a Rust `fn` that runs to
-//! completion and answers a value. `Generator.prototype.next` cannot be one. Resuming a generator
-//! means *running its body*, and a native reaches JavaScript only through DR-0011's nested
-//! execution — a Rust call waiting in the middle of an instruction, which DR-0017 says a
-//! suspension may not be handed back to. The body would run and the first `yield` in it would
-//! strand that call.
+//! completion and answers a value. `Generator.prototype.next` cannot be one, because it does not
+//! answer a value — it hands a *body* to the interpreter and the answer arrives whenever that body
+//! next stops. A native would have to run the body itself, through DR-0011's nested execution, and
+//! then it would be a Rust call per resumption in a program that may have millions.
 //!
-//! So the three methods are installed as [`Callable::Resume`], which the interpreter's own `enter`
-//! recognises: resuming a generator is a way of *entering the loop*, alongside an ordinary call.
-//! The function objects are otherwise built exactly as a built-in method is, and nothing a script
-//! can ask distinguishes them — `typeof gen.next` is `"function"`, it has a `name` and a `length`,
-//! and it is not a constructor.
+//! So the three methods are installed as [`crate::heap::Callable::Resume`], which the interpreter's
+//! own `enter` recognises: resuming a generator is a way of *entering the loop*, alongside an
+//! ordinary call. The function objects are otherwise built exactly as a built-in method is, and
+//! nothing a script can ask distinguishes them — `typeof gen.next` is `"function"`, it has a `name`
+//! and a `length`, and it is not a constructor.
 //!
 //! # The two prototypes
 //!

@@ -95,7 +95,7 @@ pub use self::environment::{Environment, EnvironmentId};
 pub use self::helper::{Helper, Step};
 pub use self::matches::Matches;
 pub(crate) use self::object::MAX_PROTOTYPE_CHAIN;
-pub use self::object::{GeneratorState, Lexical, Object, ObjectId, PrivateElement};
+pub use self::object::{Lexical, Object, ObjectId, PrivateElement};
 pub use self::promise::{
     Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
 };

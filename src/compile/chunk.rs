@@ -646,24 +646,19 @@ pub enum Instruction {
     Duplicate,
     /// Leave the current function, taking the top value with it — §14.10.
     Return,
-    /// Park the running function and answer with the top value — §27.5.3.7's `GeneratorYield`.
+    /// Park the running generator and answer `{ value, done: false }` — §27.5.3.7's
+    /// `GeneratorYield`.
     ///
-    /// Under the value is the object the parked execution is stored in, which is the generator
-    /// itself once there are generators. Both are taken; the value is left where the call that
-    /// entered this function put its callee, exactly as a [`Instruction::Return`] leaves one, and
-    /// the difference is only that the execution is kept rather than dropped.
+    /// The top value is what was yielded. It is wrapped where a [`Instruction::Return`] would have
+    /// left the returned value, because the call being answered is the *resumption* — `gen.next()`
+    /// gets an iterator result, and the value itself would be indistinguishable from a generator
+    /// that yielded `{ value: 1, done: true }`.
     ///
-    /// Emitted by nothing yet. The machinery under it — see [`crate::vm`] — is what a `yield` and
-    /// an `await` are both made of, and it is worth having tested before either has a grammar
-    /// pointed at it.
-    Suspend,
-    /// Put a parked execution back and carry on inside it — §27.5.3.2's `GeneratorResume`.
-    ///
-    /// The top value is sent *into* the suspension: it becomes the value of the expression that
-    /// parked, which is what makes `gen.next(v)` an argument. Under it is the object holding the
-    /// parked execution, and when that execution finally returns, its answer is left where these
-    /// two were.
-    Revive,
+    /// Which generator to park into is not an operand: it is the frame's, because §27.5.3.7
+    /// suspends *the generator's own execution context* and there is no other one a `yield` could
+    /// mean. What comes back the other way — the argument to the next resumption — is left on the
+    /// stack, so the `yield` expression evaluates to it.
+    Yield,
     /// Take the top value and make it the script's completion value.
     ///
     /// §14.2.2 — a Script evaluates to the value of its last *value-producing* statement, which
@@ -959,8 +954,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CompleteDerivedReturn(_)
         | Instruction::Duplicate
         | Instruction::Return
-        | Instruction::Suspend
-        | Instruction::Revive
+        | Instruction::Yield
         | Instruction::NewObject
         | Instruction::NewArray(_)
         | Instruction::DuplicateTop(_)

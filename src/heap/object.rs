@@ -54,23 +54,6 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjectId(pub(super) usize);
 
-/// §27.5.1's `[[GeneratorState]]` — where a generator has got to.
-///
-/// Three values and not §27.5's four: `suspendedYield` arrives with `yield`, which is a slice of
-/// its own. Until a body can suspend part-way through, a generator is either waiting to start, in
-/// the middle of running, or finished — and the difference between the last two is why this is a
-/// field rather than "has it a parked execution": a resumption *takes* the execution out, so both
-/// have none.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GeneratorState {
-    /// Made and not yet resumed — §15.5.4's `GeneratorStart` left it here.
-    SuspendedStart,
-    /// Running right now, which is why §27.5.1.2 refuses to resume it again.
-    Executing,
-    /// Finished, by returning or by throwing. Nothing moves it out of this.
-    Completed,
-}
-
 /// What an arrow reaches outward for, captured where it was written — §10.2.3 step 6.
 ///
 /// Two values and not one, because §9.1.1.3's function environment holds both and an arrow gets
@@ -303,17 +286,19 @@ pub struct Object {
     /// The interpreter's, and deliberately opaque here: what is in it is frames and operands, and
     /// the heap's only business with it is holding it and letting the collector walk it.
     suspension: Option<Box<crate::vm::Suspended>>,
-    /// §27.5.1's `[[GeneratorState]]`, if this object is a generator.
+    /// Whether this object is a generator at all — §27.5.1's brand.
     ///
-    /// `None` is "not a generator at all", which is what §27.5.1.2 step 2's `RequireInternalSlot`
-    /// asks about before it will do anything — so `Generator.prototype.next.call({})` is a
-    /// TypeError rather than an answer about an object that merely looks similar.
+    /// What §27.5.1.2 step 2's `RequireInternalSlot` asks about before it will do anything, so
+    /// that `Generator.prototype.next.call({})` is a TypeError rather than an answer about an
+    /// object that merely looks similar. It stays true once set: a finished generator is still a
+    /// generator.
     ///
-    /// Beside the suspension rather than inside it, because the two say different things and the
-    /// state outlives the context: a completed generator has a state and no parked execution, and
-    /// so does one that is *running* — the resumption took the execution out. Telling those two
-    /// apart is exactly what §27.5.1.2 needs, and nothing but this field can.
-    generator: Option<GeneratorState>,
+    /// There is deliberately no `[[GeneratorState]]` beside it. Every one of §27.5.1's four states
+    /// is a *question about somewhere else* — suspended is "it holds a parked execution", executing
+    /// is "a live frame names it", completed is neither — and a field repeating those answers is a
+    /// field that can disagree with them. It did: a throw that escaped a generator's body left the
+    /// state saying `executing` for ever, because nothing on that path had anywhere to write.
+    generator: bool,
     /// §22.2.3's internal slots, if this is a regular expression.
     ///
     /// Boxed, because a compiled pattern owns a tree and every object would otherwise carry room
@@ -379,7 +364,7 @@ impl Object {
             proxy: None,
             matches: None,
             suspension: None,
-            generator: None,
+            generator: false,
             regexp: None,
             call: None,
             environment: None,
@@ -541,8 +526,8 @@ impl Object {
         self.suspension.as_deref()
     }
 
-    /// Where this generator has got to, if it is one — §27.5.1's `[[GeneratorState]]`.
-    pub(crate) fn generator_state(&self) -> Option<GeneratorState> {
+    /// Whether this object is a generator — §27.5.1's brand, and not where it has got to.
+    pub(crate) fn is_generator(&self) -> bool {
         self.generator
     }
 
@@ -1128,14 +1113,10 @@ impl Heap {
         Some(*parked)
     }
 
-    /// Make `object` a generator waiting to start, or move one it already is along.
-    ///
-    /// §27.5.1's `[[GeneratorState]]`, set in the two places it moves: §15.5.4 makes the object and
-    /// starts it at `suspendedStart`, and §27.5.1.2's resumption moves it to `executing` and then
-    /// to `completed`. Nothing moves it back.
-    pub(crate) fn set_generator_state(&mut self, object: ObjectId, state: GeneratorState) {
+    /// Mark `object` a generator — §27.5.1's brand, given once by §15.5.4 and never taken away.
+    pub(crate) fn brand_generator(&mut self, object: ObjectId) {
         if let Some(object) = self.object_mut(object) {
-            object.generator = Some(state);
+            object.generator = true;
         }
     }
 

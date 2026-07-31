@@ -79,26 +79,12 @@ pub enum Fault {
     MissingFunction,
     /// A `Return` with no call to return from.
     ReturnWithNoCall,
-    /// A `Suspend` with no call to suspend.
+    /// A `Yield` where no generator is running.
     ///
-    /// A suspension parks the running *function*, so at the top level of a script there is nothing
-    /// for it to take. The compiler emits one only inside a body, which is where the grammar puts
-    /// `yield` and `await` too.
-    SuspendWithNoCall,
-    /// A `Suspend` in the very frame a nested execution entered — DR-0017.
-    ///
-    /// Under that frame is a Rust call still waiting for an answer: a coercion, a proxy trap, a
-    /// comparator. Parking it hands control straight back to that call, which then reads the
-    /// suspension's value as though the function had returned it. Unreachable from any source
-    /// text, because a `yield` is only ever in the body of the `function*` that owns it — which is
-    /// why this is a fault and not a RangeError.
-    SuspendAcrossReentry,
-    /// A `Revive` naming something that holds no parked execution.
-    ///
-    /// Either not an object at all, or one that has never suspended or has already been revived. A
-    /// generator answers for all three itself — §27.5.1.2 has a state to consult before it does
-    /// anything — so nothing above this may reach it.
-    NothingToRevive,
+    /// Two shapes and one answer: at the top level of a script there is no frame to park at all,
+    /// and inside an ordinary function there is a frame that belongs to no generator. The compiler
+    /// emits one only inside a generator body, which is exactly where the grammar puts `yield`.
+    YieldOutsideGenerator,
     /// A `DefineField` on something that is not an object.
     ///
     /// Only an object literal emits one, and it emits `NewObject` first, so no chunk the compiler

@@ -23,6 +23,10 @@ annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-para
 annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-params.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a TypeError
 annexB/built-ins/Object/is/emulates-undefined.js :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
 annexB/built-ins/Object/is/emulates-undefined.js (strict) :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
+annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js :: it threw SyntaxError: a control escape needs a letter
+annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js (strict) :: it threw SyntaxError: a control escape needs a letter
+annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js :: it threw SyntaxError: a control escape needs a letter
+annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js (strict) :: it threw SyntaxError: a control escape needs a letter
 annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js :: it threw ReferenceError: eval is not defined
 annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js (strict) :: it threw ReferenceError: eval is not defined
 annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js :: it threw ReferenceError: eval is not defined
@@ -3161,12 +3165,16 @@ built-ins/GeneratorFunction/proto-from-ctor-realm.js :: it threw TypeError: what
 built-ins/GeneratorFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/GeneratorFunction/prototype/constructor.js :: it threw an object with no name: constructor descriptor should not be writable
 built-ins/GeneratorFunction/prototype/constructor.js (strict) :: it threw an object with no name: constructor descriptor should not be writable
-built-ins/GeneratorPrototype/next/from-state-executing.js :: it threw TypeError: a generator cannot be resumed while it is running
-built-ins/GeneratorPrototype/next/from-state-executing.js (strict) :: it threw TypeError: a generator cannot be resumed while it is running
-built-ins/GeneratorPrototype/return/from-state-executing.js :: it threw TypeError: a generator cannot be resumed while it is running
-built-ins/GeneratorPrototype/return/from-state-executing.js (strict) :: it threw TypeError: a generator cannot be resumed while it is running
-built-ins/GeneratorPrototype/throw/from-state-executing.js :: it threw TypeError: a generator cannot be resumed while it is running
-built-ins/GeneratorPrototype/throw/from-state-executing.js (strict) :: it threw TypeError: a generator cannot be resumed while it is running
+built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-catch.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-catch.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-inner-try.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-inner-try.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-outer-try-before-nested.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-outer-try-before-nested.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-set-property-within-try.js :: it threw an object with no name: finally block must supersede return value Expected SameValue(«45», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-set-property-within-try.js (strict) :: it threw an object with no name: finally block must supersede return value Expected SameValue(«45», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-within-try.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
+built-ins/GeneratorPrototype/return/try-finally-within-try.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/fresh-iterator-result.js :: it threw TypeError: what was called is not a function
@@ -3253,6 +3261,8 @@ built-ins/Iterator/prototype/filter/iterator-return-method-throws.js :: it threw
 built-ins/Iterator/prototype/filter/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/filter/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/filter/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/Iterator/prototype/filter/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/find/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/find/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/find/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -3261,8 +3271,12 @@ built-ins/Iterator/prototype/flatMap/get-return-method-throws.js :: it threw an 
 built-ins/Iterator/prototype/flatMap/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/flatMap/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-mapper-result.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-mapper-result.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/flatMap/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/flatMap/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/Iterator/prototype/flatMap/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Iterator/prototype/join/closes-on-separator-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -3301,12 +3315,16 @@ built-ins/Iterator/prototype/map/iterator-return-method-throws.js :: it threw an
 built-ins/Iterator/prototype/map/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/map/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/map/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/Iterator/prototype/map/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/some/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/some/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/some/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/some/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+built-ins/Iterator/prototype/take/exhaustion-calls-return.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+built-ins/Iterator/prototype/take/exhaustion-calls-return.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
@@ -3319,6 +3337,12 @@ built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js ::
 built-ins/Iterator/prototype/take/return-is-not-forwarded-after-exhaustion.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/Iterator/zip/basic-longest.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/basic-longest.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/basic-shortest.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/basic-shortest.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/basic-strict.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zip/basic-strict.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zip/is-function.js :: it threw an object with no name: The value of `typeof Iterator.zip` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/zip/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.zip` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/zip/iterables-containing-string-objects.js :: it threw TypeError: what was called is not a function
@@ -3375,6 +3399,12 @@ built-ins/Iterator/zip/suspended-yield-iterator-close-calls-next.js :: it threw 
 built-ins/Iterator/zip/suspended-yield-iterator-close-calls-next.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zip/suspended-yield-iterator-close-calls-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zip/suspended-yield-iterator-close-calls-return.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/basic-longest.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/basic-longest.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/basic-shortest.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/basic-shortest.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/basic-strict.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/zipKeyed/basic-strict.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/zipKeyed/is-function.js :: it threw an object with no name: The value of `typeof Iterator.zipKeyed` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/zipKeyed/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.zipKeyed` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/zipKeyed/iterables-containing-string-objects.js :: it threw TypeError: what was called is not a function
@@ -3625,6 +3655,8 @@ built-ins/Math/sumPrecise/sum-is-minus-zero.js :: it threw TypeError: what was c
 built-ins/Math/sumPrecise/sum-is-minus-zero.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/sum.js :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/sum.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Math/sumPrecise/takes-iterable.js :: it threw TypeError: what was called is not a function
+built-ins/Math/sumPrecise/takes-iterable.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/EvalError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/EvalError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -10306,6 +10338,8 @@ built-ins/TypedArrayConstructors/ctors-bigint/no-args/use-default-proto-if-custo
 built-ins/TypedArrayConstructors/ctors-bigint/no-args/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/custom-proto-access-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/custom-proto-access-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterating-throws.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterating-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-not-callable-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-not-callable-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-throws.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10386,6 +10420,8 @@ built-ins/TypedArrayConstructors/ctors/no-species.js :: it threw TypeError: what
 built-ins/TypedArrayConstructors/ctors/no-species.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors/object-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/object-arg/iterating-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/object-arg/iterating-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-not-callable-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-not-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -11676,18 +11712,6 @@ language/expressions/arrow-function/dflt-params-ref-later.js :: it threw an obje
 language/expressions/arrow-function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/arrow-function/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/arrow-function/dstr/dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/expressions/arrow-function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/arrow-function/scope-body-lex-distinct.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw ReferenceError: eval is not defined
@@ -11708,6 +11732,12 @@ language/expressions/assignment/destructuring/keyed-destructuring-property-refer
 language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js (strict) :: it threw an object with no name: Actual [source, source-key, source-key-tostring, get, target, target-key, target-key-tostring, set] and expected [source, source-key, source-key-tostring, target, target-key, get, target-key-tostring, set] should have the same contents.
 language/expressions/assignment/destructuring/target-assign-throws-iterator-return-get-throws.js :: it threw an object with no name: Thrown value was not an object!
 language/expressions/assignment/destructuring/target-assign-throws-iterator-return-get-throws.js (strict) :: it threw an object with no name: Thrown value was not an object!
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js :: it threw an object with no name
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -11717,12 +11747,24 @@ language/expressions/assignment/dstr/array-elem-iter-thrw-close.js (strict) :: i
 language/expressions/assignment/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -11733,6 +11775,12 @@ language/expressions/assignment/dstr/array-elision-iter-abpt.js :: it threw an o
 language/expressions/assignment/dstr/array-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-rest-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-rest-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close-err.js :: it threw an object with no name
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close-null.js :: it threw TypeError: what was called is not a function
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close-null.js (strict) :: it threw TypeError: what was called is not a function
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close.js :: it threw an object with no name
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close.js (strict) :: it threw an object with no name
 language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/expressions/assignment/dstr/array-rest-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -12007,30 +12055,6 @@ language/expressions/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-null.js 
 language/expressions/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-undef.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-undef.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/dstr/meth-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/class/dstr/meth-static-dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
@@ -12710,18 +12734,6 @@ language/expressions/function/dflt-params-ref-later.js :: it threw an object wit
 language/expressions/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/function/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/function/dstr/dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/expressions/function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/expressions/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -13106,18 +13118,6 @@ language/expressions/object/dstr/gen-meth-obj-ptrn-prop-obj-value-null.js :: it 
 language/expressions/object/dstr/gen-meth-obj-ptrn-prop-obj-value-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/object/dstr/gen-meth-obj-ptrn-prop-obj-value-undef.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/object/dstr/gen-meth-obj-ptrn-prop-obj-value-undef.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/object/dstr/meth-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/object/dstr/meth-dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
@@ -13286,6 +13286,7 @@ language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an 
 language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/void/S11.4.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/yield/formal-parameters-after-reassignment-strict.js (strict) :: it threw an object with no name: First result `value` Expected SameValue(«32», «23») to be true
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
 language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
 language/function-code/10.4.3-1-13-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
@@ -13915,30 +13916,6 @@ language/statements/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-null.js :
 language/statements/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-undef.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/dstr/gen-meth-static-obj-ptrn-prop-obj-value-undef.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/dstr/meth-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/class/dstr/meth-static-dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-2.js :: it threw ReferenceError: eval is not defined
@@ -14240,12 +14217,6 @@ language/statements/class/subclass/superclass-bound-function.js :: it threw Type
 language/statements/class/subclass/superclass-bound-function.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/const/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/const/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/const/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/const/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/const/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/const/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/const/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/const/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/continue/S12.7_A7.js :: it threw an object with no name: 1.1: Appearing of continue within eval statement inside of IterationStatement yields SyntaxError
 language/statements/continue/S12.7_A7.js (strict) :: it threw an object with no name: 1.1: Appearing of continue within eval statement inside of IterationStatement yields SyntaxError
 language/statements/do-while/S12.6.1_A3.js :: it threw ReferenceError: eval is not defined
@@ -14381,6 +14352,12 @@ language/statements/for-of/cptn-expr-itr.js :: it threw ReferenceError: eval is 
 language/statements/for-of/cptn-expr-itr.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-of/cptn-expr-no-itr.js :: it threw ReferenceError: eval is not defined
 language/statements/for-of/cptn-expr-no-itr.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js :: it threw an object with no name
+language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/statements/for-of/dstr/array-elem-iter-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-iter-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-iter-rtrn-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/statements/for-of/dstr/array-elem-iter-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -14391,12 +14368,24 @@ language/statements/for-of/dstr/array-elem-nested-obj-yield-ident-valid.js :: it
 language/statements/for-of/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
+language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -14407,6 +14396,12 @@ language/statements/for-of/dstr/array-elision-iter-abpt.js :: it threw an object
 language/statements/for-of/dstr/array-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js :: it threw an object with no name
+language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/statements/for-of/dstr/array-rest-iter-rtrn-close-null.js :: it threw TypeError: what was called is not a function
+language/statements/for-of/dstr/array-rest-iter-rtrn-close-null.js (strict) :: it threw TypeError: what was called is not a function
+language/statements/for-of/dstr/array-rest-iter-rtrn-close.js :: it threw an object with no name
+language/statements/for-of/dstr/array-rest-iter-rtrn-close.js (strict) :: it threw an object with no name
 language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -14417,18 +14412,6 @@ language/statements/for-of/dstr/array-rest-lref-err.js :: it threw an object wit
 language/statements/for-of/dstr/array-rest-lref-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/const-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/const-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/const-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/const-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/const-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/const-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/let-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/let-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/let-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/let-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/let-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/let-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/for-of/dstr/obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
@@ -14460,14 +14443,14 @@ language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not p
 language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/var-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/var-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/var-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/var-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/var-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/dstr/var-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/generator-next-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/generator-next-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+language/statements/for-of/generator-close-via-break.js :: it threw an object with no name: Generator is closed after `break` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-break.js (strict) :: it threw an object with no name: Generator is closed after `break` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-continue.js :: it threw an object with no name: Generator is closed after `continue` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-continue.js (strict) :: it threw an object with no name: Generator is closed after `continue` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-return.js :: it threw an object with no name: Generator is closed after `return` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-return.js (strict) :: it threw an object with no name: Generator is closed after `return` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-throw.js :: it threw an object with no name: Generator is closed after `throw` statement Expected SameValue(«0», «1») to be true
+language/statements/for-of/generator-close-via-throw.js (strict) :: it threw an object with no name: Generator is closed after `throw` statement Expected SameValue(«0», «1») to be true
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -14504,24 +14487,6 @@ language/statements/for/cptn-expr-expr-iter.js :: it threw ReferenceError: eval 
 language/statements/for/cptn-expr-expr-iter.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for/cptn-expr-expr-no-iter.js :: it threw ReferenceError: eval is not defined
 language/statements/for/cptn-expr-expr-no-iter.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/for/dstr/const-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/const-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/const-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/const-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/const-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/const-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/let-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/let-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/let-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/let-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/let-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/let-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/var-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/var-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/var-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/var-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/var-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for/dstr/var-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/for/head-init-expr-check-empty-inc-empty-completion.js :: it threw ReferenceError: eval is not defined
 language/statements/for/head-init-expr-check-empty-inc-empty-completion.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for/head-init-var-check-empty-inc-empty-completion.js :: it threw ReferenceError: eval is not defined
@@ -14603,18 +14568,6 @@ language/statements/function/dflt-params-ref-later.js :: it threw an object with
 language/statements/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/function/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/function/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/dflt-ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/dflt-ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/dflt-ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/dflt-ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/dflt-ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/function/dstr/dflt-ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/function/eval-var-scope-syntax-err.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -14772,12 +14725,7 @@ language/statements/labeled/cptn-nrml.js (strict) :: it threw ReferenceError: ev
 language/statements/labeled/tco.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/let/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/let/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/let/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/let/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/let/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/let/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/let/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/let/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+language/statements/let/syntax/let-newline-yield-in-generator-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/return/tco.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/switch/cptn-a-abrupt-empty.js :: it threw ReferenceError: eval is not defined
 language/statements/switch/cptn-a-abrupt-empty.js (strict) :: it threw ReferenceError: eval is not defined
@@ -14852,12 +14800,6 @@ language/statements/try/cptn-finally-wo-catch.js :: it threw ReferenceError: eva
 language/statements/try/cptn-finally-wo-catch.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/try/cptn-try.js :: it threw ReferenceError: eval is not defined
 language/statements/try/cptn-try.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/try/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/try/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/try/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/try/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/try/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/try/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/try/scope-catch-param-var-none.js :: it threw ReferenceError: eval is not defined
 language/statements/try/tco-catch-finally.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/try/tco-catch.js (strict) :: it threw ReferenceError: f is not defined
@@ -14981,12 +14923,6 @@ language/statements/variable/12.2.1-9-s.js (strict) :: it threw ReferenceError: 
 language/statements/variable/S12.2_A5.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/cptn-value.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/cptn-value.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/variable/dstr/ary-ptrn-elision-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/variable/dstr/ary-ptrn-elision-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/variable/dstr/ary-ptrn-rest-id-elision-next-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/variable/dstr/ary-ptrn-rest-id-elision-next-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/variable/dstr/ary-ptrn-rest-id-iter-step-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/variable/dstr/ary-ptrn-rest-id-iter-step-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/while/S12.6.2_A3.js :: it threw ReferenceError: eval is not defined
 language/statements/while/S12.6.2_A3.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/while/S12.6.2_A5.js :: it threw ReferenceError: eval is not defined

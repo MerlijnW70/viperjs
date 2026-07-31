@@ -1,14 +1,13 @@
 //! Parking an execution and reviving it — DR-0017's suspended frame, as data.
 //!
 //! A generator suspends at `yield` and is revived by `next`; an `async` function suspends at
-//! `await` and is revived by a job. Both need the same thing and neither is here yet: what is here
-//! is the thing underneath both, which is an execution that can be taken out of the interpreter,
-//! held as a value, and put back.
+//! `await` and is revived by a job. Both need the same thing, and this is it: an execution that can
+//! be taken out of the interpreter, held as a value, and put back.
 //!
 //! That it can be taken out at all is a property of [`super::call::Frame`] — a plain record,
-//! borrowing nothing — and of the loop above it, which does not recurse for a JavaScript call. The
-//! one place that *is* a Rust call is DR-0011's nested execution, and DR-0017 is the rule that a
-//! suspension may not cross one. It is checked rather than assumed; see [`Vm::park`].
+//! borrowing nothing — and of the loop above it, which does not recurse for a JavaScript call.
+//! DR-0017 is the other half: a parked execution keeps no return address, so where it is revived
+//! has nothing to do with where it was parked.
 
 use super::call::Frame;
 use super::{Fault, Handler, Vm};
@@ -47,6 +46,14 @@ pub(crate) struct Suspended {
     /// generator it is. Both are needed, and at different moments — a resumption starts from the
     /// object, and a `return` inside the body has only the frame to ask.
     generator: Option<ObjectId>,
+    /// Whether this execution has run at all — §27.5.1's `suspendedStart` against
+    /// `suspendedYield`.
+    ///
+    /// Here rather than on the generator, because it is a fact about the *execution*: one made by
+    /// [`Suspended::started`] has not begun and one made by [`Vm::park`] has, and there is no third
+    /// way to make one. What reads it is `throw`, which has a `try` to consider only if the body
+    /// has reached one.
+    begun: bool,
     /// The operands it had built, from its own floor upwards.
     stack: Vec<Value>,
     /// The handlers it had installed, each rebased to that floor.
@@ -66,6 +73,11 @@ impl Suspended {
             .chain([self.this_value, self.new_target])
             .chain(self.function.map(Value::Object))
             .chain(self.generator.map(Value::Object))
+    }
+
+    /// Whether this execution has run any of its body — §27.5.1's two suspended states.
+    pub(super) fn begun(&self) -> bool {
+        self.begun
     }
 
     /// The environment its next instruction will read a variable from.
@@ -98,6 +110,7 @@ impl Suspended {
             environment,
             function: Some(function),
             generator: Some(generator),
+            begun: false,
             stack: Vec::new(),
             handlers: Vec::new(),
         }
@@ -115,40 +128,27 @@ impl Vm {
     ///
     /// # DR-0017
     ///
-    /// What may not be parked is the frame a **nested execution** entered — DR-0011's, where a
-    /// native called back into JavaScript from the middle of an instruction and a Rust call is
-    /// waiting for the answer. Parking that one hands control straight back to Rust, and the
-    /// coercion, trap or comparator that is waiting reads the suspension's value as though the
-    /// function had *returned* it.
+    /// What is kept is the *callee's* half of the frame and none of the caller's. The code, the
+    /// instruction and the registers to come back to stay in the frame and are put back here; the
+    /// parked execution carries no return address at all, which is what makes it portable. A
+    /// generator suspended inside a `map` callback may be resumed from anywhere later, because
+    /// nothing in it remembers `map`.
     ///
-    /// It is the bottom frame that is forbidden and not the nested execution as a whole:
-    /// `[1].map(() => gen.next())` is an ordinary program, and there the generator's frame sits
-    /// above the callback's, so `next` returns to the callback in the usual way. What the check
-    /// refuses is `arr.sort(gen.next.bind(gen))`, where the resumed body *is* what the comparator
-    /// call entered.
-    ///
-    /// A [`Fault`] rather than a RangeError, because the grammar already rules it out for
-    /// generators: `yield` is only ever in the body of the `function*` that owns it, and `await`
-    /// in an `async` one. The check is what keeps the next native that grows a callback from
-    /// breaking that silently.
-    ///
-    /// The frame is popped before the check because a fault ends the execution: there is no state
-    /// left for the pop to have damaged, and this way `self.frames.len()` is the depth to compare.
+    /// That is why there is no check here against DR-0011's nested execution, and it took two
+    /// wrong answers to be sure of: the Rust call waiting mid-instruction is waiting for a *value*,
+    /// and the instruction that parks leaves one. See the record.
     pub(super) fn park(
         &mut self,
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<Suspended, Fault> {
         let Some(frame) = self.frames.pop() else {
-            return Err(Fault::SuspendWithNoCall);
+            return Err(Fault::YieldOutsideGenerator);
         };
         // `reentries` is non-zero exactly when a nested execution is running, and its floor is the
         // depth it started at — so the two together say "the frame just popped was the one that
         // execution entered". Equality rather than `<=`: the nested loop stops the moment its
         // entry frame is gone, so nothing can pop past the floor and come back here.
-        if self.reentries > 0 && self.frames.len() == self.floor.frames {
-            return Err(Fault::SuspendAcrossReentry);
-        }
         // Where this frame sat, now that it is gone — the depth every handler in it was installed
         // at or above, and so what makes their `frames` marks relative rather than absolute.
         let floor = self.frames.len();
@@ -166,6 +166,7 @@ impl Vm {
             environment: self.environment,
             function: frame.function,
             generator: frame.generator,
+            begun: true,
             stack: self.stack.split_off(operands),
             handlers: self
                 .handlers

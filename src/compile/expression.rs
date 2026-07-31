@@ -397,7 +397,23 @@ impl Compiler<'_> {
                 Ok(())
             }
             ExprKind::Await(_) => Err(unsupported("await", span)),
-            ExprKind::Yield(_) => Err(unsupported("yield", span)),
+            // §15.5.5 `YieldExpression : yield AssignmentExpression`. A bare `yield` yields
+            // `undefined`, which is the first production's whole meaning — and `yield` is an
+            // *expression*, so what a resumption sends back is what it evaluates to.
+            ExprKind::Yield(yielded) => {
+                if yielded.delegate {
+                    return Err(unsupported("yield*", span));
+                }
+                match &yielded.argument {
+                    Some(argument) => self.expression(argument)?,
+                    None => {
+                        let index = self.chunk.add_constant(Value::Undefined)?;
+                        self.chunk.emit(Instruction::Constant(index));
+                    }
+                }
+                self.chunk.emit(Instruction::Yield);
+                Ok(())
+            }
             ExprKind::Super => Err(unsupported("super", span)),
             // §13.3.12 — `GetNewTarget()`, which the running call decided and which the parser has
             // already refused anywhere there is no call to have decided it.

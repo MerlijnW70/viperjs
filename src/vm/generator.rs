@@ -11,7 +11,7 @@ use super::call::Entry;
 use super::suspend::Suspended;
 use super::{Fault, Vm};
 use crate::compile::Chunk;
-use crate::heap::{GeneratorState, Heap, Object, ObjectId, Resumption};
+use crate::heap::{Heap, Object, ObjectId, Resumption};
 use crate::value::{Abrupt, Value};
 use std::rc::Rc;
 
@@ -52,7 +52,7 @@ impl Vm {
             }
         };
         let generator = heap.new_object(Some(prototype));
-        heap.set_generator_state(generator, GeneratorState::SuspendedStart);
+        heap.brand_generator(generator);
         let parked =
             Suspended::started(body, environment, receiver, new_target, function, generator);
         // The object was just made, so it is an object and this cannot answer `false`.
@@ -94,27 +94,31 @@ impl Vm {
             _ => self.stack[callee_at + 1],
         };
         self.stack.truncate(receiver_at);
-        let found = match receiver {
-            Value::Object(id) => heap
-                .object(id)
-                .and_then(Object::generator_state)
-                .map(|state| (id, state)),
-            _ => None,
+        // §27.5.1.2 step 2's `RequireInternalSlot` — a brand and not a shape, so an ordinary
+        // object with a `next` of its own is not one however similar it looks.
+        let generator = match receiver {
+            Value::Object(id) if heap.object(id).is_some_and(Object::is_generator) => id,
+            _ => {
+                self.raise(
+                    Abrupt::type_error("what was resumed is not a generator"),
+                    heap,
+                    chunk,
+                    current,
+                    at,
+                )?;
+                return Ok(());
+            }
         };
-        let Some((generator, state)) = found else {
-            self.raise(
-                Abrupt::type_error("what was resumed is not a generator"),
-                heap,
-                chunk,
-                current,
-                at,
-            )?;
-            return Ok(());
-        };
-        // §27.5.1.2 step 4 and §27.5.3.2 step 2 — a generator already running cannot be resumed. It
-        // is the one state that is an error rather than an answer, because the execution is not
-        // parked anywhere to be resumed *from*: something is in the middle of it.
-        if state == GeneratorState::Executing {
+        // §27.5.1.2 step 4 — a generator already running cannot be resumed, and *running* is a
+        // question about the frame stack rather than about a flag: the execution is not parked
+        // anywhere to be resumed from, because a frame is in the middle of it. Asked by walking the
+        // frames, which costs nothing worth measuring — a resumption is rare and the stack is a few
+        // deep — and cannot be stale, which a flag was.
+        if self
+            .frames
+            .iter()
+            .any(|frame| frame.generator == Some(generator))
+        {
             self.raise(
                 Abrupt::type_error("a generator cannot be resumed while it is running"),
                 heap,
@@ -124,29 +128,33 @@ impl Vm {
             )?;
             return Ok(());
         }
-        // Asked as one question rather than as a state and then a lookup, so that the two cannot
-        // disagree: what decides what happens next is whether there is an execution to resume, and
-        // a completed generator is precisely one with none.
+        // Everything else is decided by whether there is an execution to resume: a *completed*
+        // generator is precisely one with none, and one that has begun is told from one that has
+        // not by the execution itself.
         let parked = heap.take_parked(receiver);
+        let begun = parked.as_ref().is_some_and(Suspended::begun);
         let outcome = match (parked, kind) {
             // §27.5.3.2 `GeneratorResume` — the only path that runs any code.
             (Some(parked), Resumption::Next) => {
-                heap.set_generator_state(generator, GeneratorState::Executing);
                 self.revive(parked, sent, receiver_at, current, at);
                 return Ok(());
             }
-            // §27.5.1.3 step 5 — a `return` before the body has begun completes the generator
-            // without running it. There is no `try` it could have entered, so nothing can
-            // intercept, and the argument becomes the answer.
-            (Some(_), Resumption::Return) => {
-                heap.set_generator_state(generator, GeneratorState::Completed);
-                Finish::Value(sent)
+            // §27.5.3.4 `GeneratorResumeAbrupt` with a throw completion, where the body has begun:
+            // the `throw` happens *at the `yield`*, so a `try` the body is inside catches it. The
+            // execution is put back and then unwound, which is the same two steps a `throw`
+            // written at that line would have been.
+            (Some(parked), Resumption::Throw) if begun => {
+                // `undefined` rather than the thrown value: the `yield` never evaluates to
+                // anything, and the unwinding below discards whatever is above the handler's mark.
+                self.revive(parked, Value::Undefined, receiver_at, current, at);
+                self.unwind(sent, chunk, current, at)?;
+                return Ok(());
             }
-            // §27.5.1.4 step 5 — and a `throw` there completes it and throws, for the same reason.
-            (Some(_), Resumption::Throw) => {
-                heap.set_generator_state(generator, GeneratorState::Completed);
-                Finish::Thrown(sent)
-            }
+            // §27.5.1.4 step 5 — before the body has begun there is no `try` it could have entered,
+            // so the generator is finished and the value travels out unchanged.
+            (Some(_), Resumption::Throw) => Finish::Thrown(sent),
+            // §27.5.1.3 step 5 — and a `return` completes it without running anything.
+            (Some(_), Resumption::Return) => Finish::Value(sent),
             // §27.5.1.2 step 5 — a finished generator answers `{ value: undefined, done: true }`
             // for ever, however many times it is asked.
             (None, Resumption::Next) => Finish::Value(Value::Undefined),
@@ -192,22 +200,6 @@ impl Vm {
             );
         }
         Value::Object(object)
-    }
-
-    /// Finish a generator's frame the way §27.5.3.2 finishes a resumption.
-    ///
-    /// Called by `Return` when the frame it is leaving belongs to a generator. Two things happen
-    /// that an ordinary return does not: the generator is marked completed — nothing put its
-    /// execution back, so this is the last of it — and the returned value is wrapped, because what
-    /// a resumption answers with is an iterator result and not the value itself.
-    pub(super) fn complete_generator(
-        &mut self,
-        generator: ObjectId,
-        value: Value,
-        heap: &mut Heap,
-    ) -> Value {
-        heap.set_generator_state(generator, GeneratorState::Completed);
-        self.iterator_result(heap, value, true)
     }
 }
 

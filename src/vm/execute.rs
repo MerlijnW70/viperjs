@@ -732,12 +732,12 @@ impl Vm {
                         (Some(made), _) => made,
                     };
                     // §27.5.3.2 step 5 — a generator's body does not answer with what it returned:
-                    // the resumption that entered it answers with `{ value, done: true }`, and the
-                    // generator is finished for good. Nothing put its execution back, so this is
-                    // the last of it, and the frame is the only thing that still knows which
-                    // object it belonged to.
+                    // the resumption that entered it answers with `{ value, done: true }`. Nothing
+                    // is marked finished, because nothing needs to be — the execution was taken out
+                    // of the generator to be run and is not going back, and *that* is what being
+                    // completed means.
                     let answer = match frame.generator {
-                        Some(generator) => self.complete_generator(generator, answer, heap),
+                        Some(_) => self.iterator_result(heap, answer, true),
                         None => answer,
                     };
                     self.stack.push(answer);
@@ -747,38 +747,24 @@ impl Vm {
                     *current = frame.code;
                     *at = frame.at;
                 }
-                Instruction::Suspend => {
+                Instruction::Yield => {
                     let value = self.pop()?;
-                    let holder = self.pop()?;
-                    // Parked before the holder is looked at, because parking is what decides
-                    // whether this is legal at all — DR-0017's check lives in there, and a holder
-                    // that cannot hold is a chunk that does not make sense either way.
-                    let parked = self.park(current, at)?;
-                    if !heap.park_into(holder, parked) {
-                        return Err(Fault::NotAnObject);
-                    }
-                    // Where a `Return` would have left the returned value, and for the same
-                    // reason: the call that entered this function is answered either way, and only
-                    // the fate of the execution differs.
-                    self.stack.push(value);
-                }
-                Instruction::Revive => {
-                    let sent = self.pop()?;
-                    let holder = self.pop()?;
-                    // Both operands are gone, so this is where the revived execution's own answer
-                    // will land — the same place a call leaves one.
-                    let base = self.stack.len();
-                    // No recursion limit of its own, unlike [`Vm::enter`], and it is not missing.
-                    // A revival pushes a frame that a suspension popped, so the two conserve the
-                    // frame stack between them; what could nest revivals is a *call* to whatever
-                    // performs one, and that is bounded where every other call is. What is left is
-                    // a chunk holding many suspensions at once and reviving them one inside
-                    // another — and each of those is a heap object, so DR-0013's budget is the
-                    // bound on it. Adding a second one here would be a branch nothing can reach.
-                    let Some(parked) = heap.take_parked(holder) else {
-                        return Err(Fault::NothingToRevive);
+                    // §27.5.3.7 suspends *the generator's own execution context*, so which
+                    // generator this is belongs to the frame rather than to the instruction: there
+                    // is no other one a `yield` could mean, and the compiler emits none outside a
+                    // generator body.
+                    let Some(generator) = self.frames.last().and_then(|frame| frame.generator)
+                    else {
+                        return Err(Fault::YieldOutsideGenerator);
                     };
-                    self.revive(parked, sent, base, current, at);
+                    // Wrapped before the park, so that a park that is refused leaves nothing built.
+                    let result = self.iterator_result(heap, value, false);
+                    let parked = self.park(current, at)?;
+                    // The generator exists — the frame named it — so this cannot answer `false`.
+                    let _ = heap.park_into(Value::Object(generator), parked);
+                    // Where a `Return` would have left the returned value: the resumption that
+                    // entered this body is being answered, and it answers with an iterator result.
+                    self.stack.push(result);
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
