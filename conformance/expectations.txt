@@ -1220,72 +1220,14 @@ built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js :: it threw 
 built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js (strict) :: it threw an object with no name: The value of result.length is expected to be 1 Expected SameValue(«2», «1») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js (strict) :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/copyWithin/call-with-boolean.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/copyWithin/call-with-boolean.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/copyWithin/coerced-values-end.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-end.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-start-change-start.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-start-change-start.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-start-change-target.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-start-change-target.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-start.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-start.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-target.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/coerced-values-target.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/fill-holes.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/fill-holes.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/length-near-integer-limit.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/copyWithin/length-near-integer-limit.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/copyWithin/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/copyWithin/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/copyWithin/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/copyWithin/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/copyWithin/negative-end.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-end.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-out-of-bounds-end.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-out-of-bounds-end.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-out-of-bounds-start.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-out-of-bounds-start.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-out-of-bounds-target.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-out-of-bounds-target.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-start.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-start.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-target.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/negative-target.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-out-of-bounds-end.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-out-of-bounds-end.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-out-of-bounds-target-and-start.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-out-of-bounds-target-and-start.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-target-and-start.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-target-and-start.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-target-start-and-end.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/non-negative-target-start-and-end.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/copyWithin/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/copyWithin/prop-desc.js :: it threw an object with no name: `typeof Array.prototype.copyWithin` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/copyWithin/prop-desc.js (strict) :: it threw an object with no name: `typeof Array.prototype.copyWithin` is `function` Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/prototype/copyWithin/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/copyWithin/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/copyWithin/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/copyWithin/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/copyWithin/return-abrupt-from-end.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-end.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-get-start-value.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-get-start-value.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Array/prototype/copyWithin/return-abrupt-from-has-start.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-has-start.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/copyWithin/return-abrupt-from-set-target-value.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-set-target-value.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-start.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-start.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-target.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-target.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-this-length.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-abrupt-from-this-length.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/copyWithin/return-this.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/return-this.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/undefined-end.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/copyWithin/undefined-end.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/entries/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/entries/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
@@ -1705,105 +1647,10 @@ built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js :: it thre
 built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/sort/S15.4.4.11_A1.1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.2_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.2_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.2_T2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.2_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.3_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.3_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.4_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.4_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.4_T2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.4_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.5_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A1.5_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.1_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.1_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.1_T2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.1_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.1_T3.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.1_T3.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.2_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.2_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.2_T2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.2_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.2_T3.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A2.2_T3.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A3_T1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A3_T1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A3_T2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A3_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A4_T3.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A4_T3.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A5_T1.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/sort/S15.4.4.11_A5_T1.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/sort/S15.4.4.11_A6_T2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A6_T2.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/S15.4.4.11_A8.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/bug_596_1.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/bug_596_1.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/bug_596_2.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/bug_596_2.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/sort/comparefn-grow.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/sort/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/sort/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/sort/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/sort/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/sort/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/sort/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/sort/precise-comparefn-throws.js :: it threw an object with no name: Expected SameValue(«"what was called is not a function"», «"get"») to be true
-built-ins/Array/prototype/sort/precise-comparefn-throws.js (strict) :: it threw an object with no name: Expected SameValue(«"what was called is not a function"», «"get"») to be true
-built-ins/Array/prototype/sort/precise-getter-appends-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-appends-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-decreases-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-decreases-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-deletes-predecessor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-deletes-predecessor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-deletes-successor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-deletes-successor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-increases-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-increases-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-pops-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-pops-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-sets-predecessor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-sets-predecessor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-sets-successor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-getter-sets-successor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-prototype-accessors.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-prototype-accessors.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-prototype-element.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-prototype-element.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-appends-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-appends-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-decreases-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-decreases-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-deletes-predecessor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-deletes-predecessor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-deletes-successor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-deletes-successor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-increases-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-increases-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-pops-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-pops-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-sets-predecessor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-sets-predecessor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-sets-successor.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/precise-setter-sets-successor.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/prop-desc.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/sort/prop-desc.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/sort/stability-11-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-11-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-2048-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-2048-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-5-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-5-elements.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-513-elements.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/sort/stability-513-elements.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/splice/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/splice/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
@@ -1852,180 +1699,20 @@ built-ins/Array/prototype/toLocaleString/primitive_this_value.js (strict) :: it 
 built-ins/Array/prototype/toLocaleString/primitive_this_value_getter.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/toLocaleString/prop-desc.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/toLocaleString/prop-desc.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toReversed/frozen-this-value.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/frozen-this-value.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/get-descending-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/get-descending-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/holes-not-preserved.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/holes-not-preserved.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/ignores-species.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/ignores-species.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/immutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/immutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/length-casted-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/length-casted-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/length-decreased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/length-decreased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/length-exceeding-array-length-limit.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/toReversed/length-exceeding-array-length-limit.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/toReversed/length-increased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/length-increased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/length-tolength.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/length-tolength.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toReversed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toReversed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toReversed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toReversed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/toReversed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/toReversed/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toReversed/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toReversed/this-value-boolean.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/this-value-boolean.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toReversed/zero-or-one-element.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toReversed/zero-or-one-element.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/comparefn-called-after-get-elements.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/toSorted/comparefn-called-after-get-elements.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/toSorted/comparefn-controls-sort.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/comparefn-controls-sort.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/comparefn-default.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/comparefn-default.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/comparefn-stop-after-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/toSorted/comparefn-stop-after-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Array/prototype/toSorted/frozen-this-value.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/frozen-this-value.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/holes-not-preserved.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/holes-not-preserved.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/ignores-species.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/ignores-species.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/immutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/immutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/length-casted-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSorted/length-casted-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSorted/length-decreased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/length-decreased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/length-exceeding-array-length-limit.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/toSorted/length-exceeding-array-length-limit.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/toSorted/length-increased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/length-increased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/length-tolength.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSorted/length-tolength.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSorted/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSorted/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSorted/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSorted/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSorted/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/toSorted/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/toSorted/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toSorted/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toSorted/this-value-boolean.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSorted/this-value-boolean.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSorted/zero-or-one-element.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSorted/zero-or-one-element.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/deleteCount-clamped-between-zero-and-remaining-count.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/deleteCount-clamped-between-zero-and-remaining-count.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/deleteCount-missing.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/deleteCount-missing.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/deleteCount-undefined.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/deleteCount-undefined.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/discarded-element-not-read.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/discarded-element-not-read.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/elements-read-in-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/elements-read-in-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/frozen-this-value.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/frozen-this-value.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/holes-not-preserved.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/holes-not-preserved.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/ignores-species.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/ignores-species.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/immutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/immutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/length-casted-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/length-casted-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/length-clamped-to-2pow53minus1.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/length-clamped-to-2pow53minus1.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/length-decreased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/length-decreased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/length-exceeding-array-length-limit.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/toSpliced/length-exceeding-array-length-limit.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/toSpliced/length-increased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/length-increased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/length-tolength.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/length-tolength.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSpliced/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSpliced/mutate-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/mutate-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSpliced/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/toSpliced/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/toSpliced/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/toSpliced/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toSpliced/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toSpliced/start-and-deleteCount-missing.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-and-deleteCount-missing.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-and-deleteCount-undefineds.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-and-deleteCount-undefineds.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-bigger-than-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-bigger-than-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-neg-infinity-is-zero.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-neg-infinity-is-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-neg-less-than-minus-length-is-zero.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-neg-less-than-minus-length-is-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-neg-subtracted-from-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-neg-subtracted-from-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-undefined-and-deleteCount-missing.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/start-undefined-and-deleteCount-missing.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/this-value-boolean.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/this-value-boolean.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/toSpliced/unmodified.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/toSpliced/unmodified.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/toReversed/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/toReversed/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/toSorted/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/toSorted/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/toSpliced/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/toSpliced/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/toString/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/toString/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/unshift/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/unshift/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/with/frozen-this-value.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/frozen-this-value.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/holes-not-preserved.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/holes-not-preserved.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/ignores-species.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/ignores-species.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/immutable.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/immutable.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-bigger-or-eq-than-length.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/with/index-bigger-or-eq-than-length.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/with/index-casted-to-number.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-casted-to-number.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-negative.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-negative.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-smaller-than-minus-length.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-smaller-than-minus-length.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/index-throw-completion.js :: it threw an object with no name: Expected a MyError but got a TypeError
-built-ins/Array/prototype/with/index-throw-completion.js (strict) :: it threw an object with no name: Expected a MyError but got a TypeError
-built-ins/Array/prototype/with/length-decreased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/length-decreased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/length-exceeding-array-length-limit.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/with/length-exceeding-array-length-limit.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Array/prototype/with/length-increased-while-iterating.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/length-increased-while-iterating.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/length-tolength.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/with/length-tolength.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/with/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/with/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/with/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/with/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/with/negative-fractional-index-truncated-to-zero.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/negative-fractional-index-truncated-to-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/no-get-replaced-index.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/no-get-replaced-index.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/with/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/with/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Array/prototype/with/property-descriptor.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/with/property-descriptor.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/with/this-value-boolean.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/with/this-value-boolean.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Array/prototype/with/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
+built-ins/Array/prototype/with/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
@@ -4874,10 +4561,10 @@ built-ins/Map/groupBy/string.js :: it threw TypeError: what was called is not a 
 built-ins/Map/groupBy/string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/groupBy/toPropertyKey.js :: it threw TypeError: what was called is not a function
 built-ins/Map/groupBy/toPropertyKey.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/iterator-close-after-set-failure.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-close-failure-after-set-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-close-failure-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
@@ -5493,8 +5180,6 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-35.js :: it threw TypeError
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-35.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-44.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-44.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-51.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-51.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-68.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -16781,8 +16466,6 @@ language/expressions/property-accessors/S11.2.1_A3_T2.js :: it threw TypeError: 
 language/expressions/property-accessors/S11.2.1_A3_T2.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/property-accessors/S11.2.1_A4_T3.js :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
 language/expressions/property-accessors/S11.2.1_A4_T3.js (strict) :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
-language/expressions/property-accessors/S11.2.1_A4_T4.js :: it threw an object with no name: #13: typeof Array.prototype.sort === "function". Actual: undefined
-language/expressions/property-accessors/S11.2.1_A4_T4.js (strict) :: it threw an object with no name: #13: typeof Array.prototype.sort === "function". Actual: undefined
 language/expressions/right-shift/S11.7.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/right-shift/S11.7.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
@@ -17908,8 +17591,6 @@ language/statements/function/13.2-6-s.js :: it threw TypeError: building a funct
 language/statements/function/13.2-7-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-8-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-9-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/S13.2.1_A5_T1.js :: it threw TypeError: what was called is not a function
-language/statements/function/S13.2.1_A5_T1.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/function/S13.2.2_A14.js :: it threw an object with no name: #1: var obj = new FACTORY() does not lead to throwing exception
 language/statements/function/S13.2.2_A8_T3.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/S13.2.2_A8_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet

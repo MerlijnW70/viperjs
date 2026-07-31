@@ -14,6 +14,8 @@
 //! - `arrays` — §10.4.2's exotic `length`, and the literal that makes one.
 //! - `array_methods` — §23.1.3, and the two of §20.2.3 that reach it.
 //! - `array_more` — the rest of §23.1.3: folding, quantifying, and moving elements.
+//! - `array_sort` — §23.1.3.30 and §23.1.3.34, and the order that compares spellings.
+//! - `array_copy` — §23.1.3's change-copies, and the index that throws rather than clamps.
 //! - `objects_builtin` — §20.1's `Object`, and a property descriptor as a value.
 //! - `functions` — calls, closures, `this`.
 //! - `arrows` — §15.3, and the `this` an arrow does not bind.
@@ -47,8 +49,10 @@
 
 mod accessors;
 mod arguments;
+mod array_copy;
 mod array_methods;
 mod array_more;
+mod array_sort;
 mod arrays;
 mod arrows;
 mod bound;

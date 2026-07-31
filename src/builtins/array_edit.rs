@@ -103,6 +103,40 @@ pub fn unshift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
     Ok(Value::Number(grown as f64))
 }
 
+/// §23.1.3.4 `Array.prototype.copyWithin`, in place.
+///
+/// The one method here that can read an index it has already written, because its source and its
+/// destination are the same array. §23.1.3.4 step 8 is what stops it: when the destination starts
+/// inside the source the walk runs backwards, so every index is read before the copy reaches it —
+/// the same reason `memmove` exists and `memcpy` would be wrong.
+pub fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = this_object(call)?;
+    let length = length_of(vm, heap, object)?;
+    let to = start_index(vm, heap, call.argument(0), length)?;
+    let from = start_index(vm, heap, call.argument(1), length)?;
+    // An absent third argument is the end of the array, which is not what `ToIntegerOrInfinity`
+    // of `undefined` would give — that is zero, and would copy nothing at all.
+    let end = match call.argument(2) {
+        Value::Undefined => length,
+        value => start_index(vm, heap, value, length)?,
+    };
+    // Step 7 — however much is asked for, it stops at whichever end comes first. `saturating_sub`
+    // is the `max(final - from, 0)` half: a range that runs backwards copies nothing rather than
+    // wrapping round to an enormous count.
+    let count = end.saturating_sub(from).min(length - to);
+    let backwards = from < to && to < from + count;
+    for step in 0..count {
+        let (source, target) = match backwards {
+            true => (from + count - 1 - step, to + count - 1 - step),
+            false => (from + step, to + step),
+        };
+        // Step 9.c — a hole is not copied as `undefined`, it is *deleted* at the destination, so
+        // `copyWithin` moves holes the way `reverse` and `shift` do.
+        move_index(vm, heap, object, source, target)?;
+    }
+    Ok(Value::Object(object))
+}
+
 /// §23.1.3.24 `Array.prototype.reverse`, in place.
 pub fn reverse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = this_object(call)?;

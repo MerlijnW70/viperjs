@@ -15,9 +15,11 @@
 //! method that also serves object literals.
 
 pub mod array;
+pub mod array_copy;
 pub mod array_edit;
 pub mod array_iterate;
 pub mod array_methods;
+pub mod array_sort;
 mod buffer;
 mod collection;
 pub(crate) mod date;

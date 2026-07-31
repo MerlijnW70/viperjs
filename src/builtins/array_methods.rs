@@ -389,6 +389,20 @@ pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     Ok(Value::Object(taken))
 }
 
+/// §10.4.2.2 `ArrayCreate` — a new Array that long, or the RangeError that length earns.
+///
+/// `LengthOfArrayLike` **clamps** what is read to 2^53-1; an Array's own `length` stops at 2^32-1,
+/// and §10.4.2.2 step 1 makes the gap between them a **RangeError** rather than a second clamp.
+/// Every method that answers a copy of an array-like meets this, because the array-like it was
+/// handed may be longer than any Array — so the copy it is asking for is not one that exists.
+pub(super) fn new_array_checked(vm: &mut Vm, heap: &mut Heap, length: u64) -> Completion<ObjectId> {
+    let Ok(size) = u32::try_from(length) else {
+        return Err(Abrupt::range_error("an array cannot be that long"));
+    };
+    let prototype = vm.realm().array_prototype();
+    Ok(heap.new_array(prototype, size))
+}
+
 /// A length as the count an Array's `length` property can hold.
 ///
 /// `LengthOfArrayLike` allows up to `2^53 - 1` and an Array's `length` stops at `2^32 - 1`, so an
@@ -405,6 +419,7 @@ pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
     for (name, length, native) in [
         ("at", 1, edit::at as crate::heap::Native),
         ("concat", 1, edit::concat),
+        ("copyWithin", 2, edit::copy_within),
         ("every", 1, iterate::every),
         ("fill", 1, edit::fill),
         ("filter", 1, filter),
@@ -429,9 +444,14 @@ pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
         ("shift", 0, edit::shift),
         ("slice", 2, slice),
         ("some", 1, iterate::some),
+        ("sort", 1, super::array_sort::sort),
         ("splice", 2, edit::splice),
+        ("toReversed", 0, super::array_copy::to_reversed),
+        ("toSorted", 1, super::array_sort::to_sorted),
+        ("toSpliced", 2, super::array_copy::to_spliced),
         ("toString", 0, to_string),
         ("unshift", 1, edit::unshift),
+        ("with", 2, super::array_copy::with),
     ] {
         define_method(heap, realm, prototype, name, length, native);
     }
