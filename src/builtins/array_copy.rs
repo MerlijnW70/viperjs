@@ -48,7 +48,7 @@ fn fill_from(
 
 /// §23.1.3.39 `Array.prototype.with` — one index replaced, everything else copied.
 pub fn with(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     // Steps 3 and 4 — a negative index counts back from the end, and this is the one relative
     // index in §23.1.3 that is **not** clamped. `[1, 2].with(5, 0)` is a RangeError where
@@ -86,7 +86,7 @@ pub fn with(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 
 /// §23.1.3.33 `Array.prototype.toReversed`.
 pub fn to_reversed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let copy = new_array_checked(vm, heap, length)?;
     // Step 5.a — index `k` of the copy is index `len - k - 1` of the original. Reading forwards
@@ -100,7 +100,7 @@ pub fn to_reversed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
 
 /// §23.1.3.35 `Array.prototype.toSpliced`.
 pub fn to_spliced(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let start = start_index(vm, heap, call.argument(0), length)?;
     let inserted = call.arguments.len().saturating_sub(2) as u64;

@@ -1129,8 +1129,6 @@ built-ins/Array/prototype/Symbol.unscopables/value.js :: it threw TypeError: und
 built-ins/Array/prototype/Symbol.unscopables/value.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/prototype/at/typed-array-resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/at/typed-array-resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js :: it threw an object with no name: [].concat(objWithPoisonedLengthToString) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js (strict) :: it threw an object with no name: [].concat(objWithPoisonedLengthToString) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-value-of-throws.js :: it threw an object with no name: [].concat(objWithPoisonedLengthValueOf) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -1176,8 +1174,6 @@ built-ins/Array/prototype/concat/arg-length-exceeding-integer-limit.js :: it thr
 built-ins/Array/prototype/concat/arg-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: [1].concat(spreadableLengthOutOfRange) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/arg-length-near-integer-limit.js :: it threw an object with no name: [].concat(spreadableHasPoisonedIndex) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/arg-length-near-integer-limit.js (strict) :: it threw an object with no name: [].concat(spreadableHasPoisonedIndex) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/concat/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/concat/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/concat/create-ctor-non-object.js :: it threw an object with no name: a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/create-ctor-non-object.js (strict) :: it threw an object with no name: a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/create-ctor-poisoned.js :: it threw an object with no name: a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -1220,8 +1216,6 @@ built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js :: it threw 
 built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js (strict) :: it threw an object with no name: The value of result.length is expected to be 1 Expected SameValue(«2», «1») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js (strict) :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/copyWithin/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/copyWithin/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/copyWithin/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/copyWithin/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/copyWithin/return-abrupt-from-delete-proxy-target.js :: it threw ReferenceError: Proxy is not defined
@@ -1234,28 +1228,18 @@ built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no 
 built-ins/Array/prototype/every/15.4.4.16-1-10.js (strict) :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/every/15.4.4.16-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/every/15.4.4.16-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/15.4.4.16-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/every/15.4.4.16-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/every/15.4.4.16-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/every/15.4.4.16-5-7.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/every/15.4.4.16-5-7.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/every/15.4.4.16-7-c-iii-22.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/every/15.4.4.16-7-c-iii-22.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/every/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/every/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/every/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/every/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/every/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/fill/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/fill/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/coerced-indexes.js (strict) :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1264,20 +1248,12 @@ built-ins/Array/prototype/filter/15.4.4.20-1-10.js :: it threw an object with no
 built-ins/Array/prototype/filter/15.4.4.20-1-10.js (strict) :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «1») to be true
 built-ins/Array/prototype/filter/15.4.4.20-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/15.4.4.20-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/filter/15.4.4.20-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/15.4.4.20-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/filter/15.4.4.20-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/15.4.4.20-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/15.4.4.20-5-7.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/filter/15.4.4.20-5-7.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-23.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-23.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/filter/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/filter/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/filter/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/filter/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/filter/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
@@ -1308,30 +1284,22 @@ built-ins/Array/prototype/filter/target-array-non-extensible.js :: it threw an o
 built-ins/Array/prototype/filter/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/filter/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/filter/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/find/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/find/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/findIndex/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/findIndex/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/findLast/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/findLast/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/findLastIndex/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/findLastIndex/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1419,26 +1387,16 @@ built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with n
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js (strict) :: it threw an object with no name: result !== true
 built-ins/Array/prototype/forEach/15.4.4.18-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/forEach/15.4.4.18-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/15.4.4.18-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/forEach/15.4.4.18-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-5-7.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/forEach/15.4.4.18-5-7.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/Array/prototype/forEach/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/forEach/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/forEach/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/forEach/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/includes/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/includes/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/includes/get-prop.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/includes/get-prop.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
@@ -1449,14 +1407,6 @@ built-ins/Array/prototype/includes/resizable-buffer.js :: it threw ReferenceErro
 built-ins/Array/prototype/includes/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/indexOf/15.4.4.14-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/indexOf/15.4.4.14-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/indexOf/15.4.4.14-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/15.4.4.14-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/15.4.4.14-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/15.4.4.14-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/15.4.4.14-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/15.4.4.14-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/indexOf/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
@@ -1465,26 +1415,16 @@ built-ins/Array/prototype/indexOf/resizable-buffer-special-float-values.js :: it
 built-ins/Array/prototype/indexOf/resizable-buffer-special-float-values.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/prototype/indexOf/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/indexOf/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/join/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/join/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/join/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/join/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/keys/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/keys/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-8.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-8.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-21.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/lastIndexOf/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/lastIndexOf/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/lastIndexOf/calls-only-has-on-prototype-after-length-zeroed.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/lastIndexOf/calls-only-has-on-prototype-after-length-zeroed.js (strict) :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
@@ -1495,18 +1435,10 @@ built-ins/Array/prototype/map/15.4.4.19-1-10.js :: it threw an object with no na
 built-ins/Array/prototype/map/15.4.4.19-1-10.js (strict) :: it threw an object with no name: testResult[0] Expected SameValue(«false», «true») to be true
 built-ins/Array/prototype/map/15.4.4.19-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/map/15.4.4.19-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/map/15.4.4.19-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/15.4.4.19-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/map/15.4.4.19-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/map/15.4.4.19-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/map/15.4.4.19-5-7.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/map/15.4.4.19-5-7.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/Array/prototype/map/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/map/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/map/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/map/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/map/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
@@ -1537,28 +1469,16 @@ built-ins/Array/prototype/map/target-array-non-extensible.js :: it threw an obje
 built-ins/Array/prototype/map/target-array-non-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/map/target-array-with-non-configurable-property.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/map/target-array-with-non-configurable-property.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/pop/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/pop/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/push/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/push/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/push/throws-if-integer-limit-exceeded.js :: it threw an object with no name: Length is 2**53 - 1 Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/throws-if-integer-limit-exceeded.js (strict) :: it threw an object with no name: Length is 2**53 - 1 Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/reduce/15.4.4.21-1-10.js :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduce/15.4.4.21-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduce/15.4.4.21-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/reduce/15.4.4.21-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/reduce/15.4.4.21-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/15.4.4.21-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/15.4.4.21-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/15.4.4.21-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/15.4.4.21-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/15.4.4.21-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-32.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/reduce/15.4.4.21-9-c-ii-32.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/reduce/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduce/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduce/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduce/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduce/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1567,30 +1487,16 @@ built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js :: it threw an object wi
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-32.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-ii-32.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/reduceRight/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reduceRight/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/reverse/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/reverse/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw ReferenceError: Proxy is not defined
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw ReferenceError: Proxy is not defined
-built-ins/Array/prototype/shift/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/shift/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/slice/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/slice/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/slice/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/slice/create-ctor-non-object.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/slice/create-ctor-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -1627,20 +1533,12 @@ built-ins/Array/prototype/some/15.4.4.17-1-10.js :: it threw an object with no n
 built-ins/Array/prototype/some/15.4.4.17-1-10.js (strict) :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
 built-ins/Array/prototype/some/15.4.4.17-1-12.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/some/15.4.4.17-1-12.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/some/15.4.4.17-1-3.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-1-3.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-1-5.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-1-5.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-1-7.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/15.4.4.17-1-7.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/some/15.4.4.17-5-16.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/some/15.4.4.17-5-16.js (strict) :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/some/15.4.4.17-5-7.js :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/some/15.4.4.17-5-7.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Array/prototype/some/15.4.4.17-7-c-iii-22.js :: it threw ReferenceError: RegExp is not defined
 built-ins/Array/prototype/some/15.4.4.17-7-c-iii-22.js (strict) :: it threw ReferenceError: RegExp is not defined
-built-ins/Array/prototype/some/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/some/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/some/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/some/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1651,8 +1549,6 @@ built-ins/Array/prototype/sort/comparefn-grow.js :: it threw ReferenceError: Big
 built-ins/Array/prototype/sort/comparefn-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/splice/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/splice/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/splice/create-ctor-non-object.js :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/splice/create-ctor-non-object.js (strict) :: it threw an object with no name: null value Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/splice/create-ctor-poisoned.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -1699,20 +1595,8 @@ built-ins/Array/prototype/toLocaleString/primitive_this_value.js (strict) :: it 
 built-ins/Array/prototype/toLocaleString/primitive_this_value_getter.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/toLocaleString/prop-desc.js :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/toLocaleString/prop-desc.js (strict) :: it threw an object with no name: typeof Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Array/prototype/toReversed/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toReversed/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toSorted/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toSorted/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toSpliced/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toSpliced/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toString/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/toString/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/unshift/call-with-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/unshift/call-with-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/with/this-value-boolean.js :: it threw TypeError: an Array.prototype method requires an object
-built-ins/Array/prototype/with/this-value-boolean.js (strict) :: it threw TypeError: an Array.prototype method requires an object
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all

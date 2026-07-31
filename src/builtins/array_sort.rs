@@ -229,7 +229,7 @@ fn sorted_list(
 /// §23.1.3.30 `Array.prototype.sort`, in place.
 pub fn sort(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let comparator = comparator(call, heap)?;
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let sorted = sorted_list(vm, heap, object, length, comparator, Holes::Skip)?;
     let written = sorted.len() as u64;
@@ -249,7 +249,7 @@ pub fn sort(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 /// §23.1.3.34 `Array.prototype.toSorted`, which leaves its argument alone.
 pub fn to_sorted(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let comparator = comparator(call, heap)?;
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     // Step 4 is `ArrayCreate(len)`, which refuses a length no Array could have — see
     // [`new_array_checked`]. Made *before* the elements are gathered, because that is where the

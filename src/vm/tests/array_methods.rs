@@ -295,3 +295,58 @@ fn a_length_that_is_not_a_number_reads_as_none_at_all() {
         "undefined"
     );
 }
+
+#[test]
+fn a_primitive_receiver_is_wrapped_rather_than_refused() {
+    // Every method in §23.1.3 opens `Let O be ? ToObject(this value)`, and §7.1.18 *wraps* a
+    // primitive rather than rejecting it. So a String is an array-like — §10.4.3 gives its object
+    // an own property per index and a `length` — and the generic methods read it as one.
+    assert_eq!(run("Array.prototype.join.call('abc')"), "a,b,c");
+    assert_eq!(run("Array.prototype.slice.call('abc').join('|')"), "a|b|c");
+    assert_eq!(
+        run(
+            "Array.prototype.indexOf.call('abc', 'b') + ',' + Array.prototype.indexOf.call('abc', 'z')"
+        ),
+        "1,-1"
+    );
+    assert_eq!(
+        run("Array.prototype.map.call('ab', function (c) { return c + c; }).join(',')"),
+        "aa,bb"
+    );
+    // A Boolean, a Number and a Symbol wrap too, and their wrappers have no indices and no
+    // `length` — so the methods see an empty array-like rather than refusing the call.
+    assert_eq!(
+        run(
+            "[Array.prototype.join.call(true), Array.prototype.join.call(5),              Array.prototype.join.call(Symbol('s'))].join('|')"
+        ),
+        "||"
+    );
+    assert_eq!(run("Array.prototype.toSorted.call(true).length"), "0");
+    // …and what the wrapper *inherits* is what it reads, which is the whole of "an array-like is
+    // whatever has a length and some indices". Nothing here is an Array or pretending to be one.
+    assert_eq!(
+        run(
+            "Boolean.prototype.length = 2; Boolean.prototype[0] = 'x';              var joined = Array.prototype.join.call(true);              delete Boolean.prototype.length; delete Boolean.prototype[0]; joined"
+        ),
+        "x,"
+    );
+    // A method that *changes* its receiver writes through to the wrapper, which is thrown away the
+    // moment the call ends — so this is a call that does nothing and is not an error, exactly as
+    // `[].push.call(5, 1)` has always been.
+    assert_eq!(run("typeof Array.prototype.sort.call(true)"), "object");
+    // §7.1.18 steps 1 and 2 — the two values that genuinely have no object, and they are still a
+    // TypeError. That is the line between "wraps rather than refuses" and "never refuses".
+    for receiver in ["null", "undefined"] {
+        assert_eq!(
+            run(&format!(
+                "try {{ Array.prototype.join.call({receiver}); }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{receiver} has no object to be"
+        );
+    }
+    assert_eq!(
+        run("try { Array.prototype.sort.call(null); } catch (e) { e.message }"),
+        "undefined and null cannot be converted to an object"
+    );
+}

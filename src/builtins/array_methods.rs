@@ -139,10 +139,26 @@ pub(super) fn set_index(heap: &mut Heap, object: ObjectId, index: u64, value: Va
     let _ = heap.define_own_property(object, name, &descriptor);
 }
 
-/// `this` as an object — §7.1.18, in the part that does not need a wrapper.
-pub(super) fn this_object(call: &NativeCall<'_>) -> Completion<ObjectId> {
-    match call.this_value {
+/// `this` as an object — §7.1.18 `ToObject`, which wraps rather than refuses.
+///
+/// Every method in §23.1.3 opens with `Let O be ? ToObject(this value)`, and the difference
+/// between that and requiring an object is a whole family of working programs:
+/// `Array.prototype.join.call("ab")` reads a String object's own indices, and
+/// `Array.prototype.sort.call(true)` sorts a Boolean wrapper — which has no indices, so it sorts
+/// nothing and answers the wrapper. Refusing a primitive here would be the engine inventing a
+/// restriction the specification does not have.
+///
+/// `undefined` and `null` are the two that genuinely have no object, and they are §7.1.18 steps 1
+/// and 2's TypeError rather than this function's opinion.
+pub(super) fn this_object(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<ObjectId> {
+    match vm.object_for(call.this_value, heap)? {
         Value::Object(object) => Ok(object),
+        // `object_for` answers an Object or throws; there is no third answer. Saying so costs a
+        // line and keeps the promise that nothing here panics on a shape the types cannot rule out.
         _ => Err(Abrupt::type_error(
             "an Array.prototype method requires an object",
         )),
@@ -170,7 +186,7 @@ pub(super) fn callback(call: &NativeCall<'_>, heap: &Heap) -> Completion<Value> 
 /// "If element is undefined or null, let next be the empty String" — which is why
 /// `[1, , 3].join("-")` is `"1--3"` and not `"1-undefined-3"`.
 pub fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let separator = match call.argument(0) {
         Value::Undefined => ",".to_string(),
@@ -200,7 +216,7 @@ pub fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 /// `Array.prototype.join` changes what an array prints. That is not a quirk to tidy away: it is
 /// what makes `join` the single place an array's text is decided.
 pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let name = key(heap, "join");
     let found = vm.get_property_key(Value::Object(object), name, heap)?;
     let callable = matches!(found, Value::Object(id)
@@ -215,7 +231,7 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 
 /// §23.1.3.23 `Array.prototype.push`.
 pub fn push(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let mut length = length_of(vm, heap, object)?;
     for value in call.arguments {
         let name = index_key(heap, length);
@@ -232,7 +248,7 @@ pub fn push(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 
 /// §23.1.3.22 `Array.prototype.pop`.
 pub fn pop(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let name = key(heap, "length");
     // Step 3 — an empty array's `length` is still *written*, which matters for an array-like
@@ -253,7 +269,7 @@ pub fn pop(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 /// Strict equality, so `NaN` is never found — which is the whole reason `includes` exists and
 /// uses `SameValueZero` instead.
 pub fn index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let wanted = call.argument(0);
     let from = start_index(vm, heap, call.argument(1), length)?;
@@ -293,7 +309,7 @@ pub(super) fn start_index(
 
 /// §23.1.3.15 `Array.prototype.forEach`.
 pub fn for_each(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
@@ -316,7 +332,7 @@ pub fn for_each(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 /// a hole out: the callback is not run and no property is made. `[, 1].map(f)` calls `f` once and
 /// answers an array of length 2 whose first index is still absent.
 pub fn map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
@@ -336,7 +352,7 @@ pub fn map(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 
 /// §23.1.3.13 `Array.prototype.filter`.
 pub fn filter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
@@ -362,7 +378,7 @@ pub fn filter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 
 /// §23.1.3.25 `Array.prototype.slice`.
 pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let from = start_index(vm, heap, call.argument(0), length)?;
     let to = match call.argument(1) {

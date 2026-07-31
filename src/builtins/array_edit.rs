@@ -53,7 +53,7 @@ fn move_index(
 
 /// §23.1.3.26 `Array.prototype.shift`.
 pub fn shift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let Some(last) = length.checked_sub(1) else {
         write_length(vm, heap, object, 0)?;
@@ -71,7 +71,7 @@ pub fn shift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 
 /// §23.1.3.32 `Array.prototype.unshift`.
 pub fn unshift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let added = call.arguments.len() as u64;
     // §23.1.3.34 step 4 — *only* when there is something to insert. This used to say that a guard
@@ -110,7 +110,7 @@ pub fn unshift(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
 /// inside the source the walk runs backwards, so every index is read before the copy reaches it —
 /// the same reason `memmove` exists and `memcpy` would be wrong.
 pub fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let to = start_index(vm, heap, call.argument(0), length)?;
     let from = start_index(vm, heap, call.argument(1), length)?;
@@ -139,7 +139,7 @@ pub fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
 
 /// §23.1.3.24 `Array.prototype.reverse`, in place.
 pub fn reverse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     for lower in 0..length / 2 {
         let upper = length - lower - 1;
@@ -171,7 +171,7 @@ pub fn reverse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
 /// which is not the same as a second argument of `undefined` — that is `ToIntegerOrInfinity`
 /// of NaN, which is zero.
 pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let start = start_index(vm, heap, call.argument(0), length)?;
     let removed_count = match call.arguments.len() {
@@ -253,7 +253,7 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 /// §23.1.3.1.1's `IsConcatSpreadable` without the Symbol that can override it. One level: an array
 /// inside an array stays an array, which is why `flat` had to be added later.
 pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let prototype = vm.realm().array_prototype();
     let joined = heap.new_array(prototype, 0);
     let mut at = 0_u64;
@@ -289,7 +289,7 @@ pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 
 /// §23.1.3.8 `Array.prototype.fill`.
 pub fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let value = call.argument(0);
     let from = start_index(vm, heap, call.argument(1), length)?;
@@ -309,7 +309,7 @@ pub fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 /// Strict equality and backwards, and a hole is skipped rather than compared — the same two rules
 /// `indexOf` follows, read from the other end.
 pub fn last_index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let wanted = call.argument(0);
     // §23.1.3.19 step 5 — the default start is the *last* index, and a given one is clamped to
@@ -350,7 +350,7 @@ pub fn last_index_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Com
 /// **NaN matches NaN**. And it does not skip a hole — it reads one as `undefined` — so
 /// `[, 1].includes(undefined)` is `true` where `[, 1].indexOf(undefined)` is `-1`.
 pub fn includes(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let wanted = call.argument(0);
     let from = start_index(vm, heap, call.argument(1), length)?;
@@ -382,7 +382,7 @@ fn same_value_zero(left: Value, right: Value, heap: &Heap) -> bool {
 /// A negative index counts from the end, which is the whole reason it exists — `a[-1]` is a
 /// property named `"-1"` and always has been.
 pub fn at(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let number = vm.to_number(call.argument(0), heap)?;
     let integer = if number.is_nan() { 0.0 } else { number.trunc() };

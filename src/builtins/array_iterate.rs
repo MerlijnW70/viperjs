@@ -52,7 +52,7 @@ impl From {
 /// The two differ in direction and in nothing else, including the argument order handed to the
 /// callback: `reduceRight` still calls it `(accumulator, element, …)` rather than swapping them.
 fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, from: From) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let mut walk = 0..length;
@@ -121,7 +121,7 @@ fn quantify(
     call: &NativeCall<'_>,
     wanted: bool,
 ) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
@@ -161,7 +161,7 @@ fn search(
     from: From,
     want_index: bool,
 ) -> Completion<Value> {
-    let object = this_object(call)?;
+    let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let function = callback(call, heap)?;
     let receiver = call.argument(1);
