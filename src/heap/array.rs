@@ -121,12 +121,22 @@ impl Heap {
         if !writable && wanted != current {
             return DefineOutcome::Refused;
         }
-        // Growing needs no work: the indices between are simply absent, which is what a hole
-        // *is*. Written without a `wanted < current` guard in front of it, because there is
-        // nothing for the guard to save — no index can be at or above an array's own length, so
-        // deleting from `wanted` upwards when growing walks an empty list and answers `wanted`.
-        // A guard no input can tell from its absence is one to leave out.
-        let reached = self.delete_above(object, wanted);
+        // §10.4.2.4 step 12 — a length that is not *smaller* deletes nothing, and the clause says
+        // so before it says anything about deleting. praxis went without the check for a while, on
+        // the grounds that no index can be at or above an array's own length so the walk finds
+        // nothing anyway. True, and still wrong: the walk is over every key the object has, so a
+        // `push` that only ever grows paid a pass over the array it was appending to. Ten thousand
+        // of them took thirty seconds; with the step, under a tenth of a second.
+        //
+        // **This branch cannot be killed by a test, and that is not a gap.** Its two sides answer
+        // identically for every array a program can build — an index is always below the length,
+        // so `wanted == current` finds nothing to delete either way. What it decides is cost. It
+        // was tried without the branch and with the walk made as cheap as it can be, and ten
+        // thousand pushes still took sixteen seconds: the walk is the cost, not the sort.
+        let reached = match wanted >= current {
+            true => wanted,
+            false => self.delete_above(object, wanted),
+        };
         let length = PropertyDescriptor {
             value: Some(Value::Number(f64::from(reached))),
             ..*descriptor
@@ -145,29 +155,44 @@ impl Heap {
     /// first index that refuses, so the elements *below* a frozen one survive and the ones above
     /// it are already gone.
     fn delete_above(&mut self, object: ObjectId, floor: u32) -> u32 {
-        let mut indices: Vec<u32> = self
+        // The keys as *stored* rather than in §10.1.11's order: this sorts what survives the
+        // filter anyway, and asking for the specification's grouping means three vectors and a
+        // sort of every key the object has — paid on every write of `length`, which `push` does
+        // once per element.
+        let keys: Vec<crate::heap::PropertyKey> = self
             .object(object)
-            .map(|found| found.own_property_keys(self))
-            .unwrap_or_default()
+            .map(|found| found.stored_keys().collect())
+            .unwrap_or_default();
+        let mut indices: Vec<u32> = keys
             .into_iter()
             .filter_map(|key| array_index(self, key))
             .filter(|index| *index >= floor)
             .collect();
         indices.sort_unstable();
-        for index in indices.into_iter().rev() {
-            let key = self.index_key(index);
-            let deletable = self
-                .object(object)
+        // §10.4.2.4 steps 17.b to 17.d walk downwards and stop at the first index that refuses, so
+        // what survives is everything at or below the *highest* one that refuses. Found first and
+        // deleted afterwards, in one pass: doing it a property at a time is what the specification
+        // describes and it is quadratic, because each removal shifts the rest and rebuilds the key
+        // index. The order still decides the answer — it just no longer decides the cost.
+        let stuck = indices.iter().rev().find(|index| {
+            let key = self.index_key(**index);
+            self.object(object)
                 .and_then(|found| found.get_own_property(key))
-                .is_none_or(|property| property.configurable);
-            if !deletable {
-                return index + 1;
-            }
-            if let Some(found) = self.object_mut(object) {
-                found.delete(key);
-            }
+                .is_some_and(|property| !property.configurable)
+        });
+        let reached = match stuck {
+            Some(index) => index + 1,
+            None => floor,
+        };
+        let doomed: std::collections::HashSet<crate::heap::PropertyKey> = indices
+            .into_iter()
+            .filter(|index| *index >= reached)
+            .map(|index| self.index_key(index))
+            .collect();
+        if let Some(found) = self.object_mut(object) {
+            found.delete_all(&doomed);
         }
-        floor
+        reached
     }
 
     /// The `length` an array holds, and whether it may be changed.

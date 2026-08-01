@@ -27,6 +27,8 @@ pub mod span;
 pub mod static_semantics;
 mod unicode_id;
 mod unicode_id_table;
+mod unicode_property;
+mod unicode_property_table;
 pub mod value;
 pub mod vm;
 

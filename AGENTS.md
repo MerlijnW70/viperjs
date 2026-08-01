@@ -129,14 +129,13 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **72.74% of test262** — 67,763 of 93,153 runs. Treat that number
+Conformance as of this commit is **73.04% of test262** — 68,047 of 93,160 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
 | Runs | What stops them |
 | --- | --- |
 | 6,263 | `BigInt` literals |
-| 1,318 | Unicode property escapes |
 | 849 | dynamic `import` |
 | 830 | modules |
 | 306 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
@@ -173,6 +172,16 @@ Three things about it are worth keeping, none of them about closures:
   load-bearing. A `for`-`of`'s per-iteration environment sits *inside* its iterator's entry: a
   `continue` leaves the environment and deliberately does not close the iterator, and with the two
   the wrong way round it stops at the iterator and leaks an environment per pass.
+
+**The garbage collector is written, tested, and never called.** Nothing in `src/vm` invokes
+`Heap::collect`, so the heap only grows and DR-0013's budget is against everything a program has
+*ever* allocated rather than what it still holds. Any program that allocates more than 64 MiB in
+total throws a RangeError, however little is live — which is ~900 conformance runs on its own and
+the largest single thing standing between praxis and real programs. Wiring it needs a root set
+audited against every place a `Value` can hide: the operand stack, each frame's registers and
+chunk constants, the environment chain, the realm's intrinsics, the job queue, and the executions
+parked inside suspended generators. One missed root frees something live, so it wants doing
+deliberately and with a fuzzer, not on the way past.
 
 **A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
 early errors are decided by the *compiler* — §12.9.5 reads a regular expression literal's shape and

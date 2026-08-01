@@ -118,6 +118,45 @@ enum Outcome {
     Failed,
 }
 
+/// A repeated body that consumes exactly one code point and captures nothing.
+///
+/// The five shapes that do, as a value rather than a yes-or-no. A group is excluded even when what
+/// is inside it is one wide, because it *captures*: §22.2.2.5 steps 3 to 5 clear the groups inside
+/// a body between turns, and that reset is the whole reason the general path holds a copy of the
+/// captures.
+enum OneWide<'a> {
+    /// One code point, matched as itself.
+    Character(u32),
+    /// `.`
+    Any,
+    /// A single-letter class escape and its negated spelling.
+    Escape(ClassEscape),
+    /// A Unicode property escape.
+    Property(crate::unicode_property::Property),
+    /// A character class.
+    Class {
+        /// Whether it was written `[^…]`.
+        negated: bool,
+        /// What is in it.
+        items: &'a [ClassItem],
+    },
+}
+
+/// Which of the five a repeated body is, or `None` if it is none of them.
+fn one_wide(body: &Node) -> Option<OneWide<'_>> {
+    match body {
+        Node::Character(code) => Some(OneWide::Character(*code)),
+        Node::Any => Some(OneWide::Any),
+        Node::Escape(escape) => Some(OneWide::Escape(*escape)),
+        Node::Property(property) => Some(OneWide::Property(*property)),
+        Node::Class { negated, items } => Some(OneWide::Class {
+            negated: *negated,
+            items,
+        }),
+        _ => None,
+    }
+}
+
 impl<'a> Matcher<'a> {
     /// A matcher for this pattern over this subject.
     #[must_use]
@@ -171,8 +210,7 @@ impl<'a> Matcher<'a> {
         // The only place work is counted. Every unbounded amount of it is a node matched again —
         // `cont` walks a chain whose length the pattern fixes, and `repeat` reaches one of the two.
         // Counting in all three said the same thing three times, and no test could tell them apart.
-        self.steps += 1;
-        if self.steps > self.budget {
+        if !self.afford() {
             return Outcome::Failed;
         }
         match node {
@@ -205,6 +243,13 @@ impl<'a> Matcher<'a> {
                 Some((found, next)) if matches_escape(*escape, found) => self.cont(next, cont),
                 _ => Outcome::Failed,
             },
+            // §22.2.2.9's `CharacterSetMatcher` over the set the property names. One code point,
+            // like every other escape here — a property set never matches more than one, however
+            // many code points are in it.
+            Node::Property(property) => match self.read(at) {
+                Some((found, next)) if property.contains(found) => self.cont(next, cont),
+                _ => Outcome::Failed,
+            },
             Node::Class { negated, items } => match self.read(at) {
                 Some((found, next)) if self.in_class(found, items) != *negated => {
                     self.cont(next, cont)
@@ -233,6 +278,87 @@ impl<'a> Matcher<'a> {
                 greedy,
             } => self.repeat(node, *min, *max, *greedy, at, cont),
         }
+    }
+
+    /// §22.2.2.5 for a body that is one code point wide and captures nothing.
+    ///
+    /// The same answer as the general path and none of its recursion. Everything the general one
+    /// does per turn — resetting the groups inside the body, holding the captures to put back —
+    /// is about state this body does not have, so all that is left is: take as many as the subject
+    /// allows, then hand the continuation each stopping place in the order greed asks for.
+    ///
+    /// The positions are remembered rather than recomputed because reading backwards is not the
+    /// same as reading forwards under `u`: a low surrogate is a code point of its own read from
+    /// the left, and half of one read from the right.
+    fn repeat_one(
+        &mut self,
+        body: OneWide<'a>,
+        min: u32,
+        max: Option<u32>,
+        greedy: bool,
+        at: usize,
+        cont: &Cont<'a, '_>,
+    ) -> Outcome {
+        let mut stops = vec![at];
+        let mut here = at;
+        while max.is_none_or(|most| (stops.len() as u32) <= most) {
+            if !self.afford() {
+                return Outcome::Failed;
+            }
+            match self.read(here) {
+                Some((found, next)) if self.one(&body, found) => {
+                    here = next;
+                    stops.push(here);
+                }
+                _ => break,
+            }
+        }
+        // `stops` holds the position after 0, 1, 2 … turns, so its length is one more than the
+        // number taken.
+        let taken = (stops.len() - 1) as u32;
+        // No check that `min` was reached: `min..=taken` is empty when it was not, so the loop
+        // below runs no attempt and the answer is the same refusal. A guard in front of it was one
+        // nothing could tell from its absence.
+        //
+        // Steps 6 to 10 — greed decides which stopping place is *tried first* and never which are
+        // available, so both orders walk the same range.
+        let mut counts: Vec<u32> = (min..=taken).collect();
+        if greedy {
+            counts.reverse();
+        }
+        for count in counts {
+            if let Outcome::Matched(end) = self.cont(stops[count as usize], cont) {
+                return Outcome::Matched(end);
+            }
+        }
+        Outcome::Failed
+    }
+
+    /// Whether one code point matches a body that is one code point wide.
+    ///
+    /// The same five decisions [`Matcher::node`] makes for these, without the continuation — which
+    /// is what makes them the ones [`Matcher::repeat_one`] can take. There is no sixth arm because
+    /// [`one_wide`] hands over the *shape* rather than a yes: written as a predicate and a match on
+    /// the node again, this needed a fallback for bodies that could not arrive, and nothing could
+    /// tell what that fallback answered.
+    fn one(&self, body: &OneWide<'a>, found: u32) -> bool {
+        match body {
+            OneWide::Character(wanted) => self.same(found, *wanted),
+            OneWide::Any => self.pattern.flags.dot_all || !is_line_terminator(found),
+            OneWide::Escape(escape) => matches_escape(*escape, found),
+            OneWide::Property(property) => property.contains(found),
+            OneWide::Class { negated, items } => self.in_class(found, items) != *negated,
+        }
+    }
+
+    /// Charge one step against the budget, and say whether there was one to charge.
+    ///
+    /// One place rather than two: the recursive walk is charged per node and the iterative
+    /// repetition per turn, and a second copy of the comparison is a second chance to write it
+    /// with the wrong edge.
+    fn afford(&mut self) -> bool {
+        self.steps += 1;
+        self.steps <= self.budget
     }
 
     /// The terms of a sequence, one at a time, each continuing into the rest.
@@ -312,6 +438,16 @@ impl<'a> Matcher<'a> {
         // Step 1 — no turns left, so the quantifier is simply over.
         if max == Some(0) {
             return self.cont(at, cont);
+        }
+        // A body that consumes exactly one code point and captures nothing is matched *iteratively*
+        // — see [`Matcher::repeat_one`]. Not an optimisation: the recursive path below makes one
+        // Rust frame per turn, so `\p{L}+` over a long enough subject overflowed the stack. A
+        // budget on steps does not bound that, because a run of a hundred thousand ordinary
+        // characters costs a hundred thousand steps and a hundred thousand frames at once.
+        // the two paths answer the same for every input either can finish; what the fast
+        // one avoids is a Rust frame per turn, which is what a long subject used to overflow.
+        if let Some(wide) = one_wide(body) {
+            return self.repeat_one(wide, min, max, greedy, at, cont);
         }
         // Steps 3 to 5 — the groups *inside* the body forget what they captured on the previous
         // turn, and that reset belongs to the state another turn is attempted from. Stopping here
@@ -515,6 +651,11 @@ impl<'a> Matcher<'a> {
                             || (*low..=*high).contains(&unfold(found))))
             }
             ClassItem::Escape(escape) => matches_escape(*escape, found),
+            // §22.2.2.9 — a property set is tested on the code point as written. `i` does not
+            // reach it: the specification folds the *pattern's* literals and its ranges, and a
+            // property is neither. `\p{Lu}` therefore does not match `a` in an `i` pattern, which
+            // is the one place a set behaves unlike the range spelling out the same code points.
+            ClassItem::Property(property) => property.contains(found),
         })
     }
 
@@ -927,5 +1068,47 @@ mod tests {
             let units: Vec<u16> = subject.encode_utf16().collect();
             let _ = Matcher::new(&pattern, &units).find(0);
         }
+    }
+
+    #[test]
+    fn a_one_wide_repetition_answers_what_the_recursive_path_would() {
+        // The iterative path exists so that a long subject does not become a Rust frame per turn,
+        // and the whole of its contract is that nothing else changes. Greed, laziness, the bounds
+        // and the backtracking all have to come out the same.
+        assert_eq!(matched("a+", "aaab"), Some("aaa".to_string()));
+        assert_eq!(matched("a+?", "aaab"), Some("a".to_string()));
+        assert_eq!(matched("a{2,3}", "aaaa"), Some("aaa".to_string()));
+        assert_eq!(matched("a{2,3}?", "aaaa"), Some("aa".to_string()));
+        // Fewer than the minimum is no match at all, which is the one bound a greedy walk can
+        // reach and then have to refuse.
+        assert_eq!(matched("a{3,}", "aa"), None);
+        assert_eq!(matched("a{3,}", "aaa"), Some("aaa".to_string()));
+        // Backtracking: the repetition has to give characters back until what follows fits.
+        assert_eq!(matched("a+b", "aaab"), Some("aaab".to_string()));
+        assert_eq!(matched("[ab]+b", "abab"), Some("abab".to_string()));
+        assert_eq!(matched(r"\w+x", "abcx"), Some("abcx".to_string()));
+        // …and a subject long enough that the recursive path overflowed the stack. Nothing about
+        // the answer is interesting; that it *answers* is the test.
+        let long = "a".repeat(200_000);
+        assert_eq!(matched("^a+$", &long), Some(long.clone()));
+    }
+
+    #[test]
+    fn the_budget_stops_a_one_wide_repetition_too() {
+        // The iterative path takes turns without recursing, so it also takes them without the
+        // step counter the recursive one is charged by — unless it charges itself. Left out, a
+        // pattern could walk a subject of any length for free, which is the one thing the budget
+        // exists to stop.
+        // Anchored, because an unanchored pattern is retried at every later position with the
+        // budget reset — and near the end of the subject there are too few characters left to
+        // spend it, so it would match there and prove nothing.
+        let pattern = parse("^a+$", Flags::default()).expect("the pattern parses"); // the budget is the test
+        let units: Vec<u16> = "a".repeat(1000).encode_utf16().collect();
+        assert!(Matcher::with_budget(&pattern, &units, 10).find(0).is_none());
+        assert!(
+            Matcher::with_budget(&pattern, &units, 100_000)
+                .find(0)
+                .is_some()
+        );
     }
 }

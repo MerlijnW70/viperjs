@@ -174,6 +174,8 @@ pub enum ClassItem {
     Range(u32, u32),
     /// A class escape, which stands for a set and so cannot be an end of a range.
     Escape(ClassEscape),
+    /// `\p{…}` inside a class, which stands for a set for the same reason and so cannot either.
+    Property(crate::unicode_property::Property),
 }
 
 /// What a `(` opened.
@@ -214,6 +216,8 @@ pub enum Node {
     },
     /// One of the six single-letter class escapes, outside a class.
     Escape(ClassEscape),
+    /// `\p{…}` and `\P{…}` — §22.2.1's Unicode property escapes, outside a class.
+    Property(crate::unicode_property::Property),
     /// `(…)` in any of its five forms.
     Group {
         /// Which form.

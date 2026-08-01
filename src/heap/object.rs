@@ -741,6 +741,18 @@ impl Object {
         ));
     }
 
+    /// Rebuild the key index after the positions have moved, if this object keeps one.
+    ///
+    /// Both ways of removing a property disturb every position after it, and an index that is
+    /// wrong finds a *neighbouring* property rather than finding none — an error that reads as a
+    /// plausible value. Asked in one place rather than at each of them: written twice, the second
+    /// copy was a condition no program could tell either side of.
+    fn reindex_if_kept(&mut self) {
+        if self.index.is_some() {
+            self.reindex();
+        }
+    }
+
     /// File `property` under `key`, replacing whatever was there.
     ///
     /// The write half of `[[DefineOwnProperty]]`, and private because it is only correct after
@@ -783,10 +795,32 @@ impl Object {
         // and wrong here means finding a *neighbouring* property rather than finding none, which
         // is the kind of error that reads as a plausible value. Rebuilding costs what the removal
         // already cost.
-        if self.index.is_some() {
-            self.reindex();
-        }
+        self.reindex_if_kept();
         true
+    }
+
+    /// Remove every property whose key is in `doomed`, in one pass.
+    ///
+    /// The same result as calling [`Object::delete`] for each, and not the same cost. A single
+    /// removal shifts everything after it and rebuilds the key index, both linear — so removing
+    /// `n` properties one at a time is quadratic, and `a.length = 0` on an array of ten thousand
+    /// was a hundred million hash inserts. `retain` shifts once and the index is rebuilt once.
+    ///
+    /// Configurability is **not** checked here: §10.4.2.4 decides which properties may go by
+    /// walking them from the top down and stopping at the first that may not, and the answer it
+    /// gives depends on that order. The caller has already done it and passes what survived.
+    pub(super) fn delete_all(&mut self, doomed: &std::collections::HashSet<PropertyKey>) {
+        self.properties.retain(|(key, _)| !doomed.contains(key));
+        self.reindex_if_kept();
+    }
+
+    /// Every own key in the order they are *stored*, which is not the order §10.1.11 answers.
+    ///
+    /// For a caller that is going to sort or filter them anyway, and so pays nothing for the
+    /// grouping [`Object::own_property_keys`] does. That grouping is three vectors and a sort of
+    /// every key an object has, which is a great deal to do to find the few above an index.
+    pub(super) fn stored_keys(&self) -> impl Iterator<Item = PropertyKey> + '_ {
+        self.properties.iter().map(|(key, _)| *key)
     }
 
     /// `[[OwnPropertyKeys]]` (§10.1.11) — every own key, in the order the language guarantees.

@@ -16,6 +16,7 @@
 
 use super::syntax::{Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern};
 use crate::unicode_id::{is_id_continue, is_id_start};
+use crate::unicode_property::Property;
 use std::collections::HashSet;
 
 /// §22.2.1 — read `source` under `flags`.
@@ -474,6 +475,9 @@ impl Reader<'_> {
         let Some(letter) = self.peek() else {
             return Err(Error::at("a regular expression ends after a backslash"));
         };
+        if let Some(property) = self.property_escape(letter) {
+            return Ok(ClassItem::Property(property?));
+        }
         if let Some(escape) = class_escape(letter) {
             self.at += 1;
             return Ok(ClassItem::Escape(escape));
@@ -492,12 +496,55 @@ impl Reader<'_> {
         Ok(ClassItem::Single(self.character_escape()?))
     }
 
+    /// §22.2.1 `CharacterClassEscape :: p{ UnicodePropertyValueExpression }` — the set it names.
+    ///
+    /// `None` when the escape is not a property one, which is how both callers tell it apart from
+    /// everything else a `\` may begin: the letter has *not* been consumed on that path, so the
+    /// caller carries on as it did.
+    ///
+    /// A property escape only exists in Unicode mode. Outside it `\p` is an identity escape and
+    /// matches a `p`, which is what falling through to `character_escape` gives — and is why the
+    /// mode is checked here rather than being an error.
+    fn property_escape(&mut self, letter: char) -> Option<Result<Property, Error>> {
+        if !matches!(letter, 'p' | 'P') || !self.flags.unicode_mode() {
+            return None;
+        }
+        let negated = letter == 'P';
+        self.at += 1;
+        if self.peek() != Some('{') {
+            return Some(Err(Error::at("a property escape needs a braced name")));
+        }
+        self.at += 1;
+        let start = self.at;
+        while self.peek().is_some_and(|next| next != '}') {
+            self.at += 1;
+        }
+        if self.peek() != Some('}') {
+            return Some(Err(Error::at("a property escape's name is not closed")));
+        }
+        let spelled: String = self.text[start..self.at].iter().collect();
+        self.at += 1;
+        if crate::unicode_property::OF_STRINGS.contains(&spelled.as_str()) {
+            return Some(Err(Error::unsupported("a property of strings")));
+        }
+        let Some(property) = crate::unicode_property::lookup(&spelled) else {
+            return Some(Err(Error::at("this is not a Unicode property")));
+        };
+        Some(Ok(match negated {
+            true => property.negate(),
+            false => property,
+        }))
+    }
+
     /// §22.2.1 `AtomEscape` — everything a `\` can begin outside a class.
     fn escape(&mut self) -> Result<Node, Error> {
         self.at += 1;
         let Some(letter) = self.peek() else {
             return Err(Error::at("a regular expression ends after a backslash"));
         };
+        if let Some(property) = self.property_escape(letter) {
+            return Ok(Node::Property(property?));
+        }
         if let Some(escape) = class_escape(letter) {
             self.at += 1;
             return Ok(Node::Escape(escape));
@@ -569,9 +616,6 @@ impl Reader<'_> {
                 false => Ok(0),
             },
             '1'..='9' => Err(Error::at("a legacy octal escape is not a character escape")),
-            'p' | 'P' if self.flags.unicode_mode() => {
-                Err(Error::unsupported("a Unicode property escape"))
-            }
             // §22.2.1's `IdentityEscape`. In Unicode mode only a `SyntaxCharacter` or `/` may be
             // escaped this way, so `\a` is an error there and an `a` outside — one of the few
             // places the two modes disagree about whether a pattern is *valid* at all.
@@ -1247,5 +1291,66 @@ mod tests {
         // …and a `]` that was escaped does not close the class early.
         let pattern = parse("[\\]](a)", Flags::default()).expect("should parse");
         assert_eq!(pattern.groups, 1);
+    }
+
+    #[test]
+    fn a_property_escape_is_read_as_a_set_and_only_in_unicode_mode() {
+        // §22.2.1 `CharacterClassEscape :: p{ … }` — the braces are part of the syntax and the
+        // name inside is looked up when the pattern is *compiled*, so every way of writing it
+        // wrongly is a Syntax Error before anything runs.
+        let Ok(Node::Property(upper)) = unicode(r"\p{Lu}") else {
+            panic!("a lone-name property escape should parse"); // the shape is the test
+        };
+        assert!(upper.contains('A' as u32) && !upper.contains('a' as u32));
+        // `\P` is the same set the other way round, and it is the *escape* that negates rather
+        // than anything about the name.
+        let Ok(Node::Property(not_upper)) = unicode(r"\P{Lu}") else {
+            panic!("a negated property escape should parse"); // same
+        };
+        assert!(!not_upper.contains('A' as u32) && not_upper.contains('a' as u32));
+        assert_eq!(upper.negate(), not_upper);
+        // Inside a class it is one item among others, and it stands for a set — so it may not be
+        // an end of a range, which is what makes it a `ClassItem` of its own.
+        let Ok(Node::Class { items, .. }) = unicode(r"[\p{Nd}a]") else {
+            panic!("a class with a property should parse"); // same
+        };
+        assert!(matches!(items.first(), Some(ClassItem::Property(_))));
+        // Without `u` there is no property escape at all: `\p` is an identity escape and matches
+        // a `p`, which is why the mode is checked before the braces rather than after. Written
+        // without braces because a `{` that spells no quantifier is its own Syntax Error here —
+        // DR-0008 leaves out the Annex B reading that makes it a literal.
+        assert_eq!(
+            plain(r"\pa"),
+            Node::Sequence(vec![
+                Node::Character(u32::from(b'p')),
+                Node::Character(u32::from(b'a')),
+            ])
+        );
+    }
+
+    #[test]
+    fn a_property_escape_written_wrongly_says_which_way() {
+        // Each of these stops at a different point of the read, which is what the four messages
+        // are for — and each is an early error, so none of them is a pattern that merely fails to
+        // match.
+        assert_eq!(
+            unicode(r"\pLu"),
+            Err("a property escape needs a braced name")
+        );
+        assert_eq!(unicode(r"\p"), Err("a property escape needs a braced name"));
+        assert_eq!(
+            unicode(r"\p{Lu"),
+            Err("a property escape's name is not closed")
+        );
+        assert_eq!(
+            unicode(r"\p{"),
+            Err("a property escape's name is not closed")
+        );
+        assert_eq!(unicode(r"\p{Nope}"), Err("this is not a Unicode property"));
+        assert_eq!(unicode(r"\p{}"), Err("this is not a Unicode property"));
+        // A **property of strings** is a thing praxis has not built rather than a name the
+        // specification rejects, and the two are refused differently on purpose — see
+        // `regexp::Error::unimplemented`.
+        assert_eq!(unicode(r"\p{RGI_Emoji}"), Err("a property of strings"));
     }
 }
