@@ -46,6 +46,14 @@ pub(crate) struct Suspended {
     /// generator it is. Both are needed, and at different moments — a resumption starts from the
     /// object, and a `return` inside the body has only the frame to ask.
     generator: Option<ObjectId>,
+    /// Whether this execution has run any of its body — §27.5.1's two suspended states.
+    ///
+    /// It was here before, for `throw`, and came out because nothing could see it: reviving runs no
+    /// instruction before the unwind, so a body that had not begun answered the same either way.
+    /// **`return` is not like that.** §27.5.1.3 step 5 completes a not-yet-started generator without
+    /// running it, where a suspended one is resumed *at the `yield`* so its `finally` blocks run —
+    /// and a body that has not begun has no `yield` to resume at. That difference is a test.
+    begun: bool,
     /// The operands it had built, from its own floor upwards.
     stack: Vec<Value>,
     /// The handlers it had installed, each rebased to that floor.
@@ -65,6 +73,11 @@ impl Suspended {
             .chain([self.this_value, self.new_target])
             .chain(self.function.map(Value::Object))
             .chain(self.generator.map(Value::Object))
+    }
+
+    /// Whether this execution has begun — see the field.
+    pub(super) fn begun(&self) -> bool {
+        self.begun
     }
 
     /// The environment its next instruction will read a variable from.
@@ -97,6 +110,7 @@ impl Suspended {
             environment,
             function: Some(function),
             generator: Some(generator),
+            begun: false,
             stack: Vec::new(),
             handlers: Vec::new(),
         }
@@ -155,6 +169,7 @@ impl Vm {
             environment: self.environment,
             function: frame.function,
             generator: frame.generator,
+            begun: true,
             stack: self.stack.split_off(operands),
             handlers: self
                 .handlers

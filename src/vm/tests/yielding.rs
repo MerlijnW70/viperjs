@@ -213,38 +213,58 @@ fn two_generators_from_one_function_stop_in_different_places() {
 }
 
 #[test]
-fn a_return_into_a_suspended_body_finishes_it_without_running_its_finally() {
-    // §27.5.3.4 with a *return* completion, and the half of it that is here. The generator is
-    // finished and the argument becomes the answer, which is right for every body that is not
-    // inside a `try`:
+fn a_return_into_a_suspended_body_resumes_it_at_the_yield() {
+    // §27.5.3.4 with a *return* completion. The body is resumed **where it stopped**, so what lies
+    // between that `yield` and the end of the body happens on the way out.
     assert_eq!(
         run(
             "function* g() { yield 1; yield 2; } var it = g(); it.next(); var r = it.return(5); r.value + ':' + r.done"
         ),
         "5:true"
     );
+    // The `finally` around the `yield` runs, which is the whole difference and was a recorded
+    // divergence until the resumption learned to carry a return.
+    assert_eq!(
+        run(
+            "var seen = ''; function* g() { try { yield 1; } finally { seen = 'ran'; } } var it = g(); it.next(); it.return(5); seen"
+        ),
+        "ran"
+    );
+    // …innermost first, and every one of them.
+    assert_eq!(
+        run(
+            "var log = []; function* g() { try { try { yield 1; } finally { log.push('inner'); } } finally { log.push('outer'); } } var it = g(); it.next(); it.return(0); log.join(',')"
+        ),
+        "inner,outer"
+    );
+    // A `finally` that returns something of its own wins — §14.15.3's `UpdateEmpty` seen from the
+    // other side, and the same rule an ordinary `return` crossing one obeys.
+    assert_eq!(
+        run(
+            "function* g() { try { yield 1; } finally { return 'mine'; } } var it = g(); it.next(); it.return(5).value"
+        ),
+        "mine"
+    );
+    // §27.5.1.3 step 5 — before the body has begun there is no `yield` to resume at, so nothing
+    // runs at all.
+    assert_eq!(
+        run(
+            "var ran = false; function* g() { ran = true; yield 1; } var it = g(); var r = it.return(7); r.value + ':' + r.done + ':' + ran"
+        ),
+        "7:true:false"
+    );
+    // …and it stays finished afterwards.
     assert_eq!(
         run(
             "function* g() { yield 1; } var it = g(); it.next(); it.return(5); var r = it.next(); r.value + ':' + r.done"
         ),
         "undefined:true"
     );
-
-    // …and the half that is **not**: a `finally` around the `yield` should run on the way out and
-    // does not. `throw` manages it because a throw is a value the interpreter already knows how to
-    // unwind with; a *return completion* is not — praxis compiles `finally` inline at each exit the
-    // compiler can see, so there is no way to inject one at a `yield` from the outside. Doing it
-    // needs a completion the unwinder carries past `catch` handlers and stops at `finally` ones,
-    // which is a slice of its own and is also what `yield*` will need to forward a return.
-    //
-    // The row below asserts the wrong answer on purpose, and the test's *name* says so. It is a
-    // marker rather than a claim: it will fail the day the completion arrives, which is the signal
-    // to delete it and write the real one. A silent gap here would be found by test262 instead, and
-    // much later.
+    // An open `for`-`of` inside the body is closed on the way out, like any other crossing.
     assert_eq!(
         run(
-            "var seen = ''; function* g() { try { yield 1; } finally { seen = 'ran'; } } var it = g(); it.next(); it.return(5); seen"
+            "var closed = false; var inner = { [Symbol.iterator]: function () { return { next: function () { return { value: 1, done: false }; }, return: function () { closed = true; return {}; } }; } }; function* g() { for (var x of inner) { yield x; } } var it = g(); it.next(); it.return(0); closed"
         ),
-        ""
+        "true"
     );
 }

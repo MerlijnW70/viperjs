@@ -420,6 +420,17 @@ impl Compiler<'_> {
                     }
                 }
                 self.chunk.emit(Instruction::Yield);
+                // §27.5.1.3 — `gen.return(v)` resumes the body *at this `yield`* with a return
+                // completion, so every `finally` between here and the end runs and every open
+                // iterator is closed. That is exactly what a `return` written on this line would
+                // emit, and `unwind_across` is the same walk it uses.
+                self.chunk.emit(Instruction::ResumeMode);
+                let carry_on = self.chunk.emit_jump(Instruction::JumpIfFalse);
+                // The value the resumption sent *is* the value returned, and it is already where a
+                // `return`'s operand would be.
+                self.unwind_across(super::statement::Exit::Return)?;
+                self.chunk.emit(Instruction::Return);
+                self.chunk.patch(carry_on)?;
                 Ok(())
             }
             ExprKind::Super => Err(unsupported("super", span)),

@@ -30,7 +30,7 @@ use std::rc::Rc;
 /// differ in one place only — whether the target loop's own iterator is closed — and this is where
 /// that one difference is written down, so that no caller has to remember it.
 #[derive(Clone, Copy)]
-enum Exit {
+pub(super) enum Exit {
     /// `break` — the statement whose break list is at this index is left, and everything in it.
     Break(usize),
     /// `continue` — the loop at this index is *not* left, so its iterator stays open.
@@ -685,7 +685,7 @@ impl Compiler<'_> {
     /// a flag, because those two together can spell a `return` that leaves only *some* of them,
     /// which is not a thing that exists. A mutant that flipped that flag survived every test there
     /// was, for the good reason that nothing it changed was ever read.
-    fn unwind_across(&mut self, exit: Exit) -> Result<(), CompileError> {
+    pub(super) fn unwind_across(&mut self, exit: Exit) -> Result<(), CompileError> {
         let stack = std::mem::take(&mut self.unwinds);
         let mut outcome = Ok(());
         for at in (0..stack.len()).rev() {

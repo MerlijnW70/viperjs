@@ -777,6 +777,12 @@ impl Vm {
                     // entered this body is being answered, and it answers with an iterator result.
                     self.stack.push(result);
                 }
+                Instruction::ResumeMode => {
+                    // Read once and cleared: the next resumption sets it again, and a body that
+                    // asked twice would be asking about a revival that had already happened.
+                    let returning = std::mem::take(&mut self.resume_returns);
+                    self.stack.push(Value::Boolean(returning));
+                }
                 Instruction::YieldDelegated => {
                     // §27.5.3.7 step 7.a.vii — what is on the stack is already the inner
                     // iterator's result object, so it goes out as it is. Everything else is the

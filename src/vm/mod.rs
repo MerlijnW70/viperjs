@@ -194,6 +194,14 @@ pub struct Vm {
     /// is immutable and may run in two of them, and each needs its own. Not cleared between runs of
     /// the same machine, which is what makes the identity survive — that is the whole point of it.
     templates: std::collections::HashMap<execute::TemplateSite, crate::heap::ObjectId>,
+    /// What the resumption that is about to revive a generator asked for — §27.5.1.3's completion.
+    ///
+    /// Read by exactly one instruction, `ResumeMode`, which the compiler emits immediately after
+    /// every `Yield`. Nothing runs in between, which is what makes a register safe here where a
+    /// flag consulted later would not be: it is set by `enter_resume`, read once, and cleared.
+    ///
+    /// `false` is §27.5.1.2's `next`, which is every other resumption and the common case.
+    resume_returns: bool,
     /// How many nested executions are running, which is how much Rust stack they are using.
     ///
     /// The main loop does not recurse: ten thousand nested JavaScript calls cost ten thousand
@@ -252,6 +260,7 @@ impl Vm {
             until_heap_check: 0,
             templates: std::collections::HashMap::new(),
             reentries: 0,
+            resume_returns: false,
         }
     }
 

@@ -1995,8 +1995,6 @@ built-ins/AsyncDisposableStack/prototype/use/throws-if-value-not-object.js :: it
 built-ins/AsyncDisposableStack/prototype/use/throws-if-value-not-object.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/undefined-newtarget-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/AsyncDisposableStack/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
 built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw SyntaxError: the source of a dynamic function does not parse
@@ -3299,16 +3297,6 @@ built-ins/GeneratorFunction/proto-from-ctor-realm.js :: it threw TypeError: what
 built-ins/GeneratorFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/GeneratorFunction/prototype/constructor.js :: it threw an object with no name: constructor descriptor should not be writable
 built-ins/GeneratorFunction/prototype/constructor.js (strict) :: it threw an object with no name: constructor descriptor should not be writable
-built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-catch.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-catch.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-inner-try.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-inner-try.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-outer-try-before-nested.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-nested-try-catch-within-outer-try-before-nested.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-set-property-within-try.js :: it threw an object with no name: finally block must supersede return value Expected SameValue(«45», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-set-property-within-try.js (strict) :: it threw an object with no name: finally block must supersede return value Expected SameValue(«45», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-within-try.js :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
-built-ins/GeneratorPrototype/return/try-finally-within-try.js (strict) :: it threw an object with no name: `finally` code path executed Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/fresh-iterator-result.js :: it threw TypeError: what was called is not a function
@@ -13433,8 +13421,8 @@ language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it 
 language/expressions/void/S11.4.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/yield/formal-parameters-after-reassignment-strict.js (strict) :: it threw an object with no name: First result `value` Expected SameValue(«32», «23») to be true
-language/expressions/yield/star-return-is-null.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-language/expressions/yield/star-return-is-null.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/expressions/yield/star-return-is-null.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+language/expressions/yield/star-return-is-null.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js :: it threw an object with no name: `return` property access Expected SameValue(«0», «1») to be true
 language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js (strict) :: it threw an object with no name: `return` property access Expected SameValue(«0», «1») to be true
 language/expressions/yield/star-rhs-iter-rtrn-res-done-err.js :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
@@ -13445,12 +13433,12 @@ language/expressions/yield/star-rhs-iter-rtrn-res-value-err.js :: it threw an ob
 language/expressions/yield/star-rhs-iter-rtrn-res-value-err.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
 language/expressions/yield/star-rhs-iter-rtrn-res-value-final.js :: it threw an object with no name: Expected SameValue(«undefined», «2222») to be true
 language/expressions/yield/star-rhs-iter-rtrn-res-value-final.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «2222») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
+language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
+language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
@@ -14596,14 +14584,6 @@ language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not p
 language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/generator-close-via-break.js :: it threw an object with no name: Generator is closed after `break` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-break.js (strict) :: it threw an object with no name: Generator is closed after `break` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-continue.js :: it threw an object with no name: Generator is closed after `continue` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-continue.js (strict) :: it threw an object with no name: Generator is closed after `continue` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-return.js :: it threw an object with no name: Generator is closed after `return` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-return.js (strict) :: it threw an object with no name: Generator is closed after `return` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-throw.js :: it threw an object with no name: Generator is closed after `throw` statement Expected SameValue(«0», «1») to be true
-language/statements/for-of/generator-close-via-throw.js (strict) :: it threw an object with no name: Generator is closed after `throw` statement Expected SameValue(«0», «1») to be true
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all

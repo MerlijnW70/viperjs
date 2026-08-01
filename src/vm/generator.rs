@@ -131,6 +131,7 @@ impl Vm {
         // Everything else is decided by whether there is an execution to resume: a *completed*
         // generator is precisely one with none.
         let parked = heap.take_parked(receiver);
+        let begun = parked.as_ref().is_some_and(Suspended::begun);
         let outcome = match (parked, kind) {
             // §27.5.3.2 `GeneratorResume` — the only path that runs any code.
             (Some(parked), Resumption::Next) => {
@@ -156,6 +157,17 @@ impl Vm {
                 // anything, and the unwinding below discards whatever is above the handler's mark.
                 self.revive(parked, Value::Undefined, receiver_at, current, at);
                 self.unwind(sent, chunk, current, at)?;
+                return Ok(());
+            }
+            // §27.5.3.4 with a *return* completion, where the body has begun: it is resumed **at
+            // the `yield`**, so the `finally` blocks between there and the end run and the open
+            // iterators are closed. The value rides in as an ordinary resumption and
+            // `Instruction::ResumeMode` — which the compiler put right after that `yield` — says
+            // what it meant. Only the compiler standing at the `yield` knows what lies between it
+            // and the end of the body, which is why the shape is this way round.
+            (Some(parked), Resumption::Return) if begun => {
+                self.resume_returns = true;
+                self.revive(parked, sent, receiver_at, current, at);
                 return Ok(());
             }
             // §27.5.1.3 step 5 — and a `return` completes it without running anything.

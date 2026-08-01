@@ -666,6 +666,18 @@ pub enum Instruction {
     /// mean. What comes back the other way — the argument to the next resumption — is left on the
     /// stack, so the `yield` expression evaluates to it.
     Yield,
+    /// Push whether the resumption that just revived this body asked for a `return` — §27.5.1.3.
+    ///
+    /// Emitted straight after every [`Instruction::Yield`], because that is the only place it can
+    /// be read: a generator resumed by `gen.return(v)` has to behave as though `return v` were
+    /// written at the `yield`, and only the compiler standing at that `yield` knows which `finally`
+    /// blocks and which open iterators lie between it and the end of the body.
+    ///
+    /// So the *value* travels as an ordinary resumption and this says what it meant. The
+    /// alternative — a return completion travelling through the unwinder past `catch` handlers and
+    /// stopping at `finally` ones — needs a second kind of throw and a handler that can tell them
+    /// apart, to arrive at the sequence the compiler can already emit.
+    ResumeMode,
     /// The same, with the top value **already** an iterator result — §27.5.3.7 step 7.a.vii.
     ///
     /// A `yield*` passes the inner iterator's result object out whole rather than taking its
@@ -1006,6 +1018,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Return
         | Instruction::Yield
         | Instruction::YieldDelegated
+        | Instruction::ResumeMode
         | Instruction::Await
         | Instruction::AsyncReject
         | Instruction::GetAsyncIterator
