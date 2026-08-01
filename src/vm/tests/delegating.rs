@@ -191,32 +191,48 @@ fn a_delegation_is_still_a_suspension_and_keeps_its_place() {
 }
 
 #[test]
-fn a_return_into_a_delegating_generator_leaves_the_outer_body_properly() {
-    // §27.5.3.7 step 7.c. The resumption reaches the delegation, not the inner iterator's `next`,
-    // so it must not be read as a value sent inward — without the check it was, and the delegation
-    // carried on yielding and answered `{ value: 'after', done: false }` to a `return`.
+fn a_return_into_a_delegating_generator_is_handed_to_the_inner_iterator() {
+    // §27.5.3.7 step 7.c — and this is the one that makes `yield*` a wire rather than a filter in
+    // the third direction too. The `return` goes *inward*: the inner iterator is told, and only
+    // then does the outer generator leave.
     assert_eq!(
         run(
-            "function* inner() { yield 1; yield 2; } function* outer() { yield* inner(); yield 'after'; } var it = outer(); it.next(); var r = it.return(9); r.value + ':' + r.done"
+            "var told = false; function* inner() { try { yield 1; } finally { told = true; } } function* outer() { yield* inner(); } var it = outer(); it.next(); var r = it.return(9); told + '|' + r.value + ':' + r.done"
+        ),
+        "true|9:true"
+    );
+    // Step 7.c.viii — what the inner iterator's `return` answered is what comes out, so an
+    // iterator that substitutes its own value is obeyed.
+    assert_eq!(
+        run(
+            "var seen = []; var inner = { [Symbol.iterator]: function () { return { next: function () { return { value: 1, done: false }; }, return: function (v) { seen.push('ret:' + v); return { value: 'own', done: true }; } }; } }; function* outer() { yield* inner; } var it = outer(); it.next(); var r = it.return(9); seen.join() + '|' + r.value + ':' + r.done"
+        ),
+        "ret:9|own:true"
+    );
+    // Step 7.c.iii — an iterator with no `return` has nothing to be told, and that is not an
+    // error: the outer generator simply leaves with the value it was given. An array is one.
+    assert_eq!(
+        run(
+            "function* outer() { yield* [1, 2]; } var it = outer(); it.next(); var r = it.return(9); r.value + ':' + r.done"
         ),
         "9:true"
     );
-    // The outer generator's `finally` runs on the way out, as it does for a plain `yield`.
+    // …and the outer generator's own `finally` still runs on the way out.
     assert_eq!(
         run(
             "var seen = ''; function* inner() { yield 1; } function* outer() { try { yield* inner(); } finally { seen = 'ran'; } } var it = outer(); it.next(); it.return(3); seen"
         ),
         "ran"
     );
-    // …and it stays finished.
+    // Step 7.c.ix — an inner `return` that says it is **not** done does not end anything: the
+    // delegation carries on yielding, which is the case an implementation forgets.
     assert_eq!(
         run(
-            "function* inner() { yield 1; } function* outer() { yield* inner(); } var it = outer(); it.next(); it.return(0); var r = it.next(); r.value + ':' + r.done"
+            "var inner = { [Symbol.iterator]: function () { return { next: function () { return { value: 'n', done: false }; }, return: function () { return { value: 'r', done: false }; } }; } }; function* outer() { yield* inner; } var it = outer(); it.next(); var r = it.return(9); r.value + ':' + r.done"
         ),
-        "undefined:true"
+        "r:false"
     );
-    // An ordinary resumption after all that is still ordinary — the mode a `return` set does not
-    // survive to be read at a `yield` that never asked.
+    // An ordinary resumption after all that is still ordinary.
     assert_eq!(
         run(
             "function* inner() { yield 1; yield 2; } function* outer() { yield* inner(); yield 'after'; } var it = outer(); it.next(); var b = it.next(); var c = it.next(); b.value + '|' + c.value"

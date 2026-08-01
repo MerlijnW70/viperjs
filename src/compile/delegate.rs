@@ -32,6 +32,12 @@ use crate::value::Value;
 const SENDING_NEXT: f64 = 0.0;
 /// …and what a caught throw sets it to before going round again.
 const SENDING_THROW: f64 = 1.0;
+/// …and what a `return` resumption sets it to — §27.5.3.7 step 7.c.
+///
+/// A third value rather than a second flag, because the three are one question with three answers
+/// and the loop rejoins immediately: what follows all of them is the same check on the same result
+/// object. Only the *done* branch has to ask again, and it asks this.
+const SENDING_RETURN: f64 = 2.0;
 
 impl Compiler<'_> {
     /// Compile `yield* operand` — §27.5.3.7 step 7, as one expression leaving one value.
@@ -82,6 +88,15 @@ impl Compiler<'_> {
         let top = self.here()?;
         self.chunk.emit(Instruction::LoadVariable(0, sending));
         let sending_next = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        // Not next, so it is one of the two abrupt ones and they are told apart here.
+        self.chunk.emit(Instruction::LoadVariable(0, sending));
+        self.constant(Value::Number(SENDING_RETURN))?;
+        self.chunk
+            .emit(Instruction::Binary(crate::ast::BinaryOperator::StrictEqual));
+        let sending_throw = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.forward_return(iterator, sent)?;
+        let returned = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(sending_throw)?;
         self.forward_throw(iterator, sent)?;
         let joined = self.chunk.emit_jump(Instruction::Jump);
 
@@ -95,6 +110,7 @@ impl Compiler<'_> {
         // Steps 7.a.ii to 7.a.vi — the answer must be an object, and `done` decides whether this
         // expression is finished or the loop goes round again.
         self.chunk.patch(joined)?;
+        self.chunk.patch(returned)?;
         self.chunk.emit(Instruction::RequireObject);
         self.chunk.emit(Instruction::Duplicate);
         let name = self.name_of("done");
@@ -103,10 +119,21 @@ impl Compiler<'_> {
         // Truthy rather than `true`, which is what §7.4.4 `IteratorComplete` asks and what the
         // jump already does.
         let going = self.chunk.emit_jump(Instruction::JumpIfFalse);
-        // Done: §7.4.5 `IteratorValue` of it is what `yield*` evaluates to, and the loop is over.
+        // Done: §7.4.5 `IteratorValue` of it is what `yield*` evaluates to — *unless* the message
+        // that produced it was a `return`. Step 7.c.viii answers with a **return completion**, so
+        // the outer generator leaves with that value rather than carrying on with it as an
+        // expression. Same result object, two meanings, and only the mode says which.
         let name = self.name_of("value");
         self.constant(Value::String(name))?;
         self.chunk.emit(Instruction::GetProperty);
+        self.chunk.emit(Instruction::LoadVariable(0, sending));
+        self.constant(Value::Number(SENDING_RETURN))?;
+        self.chunk
+            .emit(Instruction::Binary(crate::ast::BinaryOperator::StrictEqual));
+        let as_a_value = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.unwind_across(super::statement::Exit::Return)?;
+        self.chunk.emit(Instruction::Return);
+        self.chunk.patch(as_a_value)?;
         let finished = self.chunk.emit_jump(Instruction::Jump);
 
         // Step 7.a.vii — not done, so the result object goes *out*, whole. The handler is armed
@@ -127,8 +154,12 @@ impl Compiler<'_> {
         // and carried on yielding: worse than not forwarding, because it answers.
         self.chunk.emit(Instruction::ResumeMode);
         let carry_on = self.chunk.emit_jump(Instruction::JumpIfFalse);
-        self.unwind_across(super::statement::Exit::Return)?;
-        self.chunk.emit(Instruction::Return);
+        // Step 7.c — the value goes *inward*, as the argument to the inner iterator's `return`.
+        // Leaving here directly was the previous shape and it skipped the inner iterator entirely.
+        self.chunk.emit(Instruction::StoreVariable(0, sent));
+        self.chunk.emit(Instruction::Pop);
+        self.set_slot(sending, Value::Number(SENDING_RETURN))?;
+        self.chunk.emit(Instruction::Jump(top));
         self.chunk.patch(carry_on)?;
         self.chunk.emit(Instruction::StoreVariable(0, sent));
         self.chunk.emit(Instruction::Pop);
@@ -144,6 +175,34 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Jump(top));
 
         self.chunk.patch(finished)
+    }
+
+    /// Step 7.c.i to 7.c.viii — hand a `return` to the inner iterator, or leave without it.
+    ///
+    /// §7.3.10's `GetMethod` again, and the absent case is the one that differs from a throw: an
+    /// iterator with no `return` has nothing to be told and that is not an error, so step 7.c.iii
+    /// simply leaves with the value. A throw in the same position is a TypeError, because the
+    /// caller asked for something to be thrown and nothing threw it.
+    fn forward_return(&mut self, iterator: u32, sent: u32) -> Result<(), CompileError> {
+        self.chunk.emit(Instruction::LoadVariable(0, iterator));
+        self.chunk.emit(Instruction::Duplicate);
+        let name = self.name_of("return");
+        self.constant(Value::String(name))?;
+        self.chunk.emit(Instruction::GetProperty);
+        let has_return = self.chunk.emit_jump(|target| {
+            Instruction::JumpKeeping(super::chunk::ShortCircuit::WhenNotNullish, target)
+        });
+        // Step 7.c.iii — nothing to call, so the outer generator leaves with what it was given.
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::LoadVariable(0, sent));
+        self.unwind_across(super::statement::Exit::Return)?;
+        self.chunk.emit(Instruction::Return);
+
+        self.chunk.patch(has_return)?;
+        self.chunk.emit(Instruction::LoadVariable(0, sent));
+        self.chunk.emit(Instruction::CallMethod(1));
+        Ok(())
     }
 
     /// Step 7.b.i to 7.b.iii — hand a throw to the inner iterator, or refuse for it.

@@ -13421,26 +13421,6 @@ language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it 
 language/expressions/void/S11.4.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/void/S11.4.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/yield/formal-parameters-after-reassignment-strict.js (strict) :: it threw an object with no name: First result `value` Expected SameValue(«32», «23») to be true
-language/expressions/yield/star-return-is-null.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/expressions/yield/star-return-is-null.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js :: it threw an object with no name: `return` property access Expected SameValue(«0», «1») to be true
-language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js (strict) :: it threw an object with no name: `return` property access Expected SameValue(«0», «1») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-done-err.js :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-done-err.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-done-no-value.js :: it threw an object with no name: access count (final iteration) Expected SameValue(«0», «1») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-done-no-value.js (strict) :: it threw an object with no name: access count (final iteration) Expected SameValue(«0», «1») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-value-err.js :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-value-err.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «Test262Error: ») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-value-final.js :: it threw an object with no name: Expected SameValue(«undefined», «2222») to be true
-language/expressions/yield/star-rhs-iter-rtrn-res-value-final.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «2222») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
 language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
 language/function-code/10.4.3-1-17-s.js (strict) :: it threw ReferenceError: eval is not defined
