@@ -121,42 +121,40 @@ a commit, and none may cost a single conformance test.
 
 ## Start here
 
-M1, M2, M3 and M5 are done: the lexer, the parser, the value and object model, a bytecode compiler
-and an interpreter that runs code — and the conformance harness that measures it, which from here is
-what says what to build next. **M4 is what is in progress.** `Object`, `Function`, `Array`, `String`,
-`Number`, `Boolean`, `Math`, `JSON`, `Date` and the `Error` hierarchy are in, and so is a good deal
-of M6: classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`, `ArrayBuffer`,
-`DataView` and the TypedArrays. **M4 is finished**: `RegExp` is ours, written as
-§22.2.1's grammar, §22.2.2's backtracking matcher and the object on top, with no dependency.
+M1, M2, M3, M4 and M5 are done: the lexer, the parser, the value and object model, a bytecode
+compiler and an interpreter that runs code, the whole ES5 library including our own `RegExp`, and
+the conformance harness that measures it — which from here is what says what to build next.
+**M6 is what is in progress.** Classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`,
+`Proxy`, `ArrayBuffer`, `DataView` and the TypedArrays were already in. **Generators, `yield`,
+`yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs`.
 
-Conformance as of this commit is **54.74% of test262** — 50,992 of 93,161 runs. Treat that number as
-perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Let the failure buckets choose the next slice, not intuition. The largest right now:
+Conformance as of this commit is **61.81% of test262** — 57,577 of 93,153 runs. Treat that number
+as perishable and re-measure rather than quoting it; the point of the figure is the work list under
+it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
 | Runs | What stops them |
 | --- | --- |
-| 17,069 | `async` functions and generators |
-| 3,474 | `Temporal` — a Stage 3 proposal, and **not** ES2023 core |
-| 3,137 | `BigInt` literals |
-| 1,339 | `eval`, and 412 more for `new Function` — both need compiling at run time |
-| 872 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
-| 838 | `BigInt64Array` and `BigUint64Array`, which need `BigInt` first |
+| 7,654 | `async function*` — §27.6, refused deliberately (see below) |
+| 6,261 | `BigInt` literals |
+| 1,318 | Unicode property escapes |
+| 1,095 | `for await` — refused with the above, and for the same reason |
+| 888 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
 | 830 | modules |
+| 785 | dynamic `import` |
 
-**`Proxy` and `RegExp` are both done**, which finishes M4. Everything left in the table is
-architectural, and 75% of the suite means async/generators plus BigInt — there is no other path to
-it. The three ratchets are the reason that number is worth quoting; see
-[[praxis-conformance-baseline]] for how to bless without laundering one.
+**Two things are refused on purpose, and the reason is worth keeping.** `async function*` and
+`for await` both *nearly* work if compiled as the ordinary generator and the ordinary loop, and a
+measurement with them doing so showed 7,846 test262 files failing with plausible errors instead of
+being skipped. A wrong answer says something false; a skip says nothing. If a slice is going to be
+partial, refuse the part it does not do.
 
 **Read the *failure* buckets, not only that table.** The list above is what stopped the tests that
-never ran, and it is all architecture. Sorting the ~17,000 that **run and fail** by reason is what
-finds the slices worth a day, and none of this session's were visible above:
+never ran. Sorting the ~15,000 that **run and fail** by reason is what finds the slices worth a day:
 
     grep -av '^#' conformance/expectations.txt | sed 's/.* :: //' | sort | uniq -c | sort -rn | head -25
 
-That is how `Array.prototype.sort` (85 runs), the four change-copy methods (~130), `ToObject` on a
-primitive receiver (116) and the weak collections (~570) were found. Bucket by *path* too
-(`awk -F/ '{print $1"/"$2}'`) to see which area is worth a slice rather than a method.
+Bucket by *path* too (`awk -F/ '{print $1"/"$2}'`) to see which area is worth a slice rather than a
+method.
 
 **And ECMA-262 cannot be read with a fetch tool.** Both the multipage and single-page builds answer
 with their table of contents whatever anchor is asked for, so "read the clause first" is not
@@ -164,30 +162,24 @@ available that way. The vendored suite is the oracle instead: implement, run `--
 read the failing tests' `info:` frontmatter — which quotes the numbered steps verbatim, and is how
 a wrong reading gets caught.
 
-Note what that list says about order. The parser already accepts generators and `async`, so that
-bucket is compiler and runtime work rather than grammar — and it is *one* piece of work, because
-both need the same thing: an interpreter whose frames can be suspended and resumed. That is the
-largest single change left in the engine and it is worth planning before starting.
+**Three ways a green run can be lying**, all met in the generator work and all worth knowing:
 
-Two things about reading that table. **`Temporal` is not ES2023** — it is a Stage 3 proposal with a
-surface larger than `Date`, `Intl` and `RegExp` combined, and building it would raise the number
-while making the engine no more of a JavaScript engine. Leave it.
+- A **decision record can be wrong**, and confidently. DR-0017 said twice that a suspension may not
+  cross a re-entry; both readings refused ordinary programs like `[1].map(it.next.bind(it))`, and
+  the second was in the code as a check before the first program that needed it was written. Write
+  the program that would break, run it, and only then believe the record.
+- **A test can pass for the wrong reason**, and a whole bucket of them can. Check what the
+  conformance run says *moved*: every new expectations line must be a test that was **skipped**
+  before, and the run's own arithmetic proves it — tests leaving "not run" must equal new passes
+  plus new failures exactly, or something that used to pass now does not.
+- **A stored state can go stale where a derived one cannot.** `[[GeneratorState]]` was a field until
+  a throw escaping a body left it saying `executing` for ever. Suspended is "it holds a parked
+  execution", executing is "a live frame names it", completed is neither — all three are questions
+  about somewhere else, and a field repeating the answers is a field that can disagree with them.
 
-And a bucket whose reason names the *harness* rather than the engine is worth being suspicious of.
-10,737 runs were once skipped for "an async test reports through `$DONE`" — one missing host
-function standing in front of a fifth of the suite. Providing it moved +786 to passing and revealed
-that the real top blocker was async and generators all along.
-
-**The two mistakes this session made twice**, both worth knowing about before the next slice:
-
-- A test can *pass for the wrong reason*. `Promise.all.call(eval)` threw a TypeError because
-  `Promise.all` was undefined, which is what the test asked for and not why; and six TypedArray
-  tests passed because `testTypedArray.js` runs its body once per constructor and there were none.
-  Both only became visible when the thing they were about arrived, and both look like regressions.
-- The local loop is `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` **and**
-  `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not
-  cover the third: a public item's doc linking to a private one is an error in CI and nowhere else,
-  and it reddened a build.
+The local loop is `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` **and**
+`RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not cover
+the third: a public item's doc linking to a private one is an error in CI and nowhere else.
 
 Read [`GOAL.md`](GOAL.md) first — it is binding and it outranks this file — then `src/span.rs` to
 calibrate on the bar. `cargo run --release --example parse -- --commonjs <dir>` over a real
