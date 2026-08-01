@@ -165,20 +165,13 @@ fn what_a_function_evaluates_to_is_not_the_scripts_completion_value() {
 
 #[test]
 fn what_functions_cannot_do_yet_says_which_and_where() {
-    let cases = [
-        ("async function f() {}", "an async function"),
-        ("function f(...[a]) {}", "a destructuring rest parameter"),
-    ];
     let mut heap = Heap::new();
-    for (source, what) in cases {
-        let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
-        let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
-        assert_eq!(
-            error.kind,
-            crate::compile::ErrorKind::Unsupported(what),
-            "compiling {source:?}"
-        );
-    }
+    let script = parse_script("function f(...[a]) {}").expect("the row parses"); // a row that does not is the bug
+    let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+    assert_eq!(
+        error.kind,
+        crate::compile::ErrorKind::Unsupported("a destructuring rest parameter")
+    );
 }
 
 #[test]

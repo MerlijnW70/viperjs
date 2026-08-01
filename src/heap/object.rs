@@ -54,6 +54,19 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjectId(pub(super) usize);
 
+/// Which kind of execution an object holds parked — §27.5.1's or §27.7's.
+///
+/// The two are the same record parked in the same slot, and they differ in three places: what the
+/// call that made them answered with, what resumes them, and what a `return` from the body does.
+/// Each of those asks this.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Suspendable {
+    /// §27.5.1's generator, resumed by `next`, `return` and `throw`.
+    Generator,
+    /// §27.7's `async` function context, resumed by a job when a promise settles.
+    Async,
+}
+
 /// What an arrow reaches outward for, captured where it was written — §10.2.3 step 6.
 ///
 /// Two values and not one, because §9.1.1.3's function environment holds both and an arrow gets
@@ -286,19 +299,19 @@ pub struct Object {
     /// The interpreter's, and deliberately opaque here: what is in it is frames and operands, and
     /// the heap's only business with it is holding it and letting the collector walk it.
     suspension: Option<Box<crate::vm::Suspended>>,
-    /// Whether this object is a generator at all — §27.5.1's brand.
+    /// Which kind of suspendable execution this object holds, if it is one.
     ///
-    /// What §27.5.1.2 step 2's `RequireInternalSlot` asks about before it will do anything, so
-    /// that `Generator.prototype.next.call({})` is a TypeError rather than an answer about an
-    /// object that merely looks similar. It stays true once set: a finished generator is still a
-    /// generator.
+    /// `None` is "neither a generator nor an `async` function's context", which is what
+    /// §27.5.1.2 step 2's `RequireInternalSlot` asks about before it will do anything — so
+    /// `Generator.prototype.next.call({})` is a TypeError rather than an answer about an object
+    /// that merely looks similar. It stays set once set: a finished generator is still a generator.
     ///
     /// There is deliberately no `[[GeneratorState]]` beside it. Every one of §27.5.1's four states
     /// is a *question about somewhere else* — suspended is "it holds a parked execution", executing
     /// is "a live frame names it", completed is neither — and a field repeating those answers is a
     /// field that can disagree with them. It did: a throw that escaped a generator's body left the
     /// state saying `executing` for ever, because nothing on that path had anywhere to write.
-    generator: bool,
+    suspendable: Option<Suspendable>,
     /// §22.2.3's internal slots, if this is a regular expression.
     ///
     /// Boxed, because a compiled pattern owns a tree and every object would otherwise carry room
@@ -364,7 +377,7 @@ impl Object {
             proxy: None,
             matches: None,
             suspension: None,
-            generator: false,
+            suspendable: None,
             regexp: None,
             call: None,
             environment: None,
@@ -526,9 +539,14 @@ impl Object {
         self.suspension.as_deref()
     }
 
-    /// Whether this object is a generator — §27.5.1's brand, and not where it has got to.
+    /// Which kind of suspendable this object is, if it is one — and not where it has got to.
+    pub(crate) fn suspendable(&self) -> Option<Suspendable> {
+        self.suspendable
+    }
+
+    /// Whether it is a *generator* — §27.5.1's brand, which is what the three resumptions want.
     pub(crate) fn is_generator(&self) -> bool {
-        self.generator
+        self.suspendable == Some(Suspendable::Generator)
     }
 
     /// The target and handler this object proxies, if it is a Proxy — §10.5.
@@ -863,6 +881,22 @@ impl Heap {
         id
     }
 
+    /// One of §27.7.5.3's two resumption closures, as a function object.
+    ///
+    /// Reachable from nothing a script can name: it exists to be handed to `PerformPromiseThen` and
+    /// called once by a job. It has no `name` and no `length`, which nothing can ask for.
+    pub(crate) fn new_revive_function(
+        &mut self,
+        context: ObjectId,
+        kind: crate::heap::ReactionKind,
+    ) -> ObjectId {
+        let id = ObjectId(self.objects.len());
+        let mut object = Object::new(None);
+        object.call = Some(Callable::Revive { kind, context });
+        self.objects.push(Some(object));
+        id
+    }
+
     /// Put a built-in function object on the heap — `CreateBuiltinFunction` (§10.3.4).
     ///
     /// No environment, because there is nothing lexical about it: a built-in's behaviour is Rust
@@ -1113,10 +1147,10 @@ impl Heap {
         Some(*parked)
     }
 
-    /// Mark `object` a generator — §27.5.1's brand, given once by §15.5.4 and never taken away.
-    pub(crate) fn brand_generator(&mut self, object: ObjectId) {
+    /// Mark `object` as holding a suspendable execution — given once and never taken away.
+    pub(crate) fn brand_suspendable(&mut self, object: ObjectId, kind: Suspendable) {
         if let Some(object) = self.object_mut(object) {
-            object.generator = true;
+            object.suspendable = Some(kind);
         }
     }
 

@@ -1079,16 +1079,152 @@ built-ins/Array/from/source-object-constructor.js :: it threw an object with no 
 built-ins/Array/from/source-object-constructor.js (strict) :: it threw an object with no name: The value of Array.from.call(Object, []).constructor is expected to equal the value of Object Expected SameValue(«function Array() { [native code] }», «function Object() { [native code] }») to be true
 built-ins/Array/from/source-object-length-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(A1, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/source-object-length-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(A1, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Array/fromAsync/async-iterable-input-does-not-await-input.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/async-iterable-input-does-not-await-input.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-add-to-empty.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-add-to-empty.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-add-to-singleton.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-add-to-singleton.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-add.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-add.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-mutate.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-mutate.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-remove.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-array-remove.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-arraybuffer.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-arraybuffer.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-arraylike-holes.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-arraylike-holes.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-arraylike-too-long.js :: the test called $DONE with Test262Error: Array-like with excessive length Expected a RangeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-arraylike-too-long.js (strict) :: the test called $DONE with Test262Error: Array-like with excessive length Expected a RangeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-asynciterator-throws.js :: the test called $DONE with Test262Error: Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-asynciterator-throws.js (strict) :: the test called $DONE with Test262Error: Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-boolean.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-boolean.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-function.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-function.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-iterator-throws.js :: the test called $DONE with Test262Error: Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-iterator-throws.js (strict) :: the test called $DONE with Test262Error: Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-null-undefined.js :: the test called $DONE with Test262Error: null asyncItems Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-null-undefined.js (strict) :: the test called $DONE with Test262Error: null asyncItems Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/asyncitems-number.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-number.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-object-not-arraylike.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-object-not-arraylike.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-string.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-string.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-symbol.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-symbol.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-uses-intrinsic-iterator-symbols.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-uses-intrinsic-iterator-symbols.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/builtin.js :: it threw an object with no name: Array.fromAsync is extensible
 built-ins/Array/fromAsync/builtin.js (strict) :: it threw an object with no name: Array.fromAsync is extensible
 built-ins/Array/fromAsync/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/fromAsync/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Array/fromAsync/mapfn-async-arraylike.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-async-arraylike.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-async-iterable-sync.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-async-iterable-sync.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-async-throws-close-async-iterator.js :: the test called $DONE with Test262Error: async mapfn rejecting should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-async-throws-close-async-iterator.js (strict) :: the test called $DONE with Test262Error: async mapfn rejecting should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-async-throws-close-sync-iterator.js :: the test called $DONE with Test262Error: async mapfn rejecting should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-async-throws-close-sync-iterator.js (strict) :: the test called $DONE with Test262Error: async mapfn rejecting should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-async-throws.js :: the test called $DONE with Test262Error: async mapfn rejecting should cause fromAsync to reject Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-async-throws.js (strict) :: the test called $DONE with Test262Error: async mapfn rejecting should cause fromAsync to reject Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-sync-arraylike.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-sync-arraylike.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-sync-iterable-sync.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-sync-iterable-sync.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/mapfn-sync-throws-close-async-iterator.js :: the test called $DONE with Test262Error: sync mapfn throwing should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-sync-throws-close-async-iterator.js (strict) :: the test called $DONE with Test262Error: sync mapfn throwing should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-sync-throws-close-sync-iterator.js :: the test called $DONE with Test262Error: sync mapfn throwing should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-sync-throws-close-sync-iterator.js (strict) :: the test called $DONE with Test262Error: sync mapfn throwing should cause fromAsync to reject Expected a Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-sync-throws.js :: the test called $DONE with Test262Error: sync mapfn throwing should cause fromAsync to reject Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/mapfn-sync-throws.js (strict) :: the test called $DONE with Test262Error: sync mapfn throwing should cause fromAsync to reject Expected a Test262Error to be thrown asynchronously but the function threw synchronously
 built-ins/Array/fromAsync/name.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/fromAsync/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Array/fromAsync/non-iterable-input-does-not-use-array-prototype.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-does-not-use-array-prototype.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-element-access-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-element-access-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-async-mapped-awaits-callback-result-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-async-mapped-awaits-callback-result-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-async-mapped-callback-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-async-mapped-callback-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-element-rejects.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-element-rejects.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-sync-mapped-callback-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable-sync-mapped-callback-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input-with-thenable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-input.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-sync-mapped-callback-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-sync-mapped-callback-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-non-promise-thenable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-non-promise-thenable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-async-mapped-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-async-mapped-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-sync-mapped-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-sync-mapped-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-then-method-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/non-iterable-with-thenable-then-method-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Array/fromAsync/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Array/fromAsync/prop-desc.js :: it threw an object with no name: Array.fromAsync is callable Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/fromAsync/prop-desc.js (strict) :: it threw an object with no name: Array.fromAsync is callable Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Array/fromAsync/returned-promise-resolves-to-array.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/returned-promise-resolves-to-array.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/returns-promise.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/returns-promise.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-input-with-non-promise-thenable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-input-with-non-promise-thenable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-input-with-thenable.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-input-with-thenable.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-input.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-input.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-iteration-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-iteration-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-rejecting-thenable-closes.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Array/fromAsync/sync-iterable-with-rejecting-thenable-closes.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/Array/fromAsync/sync-iterable-with-rejecting-thenable-rejects.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-rejecting-thenable-rejects.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-async-mapped-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-async-mapped-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-async-mapped-callback-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-async-mapped-callback-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-sync-mapped-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-sync-mapped-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-sync-mapped-callback-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-sync-mapped-callback-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-then-method-err.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/sync-iterable-with-thenable-then-method-err.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/this-constructor-operations.js :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-constructor-operations.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-constructor-with-bad-length-setter.js :: the test called $DONE with Test262Error: Promise rejected if setting length fails Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-bad-length-setter.js (strict) :: the test called $DONE with Test262Error: Promise rejected if setting length fails Expected a Test262Error to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-readonly-elements.js :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-constructor-with-readonly-elements.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-constructor-with-readonly-length.js :: the test called $DONE with Test262Error: Setting read-only length fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-readonly-length.js (strict) :: the test called $DONE with Test262Error: Setting read-only length fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-unsettable-element-closes-async-iterator.js :: the test called $DONE with Test262Error: Promise rejected if defining element fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-unsettable-element-closes-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise rejected if defining element fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-unsettable-element-closes-sync-iterator.js :: the test called $DONE with Test262Error: Promise rejected if defining element fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-unsettable-element-closes-sync-iterator.js (strict) :: the test called $DONE with Test262Error: Promise rejected if defining element fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-unsettable-element.js :: the test called $DONE with Test262Error: Promise rejected if defining element fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor-with-unsettable-element.js (strict) :: the test called $DONE with Test262Error: Promise rejected if defining element fails Expected a TypeError to be thrown asynchronously but the function threw synchronously
+built-ins/Array/fromAsync/this-constructor.js :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-constructor.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-non-constructor.js :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/this-non-constructor.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
+built-ins/Array/fromAsync/thisarg-object.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/thisarg-object.js (strict) :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/thisarg-omitted-sloppy.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/thisarg-omitted-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/length/S15.4.5.1_A1.3_T1.js :: it threw RangeError: an array length must be an integer index
 built-ins/Array/length/S15.4.5.1_A1.3_T1.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Array/length/S15.4.5.1_A1.3_T2.js :: it threw RangeError: an array length must be an integer index
@@ -1683,6 +1819,10 @@ built-ins/AsyncDisposableStack/prototype/Symbol.asyncDispose.js :: it threw Refe
 built-ins/AsyncDisposableStack/prototype/Symbol.asyncDispose.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/Symbol.toStringTag.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/adds-value-onDisposeAsync.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/adds-value-onDisposeAsync.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/allows-any-value.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/allows-any-value.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/length.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/length.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/name.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1691,14 +1831,22 @@ built-ins/AsyncDisposableStack/prototype/adopt/not-a-constructor.js :: it threw 
 built-ins/AsyncDisposableStack/prototype/adopt/not-a-constructor.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/prop-desc.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/prop-desc.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/puts-value-onDisposeAsync-on-top-of-stack.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/puts-value-onDisposeAsync-on-top-of-stack.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/returns-value.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/returns-value.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/this-does-not-have-internal-asyncdisposablestate-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/this-does-not-have-internal-asyncdisposablestate-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/this-not-object-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/this-not-object-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/throws-if-disposed.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/adopt/throws-if-disposed.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/throws-if-onDisposeAsync-not-callable.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/adopt/throws-if-onDisposeAsync-not-callable.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/constructor.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/constructor.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/defer/adds-onDisposeAsync.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/defer/adds-onDisposeAsync.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/length.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/length.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/name.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1707,14 +1855,34 @@ built-ins/AsyncDisposableStack/prototype/defer/not-a-constructor.js :: it threw 
 built-ins/AsyncDisposableStack/prototype/defer/not-a-constructor.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/prop-desc.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/prop-desc.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/defer/puts-onDisposeAsync-on-top-of-stack.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/defer/puts-onDisposeAsync-on-top-of-stack.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/returns-undefined.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/returns-undefined.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/this-does-not-have-internal-asyncdisposablestate-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/this-does-not-have-internal-asyncdisposablestate-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/this-not-object-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/this-not-object-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/defer/throws-if-disposed.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/defer/throws-if-disposed.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/throws-if-onDisposeAsync-not-callable.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/defer/throws-if-onDisposeAsync-not-callable.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/Symbol.asyncDispose-method-not-async.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/Symbol.asyncDispose-method-not-async.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/disposes-resources-in-reverse-order.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/disposes-resources-in-reverse-order.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/does-not-reinvoke-disposers-if-already-disposed.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/does-not-reinvoke-disposers-if-already-disposed.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/does-not-reinvoke-disposers-if-dispose-already-started.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/does-not-reinvoke-disposers-if-dispose-already-started.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/does-not-reject-if-already-disposed.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/does-not-reject-if-already-disposed.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/explicit-await-for-null.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/explicit-await-for-null.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/explicit-await-for-undefined.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/explicit-await-for-undefined.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/explicit-await-skipped-when-empty.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/explicit-await-skipped-when-empty.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/length.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/length.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/name.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1723,8 +1891,20 @@ built-ins/AsyncDisposableStack/prototype/disposeAsync/not-a-constructor.js :: it
 built-ins/AsyncDisposableStack/prototype/disposeAsync/not-a-constructor.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/prop-desc.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/prop-desc.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/rejects-with-error-as-is-if-only-one-error-during-disposal.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/rejects-with-error-as-is-if-only-one-error-during-disposal.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/rejects-with-suppressederror-if-multiple-errors-during-disposal.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/rejects-with-suppressederror-if-multiple-errors-during-disposal.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/resolves-to-undefined.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/resolves-to-undefined.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/returns-promise.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposeAsync/returns-promise.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/sets-state-to-disposed.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/sets-state-to-disposed.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/this-does-not-have-internal-asyncdisposablestate-rejects.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/this-does-not-have-internal-asyncdisposablestate-rejects.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/this-not-object-rejects.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/disposeAsync/this-not-object-rejects.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposed/does-not-have-asyncdisposablestate-internal-slot.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposed/does-not-have-asyncdisposablestate-internal-slot.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/disposed/getter.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1749,6 +1929,8 @@ built-ins/AsyncDisposableStack/prototype/move/not-a-constructor.js :: it threw R
 built-ins/AsyncDisposableStack/prototype/move/not-a-constructor.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/prop-desc.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/prop-desc.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack-that-contains-moved-resources.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack-that-contains-moved-resources.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack-that-is-still-pending.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack-that-is-still-pending.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/move/returns-new-asyncdisposablestack.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1767,6 +1949,24 @@ built-ins/AsyncDisposableStack/prototype/prop-desc.js :: it threw ReferenceError
 built-ins/AsyncDisposableStack/prototype/prop-desc.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/proto.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/proto.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/Symbol.asyncDispose-getter.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/Symbol.asyncDispose-getter.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/Symbol.dispose-getter.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/Symbol.dispose-getter.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/adds-async-disposable-value.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/adds-async-disposable-value.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/adds-sync-disposable-value.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/adds-sync-disposable-value.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/allows-null-value.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/allows-null-value.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/allows-undefined-value.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/allows-undefined-value.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/gets-value-Symbol.asyncDispose-property-once.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/gets-value-Symbol.asyncDispose-property-once.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/gets-value-Symbol.dispose-property-after-trying-Symbol.asyncDispose.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/gets-value-Symbol.dispose-property-after-trying-Symbol.asyncDispose.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/gets-value-Symbol.dispose-property-once.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/gets-value-Symbol.dispose-property-once.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/length.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/length.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/name.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1775,10 +1975,16 @@ built-ins/AsyncDisposableStack/prototype/use/not-a-constructor.js :: it threw Re
 built-ins/AsyncDisposableStack/prototype/use/not-a-constructor.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/prop-desc.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/prop-desc.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/puts-value-on-top-of-stack.js :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/puts-value-on-top-of-stack.js (strict) :: the test called $DONE with ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/returns-value.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/returns-value.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/this-does-not-have-internal-asyncdisposablestate-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/this-does-not-have-internal-asyncdisposablestate-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/this-not-object-throws.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/this-not-object-throws.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/throws-if-disposed.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/prototype/use/throws-if-disposed.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/throws-if-value-Symbol.asyncDispose-property-is-null-or-undefined.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/throws-if-value-Symbol.asyncDispose-property-is-null-or-undefined.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype/use/throws-if-value-Symbol.asyncDispose-property-not-callable.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -1793,8 +1999,22 @@ built-ins/AsyncDisposableStack/prototype/use/throws-if-value-not-object.js :: it
 built-ins/AsyncDisposableStack/prototype/use/throws-if-value-not-object.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/undefined-newtarget-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/AsyncDisposableStack/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/AsyncFunction/AsyncFunction-is-subclass.js :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
+built-ins/AsyncFunction/AsyncFunction-is-subclass.js (strict) :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
+built-ins/AsyncFunction/AsyncFunction-name.js :: it threw an object with no name: name descriptor value should be AsyncFunction; name value should be AsyncFunction
+built-ins/AsyncFunction/AsyncFunction-name.js (strict) :: it threw an object with no name: name descriptor value should be AsyncFunction; name value should be AsyncFunction
+built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js :: it threw an object with no name: toStringTag value Expected SameValue(«undefined», «"AsyncFunction"») to be true
+built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js (strict) :: it threw an object with no name: toStringTag value Expected SameValue(«undefined», «"AsyncFunction"») to be true
+built-ins/AsyncFunction/instance-construct-throws.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/AsyncFunction/instance-construct-throws.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/AsyncFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
 built-ins/AsyncFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
+built-ins/AsyncFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
+built-ins/AsyncFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %AsyncGeneratorFunction%
 built-ins/AsyncGeneratorFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %AsyncGeneratorFunction%
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
@@ -1859,6 +2079,10 @@ built-ins/Atomics/notify/bigint/null-bufferdata-throws.js :: it threw ReferenceE
 built-ins/Atomics/notify/bigint/null-bufferdata-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/notify/count-boundary-cases.js :: it threw TypeError: what was called is not a function
 built-ins/Atomics/notify/count-boundary-cases.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Atomics/notify/count-defaults-to-infinity-missing.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/count-defaults-to-infinity-missing.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/count-from-nans.js :: it threw TypeError: what was called is not a function
 built-ins/Atomics/notify/count-from-nans.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -1871,6 +2095,8 @@ built-ins/Atomics/notify/length.js :: it threw TypeError: undefined and null can
 built-ins/Atomics/notify/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/notify/name.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/notify/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/notify/negative-count.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/negative-count.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/notify/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -1881,6 +2107,28 @@ built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js :: it threw TypeErro
 built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Atomics/notify/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Atomics/notify/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/Atomics/notify/notify-all-on-loc.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-all-on-loc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-all.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-all.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-in-order-one-time.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-in-order-one-time.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-in-order.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-in-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-nan.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-nan.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-one.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-one.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-renotify-noop.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-renotify-noop.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-two.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-two.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-with-no-agents-waiting.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-with-no-agents-waiting.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-with-no-matching-agents-waiting.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-with-no-matching-agents-waiting.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-zero.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/notify-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/notify/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js :: it threw TypeError: what was called is not a function
@@ -1893,6 +2141,8 @@ built-ins/Atomics/notify/retrieve-length-before-index-coercion.js :: it threw an
 built-ins/Atomics/notify/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/notify/symbol-for-index-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/notify/symbol-for-index-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/notify/undefined-index-defaults-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/notify/undefined-index-defaults-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/or/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/or/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/or/non-shared-int-views-throws.js :: it threw an object with no name: Atomics.or(new Uint8ClampedArray(buffer), 0, 1) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Uint8ClampedArray and makeArrayBuffer.)
@@ -1937,28 +2187,86 @@ built-ins/Atomics/wait/bigint/null-bufferdata-throws.js :: it threw ReferenceErr
 built-ins/Atomics/wait/bigint/null-bufferdata-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/out-of-range-index-throws.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/wait/bigint/out-of-range-index-throws.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Atomics/wait/bigint/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/bigint/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/descriptor.js :: it threw an object with no name: wait should be an own property
 built-ins/Atomics/wait/descriptor.js (strict) :: it threw an object with no name: wait should be an own property
+built-ins/Atomics/wait/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/wait/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/wait/name.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/wait/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/wait/nan-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/nan-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-add.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-add.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-and.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-and.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-compareExchange.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-compareExchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-exchange.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-exchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-or.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-or.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-store.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-store.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-sub.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/null-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/null-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/object-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/object-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
+built-ins/Atomics/wait/symbol-for-index-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/symbol-for-index-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/symbol-for-index-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/symbol-for-index-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/symbol-for-timeout-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/symbol-for-timeout-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/symbol-for-value-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/symbol-for-value-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/symbol-for-value-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/symbol-for-value-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
+built-ins/Atomics/wait/true-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/true-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/undefined-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/undefined-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/undefined-index-defaults-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/undefined-index-defaults-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/value-not-equal.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/value-not-equal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/wait-index-value-not-equal.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/wait-index-value-not-equal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/wait/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/bad-range.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/bad-range.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/bigint/negative-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/bigint/negative-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/bigint/non-bigint64-typedarray-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
@@ -1973,10 +2281,20 @@ built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws.js :: it threw an obj
 built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/descriptor.js :: it threw an object with no name: waitAsync should be an own property
 built-ins/Atomics/waitAsync/descriptor.js (strict) :: it threw an object with no name: waitAsync should be an own property
+built-ins/Atomics/waitAsync/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/false-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/false-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/implicit-infinity-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/is-function.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
@@ -1985,10 +2303,32 @@ built-ins/Atomics/waitAsync/length.js :: it threw TypeError: undefined and null 
 built-ins/Atomics/waitAsync/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/waitAsync/name.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/waitAsync/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/Atomics/waitAsync/nan-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/nan-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/negative-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/negative-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/negative-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/negative-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/non-int32-typedarray-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/non-shared-bufferdata-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
@@ -1999,32 +2339,60 @@ built-ins/Atomics/waitAsync/not-an-object-throws.js :: it threw an object with n
 built-ins/Atomics/waitAsync/not-an-object-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/null-bufferdata-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/null-bufferdata-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/null-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/null-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/null-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/null-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/object-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/object-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/object-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/object-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/out-of-range-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/out-of-range-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/waitAsync/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-ok.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-not-equal.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/returns-result-object-value-is-string-timed-out.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-index-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/symbol-for-index-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/symbol-for-index-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/symbol-for-index-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/symbol-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/symbol-for-timeout-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/symbol-for-value-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/symbol-for-value-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/symbol-for-value-throws.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/symbol-for-value-throws.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/true-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/true-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/true-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/true-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/undefined-for-timeout.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/undefined-for-timeout.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/value-not-equal-agent.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/value-not-equal-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/waitAsync/value-not-equal.js :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Atomics/waitAsync/value-not-equal.js (strict) :: it threw an object with no name: The value of `typeof Atomics.waitAsync` is "function" Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/xor/bigint/bad-range.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/xor/bigint/bad-range.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
@@ -3119,6 +3487,8 @@ built-ins/Function/prototype/name.js :: it threw an object with no name: name sh
 built-ins/Function/prototype/name.js (strict) :: it threw an object with no name: name should be an own property
 built-ins/Function/prototype/property-order.js :: it threw an object with no name: The `length` property comes before the `name` property on built-in functions
 built-ins/Function/prototype/property-order.js (strict) :: it threw an object with no name: The `length` property comes before the `name` property on built-in functions
+built-ins/Function/prototype/toString/AsyncFunction.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Function/prototype/toString/AsyncFunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/toString/Function.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/toString/Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/toString/GeneratorFunction.js :: it threw TypeError: building a function from source text is not implemented yet
@@ -4057,8 +4427,14 @@ built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js :
 built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js (strict) :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
+built-ins/Object/prototype/toString/proxy-function-async.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
+built-ins/Object/prototype/toString/proxy-function-async.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
+built-ins/Object/prototype/toString/proxy-function.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
+built-ins/Object/prototype/toString/proxy-function.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js :: it threw an object with no name: generator function proxy without Symbol.toStringTag Expected SameValue(«"[object GeneratorFunction]"», «"[object Function]"») to be true
+built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js (strict) :: it threw an object with no name: generator function proxy without Symbol.toStringTag Expected SameValue(«"[object GeneratorFunction]"», «"[object Function]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-override-bigint.js :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-override-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.prototype.valueOf requires an object
@@ -4067,6 +4443,10 @@ built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.p
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/seal/seal-arrowfunction.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-arrowfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Object/seal/seal-asyncarrowfunction.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Object/seal/seal-asyncarrowfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Object/seal/seal-asyncfunction.js :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Object/seal/seal-asyncfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-bigint64array.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Object/seal/seal-bigint64array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Object/seal/seal-biguint64array.js :: it threw ReferenceError: BigUint64Array is not defined
@@ -11285,6 +11665,8 @@ built-ins/undefined/S15.1.1.3_A1.js :: it threw ReferenceError: eval is not defi
 built-ins/undefined/S15.1.1.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
 harness/assert-throws-same-realm.js :: it threw TypeError: what was called is not a function
 harness/assert-throws-same-realm.js (strict) :: it threw TypeError: what was called is not a function
+harness/asyncHelpers-throwsAsync-same-realm.js :: the test called $DONE with TypeError: what was called is not a function
+harness/asyncHelpers-throwsAsync-same-realm.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 harness/deepEqual-array.js :: it threw ReferenceError: compareEquality is not defined
 harness/deepEqual-array.js (strict) :: it threw ReferenceError: compareEquality is not defined
 harness/deepEqual-circular.js :: it threw ReferenceError: compareEquality is not defined
@@ -11373,6 +11755,54 @@ language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-decl
 language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-declare-arguments-assign.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-decl-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-named-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-func-expr-nameless-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw ReferenceError: eval is not defined
+language/eval-code/direct/async-meth-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/block-decl-eval-source-is-strict-nostrict.js :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/block-decl-eval-source-is-strict-onlystrict.js (strict) :: it threw ReferenceError: eval is not defined
 language/eval-code/direct/block-decl-onlystrict.js (strict) :: it threw ReferenceError: eval is not defined
@@ -11798,6 +12228,43 @@ language/expressions/assignment/dstr/obj-id-put-unresolvable-strict.js (strict) 
 language/expressions/assignment/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/fn-name-lhs-cover.js :: it threw an object with no name: name descriptor value should be ; name value should be
 language/expressions/assignment/fn-name-lhs-cover.js (strict) :: it threw an object with no name: name descriptor value should be ; name value should be
+language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/dflt-params-abrupt.js :: it threw an object with no name
+language/expressions/async-arrow-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/expressions/async-arrow-function/dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-arrow-function/dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-arrow-function/dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-arrow-function/dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/expressions/async-arrow-function/eval-var-scope-syntax-err.js :: it threw ReferenceError: eval is not defined
+language/expressions/async-arrow-function/prototype.js :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
+language/expressions/async-arrow-function/prototype.js (strict) :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
+language/expressions/async-function/named-dflt-params-abrupt.js :: it threw an object with no name
+language/expressions/async-function/named-dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/expressions/async-function/named-dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/named-dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/named-dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/named-dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/named-eval-var-scope-syntax-err.js :: it threw ReferenceError: eval is not defined
+language/expressions/async-function/named-reassign-fn-name-in-body-in-arrow.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «function BindingIdentifier() { [native code] }») to be true
+language/expressions/async-function/named-reassign-fn-name-in-body-in-eval.js :: the test called $DONE with ReferenceError: eval is not defined
+language/expressions/async-function/named-reassign-fn-name-in-body.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «function BindingIdentifier() { [native code] }») to be true
+language/expressions/async-function/named-strict-error-reassign-fn-name-in-body-in-arrow.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+language/expressions/async-function/named-strict-error-reassign-fn-name-in-body-in-eval.js (strict) :: the test called $DONE with Test262Error: Expected true but got false
+language/expressions/async-function/named-strict-error-reassign-fn-name-in-body.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+language/expressions/async-function/nameless-dflt-params-abrupt.js :: it threw an object with no name
+language/expressions/async-function/nameless-dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/expressions/async-function/nameless-dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/nameless-dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/nameless-dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/nameless-dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/async-function/nameless-eval-var-scope-syntax-err.js :: it threw ReferenceError: eval is not defined
 language/expressions/async-generator/eval-body-proto-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/async-generator/eval-body-proto-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/bitwise-and/S11.10.1_A1.js :: it threw ReferenceError: eval is not defined
@@ -11838,6 +12305,18 @@ language/expressions/call/tco-member-args.js (strict) :: it threw ReferenceError
 language/expressions/call/tco-non-eval-function-dynamic.js :: it threw ReferenceError: eval is not defined
 language/expressions/call/tco-non-eval-function.js :: it threw RangeError: too much recursion
 language/expressions/call/tco-non-eval-global.js :: it threw RangeError: too much recursion
+language/expressions/class/async-method-static/dflt-params-abrupt.js :: it threw an object with no name
+language/expressions/class/async-method-static/dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/expressions/class/async-method-static/dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method-static/dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method-static/dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method-static/dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method/dflt-params-abrupt.js :: it threw an object with no name
+language/expressions/class/async-method/dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/expressions/class/async-method/dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method/dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method/dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/class/async-method/dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-call-expr-identifier-reference-yield.js :: it did not parse: unexpected character
@@ -12890,6 +13369,8 @@ language/expressions/greater-than/S11.8.2_A1.js :: it threw ReferenceError: eval
 language/expressions/greater-than/S11.8.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/grouping/S11.1.6_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/grouping/S11.1.6_A1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/import.meta/syntax/goal-async-function-params-or-body.js :: it threw an object with no name: import.meta in AsyncFunctionBody Expected a SyntaxError but got a TypeError
+language/expressions/import.meta/syntax/goal-async-function-params-or-body.js (strict) :: it threw an object with no name: import.meta in AsyncFunctionBody Expected a SyntaxError but got a TypeError
 language/expressions/import.meta/syntax/goal-function-params-or-body.js :: it threw an object with no name: import.meta in FunctionBody Expected a SyntaxError but got a TypeError
 language/expressions/import.meta/syntax/goal-function-params-or-body.js (strict) :: it threw an object with no name: import.meta in FunctionBody Expected a SyntaxError but got a TypeError
 language/expressions/import.meta/syntax/goal-generator-params-or-body.js :: it threw an object with no name: import.meta in GeneratorBody Expected a SyntaxError but got a TypeError
@@ -13136,6 +13617,13 @@ language/expressions/object/fn-name-fn.js :: it threw an object with no name: na
 language/expressions/object/fn-name-fn.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/fn-name-gen.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/fn-name-gen.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
+language/expressions/object/method-definition/async-meth-dflt-params-abrupt.js :: it threw an object with no name
+language/expressions/object/method-definition/async-meth-dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/expressions/object/method-definition/async-meth-dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/object/method-definition/async-meth-dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/object/method-definition/async-meth-dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/object/method-definition/async-meth-dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/expressions/object/method-definition/async-meth-eval-var-scope-syntax-err.js :: it threw ReferenceError: eval is not defined
 language/expressions/object/method-definition/fn-name-fn.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/method-definition/fn-name-fn.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/method-definition/fn-name-gen.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
@@ -13563,6 +14051,16 @@ language/statementList/eval-fn-regexp-literal.js :: it threw ReferenceError: eva
 language/statementList/eval-fn-regexp-literal.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/async-function/cptn-decl.js :: it threw ReferenceError: eval is not defined
 language/statements/async-function/cptn-decl.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
+language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/statements/async-function/dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/async-function/dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/async-function/dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/async-function/dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/async-function/eval-var-scope-syntax-err.js :: it threw ReferenceError: eval is not defined
+language/statements/async-function/evaluation-default-that-throws.js :: it threw TypeError: what was called is not a function
+language/statements/async-function/evaluation-default-that-throws.js (strict) :: it threw TypeError: what was called is not a function
+language/statements/async-function/let-newline-await-in-async-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/await-using/Symbol.asyncDispose-getter.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/Symbol.asyncDispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/Symbol.asyncDispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier
@@ -13665,6 +14163,8 @@ language/statements/await-using/syntax/await-using-invalid-assignment-next-expre
 language/statements/await-using/syntax/await-using-invalid-assignment-next-expression-for.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-not-allowed-at-top-level-of-eval.js :: the test called $DONE with Test262Error: Expected a SyntaxError to be thrown asynchronously but got a ReferenceError
+language/statements/await-using/syntax/await-using-not-allowed-at-top-level-of-eval.js (strict) :: the test called $DONE with Test262Error: Expected a SyntaxError to be thrown asynchronously but got a ReferenceError
 language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js :: it did not parse: this expression cannot be assigned to
@@ -13693,6 +14193,18 @@ language/statements/block/tco-stmt-list.js (strict) :: it threw ReferenceError: 
 language/statements/block/tco-stmt.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/break/S12.8_A7.js :: it threw an object with no name: 1.1: Appearing of break within eval statement inside of IterationStatement yields SyntaxError
 language/statements/break/S12.8_A7.js (strict) :: it threw an object with no name: 1.1: Appearing of break within eval statement inside of IterationStatement yields SyntaxError
+language/statements/class/async-method-static/dflt-params-abrupt.js :: it threw an object with no name
+language/statements/class/async-method-static/dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/statements/class/async-method-static/dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method-static/dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method-static/dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method-static/dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method/dflt-params-abrupt.js :: it threw an object with no name
+language/statements/class/async-method/dflt-params-abrupt.js (strict) :: it threw an object with no name
+language/statements/class/async-method/dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method/dflt-params-ref-later.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method/dflt-params-ref-self.js :: the test called $DONE with Test262Error: function should not be resolved
+language/statements/class/async-method/dflt-params-ref-self.js (strict) :: the test called $DONE with Test262Error: function should not be resolved
 language/statements/class/cptn-decl.js :: it threw ReferenceError: eval is not defined
 language/statements/class/cptn-decl.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character

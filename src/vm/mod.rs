@@ -23,6 +23,7 @@
 //!   generator and an `async` function are both made of.
 //! - `generator` — §15.5.4 and §27.5.1, which are the two ends of that: making a generator, and
 //!   resuming one.
+//! - `async_fn` — §27.7, which is the same suspension with a promise where the generator was.
 //! - here — the loop, the frames, and the two kinds of failure.
 //!
 //! # A throw is an answer, not a failure
@@ -33,6 +34,7 @@
 //! looks like when it happens. So an [`Outcome`] is a value or a thrown value, and the rest of
 //! §6.2.4 lives in [`crate::compile`].
 
+mod async_fn;
 mod call;
 mod coerce;
 mod execute;
@@ -79,7 +81,7 @@ pub enum Fault {
     MissingFunction,
     /// A `Return` with no call to return from.
     ReturnWithNoCall,
-    /// A `Yield` where no generator is running.
+    /// An `Await` where no `async` function is running, or a `Yield` outside a generator.
     ///
     /// Two shapes and one answer: at the top level of a script there is no frame to park at all,
     /// and inside an ordinary function there is a frame that belongs to no generator. The compiler

@@ -396,7 +396,13 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::RegExpLiteral);
                 Ok(())
             }
-            ExprKind::Await(_) => Err(unsupported("await", span)),
+            // §27.7.5.3 — `await x` is a suspension like `yield`, and an expression like it: what
+            // the promise settles with is what it evaluates to.
+            ExprKind::Await(operand) => {
+                self.expression(operand)?;
+                self.chunk.emit(Instruction::Await);
+                Ok(())
+            }
             // §15.5.5 `YieldExpression : yield AssignmentExpression`. A bare `yield` yields
             // `undefined`, which is the first production's whole meaning — and `yield` is an
             // *expression*, so what a resumption sends back is what it evaluates to.

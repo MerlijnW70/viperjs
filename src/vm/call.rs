@@ -110,6 +110,12 @@ impl Vm {
             // enter is a generator's parked execution. Answered here, beside the built-ins, because
             // like a built-in they push no frame of the callee's own — and unlike one, they may
             // leave the loop running inside a body.
+            // §27.7.5.3's two closures. Like a resumption they enter the loop rather than running
+            // in Rust, and unlike one they answer to nobody: the job that calls them discards the
+            // completion, which is why nothing here is left on the stack for a caller.
+            Callable::Revive { kind, context } => {
+                return self.enter_revive(kind, context, receiver_at, count, heap, current, at);
+            }
             Callable::Resume(kind) => {
                 return self.enter_resume(
                     kind,
@@ -302,6 +308,14 @@ impl Vm {
             );
             heap.set_variable(environment, slot, Value::Object(arguments));
         }
+        // §27.7.5.1 `AsyncFunctionStart` — a promise, a context to park into, and then the body
+        // runs *now*: unlike a generator this pushes a frame and lets the loop carry on. What the
+        // call answers with is decided by whatever stops the body, and both `Await` and `Return`
+        // leave the same promise.
+        let context = match body.is_async() {
+            true => self.begin_async(heap),
+            false => None,
+        };
         // §15.5.4 `EvaluateGeneratorBody` — everything above this line is
         // `FunctionDeclarationInstantiation`, which a generator performs exactly as an ordinary
         // function does. What it does *not* do is run the body: from here the two part company.
@@ -343,9 +357,9 @@ impl Vm {
                 _ => None,
             },
             function: Some(object),
-            // An ordinary call, entered from the top of its body. A generator's frame is not
-            // pushed here at all — see [`Vm::enter_generator`].
-            generator: None,
+            // A generator's frame is not pushed here at all — see [`Vm::enter_generator`] — so this
+            // is an `async` function's context or nothing.
+            generator: context,
         });
         self.environment = environment;
         // §10.2.1.2 step 1 — an arrow's `[[ThisMode]]` is `lexical`, so `OrdinaryCallBindThis`

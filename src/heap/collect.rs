@@ -377,6 +377,18 @@ impl Heap {
             // pair: a program that keeps only the `resolve` it was handed keeps the promise alive
             // through it, and that is the whole point of holding one.
             match object.role() {
+                // §27.7.5.1's capability: the promise an `async` execution will settle, and the two
+                // functions that settle it. Nothing else names the pair once the body is parked —
+                // the caller holds the promise, and the resolve and reject functions are reachable
+                // through here and nowhere at all.
+                Some(crate::heap::Role::Await(capability)) => {
+                    for value in [capability.promise, capability.resolve, capability.reject] {
+                        match value {
+                            Value::Object(reached) => pending.push(reached),
+                            other => self.mark_value(other, marked),
+                        }
+                    }
+                }
                 Some(crate::heap::Role::Resolve(settler) | crate::heap::Role::Reject(settler)) => {
                     pending.push(settler.promise);
                 }

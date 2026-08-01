@@ -558,12 +558,15 @@ Promise.resolve().then(function () { $DONE(); });"
         // Nothing ran, so nothing can be said about what it would have done. Counting these as
         // failures would write the same sentence into the expectations file thousands of times
         // and bury the ones that mean something.
-        // An `async` function, because this row needs something the compiler still refuses and the
-        // example has to be replaced each time one of them lands — `class C {}` was here until
-        // classes compiled and `function* g() {}` until generators did, at which point the row was
-        // asserting the opposite of what it says.
+        // A destructuring rest parameter, because this row needs something the compiler still
+        // refuses and the example has to be replaced each time one of them lands — `class C {}`
+        // was here until classes compiled, `function* g() {}` until generators did, and
+        // `async function f() {}` until `await` did, at which point the row was asserting the
+        // opposite of what it says.
         assert!(matches!(
-            verdict("/*---\ndescription: uses an async function\n---*/\nasync function f() {}"),
+            verdict(
+                "/*---\ndescription: a destructuring rest parameter\n---*/\nfunction f(...[a]) {}"
+            ),
             Verdict::Skipped(_)
         ));
         // A *parse* failure is not skipped: the parser is finished, so a file it refuses is a

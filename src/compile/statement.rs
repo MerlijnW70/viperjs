@@ -398,6 +398,13 @@ impl Compiler<'_> {
         statement: &ForInOfStatement,
         span: Span,
     ) -> Result<(), CompileError> {
+        // §14.7.5.7 — `for await` walks an **async** iterator: every step is a promise that has to
+        // be awaited before the body runs, and `[@@asyncIterator]` is looked up before
+        // `[@@iterator]`. Compiling it as an ordinary `for`-`of` would run the body over promises
+        // rather than over what they settle with, which is a wrong answer and not a missing one.
+        if statement.is_await {
+            return Err(unsupported("for await", span));
+        }
         let mark = self.enter_scope();
         self.loop_marks.push(mark);
         let compiled = self.for_of_parts(statement, span);

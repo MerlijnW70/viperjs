@@ -31,7 +31,7 @@
 //! `#x` would be worse than one that would not compile.
 
 use super::CompileError;
-use super::function::{Body, Lexical, Naming, Strict};
+use super::function::{Asynchrony, Body, Lexical, Naming, Strict};
 use crate::ast::{Class, ClassElement, FormalParameters, Stmt};
 use crate::compile::Compiler;
 use crate::compile::chunk::{Chunk, Instruction};
@@ -276,6 +276,7 @@ impl Compiler<'_> {
             // directive of its own to say so. Inherited, and the class scope is where it comes from.
             Strict::Inherited,
             Lexical::No,
+            Asynchrony::No,
             span,
         )?;
         self.emit_function(body, span)?;
@@ -327,6 +328,7 @@ impl Compiler<'_> {
                     Naming::default(),
                     Strict::Inherited,
                     Lexical::No,
+                    Asynchrony::No,
                     span,
                 )?;
                 self.emit_function(body, span)?;
@@ -417,6 +419,7 @@ impl Compiler<'_> {
             // written directive or not. The parser has already set it on the body it parsed.
             Strict::Yes,
             Lexical::No,
+            Asynchrony::No,
             span,
         )?;
         // §15.7.14 — a class constructor has a `[[Construct]]` and no useful `[[Call]]`: written

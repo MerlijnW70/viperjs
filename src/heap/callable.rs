@@ -65,6 +65,18 @@ pub enum Callable {
     /// A variant beside [`Callable::Bound`] rather than a flag on a native, for the same reason
     /// that one is: what is actually entered is not this function.
     Resume(Resumption),
+    /// What a settled promise calls to put an `async` function's body back — §27.7.5.3.
+    ///
+    /// Two of these are made per `await`, one for each way the promise can settle, and each holds
+    /// the execution it revives. A [`Native`] could not: its body is a bare `fn` pointer with
+    /// nowhere to keep which execution this one is about, which is the same reason
+    /// [`Callable::Bound`] is a variant rather than a closure.
+    Revive {
+        /// Which way the promise settled, and so whether the body carries on or throws.
+        kind: crate::heap::ReactionKind,
+        /// The object holding the parked execution — §27.7.5.1's context.
+        context: ObjectId,
+    },
 }
 
 /// Which of §27.5.1's three ways a generator is resumed.
@@ -101,12 +113,19 @@ impl Callable {
             // a generator function has a `this` and is written like an ordinary declaration, and
             // `new g()` is still a TypeError because what it would construct is an object nothing
             // ever inherits from — a generator's instances come from calling it, not from `new`.
-            Self::Bytecode(body) => !body.is_arrow() && !body.is_method() && !body.is_generator(),
+            // …and §15.8.3 for an `async` function, which is a fourth: what `new` would construct
+            // is a promise, and a promise is not an instance of anything the call could name.
+            Self::Bytecode(body) => {
+                !body.is_arrow() && !body.is_method() && !body.is_generator() && !body.is_async()
+            }
             Self::Native { constructs, .. } => *constructs,
             Self::Bound(bound) => bound.constructs,
-            // §27.5.1 gives none of the three a `[[Construct]]`, as it gives none to any method:
-            // `new gen.next()` is a TypeError.
-            Self::Resume(_) => false,
+            // §27.5.1 gives none of the three resumptions a `[[Construct]]`, as it gives none to
+            // any method: `new gen.next()` is a TypeError. §27.7.5.3's two are the same answer for
+            // the same reason and are written with them rather than beside them — one of the pair
+            // is reachable from a script and the other is not, so a separate arm for the second
+            // would be a claim nothing could ever check.
+            Self::Resume(_) | Self::Revive { .. } => false,
         }
     }
 }

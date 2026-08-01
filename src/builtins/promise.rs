@@ -543,7 +543,7 @@ fn thunk_throw(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 /// The identity in step 2 is observable and programs rely on it: a promise of exactly this kind is
 /// handed straight back, so `Promise.resolve(p) === p` and a chain does not grow a turn for
 /// nothing.
-fn promise_resolve(
+pub(crate) fn promise_resolve(
     vm: &mut Vm,
     heap: &mut Heap,
     constructor: ObjectId,

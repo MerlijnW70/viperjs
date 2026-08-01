@@ -10,7 +10,7 @@
 use super::call::Entry;
 use super::{Fault, HEAP_CHECK_INTERVAL, Handler, Vm, jump_to};
 use crate::compile::{Chunk, Instruction, ShortCircuit, SpreadCall};
-use crate::heap::{Heap, PropertyDescriptor};
+use crate::heap::{Heap, PropertyDescriptor, ReactionKind, Suspendable};
 use crate::realm::NativeError;
 use crate::value::{Abrupt, Value};
 use std::rc::Rc;
@@ -468,9 +468,12 @@ impl Vm {
                     // generator this function makes inherits from it, and §15.5.4 gives it no
                     // `constructor`, so `g().constructor` finds %GeneratorFunction.prototype% up
                     // the chain rather than `g` itself.
+                    // …and an **async** function gets neither either, and not even a `prototype`:
+                    // §15.8.4 gives an async function object exactly `length` and `name`, because
+                    // what it answers with is a promise and nothing ever inherits from it.
                     if body.is_generator() {
                         self.realm.make_generator_function(heap, object);
-                    } else if !body.is_arrow() && !body.is_method() {
+                    } else if !body.is_arrow() && !body.is_method() && !body.is_async() {
                         self.realm.make_constructor(heap, object);
                     }
                     self.stack.push(Value::Object(object));
@@ -736,8 +739,16 @@ impl Vm {
                     // is marked finished, because nothing needs to be — the execution was taken out
                     // of the generator to be run and is not going back, and *that* is what being
                     // completed means.
-                    let answer = match frame.generator {
-                        Some(_) => self.iterator_result(heap, answer, true),
+                    // Which of the three a return from this frame is: an ordinary one, a
+                    // generator's — wrapped as `{ value, done: true }` — or an `async` function's,
+                    // which *resolves* its promise and answers with the promise.
+                    let answer = match Self::suspendable_of(&frame, heap) {
+                        Some((_, Suspendable::Generator)) => {
+                            self.iterator_result(heap, answer, true)
+                        }
+                        Some((context, Suspendable::Async)) => {
+                            self.settle_async(context, ReactionKind::Fulfil, answer, heap)
+                        }
                         None => answer,
                     };
                     self.stack.push(answer);
@@ -791,6 +802,36 @@ impl Vm {
                         at,
                     )?;
                     continue;
+                }
+                Instruction::Await => {
+                    let value = self.pop()?;
+                    let Some(context) = self.frames.last().and_then(|frame| frame.generator) else {
+                        return Err(Fault::YieldOutsideGenerator);
+                    };
+                    self.await_value(context, value, heap, root, current, at)?;
+                }
+                Instruction::AsyncReject => {
+                    let thrown = self.pop()?;
+                    let Some(frame) = self.frames.pop() else {
+                        return Err(Fault::ReturnWithNoCall);
+                    };
+                    self.stack.truncate(frame.stack_base);
+                    self.handlers.truncate(frame.handlers_base);
+                    // §27.7.5.2 step 3.b — the promise is rejected with what was thrown, and the
+                    // *promise* is what the call answers with. A `Frame` with no context is a chunk
+                    // that does not make sense: only an `async` body has this instruction in it.
+                    let answer = match frame.generator {
+                        Some(context) => {
+                            self.settle_async(context, ReactionKind::Reject, thrown, heap)
+                        }
+                        None => Value::Undefined,
+                    };
+                    self.stack.push(answer);
+                    self.environment = frame.environment;
+                    self.this_value = frame.this_value;
+                    self.new_target = frame.new_target;
+                    *current = frame.code;
+                    *at = frame.at;
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),

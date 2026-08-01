@@ -86,6 +86,13 @@ pub struct Chunk {
     /// It is not a constructor either (§15.5.3 gives it no `[[Construct]]`), and its `prototype`
     /// property is an object inheriting %GeneratorPrototype% rather than %Object.prototype%.
     pub(super) generator: bool,
+    /// Whether this body is an `async` function's — §15.8, the `async` before `function`.
+    ///
+    /// The call has to know for the same reason a generator's does, and answers differently:
+    /// §27.7.5.1 makes a promise, runs the body *now*, and answers with the promise however far the
+    /// body got. A `return` from here resolves that promise and a throw rejects it, so both ways
+    /// out of the body are decided by this flag and not by the shape of the value.
+    pub(super) is_async: bool,
     /// Whether this body is a class constructor — §15.7.14.
     ///
     /// It has a `[[Construct]]` and no useful `[[Call]]`: written without `new` it is a TypeError.
@@ -667,6 +674,20 @@ pub enum Instruction {
     /// was. Wrapping twice would also make `{ value: 1, done: false }` come out as
     /// `{ value: { value: 1, done: false }, done: false }`.
     YieldDelegated,
+    /// Hand the top value to a promise and stop until it settles — §27.7.5.3 `Await`.
+    ///
+    /// The park is a `yield`'s in every respect; what differs is who puts the body back. Two
+    /// functions are attached to the promise, one per way it can settle, and a job calls whichever
+    /// applies. What is left where a return value goes is the `async` function's **own** promise,
+    /// because that is what its caller has been waiting for since the first of these.
+    Await,
+    /// Reject an `async` function's promise with the top value and leave the body — §27.7.5.2.
+    ///
+    /// The target of a handler the compiler arms over the whole body, which is how a throw that
+    /// nothing inside caught becomes a rejected promise rather than an exception the caller sees.
+    /// Doing it in the unwinder instead would mean teaching every throw about `async` functions;
+    /// this way the ordinary machinery carries it to one instruction that knows.
+    AsyncReject,
     /// Refuse a `throw` that an inner iterator has no way to receive — §27.5.3.7 step 7.b.iii.
     ///
     /// Its own instruction for the reason [`Instruction::ThrowSuperDelete`] is one: the message is
@@ -768,6 +789,11 @@ impl Chunk {
     /// Whether this body belongs to a generator function — §15.5.
     pub fn is_generator(&self) -> bool {
         self.generator
+    }
+
+    /// Whether this body belongs to an `async` function — §15.8.
+    pub fn is_async(&self) -> bool {
+        self.is_async
     }
 
     /// Whether the parameter list is simple — §15.1.4, and which arguments object to build.
@@ -970,6 +996,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Return
         | Instruction::Yield
         | Instruction::YieldDelegated
+        | Instruction::Await
+        | Instruction::AsyncReject
         | Instruction::ThrowNoThrowMethod
         | Instruction::NewObject
         | Instruction::NewArray(_)

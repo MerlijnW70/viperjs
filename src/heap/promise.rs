@@ -193,6 +193,12 @@ pub enum Role {
     /// is a bare function pointer holding no state, so what the specification captures in a closure
     /// is carried on the function object.
     Revoke(crate::heap::ObjectId),
+    /// The promise an `async` function's execution will settle — §27.7.5.1's capability.
+    ///
+    /// Held on the execution's own context object rather than on a function, which is the one
+    /// place it can be: what settles it is a `return` or a throw from a body that may be parked
+    /// for any length of time, and by then nothing else still names the promise.
+    Await(Capability),
     /// A resolve function — §27.2.1.3.2.
     Resolve(Settler),
     /// A reject function — §27.2.1.3.1.

@@ -52,7 +52,7 @@ impl Vm {
             }
         };
         let generator = heap.new_object(Some(prototype));
-        heap.brand_generator(generator);
+        heap.brand_suspendable(generator, crate::heap::Suspendable::Generator);
         let parked =
             Suspended::started(body, environment, receiver, new_target, function, generator);
         // The object was just made, so it is an object and this cannot answer `false`.

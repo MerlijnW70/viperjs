@@ -42,8 +42,14 @@ impl Compiler<'_> {
         method: bool,
         span: Span,
     ) -> Result<(), CompileError> {
-        if function.is_async {
-            return Err(unsupported("an async function", span));
+        // §27.6's async generator is both at once and is neither of the two things this engine
+        // has: its `next` answers with a *promise* of an iterator result, so a `yield` has to
+        // settle a promise and an `await` has to leave the generator suspended. Compiling it as a
+        // generator that happens to allow `await` would be a wrong answer rather than a refusal,
+        // which is the worse of the two — a skipped test says nothing and a wrong one says
+        // something false.
+        if function.is_async && function.is_generator {
+            return Err(unsupported("an async generator", span));
         }
         if self.would_capture_a_per_iteration_binding() {
             return Err(unsupported(
@@ -66,6 +72,7 @@ impl Compiler<'_> {
             Lexical::No,
             method,
             Generator::of(function.is_generator),
+            Asynchrony::of(function.is_async),
             span,
         )?;
         self.emit_function(body, span)
@@ -83,9 +90,6 @@ impl Compiler<'_> {
         naming: Naming<'_>,
         span: Span,
     ) -> Result<(), CompileError> {
-        if arrow.is_async {
-            return Err(unsupported("an async arrow function", span));
-        }
         if self.would_capture_a_per_iteration_binding() {
             return Err(unsupported(
                 "a function that closes over a `let` or `const` declared in a loop",
@@ -105,6 +109,7 @@ impl Compiler<'_> {
             naming,
             Strict::of(arrow.is_strict),
             Lexical::Yes,
+            Asynchrony::of(arrow.is_async),
             span,
         )?;
         self.emit_function(body, span)
@@ -115,6 +120,7 @@ impl Compiler<'_> {
     /// What the nested body may see: the script's names, and — only to refuse against — the names
     /// of every function it is written inside. It is written inside this scope, so its chain is
     /// ours with ours on the end.
+    #[allow(clippy::too_many_arguments)] // the body's shape, threaded rather than shared
     pub(super) fn compile_nested(
         &mut self,
         parameters: &FormalParameters,
@@ -122,6 +128,7 @@ impl Compiler<'_> {
         naming: Naming<'_>,
         strict: Strict,
         lexical: Lexical,
+        asynchrony: Asynchrony,
         span: Span,
     ) -> Result<Chunk, CompileError> {
         self.compile_nested_method(
@@ -132,6 +139,7 @@ impl Compiler<'_> {
             lexical,
             false,
             Generator::No,
+            asynchrony,
             span,
         )
     }
@@ -147,6 +155,7 @@ impl Compiler<'_> {
         lexical: Lexical,
         method: bool,
         generator: Generator,
+        asynchrony: Asynchrony,
         span: Span,
     ) -> Result<Chunk, CompileError> {
         let mut outer = self.outer.clone();
@@ -171,6 +180,7 @@ impl Compiler<'_> {
             Nesting {
                 method,
                 generator: generator == Generator::Yes,
+                is_async: asynchrony == Asynchrony::Yes,
                 strict: match strict {
                     Strict::Yes => true,
                     Strict::No => false,
@@ -421,6 +431,8 @@ pub(super) struct Nesting<'a> {
     method: bool,
     /// Whether the body is a generator's — §15.5, which decides whether calling it runs it.
     generator: bool,
+    /// Whether the body is an `async` function's — §15.8, which decides what the call answers with.
+    is_async: bool,
     /// Whether the body is strict code — §11.2.1, decided by the parser and carried here.
     ///
     /// Passed in rather than inherited from the enclosing compiler, because a body may *add*
@@ -518,6 +530,29 @@ impl Generator {
     }
 }
 
+/// Whether the body is an `async` function's — §15.8's `async`.
+///
+/// A named flag beside [`Generator`] and for the same reason: the call sites pass several booleans
+/// in a row, and one `true` in the wrong position compiles and runs a generator as an `async`
+/// function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Asynchrony {
+    /// An ordinary function: what it returns is what the call answers with.
+    No,
+    /// An `async` function: the call answers with a promise — §27.7.5.1.
+    Yes,
+}
+
+impl Asynchrony {
+    /// What the parser recorded, as this enum.
+    pub(super) fn of(is_async: bool) -> Self {
+        match is_async {
+            true => Self::Yes,
+            false => Self::No,
+        }
+    }
+}
+
 /// Whether the body binds `this` itself, or takes the one around it.
 ///
 /// One flag rather than two near-identical compilers. The whole of §15.3's difference from §15.2
@@ -550,6 +585,7 @@ fn compile_body(
     // the key made from it is the one the object already has.
     compiler.chunk.method = nesting.method;
     compiler.chunk.generator = nesting.generator;
+    compiler.chunk.is_async = nesting.is_async;
     compiler.chunk.strict = nesting.strict;
     compiler.chunk.name = nesting.naming.spelled().map(|name| {
         compiler
@@ -669,6 +705,15 @@ fn compile_body(
         }
     }
 
+    // §27.7.5.2 — an `async` function's body is wrapped in a handler the source never wrote. A
+    // throw that nothing inside caught does not travel to the caller: it *rejects the promise*, and
+    // the caller is handed that promise like any other. Written as a handler because that is what
+    // the unwinder already does — the alternative is teaching every throw in the engine which
+    // frames are `async`.
+    let rejecting = nesting
+        .is_async
+        .then(|| compiler.chunk.emit_jump(Instruction::PushHandler));
+
     match body {
         Body::Statements(statements) => {
             // A function's own `var`s and inner declarations, on the same terms as a script's.
@@ -726,6 +771,7 @@ fn compile_body(
                     Naming::default(),
                     Strict::Inherited,
                     Lexical::No,
+                    Asynchrony::No,
                     span,
                 )?;
                 compiler.derived_fields = Some(compiler.file_function(initialiser, span)?);
@@ -754,6 +800,12 @@ fn compile_body(
             .emit(Instruction::CompleteDerivedReturn(slot));
     }
     compiler.chunk.emit(Instruction::Return);
+    // The handler's target, reached only by a throw. `Return` above has already taken the handler
+    // down — it truncates to the frame's mark — so the ordinary way out never arrives here.
+    if let Some(rejecting) = rejecting {
+        compiler.chunk.patch(rejecting)?;
+        compiler.chunk.emit(Instruction::AsyncReject);
+    }
     // Only now is it known whether anything read the name — including an arrow written inside,
     // which says so on the chunk it hands back.
     compiler.chunk.arguments = match compiler.uses_arguments {

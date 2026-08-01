@@ -54,6 +54,7 @@
 //! - `generators` — §15.5 and §27.5's object and its state machine.
 //! - `yielding` — §15.5.5 and §27.5.3, where the body stops and what a resumption sends back.
 //! - `delegating` — §27.5.3.7 step 7's `yield*`, and the messages it passes both ways.
+//! - `asynchrony` — §15.8 and §27.7, where the promise stands in for the generator object.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
@@ -71,6 +72,7 @@ mod array_more;
 mod array_sort;
 mod arrays;
 mod arrows;
+mod asynchrony;
 mod bound;
 mod buffers;
 mod builtins;
