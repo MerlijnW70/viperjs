@@ -144,6 +144,25 @@ fn the_two_prototypes_are_reachable_only_through_a_generator_function() {
     );
     // A generator function is still a function, so §20.2.3's methods are up its chain.
     assert_eq!(run("function* g() {} typeof g.call"), "function");
+
+    // …and all four of those links carry §27.3.3's attributes rather than an ordinary property's.
+    // Every row above reads a *value*; a realm that had put these there writably and enumerably
+    // would pass all of them, and would then leak two intrinsics into `for (var k in ...)`.
+    let reach = "var F = Object.getPrototypeOf(function* () {}); var P = F.prototype;";
+    for named in [
+        "F, 'prototype'",
+        "P, 'constructor'",
+        "F, Symbol.toStringTag",
+        "P, Symbol.toStringTag",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "{reach} var d = Object.getOwnPropertyDescriptor({named}); d.writable + ':' + d.enumerable + ':' + d.configurable"
+            )),
+            "false:false:true",
+            "the descriptor of {named}"
+        );
+    }
 }
 
 #[test]
