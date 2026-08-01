@@ -193,6 +193,17 @@ pub enum Role {
     /// is a bare function pointer holding no state, so what the specification captures in a closure
     /// is carried on the function object.
     Revoke(crate::heap::ObjectId),
+    /// §27.1.4's `[[SyncIteratorRecord]]` — what an async-from-sync wrapper is wrapping.
+    ///
+    /// The iterator and its `next`, read once when the wrapper was made, on the same terms as every
+    /// other Iterator Record: replacing `next` on the sync iterator afterwards does not change the
+    /// walk.
+    SyncIterator {
+        /// The synchronous iterator being adapted.
+        iterator: Value,
+        /// …and its `next`, read once.
+        next: Value,
+    },
     /// The promise an `async` function's execution will settle — §27.7.5.1's capability.
     ///
     /// Held on the execution's own context object rather than on a function, which is the one

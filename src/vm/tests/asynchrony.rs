@@ -273,29 +273,25 @@ fn the_order_jobs_run_in_is_what_a_program_notices_first() {
 }
 
 #[test]
-fn an_async_generator_and_a_for_await_are_refused_rather_than_guessed() {
-    // §27.6 and §14.7.5.7, and both are refused for the same reason: what they would compile to
-    // here is a *wrong* answer rather than a missing one. An async generator's `next` answers with
-    // a promise of an iterator result, so its `yield` has to settle one; a `for await` awaits every
-    // step before the body runs and looks for `[@@asyncIterator]` first. Compiled as the ordinary
-    // generator and the ordinary loop they nearly work, which is the worst thing they could do —
-    // and it is what the engine did until these two rows were written: 3,500 test262 files failed
-    // with plausible-looking errors instead of being skipped.
-    for (source, what) in [
-        ("async function* g() {}", "an async generator"),
-        ("var g = async function* () {};", "an async generator"),
-        ("var o = { async *m() {} };", "an async generator"),
-        (
-            "async function f() { for await (var x of []) {} }",
-            "for await",
-        ),
+fn an_async_generator_is_refused_rather_than_guessed() {
+    // §27.6, and it is refused for the reason `for await` was until it landed: what it would
+    // compile to here is a *wrong* answer rather than a missing one. An async generator's `next`
+    // answers with a promise of an iterator result, so its `yield` has to settle one and the object
+    // needs a queue of pending requests. Compiled as the ordinary generator it nearly works, which
+    // is the worst thing it could do — 3,500 test262 files failed with plausible-looking errors
+    // instead of being skipped until this row went in.
+    for source in [
+        "async function* g() {}",
+        "var g = async function* () {};",
+        "var o = { async *m() {} };",
+        "class C { async *m() {} }",
     ] {
         let mut heap = Heap::new();
         let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
         let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
         assert_eq!(
             error.kind,
-            crate::compile::ErrorKind::Unsupported(what),
+            crate::compile::ErrorKind::Unsupported("an async generator"),
             "compiling {source:?}"
         );
     }

@@ -34,17 +34,28 @@ impl Vm {
     /// executor would call a constructor once per invocation of every `async` function in the
     /// program for a result nothing can tell apart.
     pub(super) fn begin_async(&mut self, heap: &mut Heap) -> Option<ObjectId> {
-        let promise = heap.new_promise(Some(self.realm.promise_prototype()));
-        let (resolve, reject) = crate::builtins::promise::resolving_functions(heap, self, promise);
+        let capability = self.intrinsic_capability(heap);
         let context = heap.new_object(None);
         heap.brand_suspendable(context, Suspendable::Async);
-        let capability = Capability {
+        heap.object_mut(context)?.set_role(Role::Await(capability));
+        Some(context)
+    }
+
+    /// `NewPromiseCapability(%Promise%)`, built without going through the constructor.
+    ///
+    /// §27.2.1.5 goes through `Construct` because the constructor may be a subclass whose executor
+    /// is observable. Every caller of *this* one names the **intrinsic** `%Promise%` — §27.7.5.1
+    /// and §27.1.4.2 both do — and for that constructor the executor merely hands back the pair
+    /// this makes directly. Nothing can tell the two apart, and a program with an `await` in a loop
+    /// would otherwise construct once per turn.
+    pub(crate) fn intrinsic_capability(&mut self, heap: &mut Heap) -> Capability {
+        let promise = heap.new_promise(Some(self.realm.promise_prototype()));
+        let (resolve, reject) = crate::builtins::promise::resolving_functions(heap, self, promise);
+        Capability {
             promise: Value::Object(promise),
             resolve,
             reject,
-        };
-        heap.object_mut(context)?.set_role(Role::Await(capability));
-        Some(context)
+        }
     }
 
     /// §27.7.5.3 `Await` — hand the value to a promise and stop until it settles.

@@ -32,7 +32,7 @@ use crate::vm::Vm;
 ///
 /// `next` is read **once** and kept, which is what §7.4.3 does: replacing it part-way through a
 /// walk does not change the walk.
-pub(super) struct Walk {
+pub(crate) struct Walk {
     /// The iterator object, which is also the receiver `next` is called on.
     iterator: Value,
     /// Its `next` method, read once.
@@ -46,7 +46,7 @@ impl Walk {
     /// iterator when it is wrong — so the close happens with an Iterator Record whose
     /// `[[NextMethod]]` is still undefined, and `next` is never touched. A test that logs property
     /// reads sees the difference between that and reading `next` first; six of them do.
-    pub(super) fn close_unread(vm: &mut Vm, heap: &mut Heap, iterator: Value) {
+    pub(crate) fn close_unread(vm: &mut Vm, heap: &mut Heap, iterator: Value) {
         Self {
             iterator,
             next: Value::Undefined,

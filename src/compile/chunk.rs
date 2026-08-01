@@ -688,6 +688,16 @@ pub enum Instruction {
     /// Doing it in the unwinder instead would mean teaching every throw about `async` functions;
     /// this way the ordinary machinery carries it to one instruction that knows.
     AsyncReject,
+    /// Replace an iterable with its **async** iterator and that iterator's `next` — §7.4.3.
+    ///
+    /// Two values pushed where one was taken, because §7.4.2's Iterator Record is two things and
+    /// reading `next` once is part of what it promises: replacing `next` on the iterator part-way
+    /// through a `for await` does not change the walk.
+    ///
+    /// The whole of §7.4.3's `async` hint lives behind this, including the case that makes the
+    /// protocol usable at all — an object with only a `[@@iterator]` is wrapped by §27.1.4.1 so the
+    /// loop above only ever talks to one protocol.
+    GetAsyncIterator,
     /// Refuse a `throw` that an inner iterator has no way to receive — §27.5.3.7 step 7.b.iii.
     ///
     /// Its own instruction for the reason [`Instruction::ThrowSuperDelete`] is one: the message is
@@ -998,6 +1008,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::YieldDelegated
         | Instruction::Await
         | Instruction::AsyncReject
+        | Instruction::GetAsyncIterator
         | Instruction::ThrowNoThrowMethod
         | Instruction::NewObject
         | Instruction::NewArray(_)

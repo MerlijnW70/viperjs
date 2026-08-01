@@ -833,6 +833,20 @@ impl Vm {
                     *current = frame.code;
                     *at = frame.at;
                 }
+                Instruction::GetAsyncIterator => {
+                    let iterable = self.pop()?;
+                    let got =
+                        crate::builtins::async_iterator::get_async_iterator(self, heap, iterable);
+                    let (iterator, next) = match got {
+                        Ok(pair) => pair,
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    self.stack.push(iterator);
+                    self.stack.push(next);
+                }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
                 Instruction::RegExpLiteral => {

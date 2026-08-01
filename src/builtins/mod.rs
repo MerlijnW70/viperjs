@@ -22,6 +22,7 @@ pub mod array_flat;
 pub mod array_iterate;
 pub mod array_methods;
 pub mod array_sort;
+pub(crate) mod async_iterator;
 mod buffer;
 mod collection;
 pub(crate) mod date;
@@ -98,6 +99,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     wrapper::install(heap, realm, global);
     iterator::install(heap, realm);
     generator::install(heap, realm);
+    async_iterator::install(heap, realm);
     iterator_helpers::install(heap, realm, global);
     json::install(heap, realm, global);
     date::install(heap, realm, global);

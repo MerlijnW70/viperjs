@@ -398,12 +398,10 @@ impl Compiler<'_> {
         statement: &ForInOfStatement,
         span: Span,
     ) -> Result<(), CompileError> {
-        // §14.7.5.7 — `for await` walks an **async** iterator: every step is a promise that has to
-        // be awaited before the body runs, and `[@@asyncIterator]` is looked up before
-        // `[@@iterator]`. Compiling it as an ordinary `for`-`of` would run the body over promises
-        // rather than over what they settle with, which is a wrong answer and not a missing one.
+        // §14.7.5.7 — `for await` walks an **async** iterator, which is a different loop and not a
+        // flag on this one: every step is awaited before it is read.
         if statement.is_await {
-            return Err(unsupported("for await", span));
+            return self.for_await_statement(statement, span);
         }
         let mark = self.enter_scope();
         self.loop_marks.push(mark);
@@ -678,7 +676,7 @@ impl Compiler<'_> {
     /// `after` compiles whatever follows the body — the jump back, and a `for` loop's update —
     /// and answers where `continue` should land, which is not the same place in all three loops.
     /// Every `break` collected while the body was compiled is patched to just past everything.
-    fn loop_body(
+    pub(super) fn loop_body(
         &mut self,
         body: &Stmt,
         iterator: Option<u32>,

@@ -31,6 +31,7 @@ mod chunk;
 mod class;
 mod delegate;
 mod expression;
+mod for_await;
 mod function;
 mod pattern;
 mod statement;

@@ -389,6 +389,16 @@ impl Heap {
                         }
                     }
                 }
+                // §27.1.4's wrapper keeps the sync iterator it stands in front of, and its `next`
+                // read once. Nothing else names either: the loop only ever holds the wrapper.
+                Some(crate::heap::Role::SyncIterator { iterator, next }) => {
+                    for value in [*iterator, *next] {
+                        match value {
+                            Value::Object(reached) => pending.push(reached),
+                            other => self.mark_value(other, marked),
+                        }
+                    }
+                }
                 Some(crate::heap::Role::Resolve(settler) | crate::heap::Role::Reject(settler)) => {
                     pending.push(settler.promise);
                 }

@@ -185,7 +185,7 @@ impl Vm {
     /// instructions: a generator's `return` wraps its answer, and so does every path above that
     /// does not run any code. Neither is a built-in and neither can throw, which is the difference
     /// from the version beside the array iterators.
-    pub(super) fn iterator_result(&mut self, heap: &mut Heap, value: Value, done: bool) -> Value {
+    pub(crate) fn iterator_result(&mut self, heap: &mut Heap, value: Value, done: bool) -> Value {
         let object = heap.new_object(Some(self.realm.object_prototype()));
         for (name, held) in [("value", value), ("done", Value::Boolean(done))] {
             let name = crate::heap::PropertyKey::from_units(

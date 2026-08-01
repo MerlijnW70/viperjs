@@ -1025,6 +1025,8 @@ annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js :: it 
 annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js :: the test called $DONE with Test262Error: expected TypeError because `iter[Symbol.asyncIterator]() returned a non-object: Test262Error: shouldn't touch Symbol.iterator Expected SameValue(«function Test262Error() { [native code] }», «function TypeError() { [native code] }») to be true
+annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js (strict) :: the test called $DONE with Test262Error: expected TypeError because `iter[Symbol.asyncIterator]() returned a non-object: Test262Error: shouldn't touch Symbol.iterator Expected SameValue(«function Test262Error() { [native code] }», «function TypeError() { [native code] }») to be true
 annexB/language/statements/for-in/nonstrict-initializer.js :: it did not parse: a `for`-`in` or `for`-`of` binding may not have an initializer
 annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -1999,6 +2001,10 @@ built-ins/AsyncDisposableStack/prototype/use/throws-if-value-not-object.js :: it
 built-ins/AsyncDisposableStack/prototype/use/throws-if-value-not-object.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/undefined-newtarget-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/AsyncDisposableStack/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
+built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
+built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
+built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/AsyncFunction/AsyncFunction-is-subclass.js :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
@@ -14775,6 +14781,7 @@ language/statements/expression/S12.4_A2_T1.js (strict) :: it threw ReferenceErro
 language/statements/expression/S12.4_A2_T2.js :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-await-of/async-func-decl-dstr-array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
+language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-func-decl-dstr-array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
@@ -14838,6 +14845,10 @@ language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-e
 language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
 language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
+language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js :: the test called $DONE with Test262Error: Expected SameValue(«function Object() { [native code] }», «function Test262Error() { [native code] }») to be true
+language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«function Object() { [native code] }», «function Test262Error() { [native code] }») to be true
+language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js :: the test called $DONE with Test262Error: Expected SameValue(«function TypeError() { [native code] }», «function Test262Error() { [native code] }») to be true
+language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«function TypeError() { [native code] }», «function Test262Error() { [native code] }») to be true
 language/statements/for-in/S12.6.4_A3.1.js :: it threw ReferenceError: eval is not defined
 language/statements/for-in/S12.6.4_A3.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-in/S12.6.4_A3.js :: it threw ReferenceError: eval is not defined

@@ -108,6 +108,17 @@ pub struct Realm {
     /// is gone falls back to this one, and a fallback that read the global would answer with
     /// whatever a program had since assigned to `Promise`.
     promise_constructor: ObjectId,
+    /// %AsyncIteratorPrototype% — §27.1.3, whose one method answers the receiver.
+    ///
+    /// The async half of %IteratorPrototype%, and it exists for the same reason: an async iterator
+    /// is async-iterable, which is what lets `for await` be given one directly.
+    async_iterator_prototype: ObjectId,
+    /// %AsyncFromSyncIteratorPrototype% — §27.1.4.2.
+    ///
+    /// Not reachable by any name at all. `for await` over something with only a `[@@iterator]`
+    /// makes one of these to stand in front of it, and that wrapper is the only way a script ever
+    /// meets this object.
+    async_from_sync_iterator_prototype: ObjectId,
     /// %GeneratorFunction.prototype% — §27.3.3, the `[[Prototype]]` of every generator *function*.
     ///
     /// Not a constructor and not reachable by name: §27.3 makes `GeneratorFunction` itself
@@ -229,6 +240,10 @@ impl Realm {
         let finalization_registry_prototype = heap.new_object(Some(object_prototype));
         let map_iterator_prototype = heap.new_object(Some(iterator_prototype));
         let set_iterator_prototype = heap.new_object(Some(iterator_prototype));
+        // §27.1.3 — the async iterators' shared prototype, and §27.1.4.2's wrapper inherits from
+        // it exactly as a real async iterator does: the wrapper *is* one.
+        let async_iterator_prototype = heap.new_object(Some(object_prototype));
+        let async_from_sync_iterator_prototype = heap.new_object(Some(async_iterator_prototype));
         // §27.5.1 — a generator object inherits from %GeneratorPrototype%, which inherits from
         // %IteratorPrototype%. That second link is the whole of what makes a generator iterable.
         let generator_prototype = heap.new_object(Some(iterator_prototype));
@@ -310,6 +325,8 @@ impl Realm {
             typed_array_prototype,
             map_prototype,
             regexp_prototype,
+            async_iterator_prototype,
+            async_from_sync_iterator_prototype,
             generator_prototype,
             generator_function_prototype,
             regexp_string_iterator_prototype,
@@ -537,6 +554,16 @@ impl Realm {
     /// %IteratorPrototype% — what every iterator in the realm inherits from.
     pub fn iterator_prototype(&self) -> ObjectId {
         self.iterator_prototype
+    }
+
+    /// %AsyncIteratorPrototype% — §27.1.3.
+    pub fn async_iterator_prototype(&self) -> ObjectId {
+        self.async_iterator_prototype
+    }
+
+    /// %AsyncFromSyncIteratorPrototype% — §27.1.4.2.
+    pub fn async_from_sync_iterator_prototype(&self) -> ObjectId {
+        self.async_from_sync_iterator_prototype
     }
 
     /// %GeneratorPrototype% — §27.5.1, what a generator object inherits from.
