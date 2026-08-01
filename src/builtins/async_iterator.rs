@@ -161,7 +161,10 @@ fn next(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         };
         vm.call_value(next, iterator, arguments, heap)
     });
-    continuation(vm, heap, stepped, capability)
+    let sync = wrapped(heap, call.this_value)
+        .map(|(iterator, _)| iterator)
+        .ok();
+    continuation(vm, heap, stepped, capability, sync)
 }
 
 /// §27.1.4.2.2 — `return`, which tells the sync iterator the walk is over.
@@ -187,7 +190,7 @@ fn close(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
                 vm.settle_capability(capability, crate::heap::ReactionKind::Fulfil, result, heap);
             Ok(capability.promise)
         }
-        stepped => continuation(vm, heap, stepped, capability),
+        stepped => continuation(vm, heap, stepped, capability, None),
     }
 }
 
@@ -211,7 +214,7 @@ fn hurl(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
             Some(method) => vm.call_value(method, iterator, &[sent], heap),
         }
     });
-    continuation(vm, heap, stepped, capability)
+    continuation(vm, heap, stepped, capability, None)
 }
 
 /// §27.1.4.4 `AsyncFromSyncIteratorContinuation` — await the value, then pair it with the `done`.
@@ -224,6 +227,7 @@ fn continuation(
     heap: &mut Heap,
     stepped: Completion<Value>,
     capability: crate::heap::Capability,
+    close_on_rejection: Option<Value>,
 ) -> Completion<Value> {
     let settled = stepped.and_then(|result| {
         // §7.4.4 step 3 — a `next` that answered with a primitive is a TypeError, and it is this
@@ -245,10 +249,24 @@ fn continuation(
         // which is what makes `next()` answer a promise in every case and never raise.
         Err(abrupt) => return Ok(reject_with(vm, heap, capability, abrupt)),
     };
+    // §27.1.4.4 step 13 — while there is more to come, a *rejected* value closes the sync iterator
+    // underneath. The sync side has no idea its value was a promise, so nothing else can tell it
+    // the walk ended badly, and without this it is left open for good.
+    let closing = match (close_on_rejection, done) {
+        (Some(iterator), false) => Some(iterator),
+        _ => None,
+    };
     let constructor = vm.realm().promise_constructor();
     let wrapper = match crate::builtins::promise::promise_resolve(vm, heap, constructor, value) {
         Ok(wrapper) => wrapper,
-        Err(abrupt) => return Ok(reject_with(vm, heap, capability, abrupt)),
+        // Step 6 — the same close for a `PromiseResolve` that threw on the way in, and the abrupt
+        // completion is still the one that reaches the caller.
+        Err(abrupt) => {
+            if let Some(iterator) = closing {
+                crate::builtins::iterator::Walk::close_unread(vm, heap, iterator);
+            }
+            return Ok(reject_with(vm, heap, capability, abrupt));
+        }
     };
     // §27.1.4.4 step 5's closure carries one thing — the `done` read before the await — and it
     // carries it by *being* one of two functions rather than by holding a flag. A flag would have
@@ -268,12 +286,30 @@ fn continuation(
             Abrupt::type_error("a resolved value is not a promise"),
         ));
     };
+    // Step 13.b — the closure that does it, as a function object, because it has to survive the
+    // turn the value spends settling. It carries the sync iterator in the slot the wrapper itself
+    // uses; the `next` half is not read from here.
+    let on_rejected = match closing {
+        None => Value::Undefined,
+        Some(iterator) => {
+            let closer =
+                heap.new_native_function(vm.realm().function_prototype(), close_and_rethrow);
+            super::define_function_metadata(heap, closer, "", 1);
+            if let Some(object) = heap.object_mut(closer) {
+                object.set_role(Role::SyncIterator {
+                    iterator,
+                    next: Value::Undefined,
+                });
+            }
+            Value::Object(closer)
+        }
+    };
     let attached = crate::builtins::promise::perform_then(
         vm,
         heap,
         wrapper,
         Value::Object(unwrap),
-        Value::Undefined,
+        on_rejected,
         Some(capability),
     );
     match attached {
@@ -292,6 +328,24 @@ fn reject_with(
     let reason = vm.thrown_value(abrupt, heap);
     let _ = vm.settle_capability(capability, crate::heap::ReactionKind::Reject, reason, heap);
     capability.promise
+}
+
+/// §27.1.4.4 step 13.a — tell the sync iterator the walk ended, then let the reason travel on.
+///
+/// §7.4.9 with a throw completion, which is what `close_unread` performs: `return` is called if it
+/// is there, and anything it does wrong is discarded because the reason already travelling wins.
+fn close_and_rethrow(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let held = heap
+        .object(call.function)
+        .and_then(crate::heap::Object::role)
+        .and_then(|role| match role {
+            Role::SyncIterator { iterator, .. } => Some(*iterator),
+            _ => None,
+        });
+    if let Some(iterator) = held {
+        crate::builtins::iterator::Walk::close_unread(vm, heap, iterator);
+    }
+    Err(Abrupt::Thrown(call.argument(0)))
 }
 
 /// §27.1.4.4 step 5's closure, for a sync result that said it was **done**.

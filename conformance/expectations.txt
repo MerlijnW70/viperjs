@@ -14780,8 +14780,6 @@ language/statements/expression/S12.4_A2_T1.js :: it threw ReferenceError: eval i
 language/statements/expression/S12.4_A2_T1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js :: the test called $DONE with Test262Error: Actual [start, tick 1, tick 2] and expected [start, tick 1, tick 2, catch] should have the same contents.
-language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js (strict) :: the test called $DONE with Test262Error: Actual [start, tick 1, tick 2] and expected [start, tick 1, tick 2, catch] should have the same contents.
 language/statements/for-await-of/async-func-decl-dstr-array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-func-decl-dstr-array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
@@ -15010,10 +15008,6 @@ language/statements/for-of/iterator-close-throw-get-method-abrupt.js :: it threw
 language/statements/for-of/iterator-close-throw-get-method-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a Object
 language/statements/for-of/iterator-close-throw-get-method-non-callable.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 language/statements/for-of/iterator-close-throw-get-method-non-callable.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/statements/for-of/iterator-next-error.js :: it threw an object with no name: Iterator is not closed. Expected SameValue(«1», «0») to be true
-language/statements/for-of/iterator-next-error.js (strict) :: it threw an object with no name: Iterator is not closed. Expected SameValue(«1», «0») to be true
-language/statements/for-of/iterator-next-result-value-attr-error.js :: it threw an object with no name: Iterator is not closed. Expected SameValue(«1», «0») to be true
-language/statements/for-of/iterator-next-result-value-attr-error.js (strict) :: it threw an object with no name: Iterator is not closed. Expected SameValue(«1», «0») to be true
 language/statements/for-of/scope-head-lex-open.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/scope-head-lex-open.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/typedarray-backed-by-resizable-buffer-grow-before-end.js :: it threw ReferenceError: BigInt64Array is not defined

@@ -243,3 +243,76 @@ fn the_loop_is_a_loop_and_the_awaits_do_not_disturb_it() {
         "after"
     );
 }
+
+#[test]
+fn a_next_that_fails_does_not_close_the_iterator() {
+    // §14.7.5.7 step 3 — the `?` on `next()`, on `IteratorComplete` and on `IteratorValue`
+    // propagates **without** closing. Only the binding and the body reach `IteratorClose`, at steps
+    // 3.n and 3.q. An iterator whose own `next` threw is not one to tell the walk is over, and
+    // calling `return` on it is one call too many that a counting iterator can see.
+    let throwing = "var closed = false; var it = { [Symbol.iterator]: function () { return { next: function () { throw 'from next'; }, return: function () { closed = true; return {}; } }; } };";
+    assert_eq!(
+        run(&format!(
+            "{throwing} try {{ for (var x of it) {{}} }} catch (e) {{}} closed"
+        )),
+        "false"
+    );
+    assert_eq!(
+        run_settled(
+            &format!(
+                "{throwing} async function f() {{ for await (var x of it) {{}} }} f().then(null, function () {{}});"
+            ),
+            "closed"
+        ),
+        "false"
+    );
+    // …and the other half, which is what stops this being a licence to never close: an abrupt
+    // completion from the **body** still closes, and so does one from the binding.
+    let yielding = "var closed = false; var it = { [Symbol.iterator]: function () { return { next: function () { return { value: 1, done: false }; }, return: function () { closed = true; return {}; } }; } };";
+    assert_eq!(
+        run(&format!(
+            "{yielding} try {{ for (var x of it) {{ throw 'from body'; }} }} catch (e) {{}} closed"
+        )),
+        "true"
+    );
+    assert_eq!(
+        run_settled(
+            &format!(
+                "{yielding} async function f() {{ for await (var x of it) {{ throw 'from body'; }} }} f().then(null, function () {{}});"
+            ),
+            "closed"
+        ),
+        "true"
+    );
+}
+
+#[test]
+fn a_rejected_value_closes_the_sync_iterator_underneath() {
+    // §27.1.4.4 step 13 — the sync side has no idea its value was a promise, so when that promise
+    // rejects nothing else can tell it the walk ended badly. The *wrapper* closes it, which is the
+    // one place that knows both halves. Without this the iterator is left open for good.
+    assert_eq!(
+        run_settled(
+            "var closed = false; var it = { [Symbol.iterator]: function () { return { next: function () { return { value: Promise.reject('no'), done: false }; }, return: function () { closed = true; return {}; } }; } }; async function f() { for await (var x of it) {} } f().then(null, function () {});",
+            "closed"
+        ),
+        "true"
+    );
+    // Step 6 — the same close when `PromiseResolve` itself throws on the way in.
+    assert_eq!(
+        run_settled(
+            "var closed = false; var p = Promise.resolve(0); Object.defineProperty(p, 'constructor', { get: function () { throw new Error('x'); } }); var it = { [Symbol.iterator]: function () { return { next: function () { return { value: p, done: false }; }, return: function () { closed = true; return {}; } }; } }; async function f() { for await (var x of it) {} } f().then(null, function () {});",
+            "closed"
+        ),
+        "true"
+    );
+    // …and **not** when the sync result said it was done: step 13 is guarded on `done` being false,
+    // because an iterator that has finished has nothing left to be told.
+    assert_eq!(
+        run_settled(
+            "var closed = false; var it = { [Symbol.iterator]: function () { return { next: function () { return { value: Promise.reject('no'), done: true }; }, return: function () { closed = true; return {}; } }; } }; async function f() { for await (var x of it) {} } f().then(null, function () {});",
+            "closed"
+        ),
+        "false"
+    );
+}

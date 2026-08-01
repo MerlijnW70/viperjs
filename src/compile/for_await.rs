@@ -52,6 +52,7 @@ impl Compiler<'_> {
         let iterator = self.declare_hidden("iterator");
         let next = self.declare_hidden("next");
         let current = self.declare_hidden("current");
+        let closable = self.declare_hidden("closable");
 
         // §7.4.3 with the async hint, which is one instruction because every step of it can throw
         // and the order the getters are read in is observable. It leaves the iterator and its
@@ -70,6 +71,11 @@ impl Compiler<'_> {
         let unwind = self.chunk.emit_jump(Instruction::PushHandler);
 
         let top = self.here()?;
+        // Cleared before every `next()`, so a throw from the step below is the shape that must not
+        // close. Set again once a value is in hand, just above the binding.
+        self.constant(crate::value::Value::Number(0.0))?;
+        self.chunk.emit(Instruction::StoreVariable(0, closable));
+        self.chunk.emit(Instruction::Pop);
         // §7.4.4 `IteratorNext`, then the await §14.7.5.7 step 3.d.iii puts in front of everything
         // that reads the result. Awaiting *after* reading `done` would read it off a promise, which
         // is an object and therefore truthy — a loop that ran once and stopped.
@@ -95,6 +101,16 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::StoreVariable(0, current));
         self.chunk.emit(Instruction::Pop);
 
+        // §14.7.5.7 step 3 — the `?` on `next()`, on `IteratorComplete` and on `IteratorValue`
+        // propagates **without** closing: an iterator whose own `next` threw is not one to tell the
+        // walk is over, and the specification only reaches `IteratorClose` from step 3.n and 3.q,
+        // which are the binding and the body. A flag rather than moving the handler, because the
+        // handler covers a region `continue` jumps back into and `break` crosses — arming it per
+        // iteration would need both of those taught about it, where this needs neither.
+        self.constant(crate::value::Value::Number(1.0))?;
+        self.chunk.emit(Instruction::StoreVariable(0, closable));
+        self.chunk.emit(Instruction::Pop);
+
         self.assign_enumerated(&statement.left, binding, current, span)?;
         self.loop_body(
             &statement.body,
@@ -117,7 +133,11 @@ impl Compiler<'_> {
         let thrown = self.declare_hidden("thrown");
         self.chunk.emit(Instruction::StoreVariable(0, thrown));
         self.chunk.emit(Instruction::Pop);
+        // Only when a value had been handed over — see where `closable` is set.
+        self.chunk.emit(Instruction::LoadVariable(0, closable));
+        let unclosable = self.chunk.emit_jump(Instruction::JumpIfFalse);
         self.emit_close(iterator, Check::Unwind, Closing::Awaited)?;
+        self.chunk.patch(unclosable)?;
         self.chunk.emit(Instruction::LoadVariable(0, thrown));
         self.chunk.emit(Instruction::Throw);
 
