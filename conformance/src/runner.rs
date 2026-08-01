@@ -1,6 +1,8 @@
 //! Running one test262 file, and deciding what happened.
 
+use crate::Negative;
 use crate::frontmatter::Frontmatter;
+use praxis::compile::ErrorKind;
 use praxis::compile::compile_script;
 use praxis::heap::Heap;
 use praxis::parser::parse_script;
@@ -213,6 +215,30 @@ const DONE: &str = "var $__status = 'the test never called $DONE';\n     functio
 /// The second script, which reads the status after §9.5's jobs have run.
 const PROBE: &str = "$__status;";
 
+/// What a `SyntaxError` decided before anything ran means, given what the test expected.
+///
+/// §16's early errors are reported by the parser for most of the grammar and by the compiler for
+/// §22.2.1's patterns, and test262 calls the phase either `parse` or `early`. Both mean "before
+/// anything ran", which is the only distinction praxis draws — so both are accepted here and
+/// neither is checked against the other.
+fn judge_early(negative: Option<&Negative>, why: &str) -> Verdict {
+    match negative {
+        Some(expected) if matches!(expected.phase.as_str(), "parse" | "early") => {
+            match expected.kind.as_str() {
+                "SyntaxError" => Verdict::Passed,
+                other => Verdict::Failed(format!(
+                    "expected a {other} before anything ran, and it was a SyntaxError: {why}"
+                )),
+            }
+        }
+        Some(expected) => Verdict::Failed(format!(
+            "expected a {} at {} time, and it was a SyntaxError before anything ran: {why}",
+            expected.kind, expected.phase
+        )),
+        None => Verdict::Failed(format!("it did not parse: {why}")),
+    }
+}
+
 /// Run a whole program and decide what its frontmatter says about the result.
 fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
     let negative = block.negative.as_ref();
@@ -225,29 +251,23 @@ fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
             // `parse` or `early`. Both mean "before anything ran", which is what praxis's parser
             // decides — so both are accepted here and the distinction between them is not one
             // this engine draws.
-            return match negative {
-                Some(expected) if matches!(expected.phase.as_str(), "parse" | "early") => {
-                    match expected.kind.as_str() {
-                        "SyntaxError" => Verdict::Passed,
-                        other => Verdict::Failed(format!(
-                            "expected a {other} at parse time, and it was a SyntaxError: {}",
-                            error.kind
-                        )),
-                    }
-                }
-                Some(expected) => Verdict::Failed(format!(
-                    "expected a {} at {} time, and it failed to parse: {}",
-                    expected.kind, expected.phase, error.kind
-                )),
-                None => Verdict::Failed(format!("it did not parse: {}", error.kind)),
-            };
+            return judge_early(negative, &error.kind.to_string());
         }
     };
     // A construct praxis cannot compile is not a failure of the *test*: nothing was run, so
     // nothing can be said about what it would have done. Counting these as failures would fill
     // the expectations file with the same sentence thousands of times and hide the real ones.
+    //
+    // **Except one kind.** §22.2.1's early errors are decided by the compiler rather than the
+    // parser — a regular expression literal's shape is read by §12.9.5 and its *pattern* only
+    // afterwards — and they are as much a decision about the program as anything the parser says.
+    // Skipping them let a test that expected no error at all disappear into the "not run" column
+    // instead of failing, which is a hole in the ratchet rather than a kindness.
     let chunk = match compile_script(&script, &mut heap) {
         Ok(chunk) => chunk,
+        Err(error) if matches!(error.kind, ErrorKind::BadPattern(_)) => {
+            return judge_early(negative, &error.message());
+        }
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
@@ -594,6 +614,55 @@ Promise.resolve().then(function () { $DONE(); });"
             .expect("a sloppy run"); // same
         assert!(matches!(strict.verdict, Verdict::Failed(_)), "{strict:?}");
         assert_eq!(sloppy.verdict, Verdict::Passed);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_pattern_the_specification_forbids_is_judged_and_one_praxis_lacks_is_not() {
+        let root = checkout("patterns");
+        // §22.2.1's early errors are the compiler's, not the parser's, and they are still early:
+        // a test asserting that a pattern must be rejected is *passed* by rejecting it.
+        let forbidden = run(
+            &root,
+            "/*---
+negative:
+  phase: parse
+  type: SyntaxError
+---*/
+var r = /(/;",
+        );
+        assert_eq!(forbidden[0].verdict, Verdict::Passed);
+        // …and the other direction is the reason this is worth a test rather than a line: a
+        // program that expected no error at all now *fails* here, where it used to disappear into
+        // the "not run" column and take a real regression with it.
+        let unexpected = run(
+            &root,
+            "/*---
+description: fine
+---*/
+var r = /(/;",
+        );
+        assert!(
+            matches!(&unexpected[0].verdict, Verdict::Failed(why) if why.contains("did not parse")),
+            "{unexpected:?}"
+        );
+        // A pattern praxis has not *built* is still skipped, and that difference is the whole
+        // point of the split: judging it would pass every negative test the proposal ships —
+        // which asserts that particular malformed modifier groups are rejected — while every
+        // positive one failed. An engine implementing none of it would be credited with half.
+        let unbuilt = run(
+            &root,
+            "/*---
+negative:
+  phase: parse
+  type: SyntaxError
+---*/
+var r = /(?i:a)/;",
+        );
+        assert!(
+            matches!(&unbuilt[0].verdict, Verdict::Skipped(why) if why.contains("modifiers")),
+            "{unbuilt:?}"
+        );
         let _ = std::fs::remove_dir_all(&root);
     }
 

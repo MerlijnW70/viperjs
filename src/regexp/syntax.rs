@@ -22,12 +22,36 @@
 pub struct Error {
     /// What was wrong, in the words a `SyntaxError` will carry.
     pub message: &'static str,
+    /// Whether this is a pattern the specification forbids, or one this engine has not built.
+    ///
+    /// A program cannot tell the two apart and is not meant to: `new RegExp("(?i:x)")` throws a
+    /// SyntaxError either way, because a syntax an engine does not implement is a syntax it does
+    /// not accept. The difference is for the *engine's own* accounting — see
+    /// [`crate::compile::ErrorKind::BadPattern`], which is an early error the conformance harness
+    /// judges, against `Unsupported`, which it declines to judge at all.
+    ///
+    /// Getting this backwards is not a small mistake in one direction. A refusal recorded as an
+    /// early error passes every test that asserts "this must be rejected" — and a proposal's
+    /// negative tests are exactly that shape, so an engine implementing none of it would be
+    /// credited with the half of the suite that says no.
+    pub unimplemented: bool,
 }
 
 impl Error {
-    /// The error carrying this message.
+    /// The error carrying this message — a pattern the specification says is not one.
     pub(super) fn at(message: &'static str) -> Self {
-        Self { message }
+        Self {
+            message,
+            unimplemented: false,
+        }
+    }
+
+    /// The same, for a pattern this engine has not been taught rather than one that is wrong.
+    pub(super) fn unsupported(message: &'static str) -> Self {
+        Self {
+            message,
+            unimplemented: true,
+        }
     }
 }
 

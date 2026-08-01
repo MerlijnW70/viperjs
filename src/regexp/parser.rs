@@ -311,6 +311,28 @@ impl Reader<'_> {
         }
     }
 
+    /// Whether what follows `(?` spells a modifier group — `(?ims-ims:` and its subsets.
+    ///
+    /// Read without consuming: this decides *which refusal*, and the parser is about to give up
+    /// either way. Deliberately loose — any run of the three modifier letters and a `-`, ending in
+    /// a `:` — because a *nearly* well-formed modifier group is exactly what the proposal's
+    /// negative tests are made of, and calling those a syntax error would be claiming to implement
+    /// the thing they check.
+    fn at_a_modifier_group(&self) -> bool {
+        let mut at = self.at;
+        while let Some(&next) = self.text.get(at) {
+            match next {
+                'i' | 'm' | 's' | '-' => at += 1,
+                // No check that anything was read first: `(?:` is a non-capturing group and the
+                // arm above this one has already taken it, so a `:` here always follows at least
+                // one modifier letter.
+                ':' => return true,
+                _ => return false,
+            }
+        }
+        false
+    }
+
     /// §22.2.1's five bracketed forms.
     fn group(&mut self) -> Result<Node, Error> {
         self.at += 1;
@@ -341,6 +363,15 @@ impl Reader<'_> {
                     let name = self.group_name()?;
                     self.next_group += 1;
                     GroupKind::Named(self.next_group, name)
+                }
+                // §22.2.1's *modifiers* — `(?i:…)` and `(?-i:…)`. Stage 3 and not ES2023, so it
+                // is refused as a thing not built rather than as a thing forbidden. The
+                // difference matters to the conformance harness and not to a script: a
+                // SyntaxError here would *pass* the proposal's own negative tests, which assert
+                // that particular bad modifier sequences are rejected — and passing those while
+                // rejecting every good one is a wrong answer wearing a right one's clothes.
+                _ if self.at_a_modifier_group() => {
+                    return Err(Error::unsupported("the RegExp modifiers proposal"));
                 }
                 _ => return Err(Error::at("this is not a kind of group")),
             }
@@ -538,9 +569,9 @@ impl Reader<'_> {
                 false => Ok(0),
             },
             '1'..='9' => Err(Error::at("a legacy octal escape is not a character escape")),
-            'p' | 'P' if self.flags.unicode_mode() => Err(Error::at(
-                "Unicode property escapes are not implemented yet",
-            )),
+            'p' | 'P' if self.flags.unicode_mode() => {
+                Err(Error::unsupported("Unicode property escapes"))
+            }
             // §22.2.1's `IdentityEscape`. In Unicode mode only a `SyntaxCharacter` or `/` may be
             // escaped this way, so `\a` is an error there and an `a` outside — one of the few
             // places the two modes disagree about whether a pattern is *valid* at all.
@@ -987,6 +1018,32 @@ mod tests {
                 Node::Character(120),
             ]))
         );
+    }
+
+    #[test]
+    fn a_modifier_group_is_refused_as_unbuilt_and_a_malformed_one_as_wrong() {
+        // §22.2.1's *modifiers* are Stage 3 and not ES2023, so `(?i:…)` is a gap rather than a
+        // forbidden pattern. A script sees the same SyntaxError for both — a syntax an engine does
+        // not implement is a syntax it does not accept — but the engine has to know which it said,
+        // because the proposal's own tests are largely negative ones asserting that *particular*
+        // malformed modifier groups are rejected. Calling this a syntax error passes all of those
+        // while failing every pattern the proposal actually adds.
+        for source in ["(?i:a)", "(?-i:a)", "(?im-s:a)"] {
+            let error = parse(source, Flags::default())
+                .err()
+                .unwrap_or_else(|| panic!("{source} should be refused")); // a refusal is the test
+            assert!(error.unimplemented, "{source}");
+            assert_eq!(error.message, "the RegExp modifiers proposal");
+        }
+        // …and anything that only *looks* like one is an ordinary syntax error, which is what the
+        // split has to get right in the other direction. None of these reaches a `:` through the
+        // modifier letters alone.
+        for source in ["(?%a)", "(?i", "(?ix:a)", "(?:a)(?", "(?im"] {
+            let error = parse(source, Flags::default())
+                .err()
+                .unwrap_or_else(|| panic!("{source} should be refused")); // same
+            assert!(!error.unimplemented, "{source} — {}", error.message);
+        }
     }
 
     #[test]

@@ -129,7 +129,7 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **71.65% of test262** — 66,744 of 93,153 runs. Treat that number
+Conformance as of this commit is **72.04% of test262** — 67,110 of 93,153 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -141,6 +141,7 @@ it. Let the failure buckets choose the next slice, not intuition. The largest ri
 | 849 | dynamic `import` |
 | 830 | modules |
 | 306 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
+| 280 | `with` |
 | 280 | `with` |
 | 242 | a function declaration inside a block |
 
@@ -156,6 +157,15 @@ once, most of them in `dstr` directories that have nothing to do with generators
 **75% is `BigInt`**: 6,263 runs, a new numeric type through the value representation, every operator
 and every coercion. Nothing else on the list is within a factor of five, and the next largest things
 after it are Unicode property escapes (1,318) and per-iteration environments (1,234).
+
+**A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
+early errors are decided by the *compiler* — §12.9.5 reads a regular expression literal's shape and
+its pattern only afterwards — so `conformance` used to drop every one of them into "not run". 560
+runs came out of that column when it was fixed: 366 pass, and **194 fail and could not be seen
+before**. The split it rests on is `ErrorKind::BadPattern` against `Unsupported`, and getting it
+backwards is not symmetric: a *gap* recorded as an early error passes every test asserting "this
+must be rejected", and a proposal's negative tests are exactly that shape. `(?i:…)` is the live
+example — see `regexp::Error::unimplemented`.
 
 **Two buckets are not ES2023 and must not be counted as cheap.** `Temporal` (3,476 runs) is a Stage
 3 proposal with a surface larger than `Date`, `Intl` and `RegExp` combined — building it would raise

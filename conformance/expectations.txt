@@ -23,12 +23,22 @@ annexB/built-ins/Object/is/emulates-undefined.js :: it threw an object with no n
 annexB/built-ins/Object/is/emulates-undefined.js (strict) :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
 annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js :: it threw SyntaxError: a control escape needs a letter
 annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js (strict) :: it threw SyntaxError: a control escape needs a letter
+annexB/built-ins/RegExp/RegExp-decimal-escape-class-range.js :: it did not parse: a legacy octal escape is not a character escape
+annexB/built-ins/RegExp/RegExp-decimal-escape-class-range.js (strict) :: it did not parse: a legacy octal escape is not a character escape
+annexB/built-ins/RegExp/RegExp-decimal-escape-not-capturing.js :: it did not parse: a backreference names no group
+annexB/built-ins/RegExp/RegExp-decimal-escape-not-capturing.js (strict) :: it did not parse: a backreference names no group
 annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js :: it threw SyntaxError: a control escape needs a letter
 annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js (strict) :: it threw SyntaxError: a control escape needs a letter
 annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js :: it threw ReferenceError: eval is not defined
 annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js (strict) :: it threw ReferenceError: eval is not defined
+annexB/built-ins/RegExp/RegExp-leading-escape.js :: it did not parse: a backreference names no group
+annexB/built-ins/RegExp/RegExp-leading-escape.js (strict) :: it did not parse: a backreference names no group
 annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js :: it threw ReferenceError: eval is not defined
 annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js (strict) :: it threw ReferenceError: eval is not defined
+annexB/built-ins/RegExp/RegExp-trailing-escape.js :: it did not parse: a backreference names no group
+annexB/built-ins/RegExp/RegExp-trailing-escape.js (strict) :: it did not parse: a backreference names no group
+annexB/built-ins/RegExp/incomplete_hex_unicode_escape.js :: it did not parse: a hexadecimal escape is too short
+annexB/built-ins/RegExp/incomplete_hex_unicode_escape.js (strict) :: it did not parse: a hexadecimal escape is too short
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/input/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -71,6 +81,10 @@ annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructo
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/named-groups/non-unicode-malformed-lookbehind.js :: it did not parse: a named backreference names no group
+annexB/built-ins/RegExp/named-groups/non-unicode-malformed-lookbehind.js (strict) :: it did not parse: a named backreference names no group
+annexB/built-ins/RegExp/named-groups/non-unicode-malformed.js :: it did not parse: a named backreference names no group
+annexB/built-ins/RegExp/named-groups/non-unicode-malformed.js (strict) :: it did not parse: a named backreference names no group
 annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
 annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
 annexB/built-ins/RegExp/prototype/Symbol.split/toint32-limit-recompiles-source.js :: it threw an object with no name: Expected SameValue(«"a"», «""») to be true
@@ -327,19 +341,19 @@ annexB/built-ins/unescape/two-ignore-non-hex.js :: it threw ReferenceError: unes
 annexB/built-ins/unescape/two-ignore-non-hex.js (strict) :: it threw ReferenceError: unescape is not defined
 annexB/built-ins/unescape/two.js :: it threw ReferenceError: unescape is not defined
 annexB/built-ins/unescape/two.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/language/comments/multi-line-html-close.js :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/multi-line-html-close.js (strict) :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-asi.js :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-asi.js (strict) :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-first-line-1.js :: expected a EvalError at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-first-line-2.js :: expected a EvalError at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-first-line-3.js :: expected a EvalError at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-unicode-separators.js :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close-unicode-separators.js (strict) :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close.js :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-close.js (strict) :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `>`
-annexB/language/comments/single-line-html-open.js :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `<`
-annexB/language/comments/single-line-html-open.js (strict) :: expected a Test262Error at runtime time, and it failed to parse: expected an expression, found `<`
+annexB/language/comments/multi-line-html-close.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/multi-line-html-close.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-asi.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-asi.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-first-line-1.js :: expected a EvalError at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-first-line-2.js :: expected a EvalError at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-first-line-3.js :: expected a EvalError at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-unicode-separators.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close-unicode-separators.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-close.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
+annexB/language/comments/single-line-html-open.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `<`
+annexB/language/comments/single-line-html-open.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `<`
 annexB/language/eval-code/direct/block-decl-nostrict.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/func-block-decl-eval-func-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/func-block-decl-eval-func-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
@@ -1015,6 +1029,18 @@ annexB/language/global-code/switch-case-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/literals/regexp/class-escape.js :: it did not parse: a control escape needs a letter
+annexB/language/literals/regexp/class-escape.js (strict) :: it did not parse: a control escape needs a letter
+annexB/language/literals/regexp/extended-pattern-char.js :: it did not parse: a regular expression has an unmatched ]
+annexB/language/literals/regexp/extended-pattern-char.js (strict) :: it did not parse: a regular expression has an unmatched ]
+annexB/language/literals/regexp/identity-escape.js :: it did not parse: a backreference names no group
+annexB/language/literals/regexp/identity-escape.js (strict) :: it did not parse: a backreference names no group
+annexB/language/literals/regexp/legacy-octal-escape.js :: it did not parse: a backreference names no group
+annexB/language/literals/regexp/legacy-octal-escape.js (strict) :: it did not parse: a backreference names no group
+annexB/language/literals/regexp/non-empty-class-ranges-no-dash.js :: it did not parse: a character class range has a class escape as an end
+annexB/language/literals/regexp/non-empty-class-ranges-no-dash.js (strict) :: it did not parse: a character class range has a class escape as an end
+annexB/language/literals/regexp/non-empty-class-ranges.js :: it did not parse: a character class range has a class escape as an end
+annexB/language/literals/regexp/non-empty-class-ranges.js (strict) :: it did not parse: a character class range has a class escape as an end
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js (strict) :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-prototype-emulates-undefined.js :: it threw TypeError: the `prototype` of an extended constructor is neither an object nor null
@@ -4744,6 +4770,8 @@ built-ins/RegExp/match-indices/indices-array-properties.js :: it threw TypeError
 built-ins/RegExp/match-indices/indices-array-properties.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/RegExp/match-indices/indices-array-unicode-match.js :: it threw ReferenceError: compareEquality is not defined
 built-ins/RegExp/match-indices/indices-array-unicode-match.js (strict) :: it threw ReferenceError: compareEquality is not defined
+built-ins/RegExp/match-indices/indices-array-unicode-property-names.js :: it did not parse: a group name is not an identifier
+built-ins/RegExp/match-indices/indices-array-unicode-property-names.js (strict) :: it did not parse: a group name is not an identifier
 built-ins/RegExp/match-indices/indices-array-unmatched.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/match-indices/indices-array-unmatched.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/match-indices/indices-array.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -4758,6 +4786,26 @@ built-ins/RegExp/match-indices/indices-groups-properties.js :: it threw TypeErro
 built-ins/RegExp/match-indices/indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/match-indices/indices-property.js :: it threw an object with no name: indices should be an own property
 built-ins/RegExp/match-indices/indices-property.js (strict) :: it threw an object with no name: indices should be an own property
+built-ins/RegExp/named-groups/duplicate-names-exec.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-exec.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-group-property-enumeration-order.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-group-property-enumeration-order.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-match-indices.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-match-indices.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-match.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-match.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-matchall.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-matchall.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-replace.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-replace.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-replaceall.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-replaceall.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-search.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-search.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-split.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-split.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-test.js :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-test.js (strict) :: it did not parse: two groups have the same name
 built-ins/RegExp/named-groups/groups-object-subclass-sans.js :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass-sans.js (strict) :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass.js :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
@@ -4768,6 +4816,14 @@ built-ins/RegExp/named-groups/groups-object.js :: it threw an object with no nam
 built-ins/RegExp/named-groups/groups-object.js (strict) :: it threw an object with no name: groups descriptor should be enumerable
 built-ins/RegExp/named-groups/lookbehind.js :: it threw an object with no name: Actual [f, c] and expected [f, e] should have the same contents.
 built-ins/RegExp/named-groups/lookbehind.js (strict) :: it threw an object with no name: Actual [f, c] and expected [f, e] should have the same contents.
+built-ins/RegExp/named-groups/non-unicode-property-names-valid.js :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/non-unicode-property-names-valid.js (strict) :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/non-unicode-property-names.js :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/non-unicode-property-names.js (strict) :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/unicode-property-names-valid.js :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/unicode-property-names-valid.js (strict) :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/unicode-property-names.js :: it did not parse: a group name is not an identifier
+built-ins/RegExp/named-groups/unicode-property-names.js (strict) :: it did not parse: a group name is not an identifier
 built-ins/RegExp/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
@@ -4878,6 +4934,10 @@ built-ins/RegExp/prototype/dotAll/cross-realm.js :: it threw TypeError: what was
 built-ins/RegExp/prototype/dotAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/dotAll/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/dotAll/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
+built-ins/RegExp/prototype/exec/duplicate-named-groups-properties.js :: it did not parse: two groups have the same name
+built-ins/RegExp/prototype/exec/duplicate-named-groups-properties.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js :: it did not parse: two groups have the same name
+built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js (strict) :: it did not parse: two groups have the same name
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -4946,6 +5006,134 @@ built-ins/RegExp/prototype/unicodeSets/cross-realm.js :: it threw TypeError: wha
 built-ins/RegExp/prototype/unicodeSets/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/unicodeSets/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/unicodeSets/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character-property-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character-property-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-character.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-property-of-strings-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-property-of-strings-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-string-literal.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-difference-string-literal.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character-class-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character-class-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character-property-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character-property-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-character.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-property-of-strings-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-property-of-strings-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-string-literal.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-difference-string-literal.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character-class-escape.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character-class-escape.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character-class.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character-class.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character-property-escape.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character-property-escape.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-character.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-property-of-strings-escape.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-property-of-strings-escape.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-string-literal.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-intersection-string-literal.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-class-escape-union-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-union-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-union-string-literal.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/character-class-escape-union-string-literal.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character-class-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character-class-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character-property-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character-property-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-character.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-property-of-strings-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-property-of-strings-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-string-literal.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-intersection-string-literal.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character-class-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character-class-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character-property-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character-property-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-character.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-property-of-strings-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-property-of-strings-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-string-literal.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-class-union-string-literal.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character-class-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character-class-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character-property-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character-property-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-character.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-property-of-strings-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-property-of-strings-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-string-literal.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-difference-string-literal.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-intersection-character-class-escape.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character-class-escape.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character-class.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character-class.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character-property-escape.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character-property-escape.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-character.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-property-of-strings-escape.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-property-of-strings-escape.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-string-literal.js :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-intersection-string-literal.js (strict) :: it did not parse: this punctuator is doubled, which a v pattern reserves inside a class
+built-ins/RegExp/unicodeSets/generated/character-union-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-union-character-class.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
+built-ins/RegExp/unicodeSets/generated/character-union-string-literal.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/character-union-string-literal.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character-class-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character-class-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character-class.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character-class.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character-property-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character-property-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-character.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-property-of-strings-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-property-of-strings-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-string-literal.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-difference-string-literal.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character-class-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character-class-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character-class.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character-class.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character-property-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character-property-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-character.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-property-of-strings-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-property-of-strings-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-string-literal.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-intersection-string-literal.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character-class-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character-class-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character-class.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character-class.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character-property-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character-property-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-character.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-property-of-strings-escape.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-property-of-strings-escape.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-string-literal.js :: it did not parse: this character may not be escaped in a Unicode pattern
+built-ins/RegExp/unicodeSets/generated/string-literal-union-string-literal.js (strict) :: it did not parse: this character may not be escaped in a Unicode pattern
 built-ins/RegExp/unicode_full_case_folding.js :: it threw an object with no name: \u0390 does not match \u1fd3
 built-ins/RegExp/unicode_full_case_folding.js (strict) :: it threw an object with no name: \u0390 does not match \u1fd3
 built-ins/RegExp/unicode_restricted_quantifiable_assertion.js :: it threw an object with no name: RegExp("(?=.)*", "u"):  Expected a SyntaxError to be thrown but no exception was thrown at all
@@ -5246,6 +5434,10 @@ built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js :: it threw
 built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/duplicate-named-groups-properties.js :: it did not parse: two groups have the same name
+built-ins/String/prototype/match/duplicate-named-groups-properties.js (strict) :: it did not parse: two groups have the same name
+built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js :: it did not parse: two groups have the same name
+built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js (strict) :: it did not parse: two groups have the same name
 built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/match/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -5314,6 +5506,8 @@ built-ins/String/prototype/split/limit-touint32-error.js :: it threw an object w
 built-ins/String/prototype/split/limit-touint32-error.js (strict) :: it threw an object with no name: ToUint32 should be called on the limit before ToString on the separator. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-regexp-limit-string-via-eval.js :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/split/separator-regexp-limit-string-via-eval.js (strict) :: it threw ReferenceError: eval is not defined
+built-ins/String/prototype/split/separator-regexp.js :: it did not parse: a named backreference names no group
+built-ins/String/prototype/split/separator-regexp.js (strict) :: it did not parse: a named backreference names no group
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-tostring-error.js (strict) :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -14547,10 +14741,10 @@ language/statements/using/gets-initializer-Symbol.dispose-property-once.js :: it
 language/statements/using/gets-initializer-Symbol.dispose-property-once.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/global-closure-get-before-initialization.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/global-closure-get-before-initialization.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/using/global-use-before-initialization-in-declaration-statement.js :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
-language/statements/using/global-use-before-initialization-in-declaration-statement.js (strict) :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
-language/statements/using/global-use-before-initialization-in-prior-statement.js :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
-language/statements/using/global-use-before-initialization-in-prior-statement.js (strict) :: expected a ReferenceError at runtime time, and it failed to parse: expected `;`, found an identifier
+language/statements/using/global-use-before-initialization-in-declaration-statement.js :: expected a ReferenceError at runtime time, and it was a SyntaxError before anything ran: expected `;`, found an identifier
+language/statements/using/global-use-before-initialization-in-declaration-statement.js (strict) :: expected a ReferenceError at runtime time, and it was a SyntaxError before anything ran: expected `;`, found an identifier
+language/statements/using/global-use-before-initialization-in-prior-statement.js :: expected a ReferenceError at runtime time, and it was a SyntaxError before anything ran: expected `;`, found an identifier
+language/statements/using/global-use-before-initialization-in-prior-statement.js (strict) :: expected a ReferenceError at runtime time, and it was a SyntaxError before anything ran: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier

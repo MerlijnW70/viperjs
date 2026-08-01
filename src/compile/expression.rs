@@ -376,15 +376,20 @@ impl Compiler<'_> {
                 // evaluated. A pattern that does not parse makes the whole script a SyntaxError,
                 // so a bad one inside a branch that never runs still stops the program — which is
                 // the difference between an early error and an ordinary one.
-                let flags =
-                    crate::regexp::Flags::parse(&literal.flags).map_err(|error| CompileError {
-                        kind: ErrorKind::BadPattern(error.message),
-                        span,
-                    })?;
-                crate::regexp::parse(&literal.body, flags).map_err(|error| CompileError {
-                    kind: ErrorKind::BadPattern(error.message),
+                //
+                // A pattern this engine has not *built* is a different answer from one the
+                // specification forbids, even though a script sees the same SyntaxError for both:
+                // the first is a gap and the second is this engine agreeing with the standard.
+                // Only the second may be judged as an early error — see `regexp::Error`.
+                let refused = |error: crate::regexp::Error| CompileError {
+                    kind: match error.unimplemented {
+                        true => ErrorKind::Unsupported(error.message),
+                        false => ErrorKind::BadPattern(error.message),
+                    },
                     span,
-                })?;
+                };
+                let flags = crate::regexp::Flags::parse(&literal.flags).map_err(refused)?;
+                crate::regexp::parse(&literal.body, flags).map_err(refused)?;
                 let source = self
                     .heap
                     .new_string(literal.body.encode_utf16().collect::<Vec<_>>());
