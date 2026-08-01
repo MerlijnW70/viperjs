@@ -155,10 +155,10 @@ impl Compiler<'_> {
             // One inside a *block* was not hoisted, so doing nothing here would leave the name
             // unbound and say nothing about it. §14.1 block-scopes it and Annex B.3.3 hoists it
             // in sloppy code; both need block scoping, so it is refused until that exists.
-            StmtKind::Function(_) => match self.hoisted.contains(&span) {
-                true => Ok(()),
-                false => Err(unsupported("a function declaration inside a block", span)),
-            },
+            // Already made by [`Compiler::hoist_functions`] before the body ran — at a body's top
+            // level and, since §14.1 arrived, at a block's too. So there is nothing left to do,
+            // and no completion value either: `function f() {}` alone evaluates to `undefined`.
+            StmtKind::Function(_) => Ok(()),
             // §15.7.11 — a declaration evaluates the class and initialises the binding its name
             // already has: the name is hoisted and left uninitialised, so a reference before this
             // point is the temporal dead zone rather than `undefined`.
@@ -229,11 +229,15 @@ impl Compiler<'_> {
         let opened = lexical.then(|| self.enter_environment());
         let mark = self.enter_scope();
         self.declare_lexical_names(body)?;
-        // Deliberately *not* `hoist_functions`. §14.1 block-scopes a function declaration and
-        // Annex B.3.3 hoists it besides, and neither is implemented — so one written here is
-        // refused, which is what `Compiler::hoisted` is for. Hoisting it now that a block is a
-        // scope would give it the scope and none of Annex B, which is the silent wrong answer the
-        // refusal was added to stop.
+        // §14.1 `BlockDeclarationInstantiation` step 3.a.ii — a function declaration in a block is
+        // created *and initialised* before the block's first statement, so `{ f(); function f() {}
+        // }` calls it. The slot goes in the block's own level, which since block environments
+        // arrived is the block's own environment: a second entry makes a second function.
+        //
+        // Annex B.3.3's extra `var` binding in the enclosing function is **not** here — DR-0008
+        // leaves Annex B out — so `{ function f() {} } f;` is a ReferenceError rather than the
+        // function, which is what a strict-mode engine does and what §14.1 alone says.
+        self.hoist_functions(body)?;
         self.statements(body)?;
         self.leave_scope(mark);
         if let Some(opened) = opened {
@@ -252,6 +256,12 @@ impl Compiler<'_> {
         body.iter().any(|statement| match &statement.kind {
             StmtKind::Class(class) => class.name.is_some(),
             StmtKind::Declaration(declaration) => declaration.kind.is_lexical(),
+            // §14.1 — a function declaration in a block belongs to the *block*, which is what
+            // makes it the one declaration that is hoisted and lexical at once: created and
+            // **initialised** when the block is entered, where a `let` is created and left in the
+            // dead zone. Without it here the block gets no environment and the name would be a
+            // slot in the function, shared by every entry.
+            StmtKind::Function(_) => true,
             _ => false,
         })
     }

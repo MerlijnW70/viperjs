@@ -129,7 +129,7 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **72.64% of test262** — 67,664 of 93,153 runs. Treat that number
+Conformance as of this commit is **72.74% of test262** — 67,763 of 93,153 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -142,7 +142,6 @@ it. Let the failure buckets choose the next slice, not intuition. The largest ri
 | 306 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 280 | `with` |
 | 280 | `with` |
-| 242 | a function declaration inside a block |
 
 **63.06% to 71.65% in three slices**, all of them §27.6 and its neighbourhood: async generators
 themselves (+4,814), `yield*` inside one — §15.5.5 step 4's `GetIterator(value, async)` (+1,590) —

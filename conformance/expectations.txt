@@ -507,6 +507,7 @@ annexB/language/eval-code/direct/func-switch-dflt-eval-func-skip-early-err.js ::
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-block-decl-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -526,6 +527,7 @@ annexB/language/eval-code/direct/global-block-decl-eval-global-skip-early-err.js
 annexB/language/eval-code/direct/global-block-decl-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -545,6 +547,7 @@ annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-skip-ear
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -564,6 +567,7 @@ annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-skip-ear
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -583,6 +587,7 @@ annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-skip-early
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -602,6 +607,7 @@ annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-skip-early-e
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -621,6 +627,7 @@ annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-skip-early
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-switch-case-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -640,6 +647,7 @@ annexB/language/eval-code/direct/global-switch-case-eval-global-skip-early-err.j
 annexB/language/eval-code/direct/global-switch-case-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -664,6 +672,7 @@ annexB/language/eval-code/direct/switch-dflt-decl-nostrict.js :: it threw Refere
 annexB/language/eval-code/direct/var-env-lower-lex-catch-non-strict.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -683,6 +692,7 @@ annexB/language/eval-code/indirect/global-block-decl-eval-global-skip-early-err.
 annexB/language/eval-code/indirect/global-block-decl-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -702,6 +712,7 @@ annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-skip-e
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -721,6 +732,7 @@ annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-skip-e
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -740,6 +752,7 @@ annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-skip-ear
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -759,6 +772,7 @@ annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-skip-early
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -778,6 +792,7 @@ annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-skip-ear
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -797,6 +812,7 @@ annexB/language/eval-code/indirect/global-switch-case-eval-global-skip-early-err
 annexB/language/eval-code/indirect/global-switch-case-eval-global-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-block-scoping.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-block-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
@@ -837,6 +853,16 @@ annexB/language/expressions/yield/star-iterable-return-emulates-undefined-throws
 annexB/language/expressions/yield/star-iterable-return-emulates-undefined-throws-when-called.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/language/expressions/yield/star-iterable-throw-emulates-undefined-throws-when-called.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/yield/star-iterable-throw-emulates-undefined-throws-when-called.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
+annexB/language/function-code/block-decl-func-block-scoping.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-func-existing-block-fn-no-init.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-func-existing-block-fn-update.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-func-existing-fn-update.js :: it threw an object with no name: Expected SameValue(«"outer declaration"», «"inner declaration"») to be true
+annexB/language/function-code/block-decl-func-existing-var-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/function-code/block-decl-func-init.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-func-no-skip-try.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-func-update.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/block-decl-nostrict.js :: it threw an object with no name: Expected SameValue(«ReferenceError: f is not defined», «undefined») to be true
 annexB/language/function-code/function-redeclaration-block.js :: it did not parse: this name is bound twice in the same declaration
 annexB/language/function-code/function-redeclaration-switch.js :: it did not parse: this name is bound twice in the same declaration
 annexB/language/function-code/if-decl-else-decl-a-func-block-scoping.js :: it did not parse: a declaration may not stand where only a statement may
@@ -934,8 +960,34 @@ annexB/language/function-code/if-stmt-else-decl-func-skip-early-err-try.js :: it
 annexB/language/function-code/if-stmt-else-decl-func-skip-early-err.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/function-code/if-stmt-else-decl-func-skip-param.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/function-code/if-stmt-else-decl-func-update.js :: it did not parse: a declaration may not stand where only a statement may
+annexB/language/function-code/switch-case-decl-nostrict.js :: it threw an object with no name: Expected SameValue(«ReferenceError: f is not defined», «undefined») to be true
+annexB/language/function-code/switch-case-func-block-scoping.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-case-func-existing-block-fn-no-init.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-case-func-existing-block-fn-update.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-case-func-existing-fn-update.js :: it threw an object with no name: Expected SameValue(«"outer declaration"», «"inner declaration"») to be true
+annexB/language/function-code/switch-case-func-existing-var-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/function-code/switch-case-func-init.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-case-func-no-skip-try.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-case-func-update.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-dflt-decl-nostrict.js :: it threw an object with no name: Expected SameValue(«ReferenceError: f is not defined», «undefined») to be true
+annexB/language/function-code/switch-dflt-func-block-scoping.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-dflt-func-existing-block-fn-no-init.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-dflt-func-existing-block-fn-update.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-dflt-func-existing-fn-update.js :: it threw an object with no name: Expected SameValue(«"outer declaration"», «"inner declaration"») to be true
+annexB/language/function-code/switch-dflt-func-existing-var-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/function-code/switch-dflt-func-init.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-dflt-func-no-skip-try.js :: it threw ReferenceError: f is not defined
+annexB/language/function-code/switch-dflt-func-update.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/block-decl-global-block-scoping.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/block-decl-global-existing-block-fn-no-init.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/block-decl-global-existing-block-fn-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/block-decl-global-existing-fn-update.js :: it threw an object with no name: Expected SameValue(«"outer declaration"», «"inner declaration"») to be true
 annexB/language/global-code/block-decl-global-existing-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/block-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/block-decl-global-existing-var-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/block-decl-global-init.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/block-decl-global-no-skip-try.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/block-decl-global-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 annexB/language/global-code/if-decl-else-decl-a-global-block-scoping.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-block-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-block-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
@@ -1031,10 +1083,27 @@ annexB/language/global-code/if-stmt-else-decl-global-skip-early-err-switch.js ::
 annexB/language/global-code/if-stmt-else-decl-global-skip-early-err-try.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-skip-early-err.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-update.js :: it did not parse: a declaration may not stand where only a statement may
+annexB/language/global-code/script-decl-lex-collision.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
+annexB/language/global-code/switch-case-global-block-scoping.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-case-global-existing-block-fn-no-init.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-case-global-existing-block-fn-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/switch-case-global-existing-fn-update.js :: it threw an object with no name: Expected SameValue(«"outer declaration"», «"inner declaration"») to be true
 annexB/language/global-code/switch-case-global-existing-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/switch-case-global-existing-var-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/switch-case-global-init.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-case-global-no-skip-try.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-case-global-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/switch-dflt-global-block-scoping.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-dflt-global-existing-block-fn-no-init.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-dflt-global-existing-block-fn-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/switch-dflt-global-existing-fn-update.js :: it threw an object with no name: Expected SameValue(«"outer declaration"», «"inner declaration"») to be true
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/switch-dflt-global-existing-var-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+annexB/language/global-code/switch-dflt-global-init.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-dflt-global-no-skip-try.js :: it threw ReferenceError: f is not defined
+annexB/language/global-code/switch-dflt-global-update.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 annexB/language/literals/regexp/class-escape.js :: it did not parse: a control escape needs a letter
 annexB/language/literals/regexp/class-escape.js (strict) :: it did not parse: a control escape needs a letter
 annexB/language/literals/regexp/extended-pattern-char.js :: it did not parse: a regular expression has an unmatched ]
@@ -1392,6 +1461,8 @@ built-ins/Array/prototype/every/resizable-buffer-grow-mid-iteration.js :: it thr
 built-ins/Array/prototype/every/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/every/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/every/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/every/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/coerced-indexes.js (strict) :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1412,28 +1483,40 @@ built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js :: it th
 built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/filter/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/filter/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/find/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/find/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/find/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/find/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/findIndex/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/findIndex/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/findLast/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/findLast/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/findLastIndex/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/findLastIndex/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js (strict) :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
@@ -1448,6 +1531,8 @@ built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js :: it t
 built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/forEach/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/forEach/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/includes/coerced-searchelement-fromindex-resize.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/includes/coerced-searchelement-fromindex-resize.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
@@ -1506,12 +1591,16 @@ built-ins/Array/prototype/reduce/resizable-buffer-grow-mid-iteration.js :: it th
 built-ins/Array/prototype/reduce/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduce/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduce/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/reduce/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/reduce/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/reduceRight/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/reduceRight/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [
@@ -1598,6 +1687,8 @@ built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (
   "Has:4",
   "Get:4",
 ]
+built-ins/Array/prototype/reverse/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/reverse/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/slice/coerced-start-end-grow.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/slice/coerced-start-end-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/slice/coerced-start-end-shrink.js :: it threw TypeError: what was called is not a function
@@ -1620,10 +1711,16 @@ built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js :: it thre
 built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/some/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/some/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-grow.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/sort/comparefn-resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/sort/comparefn-resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-shrink.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/sort/resizable-buffer-default-comparator.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/sort/resizable-buffer-default-comparator.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -1631,6 +1728,8 @@ built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js (stri
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it did not finish within 10 seconds
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
+built-ins/Array/prototype/toLocaleString/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Array/prototype/toLocaleString/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-grow.js :: it threw ReferenceError: BigInt is not defined
 built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-grow.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-shrink.js :: it threw ReferenceError: BigInt is not defined
@@ -1759,6 +1858,8 @@ built-ins/ArrayBuffer/prototype/resize/this-is-not-resizable-arraybuffer-object.
 built-ins/ArrayBuffer/prototype/resize/this-is-not-resizable-arraybuffer-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/ArrayBuffer/prototype/sliceToImmutable/argument-coercion.js :: it threw TypeError: what was called is not a function
+built-ins/ArrayBuffer/prototype/sliceToImmutable/argument-coercion.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/modify-source-after-return.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/modify-source-after-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -3379,6 +3480,8 @@ built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw TypeE
 built-ins/Function/prototype/apply/S15.3.4.3_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Function/prototype/apply/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Function/prototype/apply/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/this-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/arguments/prop-desc.js :: it threw an object with no name: arguments should be an own property
@@ -10466,6 +10569,8 @@ built-ins/TypedArray/prototype/every/resizable-buffer-grow-mid-iteration.js :: i
 built-ins/TypedArray/prototype/every/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/every/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/every/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/every/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/every/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/every/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/every/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/every/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
@@ -10534,6 +10639,8 @@ built-ins/TypedArray/prototype/filter/resizable-buffer-grow-mid-iteration.js :: 
 built-ins/TypedArray/prototype/filter/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/filter/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/filter/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/filter/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/filter/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/filter/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutable-buffer.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
@@ -10576,6 +10683,8 @@ built-ins/TypedArray/prototype/find/resizable-buffer-grow-mid-iteration.js :: it
 built-ins/TypedArray/prototype/find/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/find/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/find/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/find/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/find/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/find/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/find/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/findIndex/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10600,6 +10709,8 @@ built-ins/TypedArray/prototype/findIndex/resizable-buffer-grow-mid-iteration.js 
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/findIndex/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/findIndex/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findIndex/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/findIndex/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/findLast/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10626,6 +10737,8 @@ built-ins/TypedArray/prototype/findLast/resizable-buffer-grow-mid-iteration.js :
 built-ins/TypedArray/prototype/findLast/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findLast/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/findLast/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/findLast/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findLast/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/findLast/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/findLastIndex/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10650,6 +10763,8 @@ built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-grow-mid-iteration
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/findLastIndex/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/findLastIndex/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/findLastIndex/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/findLastIndex/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/forEach/BigInt/arraylength-internal.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10676,6 +10791,8 @@ built-ins/TypedArray/prototype/forEach/resizable-buffer-grow-mid-iteration.js ::
 built-ins/TypedArray/prototype/forEach/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/forEach/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/forEach/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/forEach/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/forEach/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/forEach/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
@@ -10858,6 +10975,8 @@ built-ins/TypedArray/prototype/reduce/resizable-buffer-grow-mid-iteration.js :: 
 built-ins/TypedArray/prototype/reduce/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reduce/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reduce/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/reduce/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/reduce/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reduce/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/reduce/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/reduce/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
@@ -10884,6 +11003,8 @@ built-ins/TypedArray/prototype/reduceRight/resizable-buffer-grow-mid-iteration.j
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/reduceRight/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/reduceRight/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reduceRight/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/reduceRight/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/reduceRight/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
@@ -10898,6 +11019,8 @@ built-ins/TypedArray/prototype/reverse/BigInt/returns-original-object.js :: it t
 built-ins/TypedArray/prototype/reverse/BigInt/returns-original-object.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reverse/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/reverse/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
+built-ins/TypedArray/prototype/reverse/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/reverse/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reverse/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/reverse/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/set/BigInt/array-arg-return-abrupt-from-tointeger-offset.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -11066,6 +11189,8 @@ built-ins/TypedArray/prototype/some/resizable-buffer-grow-mid-iteration.js :: it
 built-ins/TypedArray/prototype/some/resizable-buffer-grow-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/some/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/some/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/some/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/some/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/some/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
@@ -11076,10 +11201,14 @@ built-ins/TypedArray/prototype/sort/BigInt/return-abrupt-from-this-out-of-bounds
 built-ins/TypedArray/prototype/sort/BigInt/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/sort/comparefn-grow.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/comparefn-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/sort/comparefn-resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/sort/comparefn-resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/sort/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
+built-ins/TypedArray/prototype/sort/resizable-buffer-default-comparator.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/sort/resizable-buffer-default-comparator.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/sort/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/sort/sort-tonumber.js :: it threw TypeError: this ArrayBuffer has been detached (Testing with Float64Array and makePassthrough.)
@@ -11130,6 +11259,8 @@ built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-this-out
 built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArray/prototype/toLocaleString/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-grow.js :: it threw ReferenceError: BigInt is not defined

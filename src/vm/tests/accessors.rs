@@ -127,29 +127,34 @@ fn a_shorthand_is_the_name_twice_and_a_method_is_a_function_expression() {
 }
 
 #[test]
-fn a_function_declaration_inside_a_block_is_refused_rather_than_ignored() {
-    // `hoist_functions` runs over a body's *top level*, and the declaration statement itself does
-    // nothing because hoisting is supposed to have made it. Together those two facts make a
-    // declaration inside a block vanish — `{ function g() {} } typeof g` answering `"undefined"`
-    // in silence, which is a wrong answer rather than a missing feature.
-    //
-    // §14.1 block-scopes such a declaration and Annex B.3.3 hoists it in sloppy code. Both need
-    // block scoping, so until that exists it is refused with a span.
-    let mut heap = Heap::new();
-    for source in [
-        "{ function g() {} }",
-        "if (true) { function g() {} }",
-        "function f() { try { function g() {} } catch (e) {} }",
-        "while (false) { function g() {} }",
-    ] {
-        let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
-        let error = compile_script(&script, &mut heap).expect_err("refused"); // same
-        assert_eq!(
-            error.kind,
-            crate::compile::ErrorKind::Unsupported("a function declaration inside a block"),
-            "compiling {source:?}"
-        );
-    }
+fn a_function_declaration_in_a_block_belongs_to_that_block() {
+    // §14.1 `BlockDeclarationInstantiation` step 3.a.ii — created *and initialised* before the
+    // block's first statement, which is the one declaration that is hoisted and lexical at once.
+    // So it is callable above its own line, and only inside.
+    assert_eq!(run("{ function g() { return 1 } } 'no error'"), "no error");
+    assert_eq!(run("{ function g() { return 1 } g() }"), "1");
+    assert_eq!(run("{ g(); function g() { return 'hoisted' } }"), "hoisted");
+    assert_eq!(
+        run("function f() { { function g() { return 2 } return g() } } f()"),
+        "2"
+    );
+    // It belongs to the block, so a second entry makes a second function — the same claim block
+    // scoping makes about `let`, and the reason this could not land before that did.
+    assert_eq!(
+        run(
+            "var r = []; for (var i = 0; i < 2; i++) { function g() { return i } r.push(g) }              r[0] === r[1]"
+        ),
+        "false"
+    );
+    // And **not** Annex B.3.3's extra `var` in the enclosing function — DR-0008 leaves Annex B
+    // out, so the name does not escape. Sloppy code in the wild relies on the opposite, which is
+    // exactly why this is asserted rather than left to be discovered.
+    assert_eq!(
+        run(
+            "var e = 'none'; { function g() {} } try { g; } catch (x) { e = x.constructor.name } e"
+        ),
+        "ReferenceError"
+    );
     // …and one at a body's top level is hoisted as it always was, in a script and in a function.
     assert_eq!(run("function f() { return 1 } f()"), "1");
     assert_eq!(
