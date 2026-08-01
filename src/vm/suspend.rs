@@ -152,12 +152,19 @@ impl Vm {
         // Where this frame sat, now that it is gone — the depth every handler in it was installed
         // at or above, and so what makes their `frames` marks relative rather than absolute.
         let floor = self.frames.len();
-        // Clamped because a body is not obliged to leave its own floor alone: `pop` answers for
-        // the stack as a whole, so a chunk that takes more than it pushed reaches under the mark.
-        // The compiler emits no such body; splitting at an index past the end would panic, and
-        // DR-0002 does not allow a chunk to decide that.
-        let operands = frame.stack_base.min(self.stack.len());
-        let installed = frame.handlers_base.min(self.handlers.len());
+        // Split at the marks directly, with nothing guarding them, and that is a claim worth
+        // stating: **a frame's two floors are never above its top.** Both places that give a frame
+        // a suspendable truncate to the floor before the body starts — `revive` to `base` and
+        // `enter` to the receiver's slot — so the body begins with nothing of its own, and a
+        // compiled body pops only what it pushed and installs handlers in pairs.
+        //
+        // There was a `.min()` here until `Yield` began reading the generator off the *frame*.
+        // Before that a hand-built chunk could park with an under-popped stack, and one did, in a
+        // test; now `frame.generator` is set only by `revive` and by an `async` entry, so no chunk
+        // an embedder can write reaches this at all. What was left was two branches nothing could
+        // execute — which is the thing mutation coverage exists to find, and it found them.
+        let operands = frame.stack_base;
+        let installed = frame.handlers_base;
         let parked = Suspended {
             code: current.take(),
             at: *at,
