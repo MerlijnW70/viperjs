@@ -14360,69 +14360,7 @@ language/statements/expression/S12.4_A2_T1.js :: it threw ReferenceError: eval i
 language/statements/expression/S12.4_A2_T1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js (strict) :: it threw ReferenceError: eval is not defined
-language/statements/for-await-of/async-func-decl-dstr-array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
-language/statements/for-await-of/async-func-decl-dstr-array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-func-decl-dstr-obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
 language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
 language/statements/for-in/S12.6.4_A3.1.js :: it threw ReferenceError: eval is not defined
@@ -14485,7 +14423,6 @@ language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js :: it threw a
 language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -14531,38 +14468,8 @@ language/statements/for-of/dstr/array-rest-iter-thrw-close.js :: it threw an obj
 language/statements/for-of/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-lref-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/obj-id-init-assignment-missing.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-missing.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-null.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-null.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-truthy.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-truthy.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-undef.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-assignment-undef.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-evaluation.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-evaluation.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-arrow.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-arrow.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-class.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-class.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-cover.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-cover.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-fn.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-fn.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-gen.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-fn-name-gen.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-in.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-in.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-let.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-let.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-order.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-order.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-simple-no-strict.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
-language/statements/for-of/dstr/obj-id-init-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/obj-prop-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier

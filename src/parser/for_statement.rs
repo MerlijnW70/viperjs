@@ -158,10 +158,25 @@ impl Parser<'_> {
         // only, so nothing is refused until the operator turns out to be `of`.
         let begins_with_let = self.at_contextual("let");
         self.enter()?;
+        // Nothing in this head is decided until the token after it is: `{ a = 1 }` is an illegal
+        // object literal and a legal `AssignmentPattern`, and only the `of` says which. So the
+        // question is deferred exactly as a literal defers it — see [`Parser::open_covers`] — and
+        // answered below, either by the refinement or by the `;` that says there was no `of`.
+        //
+        // Without this the head reports the literal's rule before the `of` has been read, and
+        // `for ({ a = 1 } of x)` is refused for breaking a rule it was never under. That is 93
+        // test262 files.
+        self.open_covers += 1;
         let expr = self.parse_expression(AllowIn::No);
+        self.open_covers -= 1;
         self.leave();
         let expr = expr?;
         let Some(operator) = self.for_in_of_operator() else {
+            // No `of` and no `in`, so the head was an ordinary `Expression` after all and owes
+            // every rule one owes — `for ({ a = 1 };;)` is the Syntax Error §13.2.5.1 describes.
+            // The deferral above is paid for here, and this is the only place it can be: one token
+            // later the tokens that would name it are gone.
+            self.report_unrefined_cover_grammar()?;
             // §12.10: `eat`, never `consume_semicolon`. A semicolon that would become one of the
             // header's two is the one kind automatic insertion may not supply.
             self.eat(TokenKind::Semicolon, Goal::RegExp, "`;`")?;
@@ -490,5 +505,28 @@ mod tests {
             script_error(&"for (;;) ".repeat(1000)).kind,
             ParseErrorKind::TooDeeplyNested
         );
+    }
+
+    #[test]
+    fn a_head_is_not_decided_until_the_token_after_it() {
+        // §13.15.5 — `{ a = 1 }` is an illegal `ObjectLiteral` and a legal `AssignmentPattern`, and
+        // only what follows the head says which. The literal parser accepts one and records the
+        // complaint for whoever turns out to own the tree; here that is the `of`.
+        let refused = |source: &str| parse_script(source).map(|_| ()).unwrap_err().kind;
+        assert!(parse_script("for ({ a = 1 } of x) ;").is_ok());
+        assert!(parse_script("for ({ a = 1 } in x) ;").is_ok());
+        assert!(parse_script("for ([ a = 1 ] of x) ;").is_ok());
+        // …and the three-part form owns nothing, so the rule stands. This is the half a deferral
+        // gets wrong by leaking: that head really was an `Expression` and really does owe it.
+        assert_eq!(
+            refused("for ({ a = 1 };;) ;"),
+            ParseErrorKind::ShorthandPropertyWithInitializer
+        );
+        // Nothing about an ordinary literal changes.
+        assert_eq!(
+            refused("({ a = 1 });"),
+            ParseErrorKind::ShorthandPropertyWithInitializer
+        );
+        assert!(parse_script("for (var i = 0; i < 2; i++) ;").is_ok());
     }
 }
