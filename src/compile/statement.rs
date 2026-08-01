@@ -12,11 +12,11 @@
 //! and `src/parser/` has always split them exactly this way. All three are one `impl Compiler`,
 //! so what a statement compiles to is unchanged by where its helpers live.
 
+use super::Environment;
 use super::binding::Bind;
 use super::{
     Closing, CompileError, Compiler, Crossing, Instruction, Unpatched, Unwind, unsupported,
 };
-use super::{Environment, LoopScope};
 use crate::ast::{
     BinaryOperator, Declaration, DeclarationKind, ForInOfKind, ForInOfStatement, ForInOfTarget,
     ForInit, ForStatement, LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
@@ -99,15 +99,10 @@ impl Compiler<'_> {
                 let top = self.here()?;
                 self.expression(&statement.test)?;
                 let out = self.chunk.emit_jump(Instruction::JumpIfFalse);
-                self.loop_marks.push(LoopScope {
-                    mark: self.locals.len(),
-                    depth: self.outer.len(),
-                });
                 let compiled = self.loop_body(&statement.body, None, |compiler| {
                     compiler.chunk.emit(Instruction::Jump(top));
                     Ok(top)
                 });
-                self.loop_marks.pop();
                 compiled?;
                 self.chunk.patch(out)
             }
@@ -115,17 +110,12 @@ impl Compiler<'_> {
             // is the opposite sense, and `continue` goes to the test rather than to the top.
             StmtKind::DoWhile(statement) => {
                 let top = self.here()?;
-                self.loop_marks.push(LoopScope {
-                    mark: self.locals.len(),
-                    depth: self.outer.len(),
-                });
                 let compiled = self.loop_body(&statement.body, None, |compiler| {
                     let test = compiler.here()?;
                     compiler.expression(&statement.test)?;
                     compiler.chunk.emit(Instruction::JumpIfTrue(top));
                     Ok(test)
                 });
-                self.loop_marks.pop();
                 compiled?;
                 Ok(())
             }
@@ -345,20 +335,13 @@ impl Compiler<'_> {
         );
         let mut opened = lexical.then(|| self.enter_environment());
         let mark = self.enter_scope();
-        // §14.7.4.2 — the initialiser runs once, before anything else, and it is compiled *here*
-        // rather than inside `for_parts` so that the loop's mark can be taken after it. What that
-        // mark means is "bindings a later pass shares with this one", and the head's are not: the
-        // copy below re-creates them. Taking the mark first would have the loop claiming its own
-        // `let i` as shared, which is the thing that used to be refused.
-        let compiled = self.for_init(statement, span).and_then(|()| {
-            self.loop_marks.push(LoopScope {
-                mark: self.locals.len(),
-                depth: self.outer.len(),
-            });
-            let compiled = self.for_parts(statement, opened.as_mut());
-            self.loop_marks.pop();
-            compiled
-        });
+        // §14.7.4.2 — the initialiser runs once, before anything else, and outside the loop it
+        // starts. It is compiled here rather than inside `for_parts` because the environment it
+        // fills has to exist first and the copies below have to come after it: `for (let i = f();
+        // …)` calls `f` once, whatever the loop then does with `i`.
+        let compiled = self
+            .for_init(statement, span)
+            .and_then(|()| self.for_parts(statement, opened.as_mut()));
         self.leave_scope(mark);
         if let Some(opened) = opened {
             self.leave_environment(opened)?;
@@ -385,12 +368,7 @@ impl Compiler<'_> {
         // §14.7.5.5 — a `let` or `const` in the head belongs to the loop, so the scope opens
         // before the binding is made and closes after the body.
         let mark = self.enter_scope();
-        self.loop_marks.push(LoopScope {
-            mark,
-            depth: self.outer.len(),
-        });
         let compiled = self.for_in_parts(statement, span);
-        self.loop_marks.pop();
         self.leave_scope(mark);
         compiled
     }
@@ -422,8 +400,6 @@ impl Compiler<'_> {
         // The head's binding, if it declares one. Made once and given its value on each pass —
         // §14.7.5.5 makes it a *fresh* binding per iteration, which is only observable through a
         // closure, and `Compiler::loop_marks` refuses that rather than getting it wrong.
-        let binding = self.for_in_binding(&statement.left, span)?;
-
         let top = self.here()?;
         self.chunk.emit(Instruction::LoadVariable(0, object));
         self.chunk.emit(Instruction::EnumerateNext(keys, index));
@@ -437,11 +413,27 @@ impl Compiler<'_> {
             .emit(Instruction::Binary(BinaryOperator::StrictEqual));
         let out = self.chunk.emit_jump(Instruction::JumpIfTrue);
 
-        self.assign_enumerated(&statement.left, binding, current, span)?;
-        self.loop_body(&statement.body, None, |compiler| {
+        // §14.7.5.7 step 3.g again, and simpler here: a `for`-`in` closes nothing, so there is no
+        // iterator entry for the environment to have to sit inside.
+        let lexical = matches!(
+            &statement.left,
+            ForInOfTarget::Declaration(declaration) if declaration.kind.is_lexical()
+        );
+        let opened = lexical.then(|| self.enter_iteration_environment());
+        let binding = self.for_in_binding(&statement.left, span)?;
+        let deep = u32::from(lexical);
+        self.assign_enumerated(&statement.left, binding, current, deep, span)?;
+        let body = self.loop_body(&statement.body, None, |compiler| {
+            if lexical {
+                compiler.chunk.emit(Instruction::PopScope);
+            }
             compiler.chunk.emit(Instruction::Jump(top));
             Ok(top)
-        })?;
+        });
+        if let Some(opened) = opened {
+            self.leave_environment_already_popped(opened)?;
+        }
+        body?;
         self.chunk.patch(out)
     }
 
@@ -462,12 +454,7 @@ impl Compiler<'_> {
             return self.for_await_statement(statement, span);
         }
         let mark = self.enter_scope();
-        self.loop_marks.push(LoopScope {
-            mark,
-            depth: self.outer.len(),
-        });
         let compiled = self.for_of_parts(statement, span);
-        self.loop_marks.pop();
         self.leave_scope(mark);
         compiled
     }
@@ -505,11 +492,13 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::StoreVariable(0, next));
         self.chunk.emit(Instruction::Pop);
 
-        let binding = self.for_in_binding(&statement.left, span)?;
-
         // §7.4.9 again, for the way out nothing can jump to: a throw from the body, or from
         // `next` itself. The handler closes the iterator and throws the same thing onward — and
         // does not look at what `return` answered, because step 5 has already decided.
+        //
+        // Emitted *above* the per-iteration environment below, which is what makes the throw path
+        // simple: unwinding restores the environment a handler was installed in, so the closing
+        // code here runs with the loop's own slots at depth zero however many passes had gone by.
         let unwind = self.chunk.emit_jump(Instruction::PushHandler);
 
         let top = self.here()?;
@@ -554,15 +543,45 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::StoreVariable(0, closable));
         self.chunk.emit(Instruction::Pop);
 
-        self.assign_enumerated(&statement.left, binding, current, span)?;
-        let body = self.loop_body(
-            &statement.body,
-            Some((iterator, Closing::Sync)),
-            |compiler| {
-                compiler.chunk.emit(Instruction::Jump(top));
-                Ok(top)
-            },
+        // §14.7.5.7 step 3.g — `NewDeclarativeEnvironment` **per pass**, holding the head's binding
+        // and nothing else. Made here rather than around the whole loop because the loop's own
+        // slots — the iterator, its `next`, the flag saying whether it may still be closed — have
+        // to outlive one pass and be reachable from the handler above at a fixed depth.
+        //
+        // A closure made in one pass therefore keeps that pass's binding, which is the difference
+        // between `for (const x of [1, 2, 3])` handing three closures three values and three ones.
+        let lexical = matches!(
+            &statement.left,
+            ForInOfTarget::Declaration(declaration) if declaration.kind.is_lexical()
         );
+        // §7.4.9's entry for this loop's iterator, pushed here rather than left to `loop_body`,
+        // because the environment below sits **inside** it and the two have to be in that order.
+        // `unwind_across` stops at the first entry a jump does not cross, and a `continue`
+        // deliberately does not close the iterator — so with the iterator on top, a `continue`
+        // would stop there and never reach the environment it is certainly leaving.
+        let closes = self.unwinds.len();
+        self.unwinds.push(Unwind {
+            outer: self.breaks.len(),
+            what: Crossing::Iterator(iterator, Closing::Sync),
+        });
+        let opened = lexical.then(|| self.enter_iteration_environment());
+        let binding = self.for_in_binding(&statement.left, span)?;
+        let deep = u32::from(lexical);
+        self.assign_enumerated(&statement.left, binding, current, deep, span)?;
+        let body = self.loop_body(&statement.body, None, |compiler| {
+            // Falling off the end of the pass leaves its environment, exactly as `break` and
+            // `continue` do — those emit their own on the way past, which is what recording it as
+            // an iteration environment arranges.
+            if lexical {
+                compiler.chunk.emit(Instruction::PopScope);
+            }
+            compiler.chunk.emit(Instruction::Jump(top));
+            Ok(top)
+        });
+        if let Some(opened) = opened {
+            self.leave_environment_already_popped(opened)?;
+        }
+        self.unwinds.truncate(closes);
         body?;
         // Every `break` arrives here having already taken the handler down and closed for itself,
         // so this is the *done* path's business alone.

@@ -190,70 +190,52 @@ fn a_function_sees_the_lexical_bindings_it_was_written_inside() {
 }
 
 #[test]
-fn a_closure_over_a_for_of_binding_is_refused_rather_than_got_wrong() {
-    // §14.7.5.7 — a `for`-`of` head's binding is made afresh on every pass, and praxis does not
-    // build that environment yet: the hidden slots the walk needs (the iterator, its `next`, the
-    // flag saying whether it may still be closed) live in the same scope, and copying *those*
-    // forward every iteration is a rearrangement this slice did not do.
-    //
-    // So it stays refused, where the `for (let i = …; …; …)` head next to it no longer is. The
-    // alternative is every closure in the loop sharing one binding and all of them answering the
-    // last value — a wrong answer that runs.
-    for source in [
-        "for (let x of [1]) { (function () { return x; }); }",
-        "for (const x of [1]) { (() => x); }",
-        "for (let k in { a: 1 }) { (() => k); }",
-    ] {
-        let error = crate::compile::compile_script(
-            &parse_script(source).expect("the source parses"), // the test is about the refusal
-            &mut Heap::new(),
-        )
-        .expect_err("refused"); // same
-        assert_eq!(
-            error.kind,
-            crate::compile::ErrorKind::Unsupported(
-                "a function that closes over a `let` or `const` declared in a loop"
-            ),
-            "compiling {source:?}"
-        );
-    }
-    // What is *not* refused: a `var` in a loop, which is one binding by design and whose closures
-    // are supposed to share it…
-    assert_eq!(
-        run("var fs = []; for (var i = 0; i < 3; i = i + 1) { fs.push(() => i); } fs[0]()"),
-        "3"
-    );
-    // …a function in a loop that closes over nothing the loop declares…
-    assert_eq!(
-        run("var f; for (var i = 0; i < 1; i = i + 1) { f = () => 'fixed'; } f()"),
-        "fixed"
-    );
-    // …and a function written after the loop has ended, which no longer has the binding in scope.
-    assert_eq!(
-        run("for (let i = 0; i < 1; i = i + 1) { } var f = () => 1; f()"),
-        "1"
-    );
-    // Both halves of "live *and* lexical", because either alone would refuse a program that is
-    // perfectly well defined.
-    //
-    // A binding declared in the loop that is no longer in scope: the inner block has ended, so
-    // nothing the function could write down still refers to it, and re-creating it on the next
-    // pass changes nothing anybody can see.
-    //
-    // A `for (let …)` head is live for the whole body, so the loop below is a `while`: the only
-    // lexical binding it declares has already gone out of scope where the function is written.
-    assert_eq!(
-        run("var f; var n = 0; while (n < 1) { { let gone = 1; } f = () => 'made'; n = 1; } f()"),
-        "made"
-    );
-    // A binding declared in the loop that is *not* lexical: a catch parameter is block-scoped but
-    // it is not re-created by the loop in a way a closure can tell apart, and §14.7.4.7 is about
-    // `let` and `const`.
+fn a_for_of_head_gives_every_pass_its_own_binding() {
+    // §14.7.5.7 step 3.g — `NewDeclarativeEnvironment` per pass, so three closures made walking
+    // three values answer with three values rather than three copies of the last.
     assert_eq!(
         run(
-            "var f; for (var i = 0; i < 1; i = i + 1) { try { throw 7; } catch (e) { f = () => e; } } f()"
+            "var f = []; for (const x of [1, 2, 3]) { f.push(function () { return x; }); }              f.map(function (g) { return g(); }).join(',')"
         ),
-        "7"
+        "1,2,3"
+    );
+    // A `continue` is the exit that decides where the environment sits in the unwind order. It
+    // leaves the pass — so its `PopScope` must be emitted — and it must **not** close the
+    // iterator. The two are recorded next to each other and `unwind_across` stops at the first
+    // thing a jump does not cross, so with them the wrong way round a `continue` stops at the
+    // iterator and never leaves the environment at all, deepening the chain once per pass.
+    assert_eq!(
+        run(
+            "var f = []; for (const x of [1, 2, 3]) { if (x === 2) { continue; } f.push(function () { return x; }); }              f.map(function (g) { return g(); }).join(',')"
+        ),
+        "1,3"
+    );
+    assert_eq!(
+        run(
+            "var f = []; for (const x of [1, 2, 3]) { if (x === 3) { break; } f.push(function () { return x; }); }              f.map(function (g) { return g(); }).join(',')"
+        ),
+        "1,2"
+    );
+    assert_eq!(
+        run(
+            "function g() { for (const x of [1, 2, 3]) { if (x === 2) { return 'r' + x; } } return 'no'; } g()"
+        ),
+        "r2"
+    );
+    // `for`-`in` is the same clause and closes nothing, which makes it the simpler half.
+    assert_eq!(
+        run(
+            "var f = []; for (const k in { a: 1, b: 2 }) { f.push(function () { return k; }); }              f.map(function (g) { return g(); }).join(',')"
+        ),
+        "a,b"
+    );
+    // …and a `var` head is **not** the loop's — §14.7.5.5 gives it no per-iteration binding, so
+    // its closures still share one. The pair is the claim.
+    assert_eq!(
+        run(
+            "var f = []; for (var v of [1, 2, 3]) { f.push(function () { return v; }); }              f.map(function (g) { return g(); }).join(',')"
+        ),
+        "3,3,3"
     );
 }
 

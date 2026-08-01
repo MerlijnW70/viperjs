@@ -49,12 +49,6 @@ impl Compiler<'_> {
             Some(written) => Naming::of(&written.name),
             None => naming,
         };
-        if self.would_capture_a_per_iteration_binding() {
-            return Err(unsupported(
-                "a function that closes over a `let` or `const` declared in a loop",
-                span,
-            ));
-        }
         let body = self.compile_nested_method(
             &function.parameters,
             Body::Statements(&function.body),
@@ -81,12 +75,6 @@ impl Compiler<'_> {
         naming: Naming<'_>,
         span: Span,
     ) -> Result<(), CompileError> {
-        if self.would_capture_a_per_iteration_binding() {
-            return Err(unsupported(
-                "a function that closes over a `let` or `const` declared in a loop",
-                span,
-            ));
-        }
         // §15.3.3's `ConciseBody` has two shapes and one meaning: `a => b` returns `b`, and
         // `a => { … }` is an ordinary body. The first is compiled as the second with the `return`
         // written in, which is what the grammar says rather than a shortcut.

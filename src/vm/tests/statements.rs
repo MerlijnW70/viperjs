@@ -136,14 +136,8 @@ fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
 #[test]
 fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
     let cases = [
-        (
-            "for (let x of [1]) { (function () { return x; }); }",
-            "a function that closes over a `let` or `const` declared in a loop",
-        ),
-        (
-            "for (const x of [1]) { (() => x); }",
-            "a function that closes over a `let` or `const` declared in a loop",
-        ),
+        ("with (o) { x; }", "with"),
+        ("async function* g() { yield 1n; }", "a BigInt literal"),
     ];
     for (source, what) in cases {
         let mut heap = Heap::new();

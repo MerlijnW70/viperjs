@@ -23,7 +23,6 @@
 //! share is [`Compiler::for_in_binding`] and [`Compiler::assign_enumerated`], which decide what the
 //! head binds and are the same question in both loops.
 
-use super::LoopScope;
 use super::statement::Check;
 use super::{Closing, CompileError, Compiler, Instruction};
 use crate::ast::ForInOfStatement;
@@ -37,12 +36,7 @@ impl Compiler<'_> {
         span: Span,
     ) -> Result<(), CompileError> {
         let mark = self.enter_scope();
-        self.loop_marks.push(LoopScope {
-            mark,
-            depth: self.outer.len(),
-        });
         let compiled = self.for_await_parts(statement, span);
-        self.loop_marks.pop();
         self.leave_scope(mark);
         compiled
     }
@@ -115,7 +109,7 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::StoreVariable(0, closable));
         self.chunk.emit(Instruction::Pop);
 
-        self.assign_enumerated(&statement.left, binding, current, span)?;
+        self.assign_enumerated(&statement.left, binding, current, 0, span)?;
         self.loop_body(
             &statement.body,
             Some((iterator, Closing::Awaited)),

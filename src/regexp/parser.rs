@@ -570,7 +570,7 @@ impl Reader<'_> {
             },
             '1'..='9' => Err(Error::at("a legacy octal escape is not a character escape")),
             'p' | 'P' if self.flags.unicode_mode() => {
-                Err(Error::unsupported("Unicode property escapes"))
+                Err(Error::unsupported("a Unicode property escape"))
             }
             // §22.2.1's `IdentityEscape`. In Unicode mode only a `SyntaxCharacter` or `/` may be
             // escaped this way, so `\a` is an error there and an `a` outside — one of the few

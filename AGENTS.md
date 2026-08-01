@@ -129,7 +129,7 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **72.14% of test262** — 67,202 of 93,153 runs. Treat that number
+Conformance as of this commit is **72.64% of test262** — 67,664 of 93,153 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -137,7 +137,6 @@ it. Let the failure buckets choose the next slice, not intuition. The largest ri
 | --- | --- |
 | 6,263 | `BigInt` literals |
 | 1,318 | Unicode property escapes |
-| 1,118 | a closure over a `for`-`of` or `for`-`in` head's binding — see below |
 | 849 | dynamic `import` |
 | 830 | modules |
 | 306 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
@@ -158,19 +157,23 @@ once, most of them in `dstr` directories that have nothing to do with generators
 and every coercion. Nothing else on the list is within a factor of five, and the next largest things
 after it are Unicode property escapes (1,318) and per-iteration environments (1,234).
 
-**Block scoping is real now, and the last of it is `for`-`of`.** A block that declares something
-gets its own environment (`Instruction::PushScope`), a `for (let i = …; …; …)` head gets §14.7.4.7's
-copy per pass, and a closure made in a loop body keeps the binding that pass had. What is still
-refused is a closure over a `for`-`of` or `for`-`in` **head's** binding: §14.7.5.7 wants a fresh
-environment per iteration, and that loop's hidden slots — the iterator, its `next`, the flag saying
-whether it may still be closed — live in the same scope, so copying them forward is a rearrangement
-that slice did not do. 1,118 runs, and the largest remaining thing that is not `BigInt`.
+**Block scoping is done, and there is no refusal left in it.** A block that declares something
+gets its own environment (`Instruction::PushScope`); a `for (let i = …; …; …)` head gets §14.7.4.7's
+copy per pass; a `for`-`of` and a `for`-`in` head get §14.7.5.7's fresh environment per pass. A
+closure made in any of them keeps the binding that pass had.
 
-Two things about it are worth keeping. An exit's depth indexes the **break lists**, not the loop
-nesting: a label on a plain block pushes one of those without being a loop, so `L: { let x; break
-L; }` counted the other way never emits its `PopScope` and the code after reads a *different
-variable*. And a throw needs no `PopScope` at all — a handler records the environment it was
-installed in, which is what `Handler::environment` is for.
+Three things about it are worth keeping, none of them about closures:
+
+- **An exit's depth indexes the break lists, not the loop nesting.** A label on a plain block pushes
+  one of those without being a loop, so `L: { let x; break L; }` counted the other way never emits
+  its `PopScope` and the code after reads a *different variable*.
+- **A throw needs no `PopScope`** — a handler records the environment it was installed in, which is
+  what `Handler::environment` is for. That is the line between an exit that runs instructions on the
+  way out and one that jumps.
+- **`unwind_across` stops at the first entry a jump does not cross**, so the order of the entries is
+  load-bearing. A `for`-`of`'s per-iteration environment sits *inside* its iterator's entry: a
+  `continue` leaves the environment and deliberately does not close the iterator, and with the two
+  the wrong way round it stops at the iterator and leaks an environment per pass.
 
 **A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
 early errors are decided by the *compiler* — §12.9.5 reads a regular expression literal's shape and

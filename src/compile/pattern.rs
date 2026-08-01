@@ -158,11 +158,17 @@ impl Compiler<'_> {
     }
 
     /// Put the name this pass is visiting where the head says it goes.
+    /// `depth` is how far out the loop's own slots are from where this runs.
+    ///
+    /// One rather than zero when the head declares lexically: §14.7.5.7 puts the head's binding in
+    /// an environment made afresh for the pass, and the value being visited is held in a slot that
+    /// belongs to the *loop* — which is therefore one hop further out than it was.
     pub(super) fn assign_enumerated(
         &mut self,
         target: &ForInOfTarget,
         binding: Option<u32>,
         current: u32,
+        depth: u32,
         span: Span,
     ) -> Result<(), CompileError> {
         match (target, binding) {
@@ -183,13 +189,13 @@ impl Compiler<'_> {
                     Some(_) => Bind::Made,
                     None => Bind::Var,
                 };
-                self.chunk.emit(Instruction::LoadVariable(0, current));
+                self.chunk.emit(Instruction::LoadVariable(depth, current));
                 self.destructure(&declarator.binding, how, span)
             }
             // A head that declares: the binding is the loop's own, so this initialises it — which
             // for a `const` is the one write it ever gets.
             (ForInOfTarget::Declaration(_), Some(slot)) => {
-                self.chunk.emit(Instruction::LoadVariable(0, current));
+                self.chunk.emit(Instruction::LoadVariable(depth, current));
                 self.chunk.emit(Instruction::Initialise(slot));
                 self.chunk.emit(Instruction::Pop);
                 Ok(())
@@ -201,7 +207,7 @@ impl Compiler<'_> {
                 else {
                     return Err(unsupported("a destructuring binding", span));
                 };
-                self.chunk.emit(Instruction::LoadVariable(0, current));
+                self.chunk.emit(Instruction::LoadVariable(depth, current));
                 self.store_name(&name.name)?;
                 self.chunk.emit(Instruction::Pop);
                 Ok(())
@@ -215,17 +221,17 @@ impl Compiler<'_> {
                     let AssignmentTarget::Pattern(pattern) = &**target else {
                         return Err(unsupported("a destructuring assignment", span));
                     };
-                    self.chunk.emit(Instruction::LoadVariable(0, current));
+                    self.chunk.emit(Instruction::LoadVariable(depth, current));
                     return self.assign_pattern(pattern, span);
                 };
                 match &target.kind {
                     ExprKind::Member { .. } | ExprKind::ComputedMember { .. } => {
                         let reference = self.property_reference(target, Keep::Nothing)?;
-                        self.chunk.emit(Instruction::LoadVariable(0, current));
+                        self.chunk.emit(Instruction::LoadVariable(depth, current));
                         self.chunk.emit(reference.set());
                     }
                     ExprKind::Identifier(name) => {
-                        self.chunk.emit(Instruction::LoadVariable(0, current));
+                        self.chunk.emit(Instruction::LoadVariable(depth, current));
                         self.store_name(name)?;
                     }
                     _ => {
