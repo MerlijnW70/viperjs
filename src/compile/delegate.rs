@@ -116,6 +116,20 @@ impl Compiler<'_> {
         let caught = self.chunk.emit_jump(Instruction::PushHandler);
         self.chunk.emit(Instruction::YieldDelegated);
         self.chunk.emit(Instruction::PopHandler);
+        // §27.5.3.7 step 7.c — a `return` resumption reaches the delegation here, and it must not
+        // be mistaken for a value sent inward. What is emitted is the same exit a `return` written
+        // on this line would take, so the outer generator's `finally` blocks run and its open
+        // iterators are closed.
+        //
+        // Step 7.c's own forwarding — telling the *inner* iterator to return, and carrying on if it
+        // says it is not done — is not here, and is the remaining divergence. Without this check at
+        // all the resumption was read as an ordinary `next`, which sent the returned value inward
+        // and carried on yielding: worse than not forwarding, because it answers.
+        self.chunk.emit(Instruction::ResumeMode);
+        let carry_on = self.chunk.emit_jump(Instruction::JumpIfFalse);
+        self.unwind_across(super::statement::Exit::Return)?;
+        self.chunk.emit(Instruction::Return);
+        self.chunk.patch(carry_on)?;
         self.chunk.emit(Instruction::StoreVariable(0, sent));
         self.chunk.emit(Instruction::Pop);
         self.set_slot(sending, Value::Number(SENDING_NEXT))?;

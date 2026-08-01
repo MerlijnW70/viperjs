@@ -189,3 +189,38 @@ fn a_delegation_is_still_a_suspension_and_keeps_its_place() {
         "105"
     );
 }
+
+#[test]
+fn a_return_into_a_delegating_generator_leaves_the_outer_body_properly() {
+    // §27.5.3.7 step 7.c. The resumption reaches the delegation, not the inner iterator's `next`,
+    // so it must not be read as a value sent inward — without the check it was, and the delegation
+    // carried on yielding and answered `{ value: 'after', done: false }` to a `return`.
+    assert_eq!(
+        run(
+            "function* inner() { yield 1; yield 2; } function* outer() { yield* inner(); yield 'after'; } var it = outer(); it.next(); var r = it.return(9); r.value + ':' + r.done"
+        ),
+        "9:true"
+    );
+    // The outer generator's `finally` runs on the way out, as it does for a plain `yield`.
+    assert_eq!(
+        run(
+            "var seen = ''; function* inner() { yield 1; } function* outer() { try { yield* inner(); } finally { seen = 'ran'; } } var it = outer(); it.next(); it.return(3); seen"
+        ),
+        "ran"
+    );
+    // …and it stays finished.
+    assert_eq!(
+        run(
+            "function* inner() { yield 1; } function* outer() { yield* inner(); } var it = outer(); it.next(); it.return(0); var r = it.next(); r.value + ':' + r.done"
+        ),
+        "undefined:true"
+    );
+    // An ordinary resumption after all that is still ordinary — the mode a `return` set does not
+    // survive to be read at a `yield` that never asked.
+    assert_eq!(
+        run(
+            "function* inner() { yield 1; yield 2; } function* outer() { yield* inner(); yield 'after'; } var it = outer(); it.next(); var b = it.next(); var c = it.next(); b.value + '|' + c.value"
+        ),
+        "2|after"
+    );
+}

@@ -135,6 +135,10 @@ impl Vm {
         let outcome = match (parked, kind) {
             // §27.5.3.2 `GeneratorResume` — the only path that runs any code.
             (Some(parked), Resumption::Next) => {
+                // Cleared rather than assumed: a `return` that reached a suspension with no
+                // `ResumeMode` after it would leave this set, and the next ordinary resumption
+                // would read it at a `yield` that never asked.
+                self.resume_returns = false;
                 self.revive(parked, sent, receiver_at, current, at);
                 return Ok(());
             }
