@@ -98,7 +98,8 @@ pub use self::matches::Matches;
 pub(crate) use self::object::MAX_PROTOTYPE_CHAIN;
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement, Suspendable};
 pub use self::promise::{
-    Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Role, Settler,
+    Capability, Gather, Group, Promise, PromiseState, Reaction, ReactionKind, Request, Role,
+    Settler,
 };
 pub use self::proxy::Proxy;
 pub use self::regexp::RegExp;

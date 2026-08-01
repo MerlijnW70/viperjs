@@ -126,34 +126,33 @@ compiler and an interpreter that runs code, the whole ES5 library including our 
 the conformance harness that measures it — which from here is what says what to build next.
 **M6 is what is in progress.** Classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`,
 `Proxy`, `ArrayBuffer`, `DataView` and the TypedArrays were already in. **Generators, `yield`,
-`yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs`.
+`yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
+and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **63.06% of test262** — 58,742 of 93,153 runs. Treat that number
+Conformance as of this commit is **68.23% of test262** — 63,556 of 93,153 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
 | Runs | What stops them |
 | --- | --- |
-| 7,957 | `async function*` — §27.6, refused deliberately (see below) |
-| 6,261 | `BigInt` literals |
+| 6,263 | `BigInt` literals |
 | 1,318 | Unicode property escapes |
-| 1,060 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
+| 1,234 | a closure over a `let` or `const` declared in a loop — per-iteration environments |
+| 849 | dynamic `import` |
 | 830 | modules |
-| 787 | dynamic `import` |
 | 306 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
+| 280 | `with` |
+| 242 | a function declaration inside a block |
 
-**What 70% and 75% actually cost, measured against that table.** 70% is +6,465 passes and §27.6 is
-7,957 skipped runs — at the rates the buckets really showed (generators 80%, `async` 65%, `for
-await` 98%) that lands almost exactly on it. **So 70% is one slice, and it is async generators.**
-75% is +11,122, which is that *plus* `BigInt`. Nothing else is close, and no combination of the
-small buckets substitutes: everything below `BigInt` in the table adds to under 4,500 even if all
-of it passed. Plan for two large slices rather than a series of small ones.
+**§27.6 landed and took 63.06% to 68.23%** — 7,643 runs left "not run", 4,814 of them passing. The
+async generator bucket, which was the single largest thing stopping tests from running at all, is
+gone. What is left of it is ~2,900 runs that now *fail* rather than being skipped, and those are the
+next slice's work list rather than a defect: read them with the `grep` below.
 
-**`async function*` is refused on purpose, and the reason is worth keeping.** It *nearly* works if
-compiled as the ordinary generator, and a measurement with it doing so showed 7,846 test262 files
-failing with plausible errors instead of being skipped. A wrong answer says something false; a skip
-says nothing. If a slice is going to be partial, refuse the part it does not do. `for await` was
-refused beside it for the same reason and is now in.
+**70% is now +1,651 runs, and it no longer needs a whole milestone.** The async-generator failures
+above plus per-iteration environments (1,234) reach it between them. **75% is still `BigInt`** —
+6,263 runs, a new numeric type through the value representation, every operator and every coercion,
+and nothing else on the list is within a factor of five of it.
 
 **Two buckets are not ES2023 and must not be counted as cheap.** `Temporal` (3,476 runs) is a Stage
 3 proposal with a surface larger than `Date`, `Intl` and `RegExp` combined — building it would raise

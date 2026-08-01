@@ -68,10 +68,11 @@ impl Heap {
         &mut self,
         prototype: ObjectId,
         kind: crate::heap::Resumption,
+        asynchronous: bool,
     ) -> ObjectId {
         let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
-        object.call = Some(Callable::Resume(kind));
+        object.call = Some(Callable::Resume { kind, asynchronous });
         self.objects.push(Some(object));
         id
     }

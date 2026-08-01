@@ -125,6 +125,10 @@ pub struct Realm {
     /// unreachable except through `Object.getPrototypeOf(function* () {}).constructor`, so this is
     /// held by the realm rather than by a property on the global object.
     generator_function_prototype: ObjectId,
+    /// %AsyncGeneratorPrototype% — §27.6.1, what an async generator *object* inherits from.
+    async_generator_prototype: ObjectId,
+    /// %AsyncGeneratorFunction.prototype% — §27.4.3, what an async generator *function* does.
+    async_generator_function_prototype: ObjectId,
     /// %GeneratorPrototype% — §27.5.1, what every generator *object* inherits from.
     ///
     /// Its `[[Prototype]]` is %IteratorPrototype%, which is what makes a generator iterable: the
@@ -250,6 +254,13 @@ impl Realm {
         // §27.3.3 — and a generator *function* inherits from this, which is an ordinary object
         // whose `[[Prototype]]` is %Function.prototype%: a generator function is still a function.
         let generator_function_prototype = heap.new_object(Some(function_prototype));
+        // §27.6.1 — the async pair of the two above, and the link that differs is the interesting
+        // one: an async generator object inherits from %AsyncIteratorPrototype%, not from
+        // %IteratorPrototype%, which is what puts `Symbol.asyncIterator` rather than
+        // `Symbol.iterator` on it and so what makes it a `for await` target and not a `for`-`of`
+        // one.
+        let async_generator_prototype = heap.new_object(Some(async_iterator_prototype));
+        let async_generator_function_prototype = heap.new_object(Some(function_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
         // rather than in a builtin module because it is not reachable by name from any script:
         // its only appearances are as an accessor pair the specification puts in place.
@@ -329,6 +340,8 @@ impl Realm {
             async_from_sync_iterator_prototype,
             generator_prototype,
             generator_function_prototype,
+            async_generator_prototype,
+            async_generator_function_prototype,
             regexp_string_iterator_prototype,
             set_prototype,
             weak_map_prototype,
@@ -571,6 +584,16 @@ impl Realm {
         self.generator_prototype
     }
 
+    /// %AsyncGeneratorPrototype% — §27.6.1, what an async generator object inherits from.
+    pub fn async_generator_prototype(&self) -> ObjectId {
+        self.async_generator_prototype
+    }
+
+    /// %AsyncGeneratorFunction.prototype% — §27.4.3.
+    pub fn async_generator_function_prototype(&self) -> ObjectId {
+        self.async_generator_function_prototype
+    }
+
     /// %GeneratorFunction.prototype% — §27.3.3, what a generator function inherits from.
     pub fn generator_function_prototype(&self) -> ObjectId {
         self.generator_function_prototype
@@ -636,8 +659,16 @@ impl Realm {
     /// from %Object.prototype%, which is what puts `next` on every generator this function makes.
     /// And there is **no `constructor` back-pointer**: a generator function is not a constructor,
     /// so a property saying it was would be a lie a script can read.
-    pub fn make_generator_function(&self, heap: &mut Heap, function: ObjectId) {
-        let prototype = heap.new_object(Some(self.generator_prototype));
+    pub fn make_generator_function(&self, heap: &mut Heap, function: ObjectId, asynchronous: bool) {
+        // §27.6.2 does the same with %AsyncGeneratorPrototype%, and getting this wrong is not
+        // subtle: the object every instance inherits from is where `next` comes from, so an async
+        // generator built on the synchronous prototype answers its own `next` with §27.5.1's,
+        // which then refuses the receiver for not being a generator.
+        let inherits = match asynchronous {
+            true => self.async_generator_prototype,
+            false => self.generator_prototype,
+        };
+        let prototype = heap.new_object(Some(inherits));
         let key = PropertyKey::from_units(heap, &"prototype".encode_utf16().collect::<Vec<_>>());
         let descriptor = PropertyDescriptor {
             value: Some(Value::Object(prototype)),

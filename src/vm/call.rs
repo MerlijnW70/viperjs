@@ -125,7 +125,24 @@ impl Vm {
                     at,
                 );
             }
-            Callable::Resume(kind) => {
+            // §27.6.1's three methods and §27.5.1's read the same and are not the same: one
+            // answers a promise and the other an iterator result, and each refuses the other's
+            // receiver. Which prototype the method came off is carried on the function object,
+            // because by the time it is called there is nothing else left to ask.
+            Callable::Resume { kind, asynchronous } if asynchronous => {
+                return self.enter_async_resume(
+                    kind,
+                    how,
+                    callee_at,
+                    receiver_at,
+                    count,
+                    heap,
+                    chunk,
+                    current,
+                    at,
+                );
+            }
+            Callable::Resume { kind, .. } => {
                 return self.enter_resume(
                     kind,
                     how,
@@ -321,7 +338,10 @@ impl Vm {
         // runs *now*: unlike a generator this pushes a frame and lets the loop carry on. What the
         // call answers with is decided by whatever stops the body, and both `Await` and `Return`
         // leave the same promise.
-        let context = match body.is_async() {
+        // §27.6 has no context object of its own: the async generator *is* the thing a body parks
+        // into and the thing that holds the promises, so making an `Await` context here would give
+        // the body two places to be parked and one of them would win.
+        let context = match body.is_async() && !body.is_generator() {
             true => self.begin_async(heap),
             false => None,
         };
@@ -333,6 +353,21 @@ impl Vm {
                 Some(captured) => captured.this_value,
                 None => receiver,
             };
+            // §27.6.2 `AsyncGeneratorFunction` — the same shape, a different object.
+            if body.is_async() {
+                return self.enter_async_generator(
+                    body,
+                    object,
+                    this_value,
+                    new_target,
+                    environment,
+                    receiver_at,
+                    heap,
+                    chunk,
+                    current,
+                    at,
+                );
+            }
             return self.enter_generator(
                 body,
                 object,

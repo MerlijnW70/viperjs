@@ -35,6 +35,7 @@
 //! §6.2.4 lives in [`crate::compile`].
 
 mod async_fn;
+mod async_generator;
 mod call;
 mod coerce;
 mod execute;

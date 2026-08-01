@@ -27,14 +27,41 @@ use crate::vm::Vm;
 
 /// Build §27.1.3's prototype and §27.1.4.2's wrapper prototype.
 pub fn install(heap: &mut Heap, realm: &Realm) {
-    // §27.1.3's `[@@asyncIterator]() { return this }` is **not** installed yet, and the object is
-    // left bare on purpose. Nothing a script can name inherits from it until §27.6's async
-    // generators arrive — the wrapper below is internal and never handed out — so the method would
-    // be code no test could reach. It goes in with the slice that makes it reachable.
+    // §27.1.3.1 `[@@asyncIterator]() { return this }` — one step long, and it is the whole of what
+    // makes an async iterator *async iterable*. It was left out until now on the grounds that
+    // nothing a script could name inherited from this object; §27.6's async generators do, and
+    // without it `for await (const x of asyncGen())` finds no `[@@asyncIterator]`, falls back to
+    // §7.4.3's synchronous path, and reads a `Symbol.iterator` the specification says it must not
+    // even look for.
+    let shared = realm.async_iterator_prototype();
+    let itself = heap.new_native_function(realm.function_prototype(), same);
+    super::define_function_metadata(heap, itself, "[Symbol.asyncIterator]", 0);
+    if let Some(symbol) = realm.well_known(super::well_known_at("asyncIterator")) {
+        let name = PropertyKey::from_symbol(symbol);
+        let _ = heap.define_own_property(
+            shared,
+            name,
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Object(itself)),
+                writable: Some(true),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+    }
     let wrapper = realm.async_from_sync_iterator_prototype();
     define_method(heap, realm, wrapper, "next", 1, next);
     define_method(heap, realm, wrapper, "return", 1, close);
     define_method(heap, realm, wrapper, "throw", 1, hurl);
+}
+
+/// §27.1.3.1 `%AsyncIteratorPrototype%[@@asyncIterator]` — the receiver, whatever it is.
+///
+/// Checks nothing, because the clause has nothing to check: it is `return this` and a primitive
+/// receiver is as valid an answer as an object.
+fn same(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    Ok(call.this_value)
 }
 
 /// §27.1.4.1 `CreateAsyncFromSyncIterator` — put an adapter in front of a sync iterator.

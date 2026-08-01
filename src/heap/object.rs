@@ -57,6 +57,13 @@ pub enum Suspendable {
     Generator,
     /// §27.7's `async` function context, resumed by a job when a promise settles.
     Async,
+    /// §27.6's async generator, which is resumed by both — and is the only one a script can hold.
+    ///
+    /// A third brand rather than the two together, because it is not the conjunction: an `async`
+    /// function's context object is internal and settles one promise, and an async generator is
+    /// the object the script was handed and settles one promise *per request*. What they share is
+    /// only that a body can be parked, and every object here has that.
+    AsyncGenerator,
 }
 
 /// What an arrow reaches outward for, captured where it was written — §10.2.3 step 6.
@@ -539,6 +546,11 @@ impl Object {
     /// Whether it is a *generator* — §27.5.1's brand, which is what the three resumptions want.
     pub(crate) fn is_generator(&self) -> bool {
         self.suspendable == Some(Suspendable::Generator)
+    }
+
+    /// Whether this is §27.6's async generator — the `RequireInternalSlot` of its three methods.
+    pub(crate) fn is_async_generator(&self) -> bool {
+        self.suspendable == Some(Suspendable::AsyncGenerator)
     }
 
     /// The target and handler this object proxies, if it is a Proxy — §10.5.

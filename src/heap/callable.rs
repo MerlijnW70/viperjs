@@ -64,7 +64,17 @@ pub enum Callable {
     ///
     /// A variant beside [`Callable::Bound`] rather than a flag on a native, for the same reason
     /// that one is: what is actually entered is not this function.
-    Resume(Resumption),
+    Resume {
+        /// Which of the three this is.
+        kind: Resumption,
+        /// Whether it is §27.6.1's method rather than §27.5.1's — the async generator's.
+        ///
+        /// The two sets read identically and neither accepts the other's receiver, so the
+        /// difference has to travel on the function object: `Object.getOwnPropertyDescriptor`
+        /// finds nothing that tells them apart, and by the time one is called the prototype it
+        /// came off is no longer anywhere in the call.
+        asynchronous: bool,
+    },
     /// What a settled promise calls to put an `async` function's body back — §27.7.5.3.
     ///
     /// Two of these are made per `await`, one for each way the promise can settle, and each holds
@@ -125,7 +135,7 @@ impl Callable {
             // the same reason and are written with them rather than beside them — one of the pair
             // is reachable from a script and the other is not, so a separate arm for the second
             // would be a claim nothing could ever check.
-            Self::Resume(_) | Self::Revive { .. } => false,
+            Self::Resume { .. } | Self::Revive { .. } => false,
         }
     }
 }

@@ -75,6 +75,22 @@ pub struct Capability {
     pub reject: Value,
 }
 
+/// §27.6.3.1 — an AsyncGeneratorRequest Record: one `next`, `return` or `throw` awaiting service.
+///
+/// The completion the body will be resumed with, and the promise to settle with whatever that
+/// resumption produces. Both halves are needed at two different moments — the completion when the
+/// request reaches the front of the queue, the capability when the body next stops — and a request
+/// may wait arbitrarily long in between.
+#[derive(Debug, Clone, Copy)]
+pub struct Request {
+    /// Which of the three was called, which decides how the body is resumed.
+    pub kind: crate::heap::Resumption,
+    /// The argument it was called with — the value of the `yield`, or what is returned or thrown.
+    pub value: Value,
+    /// `[[Capability]]` — the promise this request's caller is holding.
+    pub capability: Capability,
+}
+
 /// §27.2.1.2 — a PromiseReaction Record: one `then` waiting for one answer.
 #[derive(Debug, Clone, Copy)]
 pub struct Reaction {
@@ -210,6 +226,18 @@ pub enum Role {
     /// place it can be: what settles it is a `return` or a throw from a body that may be parked
     /// for any length of time, and by then nothing else still names the promise.
     Await(Capability),
+    /// §27.6.3's `[[AsyncGeneratorQueue]]` — the requests waiting on one async generator.
+    ///
+    /// The reason an async generator needs a queue where a synchronous one needs nothing: `next`
+    /// answers a **promise** and returns immediately, so a caller may ask again long before the
+    /// first answer exists, and §27.6.3.2 says every ask is served, in order. A synchronous `next`
+    /// cannot be asked twice at once — it either runs the body to the next `yield` or throws — so
+    /// there is nothing to remember.
+    ///
+    /// Held on the generator object itself, which is where §27.6.1's slot is. That is also what
+    /// makes the queue *reachable*: a request holds the promise its caller is waiting for, and
+    /// while the generator is suspended nothing else names it.
+    Requests(std::collections::VecDeque<Request>),
     /// A resolve function — §27.2.1.3.2.
     Resolve(Settler),
     /// A reject function — §27.2.1.3.1.

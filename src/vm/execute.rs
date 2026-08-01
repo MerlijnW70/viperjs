@@ -472,7 +472,8 @@ impl Vm {
                     // §15.8.4 gives an async function object exactly `length` and `name`, because
                     // what it answers with is a promise and nothing ever inherits from it.
                     if body.is_generator() {
-                        self.realm.make_generator_function(heap, object);
+                        self.realm
+                            .make_generator_function(heap, object, body.is_async());
                     } else if !body.is_arrow() && !body.is_method() && !body.is_async() {
                         self.realm.make_constructor(heap, object);
                     }
@@ -744,14 +745,26 @@ impl Vm {
                     // which *resolves* its promise and answers with the promise.
                     let answer = match Self::suspendable_of(&frame, heap) {
                         Some((_, Suspendable::Generator)) => {
-                            self.iterator_result(heap, answer, true)
+                            Some(self.iterator_result(heap, answer, true))
                         }
                         Some((context, Suspendable::Async)) => {
-                            self.settle_async(context, ReactionKind::Fulfil, answer, heap)
+                            Some(self.settle_async(context, ReactionKind::Fulfil, answer, heap))
                         }
-                        None => answer,
+                        // §27.6.3.2 and then §27.6.3.6 — the request being served is answered with
+                        // `{ value, done: true }`, and every request behind it with the same, the
+                        // body being gone. **Nothing is pushed**: the promise this resumption
+                        // answers with went onto the stack when the request was enqueued, which is
+                        // the one way an async generator's body differs from every other.
+                        Some((generator, Suspendable::AsyncGenerator)) => {
+                            self.answer_step(generator, answer, true, heap);
+                            self.drain(generator, heap);
+                            None
+                        }
+                        None => Some(answer),
                     };
-                    self.stack.push(answer);
+                    if let Some(answer) = answer {
+                        self.stack.push(answer);
+                    }
                     self.environment = frame.environment;
                     self.this_value = frame.this_value;
                     self.new_target = frame.new_target;
@@ -768,6 +781,20 @@ impl Vm {
                     else {
                         return Err(Fault::YieldOutsideGenerator);
                     };
+                    // §27.6.3.8 — an async generator's `yield` *settles a promise* instead of
+                    // answering a resumption, and then serves whatever was asked while it was
+                    // busy. Told apart by the brand on the object the frame names, which is the
+                    // only thing that distinguishes the two bodies at this instruction.
+                    if heap
+                        .object(generator)
+                        .is_some_and(crate::heap::Object::is_async_generator)
+                    {
+                        let parked = self.park(current, at)?;
+                        heap.park_into(generator, parked);
+                        self.answer_step(generator, value, false, heap);
+                        self.serve_queued(generator, heap, root, current, at)?;
+                        continue;
+                    }
                     // Wrapped before the park, so that a park that is refused leaves nothing built.
                     let result = self.iterator_result(heap, value, false);
                     let parked = self.park(current, at)?;
@@ -826,13 +853,25 @@ impl Vm {
                     // §27.7.5.2 step 3.b — the promise is rejected with what was thrown, and the
                     // *promise* is what the call answers with. A `Frame` with no context is a chunk
                     // that does not make sense: only an `async` body has this instruction in it.
-                    let answer = match frame.generator {
-                        Some(context) => {
-                            self.settle_async(context, ReactionKind::Reject, thrown, heap)
+                    let answer = match Self::suspendable_of(&frame, heap) {
+                        // §27.6.3.2 with a throw completion, then the drain: the request in service
+                        // is *rejected* with what escaped, and the queue behind it answers as a
+                        // completed generator does. Nothing is pushed, for the reason `Return` gives.
+                        Some((generator, Suspendable::AsyncGenerator)) => {
+                            self.reject_step(generator, thrown, heap);
+                            self.drain(generator, heap);
+                            None
                         }
-                        None => Value::Undefined,
+                        _ => frame
+                            .generator
+                            .map(|context| {
+                                self.settle_async(context, ReactionKind::Reject, thrown, heap)
+                            })
+                            .or(Some(Value::Undefined)),
                     };
-                    self.stack.push(answer);
+                    if let Some(answer) = answer {
+                        self.stack.push(answer);
+                    }
                     self.environment = frame.environment;
                     self.this_value = frame.this_value;
                     self.new_target = frame.new_target;

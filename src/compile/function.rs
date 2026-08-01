@@ -42,15 +42,6 @@ impl Compiler<'_> {
         method: bool,
         span: Span,
     ) -> Result<(), CompileError> {
-        // §27.6's async generator is both at once and is neither of the two things this engine
-        // has: its `next` answers with a *promise* of an iterator result, so a `yield` has to
-        // settle a promise and an `await` has to leave the generator suspended. Compiling it as a
-        // generator that happens to allow `await` would be a wrong answer rather than a refusal,
-        // which is the worse of the two — a skipped test says nothing and a wrong one says
-        // something false.
-        if function.is_async && function.is_generator {
-            return Err(unsupported("an async generator", span));
-        }
         if self.would_capture_a_per_iteration_binding() {
             return Err(unsupported(
                 "a function that closes over a `let` or `const` declared in a loop",

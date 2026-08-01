@@ -42,7 +42,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
         ("return", Resumption::Return),
         ("throw", Resumption::Throw),
     ] {
-        let function = heap.new_resume_function(realm.function_prototype(), kind);
+        let function = heap.new_resume_function(realm.function_prototype(), kind, false);
         super::define_function_metadata(heap, function, name, 1);
         define_value(heap, prototype, name, Value::Object(function));
     }
@@ -59,6 +59,46 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // §27.3.3.2 — `%GeneratorFunction.prototype%.prototype` is %GeneratorPrototype%, and it is not
     // writable: everything else in the realm is built on where it is. §27.5.1.1's `constructor`
     // points back, which is what makes the pair a chain rather than two objects.
+    fixed(
+        heap,
+        function_prototype,
+        "prototype",
+        Value::Object(prototype),
+    );
+    fixed(
+        heap,
+        prototype,
+        "constructor",
+        Value::Object(function_prototype),
+    );
+    install_async(heap, realm);
+}
+
+/// §27.4.3 and §27.6.1 — the same four things again, for the async generator.
+///
+/// Written out rather than shared with a loop, because the two differ in more than the objects: the
+/// async trio is `asynchronous`, which is what makes `next` answer a promise, and §27.6.1's methods
+/// **refuse a synchronous generator** as their receiver just as §27.5.1's refuse an async one. A
+/// helper taking both sets would have to carry that flag anyway, and the flag is the whole
+/// difference.
+fn install_async(heap: &mut Heap, realm: &Realm) {
+    let function_prototype = realm.async_generator_function_prototype();
+    let prototype = realm.async_generator_prototype();
+    for (name, kind) in [
+        ("next", Resumption::Next),
+        ("return", Resumption::Return),
+        ("throw", Resumption::Throw),
+    ] {
+        let function = heap.new_resume_function(realm.function_prototype(), kind, true);
+        super::define_function_metadata(heap, function, name, 1);
+        define_value(heap, prototype, name, Value::Object(function));
+    }
+    for (object, tag) in [
+        (function_prototype, "AsyncGeneratorFunction"),
+        (prototype, "AsyncGenerator"),
+    ] {
+        tag_with(heap, realm, object, tag);
+    }
     fixed(
         heap,
         function_prototype,

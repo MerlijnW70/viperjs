@@ -101,11 +101,26 @@ impl Vm {
             self.raise(error, heap, chunk, current, at)?;
             return Ok(());
         }
-        let answer = self.capability_of(context, heap).map(|held| held.promise);
+        // What the resumption that reached this `await` answers with. An `async` function answers
+        // with its own promise, which its caller has been holding since the first `await`; an
+        // **async generator** answers with nothing at all, because the promise for the request in
+        // service was pushed when that request was enqueued and the slot is already filled.
+        let answer = match heap
+            .object(context)
+            .and_then(crate::heap::Object::suspendable)
+        {
+            Some(Suspendable::AsyncGenerator) => None,
+            _ => Some(
+                self.capability_of(context, heap)
+                    .map_or(Value::Undefined, |held| held.promise),
+            ),
+        };
         let parked = self.park(current, at)?;
         // The context was made by `begin_async` and named by the frame, so it is an object.
         heap.park_into(context, parked);
-        self.stack.push(answer.unwrap_or(Value::Undefined));
+        if let Some(answer) = answer {
+            self.stack.push(answer);
+        }
         Ok(())
     }
 

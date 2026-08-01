@@ -389,6 +389,26 @@ impl Heap {
                         }
                     }
                 }
+                // §27.6.1's `[[AsyncGeneratorQueue]]`. Every request holds a promise its caller is
+                // waiting on and the two functions that settle it, and while the generator is
+                // parked there is no other path to any of them — a caller that dropped its promise
+                // still gets it settled, so the queue is what keeps it alive.
+                Some(crate::heap::Role::Requests(requests)) => {
+                    for request in requests {
+                        let capability = request.capability;
+                        for value in [
+                            request.value,
+                            capability.promise,
+                            capability.resolve,
+                            capability.reject,
+                        ] {
+                            match value {
+                                Value::Object(reached) => pending.push(reached),
+                                other => self.mark_value(other, marked),
+                            }
+                        }
+                    }
+                }
                 // §27.1.4's wrapper keeps the sync iterator it stands in front of, and its `next`
                 // read once. Nothing else names either: the loop only ever holds the wrapper.
                 Some(crate::heap::Role::SyncIterator { iterator, next }) => {

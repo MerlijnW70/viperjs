@@ -273,26 +273,170 @@ fn the_order_jobs_run_in_is_what_a_program_notices_first() {
 }
 
 #[test]
-fn an_async_generator_is_refused_rather_than_guessed() {
-    // §27.6, and it is refused for the reason `for await` was until it landed: what it would
-    // compile to here is a *wrong* answer rather than a missing one. An async generator's `next`
-    // answers with a promise of an iterator result, so its `yield` has to settle one and the object
-    // needs a queue of pending requests. Compiled as the ordinary generator it nearly works, which
-    // is the worst thing it could do — 3,500 test262 files failed with plausible-looking errors
-    // instead of being skipped until this row went in.
-    for source in [
-        "async function* g() {}",
-        "var g = async function* () {};",
-        "var o = { async *m() {} };",
-        "class C { async *m() {} }",
-    ] {
-        let mut heap = Heap::new();
-        let script = parse_script(source).expect("the row parses"); // a row that does not is the bug
-        let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
-        assert_eq!(
-            error.kind,
-            crate::compile::ErrorKind::Unsupported("an async generator"),
-            "compiling {source:?}"
-        );
-    }
+fn an_async_generator_answers_every_resumption_with_a_promise() {
+    // §27.6.1.2 — `next` answers a promise, not an iterator result, and the result arrives inside
+    // it. That is the whole difference from §27.5.1, and it is what a caller sees first.
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield 1; } var r = 'no'; var p = g().next();              p.then(function (v) { r = v.value + ':' + v.done; });",
+            "(p instanceof Promise) + ' ' + r"
+        ),
+        "true 1:false"
+    );
+    // …and the last one is `{ undefined, true }`, for ever after.
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield 1; } var it = g(); var r = [];              it.next().then(function (v) { r.push(v.value + ':' + v.done);                return it.next(); }).then(function (v) { r.push(v.value + ':' + v.done);                return it.next(); }).then(function (v) { r.push(v.value + ':' + v.done); });",
+            "r.join(',')"
+        ),
+        "1:false,undefined:true,undefined:true"
+    );
+}
+
+#[test]
+fn two_asks_made_before_the_first_is_answered_are_served_in_order() {
+    // §27.6.3.2's queue, which is the one thing a synchronous generator needs nothing like: `next`
+    // returns a promise straight away, so both of these are outstanding against a body that has
+    // not reached its first `yield`. They must be answered `1` then `2` and not both `1`.
+    //
+    // Without the queue the second ask finds the body parked and resumes it *again* from the same
+    // `yield`, which is a plausible-looking wrong answer rather than a crash — the reason this is
+    // pinned by a test rather than left to the conformance number.
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield 1; yield 2; } var it = g(); var r = [];              it.next().then(function (v) { r.push(v.value); });              it.next().then(function (v) { r.push(v.value); });",
+            "r.join(',')"
+        ),
+        "1,2"
+    );
+}
+
+#[test]
+fn an_ask_made_while_the_body_is_awaiting_waits_rather_than_reviving_it() {
+    // The case the queue exists for, and the one the two-asks test above does *not* reach: by the
+    // time the second `next` runs there, the body is parked at a `yield` with nothing in service,
+    // so serving it straight away is right. Here the body is parked **inside an `await`** with the
+    // first request still in service, and reviving it would resume it from the middle of that
+    // `await` with the wrong value.
+    //
+    // Told apart by the queue and by nothing else: both states are "parked", which is why there is
+    // no `[[AsyncGeneratorState]]` field to consult and why this test is the one that pins it.
+    //
+    // What the body yields has to be **what it awaited**, and that is not decoration. Written with
+    // constants the wrong engine gives the right answer: reviving the parked body directly hands
+    // the `await` the second `next`'s argument instead of the settled `7`, and then yields the
+    // same numbers in the same order anyway. Only a value that came *through* the await separates
+    // the two — the first version of this test did not have one, and mutating the guard proved it.
+    assert_eq!(
+        run_settled(
+            "async function* g() { var a = await 7; yield a; yield a + 1; } var it = g(); var r = [];              it.next().then(function (v) { r.push(v.value); });              it.next().then(function (v) { r.push(v.value); });",
+            "r.join(',')"
+        ),
+        "7,8"
+    );
+}
+
+#[test]
+fn a_return_into_a_suspended_body_runs_the_finally_blocks_it_is_inside() {
+    // §27.5.1.3 step 5's distinction, which §27.6 inherits: a body that has begun is resumed *at
+    // the `yield`* so that what it is inside gets to run, where one that has not begun is simply
+    // completed. `it.return(9)` here has to leave `9` and to have run the `finally`.
+    assert_eq!(
+        run_settled(
+            "var ran = false;              async function* g() { try { yield 1; } finally { ran = true; } }              var it = g(); var r = 'no';              it.next().then(function () { return it.return(9); })                .then(function (v) { r = v.value + ':' + v.done; });",
+            "ran + ' ' + r"
+        ),
+        "true 9:true"
+    );
+}
+
+#[test]
+fn a_completed_generator_answers_each_queued_ask_in_that_ask_s_own_way() {
+    // §27.6.3.6's drain, and the three methods do not agree: `next` answers `undefined`, `return`
+    // hands back what it was given, and `throw` **rejects**. All three are queued behind the
+    // request that finished the body, so all three are answered without anything running.
+    assert_eq!(
+        run_settled(
+            "async function* g() { return 1; } var it = g(); var r = [];              it.next().then(function (v) { r.push('n' + v.value); });              it.return(5).then(function (v) { r.push('r' + v.value + ':' + v.done); });              it.throw(new TypeError('x')).then(function () { r.push('resolved'); },                function (e) { r.push('t' + e.name); });",
+            "r.join(',')"
+        ),
+        "n1,r5:true,tTypeError"
+    );
+}
+
+#[test]
+fn the_async_iterator_symbol_has_the_attributes_that_clause_gives_it() {
+    // §27.1.3.1 — writable, not enumerable, configurable. A method a script may replace and may
+    // not find by enumeration, which is what every method in §27 is and what makes the difference
+    // between a built-in and a property somebody assigned.
+    assert_eq!(
+        run_settled(
+            "async function* g() {}              var p = Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(g())));              var d = Object.getOwnPropertyDescriptor(p, Symbol.asyncIterator);",
+            "d.writable + ',' + d.enumerable + ',' + d.configurable"
+        ),
+        "true,false,true"
+    );
+}
+
+#[test]
+fn an_await_inside_the_body_does_not_answer_the_request() {
+    // §27.6.3.8 against §27.7.5.3 — an `await` parks the body without taking anything off the
+    // queue, so the request that is in service stays in service and is answered by the `yield`
+    // that comes after. A body that answered at the `await` would resolve with the awaited value.
+    assert_eq!(
+        run_settled(
+            "async function* g() { var a = await 10; yield a + 1; } var r = 'no';              g().next().then(function (v) { r = v.value + ':' + v.done; });",
+            "r"
+        ),
+        "11:false"
+    );
+}
+
+#[test]
+fn a_throw_escaping_the_body_rejects_the_request_being_served() {
+    // §27.6.3.2 with a throw completion. The promise the caller is holding *rejects* — it does not
+    // resolve with an error object, which is what a body that treated the throw as a return would
+    // produce.
+    assert_eq!(
+        run_settled(
+            "async function* g() { throw new TypeError('no'); } var r = 'no';              g().next().then(function () { r = 'resolved'; }, function (e) { r = e.name; });",
+            "r"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_return_completes_it_and_answers_everything_still_queued() {
+    // §27.6.3.6's drain: once the body is gone, every request behind the one that finished it is
+    // answered too, and each in the way its own method demands — `next` with `undefined`, `return`
+    // with what it was given.
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield 1; } var it = g(); var r = [];              it.return(9).then(function (v) { r.push(v.value + ':' + v.done); });              it.next().then(function (v) { r.push(v.value + ':' + v.done); });",
+            "r.join(',')"
+        ),
+        "9:true,undefined:true"
+    );
+}
+
+#[test]
+fn an_async_generator_is_what_for_await_walks() {
+    // §27.1.3.1's `[@@asyncIterator]`, which is only reachable now that something inherits it.
+    // Without it the loop falls back to §7.4.3's synchronous path and reads a `Symbol.iterator`
+    // the specification says it must not even ask for — so this asserts both halves.
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield 1; yield 2; } var n = 0;              (async function () { for await (var x of g()) { n += x; } })();",
+            "n"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield 1; } var asked = false;              var it = g(); Object.defineProperty(it, Symbol.iterator,                { get: function () { asked = true; } });              (async function () { for await (var x of it) {} })();",
+            "asked"
+        ),
+        "false"
+    );
 }
