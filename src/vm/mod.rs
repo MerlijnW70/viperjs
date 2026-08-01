@@ -78,6 +78,10 @@ pub enum Fault {
     MissingLocal,
     /// A `PopHandler` with no matching `PushHandler`.
     UnmatchedPopHandler,
+    /// A `PopScope` or `CopyScope` where nothing had been pushed — the environment chain has no
+    /// parent to go back to. The compiler emits these in pairs with a `PushScope`, so this is a
+    /// hand-written chunk rather than anything a source can produce.
+    UnmatchedPopScope,
     /// A `MakeFunction` naming a body this chunk does not have.
     MissingFunction,
     /// A `Return` with no call to return from.
@@ -134,6 +138,17 @@ pub(super) struct Handler {
     /// this, a caught exception would leave rubbish under everything the handler pushed
     /// afterwards, and the imbalance would surface somewhere else entirely.
     pub(super) depth: usize,
+    /// Which environment was in force when it was installed — §8.3.2's running LexicalEnvironment.
+    ///
+    /// A `throw` out of a block leaves that block's environment behind exactly as it leaves its
+    /// operands, and for the same reason: the jump goes to code compiled against the *outer* one,
+    /// so a variable read after the `catch` would be read at the wrong depth. Popping frames
+    /// already restores this when the handler belongs to a caller; this is the case where it does
+    /// not, and the handler is in the same frame as the throw.
+    ///
+    /// An absolute heap identity rather than a count, so unlike `frames` and `depth` it needs no
+    /// rebasing when an execution is parked and revived somewhere else.
+    pub(super) environment: EnvironmentId,
 }
 
 /// The interpreter.
@@ -483,6 +498,10 @@ impl Vm {
             *at = frame.at;
         }
         let length = current.as_deref().unwrap_or(root).code().len();
+        // …and the block the throw was inside is left too. Written after the loop above rather
+        // than instead of it: popping frames restores the *caller's* environment, and this is the
+        // one the handler itself was installed in, which may be several blocks further in.
+        self.environment = handler.environment;
         self.stack.truncate(handler.depth);
         self.stack.push(thrown);
         *at = jump_to(handler.target, length)?;

@@ -42,12 +42,6 @@ impl Compiler<'_> {
         method: bool,
         span: Span,
     ) -> Result<(), CompileError> {
-        if self.would_capture_a_per_iteration_binding() {
-            return Err(unsupported(
-                "a function that closes over a `let` or `const` declared in a loop",
-                span,
-            ));
-        }
         // §10.2.9 — a function expression that names itself takes that name, and it wins over the
         // position: `var a = function f() {}` is called `f`. `NamedEvaluation` only reaches an
         // *anonymous* one, which is what §8.6.3 says and what the callers here check.
@@ -55,6 +49,12 @@ impl Compiler<'_> {
             Some(written) => Naming::of(&written.name),
             None => naming,
         };
+        if self.would_capture_a_per_iteration_binding() {
+            return Err(unsupported(
+                "a function that closes over a `let` or `const` declared in a loop",
+                span,
+            ));
+        }
         let body = self.compile_nested_method(
             &function.parameters,
             Body::Statements(&function.body),

@@ -804,6 +804,40 @@ impl Vm {
                     // entered this body is being answered, and it answers with an iterator result.
                     self.stack.push(result);
                 }
+                Instruction::PushScope(slots) => {
+                    // §8.3.2's `NewDeclarativeEnvironment` — a child of what is running, which is
+                    // what makes an inner block see the outer one's names one hop out.
+                    self.environment = heap.new_environment(Some(self.environment), slots as usize);
+                }
+                Instruction::PopScope => {
+                    // A block always has something outside it — the function's own environment at
+                    // the very least — so a `None` here is a chunk that does not make sense rather
+                    // than the end of the chain.
+                    self.environment = heap
+                        .environment_at(self.environment, 1)
+                        .ok_or(Fault::UnmatchedPopScope)?;
+                }
+                Instruction::CopyScope(slots) => {
+                    // §14.7.4.7 — a *sibling*: the same parent, so a loop of a million iterations
+                    // makes a million environments and not a chain a million deep. Each starts
+                    // holding what the last one ended with, which is how `i++` carries forward
+                    // while a closure made last time keeps the value it captured.
+                    let parent = heap
+                        .environment_at(self.environment, 1)
+                        .ok_or(Fault::UnmatchedPopScope)?;
+                    let fresh = heap.new_environment(Some(parent), slots as usize);
+                    for index in 0..slots {
+                        // §14.7.4.7 copies the *binding's value*, and an uninitialised one stays
+                        // uninitialised: a `let` in the temporal dead zone at the moment the loop
+                        // turns over is still in it on the next pass.
+                        let held = heap.variable(self.environment, index).flatten();
+                        let _ = match held {
+                            Some(value) => heap.set_variable(fresh, index, value),
+                            None => heap.uninitialise(fresh, index),
+                        };
+                    }
+                    self.environment = fresh;
+                }
                 Instruction::GeneratorStart => {
                     // Which kind is a property of the code being run and of nothing else: the
                     // compiler emits this instruction only into a generator body, and `is_async`
@@ -1401,6 +1435,7 @@ impl Vm {
                     target,
                     frames: self.frames.len(),
                     depth: self.stack.len(),
+                    environment: self.environment,
                 }),
                 Instruction::PopHandler => {
                     // A pop with nothing to pop is a chunk that does not make sense: the compiler

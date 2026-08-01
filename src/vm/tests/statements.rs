@@ -137,11 +137,11 @@ fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
 fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
     let cases = [
         (
-            "for (let i = 0; i < 1; i++) { (function () { return i; }); }",
+            "for (let x of [1]) { (function () { return x; }); }",
             "a function that closes over a `let` or `const` declared in a loop",
         ),
         (
-            "for (let i = 0; i < 1; i++) { (() => i); }",
+            "for (const x of [1]) { (() => x); }",
             "a function that closes over a `let` or `const` declared in a loop",
         ),
     ];

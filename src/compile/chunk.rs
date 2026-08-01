@@ -666,6 +666,32 @@ pub enum Instruction {
     /// mean. What comes back the other way — the argument to the next resumption — is left on the
     /// stack, so the `yield` expression evaluates to it.
     Yield,
+    /// §8.3.2 — push a fresh Declarative Environment Record of this many slots and run inside it.
+    ///
+    /// What makes a block's `let` a binding *per execution of the block* rather than a slot in the
+    /// function. Without it a closure made on one pass through a loop body and one made on the next
+    /// read the same variable, which is the single most visible thing an engine can get wrong about
+    /// ES2015 scoping.
+    ///
+    /// Emitted only for a block that declares something lexical. A block that declares nothing has
+    /// no bindings to keep apart, and an environment per `{ }` would cost an allocation on every
+    /// `if` in the program.
+    PushScope(u32),
+    /// Leave it again, running in its parent — the other half of [`Instruction::PushScope`].
+    ///
+    /// Emitted on every path out of the block, which is what `unwind_across` is for: a `break`, a
+    /// `continue` and a `return` each leave as many scopes as they cross. A **throw** does not need
+    /// one, because the handler records the environment it was installed in and unwinding restores
+    /// it — there is no instruction to run on a path that jumps.
+    PopScope,
+    /// §14.7.4.7 `CreatePerIterationEnvironment` — a *sibling* holding copies of the same bindings.
+    ///
+    /// The loop variable of `for (let i = 0; …)` is one binding per iteration, and each iteration
+    /// starts from the last one's value. So this makes a new environment beside the current one —
+    /// same parent, not a child — copies the slots across, and runs in it. Nesting instead would
+    /// deepen the chain by one per iteration, and a loop of a million would be a chain of a
+    /// million.
+    CopyScope(u32),
     /// §15.5.4 `GeneratorStart` — make the generator, park everything after this, and answer it.
     ///
     /// Emitted once, at the point where the parameters have been initialised and the body has not
@@ -894,6 +920,26 @@ impl Chunk {
         }
     }
 
+    /// Say how many slots an already-emitted [`Instruction::PushScope`] reserves.
+    ///
+    /// The count is not known when the instruction is emitted: a block's lexical names are, but the
+    /// hidden slots its statements need are made as they are compiled. So it is written like a
+    /// jump's target — a placeholder now, the real number once the block has been walked.
+    ///
+    /// Separate from [`Chunk::patch_to`] rather than folded into `retarget`, because that function
+    /// is about *targets* and its exhaustiveness is what stops a new jump being forgotten. A slot
+    /// count arriving there would make "not a jump" a lie.
+    pub(super) fn patch_scope(&mut self, scope: Unpatched, slots: u32) {
+        let Unpatched(at) = scope;
+        if let Some(instruction) = self.code.get_mut(at) {
+            *instruction = match *instruction {
+                Instruction::PushScope(_) => Instruction::PushScope(slots),
+                Instruction::CopyScope(_) => Instruction::CopyScope(slots),
+                other => other,
+            };
+        }
+    }
+
     /// Add an instruction.
     pub(super) fn emit(&mut self, instruction: Instruction) {
         self.code.push(instruction);
@@ -976,7 +1022,9 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         // Not a jump. An `Unpatched` can only ever name one, since `emit_jump` is the only way
         // to make one — so these are unreachable, and are listed rather than swept into a
         // catch-all so that a new jump cannot hide among them.
-        Instruction::Constant(_)
+        Instruction::PushScope(_)
+        | Instruction::CopyScope(_)
+        | Instruction::Constant(_)
         | Instruction::RegExpLiteral
         | Instruction::Unary(_)
         | Instruction::Binary(_)
@@ -1032,6 +1080,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::YieldDelegated
         | Instruction::ResumeMode
         | Instruction::GeneratorStart
+        | Instruction::PopScope
         | Instruction::Await
         | Instruction::AsyncReject
         | Instruction::GetAsyncIterator

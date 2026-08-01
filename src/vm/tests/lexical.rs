@@ -190,21 +190,19 @@ fn a_function_sees_the_lexical_bindings_it_was_written_inside() {
 }
 
 #[test]
-fn a_closure_over_a_binding_a_loop_re_creates_is_refused_rather_than_got_wrong() {
-    // §14.7.4.7 `CreatePerIterationEnvironment` — each pass of a loop gets a *fresh* binding, so
-    // three closures made in three passes answer with three different values. praxis gives a
-    // lexical declaration one slot for the whole call, which is right for a block entered once
-    // and wrong for one entered again; the two differ only when a closure escapes the pass that
-    // made it.
+fn a_closure_over_a_for_of_binding_is_refused_rather_than_got_wrong() {
+    // §14.7.5.7 — a `for`-`of` head's binding is made afresh on every pass, and praxis does not
+    // build that environment yet: the hidden slots the walk needs (the iterator, its `next`, the
+    // flag saying whether it may still be closed) live in the same scope, and copying *those*
+    // forward every iteration is a rearrangement this slice did not do.
     //
-    // So it is refused. The alternative is every closure in the loop sharing one variable and all
-    // of them answering the last value, which is a wrong answer that runs.
+    // So it stays refused, where the `for (let i = …; …; …)` head next to it no longer is. The
+    // alternative is every closure in the loop sharing one binding and all of them answering the
+    // last value — a wrong answer that runs.
     for source in [
-        "for (let i = 0; i < 1; i++) { (function () { return i; }); }",
-        "for (let i = 0; i < 1; i++) { (() => i); }",
-        "for (let i = 0; i < 1; i++) { let j = i; (() => j); }",
-        "while (true) { let x = 1; (() => x); break; }",
-        "do { let x = 1; (() => x); } while (false);",
+        "for (let x of [1]) { (function () { return x; }); }",
+        "for (const x of [1]) { (() => x); }",
+        "for (let k in { a: 1 }) { (() => k); }",
     ] {
         let error = crate::compile::compile_script(
             &parse_script(source).expect("the source parses"), // the test is about the refusal
@@ -256,5 +254,108 @@ fn a_closure_over_a_binding_a_loop_re_creates_is_refused_rather_than_got_wrong()
             "var f; for (var i = 0; i < 1; i = i + 1) { try { throw 7; } catch (e) { f = () => e; } } f()"
         ),
         "7"
+    );
+}
+
+#[test]
+fn a_block_entered_twice_makes_its_lexical_bindings_twice() {
+    // §14.2.2 — a block's Declarative Environment Record is made when the block is *entered*, so a
+    // loop body entered three times has made three of them and the closures made in each hold
+    // three different bindings. This is the one thing everybody knows ES2015 changed, and until
+    // this slice praxis refused it rather than answering `2,2,2`.
+    assert_eq!(
+        run(
+            "var f = []; for (var i = 0; i < 3; i++) { let x = i; f.push(function () { return x; }); }              f[0]() + ',' + f[1]() + ',' + f[2]()"
+        ),
+        "0,1,2"
+    );
+    // A `while` is the same statement for this purpose — the block is what makes the binding, not
+    // the loop — and it is worth testing separately because only `for` has a head to confuse it
+    // with.
+    assert_eq!(
+        run(
+            "var f = []; var n = 0; while (n < 3) { let x = n; f.push(function () { return x; }); n++; }              f[0]() + ',' + f[1]() + ',' + f[2]()"
+        ),
+        "0,1,2"
+    );
+    // …and a `var` still shares one binding, which is what it is for. Written beside the above
+    // because the interesting claim is that the two now differ.
+    assert_eq!(
+        run(
+            "var f = []; for (var i = 0; i < 3; i++) { var x = i; f.push(function () { return x; }); }              f[0]() + ',' + f[1]() + ',' + f[2]()"
+        ),
+        "2,2,2"
+    );
+}
+
+#[test]
+fn a_jump_or_a_throw_out_of_a_block_leaves_its_environment_behind() {
+    // The half of block scoping that is not about closures at all. Leaving the block by running
+    // off the end emits a `PopScope`; leaving it by `break`, `continue` or `return` has to emit one
+    // too, and leaving it by a *throw* must not — the handler recorded the environment it was
+    // installed in. Get any of the three wrong and the code after the block reads its variables one
+    // hop too shallow, which finds a *different variable* rather than failing.
+    assert_eq!(
+        run(
+            "var f = []; for (var i = 0; i < 3; i++) { let x = i; if (i === 1) { break; } f.push(x); } f.length + ':' + i"
+        ),
+        "1:1"
+    );
+    assert_eq!(
+        run(
+            "var seen = ''; try { for (var i = 0; i < 2; i++) { let x = i; if (i === 1) { throw new Error('e'); } } } catch (e) { seen = 'caught'; } seen + ':' + i"
+        ),
+        "caught:1"
+    );
+    assert_eq!(
+        run(
+            "function f() { for (var i = 0; i < 3; i++) { let x = i; if (x === 1) { return 'left ' + i; } } return 'ran out'; } f()"
+        ),
+        "left 1"
+    );
+    // A `continue` crosses the block on every pass, so an unbalanced one would deepen the chain
+    // once per iteration rather than once — which shows up as the wrong answer only after the loop.
+    assert_eq!(
+        run(
+            "var t = 0; for (var i = 0; i < 4; i++) { let x = i; if (x % 2 === 0) { continue; } t += x; } t + ':' + i"
+        ),
+        "4:4"
+    );
+}
+
+#[test]
+fn a_for_head_gives_every_pass_its_own_binding() {
+    // §14.7.4.7 `CreatePerIterationEnvironment`, which is the one everybody has met: three closures
+    // made in three passes answer with three different numbers, where a single shared slot would
+    // make all of them say `3`.
+    assert_eq!(
+        run(
+            "var f = []; for (let i = 0; i < 3; i++) { f.push(function () { return i; }); }              f[0]() + ',' + f[1]() + ',' + f[2]()"
+        ),
+        "0,1,2"
+    );
+    // …and the loop still counts, which is the half a naive fresh-binding-per-pass would break:
+    // the copy happens *before* the update, so `i++` increments the next pass's binding while the
+    // closure the last pass made keeps its own.
+    assert_eq!(
+        run("var s = ''; for (let i = 0; i < 3; i++) { s += i; } s"),
+        "012"
+    );
+    // A `continue` reaches step 3.d as well, so a pass skipped this way still turns the binding
+    // over — written out because it is the one exit that must *not* skip the copy.
+    assert_eq!(
+        run(
+            "var f = []; for (let i = 0; i < 4; i++) { if (i === 1) { continue; } f.push(function () { return i; }); }              f.map(function (g) { return g(); }).join(',')"
+        ),
+        "0,2,3"
+    );
+    // The initialiser's own environment is never the one a body runs in — step 2's copy — so the
+    // first pass is no different from the rest. Nothing but a closure made on that first pass can
+    // tell, which is why it is asserted rather than assumed.
+    assert_eq!(
+        run(
+            "var f = []; for (let i = 0; i < 2; i++) { f.push(function () { return i; }); }              f[0]() === f[1]()"
+        ),
+        "false"
     );
 }

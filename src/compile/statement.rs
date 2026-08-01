@@ -16,6 +16,7 @@ use super::binding::Bind;
 use super::{
     Closing, CompileError, Compiler, Crossing, Instruction, Unpatched, Unwind, unsupported,
 };
+use super::{Environment, LoopScope};
 use crate::ast::{
     BinaryOperator, Declaration, DeclarationKind, ForInOfKind, ForInOfStatement, ForInOfTarget,
     ForInit, ForStatement, LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
@@ -98,7 +99,10 @@ impl Compiler<'_> {
                 let top = self.here()?;
                 self.expression(&statement.test)?;
                 let out = self.chunk.emit_jump(Instruction::JumpIfFalse);
-                self.loop_marks.push(self.locals.len());
+                self.loop_marks.push(LoopScope {
+                    mark: self.locals.len(),
+                    depth: self.outer.len(),
+                });
                 let compiled = self.loop_body(&statement.body, None, |compiler| {
                     compiler.chunk.emit(Instruction::Jump(top));
                     Ok(top)
@@ -111,7 +115,10 @@ impl Compiler<'_> {
             // is the opposite sense, and `continue` goes to the test rather than to the top.
             StmtKind::DoWhile(statement) => {
                 let top = self.here()?;
-                self.loop_marks.push(self.locals.len());
+                self.loop_marks.push(LoopScope {
+                    mark: self.locals.len(),
+                    depth: self.outer.len(),
+                });
                 let compiled = self.loop_body(&statement.body, None, |compiler| {
                     let test = compiler.here()?;
                     compiler.expression(&statement.test)?;
@@ -224,6 +231,12 @@ impl Compiler<'_> {
     /// §14.2.3 `BlockDeclarationInstantiation` — and each is left uninitialised, which is what
     /// makes reading one above its declaration a ReferenceError rather than `undefined`.
     pub(super) fn block(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
+        // §14.2.2 makes a Declarative Environment Record for a block **only if it declares
+        // something**. Not an optimisation: `{ }` and `if (c) { x; }` are most of the blocks in
+        // any program, and an environment each would be an allocation per `if` for a scope holding
+        // nothing. §8.3.2's chain would be longer everywhere and hold the same names.
+        let lexical = Self::declares_something_lexical(body);
+        let opened = lexical.then(|| self.enter_environment());
         let mark = self.enter_scope();
         self.declare_lexical_names(body)?;
         // Deliberately *not* `hoist_functions`. §14.1 block-scopes a function declaration and
@@ -233,7 +246,24 @@ impl Compiler<'_> {
         // refusal was added to stop.
         self.statements(body)?;
         self.leave_scope(mark);
+        if let Some(opened) = opened {
+            self.leave_environment(opened)?;
+        }
         Ok(())
+    }
+
+    /// Whether this body's *top level* declares anything a block scope has to keep — §8.2.6.
+    ///
+    /// The same question [`Compiler::declare_lexical_names`] answers by doing it, asked before any
+    /// of it happens: an environment has to be pushed before the names go into it, and whether to
+    /// push one depends on whether there are any. Kept beside that function so the two cannot
+    /// drift — a `let` form it learned about and this did not would silently lose its scope.
+    fn declares_something_lexical(body: &[Stmt]) -> bool {
+        body.iter().any(|statement| match &statement.kind {
+            StmtKind::Class(class) => class.name.is_some(),
+            StmtKind::Declaration(declaration) => declaration.kind.is_lexical(),
+            _ => false,
+        })
     }
 
     /// Create every `let` and `const` a body declares, uninitialised — §14.2.3 and §10.2.11.
@@ -305,11 +335,34 @@ impl Compiler<'_> {
     fn for_statement(&mut self, statement: &ForStatement, span: Span) -> Result<(), CompileError> {
         // §14.7.4.4 — the head's `let` and `const` belong to the *loop*, not to the statement
         // around it, so the scope opens before the head is compiled and closes after the body.
+        // §14.7.4.4 — and only a *lexical* head gets an environment: `for (var i = …)` declares
+        // one binding for the whole function and `for (i = 0; …)` declares none at all, so an
+        // environment for either would be a scope with nothing in it that has to be copied on
+        // every pass.
+        let lexical = matches!(
+            &statement.init,
+            Some(ForInit::Declaration(declaration)) if declaration.kind.is_lexical()
+        );
+        let mut opened = lexical.then(|| self.enter_environment());
         let mark = self.enter_scope();
-        self.loop_marks.push(mark);
-        let compiled = self.for_parts(statement, span);
-        self.loop_marks.pop();
+        // §14.7.4.2 — the initialiser runs once, before anything else, and it is compiled *here*
+        // rather than inside `for_parts` so that the loop's mark can be taken after it. What that
+        // mark means is "bindings a later pass shares with this one", and the head's are not: the
+        // copy below re-creates them. Taking the mark first would have the loop claiming its own
+        // `let i` as shared, which is the thing that used to be refused.
+        let compiled = self.for_init(statement, span).and_then(|()| {
+            self.loop_marks.push(LoopScope {
+                mark: self.locals.len(),
+                depth: self.outer.len(),
+            });
+            let compiled = self.for_parts(statement, opened.as_mut());
+            self.loop_marks.pop();
+            compiled
+        });
         self.leave_scope(mark);
+        if let Some(opened) = opened {
+            self.leave_environment(opened)?;
+        }
         compiled
     }
 
@@ -332,7 +385,10 @@ impl Compiler<'_> {
         // §14.7.5.5 — a `let` or `const` in the head belongs to the loop, so the scope opens
         // before the binding is made and closes after the body.
         let mark = self.enter_scope();
-        self.loop_marks.push(mark);
+        self.loop_marks.push(LoopScope {
+            mark,
+            depth: self.outer.len(),
+        });
         let compiled = self.for_in_parts(statement, span);
         self.loop_marks.pop();
         self.leave_scope(mark);
@@ -406,7 +462,10 @@ impl Compiler<'_> {
             return self.for_await_statement(statement, span);
         }
         let mark = self.enter_scope();
-        self.loop_marks.push(mark);
+        self.loop_marks.push(LoopScope {
+            mark,
+            depth: self.outer.len(),
+        });
         let compiled = self.for_of_parts(statement, span);
         self.loop_marks.pop();
         self.leave_scope(mark);
@@ -638,7 +697,7 @@ impl Compiler<'_> {
     }
 
     /// The rest of `for`, once its scope has been opened.
-    fn for_parts(&mut self, statement: &ForStatement, span: Span) -> Result<(), CompileError> {
+    fn for_init(&mut self, statement: &ForStatement, span: Span) -> Result<(), CompileError> {
         match &statement.init {
             Some(ForInit::Expression(expression)) => {
                 self.expression(expression)?;
@@ -646,6 +705,22 @@ impl Compiler<'_> {
             }
             Some(ForInit::Declaration(declaration)) => self.declaration(declaration, span)?,
             None => {}
+        }
+        Ok(())
+    }
+
+    /// The rest of `for`, once its head has run — §14.7.4.7 `ForBodyEvaluation`.
+    fn for_parts(
+        &mut self,
+        statement: &ForStatement,
+        mut per_iteration: Option<&mut Environment>,
+    ) -> Result<(), CompileError> {
+        // §14.7.4.7 step 2 — before the first test, so the initialiser's own environment is never
+        // the one the body runs in. Without it the first pass shares its bindings with the
+        // initialiser and every later pass does not, which is a difference no reader would expect
+        // and only a closure made on the first pass can see.
+        if let Some(environment) = per_iteration.as_mut() {
+            self.copy_environment(environment);
         }
         let top = self.here()?;
         // A missing test is `true` — `for (;;)` — so there is simply no jump out of the top.
@@ -661,6 +736,13 @@ impl Compiler<'_> {
             // `continue` goes to the *update*, not to the test: `for (i = 0; i < 3; i = i + 1) {
             // continue; }` still increments, which is the whole reason the third part exists.
             let target = compiler.here()?;
+            // §14.7.4.7 step 3.d — **before** the update and at the `continue` target, because a
+            // `continue` reaches step 3.d too. The update then runs against the next pass's copy,
+            // so `i++` carries the count forward while the closure the last pass made keeps its
+            // own `i`.
+            if let Some(environment) = per_iteration.as_mut() {
+                compiler.copy_environment(environment);
+            }
             if let Some(update) = update {
                 compiler.expression(update)?;
                 compiler.chunk.emit(Instruction::Pop);
@@ -712,6 +794,10 @@ impl Compiler<'_> {
                     for _ in 0..*count {
                         self.chunk.emit(Instruction::PopHandler);
                     }
+                    Ok(())
+                }
+                Crossing::Scope => {
+                    self.chunk.emit(Instruction::PopScope);
                     Ok(())
                 }
                 Crossing::Finally(body) => self.block(body),

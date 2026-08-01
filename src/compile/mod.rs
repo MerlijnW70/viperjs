@@ -210,7 +210,7 @@ struct Compiler<'a> {
     /// binding declared inside the innermost loop is live. Refused rather than compiled, because
     /// the alternative is every closure in the loop sharing one variable and answering the last
     /// value — a wrong answer that looks like a working program.
-    loop_marks: Vec<usize>,
+    loop_marks: Vec<LoopScope>,
     /// Where `continue` goes — the top of the innermost loop's test, or its update.
     continues: Vec<Vec<Unpatched>>,
     /// How deep into an expression the compiler currently is.
@@ -342,6 +342,18 @@ enum Crossing {
     /// try block, and only one over its catch block, the other having been consumed by the throw
     /// that got there.
     Handlers(u32),
+    /// A block environment, which a jump out of the block has to leave.
+    ///
+    /// The same shape of problem `Handlers` is and the same reason it is not in the specification:
+    /// §8.3.2 talks about *restoring* the running environment when a block completes however it
+    /// completes, and this VM leaves it by running an instruction. A `break` that jumped past one
+    /// would carry on with the block's environment still in force, so every variable read after
+    /// the loop would be read one hop too shallow — reading a *different variable*, not failing.
+    ///
+    /// The throw path needs nothing here: a handler records the environment it was installed in,
+    /// and unwinding restores it. That is the difference between an exit that runs instructions on
+    /// the way out and one that jumps.
+    Scope,
     /// A `finally` block, which §14.15.3 runs on every way out of the `try` it belongs to.
     ///
     /// The statements rather than a jump to one copy of them, because there is nowhere to jump
@@ -454,6 +466,83 @@ impl<'a> Compiler<'a> {
         mark
     }
 
+    /// Open a real environment, not merely a compiler scope — §8.3.2's running LexicalEnvironment.
+    ///
+    /// The difference between the two is what a closure sees. A compiler scope hands out fresh
+    /// *slots* in the function's one environment, which is enough to keep two blocks' `x` apart
+    /// but not enough to keep two *executions* of the same block apart — and an arrow made in a
+    /// loop body must capture the binding that iteration had.
+    ///
+    /// Pushing the current locals onto `outer` is the whole mechanism: [`Compiler::binding`]
+    /// already walks that chain and counts the hops, so every name outside the block gains a hop
+    /// without a line of resolution code changing, and a nested function's own chain is built from
+    /// the same two fields.
+    fn enter_environment(&mut self) -> Environment {
+        let held = std::mem::take(&mut self.locals);
+        self.outer.push(held);
+        // Recorded so that a `break`, a `continue` or a `return` written inside the block emits
+        // the `PopScope` it would otherwise jump straight past.
+        //
+        // `breaks.len()` and not the loop nesting, which is the same scale every other crossing
+        // uses and the only one that is right: an [`Exit`]'s depth indexes the *break lists*, and a
+        // label on a plain block pushes one of those without being a loop. Counted the other way,
+        // `L: { let x; break L; }` never crosses this entry — the two numbers are both zero — and
+        // the code after the block reads its variables one hop too shallow.
+        let outer = self.breaks.len();
+        self.unwinds.push(Unwind {
+            outer,
+            what: Crossing::Scope,
+        });
+        Environment {
+            scope: self.chunk.emit_jump(Instruction::PushScope),
+            copies: Vec::new(),
+        }
+    }
+
+    /// §14.7.4.7 `CreatePerIterationEnvironment` — start the next pass with its own bindings.
+    ///
+    /// Emitted twice per loop and not once: before the first test, so the body never runs in the
+    /// environment the initialiser built, and again after each body before the update, so the
+    /// update increments *the next pass's* copy. A closure made during a pass therefore keeps what
+    /// that pass had, and the loop still counts, which is the pair of facts that makes
+    /// `for (let i = 0; i < 3; i++)` hand three closures three numbers.
+    fn copy_environment(&mut self, environment: &mut Environment) {
+        environment
+            .copies
+            .push(self.chunk.emit_jump(Instruction::CopyScope));
+    }
+
+    /// Close it again, and say how many slots it turned out to need.
+    ///
+    /// A `PopScope` is emitted here and on no other path out. Every *jumping* exit — `break`,
+    /// `continue`, `return` — goes through `unwind_across`, which emits its own; a throw needs
+    /// none at all, because the handler recorded the environment it was installed in.
+    fn leave_environment(&mut self, environment: Environment) -> Result<(), CompileError> {
+        let slots = u32::try_from(self.locals.len()).map_err(|_| CompileError {
+            kind: ErrorKind::TooLong,
+            span: Span::new(0, 0),
+        })?;
+        self.chunk.patch_scope(environment.scope, slots);
+        for copy in environment.copies {
+            self.chunk.patch_scope(copy, slots);
+        }
+        self.chunk.emit(Instruction::PopScope);
+        // Down before anything else: the ordinary way out has just been emitted, and leaving the
+        // entry in place would make a later `break` emit a second `PopScope` for a block it is no
+        // longer inside.
+        self.unwinds.pop();
+        let Some(held) = self.outer.pop() else {
+            // `enter_environment` pushed one and the two are called in pairs, so this is a
+            // compiler that has lost track of itself rather than a program that did anything.
+            return Err(CompileError {
+                kind: ErrorKind::TooDeep,
+                span: Span::new(0, 0),
+            });
+        };
+        self.locals = held;
+        Ok(())
+    }
+
     /// The local `name` refers to, if it is one.
     fn local(&self, name: &str) -> Option<&Local> {
         self.locals
@@ -480,14 +569,27 @@ impl<'a> Compiler<'a> {
     /// Whether a function written here would close over a binding that a loop re-creates.
     ///
     /// True when the innermost enclosing loop has a live lexical binding declared inside it. See
-    /// [`Compiler::loop_marks`] for why that is refused rather than compiled.
+    /// Whether a function written here would close over a binding its loop re-creates.
+    ///
+    /// Only `for`-`of` and `for`-`in` now: their §14.7.5.7 environment is not built, so the head's
+    /// binding is one slot for the whole walk and every closure over it would answer with the last
+    /// value. A wrong answer that runs, which is what the refusal is for.
+    ///
+    /// A `for (let i = …; …; …)` head is *not* refused — §14.7.4.7's copy is emitted — and neither
+    /// is anything declared in a loop **body**, which lives in the body block's own environment and
+    /// is therefore made afresh on every pass.
     fn would_capture_a_per_iteration_binding(&self) -> bool {
-        let Some(&mark) = self.loop_marks.last() else {
+        let Some(&loop_scope) = self.loop_marks.last() else {
             return false;
         };
-        self.locals
+        // The level the loop's mark was taken in, which is the one being compiled when the loop is
+        // not inside a block of its own. `unwrap_or` rather than a match on the two: a depth equal
+        // to the chain's length *is* the current level, and there is no third answer for a mark
+        // this compiler made itself.
+        let level = self.outer.get(loop_scope.depth).unwrap_or(&self.locals);
+        level
             .iter()
-            .skip(mark)
+            .skip(loop_scope.mark)
             .any(|local| local.live && local.lexical)
     }
 
@@ -778,6 +880,34 @@ const THIS_BINDING: &str = "%this";
 ///
 /// Two numbers rather than a name, because the compiler built the chain of scopes and so knows
 /// the answer. Nothing at run time compares a string to find a variable.
+/// One open block environment, held only for as long as it takes to close it.
+///
+/// Carries the instruction whose slot count is not known yet, which is the only thing the closing
+/// half needs from the opening one. A struct rather than a bare `Unpatched` so that a caller cannot
+/// hand `leave_environment` some other jump it happens to be holding.
+/// Where a loop's bindings that are **not** re-created per pass begin.
+///
+/// One mark and not a mark plus a flag. A `for (let i = …; …; …)` head *is* re-created — §14.7.4.7's
+/// copy is emitted — so its bindings are simply left above the mark and the same question answers
+/// itself: everything from here on is a binding one closure could share with the next pass.
+///
+/// Written the other way, with a `per_iteration` flag beside the mark, every loop that has no head
+/// bindings at all carried a value nothing could read.
+#[derive(Debug, Clone, Copy)]
+struct LoopScope {
+    /// Where those locals begin, in the level named by `depth`.
+    mark: usize,
+    /// How many levels out that is — a loop's body may be several blocks deeper by now.
+    depth: usize,
+}
+
+struct Environment {
+    /// The `PushScope` whose slot count is filled in when the block ends.
+    scope: chunk::Unpatched,
+    /// Every `CopyScope` in it, which take the same count and learn it at the same moment.
+    copies: Vec<chunk::Unpatched>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Where {
     /// How many environments out — `0` is the running function's own.

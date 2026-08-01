@@ -160,6 +160,9 @@ impl Vm {
                 .into_iter()
                 .map(|handler| Handler {
                     target: handler.target,
+                    // Absolute, so it crosses a suspension untouched where the two counts below
+                    // do not: an environment is a place on the heap, not a mark on a stack.
+                    environment: handler.environment,
                     frames: handler.frames.saturating_sub(floor),
                     depth: handler.depth.saturating_sub(operands),
                 })
@@ -219,6 +222,7 @@ impl Vm {
         for handler in parked.handlers {
             self.handlers.push(Handler {
                 target: handler.target,
+                environment: handler.environment,
                 frames: handler.frames + floor,
                 depth: handler.depth + base,
             });
