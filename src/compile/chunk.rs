@@ -666,6 +666,18 @@ pub enum Instruction {
     /// mean. What comes back the other way — the argument to the next resumption — is left on the
     /// stack, so the `yield` expression evaluates to it.
     Yield,
+    /// §15.5.4 `GeneratorStart` — make the generator, park everything after this, and answer it.
+    ///
+    /// Emitted once, at the point where the parameters have been initialised and the body has not
+    /// begun. That position *is* the clause: §15.5.4 runs `FunctionDeclarationInstantiation` and
+    /// only then creates the object, so a destructuring parameter that throws — `function* g([x])`
+    /// called with something that is not iterable — throws **at the call**, before there is a
+    /// generator to hold anything.
+    ///
+    /// Deciding it in `enter` instead, which is what this replaces, put the whole parameter list
+    /// inside the parked body and so ran it at the first `next`. Nothing about that is visible
+    /// until a parameter can fail or be observed, and then all of it is at once.
+    GeneratorStart,
     /// Push whether the resumption that just revived this body asked for a `return` — §27.5.1.3.
     ///
     /// Emitted straight after every [`Instruction::Yield`], because that is the only place it can
@@ -1019,6 +1031,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Yield
         | Instruction::YieldDelegated
         | Instruction::ResumeMode
+        | Instruction::GeneratorStart
         | Instruction::Await
         | Instruction::AsyncReject
         | Instruction::GetAsyncIterator

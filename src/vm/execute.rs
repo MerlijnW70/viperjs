@@ -804,6 +804,14 @@ impl Vm {
                     // entered this body is being answered, and it answers with an iterator result.
                     self.stack.push(result);
                 }
+                Instruction::GeneratorStart => {
+                    // Which kind is a property of the code being run and of nothing else: the
+                    // compiler emits this instruction only into a generator body, and `is_async`
+                    // on that body is what tells §27.6's apart from §27.5's.
+                    let asynchronous = running.is_async();
+                    self.start_generator(asynchronous, heap, root, current, at)?;
+                    continue;
+                }
                 Instruction::ResumeMode => {
                     // Read once and cleared: the next resumption sets it again, and a body that
                     // asked twice would be asking about a revival that had already happened.

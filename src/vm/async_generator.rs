@@ -44,56 +44,12 @@
 
 use super::call::Entry;
 use super::{Fault, Vm};
-use crate::heap::{Heap, Object, ObjectId, ReactionKind, Request, Resumption, Role, Suspendable};
+use crate::heap::{Heap, Object, ObjectId, ReactionKind, Request, Resumption, Role};
 use crate::value::{Abrupt, Value};
 use std::collections::VecDeque;
 use std::rc::Rc;
 
 impl Vm {
-    /// §27.6.2's `AsyncGeneratorFunction` call — make the object and run none of the body.
-    ///
-    /// The synchronous twin of this is [`Vm::enter_generator`], and the two differ in exactly three
-    /// things: the prototype, the brand, and that this one starts with an empty request queue.
-    #[allow(clippy::too_many_arguments)] // the call's shape, threaded rather than shared
-    pub(super) fn enter_async_generator(
-        &mut self,
-        body: Rc<crate::compile::Chunk>,
-        function: ObjectId,
-        receiver: Value,
-        new_target: Value,
-        environment: crate::heap::EnvironmentId,
-        receiver_at: usize,
-        heap: &mut Heap,
-        chunk: &crate::compile::Chunk,
-        current: &mut Option<Rc<crate::compile::Chunk>>,
-        at: &mut usize,
-    ) -> Result<(), Fault> {
-        // §10.1.13 with %AsyncGeneratorPrototype% as the fallback, and a full `[[Get]]` for the
-        // same reason the synchronous one is: `g.prototype` is an ordinary writable property.
-        let prototype =
-            match self.prototype_for(function, self.realm.async_generator_prototype(), heap) {
-                Ok(prototype) => prototype,
-                Err(error) => {
-                    self.raise(error, heap, chunk, current, at)?;
-                    return Ok(());
-                }
-            };
-        let generator = heap.new_object(Some(prototype));
-        heap.brand_suspendable(generator, Suspendable::AsyncGenerator);
-        // §27.6.1's `[[AsyncGeneratorQueue]]`, empty. Set here rather than lazily so that every
-        // async generator has one from the moment it exists — a queue that appears on first use is
-        // a queue that can be missing, and the code that reads it would need a case for that.
-        if let Some(object) = heap.object_mut(generator) {
-            object.set_role(Role::Requests(VecDeque::new()));
-        }
-        let parked =
-            super::Suspended::started(body, environment, receiver, new_target, function, generator);
-        heap.park_into(generator, parked);
-        self.stack.truncate(receiver_at);
-        self.stack.push(Value::Object(generator));
-        Ok(())
-    }
-
     /// §27.6.1's `next`, `return` and `throw` — enqueue an ask, and serve it if nothing is ahead.
     ///
     /// Unlike §27.5.1's three, none of these can fail for being called at a bad moment: a generator

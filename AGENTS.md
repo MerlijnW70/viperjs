@@ -129,7 +129,7 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **69.93% of test262** — 65,146 of 93,153 runs. Treat that number
+Conformance as of this commit is **71.65% of test262** — 66,744 of 93,153 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -144,16 +144,18 @@ it. Let the failure buckets choose the next slice, not intuition. The largest ri
 | 280 | `with` |
 | 242 | a function declaration inside a block |
 
-**§27.6 landed and took 63.06% to 69.93%** in two slices: async generators themselves, then
-`yield*` inside one — §15.5.5 step 4's `GetIterator(value, async)`, worth +1,590 on its own. The
-async generator bucket, which was the single largest thing stopping tests from running at all, is
-gone.
+**63.06% to 71.65% in three slices**, all of them §27.6 and its neighbourhood: async generators
+themselves (+4,814), `yield*` inside one — §15.5.5 step 4's `GetIterator(value, async)` (+1,590) —
+and then `GeneratorStart` becoming an instruction (+1,598). That last one is worth reading before
+touching this area: a generator's parameters are **not** part of its body, so
+`FunctionDeclarationInstantiation` runs at the call and only `GeneratorStart` parks what is left.
+Deciding it in `enter` instead put the whole parameter list inside the parked body, where it ran at
+the first `next` — invisible until a parameter can throw or be observed, and then 1,598 tests at
+once, most of them in `dstr` directories that have nothing to do with generators.
 
-**70% is +61 runs.** What is left in that area is ~930 runs of "expected a SyntaxError / TypeError /
-ReferenceError but nothing was thrown" — early errors the parser does not raise inside an async
-generator — and those are the next slice. **75% is still `BigInt`**: 6,263 runs, a new numeric type
-through the value representation, every operator and every coercion, and nothing else on the list is
-within a factor of five of it.
+**75% is `BigInt`**: 6,263 runs, a new numeric type through the value representation, every operator
+and every coercion. Nothing else on the list is within a factor of five, and the next largest things
+after it are Unicode property escapes (1,318) and per-iteration environments (1,234).
 
 **Two buckets are not ES2023 and must not be counted as cheap.** `Temporal` (3,476 runs) is a Stage
 3 proposal with a surface larger than `Date`, `Intl` and `RegExp` combined — building it would raise

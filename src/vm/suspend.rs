@@ -80,40 +80,23 @@ impl Suspended {
         self.begun
     }
 
+    /// Say that this parked execution has run no statement of its body — §15.5.4's suspendedStart.
+    ///
+    /// A method rather than an argument to [`Vm::park`], because every *other* park happens at a
+    /// `yield` or an `await` and cannot be anything but begun. Passed as a flag it was a value one
+    /// caller could get wrong and no program could observe; said here it is one statement, and
+    /// deleting it changes what `return` does to a generator nobody has resumed.
+    pub(super) fn before_the_body(mut self) -> Self {
+        self.begun = false;
+        self
+    }
+
     /// The environment its next instruction will read a variable from.
     ///
     /// Kept alive by this and by nothing else once the call that made it has been parked: the
     /// frames that would have named it are gone.
     pub(crate) fn environment(&self) -> EnvironmentId {
         self.environment
-    }
-
-    /// An execution that has not begun — §15.5.4's `GeneratorStart`, as a parked frame.
-    ///
-    /// Instruction zero, an empty operand stack and no handlers, which is exactly what a frame the
-    /// loop has never run would look like. That is the whole trick behind a generator function
-    /// answering without running anything: there is no separate "not started yet" state, only a
-    /// suspension that happens to be at the beginning.
-    pub(super) fn started(
-        code: Rc<Chunk>,
-        environment: EnvironmentId,
-        this_value: Value,
-        new_target: Value,
-        function: ObjectId,
-        generator: ObjectId,
-    ) -> Self {
-        Self {
-            code: Some(code),
-            at: 0,
-            this_value,
-            new_target,
-            environment,
-            function: Some(function),
-            generator: Some(generator),
-            begun: false,
-            stack: Vec::new(),
-            handlers: Vec::new(),
-        }
     }
 }
 

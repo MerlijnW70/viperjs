@@ -334,3 +334,54 @@ fn a_generator_method_and_a_generator_expression_are_generators_too() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_generators_parameters_run_at_the_call_and_not_at_the_first_resumption() {
+    // §15.5.4 in order: `FunctionDeclarationInstantiation`, *then* `GeneratorStart`. The parameter
+    // list is not part of the body, so a destructuring parameter that cannot be taken apart throws
+    // at the call — before there is a generator object for anyone to hold.
+    assert_eq!(
+        run(
+            "var e = 'none'; function* g([x]) {} try { g(1); } catch (x) { e = x.constructor.name } e"
+        ),
+        "TypeError"
+    );
+    // The same for a default, which is observable without throwing: it has already run by the time
+    // the call returns, and running it at the first `next` would leave this `0`.
+    assert_eq!(
+        run("var n = 0; function* g(a = (n = 1)) { yield a; } var it = g(); n"),
+        "1"
+    );
+    // …and what it computed is what the body sees, so the value was not merely evaluated early and
+    // thrown away.
+    assert_eq!(run("function* g(a = 5) { yield a; } g().next().value"), "5");
+    // §27.6.2 does the same, and takes the same instruction to do it.
+    assert_eq!(
+        run(
+            "var e = 'none'; async function* g([x]) {} try { g(1); } catch (x) { e = x.constructor.name } e"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_return_before_the_first_resumption_completes_it_without_running_anything() {
+    // §27.5.1.3 step 5, and it is the one thing that can tell a body parked *before* its first
+    // statement from one parked at a `yield`. A suspended generator is resumed at the `yield` so
+    // its `finally` runs; one that has not begun is simply completed, and there is no `yield` for
+    // it to be resumed at.
+    assert_eq!(
+        run(
+            "var ran = false; function* g() { try { yield 1; } finally { ran = true; } }              var r = g().return(9); ran + ' ' + r.value + ':' + r.done"
+        ),
+        "false 9:true"
+    );
+    // …where the same generator resumed once *does* run it, which is what makes the pair a test of
+    // the distinction rather than of `return` on its own.
+    assert_eq!(
+        run(
+            "var ran = false; function* g() { try { yield 1; } finally { ran = true; } }              var it = g(); it.next(); var r = it.return(9); ran + ' ' + r.value + ':' + r.done"
+        ),
+        "true 9:true"
+    );
+}

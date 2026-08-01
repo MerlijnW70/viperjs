@@ -696,6 +696,14 @@ fn compile_body(
         }
     }
 
+    // §15.5.4 and §27.6.2 — the parameters are done, so this is where the generator is made and
+    // everything after it becomes the parked body. Above the `async` handler below, because that
+    // handler belongs to the *body*: a throw from a parameter default is the caller's to catch,
+    // and a throw from the body rejects the promise the resumption answered with.
+    if nesting.generator {
+        compiler.chunk.emit(Instruction::GeneratorStart);
+    }
+
     // §27.7.5.2 — an `async` function's body is wrapped in a handler the source never wrote. A
     // throw that nothing inside caught does not travel to the caller: it *rejects the promise*, and
     // the caller is handed that promise like any other. Written as a handler because that is what

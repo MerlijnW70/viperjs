@@ -11,40 +11,59 @@ use super::call::Entry;
 use super::suspend::Suspended;
 use super::{Fault, Vm};
 use crate::compile::Chunk;
-use crate::heap::{Heap, Object, ObjectId, Resumption};
+use crate::heap::{Heap, Object, Resumption};
 use crate::value::{Abrupt, Value};
+use std::collections::VecDeque;
 use std::rc::Rc;
 
 impl Vm {
-    /// §15.5.4 `EvaluateGeneratorBody` — make the generator object and run nothing.
+    /// §15.5.4 `GeneratorStart` — the instruction, run inside the callee with its parameters done.
     ///
-    /// Reached once the environment is built and the arguments are in their slots, because that is
-    /// the order the clause has: `FunctionDeclarationInstantiation` first, then the object, then
-    /// `GeneratorStart`. A parameter's default expression therefore runs when the generator
-    /// function is *called* and not when it is first resumed, which is observable and is why the
-    /// order is worth stating.
+    /// Makes the object §27.5.1 describes, hands the half-run execution to it, and answers the
+    /// *call* with it. Everything before this instruction has already happened in an ordinary
+    /// frame, which is the whole point: `FunctionDeclarationInstantiation` is not part of the
+    /// generator's body and must not be delayed until the first `next`.
     ///
-    /// Nothing is pushed onto the frame stack. The execution that would have been a frame is
-    /// parked from the start, at instruction zero with an empty operand stack — which is exactly
-    /// what a frame the loop has not run yet would have looked like.
-    #[allow(clippy::too_many_arguments)] // the call's shape, threaded rather than shared
-    pub(super) fn enter_generator(
+    /// `asynchronous` picks §27.6.2's object instead — a different prototype, a different brand,
+    /// and a request queue. Nothing else about starting one differs.
+    pub(super) fn start_generator(
         &mut self,
-        body: Rc<Chunk>,
-        function: ObjectId,
-        receiver: Value,
-        new_target: Value,
-        environment: crate::heap::EnvironmentId,
-        receiver_at: usize,
+        asynchronous: bool,
         heap: &mut Heap,
         chunk: &Chunk,
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<(), Fault> {
-        // §10.1.13 `GetPrototypeFromConstructor` with %GeneratorPrototype% as the fallback, and it
-        // is a full `[[Get]]`: `g.prototype` is an ordinary writable property, so a script may
-        // replace it, and a getter or a proxy there may throw.
-        let prototype = match self.prototype_for(function, self.realm.generator_prototype(), heap) {
+        let Some(frame) = self.frames.last() else {
+            return Err(Fault::YieldOutsideGenerator);
+        };
+        // §10.2.2's *active function object*, which is what §10.1.13 reads `prototype` off. A frame
+        // running a generator body always has one: the only way to reach this instruction is a
+        // call, and a call names what it called.
+        let Some(function) = frame.function else {
+            return Err(Fault::YieldOutsideGenerator);
+        };
+        // The three things §27.6.2 changes about §15.5.4, decided together. Separately they were
+        // three conditions asking one question, and the two that only added state — the brand's
+        // sibling and the queue — could each be mutated away without any program noticing.
+        let (fallback, brand, queue) = match asynchronous {
+            true => (
+                self.realm.async_generator_prototype(),
+                crate::heap::Suspendable::AsyncGenerator,
+                // §27.6.1's `[[AsyncGeneratorQueue]]`, empty and present from the start: a queue
+                // that appears on first use is a queue that can be missing.
+                Some(crate::heap::Role::Requests(VecDeque::new())),
+            ),
+            false => (
+                self.realm.generator_prototype(),
+                crate::heap::Suspendable::Generator,
+                None,
+            ),
+        };
+        // §10.1.13 `GetPrototypeFromConstructor`, and it is a full `[[Get]]`: `g.prototype` is an
+        // ordinary writable property, so a script may replace it and a getter or a proxy there may
+        // throw. It throws *inside the callee*, which is where §15.5.4 puts it.
+        let prototype = match self.prototype_for(function, fallback, heap) {
             Ok(prototype) => prototype,
             Err(error) => {
                 self.raise(error, heap, chunk, current, at)?;
@@ -52,14 +71,20 @@ impl Vm {
             }
         };
         let generator = heap.new_object(Some(prototype));
-        heap.brand_suspendable(generator, crate::heap::Suspendable::Generator);
-        let parked =
-            Suspended::started(body, environment, receiver, new_target, function, generator);
-        // The object was just made, so it is an object and this cannot answer `false`.
+        heap.brand_suspendable(generator, brand);
+        if let (Some(queue), Some(object)) = (queue, heap.object_mut(generator)) {
+            object.set_role(queue);
+        }
+        // Said before the park, because the park reads it: this is the execution's own answer to
+        // "which generator am I", and a `return` inside the body has only the frame to ask.
+        if let Some(frame) = self.frames.last_mut() {
+            frame.generator = Some(generator);
+        }
+        // Not begun — the parameters ran, the body has not. §27.5.1.3 step 5 turns on exactly that
+        // difference, and it is why a park at a `yield` and a park here are not the same record.
+        let parked = self.park(current, at)?.before_the_body();
         heap.park_into(generator, parked);
-        // Where a call leaves its answer: the callee and its arguments go, and the generator takes
-        // their place. From here it is an ordinary value that happens to hold an execution.
-        self.stack.truncate(receiver_at);
+        // Where a call leaves its answer, the park having truncated to it.
         self.stack.push(Value::Object(generator));
         Ok(())
     }

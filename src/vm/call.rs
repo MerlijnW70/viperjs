@@ -347,40 +347,10 @@ impl Vm {
         };
         // §15.5.4 `EvaluateGeneratorBody` — everything above this line is
         // `FunctionDeclarationInstantiation`, which a generator performs exactly as an ordinary
-        // function does. What it does *not* do is run the body: from here the two part company.
-        if body.is_generator() {
-            let this_value = match lexical {
-                Some(captured) => captured.this_value,
-                None => receiver,
-            };
-            // §27.6.2 `AsyncGeneratorFunction` — the same shape, a different object.
-            if body.is_async() {
-                return self.enter_async_generator(
-                    body,
-                    object,
-                    this_value,
-                    new_target,
-                    environment,
-                    receiver_at,
-                    heap,
-                    chunk,
-                    current,
-                    at,
-                );
-            }
-            return self.enter_generator(
-                body,
-                object,
-                this_value,
-                new_target,
-                environment,
-                receiver_at,
-                heap,
-                chunk,
-                current,
-                at,
-            );
-        }
+        // function does, and so does everything below: a generator body is entered as an ordinary
+        // call and parks itself at `Instruction::GeneratorStart`, which the compiler puts after the
+        // parameters. Diverting here instead put the parameter list inside the parked body, where
+        // it ran at the first `next` — see that instruction.
         self.stack.truncate(receiver_at);
         self.frames.push(Frame {
             code: (*current).take(),
