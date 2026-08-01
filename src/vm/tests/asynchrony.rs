@@ -421,6 +421,44 @@ fn a_return_completes_it_and_answers_everything_still_queued() {
 }
 
 #[test]
+fn a_delegation_inside_an_async_generator_asks_for_the_async_iterator() {
+    // §15.5.5 step 3 and step 4 — `GetIterator(value, async)`, which asks `[@@asyncIterator]` and
+    // falls back to §27.1.4's wrapper. Delegating to another async generator is the case that only
+    // works if the async one is asked for: its `next` answers a promise, and the synchronous walk
+    // would read `done` off that promise, find it absent, and loop for ever.
+    assert_eq!(
+        run_settled(
+            "async function* inner() { yield 1; yield 2; }              async function* g() { yield* inner(); yield 3; }              var r = []; (async function () { for await (var x of g()) { r.push(x); } })();",
+            "r.join(',')"
+        ),
+        "1,2,3"
+    );
+    // …and a plain array still works, through the async-from-sync wrapper §7.4.3 falls back to.
+    assert_eq!(
+        run_settled(
+            "async function* g() { yield* [1, 2]; } var r = [];              (async function () { for await (var x of g()) { r.push(x); } })();",
+            "r.join(',')"
+        ),
+        "1,2"
+    );
+}
+
+#[test]
+fn a_delegation_inside_an_async_generator_never_reads_symbol_iterator() {
+    // The half of step 4 that a passing walk does not prove: when `[@@asyncIterator]` is there,
+    // `[@@iterator]` must not be *looked at* — not read and discarded, not read as a fallback.
+    // A whole bucket of test262 checks exactly this by leaving a throwing getter on the sync one,
+    // and the synchronous delegation this replaced tripped every one of them.
+    assert_eq!(
+        run_settled(
+            "var asked = false;              var inner = { };              inner[Symbol.asyncIterator] = function () {                var n = 0; return { next: function () { n += 1;                  return Promise.resolve({ value: n, done: n > 2 }); } }; };              Object.defineProperty(inner, Symbol.iterator,                { get: function () { asked = true; } });              async function* g() { yield* inner; } var r = [];              (async function () { for await (var x of g()) { r.push(x); } })();",
+            "asked + ' ' + r.join(',')"
+        ),
+        "false 1,2"
+    );
+}
+
+#[test]
 fn an_async_generator_is_what_for_await_walks() {
     // §27.1.3.1's `[@@asyncIterator]`, which is only reachable now that something inherits it.
     // Without it the loop falls back to §7.4.3's synchronous path and reads a `Symbol.iterator`

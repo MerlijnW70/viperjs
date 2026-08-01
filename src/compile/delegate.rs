@@ -62,22 +62,41 @@ impl Compiler<'_> {
         let next = self.declare_hidden("next");
         let sent = self.declare_hidden("sent");
         let sending = self.declare_hidden("sending");
+        // §15.5.5 step 3's `GetGeneratorKind`, asked of the body being compiled. Inside a generator
+        // this can only be an async generator, and it changes three things: which iterator is
+        // fetched, that every answer is awaited, and what the suspension hands outward.
+        let asynchronous = self.chunk.is_async;
 
-        // §7.4.2 `GetIterator` and then `next` read **once**, exactly as `for`-`of` reads it: a
-        // `next` replaced on the inner iterator part-way through is not the one this loop calls.
+        // §7.4.2 `GetIterator(value, generatorKind)` and then `next` read **once**, exactly as
+        // `for`-`of` reads it: a `next` replaced on the inner iterator part-way through is not the
+        // one this loop calls.
+        //
+        // The `async` hint is not a detail. §7.4.3 asks `[@@asyncIterator]` and falls back to
+        // §27.1.4's wrapper around `[@@iterator]`, and a `yield*` that asked for the synchronous
+        // one instead would *read a property the specification says it must not even look at* —
+        // which is observable, and is what a whole bucket of test262 checks by putting a throwing
+        // getter on `Symbol.iterator`.
         self.expression(operand)?;
-        self.chunk.emit(Instruction::Duplicate);
-        self.chunk
-            .emit(Instruction::LoadWellKnown(well_known("iterator")));
-        self.chunk.emit(Instruction::GetProperty);
-        self.chunk.emit(Instruction::CallMethod(0));
-        self.chunk.emit(Instruction::RequireObject);
-        self.chunk.emit(Instruction::StoreVariable(0, iterator));
-        let name = self.name_of("next");
-        self.constant(Value::String(name))?;
-        self.chunk.emit(Instruction::GetProperty);
-        self.chunk.emit(Instruction::StoreVariable(0, next));
-        self.chunk.emit(Instruction::Pop);
+        if asynchronous {
+            self.chunk.emit(Instruction::GetAsyncIterator);
+            self.chunk.emit(Instruction::StoreVariable(0, next));
+            self.chunk.emit(Instruction::Pop);
+            self.chunk.emit(Instruction::StoreVariable(0, iterator));
+            self.chunk.emit(Instruction::Pop);
+        } else {
+            self.chunk.emit(Instruction::Duplicate);
+            self.chunk
+                .emit(Instruction::LoadWellKnown(well_known("iterator")));
+            self.chunk.emit(Instruction::GetProperty);
+            self.chunk.emit(Instruction::CallMethod(0));
+            self.chunk.emit(Instruction::RequireObject);
+            self.chunk.emit(Instruction::StoreVariable(0, iterator));
+            let name = self.name_of("next");
+            self.constant(Value::String(name))?;
+            self.chunk.emit(Instruction::GetProperty);
+            self.chunk.emit(Instruction::StoreVariable(0, next));
+            self.chunk.emit(Instruction::Pop);
+        }
 
         // Step 3 — the first message inward is a normal completion carrying `undefined`, which is
         // why the inner iterator's first `next` is called with no useful argument however the outer
@@ -111,6 +130,13 @@ impl Compiler<'_> {
         // expression is finished or the loop goes round again.
         self.chunk.patch(joined)?;
         self.chunk.patch(returned)?;
+        // §15.5.5 steps 7.a.iii, 7.b.iii and 7.c.v — an async delegation awaits *the answer*, and
+        // here rather than at each of the three calls because all three arrive at this point. It
+        // has to be before `done` is read: awaiting afterwards would read `done` off a promise,
+        // which is always absent and so always falsy, and the loop would never end.
+        if asynchronous {
+            self.chunk.emit(Instruction::Await);
+        }
         self.chunk.emit(Instruction::RequireObject);
         self.chunk.emit(Instruction::Duplicate);
         let name = self.name_of("done");
@@ -141,7 +167,18 @@ impl Compiler<'_> {
         // rather than escaping the delegation.
         self.chunk.patch(going)?;
         let caught = self.chunk.emit_jump(Instruction::PushHandler);
-        self.chunk.emit(Instruction::YieldDelegated);
+        // §27.6.3.8 `AsyncGeneratorYield` takes a *value* and wraps it itself, where §27.5.3.7 step
+        // 7.a.vii hands the inner result object straight out to keep its identity. So the async one
+        // reads `value` off the result and yields that: wrapping twice would put an iterator result
+        // inside an iterator result.
+        if asynchronous {
+            let name = self.name_of("value");
+            self.constant(Value::String(name))?;
+            self.chunk.emit(Instruction::GetProperty);
+            self.chunk.emit(Instruction::Yield);
+        } else {
+            self.chunk.emit(Instruction::YieldDelegated);
+        }
         self.chunk.emit(Instruction::PopHandler);
         // §27.5.3.7 step 7.c — a `return` resumption reaches the delegation here, and it must not
         // be mistaken for a value sent inward. What is emitted is the same exit a `return` written

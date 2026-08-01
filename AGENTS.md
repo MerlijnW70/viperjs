@@ -129,7 +129,7 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **68.23% of test262** — 63,556 of 93,153 runs. Treat that number
+Conformance as of this commit is **69.93% of test262** — 65,146 of 93,153 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 
@@ -144,15 +144,16 @@ it. Let the failure buckets choose the next slice, not intuition. The largest ri
 | 280 | `with` |
 | 242 | a function declaration inside a block |
 
-**§27.6 landed and took 63.06% to 68.23%** — 7,643 runs left "not run", 4,814 of them passing. The
+**§27.6 landed and took 63.06% to 69.93%** in two slices: async generators themselves, then
+`yield*` inside one — §15.5.5 step 4's `GetIterator(value, async)`, worth +1,590 on its own. The
 async generator bucket, which was the single largest thing stopping tests from running at all, is
-gone. What is left of it is ~2,900 runs that now *fail* rather than being skipped, and those are the
-next slice's work list rather than a defect: read them with the `grep` below.
+gone.
 
-**70% is now +1,651 runs, and it no longer needs a whole milestone.** The async-generator failures
-above plus per-iteration environments (1,234) reach it between them. **75% is still `BigInt`** —
-6,263 runs, a new numeric type through the value representation, every operator and every coercion,
-and nothing else on the list is within a factor of five of it.
+**70% is +61 runs.** What is left in that area is ~930 runs of "expected a SyntaxError / TypeError /
+ReferenceError but nothing was thrown" — early errors the parser does not raise inside an async
+generator — and those are the next slice. **75% is still `BigInt`**: 6,263 runs, a new numeric type
+through the value representation, every operator and every coercion, and nothing else on the list is
+within a factor of five of it.
 
 **Two buckets are not ES2023 and must not be counted as cheap.** `Temporal` (3,476 runs) is a Stage
 3 proposal with a surface larger than `Date`, `Intl` and `RegExp` combined — building it would raise
