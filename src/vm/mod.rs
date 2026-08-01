@@ -508,6 +508,81 @@ impl Vm {
         Ok(None)
     }
 
+    /// Free everything this machine can no longer reach, and answer how much that was.
+    ///
+    /// The host's to call, and deliberately: the interpreter does not run this on a schedule of its
+    /// own because `Heap::footprint` counts arena slots and DR-0010 does not reuse a swept one, so
+    /// a collection cannot lower what the budget is measured against for objects. Until it can, a
+    /// timer inside the loop costs more than it saves — measured, twice, in `execute`.
+    ///
+    /// An embedder knows things the loop does not: when a request finished, when a frame was
+    /// drawn, when nothing is holding the values a script just made. `root` is the chunk being run
+    /// or the one about to be, whose constants are Strings the machine will reach for.
+    ///
+    /// # Safety of a sort
+    ///
+    /// Calling this between two `run`s is what the tests do and what an embedder should. Calling it
+    /// is safe at any time in the Rust sense — nothing here can dangle a pointer — but a root set
+    /// is a claim about what a *program* can still name, so this is not for calling from inside a
+    /// native while the interpreter is mid-instruction: the operands of the instruction in flight
+    /// are on the stack and rooted, but a value a Rust local is holding and has not pushed is not.
+    pub fn collect(&self, root: &Chunk, heap: &mut Heap) -> crate::heap::Collected {
+        let roots = self.roots(root);
+        heap.collect(&roots)
+    }
+
+    /// Everything a running program can still name — §9's execution contexts, as a root set.
+    ///
+    /// The list the collector cannot work out for itself, and the one place in the engine where
+    /// being *incomplete* is worse than being wrong: a missing root does not fail, it frees
+    /// something a later instruction reads. So it is written against the fields of [`Vm`] and
+    /// [`super::call::Frame`] rather than against a memory of what they hold, and every one of
+    /// them appears here or is deliberately absent with a reason.
+    ///
+    /// What is deliberately absent: `steps`, `floor`, `until_heap_check` and the `at`/`stack_base`
+    /// marks are numbers; `code` is an `Rc<Chunk>` whose *constants* are named through
+    /// [`Chunk::names`]; the intern table is not a root at all, which is what lets a name a program
+    /// computed and dropped be collected.
+    ///
+    /// `root` is the chunk being run, which the machine does not hold: it is lent to `run` and its
+    /// constants are the Strings the outermost code is about to use.
+    fn roots(&self, root: &Chunk) -> crate::heap::Roots {
+        let mut values = Vec::new();
+        let mut environments = vec![self.environment];
+
+        values.extend(self.stack.iter().copied());
+        values.extend([self.this_value, self.new_target, self.completion]);
+        values.extend(self.escaped);
+        values.extend(self.templates.values().copied().map(Value::Object));
+        // Everything the realm built before a script ran. Not the individual intrinsics, because a
+        // list of those is one an intrinsic added later is left out of — see `Realm::intrinsics`.
+        values.extend(self.realm.intrinsics().map(Value::Object));
+        root.names(&mut values);
+
+        for frame in &self.frames {
+            values.extend([frame.this_value, frame.new_target]);
+            values.extend(frame.constructed);
+            values.extend(frame.function.map(Value::Object));
+            values.extend(frame.generator.map(Value::Object));
+            environments.push(frame.environment);
+            if let Some(code) = &frame.code {
+                code.names(&mut values);
+            }
+        }
+        // A handler remembers the environment it was installed in, and a throw is going to restore
+        // it — so it is live however deeply the block it belongs to has been left.
+        environments.extend(self.handlers.iter().map(|handler| handler.environment));
+        // §9.5's queue. A job that has not run yet holds the only reference to what it will run
+        // with: a promise reaction names its handler, its capability and the value it settled.
+        for job in &self.jobs {
+            job.names(&mut values);
+        }
+        crate::heap::Roots {
+            values,
+            environments,
+        }
+    }
+
     /// Take the top of the stack.
     fn pop(&mut self) -> Result<Value, Fault> {
         self.stack.pop().ok_or(Fault::StackUnderflow)

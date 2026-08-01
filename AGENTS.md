@@ -173,17 +173,22 @@ Three things about it are worth keeping, none of them about closures:
   `continue` leaves the environment and deliberately does not close the iterator, and with the two
   the wrong way round it stops at the iterator and leaks an environment per pass.
 
-**The garbage collector is written, tested, and never called.** Nothing in `src/vm` invokes
-`Heap::collect`, so the heap only grows and DR-0013's budget is against everything a program has
-*ever* allocated rather than what it still holds. Any program that allocates more than 64 MiB in
-total throws a RangeError, however little is live — which is ~900 conformance runs on its own and
-the largest single thing standing between praxis and real programs. Wiring it needs a root set
-audited against every place a `Value` can hide: the operand stack, each frame's registers and
-chunk constants, the environment chain, the realm's intrinsics, the job queue, and the executions
-parked inside suspended generators. One missed root frees something live, so it wants doing
-deliberately and with a fuzzer, not on the way past.
+**The garbage collector's root set is settled; its schedule is not.** `Vm::collect` is the host's
+to call, and the interpreter does not run one on a timer. That is measured, not deferred:
+`Heap::footprint` counts arena *slots* and DR-0010 does not reuse a swept one, so a collection
+reclaims Strings, environments and buffers and cannot reclaim what an object took. Scheduled every
+eight mebibytes it cost 318 conformance files their time budget to buy six passes; run once at the
+budget, 79 files to buy none. **The next step there is slot reuse with generation-tagged handles —
+a decision record, not a patch**, and after it the timer is one line.
 
-**A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
+What *is* settled is the part that cannot be left half-right. Four whole classes of reference were
+untraced before this: a bound function's target and arguments, a revive closure's context, a
+compiled chunk's constant table, and a queued job's payload. A collection with any of those missing
+frees something a later instruction reads — silently, as a wrong value rather than a crash. The
+root set lives in `Vm::roots` and is checked against the collector in `vm::tests::collecting`,
+including the one case that distinguishes it: an intrinsic *nothing has reached yet*.
+
+**A compile error is not automatically a skip**A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
 early errors are decided by the *compiler* — §12.9.5 reads a regular expression literal's shape and
 its pattern only afterwards — so `conformance` used to drop every one of them into "not run". 560
 runs came out of that column when it was fixed: 366 pass, and **194 fail and could not be seen

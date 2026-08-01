@@ -49,6 +49,30 @@ pub(crate) enum Job {
     },
 }
 
+impl Job {
+    /// Every heap value this job will need when it runs.
+    ///
+    /// A queued job is often the only thing naming what it will run with: a reaction holds the
+    /// handler a program passed to `then` and let go of, and the capability it will settle. Written
+    /// beside the variants so that a third kind of job cannot be added without its own line here.
+    pub(crate) fn names(&self, into: &mut Vec<Value>) {
+        match self {
+            Job::Reaction { reaction, argument } => {
+                into.push(*argument);
+                into.extend(reaction.handler);
+                if let Some(capability) = reaction.capability {
+                    into.extend([capability.promise, capability.resolve, capability.reject]);
+                }
+            }
+            Job::ResolveThenable {
+                promise,
+                thenable,
+                then,
+            } => into.extend([Value::Object(*promise), *thenable, *then]),
+        }
+    }
+}
+
 impl Vm {
     /// Put a job on the end of the queue — §9.5 `HostEnqueuePromiseJob`.
     pub(crate) fn enqueue(&mut self, job: Job) {

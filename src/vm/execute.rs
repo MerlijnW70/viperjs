@@ -47,6 +47,20 @@ impl Vm {
                 self.until_heap_check -= 1;
             } else {
                 self.until_heap_check = HEAP_CHECK_INTERVAL;
+                // §7.1's abstract operations say nothing about memory, and DR-0013's budget is
+                // what praxis answers with instead.
+                //
+                // The collector is **not** run from here, and that is a measurement rather than an
+                // oversight. `Heap::footprint` counts arena *slots*, and DR-0010 does not reuse a
+                // swept one — so a collection reclaims Strings, environments and buffers and
+                // cannot reclaim what an object took. Scheduled every eight mebibytes it cost 318
+                // conformance files their time budget to buy six passes; run once at the budget,
+                // 79 files to buy none. Until a slot can be reused, walking the heap buys less
+                // than the walk costs.
+                //
+                // So the *policy* is the host's — [`Vm::collect`] — and what is settled here is
+                // the part that cannot be left half-right: the root set, checked against the
+                // collector in `vm::tests::collecting`.
                 if heap.is_exhausted() {
                     let thrown = self.realm.error(
                         heap,

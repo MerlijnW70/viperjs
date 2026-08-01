@@ -60,6 +60,8 @@ pub struct Realm {
     /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
     /// property on the constructor would be the script's to move; this is not.
     well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
+    /// How many objects the heap held once this realm was built — see [`Realm::intrinsics`].
+    intrinsics: usize,
     /// %ArrayBuffer.prototype% — §25.1.5.
     array_buffer_prototype: ObjectId,
     /// %ArrayBuffer% itself, which `slice`'s `SpeciesConstructor` falls back to.
@@ -329,6 +331,7 @@ impl Realm {
             string_prototype,
             symbol_prototype,
             well_known,
+            intrinsics: 0,
             array_buffer_prototype,
             // Replaced by `builtins::buffer::install`, which is where the constructor is made.
             array_buffer_constructor: array_buffer_prototype,
@@ -379,6 +382,8 @@ impl Realm {
         if let Some(found) = crate::builtins::global_object(heap, &realm, "ArrayBuffer") {
             realm.array_buffer_constructor = found;
         }
+        // Last, so that everything above it is inside the ceiling — see `Realm::intrinsics`.
+        realm.seal(heap);
         realm
     }
 
@@ -615,6 +620,27 @@ impl Realm {
     /// name lookup would be a string comparison on a path that has none. The names those indices
     /// have are the `WELL_KNOWN` table in `crate::builtins`, and `well_known_at` beside it turns
     /// one into the other for the callers that have a name and not a position.
+    /// Every object that existed before any script did, as roots for the collector.
+    ///
+    /// A *ceiling* rather than a list of the forty-odd intrinsic fields, and deliberately: a list
+    /// written out by hand is one an intrinsic added later is left out of, and being left out of
+    /// the root set does not fail to compile — it frees `%GeneratorPrototype%` while a generator
+    /// is still inheriting from it. Nothing a script can reach is below the ceiling, because the
+    /// ceiling is taken before a script runs.
+    ///
+    /// It over-approximates by whatever `Realm::new` allocated and threw away, which is a handful
+    /// of objects that will never be collected. That is the price, and it is the right way round:
+    /// the alternative fails by freeing something live.
+    pub fn intrinsics(&self) -> impl Iterator<Item = crate::heap::ObjectId> {
+        (0..self.intrinsics).map(crate::heap::ObjectId)
+    }
+
+    /// Record that ceiling, once everything the realm builds is built.
+    fn seal(&mut self, heap: &Heap) {
+        self.intrinsics = heap.object_count();
+    }
+
+    /// The well-known Symbol at `at` in `crate::builtins::WELL_KNOWN`.
     pub fn well_known(&self, at: usize) -> Option<SymbolId> {
         self.well_known.get(at).copied()
     }

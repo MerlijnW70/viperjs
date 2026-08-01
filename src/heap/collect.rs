@@ -221,6 +221,47 @@ impl Heap {
             if let Some(map) = object.arguments_map() {
                 self.mark_environment(map.environment(), marked);
             }
+            // What this object is callable *as*, which four of the five shapes make reachable and
+            // nothing else does. A bound function is the plain one: `f.bind(o, x)` leaves `f`, `o`
+            // and `x` named by the bound function alone, so a collector that skipped this would
+            // free the target of a function still sitting in a variable.
+            //
+            // The compiled body is the one that is easy to miss, because what it names is not
+            // values on the object but Strings in its *constant table* — every literal the body
+            // mentions, its own name, and both halves of every tagged template. See
+            // [`Chunk::names`], which is in `compile` so that a field added to a chunk cannot be
+            // forgotten here.
+            match object.call() {
+                Some(crate::heap::Callable::Bytecode(chunk)) => {
+                    let mut named = Vec::new();
+                    chunk.names(&mut named);
+                    for value in named {
+                        match value {
+                            Value::Object(reached) => pending.push(reached),
+                            other => self.mark_value(other, marked),
+                        }
+                    }
+                }
+                Some(crate::heap::Callable::Bound(bound)) => {
+                    pending.push(bound.target);
+                    for value in std::iter::once(bound.this_value).chain(bound.arguments.clone()) {
+                        match value {
+                            Value::Object(reached) => pending.push(reached),
+                            other => self.mark_value(other, marked),
+                        }
+                    }
+                }
+                // §27.7.5.3's two closures name the execution they revive, and that context object
+                // is where the parked body and the promise it settles live.
+                Some(crate::heap::Callable::Revive { context, .. }) => pending.push(*context),
+                // A native holds a function pointer and a resumption holds a kind; neither names
+                // anything on the heap. Listed rather than swept into a catch-all, so that a sixth
+                // shape carrying a value cannot arrive here unnoticed.
+                Some(
+                    crate::heap::Callable::Native { .. } | crate::heap::Callable::Resume { .. },
+                )
+                | None => {}
+            }
             // A wrapper's primitive can be a String, and nothing else need be holding it: the
             // only reference to `new String('x')`'s contents is the wrapper itself.
             match object.primitive() {

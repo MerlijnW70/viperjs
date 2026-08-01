@@ -148,6 +148,30 @@ pub struct Template {
     pub raw: Vec<crate::heap::StringId>,
 }
 
+impl Chunk {
+    /// Every heap value this chunk names, and every one the chunks inside it name.
+    ///
+    /// A compiled body holds Strings — its constants, its own name, the cooked and raw halves of
+    /// each tagged template — and nothing outside `compile` knows that. So the walk is here rather
+    /// than in the collector, where it would be a second copy of this struct's field list and the
+    /// kind that goes quietly out of date: a field added above and forgotten here does not fail to
+    /// compile, it frees a String something is still going to read.
+    ///
+    /// Nested functions are included because a closure's body is reachable through the outer chunk
+    /// long before any function object for it exists — `MakeFunction` reads it out of here.
+    pub fn names(&self, into: &mut Vec<Value>) {
+        into.extend(self.constants.iter().copied());
+        into.extend(self.name.map(Value::String));
+        for template in &self.templates {
+            into.extend(template.cooked.iter().flatten().copied().map(Value::String));
+            into.extend(template.raw.iter().copied().map(Value::String));
+        }
+        for nested in &self.functions {
+            nested.names(into);
+        }
+    }
+}
+
 /// One instruction.
 ///
 /// Deliberately few. An operator is one instruction carrying which operator it is, rather than one

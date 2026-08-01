@@ -79,6 +79,7 @@ mod buffers;
 mod builtins;
 mod classes;
 mod coercion;
+mod collecting;
 mod collections;
 mod constructors;
 mod date;

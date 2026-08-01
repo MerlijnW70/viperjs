@@ -67,12 +67,20 @@ impl Suspended {
     /// here is reachable any other way. The operands are on no stack the machine owns any more,
     /// and a `this` captured mid-call may be the only reference to the object it names.
     pub(crate) fn reachable(&self) -> impl Iterator<Item = Value> + '_ {
+        // The code it will carry on in, which names Strings its constant table alone holds. A
+        // parked body is often the *only* thing pointing at its chunk: the function object that
+        // made it may have been collected already, and the frames that ran it are gone.
+        let mut named = Vec::new();
+        if let Some(code) = &self.code {
+            code.names(&mut named);
+        }
         self.stack
             .iter()
             .copied()
             .chain([self.this_value, self.new_target])
             .chain(self.function.map(Value::Object))
             .chain(self.generator.map(Value::Object))
+            .chain(named)
     }
 
     /// Whether this execution has begun — see the field.
