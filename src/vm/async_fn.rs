@@ -150,15 +150,20 @@ impl Vm {
         &mut self,
         kind: ReactionKind,
         context: ObjectId,
+        callee_at: usize,
         receiver_at: usize,
         count: usize,
         heap: &mut Heap,
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<(), Fault> {
+        // From the callee's slot and not from the receiver's, which is where `enter_native` and
+        // `enter_resume` both read theirs. The two are one apart for a method call and the *same
+        // slot* for a plain one, so counting from the receiver happens to be right only because a
+        // job always calls this as a method — and would be off by one the day anything else did.
         let settled = match count {
             0 => Value::Undefined,
-            _ => self.stack[receiver_at + 2],
+            _ => self.stack[callee_at + 1],
         };
         self.stack.truncate(receiver_at);
         let Some(parked) = heap.take_parked(Value::Object(context)) else {

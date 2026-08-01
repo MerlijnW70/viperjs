@@ -114,7 +114,16 @@ impl Vm {
             // in Rust, and unlike one they answer to nobody: the job that calls them discards the
             // completion, which is why nothing here is left on the stack for a caller.
             Callable::Revive { kind, context } => {
-                return self.enter_revive(kind, context, receiver_at, count, heap, current, at);
+                return self.enter_revive(
+                    kind,
+                    context,
+                    callee_at,
+                    receiver_at,
+                    count,
+                    heap,
+                    current,
+                    at,
+                );
             }
             Callable::Resume(kind) => {
                 return self.enter_resume(
