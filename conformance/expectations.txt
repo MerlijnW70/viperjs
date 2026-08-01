@@ -9,18 +9,16 @@
 # test262 defaaf1571cd13b183e3f505c6a06e8db316e593
 annexB/built-ins/Array/from/iterator-method-emulates-undefined.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/Array/from/iterator-method-emulates-undefined.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-annexB/built-ins/Function/createdynfn-html-close-comment-body.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-close-comment-body.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-close-comment-params.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-close-comment-params.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-open-comment-body.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-open-comment-body.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-open-comment-params.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-html-open-comment-params.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-params.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-params.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a TypeError
+annexB/built-ins/Function/createdynfn-html-close-comment-body.js :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-close-comment-body.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-close-comment-params.js :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-close-comment-params.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-open-comment-body.js :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-open-comment-body.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-open-comment-params.js :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-html-open-comment-params.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js :: it threw SyntaxError: the source of a dynamic function does not parse
+annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
 annexB/built-ins/Object/is/emulates-undefined.js :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
 annexB/built-ins/Object/is/emulates-undefined.js (strict) :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
 annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js :: it threw SyntaxError: a control escape needs a letter
@@ -491,12 +489,12 @@ annexB/language/eval-code/direct/global-block-decl-eval-global-block-scoping.js 
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-block-decl-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-block-decl-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-block-decl-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-block-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-block-decl-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-block-decl-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-block-decl-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-block-decl-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-block-decl-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -510,12 +508,12 @@ annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-block-sc
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -529,12 +527,12 @@ annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-block-sc
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -548,12 +546,12 @@ annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-block-scop
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -567,12 +565,12 @@ annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-block-scopin
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -586,12 +584,12 @@ annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-block-scop
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -605,12 +603,12 @@ annexB/language/eval-code/direct/global-switch-case-eval-global-block-scoping.js
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-switch-case-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-switch-case-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-switch-case-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-switch-case-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-switch-case-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-switch-case-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-switch-case-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-switch-case-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-case-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -624,12 +622,12 @@ annexB/language/eval-code/direct/global-switch-dflt-eval-global-block-scoping.js
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/direct/global-switch-dflt-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/direct/global-switch-dflt-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/direct/global-switch-dflt-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -648,12 +646,12 @@ annexB/language/eval-code/indirect/global-block-decl-eval-global-block-scoping.j
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-block-decl-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-block-decl-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-block-decl-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -667,12 +665,12 @@ annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-block-
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -686,12 +684,12 @@ annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-block-
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -705,12 +703,12 @@ annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-block-sc
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -724,12 +722,12 @@ annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-block-scop
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -743,12 +741,12 @@ annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-block-sc
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -762,12 +760,12 @@ annexB/language/eval-code/indirect/global-switch-case-eval-global-block-scoping.
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-switch-case-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-switch-case-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-case-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -781,12 +779,12 @@ annexB/language/eval-code/indirect/global-switch-dflt-eval-global-block-scoping.
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-block-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-fn-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-fn-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-global-update.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-global-init.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-global-update.js :: it threw ReferenceError: eval is not defined
+annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-non-enumerable-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-var-no-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-existing-var-update.js :: it threw ReferenceError: eval is not defined
-annexB/language/eval-code/indirect/global-switch-dflt-eval-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/eval-code/indirect/global-switch-dflt-eval-global-init.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-no-skip-try.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-skip-early-err-block.js :: it threw ReferenceError: eval is not defined
 annexB/language/eval-code/indirect/global-switch-dflt-eval-global-skip-early-err-for-in.js :: it threw ReferenceError: eval is not defined
@@ -916,15 +914,15 @@ annexB/language/function-code/if-stmt-else-decl-func-skip-early-err-try.js :: it
 annexB/language/function-code/if-stmt-else-decl-func-skip-early-err.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/function-code/if-stmt-else-decl-func-skip-param.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/function-code/if-stmt-else-decl-func-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/block-decl-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/block-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/block-decl-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/block-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/if-decl-else-decl-a-global-block-scoping.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-block-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-block-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/if-decl-else-decl-a-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/if-decl-else-decl-a-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/if-decl-else-decl-a-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/if-decl-else-decl-a-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/if-decl-else-decl-a-global-existing-var-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-existing-var-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-a-global-init.js :: it did not parse: a declaration may not stand where only a statement may
@@ -942,8 +940,8 @@ annexB/language/global-code/if-decl-else-decl-b-global-existing-block-fn-no-init
 annexB/language/global-code/if-decl-else-decl-b-global-existing-block-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-b-global-existing-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-b-global-existing-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/if-decl-else-decl-b-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/if-decl-else-decl-b-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/if-decl-else-decl-b-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/if-decl-else-decl-b-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/if-decl-else-decl-b-global-existing-var-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-b-global-existing-var-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-decl-b-global-init.js :: it did not parse: a declaration may not stand where only a statement may
@@ -961,8 +959,8 @@ annexB/language/global-code/if-decl-else-stmt-global-existing-block-fn-no-init.j
 annexB/language/global-code/if-decl-else-stmt-global-existing-block-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-stmt-global-existing-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-stmt-global-existing-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/if-decl-else-stmt-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/if-decl-else-stmt-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/if-decl-else-stmt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/if-decl-else-stmt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/if-decl-else-stmt-global-existing-var-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-stmt-global-existing-var-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-else-stmt-global-init.js :: it did not parse: a declaration may not stand where only a statement may
@@ -980,8 +978,8 @@ annexB/language/global-code/if-decl-no-else-global-existing-block-fn-no-init.js 
 annexB/language/global-code/if-decl-no-else-global-existing-block-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-no-else-global-existing-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-no-else-global-existing-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/if-decl-no-else-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/if-decl-no-else-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/if-decl-no-else-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/if-decl-no-else-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/if-decl-no-else-global-existing-var-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-no-else-global-existing-var-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-decl-no-else-global-init.js :: it did not parse: a declaration may not stand where only a statement may
@@ -999,8 +997,8 @@ annexB/language/global-code/if-stmt-else-decl-global-existing-block-fn-no-init.j
 annexB/language/global-code/if-stmt-else-decl-global-existing-block-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-existing-fn-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-existing-fn-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/if-stmt-else-decl-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/if-stmt-else-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/if-stmt-else-decl-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/if-stmt-else-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/if-stmt-else-decl-global-existing-var-no-init.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-existing-var-update.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-init.js :: it did not parse: a declaration may not stand where only a statement may
@@ -1013,10 +1011,10 @@ annexB/language/global-code/if-stmt-else-decl-global-skip-early-err-switch.js ::
 annexB/language/global-code/if-stmt-else-decl-global-skip-early-err-try.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-skip-early-err.js :: it did not parse: a declaration may not stand where only a statement may
 annexB/language/global-code/if-stmt-else-decl-global-update.js :: it did not parse: a declaration may not stand where only a statement may
-annexB/language/global-code/switch-case-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
-annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: building a function from source text is not implemented yet
+annexB/language/global-code/switch-case-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js (strict) :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-prototype-emulates-undefined.js :: it threw TypeError: the `prototype` of an extended constructor is neither an object nor null
@@ -1402,14 +1400,10 @@ built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it
 built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/includes/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/includes/resizable-buffer-special-float-values.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/prototype/includes/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/includes/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
-built-ins/Array/prototype/indexOf/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/prototype/indexOf/resizable-buffer-special-float-values.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/prototype/indexOf/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/indexOf/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/join/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -2005,8 +1999,8 @@ built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-p
 built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
 built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 built-ins/AsyncFromSyncIteratorPrototype/return/absent-value-not-passed.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
-built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw SyntaxError: the source of a dynamic function does not parse
+built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
 built-ins/AsyncFunction/AsyncFunction-is-subclass.js :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
 built-ins/AsyncFunction/AsyncFunction-is-subclass.js (strict) :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
 built-ins/AsyncFunction/AsyncFunction-name.js :: it threw an object with no name: name descriptor value should be AsyncFunction; name value should be AsyncFunction
@@ -2015,10 +2009,8 @@ built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js :: it threw an objec
 built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js :: it threw an object with no name: toStringTag value Expected SameValue(«undefined», «"AsyncFunction"») to be true
 built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js (strict) :: it threw an object with no name: toStringTag value Expected SameValue(«undefined», «"AsyncFunction"») to be true
-built-ins/AsyncFunction/instance-construct-throws.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/AsyncFunction/instance-construct-throws.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/AsyncFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
-built-ins/AsyncFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
+built-ins/AsyncFunction/instance-construct-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/AsyncFunction/instance-construct-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/AsyncFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/AsyncFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %AsyncGeneratorFunction%
@@ -2479,8 +2471,6 @@ built-ins/BigInt/valueof-throws.js :: it threw an object with no name: Expected 
 built-ins/BigInt/valueof-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
 built-ins/Boolean/S9.2_A1_T1.js :: it threw ReferenceError: eval is not defined
 built-ins/Boolean/S9.2_A1_T1.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/Boolean/S9.2_A6_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Boolean/S9.2_A6_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Boolean/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Boolean/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Boolean/prototype/S15.6.3.1_A1.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
@@ -3115,26 +3105,8 @@ built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
 built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
-built-ins/Function/15.3.2.1-10-6gs.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-built-ins/Function/15.3.2.1-11-1-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-built-ins/Function/15.3.2.1-11-1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-2-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-3-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-built-ins/Function/15.3.2.1-11-3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-4-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-5-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-built-ins/Function/15.3.2.1-11-5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-6-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-7-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-8-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-9-s.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.2.1-11-9-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/15.3.5-1gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/15.3.5-2gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-10gs.js :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/15.3.5.4_2-11gs.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Function/15.3.5.4_2-12gs.js :: it threw ReferenceError: eval is not defined
 built-ins/Function/15.3.5.4_2-13gs.js (strict) :: it threw ReferenceError: eval is not defined
@@ -3160,121 +3132,13 @@ built-ins/Function/15.3.5.4_2-54gs.js (strict) :: it threw an object with no nam
 built-ins/Function/15.3.5.4_2-57gs.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Function/15.3.5.4_2-5gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/15.3.5.4_2-76gs.js :: it threw ReferenceError: eval is not defined
-built-ins/Function/15.3.5.4_2-77gs.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.5.4_2-78gs.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.5.4_2-7gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.5.4_2-8gs.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.5.4_2-95gs.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/15.3.5.4_2-9gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.1_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.1_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T1.js :: it threw an object with no name: The value of e is expected to be 7 Expected SameValue(«TypeError: building a function from source text is not implemented yet», «7») to be true
-built-ins/Function/S15.3.2.1_A1_T1.js (strict) :: it threw an object with no name: The value of e is expected to be 7 Expected SameValue(«TypeError: building a function from source text is not implemented yet», «7») to be true
-built-ins/Function/S15.3.2.1_A1_T10.js :: it threw an object with no name: #1: test fails with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T10.js (strict) :: it threw an object with no name: #1: test fails with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T11.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T11.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T12.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T12.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T13.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A1_T13.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A1_T2.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T2.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T3.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T3.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T4.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T4.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T5.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T5.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T6.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T6.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T7.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T7.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T8.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A1_T8.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A1_T9.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A1_T9.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A2_T1.js :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T1.js (strict) :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T2.js :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T2.js (strict) :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T3.js :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T3.js (strict) :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T4.js :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T4.js (strict) :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T5.js :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T5.js (strict) :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T6.js :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A2_T6.js (strict) :: it threw an object with no name: #1: test failed
-built-ins/Function/S15.3.2.1_A3_T1.js :: it threw an object with no name: The value of e is expected to be 1 Expected SameValue(«TypeError: building a function from source text is not implemented yet», «1») to be true
-built-ins/Function/S15.3.2.1_A3_T1.js (strict) :: it threw an object with no name: The value of e is expected to be 1 Expected SameValue(«TypeError: building a function from source text is not implemented yet», «1») to be true
-built-ins/Function/S15.3.2.1_A3_T10.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A3_T10.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A3_T11.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T11.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T12.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T12.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T13.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T13.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T14.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T14.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T15.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T15.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T2.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T2.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T3.js :: it threw an object with no name: The value of e is expected to be "body" Expected SameValue(«TypeError: building a function from source text is not implemented yet», «"body"») to be true
-built-ins/Function/S15.3.2.1_A3_T3.js (strict) :: it threw an object with no name: The value of e is expected to be "body" Expected SameValue(«TypeError: building a function from source text is not implemented yet», «"body"») to be true
-built-ins/Function/S15.3.2.1_A3_T4.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T4.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T5.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T5.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T6.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A3_T6.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A3_T7.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T7.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T8.js :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T8.js (strict) :: it threw an object with no name: #1: test failed with error TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2.1_A3_T9.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2.1_A3_T9.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3.2_A1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.2_A1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A1_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A1_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A2_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A2_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A2_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A2_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A3_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A3_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A3_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3.5_A3_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A2_T1.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3_A2_T1.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3_A2_T2.js :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3_A2_T2.js (strict) :: it threw an object with no name: The result of evaluating (e instanceof SyntaxError) is expected to be true
-built-ins/Function/S15.3_A3_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T4.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T4.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T6.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/S15.3_A3_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/StrictFunction_reservedwords_with.js :: it threw an object with no name: `new Function("'use strict'; with ({}) {}")` throws a SyntaxError exception Expected a SyntaxError but got a TypeError
-built-ins/Function/StrictFunction_reservedwords_with.js (strict) :: it threw an object with no name: `new Function("'use strict'; with ({}) {}")` throws a SyntaxError exception Expected a SyntaxError but got a TypeError
+built-ins/Function/15.3.5.4_2-7gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Function/15.3.5.4_2-9gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/StrictFunction_restricted-properties.js (strict) :: it threw an object with no name: return func.caller throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/call-bind-this-realm-undef.js :: it threw TypeError: what was called is not a function
 built-ins/Function/call-bind-this-realm-undef.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/call-bind-this-realm-value.js :: it threw TypeError: what was called is not a function
 built-ins/Function/call-bind-this-realm-value.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/instance-name.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/internals/Call/class-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Call/class-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it threw TypeError: what was called is not a function
@@ -3285,34 +3149,18 @@ built-ins/Function/internals/Construct/derived-return-val-realm.js :: it threw T
 built-ins/Function/internals/Construct/derived-return-val-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/is-a-constructor.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/is-a-constructor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A1_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A1_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A1_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A1_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A2_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A2_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A2_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A2_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A2_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A2_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A3_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A3_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A3_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A3_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A3_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A3_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A4_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A4_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A4_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A4_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A4_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/length/S15.3.5.1_A4_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/private-identifiers-not-empty.js :: it threw an object with no name: It should be a SyntaxError if AllPrivateIdentifiersValid returns false to dynamic function body Expected a SyntaxError but got a TypeError
-built-ins/Function/private-identifiers-not-empty.js (strict) :: it threw an object with no name: It should be a SyntaxError if AllPrivateIdentifiersValid returns false to dynamic function body Expected a SyntaxError but got a TypeError
+built-ins/Function/length/S15.3.5.1_A1_T1.js :: it threw an object with no name: The value of f.length is expected to be 3 Expected SameValue(«1», «3») to be true
+built-ins/Function/length/S15.3.5.1_A1_T1.js (strict) :: it threw an object with no name: The value of f.length is expected to be 3 Expected SameValue(«1», «3») to be true
+built-ins/Function/length/S15.3.5.1_A1_T2.js :: it threw an object with no name: The value of f.length is expected to be 5 Expected SameValue(«2», «5») to be true
+built-ins/Function/length/S15.3.5.1_A1_T2.js (strict) :: it threw an object with no name: The value of f.length is expected to be 5 Expected SameValue(«2», «5») to be true
+built-ins/Function/length/S15.3.5.1_A1_T3.js :: it threw an object with no name: The value of f.length is expected to be 6 Expected SameValue(«3», «6») to be true
+built-ins/Function/length/S15.3.5.1_A1_T3.js (strict) :: it threw an object with no name: The value of f.length is expected to be 6 Expected SameValue(«3», «6») to be true
+built-ins/Function/length/S15.3.5.1_A3_T1.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
+built-ins/Function/length/S15.3.5.1_A3_T1.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
+built-ins/Function/length/S15.3.5.1_A3_T2.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
+built-ins/Function/length/S15.3.5.1_A3_T2.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
+built-ins/Function/length/S15.3.5.1_A3_T3.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
+built-ins/Function/length/S15.3.5.1_A3_T3.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
 built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -3327,10 +3175,6 @@ built-ins/Function/prototype/S15.3.4_A2_T2.js :: it threw an object with no name
 built-ins/Function/prototype/S15.3.4_A2_T2.js (strict) :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: TypeError: what was called is not a function
 built-ins/Function/prototype/S15.3.4_A2_T3.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/S15.3.4_A2_T3.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.5.2_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/S15.3.5.2_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/S15.3.5.2_A1_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/S15.3.5.2_A1_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/Symbol.hasInstance/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Function/prototype/Symbol.hasInstance/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Function/prototype/Symbol.hasInstance/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -3351,54 +3195,14 @@ built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js :: it threw Typ
 built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/Symbol.hasInstance/value-positive.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/Symbol.hasInstance/value-positive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/S15.3.4.3_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/apply/S15.3.4.3_A3_T10.js :: it threw ReferenceError: eval is not defined
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T4.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T4.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A3_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/apply/S15.3.4.3_A3_T9.js :: it threw ReferenceError: eval is not defined
 built-ins/Function/prototype/apply/S15.3.4.3_A3_T9.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/apply/S15.3.4.3_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T8.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T8.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T10.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T10.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T4.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T4.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T6.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T8.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T8.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T9.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A7_T9.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/apply/S15.3.4.3_A8_T6.js :: it threw an object with no name: #1: Function.prototype.apply can't be used as [[Construct]] caller
-built-ins/Function/prototype/apply/S15.3.4.3_A8_T6.js (strict) :: it threw an object with no name: #1: Function.prototype.apply can't be used as [[Construct]] caller
 built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
@@ -3433,56 +3237,14 @@ built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object w
 built-ins/Function/prototype/bind/instance-name-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/call/S15.3.4.4_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A2_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A2_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/call/S15.3.4.4_A3_T10.js :: it threw ReferenceError: eval is not defined
-built-ins/Function/prototype/call/S15.3.4.4_A3_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T4.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T4.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A3_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Function/prototype/call/S15.3.4.4_A3_T9.js :: it threw ReferenceError: eval is not defined
 built-ins/Function/prototype/call/S15.3.4.4_A3_T9.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/call/S15.3.4.4_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/call/S15.3.4.4_A5_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A5_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A5_T8.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A5_T8.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T10.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T10.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T4.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T4.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T6.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T8.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T8.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T9.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A6_T9.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/call/S15.3.4.4_A7_T6.js :: it threw an object with no name: #1: Function.prototype.call can't be used as [[Construct]] caller
-built-ins/Function/prototype/call/S15.3.4.4_A7_T6.js (strict) :: it threw an object with no name: #1: Function.prototype.call can't be used as [[Construct]] caller
 built-ins/Function/prototype/caller-arguments/accessor-properties.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Function/prototype/caller-arguments/accessor-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Function/prototype/caller/prop-desc.js :: it threw an object with no name: caller should be an own property
@@ -3493,12 +3255,10 @@ built-ins/Function/prototype/name.js :: it threw an object with no name: name sh
 built-ins/Function/prototype/name.js (strict) :: it threw an object with no name: name should be an own property
 built-ins/Function/prototype/property-order.js :: it threw an object with no name: The `length` property comes before the `name` property on built-in functions
 built-ins/Function/prototype/property-order.js (strict) :: it threw an object with no name: The `length` property comes before the `name` property on built-in functions
-built-ins/Function/prototype/toString/AsyncFunction.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/toString/AsyncFunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/toString/Function.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/toString/Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/toString/GeneratorFunction.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Function/prototype/toString/GeneratorFunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+built-ins/Function/prototype/toString/GeneratorFunction.js :: it threw SyntaxError: the source of a dynamic function does not parse
+built-ins/Function/prototype/toString/GeneratorFunction.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
+built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
+built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js (strict) :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/method-computed-property-name.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "undefined" ([ { a(){} }.a ](){ })
@@ -3513,30 +3273,24 @@ built-ins/Function/prototype/toString/private-static-method-class-statement.js :
 built-ins/Function/prototype/toString/private-static-method-class-statement.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
 built-ins/Function/prototype/toString/symbol-named-builtins.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Function/prototype/toString/symbol-named-builtins.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/GeneratorFunction/has-instance.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/has-instance.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-construct-throws.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-construct-throws.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-name.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-prototype.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-prototype.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-restricted-properties.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-restricted-properties.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-yield-expr-in-param.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/instance-yield-expr-in-param.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-constructor-no-arguments.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-constructor-no-arguments.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-function-multiple-arguments.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-function-multiple-arguments.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-function-no-arguments.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-function-no-arguments.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-function-single-argument.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/invoked-as-function-single-argument.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/GeneratorFunction/is-a-constructor.js :: it threw an object with no name: this implementation could not obtain %GeneratorFunction%
-built-ins/GeneratorFunction/is-a-constructor.js (strict) :: it threw an object with no name: this implementation could not obtain %GeneratorFunction%
+built-ins/GeneratorFunction/instance-construct-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/GeneratorFunction/instance-construct-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/GeneratorFunction/instance-length.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
+built-ins/GeneratorFunction/instance-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
+built-ins/GeneratorFunction/instance-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
+built-ins/GeneratorFunction/instance-restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/GeneratorFunction/instance-restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/GeneratorFunction/instance-yield-expr-in-param.js :: it threw an object with no name: YieldExpression not permitted generally Expected a SyntaxError to be thrown but no exception was thrown at all
+built-ins/GeneratorFunction/instance-yield-expr-in-param.js (strict) :: it threw an object with no name: YieldExpression not permitted generally Expected a SyntaxError to be thrown but no exception was thrown at all
+built-ins/GeneratorFunction/invoked-as-constructor-no-arguments.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/GeneratorFunction/invoked-as-constructor-no-arguments.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/GeneratorFunction/invoked-as-function-multiple-arguments.js :: it threw SyntaxError: the source of a dynamic function does not parse
+built-ins/GeneratorFunction/invoked-as-function-multiple-arguments.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
+built-ins/GeneratorFunction/invoked-as-function-no-arguments.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/GeneratorFunction/invoked-as-function-no-arguments.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/GeneratorFunction/invoked-as-function-single-argument.js :: it threw SyntaxError: the source of a dynamic function does not parse
+built-ins/GeneratorFunction/invoked-as-function-single-argument.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
 built-ins/GeneratorFunction/name.js :: it threw an object with no name: name descriptor value should be GeneratorFunction; name value should be GeneratorFunction
 built-ins/GeneratorFunction/name.js (strict) :: it threw an object with no name: name descriptor value should be GeneratorFunction; name value should be GeneratorFunction
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
@@ -4253,8 +4007,6 @@ built-ins/Object/defineProperty/15.2.3.6-4-151.js :: it threw RangeError: an arr
 built-ins/Object/defineProperty/15.2.3.6-4-151.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Object/defineProperty/15.2.3.6-4-292-2.js (strict) :: it threw an object with no name: Expected a === 0, actually 20
 built-ins/Object/defineProperty/15.2.3.6-4-293-4.js (strict) :: it threw an object with no name: Expected "a === 0", actually 10
-built-ins/Object/entries/tamper-with-global-object.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/entries/tamper-with-global-object.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/fromEntries/evaluation-order.js :: it threw an object with no name: Actual [] and expected [get Symbol.iterator, next 0, access property "0" of first entry, access property "1" of first entry, toString of first key, next 1, access property "0" of second entry, access property "1" of second entry, toString of second key, next 2] should have the same contents. Object.fromEntries evaluation order
 built-ins/Object/fromEntries/evaluation-order.js (strict) :: it threw an object with no name: Actual [] and expected [get Symbol.iterator, next 0, access property "0" of first entry, access property "1" of first entry, toString of first key, next 1, access property "0" of second entry, access property "1" of second entry, toString of second key, next 2] should have the same contents. Object.fromEntries evaluation order
 built-ins/Object/fromEntries/iterator-closed-for-null-entry.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -4303,10 +4055,6 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js :: it threw TypeError
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-187.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-187.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-188.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-188.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-4.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -4429,8 +4177,6 @@ built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it thre
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js (strict) :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/prototype/toString/Object.prototype.toString.call-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js (strict) :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
 built-ins/Object/prototype/toString/proxy-function-async.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
@@ -4447,24 +4193,12 @@ built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.p
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
-built-ins/Object/seal/seal-arrowfunction.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-arrowfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-asyncarrowfunction.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-asyncarrowfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-asyncfunction.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-asyncfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/seal/seal-bigint64array.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Object/seal/seal-bigint64array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Object/seal/seal-biguint64array.js :: it threw ReferenceError: BigUint64Array is not defined
 built-ins/Object/seal/seal-biguint64array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-built-ins/Object/seal/seal-function.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-generatorfunction.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/seal/seal-generatorfunction.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Object/values/order-after-define-property.js :: it threw an object with no name: Actual [a] and expected [a, b] should have the same contents.
 built-ins/Object/values/order-after-define-property.js (strict) :: it threw an object with no name: Actual [a] and expected [a, b] should have the same contents.
-built-ins/Object/values/tamper-with-global-object.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Object/values/tamper-with-global-object.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Promise/all/ctx-non-ctor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/all/ctx-non-ctor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Promise/all/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -4808,8 +4542,6 @@ built-ins/Proxy/set/trap-is-undefined.js :: it threw an object with no name: Exp
 built-ins/Proxy/set/trap-is-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/Reflect/apply/arguments-list-is-not-array-like-but-still-valid.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/defineProperty/return-abrupt-from-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Reflect/deleteProperty/return-abrupt-from-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -5456,10 +5188,6 @@ built-ins/String/prototype/normalize/return-normalized-string.js :: it threw Typ
 built-ins/String/prototype/normalize/return-normalized-string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/repeat/repeat-string-n-times.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/String/prototype/repeat/repeat-string-n-times.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/String/prototype/replace/S15.5.4.11_A1_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/String/prototype/replace/S15.5.4.11_A1_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/String/prototype/replace/S15.5.4.11_A1_T6.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/String/prototype/replace/S15.5.4.11_A1_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -5484,8 +5212,6 @@ built-ins/String/prototype/search/cstm-search-on-string-primitive.js :: it threw
 built-ins/String/prototype/search/cstm-search-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/search/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/search/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/slice/S15.5.4.13_A1_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/String/prototype/slice/S15.5.4.13_A1_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/split/checking-by-using-eval.js :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/split/checking-by-using-eval.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js :: it threw an object with no name: should not be called
@@ -5506,8 +5232,6 @@ built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-tes
 built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/String/prototype/startsWith/searchstring-is-regexp-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/startsWith/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/substring/S15.5.4.15_A1_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-built-ins/String/prototype/substring/S15.5.4.15_A1_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
 built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
 built-ins/String/prototype/toLocaleLowerCase/S15.5.4.17_A1_T3.js :: it threw ReferenceError: eval is not defined
@@ -9804,12 +9528,10 @@ built-ins/TypedArray/prototype/byteLength/resizable-array-buffer-auto.js :: it t
 built-ins/TypedArray/prototype/byteLength/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/byteLength/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/byteLength/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/byteLength/resizable-buffer-assorted.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/byteLength/resizable-buffer-assorted.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-1.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-1.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-2.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-2.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-1.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-1.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-2.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/byteLength/resized-out-of-bounds-2.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/byteOffset/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/byteOffset/BigInt/detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/byteOffset/BigInt/resizable-array-buffer-auto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -9822,8 +9544,8 @@ built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-auto.js :: it t
 built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/byteOffset/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/copyWithin/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/copyWithin/BigInt/detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/copyWithin/BigInt/get-length-ignores-length-prop.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10106,8 +9828,6 @@ built-ins/TypedArray/prototype/includes/index-compared-against-initial-length.js
 built-ins/TypedArray/prototype/includes/index-compared-against-initial-length.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/includes/length-zero-returns-false.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/includes/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/includes/resizable-buffer-special-float-values.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/TypedArray/prototype/includes/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/includes/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/includes/search-undefined-after-shrinking-buffer-index-is-oob.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
@@ -10120,8 +9840,6 @@ built-ins/TypedArray/prototype/indexOf/detached-buffer-during-fromIndex-returns-
 built-ins/TypedArray/prototype/indexOf/detached-buffer-during-fromIndex-returns-minus-one-for-zero.js (strict) :: it threw an object with no name: Expected SameValue(«0», «-1») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/indexOf/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/indexOf/resizable-buffer-special-float-values.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/TypedArray/prototype/indexOf/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/indexOf/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/join/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10162,8 +9880,6 @@ built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js :: i
 built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/negative-index-and-resize-to-smaller.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/negative-index-and-resize-to-smaller.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/lastIndexOf/resizable-buffer-special-float-values.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/lastIndexOf/resizable-buffer-special-float-values.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/TypedArray/prototype/lastIndexOf/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/lastIndexOf/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/length/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10178,12 +9894,10 @@ built-ins/TypedArray/prototype/length/resizable-array-buffer-auto.js :: it threw
 built-ins/TypedArray/prototype/length/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/length/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/length/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/length/resizable-buffer-assorted.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/length/resizable-buffer-assorted.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/length/resized-out-of-bounds-1.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/length/resized-out-of-bounds-1.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/length/resized-out-of-bounds-2.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/TypedArray/prototype/length/resized-out-of-bounds-2.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-1.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-1.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-2.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/length/resized-out-of-bounds-2.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/map/BigInt/callbackfn-is-not-callable.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -10284,8 +9998,6 @@ built-ins/TypedArray/prototype/reduceRight/return-abrupt-from-this-out-of-bounds
 built-ins/TypedArray/prototype/reduceRight/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/reduceRight/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduceRight/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/resizable-and-fixed-have-same-prototype.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/resizable-and-fixed-have-same-prototype.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/reverse/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reverse/BigInt/detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/reverse/BigInt/preserves-non-numeric-properties.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -11685,10 +11397,6 @@ harness/deepEqual-object.js :: it threw ReferenceError: compareEquality is not d
 harness/deepEqual-object.js (strict) :: it threw ReferenceError: compareEquality is not defined
 harness/deepEqual-primitives.js :: it threw ReferenceError: compareEquality is not defined
 harness/deepEqual-primitives.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/fnGlobalObject.js :: it threw TypeError: building a function from source text is not implemented yet
-harness/fnGlobalObject.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-harness/wellKnownIntrinsicObjects.js :: it threw an object with no name: this implementation could not obtain %Array%
-harness/wellKnownIntrinsicObjects.js (strict) :: it threw an object with no name: this implementation could not obtain %Array%
 language/arguments-object/10.5-1-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/arguments-object/10.5-7-b-1-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/arguments-object/10.6-10-c-ii-1-s.js (strict) :: it threw an object with no name: foo(10, "sss", 1) !== true
@@ -11732,10 +11440,10 @@ language/directive-prologue/10.1.1-11-s.js :: it threw an object with no name: e
 language/directive-prologue/10.1.1-12-s.js :: it threw ReferenceError: eval is not defined
 language/directive-prologue/10.1.1-13-s.js :: it threw ReferenceError: eval is not defined
 language/directive-prologue/10.1.1-14-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/directive-prologue/10.1.1-29-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/directive-prologue/10.1.1-30-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-language/directive-prologue/10.1.1-31-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/directive-prologue/10.1.1-32-s.js :: it threw TypeError: building a function from source text is not implemented yet
+language/directive-prologue/10.1.1-29-s.js :: it threw ReferenceError: eval is not defined
+language/directive-prologue/10.1.1-30-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
+language/directive-prologue/10.1.1-31-s.js :: it threw ReferenceError: eval is not defined
+language/directive-prologue/10.1.1-32-s.js :: it threw ReferenceError: eval is not defined
 language/directive-prologue/10.1.1-5-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/directive-prologue/10.1.1-8-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/directive-prologue/func-decl-inside-func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -12249,8 +11957,6 @@ language/expressions/async-arrow-function/dflt-params-ref-self.js (strict) :: th
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/eval-var-scope-syntax-err.js :: it threw ReferenceError: eval is not defined
-language/expressions/async-arrow-function/prototype.js :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
-language/expressions/async-arrow-function/prototype.js (strict) :: it threw an object with no name: this implementation could not obtain %AsyncFunction%
 language/expressions/async-function/named-dflt-params-abrupt.js :: it threw an object with no name
 language/expressions/async-function/named-dflt-params-abrupt.js (strict) :: it threw an object with no name
 language/expressions/async-function/named-dflt-params-ref-later.js :: the test called $DONE with Test262Error: function should not be resolved
@@ -12752,44 +12458,30 @@ language/expressions/class/method/dflt-params-ref-self.js :: it threw an object 
 language/expressions/class/method/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-eval.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-eval.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-eval.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-static-field-multiple-evaluations-of-class-direct-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-static-field-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-static-field-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-static-field-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-field-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-static-getter-multiple-evaluations-of-class-direct-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-static-getter-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-static-getter-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-static-getter-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-getter-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-direct-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-direct-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-eval-indirect.js :: it threw ReferenceError: eval is not defined
-language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/private-static-setter-multiple-evaluations-of-class-function-ctor.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -12797,8 +12489,6 @@ language/expressions/class/subclass-builtins/subclass-BigInt64Array.js :: it thr
 language/expressions/class/subclass-builtins/subclass-BigInt64Array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 language/expressions/class/subclass-builtins/subclass-BigUint64Array.js :: it threw ReferenceError: BigUint64Array is not defined
 language/expressions/class/subclass-builtins/subclass-BigUint64Array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-language/expressions/class/subclass-builtins/subclass-Function.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/class/subclass-builtins/subclass-Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/comma/S11.14_A1.js :: it threw ReferenceError: eval is not defined
@@ -13375,44 +13065,10 @@ language/expressions/greater-than/S11.8.2_A1.js :: it threw ReferenceError: eval
 language/expressions/greater-than/S11.8.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/grouping/S11.1.6_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/grouping/S11.1.6_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/import.meta/syntax/goal-async-function-params-or-body.js :: it threw an object with no name: import.meta in AsyncFunctionBody Expected a SyntaxError but got a TypeError
-language/expressions/import.meta/syntax/goal-async-function-params-or-body.js (strict) :: it threw an object with no name: import.meta in AsyncFunctionBody Expected a SyntaxError but got a TypeError
-language/expressions/import.meta/syntax/goal-function-params-or-body.js :: it threw an object with no name: import.meta in FunctionBody Expected a SyntaxError but got a TypeError
-language/expressions/import.meta/syntax/goal-function-params-or-body.js (strict) :: it threw an object with no name: import.meta in FunctionBody Expected a SyntaxError but got a TypeError
-language/expressions/import.meta/syntax/goal-generator-params-or-body.js :: it threw an object with no name: import.meta in GeneratorBody Expected a SyntaxError but got a TypeError
-language/expressions/import.meta/syntax/goal-generator-params-or-body.js (strict) :: it threw an object with no name: import.meta in GeneratorBody Expected a SyntaxError but got a TypeError
 language/expressions/in/S11.8.7_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/in/S11.8.7_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/instanceof/S11.8.6_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/instanceof/S11.8.6_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/instanceof/S11.8.6_A7_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S11.8.6_A7_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T4.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T4.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T6.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T7.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T7.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T8.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A1_T8.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A2_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A2_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A2_T5.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A2_T5.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A2_T6.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A2_T6.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A3_T1.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A3_T1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A3_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/instanceof/S15.3.5.3_A3_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/instanceof/primitive-prototype-with-primitive.js :: it threw TypeError: the right operand of instanceof is not callable
 language/expressions/instanceof/primitive-prototype-with-primitive.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
 language/expressions/instanceof/prototype-getter-with-object-throws.js :: it threw an object with no name: Expected a DummyError but got a TypeError
@@ -13466,8 +13122,6 @@ language/expressions/logical-not/S11.4.9_A1.js :: it threw ReferenceError: eval 
 language/expressions/logical-not/S11.4.9_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/logical-not/S9.2_A1_T2.js :: it threw ReferenceError: eval is not defined
 language/expressions/logical-not/S9.2_A1_T2.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/logical-not/S9.2_A6_T2.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/logical-not/S9.2_A6_T2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/logical-or/S11.11.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/logical-or/S11.11.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/logical-or/tco-right.js (strict) :: it threw ReferenceError: f is not defined
@@ -13746,14 +13400,10 @@ language/expressions/super/realm.js :: it threw TypeError: what was called is no
 language/expressions/super/realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/tagged-template/cache-differing-expressions-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/tagged-template/cache-differing-expressions-eval.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/tagged-template/cache-differing-expressions-new-function.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/tagged-template/cache-differing-expressions-new-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/tagged-template/cache-eval-inner-function.js :: it threw ReferenceError: eval is not defined
 language/expressions/tagged-template/cache-eval-inner-function.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/tagged-template/cache-identical-source-eval.js :: it threw ReferenceError: eval is not defined
 language/expressions/tagged-template/cache-identical-source-eval.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/tagged-template/cache-identical-source-new-function.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/tagged-template/cache-identical-source-new-function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/expressions/tagged-template/cache-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/tagged-template/cache-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/tagged-template/tco-call.js (strict) :: it threw ReferenceError: f is not defined
@@ -13764,12 +13414,10 @@ language/expressions/template-literal/mongolian-vowel-separator-eval.js (strict)
 language/expressions/this/S11.1.1_A3.1.js :: it threw ReferenceError: eval is not defined
 language/expressions/this/S11.1.1_A3.2.js :: it threw ReferenceError: eval is not defined
 language/expressions/this/S11.1.1_A3.2.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/this/S11.1.1_A4.1.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/this/S11.1.1_A4.1.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/this/S11.1.1_A4.2.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/this/S11.1.1_A4.2.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/typeof/native-call.js :: it threw TypeError: building a function from source text is not implemented yet
-language/expressions/typeof/native-call.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/expressions/this/S11.1.1_A4.1.js :: it threw ReferenceError: eval is not defined
+language/expressions/this/S11.1.1_A4.1.js (strict) :: it threw ReferenceError: eval is not defined
+language/expressions/this/S11.1.1_A4.2.js :: it threw ReferenceError: eval is not defined
+language/expressions/this/S11.1.1_A4.2.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/typeof/syntax.js :: it threw ReferenceError: eval is not defined
 language/expressions/typeof/syntax.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js :: it threw ReferenceError: eval is not defined
@@ -13807,14 +13455,6 @@ language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js :: it threw an obje
 language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
 language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
-language/function-code/10.4.3-1-13-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-13gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-14-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-14gs.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-15-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-15gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-16-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-16gs.js :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-17-s.js (strict) :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-17gs.js (strict) :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-18gs.js :: it threw ReferenceError: eval is not defined
@@ -13828,20 +13468,8 @@ language/function-code/10.4.3-1-63-s.js :: it threw ReferenceError: eval is not 
 language/function-code/10.4.3-1-63-s.js (strict) :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-63gs.js :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-63gs.js (strict) :: it threw ReferenceError: eval is not defined
-language/function-code/10.4.3-1-64-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-64-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-64gs.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-64gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-65-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-65-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-65gs.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-65gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/10.4.3-1-82-s.js :: it threw ReferenceError: eval is not defined
 language/function-code/10.4.3-1-82gs.js :: it threw ReferenceError: eval is not defined
-language/function-code/10.4.3-1-83-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-83gs.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-84-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/function-code/10.4.3-1-84gs.js :: it threw TypeError: building a function from source text is not implemented yet
 language/function-code/S10.2.1_A2.js :: it threw an object with no name: #1: f1(1, 2) === 2
 language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(1, 2) === undefined
 language/function-code/eval-param-env-with-computed-key.js :: it threw ReferenceError: eval is not defined
@@ -14728,26 +14356,10 @@ language/statements/class/subclass-builtins/subclass-BigInt64Array.js :: it thre
 language/statements/class/subclass-builtins/subclass-BigInt64Array.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 language/statements/class/subclass-builtins/subclass-BigUint64Array.js :: it threw ReferenceError: BigUint64Array is not defined
 language/statements/class/subclass-builtins/subclass-BigUint64Array.js (strict) :: it threw ReferenceError: BigUint64Array is not defined
-language/statements/class/subclass-builtins/subclass-Function.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass-builtins/subclass-Function.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/instance-name.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/regular-subclassing.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/regular-subclassing.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/Function/super-must-be-called.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-length.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-length.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-name.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-name.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-prototype.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-prototype.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/regular-subclassing.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/regular-subclassing.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/super-must-be-called.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/class/subclass/builtin-objects/GeneratorFunction/super-must-be-called.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-prototype.js :: it threw an object with no name: prototype has no constructor reference Expected SameValue(«true», «false») to be true
+language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-prototype.js (strict) :: it threw an object with no name: prototype has no constructor reference Expected SameValue(«true», «false») to be true
+language/statements/class/subclass/builtin-objects/GeneratorFunction/regular-subclassing.js :: it threw SyntaxError: the source of a dynamic function does not parse
+language/statements/class/subclass/builtin-objects/GeneratorFunction/regular-subclassing.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
 language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js (strict) :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js :: it threw TypeError: a class may only extend a constructor or null
@@ -14873,8 +14485,6 @@ language/statements/for-in/head-const-bound-names-fordecl-tdz.js :: it threw an 
 language/statements/for-in/head-const-bound-names-fordecl-tdz.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/head-let-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/head-let-bound-names-fordecl-tdz.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-in/resizable-buffer.js :: it threw TypeError: what was called is not a function
-language/statements/for-in/resizable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/for-in/scope-head-lex-open.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/scope-head-lex-open.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/arguments-mapped-aliasing.js :: it threw TypeError: what was called is not a function
@@ -15036,15 +14646,12 @@ language/statements/for/tco-const-body.js (strict) :: it threw ReferenceError: f
 language/statements/for/tco-let-body.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/for/tco-lhs-body.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/for/tco-var-body.js (strict) :: it threw ReferenceError: f is not defined
-language/statements/function/13.0-12-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.0-13-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/function/13.0-14-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
 language/statements/function/13.0-15-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.0-16-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.0-17-s.js :: it threw ReferenceError: eval is not defined
 language/statements/function/13.0-7-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.0-8-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/function/13.0_4-17gs.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.1-19-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.1-2-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.1-21-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -15058,29 +14665,18 @@ language/statements/function/13.1-33-s.js :: it threw an object with no name: Ex
 language/statements/function/13.1-39-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.1-4-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/function/13.1-41-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/function/13.2-10-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-10-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-11-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-11-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-12-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-12-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-13-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-13-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-14-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-14-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-15-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-15-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-16-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-16-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-17-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-17-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-18-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-18-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/function/13.2-10-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-10-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-13-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-13-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-14-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-14-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-17-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-17-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-18-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-18-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/13.2-19-b-3gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-19-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-19-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-2-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-20-s.js :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/13.2-21-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/13.2-22-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/13.2-25-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15088,14 +14684,10 @@ language/statements/function/13.2-26-s.js :: it threw an object with no name: Ex
 language/statements/function/13.2-30-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/13.2-30-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/13.2-4-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-5-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-6-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-7-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-8-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/13.2-9-s.js :: it threw TypeError: building a function from source text is not implemented yet
+language/statements/function/13.2-5-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-6-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/statements/function/13.2-9-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/S13.2.2_A14.js :: it threw an object with no name: #1: var obj = new FACTORY() does not lead to throwing exception
-language/statements/function/S13.2.2_A8_T3.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/function/S13.2.2_A8_T3.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/function/S13_A14_T1.js :: it threw ReferenceError: eval is not defined
 language/statements/function/S13_A3_T1.js :: it threw ReferenceError: __exp__func is not defined
 language/statements/function/S13_A3_T1.js (strict) :: it threw ReferenceError: __exp__func is not defined
@@ -15438,9 +15030,6 @@ language/statements/using/using-allows-undefined-initializer.js (strict) :: it d
 language/statements/variable/12.2.1-10-s.js :: it threw ReferenceError: eval is not defined
 language/statements/variable/12.2.1-10-s.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/variable/12.2.1-11.js :: it threw ReferenceError: eval is not defined
-language/statements/variable/12.2.1-16-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/variable/12.2.1-16-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/variable/12.2.1-17-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/variable/12.2.1-18-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/variable/12.2.1-19-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/variable/12.2.1-2-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
@@ -15452,9 +15041,6 @@ language/statements/variable/12.2.1-22-s.js :: it threw ReferenceError: eval is 
 language/statements/variable/12.2.1-22-s.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/variable/12.2.1-3-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/variable/12.2.1-4-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/variable/12.2.1-5-s.js :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/variable/12.2.1-5-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/variable/12.2.1-6-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
 language/statements/variable/12.2.1-7-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/variable/12.2.1-8-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/variable/12.2.1-9-s.js :: it threw ReferenceError: eval is not defined
@@ -15479,9 +15065,6 @@ language/statements/while/cptn-no-iter.js (strict) :: it threw ReferenceError: e
 language/statements/while/tco-body.js (strict) :: it threw ReferenceError: f is not defined
 language/statements/with/12.10.1-10-s.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
 language/statements/with/12.10.1-12-s.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-language/statements/with/12.10.1-4-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-language/statements/with/12.10.1-5-s.js (strict) :: it threw TypeError: building a function from source text is not implemented yet
-language/statements/with/12.10.1-8-s.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
 language/statements/with/S12.10_A4_T1.js :: it threw ReferenceError: eval is not defined
 language/statements/with/S12.10_A4_T2.js :: it threw ReferenceError: eval is not defined
 language/statements/with/S12.10_A4_T3.js :: it threw ReferenceError: eval is not defined

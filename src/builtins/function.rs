@@ -192,19 +192,103 @@ pub fn bind(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     Ok(Value::Object(bound))
 }
 
-/// §20.2.1.1 `Function(...)` — building a function out of source text at run time.
+/// §20.2.1.1 `CreateDynamicFunction` — a function built out of source text at run time.
 ///
-/// Refused, and deliberately loudly. Everything else about `Function` is here: the object exists,
-/// `Function.prototype` is reachable through it, and `instanceof Function` works. What is missing
-/// is the part that compiles a String, which needs the parser and the compiler run from inside a
-/// built-in and a global scope to compile against — a slice of its own.
+/// # The scope it compiles against is the global one, and that is the whole reason this is
+/// tractable
 ///
-/// A TypeError rather than nothing, because the alternative to saying so is answering with a
-/// function that does not do what its source says.
-fn construct(_vm: &mut Vm, _heap: &mut Heap, _call: &NativeCall<'_>) -> Completion<Value> {
-    Err(Abrupt::type_error(
-        "building a function from source text is not implemented yet",
-    ))
+/// §20.2.1.1.1 step 30 gives the new function the *realm's* global environment, never the caller's.
+/// So `function f() { var x = 1; return Function("return typeof x")(); }` answers `"undefined"` —
+/// the `x` beside it is invisible, and a reader who expects a closure is reading `eval`. That is
+/// what separates this from direct `eval`, which does need the caller's scope and is a slice of its
+/// own: here the compiler is handed no outer scopes at all, so every free name compiles to a global
+/// lookup, which is exactly what the clause asks for.
+///
+/// # Why the source is reassembled and reparsed rather than spliced
+///
+/// Steps 12 to 20 build one string — `function anonymous(P\n) {\nbody\n}` — and require the
+/// *whole* of it to parse. That is not decoration: it is what makes `Function("a", "){ } , function
+/// f2(") a SyntaxError instead of two functions, because the parameter text and the body text have
+/// to agree about where the function ends. Parsing them separately would accept it.
+///
+/// The newlines are the specification's and are load-bearing too: a body ending in a `//` comment
+/// would otherwise swallow the closing brace.
+fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Steps 5 to 11 — the last argument is the body and everything before it is a parameter, so
+    // `Function()` is a function of no arguments with an empty body rather than an error.
+    let (parameters, body) = match call.arguments.split_last() {
+        Some((body, parameters)) => (parameters, *body),
+        None => (&[] as &[Value], Value::Undefined),
+    };
+    let mut written = String::new();
+    for (at, parameter) in parameters.iter().enumerate() {
+        if at > 0 {
+            written.push(',');
+        }
+        written.push_str(&text_of(vm, heap, *parameter)?);
+    }
+    let body = match call.arguments.is_empty() {
+        true => String::new(),
+        false => text_of(vm, heap, body)?,
+    };
+    let source = format!("function anonymous({written}\n) {{\n{body}\n}}");
+
+    // Step 20's assertion, as a real check. A refusal here is a **SyntaxError**, which is what the
+    // clause says and is also the one a program tests for.
+    let script = crate::parser::parse_script(&source).map_err(|_| {
+        Abrupt::Raised(
+            crate::value::ErrorKind::Syntax,
+            "the source of a dynamic function does not parse",
+        )
+    })?;
+    // Steps 19 and 21 parse the parameters and the body *separately* as well as together, and this
+    // is what that catches: a body of `return }{` closes the function early, so the combined text
+    // parses happily as a function **and a block beside it**. One statement is the whole of the
+    // check — anything the body smuggled out of the braces shows up as a second one.
+    if script.body.len() != 1 {
+        return Err(Abrupt::Raised(
+            crate::value::ErrorKind::Syntax,
+            "the source of a dynamic function does not parse as one function",
+        ));
+    }
+    let compiled = crate::compile::compile_script(&script, heap)
+        // Not a SyntaxError: the text *is* a program and this engine cannot compile it yet.
+        // Reporting it as one would tell a program its own source is malformed.
+        .map_err(|error| Abrupt::type_error(leaked(error.message())))?;
+    let Some(inner) = compiled.function(0) else {
+        // The script above is one function declaration and nothing else, so it has one nested body.
+        return Err(Abrupt::type_error("a dynamic function compiled to nothing"));
+    };
+    let inner = std::rc::Rc::clone(inner);
+
+    // §20.2.1.1.1 step 28 — the prototype comes from `new.target` when there was one, which is what
+    // makes a subclass of `Function` produce instances of itself.
+    let prototype = super::prototype_from(heap, call, vm.realm().function_prototype());
+    // Step 30 — the global environment, and an empty one of its own so that the body's own slots
+    // have somewhere to live. Its parent is `None`: there is nothing outside a dynamic function.
+    let environment = heap.new_environment(None, 0);
+    let object = heap.new_function(prototype, inner, environment, None);
+    // §20.2.1.1.1 steps 31 to 33 — `length` is how many parameters were written, `name` is
+    // `"anonymous"` whatever the source says, and it is a constructor like any ordinary function.
+    let length = u32::try_from(parameters.len()).unwrap_or(u32::MAX);
+    super::define_function_metadata(heap, object, "anonymous", length);
+    vm.realm().make_constructor(heap, object);
+    Ok(Value::Object(object))
+}
+
+/// A compiler refusal, worded for a script rather than for this repository.
+///
+/// [`crate::compile::CompileError::message`] is written for a reader of the engine. What reaches a
+/// program is the same sentence, and it says what was not built rather than what to do about it.
+fn leaked(message: String) -> &'static str {
+    let _ = message;
+    "building this function from source text is not implemented yet"
+}
+
+/// §7.1.17 `ToString`, for one of the arguments a dynamic function is assembled from.
+fn text_of(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<String> {
+    let text = vm.to_string(value, heap)?;
+    Ok(String::from_utf16_lossy(heap.string(text).unwrap_or(&[])))
 }
 
 /// Build `Function`, and `Function.prototype`'s methods, into `heap`.

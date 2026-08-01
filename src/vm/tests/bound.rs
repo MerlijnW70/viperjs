@@ -24,12 +24,9 @@ fn the_function_global_names_the_prototype_every_function_already_had() {
         run("var was = Function.prototype; Function.prototype = 1; Function.prototype === was"),
         "true"
     );
-    // §20.2.1.1 — building a function out of source text is refused rather than faked, and says
-    // so where a program can see it.
-    assert_eq!(
-        run("try { Function('return 1'); } catch (e) { e.name }"),
-        "TypeError"
-    );
+    // §20.2.1.1 — and it builds a function out of source text, called or constructed alike.
+    assert_eq!(run("Function('return 1')()"), "1");
+    assert_eq!(run("new Function('a', 'return a * 2')(21)"), "42");
 }
 
 #[test]
@@ -239,5 +236,61 @@ fn a_bound_builtin_is_how_the_test_suite_reaches_a_method_generically() {
              var a = []; push(a, 7); a[0]"
         ),
         "7"
+    );
+}
+
+#[test]
+fn a_dynamic_function_compiles_against_the_global_scope_and_nothing_else() {
+    // §20.2.1.1.1 step 30 — the *realm's* global environment, never the caller's. A reader who
+    // expects a closure is reading `eval`; this is the difference between the two, and it is the
+    // whole reason a dynamic function can be compiled without the caller's scope to hand.
+    assert_eq!(
+        run(
+            "var x = 'global'; function f() { var x = 'local'; return Function('return x')(); } f()"
+        ),
+        "global"
+    );
+    assert_eq!(
+        run("function f() { var only = 1; return Function('return typeof only')(); } f()"),
+        "undefined"
+    );
+    // Steps 5 to 11 — the last argument is the body and the rest are parameters, so no arguments
+    // at all is a function of none with an empty body rather than an error.
+    assert_eq!(run("new Function('a', 'b', 'return a + b')(2, 3)"), "5");
+    assert_eq!(run("typeof Function()()"), "undefined");
+    assert_eq!(run("Function('a,b', 'return a * b')(6, 7)"), "42");
+    // Steps 31 to 33 — `length` counts what was written, the name is always `anonymous`, and it
+    // constructs like any ordinary function.
+    assert_eq!(
+        run("var f = new Function('a', 'b', ''); f.length + ':' + f.name"),
+        "2:anonymous"
+    );
+    assert_eq!(
+        run("var f = new Function('a', 'this.a = a'); new f(1).a"),
+        "1"
+    );
+    assert_eq!(run("var f = Function(''); new f() instanceof f"), "true");
+}
+
+#[test]
+fn a_dynamic_function_is_assembled_before_it_is_parsed() {
+    // Steps 12 to 20 build one string and require the **whole** of it to parse. That is what makes
+    // this a SyntaxError rather than two functions: the parameter text and the body text have to
+    // agree about where the function ends, and parsing them apart would accept it.
+    assert_eq!(
+        run("try { new Function('a', '){ } , function f2(', ''); } catch (e) { e.name }"),
+        "SyntaxError"
+    );
+    assert_eq!(
+        run("try { new Function('return }{'); } catch (e) { e.name }"),
+        "SyntaxError"
+    );
+    // …and the newlines the clause puts around the body are load-bearing: a body ending in a line
+    // comment would otherwise swallow the closing brace.
+    assert_eq!(run("Function('return 1 // done')()"), "1");
+    // A parameter list that is not one is refused on the same terms.
+    assert_eq!(
+        run("try { new Function('a b', 'return 1'); } catch (e) { e.name }"),
+        "SyntaxError"
     );
 }
