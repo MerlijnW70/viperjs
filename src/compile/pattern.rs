@@ -53,7 +53,7 @@ impl Compiler<'_> {
 
         self.chunk.emit(Instruction::LoadVariable(0, done));
         let already = self.chunk.emit_jump(Instruction::JumpIfTrue);
-        self.emit_close(iterator, Check::Plain)?;
+        self.emit_close(iterator, Check::Plain, super::Closing::Sync)?;
         self.chunk.patch(already)?;
         let past = self.chunk.emit_jump(Instruction::Jump);
 
@@ -63,7 +63,7 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
         self.chunk.emit(Instruction::LoadVariable(0, done));
         let spent = self.chunk.emit_jump(Instruction::JumpIfTrue);
-        self.emit_close(iterator, Check::Unwind)?;
+        self.emit_close(iterator, Check::Unwind, super::Closing::Sync)?;
         self.chunk.patch(spent)?;
         self.chunk.emit(Instruction::LoadVariable(0, thrown));
         self.chunk.emit(Instruction::Throw);

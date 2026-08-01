@@ -13,7 +13,9 @@
 //! so what a statement compiles to is unchanged by where its helpers live.
 
 use super::binding::Bind;
-use super::{CompileError, Compiler, Crossing, Instruction, Unpatched, Unwind, unsupported};
+use super::{
+    Closing, CompileError, Compiler, Crossing, Instruction, Unpatched, Unwind, unsupported,
+};
 use crate::ast::{
     BinaryOperator, Declaration, DeclarationKind, ForInOfKind, ForInOfStatement, ForInOfTarget,
     ForInit, ForStatement, LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
@@ -478,10 +480,14 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
 
         self.assign_enumerated(&statement.left, binding, current, span)?;
-        let body = self.loop_body(&statement.body, Some(iterator), |compiler| {
-            compiler.chunk.emit(Instruction::Jump(top));
-            Ok(top)
-        });
+        let body = self.loop_body(
+            &statement.body,
+            Some((iterator, Closing::Sync)),
+            |compiler| {
+                compiler.chunk.emit(Instruction::Jump(top));
+                Ok(top)
+            },
+        );
         body?;
         // Every `break` arrives here having already taken the handler down and closed for itself,
         // so this is the *done* path's business alone.
@@ -496,7 +502,7 @@ impl Compiler<'_> {
         let thrown = self.declare_hidden("thrown");
         self.chunk.emit(Instruction::StoreVariable(0, thrown));
         self.chunk.emit(Instruction::Pop);
-        self.emit_close(iterator, Check::Unwind)?;
+        self.emit_close(iterator, Check::Unwind, Closing::Sync)?;
         self.chunk.emit(Instruction::LoadVariable(0, thrown));
         self.chunk.emit(Instruction::Throw);
         self.chunk.patch(past)?;
@@ -512,13 +518,19 @@ impl Compiler<'_> {
     /// An iterator with no `return` is simply left; one that has it gets it called and the answer
     /// checked. §7.4.9 step 6 makes a non-object answer a **TypeError**, which is the one way
     /// closing an iterator can fail for a reason of its own.
-    pub(super) fn emit_close(&mut self, iterator: u32, check: Check) -> Result<(), CompileError> {
+    pub(super) fn emit_close(
+        &mut self,
+        iterator: u32,
+        check: Check,
+        closing: Closing,
+    ) -> Result<(), CompileError> {
         // A deliberate exit is leaving the loop, so its handler comes down *first*. Left armed,
         // it would catch a `return` method that threw and close the same iterator a second time —
         // which is one call too many and is observable.
         if check == Check::Loop {
             self.chunk.emit(Instruction::PopHandler);
         }
+
         self.chunk.emit(Instruction::LoadVariable(0, iterator));
         self.chunk.emit(Instruction::Duplicate);
         let name = self.name_of("return");
@@ -529,6 +541,18 @@ impl Compiler<'_> {
         // is exactly the pair step 4 tests for.
         let absent = self.chunk.emit_jump(Instruction::JumpIfFalse);
         self.chunk.emit(Instruction::CallMethod(0));
+        // §7.4.11 step 3.d — an async iterator answers with a promise, and the loop may not leave
+        // until it settles. Before the check below, because what has to be an object is what the
+        // promise *settled with* and not the promise.
+        //
+        // Only ever reached with `Check::Loop`, which is a deliberate exit. §7.4.11 asks for this
+        // on the way out of a **throw** as well, and it is not done there: step 4 says the original
+        // completion wins, so the close's own rejection would have to be swallowed by a handler
+        // wrapped around all of this — and that combination does not terminate. See the note in
+        // `for_await`.
+        if closing == Closing::Awaited {
+            self.chunk.emit(Instruction::Await);
+        }
         // §7.4.9 step 5 answers a throw completion *before* it looks at what `return` gave back,
         // so on the way out of a throw the answer is not examined at all. Only a deliberate exit
         // checks it.
@@ -637,7 +661,7 @@ impl Compiler<'_> {
         let mut outcome = Ok(());
         for at in (0..stack.len()).rev() {
             let entry = &stack[at];
-            let iterator = matches!(entry.what, Crossing::Iterator(_));
+            let iterator = matches!(entry.what, Crossing::Iterator(..));
             let crossed = match exit {
                 Exit::Return => true,
                 // An iterator belongs to its own loop rather than sitting inside it, which is the
@@ -662,7 +686,7 @@ impl Compiler<'_> {
                     Ok(())
                 }
                 Crossing::Finally(body) => self.block(body),
-                Crossing::Iterator(slot) => self.emit_close(*slot, Check::Loop),
+                Crossing::Iterator(slot, closing) => self.emit_close(*slot, Check::Loop, *closing),
             };
             if outcome.is_err() {
                 break;
@@ -679,7 +703,7 @@ impl Compiler<'_> {
     pub(super) fn loop_body(
         &mut self,
         body: &Stmt,
-        iterator: Option<u32>,
+        iterator: Option<(u32, Closing)>,
         after: impl FnOnce(&mut Self) -> Result<u32, CompileError>,
     ) -> Result<(), CompileError> {
         self.breaks.push(Vec::new());
@@ -690,10 +714,10 @@ impl Compiler<'_> {
         // argument rather than pushed by the caller beforehand: the caller would have to know not to
         // push twice, and *that* was a branch nothing could pin.
         let mark = self.unwinds.len();
-        if let Some(slot) = iterator {
+        if let Some((slot, closing)) = iterator {
             self.unwinds.push(Unwind {
                 outer: self.breaks.len() - 1,
-                what: Crossing::Iterator(slot),
+                what: Crossing::Iterator(slot, closing),
             });
         }
         let compiled = self.statement(body).and_then(|()| after(self));

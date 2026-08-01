@@ -159,6 +159,44 @@ fn leaving_early_closes_the_iterator_and_waits_for_it() {
         ),
         "left cleanly"
     );
+    // §7.4.11 step 3.d — the close is **awaited**, so a `return` that answers a rejected promise
+    // takes the loop with it rather than being dropped on the floor.
+    assert_eq!(
+        run_settled(
+            "var out = 'not rejected'; var it = { [Symbol.asyncIterator]: function () { return { next: function () { return Promise.resolve({ value: 1, done: false }); }, return: function () { return Promise.reject('close failed'); } }; } }; async function f() { for await (var x of it) break; } f().then(null, function (e) { out = 'rejected:' + e; });",
+            "out"
+        ),
+        "rejected:close failed"
+    );
+    // …and step 6 — what it settled with has to be an object.
+    assert_eq!(
+        run_settled(
+            "var out = ''; var it = { [Symbol.asyncIterator]: function () { return { next: function () { return Promise.resolve({ value: 1, done: false }); }, return: function () { return Promise.resolve(1); } }; } }; async function f() { for await (var x of it) break; } f().then(null, function (e) { out = e.name; });",
+            "out"
+        ),
+        "TypeError"
+    );
+    // A sync iterator whose `return` is present and not callable is a TypeError too, and the
+    // *message* is the assertion rather than the name. §7.3.10 puts the check at the **lookup**,
+    // and without it the value would simply be called and fail there — the same kind of error one
+    // step later, which is why only the wording tells the two apart.
+    assert_eq!(
+        run_settled(
+            "var out = ''; var it = { [Symbol.iterator]: function () { return { next: function () { return { value: 1, done: false }; }, return: 1 }; } }; async function f() { for await (var x of it) break; } f().then(null, function (e) { out = e.message; });",
+            "out"
+        ),
+        "this iterator's method is not a function"
+    );
+    // §7.4.11 step 4 — but on the way out of a **throw** the close's own failure is discarded and
+    // the body's exception is what arrives. Both halves matter: the `return` really is called, and
+    // what it rejects with never reaches the caller.
+    assert_eq!(
+        run_settled(
+            "var called = false, out = ''; var it = { [Symbol.asyncIterator]: function () { return { next: function () { return Promise.resolve({ value: 1, done: false }); }, return: function () { called = true; return Promise.reject('close failed'); } }; } }; async function f() { for await (var x of it) throw 'from the body'; } f().then(null, function (e) { out = called + ':' + e; });",
+            "out"
+        ),
+        "true:from the body"
+    );
     // A `return` out of the enclosing function closes it as well, which is the third way out.
     assert_eq!(
         run_settled(

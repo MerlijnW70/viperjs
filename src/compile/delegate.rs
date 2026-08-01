@@ -153,7 +153,11 @@ impl Compiler<'_> {
         // the throw, on the same terms as any operand left behind by one.
         self.chunk.emit(Instruction::Pop);
         self.chunk.emit(Instruction::Pop);
-        self.emit_close(iterator, super::statement::Check::Unwind)?;
+        self.emit_close(
+            iterator,
+            super::statement::Check::Unwind,
+            super::Closing::Sync,
+        )?;
         self.chunk.emit(Instruction::ThrowNoThrowMethod);
 
         self.chunk.patch(has_throw)?;

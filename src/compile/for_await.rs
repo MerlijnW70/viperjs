@@ -28,7 +28,7 @@
 //! head binds and are the same question in both loops.
 
 use super::statement::Check;
-use super::{CompileError, Compiler, Instruction};
+use super::{Closing, CompileError, Compiler, Instruction};
 use crate::ast::ForInOfStatement;
 use crate::span::Span;
 
@@ -100,10 +100,14 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
 
         self.assign_enumerated(&statement.left, binding, current, span)?;
-        self.loop_body(&statement.body, Some(iterator), |compiler| {
-            compiler.chunk.emit(Instruction::Jump(top));
-            Ok(top)
-        })?;
+        self.loop_body(
+            &statement.body,
+            Some((iterator, Closing::Awaited)),
+            |compiler| {
+                compiler.chunk.emit(Instruction::Jump(top));
+                Ok(top)
+            },
+        )?;
         // Every `break` arrives having taken the handler down and closed for itself, so this is the
         // done path's business alone.
         let past = self.chunk.emit_jump(Instruction::Jump);
@@ -117,7 +121,7 @@ impl Compiler<'_> {
         let thrown = self.declare_hidden("thrown");
         self.chunk.emit(Instruction::StoreVariable(0, thrown));
         self.chunk.emit(Instruction::Pop);
-        self.emit_close(iterator, Check::Unwind)?;
+        self.emit_close(iterator, Check::Unwind, Closing::Sync)?;
         self.chunk.emit(Instruction::LoadVariable(0, thrown));
         self.chunk.emit(Instruction::Throw);
 

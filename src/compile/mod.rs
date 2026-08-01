@@ -314,6 +314,20 @@ struct Unwind {
     what: Crossing,
 }
 
+/// Whether closing an iterator has to **wait** for it — §7.4.9 against §7.4.11.
+///
+/// A `for`-`of` calls `return()` and reads the answer; a `for await` has to await it first, because
+/// what an async iterator answers with is a promise and the loop may not leave until it settles.
+/// A named pair rather than a `bool` threaded through three signatures, where `true` at the wrong
+/// argument position compiles and silently awaits in an ordinary loop.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Closing {
+    /// §7.4.9 — the answer is whatever `return()` gave back.
+    Sync,
+    /// §7.4.11 — await it, and on the way out of a throw discard anything it raises.
+    Awaited,
+}
+
 /// The three kinds of thing [`Unwind`] can hold, and what each costs to cross.
 #[derive(Clone)]
 enum Crossing {
@@ -342,7 +356,7 @@ enum Crossing {
     /// found that needs it, and not before.
     Finally(Rc<[Stmt]>),
     /// A `for`-`of` iterator to close — §7.4.9 `IteratorClose`, in the slot holding it.
-    Iterator(u32),
+    Iterator(u32, Closing),
 }
 
 impl<'a> Compiler<'a> {
