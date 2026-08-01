@@ -5,22 +5,18 @@
 //! - the iterator comes from §7.4.3's *async* path, which may wrap a sync one (see
 //!   [`Instruction::GetAsyncIterator`]);
 //! - every `next()` answers a **promise**, so the result is awaited before `done` is read;
-//! - closing early should await the `return()` too — §7.4.11 waits for the iterator to say it has
-//!   finished before the loop may leave.
+//! - closing early awaits the `return()` too — §7.4.11 waits for the iterator to say it has
+//!   finished before the loop may leave, and discards the close's own failure when a throw is
+//!   already travelling.
 //!
-//! # What is missing: §7.4.11's await on the close
+//! # What the close still costs a turn too many
 //!
-//! The third of those is **not** here yet. Leaving the loop early calls the iterator's `return` and
-//! does not await what it answers, so a close that rejects is dropped and one that answers a
-//! non-object is not checked. The sync iterator underneath is still closed — the wrapper's `return`
-//! calls it before answering — which is why the observable half works and the tests pass.
-//!
-//! It is not a small fix, and that is the reason it is recorded rather than done: the close for a
-//! `break` or a `return` is emitted by `loop_body` through the same `Crossing` machinery every
-//! loop uses, so awaiting it means threading "this loop is async" through all of it. Two survivors
-//! in `builtins::async_iterator` are waiting on it — the `return` lookup's callable check and the
-//! `done` of the result built when there is no `return` — because neither can be seen from a
-//! script until the close's answer is looked at.
+//! All three are here. What is not right yet is the *timing* of the third on the throw path:
+//! `async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js` sees the rejection
+//! arrive one tick later than the specification's accounting says it should, and two test262 files
+//! detect exactly that. The behaviour is right — the `catch` runs and with the right value — so
+//! this is turn accounting somewhere between `Await`, `PromiseResolve` and the wrapper's own
+//! `return`, and it wants counting rather than guessing.
 //!
 //! It is a separate file rather than a flag on `for_of_parts` because that function is already the
 //! longest in its module and the two share no line that is not `for`-`of`'s shape. What they do
@@ -121,7 +117,7 @@ impl Compiler<'_> {
         let thrown = self.declare_hidden("thrown");
         self.chunk.emit(Instruction::StoreVariable(0, thrown));
         self.chunk.emit(Instruction::Pop);
-        self.emit_close(iterator, Check::Unwind, Closing::Sync)?;
+        self.emit_close(iterator, Check::Unwind, Closing::Awaited)?;
         self.chunk.emit(Instruction::LoadVariable(0, thrown));
         self.chunk.emit(Instruction::Throw);
 

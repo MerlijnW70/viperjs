@@ -14780,6 +14780,8 @@ language/statements/expression/S12.4_A2_T1.js :: it threw ReferenceError: eval i
 language/statements/expression/S12.4_A2_T1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js :: it threw ReferenceError: eval is not defined
 language/statements/expression/S12.4_A2_T2.js (strict) :: it threw ReferenceError: eval is not defined
+language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js :: the test called $DONE with Test262Error: Actual [start, tick 1, tick 2] and expected [start, tick 1, tick 2, catch] should have the same contents.
+language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js (strict) :: the test called $DONE with Test262Error: Actual [start, tick 1, tick 2] and expected [start, tick 1, tick 2, catch] should have the same contents.
 language/statements/for-await-of/async-func-decl-dstr-array-elem-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-func-decl-dstr-array-rest-nested-obj-yield-ident-valid.js :: it did not parse: a shorthand property may not have an initializer outside a pattern
@@ -14845,10 +14847,6 @@ language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-e
 language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-obj-yield-expr.js (strict) :: it did not parse: a shorthand property may not have an initializer outside a pattern
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
 language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
-language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js :: the test called $DONE with Test262Error: Expected SameValue(«function Object() { [native code] }», «function Test262Error() { [native code] }») to be true
-language/statements/for-await-of/iterator-close-throw-get-method-abrupt.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«function Object() { [native code] }», «function Test262Error() { [native code] }») to be true
-language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js :: the test called $DONE with Test262Error: Expected SameValue(«function TypeError() { [native code] }», «function Test262Error() { [native code] }») to be true
-language/statements/for-await-of/iterator-close-throw-get-method-non-callable.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«function TypeError() { [native code] }», «function Test262Error() { [native code] }») to be true
 language/statements/for-in/S12.6.4_A3.1.js :: it threw ReferenceError: eval is not defined
 language/statements/for-in/S12.6.4_A3.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/statements/for-in/S12.6.4_A3.js :: it threw ReferenceError: eval is not defined

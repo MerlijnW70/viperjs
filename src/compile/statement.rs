@@ -530,6 +530,12 @@ impl Compiler<'_> {
         if check == Check::Loop {
             self.chunk.emit(Instruction::PopHandler);
         }
+        // §7.4.11 step 4 — on the way out of a *throw* the original completion wins, so every
+        // failure of the close is discarded: the rejection the `Await` below raises, and the method
+        // lookup step 2 can fail at. A handler around the whole close is the only way to say that,
+        // because by then the throw is a value travelling and not a flag to consult.
+        let swallow = (closing == Closing::Awaited && check == Check::Unwind)
+            .then(|| self.chunk.emit_jump(Instruction::PushHandler));
 
         self.chunk.emit(Instruction::LoadVariable(0, iterator));
         self.chunk.emit(Instruction::Duplicate);
@@ -544,12 +550,7 @@ impl Compiler<'_> {
         // §7.4.11 step 3.d — an async iterator answers with a promise, and the loop may not leave
         // until it settles. Before the check below, because what has to be an object is what the
         // promise *settled with* and not the promise.
-        //
-        // Only ever reached with `Check::Loop`, which is a deliberate exit. §7.4.11 asks for this
-        // on the way out of a **throw** as well, and it is not done there: step 4 says the original
-        // completion wins, so the close's own rejection would have to be swallowed by a handler
-        // wrapped around all of this — and that combination does not terminate. See the note in
-        // `for_await`.
+
         if closing == Closing::Awaited {
             self.chunk.emit(Instruction::Await);
         }
@@ -565,7 +566,15 @@ impl Compiler<'_> {
         // The receiver and the absent method are still there; neither is wanted.
         self.chunk.emit(Instruction::Pop);
         self.chunk.emit(Instruction::Pop);
-        self.chunk.patch(done)
+        self.chunk.patch(done)?;
+        let Some(swallow) = swallow else {
+            return Ok(());
+        };
+        self.chunk.emit(Instruction::PopHandler);
+        let past = self.chunk.emit_jump(Instruction::Jump);
+        self.chunk.patch(swallow)?;
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.patch(past)
     }
 
     /// The interned name of a property this compiler emits for itself.
