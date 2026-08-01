@@ -48,6 +48,7 @@ mod helper;
 mod iteration;
 mod matches;
 mod object;
+mod ordinary;
 mod promise;
 mod property;
 mod proxy;

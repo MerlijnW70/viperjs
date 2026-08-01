@@ -104,7 +104,7 @@ impl Vm {
         let answer = self.capability_of(context, heap).map(|held| held.promise);
         let parked = self.park(current, at)?;
         // The context was made by `begin_async` and named by the frame, so it is an object.
-        let _ = heap.park_into(Value::Object(context), parked);
+        heap.park_into(context, parked);
         self.stack.push(answer.unwrap_or(Value::Undefined));
         Ok(())
     }

@@ -772,7 +772,7 @@ impl Vm {
                     let result = self.iterator_result(heap, value, false);
                     let parked = self.park(current, at)?;
                     // The generator exists — the frame named it — so this cannot answer `false`.
-                    let _ = heap.park_into(Value::Object(generator), parked);
+                    heap.park_into(generator, parked);
                     // Where a `Return` would have left the returned value: the resumption that
                     // entered this body is being answered, and it answers with an iterator result.
                     self.stack.push(result);
@@ -787,7 +787,7 @@ impl Vm {
                         return Err(Fault::YieldOutsideGenerator);
                     };
                     let parked = self.park(current, at)?;
-                    let _ = heap.park_into(Value::Object(generator), parked);
+                    heap.park_into(generator, parked);
                     self.stack.push(result);
                 }
                 Instruction::ThrowNoThrowMethod => {

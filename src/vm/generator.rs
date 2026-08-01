@@ -56,7 +56,7 @@ impl Vm {
         let parked =
             Suspended::started(body, environment, receiver, new_target, function, generator);
         // The object was just made, so it is an object and this cannot answer `false`.
-        let _ = heap.park_into(Value::Object(generator), parked);
+        heap.park_into(generator, parked);
         // Where a call leaves its answer: the callee and its arguments go, and the generator takes
         // their place. From here it is an ordinary value that happens to hold an execution.
         self.stack.truncate(receiver_at);
