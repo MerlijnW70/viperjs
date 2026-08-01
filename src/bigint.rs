@@ -1,0 +1,637 @@
+//! §6.1.6.2's BigInt — an integer with no width, and the arithmetic §6.1.6.2.1 to §6.1.6.2.22 asks of it.
+//!
+//! A sign and a magnitude, where the magnitude is base 2^32 with the least significant limb first.
+//! Two invariants hold everywhere and every operation restores them: there is **no trailing zero
+//! limb**, and **zero is not negative**. Together they make equality a comparison of two fields and
+//! nothing more, which is what §6.1.6.2.13's `BigInt::equal` wants.
+//!
+//! # Why not two's complement
+//!
+//! Because a BigInt has no width, and two's complement is a statement about one. `-1n` in two's
+//! complement is an infinite run of ones, which a `Vec` cannot hold. Sign-and-magnitude holds every
+//! value in the space a program can name and pays for it in exactly one place: §6.1.6.2.18 to
+//! §6.1.6.2.20's bitwise operators, which *are* defined on two's complement and are written below
+//! as the identities that relate the two.
+//!
+//! # Why base 2^32 and not 2^64
+//!
+//! A multiply of two limbs has to fit in something. `u32 * u32` fits in a `u64` and needs nothing
+//! from the platform; `u64 * u64` needs a 128-bit product, and while Rust has `u128` the schoolbook
+//! algorithms below read the same either way. Twice the limbs is twice the loop iterations on
+//! numbers that programs almost never make large — a `BigInt` in real code is a database identifier
+//! or a nanosecond timestamp, not a cryptographic modulus.
+
+use std::cmp::Ordering;
+
+/// An arbitrary-precision integer — §6.1.6.2's BigInt value.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct BigInt {
+    /// Whether this is less than zero. Never true when the magnitude is empty.
+    negative: bool,
+    /// Base 2^32, least significant limb first, with no trailing zero. Empty is zero.
+    magnitude: Vec<u32>,
+}
+
+/// Why an operation could not answer — each is a specific abrupt completion in §6.1.6.2.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Error {
+    /// §6.1.6.2.5 `BigInt::divide` step 1 and §6.1.6.2.6 step 1 — a RangeError, not a NaN.
+    ///
+    /// The one place BigInt and Number part company loudest: `1 / 0` is `Infinity` and `1n / 0n`
+    /// throws, because there is no BigInt infinity for it to be.
+    DividedByZero,
+    /// §6.1.6.2.3 `BigInt::exponentiate` step 1 — a negative exponent is a RangeError.
+    ///
+    /// `2n ** -1n` would be one half, and a BigInt is an integer. Refusing is the only answer that
+    /// is not a lie about the type.
+    NegativeExponent,
+    /// §6.1.6.2.11 `BigInt::unsignedRightShift` — always a TypeError.
+    ///
+    /// `>>>` fills from the left with zeros, which needs a width; a BigInt has none. The
+    /// specification does not define it rather than defining it as `>>`.
+    NoUnsignedShift,
+    /// A result too large to hold — praxis's limit, not the language's.
+    ///
+    /// §6.1.6.2 puts no bound on a BigInt, and no implementation can honour that. `2n ** (2n **
+    /// 40n)` is a number nothing can write down, and asking for it should be a refusal rather than
+    /// an allocation that never returns. The ceiling is a gigabyte of magnitude.
+    TooLarge,
+}
+
+/// The most limbs a BigInt may have — praxis's ceiling on §6.1.6.2's unbounded integer.
+///
+/// 2^20 limbs is four megabytes of magnitude — a thirty-three-million-bit integer, or ten million
+/// decimal digits. Past what any program means to compute, and *inside* DR-0013's sixty-four
+/// mebibyte heap besides, so a program that reaches it was going to run out of heap anyway.
+///
+/// Chosen small enough that a test can stand at the boundary. A ceiling nobody can reach is a
+/// ceiling nobody has checked, and the two sides of it are one comparison apart.
+pub const MAX_LIMBS: usize = 1 << 20;
+
+impl BigInt {
+    /// Zero.
+    pub fn zero() -> Self {
+        // Through `from_u64` rather than an empty magnitude and a sign of its own: the sign of an
+        // empty magnitude is dropped, so writing one here was a value nothing could read.
+        Self::from_u64(0)
+    }
+
+    /// The BigInt this `u64` names.
+    pub fn from_u64(value: u64) -> Self {
+        Self::from_parts(vec![value as u32, (value >> 32) as u32], false)
+    }
+
+    /// Whether this is zero — §6.1.6.2's only value that is neither positive nor negative.
+    pub fn is_zero(&self) -> bool {
+        self.magnitude.is_empty()
+    }
+
+    /// Whether this is less than zero.
+    pub fn is_negative(&self) -> bool {
+        self.negative
+    }
+
+    /// A value from a magnitude and a sign, restoring both invariants.
+    ///
+    /// The one way to build one, so that "zero is not negative" is decided in a single place. It
+    /// was written out at each site for a while, as `negative: false` followed by a sign applied
+    /// afterwards — and the `false` was then a value nothing could read, because the sign always
+    /// overwrote it.
+    fn from_parts(mut magnitude: Vec<u32>, negative: bool) -> Self {
+        trim(&mut magnitude);
+        Self {
+            negative: negative && !magnitude.is_empty(),
+            magnitude,
+        }
+    }
+
+    /// The same magnitude with this sign, keeping zero unsigned.
+    fn with_sign(self, negative: bool) -> Self {
+        Self::from_parts(self.magnitude, negative)
+    }
+
+    /// §6.1.6.2.1 `BigInt::unaryMinus` — the same magnitude, the other sign.
+    ///
+    /// Zero negates to zero, which is not a special case here but a consequence of the invariant
+    /// at the top of this file: an empty magnitude is never signed.
+    pub fn negate(&self) -> Self {
+        self.clone().with_sign(!self.negative)
+    }
+
+    /// The magnitude, as a positive BigInt — `|x|`.
+    pub fn magnitude_of(&self) -> Self {
+        self.clone().with_sign(false)
+    }
+
+    /// §6.1.6.2.12 `BigInt::lessThan`, as the full ordering the callers of it want.
+    ///
+    /// A negative is below every non-negative, and among two of the same sign the magnitudes decide
+    /// — reversed for two negatives, since a bigger magnitude is a smaller number.
+    pub fn compare(&self, other: &Self) -> Ordering {
+        match (self.negative, other.negative) {
+            (false, true) => Ordering::Greater,
+            (true, false) => Ordering::Less,
+            (false, false) => compare_magnitude(&self.magnitude, &other.magnitude),
+            (true, true) => compare_magnitude(&other.magnitude, &self.magnitude),
+        }
+    }
+
+    /// §6.1.6.2.7 `BigInt::add`.
+    pub fn add(&self, other: &Self) -> Result<Self, Error> {
+        // Like signs add the magnitudes and keep the sign; unlike signs are a subtraction, and
+        // which way round it goes is decided by which magnitude is larger.
+        if self.negative == other.negative {
+            let magnitude = add_magnitude(&self.magnitude, &other.magnitude)?;
+            return Ok(Self::from_parts(magnitude, self.negative));
+        }
+        Ok(match compare_magnitude(&self.magnitude, &other.magnitude) {
+            Ordering::Less => Self::from_parts(
+                subtract_magnitude(&other.magnitude, &self.magnitude),
+                other.negative,
+            ),
+            _ => Self::from_parts(
+                subtract_magnitude(&self.magnitude, &other.magnitude),
+                self.negative,
+            ),
+        })
+    }
+
+    /// §6.1.6.2.8 `BigInt::subtract` — `x + (-y)`, which is what the clause is.
+    pub fn subtract(&self, other: &Self) -> Result<Self, Error> {
+        self.add(&other.negate())
+    }
+
+    /// §6.1.6.2.4 `BigInt::multiply`.
+    pub fn multiply(&self, other: &Self) -> Result<Self, Error> {
+        // No shortcut for a zero operand: `multiply_magnitude` walks an empty magnitude, produces
+        // limbs of zeros and trims them away, which is the same answer by the same route.
+        let magnitude = multiply_magnitude(&self.magnitude, &other.magnitude)?;
+        Ok(Self::from_parts(magnitude, self.negative != other.negative))
+    }
+
+    /// §6.1.6.2.5 `BigInt::divide` — truncated towards zero, as the clause says.
+    ///
+    /// `-7n / 2n` is `-3n` and not `-4n`: the quotient is the *integer part*, which is a different
+    /// thing from the floor for a negative result. `%` below is defined to agree with it.
+    pub fn divide(&self, other: &Self) -> Result<Self, Error> {
+        Ok(self.divide_and_remainder(other)?.0)
+    }
+
+    /// §6.1.6.2.6 `BigInt::remainder` — the sign of the **dividend**, as the clause says.
+    ///
+    /// `-7n % 2n` is `-1n`, not `1n`. That is not the mathematical modulo and it is what makes
+    /// `(a / b) * b + (a % b)` equal `a`, which is the identity the pair is defined by.
+    pub fn remainder(&self, other: &Self) -> Result<Self, Error> {
+        Ok(self.divide_and_remainder(other)?.1)
+    }
+
+    /// Both halves of a division, which the algorithm produces together.
+    pub fn divide_and_remainder(&self, other: &Self) -> Result<(Self, Self), Error> {
+        if other.is_zero() {
+            return Err(Error::DividedByZero);
+        }
+        let (quotient, remainder) = divide_magnitude(&self.magnitude, &other.magnitude);
+        Ok((
+            Self::from_parts(quotient, self.negative != other.negative),
+            Self::from_parts(remainder, self.negative),
+        ))
+    }
+
+    /// §6.1.6.2.3 `BigInt::exponentiate`.
+    ///
+    /// Square-and-multiply, which is the difference between `2n ** 1000n` being instant and being a
+    /// thousand multiplications of a growing number. The exponent is read as a `u64` because an
+    /// exponent that does not fit in one names a result with more bits than there are atoms; that
+    /// case is [`Error::TooLarge`] rather than an attempt.
+    pub fn exponentiate(&self, exponent: &Self) -> Result<Self, Error> {
+        if exponent.negative {
+            return Err(Error::NegativeExponent);
+        }
+        let Some(power) = exponent.to_u64() else {
+            return Err(Error::TooLarge);
+        };
+        // Left to right over the exponent's bits, squaring the running result rather than the
+        // base. The other direction needs a guard against squaring the base one last time after
+        // the loop has finished with it — a step whose answer nothing reads, which is a branch no
+        // test can distinguish.
+        let mut result = Self::from_u64(1);
+        for bit in (0..(u64::BITS - power.leading_zeros())).rev() {
+            result = result.multiply(&result)?;
+            if power >> bit & 1 == 1 {
+                result = result.multiply(self)?;
+            }
+        }
+        Ok(result)
+    }
+
+    /// §6.1.6.2.9 `BigInt::leftShift`, which shifts the other way for a negative count.
+    ///
+    /// `x << -n` is `x >> n` — the clause is written as one operation taking a signed count, and
+    /// this is that.
+    pub fn shift_left(&self, places: &Self) -> Result<Self, Error> {
+        if places.negative {
+            return self.shift_right(&places.negate());
+        }
+        let Some(places) = places.to_u64() else {
+            return Err(Error::TooLarge);
+        };
+        let magnitude = shift_magnitude_left(&self.magnitude, places)?;
+        Ok(Self::from_parts(magnitude, self.negative))
+    }
+
+    /// §6.1.6.2.10 `BigInt::signedRightShift`, which is an *arithmetic* shift.
+    ///
+    /// The sign is kept, and a negative number rounds **towards negative infinity** rather than
+    /// towards zero: `-1n >> 1n` is `-1n`, where `-1n / 2n` is `0n`. That is what makes a right
+    /// shift a division by a power of two in two's complement and not in sign-and-magnitude — so
+    /// the correction below is the whole of the difference.
+    pub fn shift_right(&self, places: &Self) -> Result<Self, Error> {
+        if places.negative {
+            return self.shift_left(&places.negate());
+        }
+        let Some(places) = places.to_u64() else {
+            // Shifting a finite number right by more bits than it has leaves 0, or -1 for a
+            // negative — the sign bit, repeated for ever.
+            return Ok(match self.negative {
+                true => Self::from_u64(1).negate(),
+                false => Self::zero(),
+            });
+        };
+        let shifted = shift_magnitude_right(&self.magnitude, places);
+        let result = Self::from_parts(shifted, self.negative);
+        // A negative that lost any set bit on the way out has rounded the wrong way for an
+        // arithmetic shift, and one more towards negative infinity is the correction.
+        match self.negative && !dropped_bits_were_zero(&self.magnitude, places) {
+            true => result.subtract(&Self::from_u64(1)),
+            false => Ok(result),
+        }
+    }
+
+    /// §6.1.6.2.2 `BigInt::bitwiseNOT` — `-(x + 1)`, which is what two's complement makes it.
+    ///
+    /// Written as the identity rather than as a walk over the limbs, because the identity is exact
+    /// at every width and a walk is a statement about one.
+    pub fn not(&self) -> Result<Self, Error> {
+        self.add(&Self::from_u64(1)).map(|sum| sum.negate())
+    }
+
+    /// §6.1.6.2.20 `BigInt::bitwiseAND`.
+    pub fn and(&self, other: &Self) -> Result<Self, Error> {
+        self.bitwise(other, |a, b| a & b)
+    }
+
+    /// §6.1.6.2.19 `BigInt::bitwiseXOR`.
+    pub fn xor(&self, other: &Self) -> Result<Self, Error> {
+        self.bitwise(other, |a, b| a ^ b)
+    }
+
+    /// §6.1.6.2.18 `BigInt::bitwiseOR`.
+    pub fn or(&self, other: &Self) -> Result<Self, Error> {
+        self.bitwise(other, |a, b| a | b)
+    }
+
+    /// The three bitwise operators, over two's complement, at a width wide enough to be all widths.
+    ///
+    /// §6.1.6.2.17 `BigIntBitwiseOp` is defined on the infinite two's-complement expansions, where
+    /// a negative number is an infinite run of leading ones. An infinite run is not something to
+    /// hold, but it *is* something to know: past the last limb of a negative operand every bit is
+    /// one, so a width one limb beyond the longer operand computes the same answer as any wider
+    /// one, and its top limb says which.
+    fn bitwise(&self, other: &Self, combine: impl Fn(u32, u32) -> u32) -> Result<Self, Error> {
+        let width = self.magnitude.len().max(other.magnitude.len()) + 1;
+        within_ceiling(width)?;
+        let left = self.to_twos_complement(width);
+        let right = other.to_twos_complement(width);
+        let combined: Vec<u32> = left
+            .iter()
+            .zip(right.iter())
+            .map(|(a, b)| combine(*a, *b))
+            .collect();
+        Ok(Self::from_twos_complement(combined))
+    }
+
+    /// This value as `width` limbs of two's complement — see [`BigInt::bitwise`].
+    fn to_twos_complement(&self, width: usize) -> Vec<u32> {
+        let mut limbs = vec![0u32; width];
+        limbs[..self.magnitude.len()].copy_from_slice(&self.magnitude);
+        if !self.negative {
+            return limbs;
+        }
+        // Negate: invert every limb and add one, which is the definition and not an optimisation of
+        // it. The carry cannot escape `width`, because `width` is a limb wider than the magnitude.
+        let mut carry = 1u64;
+        for limb in &mut limbs {
+            let sum = u64::from(!*limb) + carry;
+            *limb = sum as u32;
+            carry = sum >> 32;
+        }
+        limbs
+    }
+
+    /// The reverse, reading the top limb as the sign.
+    fn from_twos_complement(mut limbs: Vec<u32>) -> Self {
+        // The top limb is all ones for a negative and all zeros for a non-negative, `width` having
+        // been chosen a limb wider than either operand needed.
+        let negative = limbs.last().is_some_and(|top| *top & 0x8000_0000 != 0);
+        if negative {
+            let mut carry = 1u64;
+            for limb in &mut limbs {
+                let sum = u64::from(!*limb) + carry;
+                *limb = sum as u32;
+                carry = sum >> 32;
+            }
+        }
+        trim(&mut limbs);
+        Self::from_parts(limbs, negative)
+    }
+
+    /// §12.9.3's `BigIntLiteral`, and §7.1.14's `StringToBigInt` — digits in a radix, read.
+    ///
+    /// The digits are already known to be digits: the lexer read them and §7.1.14's caller has
+    /// checked the string. Anything that is not one answers `None` rather than being skipped, so a
+    /// caller cannot hand this `"1 2"` and get `12n`.
+    ///
+    /// Multiply-and-add, one digit at a time. A base conversion can be done in `n log n` and the
+    /// difference shows up at tens of thousands of digits — which a literal in a source file is
+    /// not, and `BigInt("…")` on such a string is a program that has other problems.
+    pub fn from_digits(digits: &str, radix: u32) -> Option<Self> {
+        let base = Self::from_u64(u64::from(radix));
+        let mut value = Self::zero();
+        for digit in digits.chars() {
+            let read = digit.to_digit(radix)?;
+            value = value.multiply(&base).ok()?;
+            value = value.add(&Self::from_u64(u64::from(read))).ok()?;
+        }
+        Some(value)
+    }
+
+    /// §6.1.6.2.22 `BigInt::toString` — the digits, with a `-` in front when it is negative.
+    ///
+    /// Repeated division by the radix, least significant digit first. No `n` suffix: §6.1.6.2.22
+    /// does not put one there, and `String(1n)` is `"1"` — the suffix is syntax and not part of
+    /// the value.
+    pub fn to_digits(&self, radix: u32) -> String {
+        if self.is_zero() {
+            return "0".to_string();
+        }
+        let mut digits = Vec::new();
+        let mut left = self.magnitude.clone();
+        let divisor = [radix];
+        while !left.is_empty() {
+            let (quotient, remainder) = divide_magnitude(&left, &divisor);
+            let digit = remainder.first().copied().unwrap_or(0);
+            // `from_digit` answers `None` only above the radix, and a remainder is always below it.
+            digits.push(char::from_digit(digit, radix).unwrap_or('0'));
+            left = quotient;
+        }
+        if self.negative {
+            digits.push('-');
+        }
+        digits.iter().rev().collect()
+    }
+
+    /// This value as a `u64`, or `None` if it does not fit — the sign is ignored.
+    fn to_u64(&self) -> Option<u64> {
+        match self.magnitude.len() {
+            0 => Some(0),
+            1 => Some(u64::from(self.magnitude[0])),
+            2 => Some(u64::from(self.magnitude[0]) | (u64::from(self.magnitude[1]) << 32)),
+            _ => None,
+        }
+    }
+}
+
+/// Whether a result of this many limbs is one this engine will build — see [`MAX_LIMBS`].
+///
+/// One comparison rather than the same one at each of the three places that grow a magnitude. Three
+/// copies is three chances to write the edge the wrong way round, and only one of the three is
+/// cheap enough for a test to stand at: an addition reaches the ceiling with one allocation where a
+/// multiplication would need two operands of half of it and the time to multiply them.
+fn within_ceiling(width: usize) -> Result<(), Error> {
+    match width > MAX_LIMBS {
+        true => Err(Error::TooLarge),
+        false => Ok(()),
+    }
+}
+
+/// Drop the trailing zero limbs, which is what keeps the representation unique.
+fn trim(magnitude: &mut Vec<u32>) {
+    while magnitude.last() == Some(&0) {
+        magnitude.pop();
+    }
+}
+
+/// Which of two magnitudes is larger — longer wins, then the most significant limb that differs.
+fn compare_magnitude(left: &[u32], right: &[u32]) -> Ordering {
+    match left.len().cmp(&right.len()) {
+        Ordering::Equal => left.iter().rev().cmp(right.iter().rev()),
+        other => other,
+    }
+}
+
+/// `left + right`, on magnitudes.
+fn add_magnitude(left: &[u32], right: &[u32]) -> Result<Vec<u32>, Error> {
+    let width = left.len().max(right.len()) + 1;
+    within_ceiling(width)?;
+    let mut sum = Vec::new();
+    let mut carry = 0u64;
+    for at in 0..width {
+        let total = carry
+            + u64::from(left.get(at).copied().unwrap_or(0))
+            + u64::from(right.get(at).copied().unwrap_or(0));
+        sum.push(total as u32);
+        carry = total >> 32;
+    }
+    trim(&mut sum);
+    Ok(sum)
+}
+
+/// `left - right`, on magnitudes, where the caller has established that `left >= right`.
+fn subtract_magnitude(left: &[u32], right: &[u32]) -> Vec<u32> {
+    let mut difference = Vec::new();
+    let mut borrow = 0i64;
+    for (at, limb) in left.iter().enumerate() {
+        let total = i64::from(*limb) - i64::from(right.get(at).copied().unwrap_or(0)) - borrow;
+        // `left >= right` is the caller's promise, so the borrow always comes back out of a later
+        // limb — the running value can be negative here and the whole cannot.
+        let (limb, next) = match total < 0 {
+            true => (total as u32, 1),
+            false => (total as u32, 0),
+        };
+        difference.push(limb);
+        borrow = next;
+    }
+    trim(&mut difference);
+    difference
+}
+
+/// `left * right`, schoolbook — one pass per limb of the right operand.
+fn multiply_magnitude(left: &[u32], right: &[u32]) -> Result<Vec<u32>, Error> {
+    let width = left.len() + right.len();
+    within_ceiling(width)?;
+    let mut product = vec![0u32; width];
+    for (at, factor) in right.iter().enumerate() {
+        let mut carry = 0u64;
+        for (offset, limb) in left.iter().enumerate() {
+            let total =
+                u64::from(*limb) * u64::from(*factor) + u64::from(product[at + offset]) + carry;
+            product[at + offset] = total as u32;
+            carry = total >> 32;
+        }
+        product[at + left.len()] = carry as u32;
+    }
+    trim(&mut product);
+    Ok(product)
+}
+
+/// `left / right` and `left % right`, on magnitudes — one algorithm, whatever the sizes.
+///
+/// A dividend smaller than the divisor and a divisor of a single limb both used to have a shortcut
+/// of their own. Neither changed an answer: the general path produces a zero quotient for the
+/// first and reads one limb where it would have read two for the second, and both shortcuts were
+/// branches nothing could tell from their absence.
+/// One digit of the quotient per position, most significant first, exactly as long division is
+/// taught. The digit is *estimated* from the top limbs and then **corrected by trying it**: the
+/// product is compared against what is left and the estimate comes down until it fits.
+///
+/// # Why not Knuth's algorithm D as written
+///
+/// Algorithm D estimates more cleverly — normalising the divisor so its top bit is set bounds the
+/// error at one — and then subtracts optimistically and *adds back* on the rare occasion it went
+/// too far. That add-back is correct and it is unreachable by any input a test can construct: it
+/// runs about once in two billion divisions of random operands, which is to say never, which is to
+/// say it is code nobody has ever executed.
+///
+/// Comparing before subtracting costs a multiply and a comparison per attempt — a constant factor
+/// on an operation no JavaScript program runs in a loop — and every line of it is reached by
+/// ordinary arithmetic. GOAL.md's preference for the boring implementation is exactly this trade:
+/// the clever one is faster and has a branch that cannot be tested.
+fn divide_magnitude(left: &[u32], right: &[u32]) -> (Vec<u32>, Vec<u32>) {
+    // Normalise: shift both until the divisor's top bit is set. This is not a tidying step, it is
+    // what makes the estimate below *close*. With a divisor whose top limb is 1, `head / top` can
+    // be four billion times the true digit and the correction loop counts all the way down; with
+    // the top bit set the estimate is at most two too large, which is why the loop is a loop and
+    // not a search. Measured before it was here: a division of two three-limb numbers took a
+    // second.
+    //
+    // The shift cannot overflow the ceiling — it adds at most one limb to operands already inside
+    // it — so a refusal here would be a case no input reaches, and `unwrap_or_default` says so
+    // rather than adding one.
+    let shift = u64::from(right[right.len() - 1].leading_zeros());
+    let divisor = shift_magnitude_left(right, shift).unwrap_or_default();
+    let dividend = shift_magnitude_left(left, shift).unwrap_or_default();
+
+    let n = divisor.len();
+    let mut remainder: Vec<u32> = Vec::new();
+    let mut quotient = vec![0u32; dividend.len()];
+    for at in (0..dividend.len()).rev() {
+        // Bring the next limb down, least significant first — so it goes to the *bottom* of the
+        // running remainder and what is there already moves up one place.
+        remainder.insert(0, dividend[at]);
+        trim(&mut remainder);
+        if compare_magnitude(&remainder, &divisor) == Ordering::Less {
+            continue;
+        }
+        // The estimate, from one limb more of the remainder than the divisor has. Normalisation
+        // makes it at most two too large and never too small, so the correction only comes down.
+        let head = match remainder.len() > n {
+            true => (u64::from(remainder[n]) << 32) | u64::from(remainder[n - 1]),
+            false => u64::from(remainder[n - 1]),
+        };
+        let mut estimate = (head / u64::from(divisor[n - 1])).min(0xFFFF_FFFF);
+        let mut product = multiply_by_limb(&divisor, estimate);
+        // Try it, rather than subtracting optimistically and adding back when that went too far.
+        // The add-back is Knuth's and it is correct; it also runs about once in two billion
+        // divisions, which is to say it is code no test can reach. This runs on ordinary inputs.
+        while compare_magnitude(&product, &remainder) == Ordering::Greater {
+            estimate -= 1;
+            product = multiply_by_limb(&divisor, estimate);
+        }
+        remainder = subtract_magnitude(&remainder, &product);
+        quotient[at] = estimate as u32;
+    }
+    trim(&mut quotient);
+    // The quotient is unaffected by the normalisation — both operands were scaled by the same
+    // power of two — and the remainder was scaled with them, so it comes back.
+    (quotient, shift_magnitude_right(&remainder, shift))
+}
+
+/// `magnitude * limb`, which long division needs to try a digit before committing to it.
+fn multiply_by_limb(magnitude: &[u32], limb: u64) -> Vec<u32> {
+    let mut product = Vec::new();
+    let mut carry = 0u64;
+    for value in magnitude {
+        let total = u64::from(*value) * limb + carry;
+        product.push(total as u32);
+        carry = total >> 32;
+    }
+    while carry > 0 {
+        product.push(carry as u32);
+        carry >>= 32;
+    }
+    trim(&mut product);
+    product
+}
+
+/// `magnitude << places`, in bits.
+fn shift_magnitude_left(magnitude: &[u32], places: u64) -> Result<Vec<u32>, Error> {
+    if magnitude.is_empty() {
+        return Ok(Vec::new());
+    }
+    let limbs = (places / 32) as usize;
+    let bits = (places % 32) as u32;
+    let width = magnitude.len() + limbs + 1;
+    within_ceiling(width)?;
+    let mut shifted = vec![0u32; width];
+    for (at, limb) in magnitude.iter().enumerate() {
+        let wide = u64::from(*limb) << bits;
+        shifted[at + limbs] |= wide as u32;
+        shifted[at + limbs + 1] |= (wide >> 32) as u32;
+    }
+    trim(&mut shifted);
+    Ok(shifted)
+}
+
+/// `magnitude >> places`, in bits, discarding what falls off the bottom.
+fn shift_magnitude_right(magnitude: &[u32], places: u64) -> Vec<u32> {
+    let limbs = (places / 32) as usize;
+    // No guard for a shift past the end: `limbs..magnitude.len()` is simply an empty range then,
+    // and the answer is the empty magnitude either way.
+    let bits = (places % 32) as u32;
+    let mut shifted = Vec::new();
+    for at in limbs..magnitude.len() {
+        // `checked_shl` rather than `>>`, because a shift of a whole limb width is undefined in
+        // Rust and this is reached with `bits` of zero on every whole-limb shift.
+        let high = match bits {
+            0 => 0,
+            _ => magnitude
+                .get(at + 1)
+                .map_or(0, |next| next.wrapping_shl(32 - bits)),
+        };
+        shifted.push((magnitude[at] >> bits) | high);
+    }
+    trim(&mut shifted);
+    shifted
+}
+
+/// Whether every bit `>> places` discards was already zero — see [`BigInt::shift_right`].
+fn dropped_bits_were_zero(magnitude: &[u32], places: u64) -> bool {
+    let limbs = (places / 32) as usize;
+    let bits = (places % 32) as u32;
+    if magnitude
+        .iter()
+        .take(limbs.min(magnitude.len()))
+        .any(|limb| *limb != 0)
+    {
+        return false;
+    }
+    match bits {
+        0 => true,
+        _ => magnitude
+            .get(limbs)
+            .is_none_or(|limb| limb & ((1u32 << bits) - 1) == 0),
+    }
+}
+
+#[cfg(test)]
+mod tests;
