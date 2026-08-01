@@ -42,12 +42,23 @@ fn a_generator_answers_with_an_iterator_result() {
         run("function* g() {} var r = g().next(); r.value + ':' + r.done"),
         "undefined:true"
     );
-    // The result is an ordinary object with two own, writable, enumerable properties — §7.4.13
-    // gives them all three attributes, which is why `Object.keys` finds them.
+    // The result is an ordinary object with two own properties, and §7.4.13 gives each of them
+    // **all three** attributes. `Object.keys` only asks about the enumerable one, so the other two
+    // are read off the descriptor — a result object whose `value` could not be written or removed
+    // would pass every row above and fail the first program that reused one.
     assert_eq!(
         run("function* g() {} Object.keys(g().next()).join(',')"),
         "value,done"
     );
+    for name in ["value", "done"] {
+        assert_eq!(
+            run(&format!(
+                "function* g() {{}} var d = Object.getOwnPropertyDescriptor(g().next(), '{name}'); d.writable + ':' + d.enumerable + ':' + d.configurable"
+            )),
+            "true:true:true",
+            "the descriptor of {name}"
+        );
+    }
 }
 
 #[test]

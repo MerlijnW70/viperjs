@@ -53,6 +53,19 @@ pub(crate) struct Suspended {
     /// [`Suspended::started`] has not begun and one made by [`Vm::park`] has, and there is no third
     /// way to make one. What reads it is `throw`, which has a `try` to consider only if the body
     /// has reached one.
+    ///
+    /// **Nothing can currently tell the two apart**, and that is worth writing down rather than
+    /// acting on. §27.5.1.4 step 5 completes a not-yet-started generator without running it, where
+    /// step 8 resumes a suspended one abruptly — but resuming an execution parked at instruction
+    /// zero, with no handlers installed, unwinds before a single instruction is read, so both paths
+    /// reach the same place. Measured rather than assumed: flipping this constant leaves all 93,153
+    /// test262 runs identical, which is why mutation coverage reports it as a survivor.
+    ///
+    /// It stays because the coincidence has a known expiry. The parameter-default divergence
+    /// recorded beside `yield` is fixed by running the prologue at the *call* and parking at the
+    /// body — and then instruction zero is real code, reviving a not-yet-started generator would
+    /// run it, and step 5 forbids exactly that. Deleting this to satisfy a mutation score would
+    /// plant that bug in advance.
     begun: bool,
     /// The operands it had built, from its own floor upwards.
     stack: Vec<Value>,
