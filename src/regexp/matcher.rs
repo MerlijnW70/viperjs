@@ -1111,4 +1111,35 @@ mod tests {
                 .is_some()
         );
     }
+
+    #[test]
+    fn a_repetition_of_something_wider_than_one_code_point_takes_the_general_path() {
+        // Every quantifier test beside this one uses a body one code point wide, so since
+        // `repeat_one` arrived they all take the iterative path and say nothing about the
+        // recursive one. A **group** is excluded from that path — it captures, and §22.2.2.5 steps
+        // 3 to 5 clear what is inside it between turns — so these are what still reach `repeat`.
+        //
+        // Written out because the fast path did not replace the general one, it merely hid it: the
+        // branches below were covered until the tests that covered them started going elsewhere.
+        assert_eq!(matched("(?:ab)+", "ababX"), Some("abab".to_string()));
+        assert_eq!(matched("(?:ab)+?", "ababX"), Some("ab".to_string()));
+        assert_eq!(matched("(?:ab){2}", "ababab"), Some("abab".to_string()));
+        assert_eq!(matched("(?:ab){2,}", "ababab"), Some("ababab".to_string()));
+        assert_eq!(matched("(?:ab){2,}?", "ababab"), Some("abab".to_string()));
+        // Zero turns — §22.2.2.5 step 1 — where the body is one the loop would otherwise enter.
+        // The quantifier matches empty and what follows has to match from where it started.
+        // Anchored, or the search simply moves along until it finds the `c` on its own.
+        assert_eq!(matched("^(?:ab){0}c", "abc"), None);
+        assert_eq!(matched("^(?:ab){0}a", "abc"), Some("a".to_string()));
+        // …and backtracking through a wide body, which is the whole reason the recursive path
+        // still exists: the group has to give a *pair* back, not a character.
+        // One `ab` is the least the group may take, so there is nothing left for the `abX` and no
+        // shorter turn to fall back to.
+        assert_eq!(matched("(?:ab)+abX", "abX"), None);
+        // …and here it takes two and gives one back, so that `abX` fits where it stopped.
+        assert_eq!(matched("(?:ab)+abX", "ababX"), Some("ababX".to_string()));
+        // A capturing group keeps what its *last* turn matched, which is the state the general
+        // path holds a copy of the captures to get right.
+        assert_eq!(all("(a|b)+", "", "ab"), Some("ab|b".to_string()));
+    }
 }
