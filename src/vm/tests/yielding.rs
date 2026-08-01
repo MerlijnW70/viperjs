@@ -248,14 +248,3 @@ fn a_return_into_a_suspended_body_finishes_it_without_running_its_finally() {
         ""
     );
 }
-
-#[test]
-fn yield_star_is_not_implemented_yet() {
-    // §15.5.5's third production, and the one piece of the grammar this slice leaves. Written as a
-    // row rather than left silent because a `yield*` that compiled to a plain `yield` would be a
-    // wrong answer instead of a refusal.
-    let mut heap = Heap::new();
-    let script = parse_script("function* g() { yield* [1]; }").expect("the row parses"); // a row that does not is the bug
-    let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
-    assert_eq!(error.kind, crate::compile::ErrorKind::Unsupported("yield*"));
-}

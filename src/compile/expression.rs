@@ -401,8 +401,10 @@ impl Compiler<'_> {
             // `undefined`, which is the first production's whole meaning — and `yield` is an
             // *expression*, so what a resumption sends back is what it evaluates to.
             ExprKind::Yield(yielded) => {
-                if yielded.delegate {
-                    return Err(unsupported("yield*", span));
+                // §27.5.3.7 step 7 — `yield*` is a loop rather than an expression, and a long
+                // enough one to want its own file.
+                if let (true, Some(operand)) = (yielded.delegate, &yielded.argument) {
+                    return self.yield_delegated(operand);
                 }
                 match &yielded.argument {
                     Some(argument) => self.expression(argument)?,

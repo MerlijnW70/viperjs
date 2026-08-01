@@ -766,6 +766,32 @@ impl Vm {
                     // entered this body is being answered, and it answers with an iterator result.
                     self.stack.push(result);
                 }
+                Instruction::YieldDelegated => {
+                    // §27.5.3.7 step 7.a.vii — what is on the stack is already the inner
+                    // iterator's result object, so it goes out as it is. Everything else is the
+                    // same park.
+                    let result = self.pop()?;
+                    let Some(generator) = self.frames.last().and_then(|frame| frame.generator)
+                    else {
+                        return Err(Fault::YieldOutsideGenerator);
+                    };
+                    let parked = self.park(current, at)?;
+                    let _ = heap.park_into(Value::Object(generator), parked);
+                    self.stack.push(result);
+                }
+                Instruction::ThrowNoThrowMethod => {
+                    // §27.5.3.7 step 7.b.iii. The iterator has already been closed by the
+                    // instructions in front of this one, which is the order the clause has: it is
+                    // told the delegation is over *before* the caller is told it went wrong.
+                    self.raise(
+                        Abrupt::type_error("the iterator being delegated to has no `throw` method"),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )?;
+                    continue;
+                }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
                 Instruction::RegExpLiteral => {

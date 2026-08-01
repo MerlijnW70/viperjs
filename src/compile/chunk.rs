@@ -659,6 +659,20 @@ pub enum Instruction {
     /// mean. What comes back the other way — the argument to the next resumption — is left on the
     /// stack, so the `yield` expression evaluates to it.
     Yield,
+    /// The same, with the top value **already** an iterator result — §27.5.3.7 step 7.a.vii.
+    ///
+    /// A `yield*` passes the inner iterator's result object out whole rather than taking its
+    /// `value` and wrapping it again, and the difference is observable: extra properties on the
+    /// object reach the outer caller, and a `done` that is truthy without being `true` stays as it
+    /// was. Wrapping twice would also make `{ value: 1, done: false }` come out as
+    /// `{ value: { value: 1, done: false }, done: false }`.
+    YieldDelegated,
+    /// Refuse a `throw` that an inner iterator has no way to receive — §27.5.3.7 step 7.b.iii.
+    ///
+    /// Its own instruction for the reason [`Instruction::ThrowSuperDelete`] is one: the message is
+    /// fixed, the error kind is fixed, and building it out of the global `TypeError` would let a
+    /// script that replaced that name change what the engine throws.
+    ThrowNoThrowMethod,
     /// Take the top value and make it the script's completion value.
     ///
     /// §14.2.2 — a Script evaluates to the value of its last *value-producing* statement, which
@@ -955,6 +969,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::Duplicate
         | Instruction::Return
         | Instruction::Yield
+        | Instruction::YieldDelegated
+        | Instruction::ThrowNoThrowMethod
         | Instruction::NewObject
         | Instruction::NewArray(_)
         | Instruction::DuplicateTop(_)

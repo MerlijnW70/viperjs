@@ -29,6 +29,7 @@ use crate::value::Value;
 mod binding;
 mod chunk;
 mod class;
+mod delegate;
 mod expression;
 mod function;
 mod pattern;

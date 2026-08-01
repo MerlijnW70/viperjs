@@ -53,6 +53,7 @@
 //! - `suspension` — DR-0017's parked frame, out of chunks no compiler emits yet.
 //! - `generators` — §15.5 and §27.5's object and its state machine.
 //! - `yielding` — §15.5.5 and §27.5.3, where the body stops and what a resumption sends back.
+//! - `delegating` — §27.5.3.7 step 7's `yield*`, and the messages it passes both ways.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
@@ -78,6 +79,7 @@ mod coercion;
 mod collections;
 mod constructors;
 mod date;
+mod delegating;
 mod destructuring;
 mod for_in;
 mod for_of;
