@@ -46,27 +46,6 @@ pub(crate) struct Suspended {
     /// generator it is. Both are needed, and at different moments — a resumption starts from the
     /// object, and a `return` inside the body has only the frame to ask.
     generator: Option<ObjectId>,
-    /// Whether this execution has run at all — §27.5.1's `suspendedStart` against
-    /// `suspendedYield`.
-    ///
-    /// Here rather than on the generator, because it is a fact about the *execution*: one made by
-    /// [`Suspended::started`] has not begun and one made by [`Vm::park`] has, and there is no third
-    /// way to make one. What reads it is `throw`, which has a `try` to consider only if the body
-    /// has reached one.
-    ///
-    /// **Nothing can currently tell the two apart**, and that is worth writing down rather than
-    /// acting on. §27.5.1.4 step 5 completes a not-yet-started generator without running it, where
-    /// step 8 resumes a suspended one abruptly — but resuming an execution parked at instruction
-    /// zero, with no handlers installed, unwinds before a single instruction is read, so both paths
-    /// reach the same place. Measured rather than assumed: flipping this constant leaves all 93,153
-    /// test262 runs identical, which is why mutation coverage reports it as a survivor.
-    ///
-    /// It stays because the coincidence has a known expiry. The parameter-default divergence
-    /// recorded beside `yield` is fixed by running the prologue at the *call* and parking at the
-    /// body — and then instruction zero is real code, reviving a not-yet-started generator would
-    /// run it, and step 5 forbids exactly that. Deleting this to satisfy a mutation score would
-    /// plant that bug in advance.
-    begun: bool,
     /// The operands it had built, from its own floor upwards.
     stack: Vec<Value>,
     /// The handlers it had installed, each rebased to that floor.
@@ -86,11 +65,6 @@ impl Suspended {
             .chain([self.this_value, self.new_target])
             .chain(self.function.map(Value::Object))
             .chain(self.generator.map(Value::Object))
-    }
-
-    /// Whether this execution has run any of its body — §27.5.1's two suspended states.
-    pub(super) fn begun(&self) -> bool {
-        self.begun
     }
 
     /// The environment its next instruction will read a variable from.
@@ -123,7 +97,6 @@ impl Suspended {
             environment,
             function: Some(function),
             generator: Some(generator),
-            begun: false,
             stack: Vec::new(),
             handlers: Vec::new(),
         }
@@ -158,10 +131,6 @@ impl Vm {
         let Some(frame) = self.frames.pop() else {
             return Err(Fault::YieldOutsideGenerator);
         };
-        // `reentries` is non-zero exactly when a nested execution is running, and its floor is the
-        // depth it started at — so the two together say "the frame just popped was the one that
-        // execution entered". Equality rather than `<=`: the nested loop stops the moment its
-        // entry frame is gone, so nothing can pop past the floor and come back here.
         // Where this frame sat, now that it is gone — the depth every handler in it was installed
         // at or above, and so what makes their `frames` marks relative rather than absolute.
         let floor = self.frames.len();
@@ -186,7 +155,6 @@ impl Vm {
             environment: self.environment,
             function: frame.function,
             generator: frame.generator,
-            begun: true,
             stack: self.stack.split_off(operands),
             handlers: self
                 .handlers

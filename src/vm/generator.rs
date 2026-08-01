@@ -129,30 +129,35 @@ impl Vm {
             return Ok(());
         }
         // Everything else is decided by whether there is an execution to resume: a *completed*
-        // generator is precisely one with none, and one that has begun is told from one that has
-        // not by the execution itself.
+        // generator is precisely one with none.
         let parked = heap.take_parked(receiver);
-        let begun = parked.as_ref().is_some_and(Suspended::begun);
         let outcome = match (parked, kind) {
             // §27.5.3.2 `GeneratorResume` — the only path that runs any code.
             (Some(parked), Resumption::Next) => {
                 self.revive(parked, sent, receiver_at, current, at);
                 return Ok(());
             }
-            // §27.5.3.4 `GeneratorResumeAbrupt` with a throw completion, where the body has begun:
-            // the `throw` happens *at the `yield`*, so a `try` the body is inside catches it. The
-            // execution is put back and then unwound, which is the same two steps a `throw`
-            // written at that line would have been.
-            (Some(parked), Resumption::Throw) if begun => {
+            // §27.5.3.4 `GeneratorResumeAbrupt` with a throw completion: the `throw` happens *at
+            // the `yield`*, so a `try` the body is inside catches it. Put the execution back and
+            // then unwind, which is the same two steps a `throw` written at that line would be.
+            //
+            // §27.5.1.4 step 5 asks for something else when the body has **not** begun — complete
+            // it without resuming — and this arm answers for that case too, because the two cannot
+            // be told apart. Reviving executes nothing before the unwind below, and an execution
+            // that has not begun carries no handlers, so the unwind passes straight through the
+            // frame it just pushed and lands exactly where the other path would have thrown.
+            //
+            // A `Suspended::begun` flag used to select between them. It was a survivor, and the
+            // reason offered for keeping it — that the recorded parameter-default fix would put
+            // real code at instruction zero and make the distinction bite — was wrong: nothing at
+            // instruction zero ever runs on this path, whatever it is.
+            (Some(parked), Resumption::Throw) => {
                 // `undefined` rather than the thrown value: the `yield` never evaluates to
                 // anything, and the unwinding below discards whatever is above the handler's mark.
                 self.revive(parked, Value::Undefined, receiver_at, current, at);
                 self.unwind(sent, chunk, current, at)?;
                 return Ok(());
             }
-            // §27.5.1.4 step 5 — before the body has begun there is no `try` it could have entered,
-            // so the generator is finished and the value travels out unchanged.
-            (Some(_), Resumption::Throw) => Finish::Thrown(sent),
             // §27.5.1.3 step 5 — and a `return` completes it without running anything.
             (Some(_), Resumption::Return) => Finish::Value(sent),
             // §27.5.1.2 step 5 — a finished generator answers `{ value: undefined, done: true }`
