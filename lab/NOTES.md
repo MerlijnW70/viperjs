@@ -29,6 +29,47 @@ reproducible.
 
 ---
 
+## name-resolution — what would it cost to resolve every name at run time?
+
+**Date:** 2026-08-03
+**Question:** §14.11 forced a second way to reach a variable — a walk of the running scopes by
+name — and DR-0018's name lists make that walk find *exactly* the binding the compiled slot was
+chosen for. The two are therefore indistinguishable by any program, so the compile-time switch
+between them is a branch mutation coverage cannot pin, and it duly survived. AGENTS.md's answer to
+a branch nothing can pin is to remove it. Removing this one means every name in every program
+resolved at run time. **Is that affordable?**
+**Setup:** five loops of 300,000 iterations, each doing nothing but read and write names — locals,
+a name one scope out, one four scopes out, and a global. Run against the engine as it is, then
+against the same engine with `Compiler::names_are_dynamic` forced `true`, which is exactly the
+mutant. Release build, one warm-up run discarded.
+**Result:**
+
+| | placed | dynamic | |
+| --- | --- | --- | --- |
+| local reads | 56.1 ms | 183.6 ms | **3.3×** |
+| local writes | 38.2 ms | 114.3 ms | **3.0×** |
+| one scope out | 38.1 ms | 133.1 ms | **3.5×** |
+| four scopes out | 38.1 ms | 141.0 ms | **3.7×** |
+| globals | 162.9 ms | 226.2 ms | 1.4× |
+
+**Verdict:** PROMOTE the *number*, not the code — the branch stays and is now justified by a
+measurement rather than an intuition. Three to four times on local variable access is the whole
+hot path of the interpreter, and a global read is dearer in absolute terms only because it was
+already a property lookup.
+
+The interesting part is what it says about the *method*. A semantically transparent optimisation
+is invisible to behavioural mutation testing **by construction**: if flipping it changed an
+answer, it would not be transparent. So the ratchet can never kill such a branch, and no
+restructuring helps — moving the decision into `binding`, into the chunk, or into the interpreter
+leaves the same equivalent pair with the same switch. What closes it is a *structural* test that
+asserts the design rather than the behaviour: `a_name_is_a_slot_the_compiler_chose_and_only_a_with
+_makes_it_a_walk` reads the emitted instructions, and it is the second such claim in
+`compile/tests.rs` for the same reason the first one is there.
+
+**Cost:** about an hour, most of it establishing that no restructuring could work before accepting
+that the test was the answer.
+
+
 ## gc-pressure — is the `property-escapes` bucket a memory problem or a time problem?
 
 **Date:** 2026-08-02

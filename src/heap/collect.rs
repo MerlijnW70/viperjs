@@ -588,6 +588,13 @@ impl Heap {
             for value in self.environment_slots(id) {
                 self.mark_value(value, marked);
             }
+            // §9.1.1.2's binding object, which a `with` scope's names live on. Reached from the
+            // environment and from nowhere else once the statement has been entered — the value
+            // the header evaluated is off the stack by then — so missing it here frees an object
+            // the body is still reading names from.
+            if let Some(object) = self.environment_binding_object(id) {
+                self.mark_object(object, marked);
+            }
             next = self.environment_parent(id);
         }
     }

@@ -877,6 +877,101 @@ impl Vm {
                     self.environment =
                         heap.new_named_environment(Some(self.environment), slots, names);
                 }
+                Instruction::PushWithScope(index) => {
+                    // §14.11.2 steps 2 to 5 — `ToObject` first, so `with (null)` is a TypeError
+                    // before any scope is made and the body never runs.
+                    // The scope is read out of the running chunk *before* anything that can throw,
+                    // because `running` borrows the very chunk pointer `unwind` may rewrite.
+                    let scope = running.scope(index).ok_or(Fault::MissingScope)?;
+                    let (slots, names) = (scope.slots as usize, Rc::clone(&scope.names));
+                    let value = self.pop()?;
+                    let converted = self.object_for(value, heap);
+                    let object = match self.settle(converted, heap, root, current, at)? {
+                        Some(Value::Object(object)) => object,
+                        // `ToObject` answers an object or throws, so the middle case is not one
+                        // this heap produces; `None` is a handler having taken the throw.
+                        Some(_) => return Err(Fault::NotAnObject),
+                        None => continue,
+                    };
+                    self.environment =
+                        heap.new_with_environment(Some(self.environment), slots, names, object);
+                }
+                Instruction::LoadName(index) | Instruction::LoadNameForCall(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    let name = self.name_text(running, index, heap)?;
+                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
+                        Some(found) => found,
+                        None => continue,
+                    };
+                    // §9.1.1.2.10 `WithBaseObject`, pushed *first* so the stack reads as a method
+                    // call's — receiver, callee, arguments — and only for the call form.
+                    if matches!(instruction, Instruction::LoadNameForCall(_)) {
+                        self.stack.push(Vm::with_base(found));
+                    }
+                    match self.read_resolved(found, key, heap) {
+                        Ok(Some(value)) => self.stack.push(value),
+                        // §6.2.5.5 — nothing anywhere is the ReferenceError an ordinary
+                        // unresolvable name gets, said in the same words by the same code.
+                        Ok(None) => {
+                            let message = self.missing_global(key, heap);
+                            let thrown = self.realm.error(heap, NativeError::Reference, &message);
+                            self.unwind(thrown, root, current, at)?;
+                            continue;
+                        }
+                        Err(error) => {
+                            let thrown = self.thrown_value(error, heap);
+                            self.unwind(thrown, root, current, at)?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::StoreName(index) => {
+                    // Peeked, not popped, for the reason every other store peeks: an assignment is
+                    // an expression and its value is the caller's.
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let key = self.global_name(running, index, heap)?;
+                    let name = self.name_text(running, index, heap)?;
+                    let strict = running.is_strict();
+                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
+                        Some(found) => found,
+                        None => continue,
+                    };
+                    let stored = self.store_dynamic(found, key, value, strict, heap);
+                    match self.settle(stored.map(Value::Boolean), heap, root, current, at)? {
+                        // Nowhere in the chain: §6.2.5.6 puts it on the global object, which is
+                        // what `StoreGlobal` does and is reached here by the same call.
+                        Some(Value::Boolean(false)) => {
+                            let global = Value::Object(self.realm.global());
+                            let stored = self.set_property_key(global, key, value, heap);
+                            self.settle(stored, heap, root, current, at)?;
+                        }
+                        Some(_) => {}
+                        None => continue,
+                    }
+                }
+                Instruction::TypeofName(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    let name = self.name_text(running, index, heap)?;
+                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
+                        Some(found) => found,
+                        None => continue,
+                    };
+                    let read = self.read_resolved(found, key, heap);
+                    // §13.5.1.1 step 2 — a name that is nowhere is `"undefined"` and not a throw,
+                    // which is the one place `typeof` differs from a read.
+                    let answer = match self.settle(
+                        read.map(|found| found.unwrap_or(Value::Undefined)),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )? {
+                        Some(value) => value.type_of(heap),
+                        None => continue,
+                    };
+                    let id = heap.new_string(answer.encode_utf16().collect());
+                    self.stack.push(Value::String(id));
+                }
                 Instruction::PopScope => {
                     // A block always has something outside it — the function's own environment at
                     // the very least — so a `None` here is a chunk that does not make sense rather

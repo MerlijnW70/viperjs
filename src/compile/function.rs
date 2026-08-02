@@ -224,6 +224,7 @@ impl Compiler<'_> {
                 naming,
                 lexical,
                 this_binding,
+                inside_with: self.names_are_dynamic(),
             },
             span,
         )
@@ -272,11 +273,22 @@ impl Compiler<'_> {
         if matches!(callee.kind, ExprKind::Super) {
             return self.super_call(arguments, span);
         }
-        let method = matches!(
-            callee.kind,
-            ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
-        );
-        if method {
+        // §9.1.1.2.10 — a bare name inside a `with` may resolve to the object, and then the call
+        // gets it as `this`. So it is compiled as a *method* call: the receiver is pushed under the
+        // callee by one instruction, because the two answers come from one walk and asking twice
+        // would ask an object that may have changed in between.
+        let with_name = self.names_are_dynamic() && matches!(callee.kind, ExprKind::Identifier(_));
+        let method = with_name
+            || matches!(
+                callee.kind,
+                ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
+            );
+        if let ExprKind::Identifier(name) = &callee.kind
+            && with_name
+        {
+            let index = self.name(name)?;
+            self.chunk.emit(Instruction::LoadNameForCall(index));
+        } else if method {
             // The base is evaluated once and copied *before* the key, so the stack ends as
             // [receiver, method] with nothing between them. Copying after the key would leave the
             // key underneath, and evaluating the base twice would run `f()` twice in `f().m()`.
@@ -493,6 +505,13 @@ pub(super) struct Nesting<'a> {
     lexical: Lexical,
     /// The enclosing derived constructor's `this`, if this body may reach it — DR-0015.
     this_binding: Option<ThisSlot>,
+    /// Whether this body is written inside a `with` — §14.11.
+    ///
+    /// Inherited rather than recomputed, and it has to be: the body's *own* scopes contain no
+    /// `with`, but the chain it closes over does, so every name in it is still a run-time walk.
+    /// `with (o) { function f() { return a; } }` is the program — `f` called long afterwards and
+    /// from anywhere still reads `o.a`, because the environment it captured is the object's.
+    inside_with: bool,
 }
 
 /// What a function is called, and where the compiler learned it — §10.2.9 and §8.6.3.
@@ -641,6 +660,10 @@ fn compile_body(
     });
     compiler.is_script = false;
     compiler.global_vars = false;
+    // The scopes this body is written *inside*, which every depth it resolves is measured against
+    // — see `Compiler::own_depth`.
+    compiler.seeded_scopes = outer.len();
+    compiler.with_depth = u32::from(nesting.inside_with);
     compiler.outer = outer;
     compiler.this_binding = nesting.this_binding;
     compiler.chunk.arrow = lexical == Lexical::Yes;

@@ -145,6 +145,18 @@ pub struct Environment {
     /// where cycles are built before user code runs; a list of names holds no value and can point
     /// at nothing, so the argument does not reach here.
     names: Option<Rc<[Binding]>>,
+    /// §9.1.1.2's `[[BindingObject]]`, when this scope's bindings are an **object's properties**.
+    ///
+    /// The other kind of environment record, and `with` is the only thing in the language that
+    /// makes one a program can see. Its slots are empty and its name list is `None`, because there
+    /// is no fixed set of names to have: what the scope contains is whatever the object has *at
+    /// the moment a name is looked up*, so `with (o) { a }` after `delete o.a` reads outwards.
+    ///
+    /// The `[[IsWithEnvironment]]` flag §9.1.1.2 also carries is not here, because praxis has no
+    /// other use for one: the global scope is spelled `None` for a parent (see
+    /// [`Heap::new_environment`]) rather than as an object environment record, so every one of
+    /// these is a `with`'s and every one consults `@@unscopables`.
+    binding_object: Option<crate::heap::ObjectId>,
 }
 
 impl Environment {
@@ -156,6 +168,11 @@ impl Environment {
     /// The environment this one is written inside.
     pub(super) fn parent(&self) -> Option<EnvironmentId> {
         self.parent
+    }
+
+    /// The object whose properties are this scope's bindings, if it is that kind — §9.1.1.2.
+    pub(super) fn binding_object(&self) -> Option<crate::heap::ObjectId> {
+        self.binding_object
     }
 }
 
@@ -195,8 +212,67 @@ impl Heap {
             slots: vec![Some(Value::Undefined); size],
             parent,
             names,
+            binding_object: None,
         }));
         id
+    }
+
+    /// §9.1.1.2 `NewObjectEnvironment` — a scope whose bindings are `object`'s properties.
+    ///
+    /// What `with` opens, and the one environment with no slots at all: there is nothing to
+    /// allocate because there is no fixed set of names. Whether a name is bound here is a question
+    /// asked of the object each time, which is why a `with` body cannot resolve a name to an index
+    /// the way every other scope can.
+    pub fn new_object_environment(
+        &mut self,
+        parent: Option<EnvironmentId>,
+        object: crate::heap::ObjectId,
+    ) -> EnvironmentId {
+        let id = EnvironmentId(self.environments.len());
+        self.environments.push(Some(Environment {
+            slots: Vec::new(),
+            parent,
+            names: None,
+            binding_object: Some(object),
+        }));
+        id
+    }
+
+    /// §14.11's scope: `object`'s properties **and** `size` slots of praxis's own.
+    ///
+    /// The slots are the compiler's temporaries — see [`crate::compile::Instruction::PushWithScope`]
+    /// for why one record holds both, and why nothing can tell.
+    pub fn new_with_environment(
+        &mut self,
+        parent: Option<EnvironmentId>,
+        size: usize,
+        names: Rc<[Binding]>,
+        object: crate::heap::ObjectId,
+    ) -> EnvironmentId {
+        let id = EnvironmentId(self.environments.len());
+        self.environments.push(Some(Environment {
+            slots: vec![Some(Value::Undefined); size],
+            parent,
+            // **Not** the names, deliberately. A name list is what a resolution walk reads, and
+            // this scope's names are the object's — so handing over the temporaries' would let a
+            // walk find a `%` slot where it should have asked the object. They are reached by
+            // index from compiled code and by nothing else.
+            names: None,
+            binding_object: Some(object),
+        }));
+        let _ = names;
+        id
+    }
+
+    /// The object an environment's bindings live on, if it is §9.1.1.2's kind.
+    pub fn environment_binding_object(
+        &self,
+        environment: EnvironmentId,
+    ) -> Option<crate::heap::ObjectId> {
+        self.environments
+            .get(environment.0)?
+            .as_ref()?
+            .binding_object()
     }
 
     /// What the source called this environment's slots, if it named them.

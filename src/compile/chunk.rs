@@ -784,6 +784,36 @@ pub enum Instruction {
     /// [`Instruction::PushScope`] it copies names: a pass's environment is the same shape and holds
     /// the same names as the one before it, which is what makes it a copy.
     CopyScope(u32),
+    /// §14.11 — take the value on top, make it an object, and run inside a scope of its properties.
+    ///
+    /// The operand names a [`Scope`] exactly as [`Instruction::PushScope`] does, and for the same
+    /// reason: the compiler still needs a level of its own for the temporaries a body's statements
+    /// make. §9.1.1.2's record has only the object; praxis's has the object *and* those slots, and
+    /// nothing can tell — a temporary is spelled with a `%` no source can write, and the name walk
+    /// that a `with` body's identifiers go through asks the object and never the slots.
+    ///
+    /// Left by an ordinary [`Instruction::PopScope`]. There is nothing to undo but the hop.
+    PushWithScope(u32),
+    /// Read `name` by walking the running scopes — §9.4.2 `ResolveBinding` at run time.
+    ///
+    /// What a name inside a `with` body compiles to, and only there. Everywhere else the compiler
+    /// knows which scope and which slot, and says so in [`Instruction::LoadVariable`]; inside a
+    /// `with` the answer depends on what the object holds at the moment of the read, so there is no
+    /// index that could be right. The operand indexes the constant table, and the constant is the
+    /// name.
+    LoadName(u32),
+    /// Write it — the same walk, and §6.2.5.6's rule that a name found nowhere becomes a property
+    /// of the global object.
+    StoreName(u32),
+    /// §13.5.1.1 — its type, and `"undefined"` rather than a throw when the walk finds nothing.
+    TypeofName(u32),
+    /// Read it *for a call*, pushing §9.1.1.2.10's `WithBaseObject` under it as the receiver.
+    ///
+    /// The one place a call written as a bare name has a `this`: `with (o) { m() }` calls `o.m`
+    /// with `o`, where `m()` anywhere else is called with none. That is the whole of why a `with`
+    /// is not sugar for a block of property reads, and it is why this is a separate instruction
+    /// rather than a [`Instruction::LoadName`] with a `Call` after it.
+    LoadNameForCall(u32),
     /// §15.5.4 `GeneratorStart` — make the generator, park everything after this, and answer it.
     ///
     /// Emitted once, at the point where the parameters have been initialised and the body has not
@@ -1039,6 +1069,7 @@ impl Chunk {
             *instruction = match *instruction {
                 Instruction::PushScope(_) => Instruction::PushScope(index),
                 Instruction::CopyScope(_) => Instruction::CopyScope(index),
+                Instruction::PushWithScope(_) => Instruction::PushWithScope(index),
                 other => other,
             };
         }
@@ -1141,6 +1172,11 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         // catch-all so that a new jump cannot hide among them.
         Instruction::PushScope(_)
         | Instruction::CopyScope(_)
+        | Instruction::PushWithScope(_)
+        | Instruction::LoadName(_)
+        | Instruction::StoreName(_)
+        | Instruction::TypeofName(_)
+        | Instruction::LoadNameForCall(_)
         | Instruction::Constant(_)
         | Instruction::RegExpLiteral
         | Instruction::Unary(_)

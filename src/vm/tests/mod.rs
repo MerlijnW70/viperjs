@@ -71,6 +71,7 @@
 //! - `bigints` — §6.1.6.2 as a *language* value: the literal, the operators, what refuses to mix.
 //! - `date` — §21.4, its arithmetic, its text forms and reading them back.
 //! - `collecting` — the root set, checked against the collector rather than against a program.
+//! - `with` — §14.11, the one scope whose bindings are an object's properties.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the
@@ -142,6 +143,7 @@ mod typed;
 mod values;
 mod weak;
 mod weak_ref;
+mod with;
 mod wrapper;
 mod yielding;
 

@@ -383,6 +383,17 @@ struct Compiler<'a> {
     /// something neither of them can see: the caller's variable environment, and whether the
     /// evaluated code is strict. See [`EvalVars`].
     global_vars: bool,
+    /// How many `with` scopes are open at the point being compiled — §14.11.
+    ///
+    /// Not a depth to add to anything: a `with` opens a real compiler level like a block does, so
+    /// every slot index and every hop is already right. What this decides is whether a **name** can
+    /// be resolved at all. Inside one, what a name means depends on what an object holds at the
+    /// moment of the read, so the compiler stops answering and emits the walk instead.
+    ///
+    /// A count and not a flag, because a nested `with` that is left still leaves an outer one open.
+    /// Inherited by every function written inside one, which is what makes the whole of
+    /// `with (o) { function f() { return a; } }` dynamic — `f`'s scope chain contains the object.
+    with_depth: u32,
     /// How many enclosing scopes this compiler was handed before it compiled anything.
     ///
     /// Zero for a script and for a function body, whose `outer` is built by the caller and then
@@ -540,6 +551,7 @@ impl<'a> Compiler<'a> {
             is_script: true,
             global_vars: true,
             seeded_scopes: 0,
+            with_depth: 0,
         }
     }
 
@@ -717,6 +729,40 @@ impl<'a> Compiler<'a> {
             scope: self.chunk.emit_jump(Instruction::PushScope),
             copies: Vec::new(),
         }
+    }
+
+    /// §14.11's scope — the same level a block opens, over an object.
+    ///
+    /// The bookkeeping is identical and that is the point: a `with` body's temporaries need a level
+    /// like any other body's, every hop outwards counts one more like any other scope's, and a
+    /// `break` out of it emits the `PopScope` `unwind_across` emits for any other. What differs is
+    /// one instruction and [`Compiler::with_depth`], which stops the compiler answering questions
+    /// about names it can no longer answer.
+    fn enter_with_environment(&mut self) -> Environment {
+        let outer = self.breaks.len();
+        let held = std::mem::take(&mut self.locals);
+        self.outer.push(held);
+        // No `this_binding` hop, unlike every other scope. DR-0015's binding exists only inside a
+        // *derived constructor* and the arrows written in one, §15.7 makes every class body strict,
+        // and §11.2.1 makes a `with` in strict code a Syntax Error the parser refuses. So the two
+        // cannot meet, and a line adjusting the depth here would be one no program can reach —
+        // which mutation coverage said by surviving its removal.
+        self.scope_marks.push(0);
+        self.unwinds.push(Unwind {
+            outer,
+            what: Crossing::Scope,
+        });
+        self.with_depth += 1;
+        Environment {
+            scope: self.chunk.emit_jump(Instruction::PushWithScope),
+            copies: Vec::new(),
+        }
+    }
+
+    /// Close it, and let names resolve again.
+    fn leave_with_environment(&mut self, environment: Environment) -> Result<(), CompileError> {
+        self.with_depth = self.with_depth.saturating_sub(1);
+        self.close_environment(environment, true)
     }
 
     /// §14.7.4.7 `CreatePerIterationEnvironment` — start the next pass with its own bindings.
@@ -929,7 +975,14 @@ impl<'a> Compiler<'a> {
         match binding {
             // The body's own — the slot given below, or a parameter or `var` that took the name
             // first, in which case §10.2.11 step 19 makes no object and this is that.
-            Some(found) if found.depth == 0 => {
+            //
+            // Compared against the depth of this body's **base level** and not against zero. Every
+            // scope opened since — a block with a `let`, a `for` head, a `with` — is one more hop
+            // to it, so `function f() { { let z; return arguments[0]; } }` resolved `arguments` at
+            // depth 1, took the arm below, and told the *enclosing* function to build an object
+            // this one then read from a slot nothing had filled. It threw, from a program with
+            // nothing unusual in it.
+            Some(found) if found.depth == self.own_depth() => {
                 self.uses_arguments = Some(found.index) == self.arguments_slot;
             }
             // An enclosing function's, which only an arrow can reach. The chunk carries it out to
@@ -938,6 +991,22 @@ impl<'a> Compiler<'a> {
             // Nowhere at all: an `arguments` at the top level of a script is an ordinary global.
             None => {}
         }
+    }
+
+    /// How many scopes deep in **this body** the compiler currently is.
+    ///
+    /// The chain `binding` walks runs from here out through this body's own blocks and then into
+    /// the scopes the body was compiled inside. This is the depth of the boundary between the two
+    /// — the body's base level, where its parameters and its `arguments` slot live — so a binding
+    /// at exactly this depth is one of the function's own and anything deeper belongs to whoever
+    /// wrote it.
+    fn own_depth(&self) -> u32 {
+        u32::try_from(self.outer.len().saturating_sub(self.seeded_scopes)).unwrap_or(u32::MAX)
+    }
+
+    /// Whether a name here has to be resolved at run time — §14.11, and the whole of what it costs.
+    pub(super) fn names_are_dynamic(&self) -> bool {
+        self.with_depth > 0
     }
 
     /// Emit a read of `name`, from a scope if it has one and from the global object if not.
@@ -949,6 +1018,20 @@ impl<'a> Compiler<'a> {
     pub(super) fn load_name(&mut self, name: &str) -> Result<(), CompileError> {
         let binding = self.binding(name);
         self.note_arguments(name, binding);
+        // §14.11 — inside a `with` the compiler's answer may be wrong by the time the read happens,
+        // so it does not give one. Asked *after* `note_arguments`, which is about the enclosing
+        // function's object and is a question about the source rather than about the scope chain.
+        // Forcing this true is **behaviour-preserving**: `LoadName` finds by name the very binding
+        // the slot was chosen for, so no program can tell. What it costs is 3.0× to 3.7× on local
+        // variable access — `lab/NOTES.md`'s `name-resolution` measured it — which is DR-0010's
+        // premise that the common path pays nothing for the rare one. Nothing that *runs* can pin
+        // that, so `compile::tests::a_name_is_a_slot_the_compiler_chose_and_only_a_with_makes_it_a
+        // _walk` asserts the instructions instead.
+        if self.names_are_dynamic() {
+            let index = self.name(name)?;
+            self.chunk.emit(Instruction::LoadName(index));
+            return Ok(());
+        }
         match binding {
             Some(binding) => {
                 self.load(binding);
@@ -1020,6 +1103,13 @@ impl<'a> Compiler<'a> {
     pub(super) fn store_name(&mut self, name: &str) -> Result<(), CompileError> {
         let binding = self.binding(name);
         self.note_arguments(name, binding);
+        // The same as the read above — equivalent by behaviour, pinned by the same structural test,
+        // and the difference is which of the two costs anything.
+        if self.names_are_dynamic() {
+            let index = self.name(name)?;
+            self.chunk.emit(Instruction::StoreName(index));
+            return Ok(());
+        }
         match binding {
             // §9.1.1.1.5 step 5 — an immutable binding refuses every assignment, and the compiler
             // already knows which binding this is. What is left for run time is the *refusal*,

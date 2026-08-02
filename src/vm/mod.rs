@@ -26,6 +26,7 @@
 //! - `async_fn` — §27.7, which is the same suspension with a promise where the generator was.
 //! - `async_generator` — §27.6, which is both of those at once and neither of them.
 //! - `coerce` — §7.1.1's `ToPrimitive`, and the one place Rust re-enters the loop to get it.
+//! - `dynamic` — §9.4.2's `ResolveBinding` done at run time, which is what `with` costs.
 //! - `eval` — §19.2.1.1's **direct** mode, which resolves into the scopes the caller is *running*
 //!   in. The indirect half is a built-in; this one cannot be, because a native call has no handle
 //!   on its caller's environment.
@@ -49,6 +50,7 @@ mod async_fn;
 mod async_generator;
 mod call;
 mod coerce;
+mod dynamic;
 mod eval;
 mod execute;
 mod generator;

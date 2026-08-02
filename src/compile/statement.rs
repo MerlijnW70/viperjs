@@ -147,7 +147,7 @@ impl Compiler<'_> {
             },
             // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
             StmtKind::Labelled(statement) => self.labelled_statement(statement),
-            StmtKind::With(_) => Err(unsupported("with", span)),
+            StmtKind::With(statement) => self.with_statement(statement),
             // Already made by [`Compiler::hoist_functions`] before the body ran, so a declaration
             // at a body's top level has nothing left to do — and produces no completion value,
             // which is §14.2.2: `function f() {}` alone evaluates to `undefined`.
@@ -1296,6 +1296,29 @@ impl Compiler<'_> {
     ///
     /// Only the top level of the body. A function declared inside a block is Annex B's business
     /// and is refused, because its rules are a compatibility settlement rather than a semantics.
+    /// §14.11 — `with (o) stmt`, the one scope whose names are an object's properties.
+    ///
+    /// §11.2.1 makes this a Syntax Error in strict code and the parser has already refused it
+    /// there, so anything arriving here is sloppy. What it costs is in
+    /// [`Compiler::names_are_dynamic`]: every identifier in the body, and in every function written
+    /// inside it, becomes a walk of the running scopes rather than a slot the compiler chose.
+    pub(super) fn with_statement(
+        &mut self,
+        statement: &crate::ast::WithStatement,
+    ) -> Result<(), CompileError> {
+        // §14.11.2 step 1 — the object is evaluated in the scope *outside*, which is why this is
+        // before the scope is opened and not after it.
+        self.expression(&statement.object)?;
+        let opened = self.enter_with_environment();
+        let mark = self.enter_scope();
+        let compiled = self.statement(&statement.body);
+        self.leave_scope(mark);
+        // Left even when the body was refused, so that a later statement is compiled against the
+        // scope it is actually in — the same reason every other scope is closed on the failing path.
+        self.leave_with_environment(opened)?;
+        compiled
+    }
+
     pub(super) fn hoist_functions(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
         for statement in body {
             let StmtKind::Function(function) = &statement.kind else {

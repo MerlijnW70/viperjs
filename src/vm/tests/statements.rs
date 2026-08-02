@@ -135,8 +135,11 @@ fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
 
 #[test]
 fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
+    // Two constructs the compiler still refuses. This row used to be `with`, which is the shape
+    // AGENTS.md warns about: a test that asserts a refusal outlives the refusal it describes, and
+    // then asserts the opposite of what the engine does.
     let cases = [
-        ("with (o) { x; }", "with"),
+        ("function f(...[a]) {}", "a destructuring rest parameter"),
         (
             "async function* g() { yield import('x'); }",
             "a dynamic import",
@@ -353,12 +356,15 @@ fn a_finally_that_cannot_be_compiled_is_reported_from_the_innermost_one() {
     //
     // Two different refusals, so that "the first one" and "the last one" are distinguishable
     // answers rather than the same sentence arriving by two routes.
-    let source = "while (1) { try { try { break; } finally { with (0) {} } } \
-                  finally { function* g() {} } }";
+    let source = "while (1) { try { try { break; } finally { function f(...[a]) {} } } \
+                  finally { import('x'); } }";
     let mut heap = Heap::new();
     let script = parse_script(source).expect("the source parses"); // the test is about compiling
     let error = compile_script(&script, &mut heap).expect_err("the inner finally is refused"); // same
-    assert_eq!(error.kind, crate::compile::ErrorKind::Unsupported("with"));
+    assert_eq!(
+        error.kind,
+        crate::compile::ErrorKind::Unsupported("a destructuring rest parameter")
+    );
 }
 
 #[test]

@@ -411,3 +411,49 @@ fn a_strict_functions_arguments_is_not_joined_to_its_parameters() {
         "TypeError"
     );
 }
+
+#[test]
+fn arguments_is_the_running_functions_however_many_scopes_are_between() {
+    // §10.2.11 step 19 gives the *function* the object, and the compiler decides whether to build
+    // one by whether the name resolved to its slot. That comparison used to be against depth zero,
+    // which is only right when nothing has opened a scope since — so an ordinary block with a `let`
+    // in it made the read resolve one hop out, told the **enclosing** function to build an object,
+    // and left this one reading a slot nothing had filled. It threw.
+    assert_eq!(
+        run("function f() { { let z = 1; return arguments[0]; } } f(7)"),
+        "7"
+    );
+    assert_eq!(
+        run("function f() { { let z = 1; return typeof arguments; } } f()"),
+        "object"
+    );
+    // Every kind of scope that adds a hop, since each reaches the same comparison.
+    assert_eq!(
+        run("function f() { for (let i = 0; i < 1; i++) { return arguments[0]; } } f(4)"),
+        "4"
+    );
+    assert_eq!(
+        run("function f() { switch (1) { case 1: let q = 1; return arguments[0]; } } f(5)"),
+        "5"
+    );
+    assert_eq!(
+        run("function f() { try { throw 1; } catch (e) { return arguments[0]; } } f(6)"),
+        "6"
+    );
+    assert_eq!(
+        run("function f() { var o = {}; with (o) { return arguments[0]; } } f(7)"),
+        "7"
+    );
+    // …and `typeof` is a read like any other, which is a second path to the same question and did
+    // not ask it: `with (o) { typeof arguments }` answered `"undefined"` with the object in reach.
+    assert_eq!(
+        run("function f() { var o = {}; with (o) { return typeof arguments; } } f()"),
+        "object"
+    );
+    // The other side of the comparison still holds: an **arrow** has none of its own, so its read
+    // resolves further out and the function around it is the one that builds the object.
+    assert_eq!(
+        run("function f(a) { { let z = 1; return (() => arguments[0])(); } } f(3)"),
+        "3"
+    );
+}

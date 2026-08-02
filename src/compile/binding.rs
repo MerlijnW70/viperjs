@@ -474,6 +474,21 @@ impl Compiler<'_> {
 
     /// Give one name the value on top of the stack, consuming it.
     pub(super) fn bind_name(&mut self, name: &str, how: Bind) -> Result<(), CompileError> {
+        // §14.11 — a `var` is *assigned* here rather than declared: hoisting made the binding
+        // already, and this is the store. So inside a `with` it goes through the scope walk like
+        // any other assignment, because the object may have the name and then it is the object's
+        // property that changes. `with (o) { var a = 2; }` with an `o.a` sets `o.a` and leaves the
+        // function's `a` alone, which is what §9.1.1.2 makes true and what a slot store cannot be.
+        //
+        // Only `Bind::Var`. The other three *declare* a binding in the scope being compiled — a
+        // `let`, a `catch` parameter, a `for`-head name — and a declaration is never the object's
+        // however deep inside a `with` it is written.
+        if matches!(how, Bind::Var) && self.names_are_dynamic() {
+            let index = self.name(name)?;
+            self.chunk.emit(Instruction::StoreName(index));
+            self.chunk.emit(Instruction::Pop);
+            return Ok(());
+        }
         match how {
             // A `var` **anywhere in a script** is a property of the global object, not a slot —
             // §16.1.7 puts it in the global variable scope however many blocks it is written

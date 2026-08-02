@@ -71,10 +71,22 @@ impl Compiler<'_> {
                 // bare name takes this path.
                 if *operator == UnaryOperator::Typeof
                     && let ExprKind::Identifier(name) = &argument.kind
-                    && self.binding(name).is_none()
+                    && (self.binding(name).is_none() || self.names_are_dynamic())
                 {
+                    // §10.2.11 step 19 — a `typeof arguments` is a read like any other, and this
+                    // path does not go through `load_name`. Left out, the name resolves to a slot
+                    // the call was never asked to fill, and `with (o) { typeof arguments }` answers
+                    // `"undefined"` where the object is right there.
+                    let binding = self.binding(name);
+                    self.note_arguments(name, binding);
                     let index = self.name(name)?;
-                    self.chunk.emit(Instruction::TypeofGlobal(index));
+                    // §14.11 — inside a `with` even a name the compiler *can* place takes this
+                    // path, because the object may have it and the object is asked first.
+                    let sought = match self.names_are_dynamic() {
+                        true => Instruction::TypeofName(index),
+                        false => Instruction::TypeofGlobal(index),
+                    };
+                    self.chunk.emit(sought);
                     return Ok(());
                 }
                 self.expression(argument)?;
@@ -898,6 +910,13 @@ impl Compiler<'_> {
             //
             // A name it cannot place is a property of the global object, which may or may not be
             // configurable and may not be there at all. That one needs the object, at run time.
+            // …and inside a `with` it may be a property of the object, which is a third answer
+            // this does not have an instruction for. Refused rather than answered with either of
+            // the other two: `delete a` there is neither always `false` nor always the global's.
+            ExprKind::Identifier(_) if self.names_are_dynamic() => Err(unsupported(
+                "a delete of a bare name inside `with`",
+                argument.span,
+            )),
             ExprKind::Identifier(name) => match self.binding(name) {
                 Some(_) => self.constant(Value::Boolean(false)),
                 None => {

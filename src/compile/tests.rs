@@ -522,3 +522,95 @@ fn a_slot_no_name_reached_is_left_out_of_the_list_rather_than_stood_in_for() {
         chunk.locals()
     );
 }
+
+#[test]
+fn a_name_is_a_slot_the_compiler_chose_and_only_a_with_makes_it_a_walk() {
+    // The second structural claim this file makes, and it is here because nothing else can make
+    // it. §14.11 needs a name resolved at run time, and DR-0018's name lists mean that walk finds
+    // *exactly* the binding the slot was chosen for — so the two are indistinguishable by any
+    // program, and a test that runs source cannot tell which was emitted.
+    //
+    // What it pins is the engine's premise: a name costs nothing at run time (DR-0010), and the
+    // walk is the exception rather than the rule. `lab/`'s `name-resolution` measured what
+    // abandoning that costs — **3.0× to 3.7×** on local variable access — so this is a property
+    // worth asserting rather than a shape that happens to be true today.
+    let reads = |source: &str| {
+        let mut heap = Heap::new();
+        let script = parse_script(source).expect("the source parses"); // a compiler test needs a tree
+        let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
+        let inner = Rc::clone(chunk.function(0).expect("the script declares a function")); // likewise
+        inner
+            .code()
+            .iter()
+            .filter(|instruction| {
+                matches!(
+                    instruction,
+                    Instruction::LoadVariable(_, _)
+                        | Instruction::LoadGlobal(_)
+                        | Instruction::LoadName(_)
+                        | Instruction::StoreVariable(_, _)
+                        | Instruction::StoreGlobal(_)
+                        | Instruction::StoreName(_)
+                )
+            })
+            .copied()
+            .collect::<Vec<_>>()
+    };
+    // A local, a name from an enclosing scope, and a global: all three are placed when they are
+    // compiled, and none of them is a walk.
+    let placed = reads("function f() { var a = 1; a = a + 1; return a + globalThis; }");
+    assert!(
+        placed.iter().all(|instruction| !matches!(
+            instruction,
+            Instruction::LoadName(_) | Instruction::StoreName(_)
+        )),
+        "nothing outside a `with` resolves a name at run time: {placed:?}"
+    );
+    assert!(
+        placed
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadVariable(_, _)))
+    );
+    assert!(
+        placed
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadGlobal(_)))
+    );
+    // …and inside a `with` every one of them is, because the object may have any of those names
+    // and the compiler cannot know which.
+    let walked = reads("function f() { var o = {}; var a = 1; with (o) { a = a + 1; return a; } }");
+    assert!(
+        walked
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadName(_))),
+        "a read inside a `with` is a walk: {walked:?}"
+    );
+    assert!(
+        walked
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::StoreName(_))),
+        "so is a write: {walked:?}"
+    );
+    // The body of a function *written inside* one too — its chain contains the object, so its
+    // names are no more placeable than the ones written beside them.
+    let nested =
+        reads("function f() { var o = {}; with (o) { return function () { return a; }; } }");
+    let _ = nested;
+    let inner_names = {
+        let mut heap = Heap::new();
+        let script = parse_script(
+            "function f() { var o = {}; with (o) { return function () { return a; }; } }",
+        )
+        .expect("parses"); // same
+        let chunk = compile_script(&script, &mut heap).expect("compiles"); // same
+        let outer = Rc::clone(chunk.function(0).expect("f")); // same
+        let inner = Rc::clone(outer.function(0).expect("the function inside the with")); // same
+        inner.code().to_vec()
+    };
+    assert!(
+        inner_names
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadName(_))),
+        "a function written inside a `with` keeps the object in its chain: {inner_names:?}"
+    );
+}
