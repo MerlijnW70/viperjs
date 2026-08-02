@@ -8,6 +8,19 @@
 //! carries a *reason* written by whatever failed, so it may hold tabs and newlines and anything
 //! else — which is why the fields are escaped rather than merely joined. A protocol that assumed
 //! well-behaved text would corrupt exactly the outcomes that are most interesting to read.
+//!
+//! # Why a scenario is announced before it is run
+//!
+//! A worker that is killed cannot say what it was doing, and the parent has to answer for the file
+//! anyway. Without an announcement the only honest thing it can say is "one run of this file did
+//! not finish" — but a file is *two* runs whenever §11.2.2 gives it both modes, so a timed-out file
+//! contributed one outcome where a finished one contributes two, and the size of the suite moved
+//! with the number of timeouts. A change that made tests slower then read as a change that removed
+//! them.
+//!
+//! So the child says what it is about to run before it runs any of it, and the parent keeps the
+//! list. What comes back is struck off; whatever is left when the child dies is what the parent
+//! reports as unfinished, by name and by mode.
 
 use crate::runner::{Outcome, Verdict};
 
@@ -16,6 +29,30 @@ use crate::runner::{Outcome, Verdict};
 /// A file answers with none, one or two of them — §11.2.2's two modes — so the reader cannot know
 /// a block has finished by counting. It has to be told.
 pub const END_OF_BLOCK: &str = ".";
+
+/// One thing a worker says about the file it was given.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Message {
+    /// "I am about to run this file in this mode" — sent for every scenario before the first runs.
+    ///
+    /// All of them up front rather than one before each: a child killed during the *first* run has
+    /// then already said that a second was coming, and the parent can answer for both. Announced
+    /// one at a time, the second would be indistinguishable from a file that never had one.
+    Planned {
+        /// The file, named as the expectations file names it.
+        name: String,
+        /// Whether this scenario prepends `"use strict"`.
+        strict: bool,
+    },
+    /// "This scenario came to this" — the verdict itself.
+    Finished(Outcome),
+}
+
+/// The plan for one scenario as a line, with no trailing newline.
+pub fn encode_plan(name: &str, strict: bool) -> String {
+    let strict = if strict { "1" } else { "0" };
+    format!("A\t{strict}\t{}", escape(name))
+}
 
 /// One outcome as a line, with no trailing newline.
 pub fn encode(outcome: &Outcome) -> String {
@@ -28,13 +65,13 @@ pub fn encode(outcome: &Outcome) -> String {
     format!("{kind}\t{strict}\t{}\t{detail}", escape(&outcome.name))
 }
 
-/// The outcome a line spells, or `None` if it spells nothing.
+/// What a line says, or `None` if it says nothing this protocol defines.
 ///
 /// Fallible because the other end of a pipe is not a trusted caller: a worker that dies mid-line,
 /// or writes something of its own to stdout, must not be able to turn into a *wrong verdict*. A
 /// line that does not decode is one the parent will report as a failure to answer, which is what
 /// actually happened.
-pub fn decode(line: &str) -> Option<Outcome> {
+pub fn decode(line: &str) -> Option<Message> {
     let mut fields = line.split('\t');
     let kind = fields.next()?;
     let strict = match fields.next()? {
@@ -43,11 +80,22 @@ pub fn decode(line: &str) -> Option<Outcome> {
         _ => return None,
     };
     let name = unescape(fields.next()?);
-    // The detail is the rest, and it is the only field that may be absent — a pass has none.
+    // The detail is the rest, and it is the only field that may be absent — a pass has none, and
+    // an announcement is nothing but a name and a mode.
     let detail = unescape(fields.next().unwrap_or(""));
     // Exactly the fields named: a line with more is a line from a protocol this is not.
     if fields.next().is_some() {
         return None;
+    }
+    // An announcement carries no verdict, so it is answered before one is built rather than by
+    // inventing a fourth `Verdict` that nothing else in the harness could ever hold.
+    if kind == "A" {
+        // A plan with a detail field is not a plan this wrote. Refused rather than ignored: the
+        // point of the field check above is that a line means one thing, and a silently dropped
+        // field is how two versions of a protocol agree while meaning different things.
+        return detail
+            .is_empty()
+            .then_some(Message::Planned { name, strict });
     }
     let verdict = match kind {
         "P" => Verdict::Passed,
@@ -55,11 +103,11 @@ pub fn decode(line: &str) -> Option<Outcome> {
         "S" => Verdict::Skipped(detail),
         _ => return None,
     };
-    Some(Outcome {
+    Some(Message::Finished(Outcome {
         name,
         strict,
         verdict,
-    })
+    }))
 }
 
 /// The text with every character the protocol reserves written as an escape.
@@ -119,6 +167,9 @@ mod tests {
             "a line must be one line: {line:?}"
         );
         let back = decode(&line).expect("what encode wrote, decode reads"); // the test is the round trip
+        let Message::Finished(back) = back else {
+            panic!("an encoded outcome decodes as an outcome"); // the test is the round trip
+        };
         assert_eq!(back.name, outcome.name);
         assert_eq!(back.strict, outcome.strict);
         assert_eq!(
@@ -144,6 +195,58 @@ mod tests {
             strict: false,
             verdict: Verdict::Skipped("modules are M7".into()),
         });
+    }
+
+    #[test]
+    fn an_announced_scenario_crosses_as_a_plan_and_not_as_a_verdict() {
+        // The line a worker sends before it runs anything. It must arrive as a *plan*: decoded as
+        // an outcome of any kind it would be counted, and a file would be tallied twice — once
+        // when it was announced and once when it answered.
+        let line = encode_plan("built-ins/Array/length.js", true);
+        assert_eq!(
+            decode(&line),
+            Some(Message::Planned {
+                name: "built-ins/Array/length.js".to_string(),
+                strict: true,
+            })
+        );
+    }
+
+    #[test]
+    fn a_plan_keeps_the_mode_it_was_given() {
+        // Both modes, because a plan that lost the flag would strike the wrong scenario off the
+        // outstanding list and leave a run unaccounted for at exactly the moment it matters.
+        let Some(Message::Planned { strict, .. }) = decode(&encode_plan("a.js", false)) else {
+            panic!("a plan decodes as a plan"); // the test is about the mode
+        };
+        assert!(!strict);
+        let Some(Message::Planned { strict, .. }) = decode(&encode_plan("a.js", true)) else {
+            panic!("a plan decodes as a plan"); // the test is about the mode
+        };
+        assert!(strict);
+    }
+
+    #[test]
+    fn a_name_holding_the_separators_survives_being_announced() {
+        // The same reason `encode` escapes: a plan carries a name written by the filesystem, and a
+        // name with a tab in it would arrive as an extra field and be refused outright.
+        let line = encode_plan("with\ttab\nand a newline.js", false);
+        assert!(!line.contains('\n'));
+        assert_eq!(
+            decode(&line),
+            Some(Message::Planned {
+                name: "with\ttab\nand a newline.js".to_string(),
+                strict: false,
+            })
+        );
+    }
+
+    #[test]
+    fn a_plan_carrying_a_verdict_is_refused_rather_than_read_as_one() {
+        // A plan has no detail field. A line claiming to be one *and* carrying a reason comes from
+        // a protocol this is not, and reading it as a bare plan would be two versions silently
+        // agreeing while meaning different things.
+        assert_eq!(decode("A\t0\ta.js\tit threw"), None);
     }
 
     #[test]

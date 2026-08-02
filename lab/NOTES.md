@@ -29,6 +29,65 @@ reproducible.
 
 ---
 
+## gc-pressure — is the `property-escapes` bucket a memory problem or a time problem?
+
+**Date:** 2026-08-02
+**Question:** 878 of the 894 tests failing on DR-0013's RangeError are
+`built-ins/RegExp/property-escapes`. The recorded plan said they were blocked on the GC schedule,
+which was blocked on DR-0010 slot reuse. Is that true — would a collector plus reusable slots make
+them pass?
+**Setup:** `cargo run -p praxis-lab -- gc-pressure <test262 file>`, which prepends the harness
+includes and runs a whole file with a wall clock. Measured on a 9950X (32 threads, 64 GB DDR5),
+`--release`. Three engine builds: as-is; collect-when-exhausted; and collect-when-exhausted with
+`footprint` counting only *live* slots, which simulates slot reuse without building it. Per-test
+harness budget is 10 s.
+**Result:**
+
+| Build | `ASCII.js` | Peak |
+| --- | --- | --- |
+| as-is (throws at 64 MiB) | — | refused |
+| collect on exhaustion | 40.8 s, completed | 54 MiB |
+| + simulated slot reuse | (same policy) | 54 MiB |
+| no collector, unlimited budget | **21.8 s**, completed | 303 MiB |
+
+Over the whole bucket, simulated reuse + collection took it from 884 failures to 445 — but the run
+total fell from 1226 to 787, and the missing 439 are **timeouts the harness drops into no column**.
+They did not pass; they vanished.
+
+Instrumenting the exhaustion point showed where the memory goes: a collection reclaims the string
+units perfectly (40 MB -> 1 MB, the `result +=` garbage), and 457,392 of 457,397 environments are
+garbage but their *slots* stay. So the floor ratchets up — 26, 35, 41, 45 MiB — until slots alone
+exceed the budget.
+
+Per-1M-iteration micro-benchmarks isolated the cost, `var` loops throughout (empty loop 0.62 s):
+
+| Shape | Time | Over baseline |
+| --- | --- | --- |
+| `o.x = i` — fixed key | 0.62 s | 0 |
+| `a[0] = i` — one slot, same index | 2.55 s | 1.9 us/store, **17 MiB** |
+| `a[len++] = i` — varying index | 4.37 s | 3.8 us/store, 23 MiB |
+| `for (let i …)` vs `for (var i …)` | 4.79 s vs 0.63 s | 4.2 us/iteration |
+
+**Verdict:** PARK the bucket — DEAD as a GC target. Even a zero-cost collector leaves `ASCII.js` at
+21.8 s against a 10 s budget, so no amount of collector work wins these tests; they need an
+interpreter several times faster, which is M8. The recorded claim that the GC schedule unblocks 894
+runs is **wrong**, and the 894 should not be costed as GC work.
+
+Two findings worth more than the bucket was:
+
+- **A computed property key allocates a throwaway heap String per access.** `to_property_key` calls
+  `to_string` (which `new_string`s a permanent arena slot), then `intern_id` copies the units back
+  out and interns them, abandoning the slot just made. `a[0] = i` a million times writes one element
+  and costs 17 MiB. That is a DR-0013 leak on every indexed or computed access, and ~2 us of the
+  cost. `PropertyKey` has no integer variant, which is the deeper version of the same thing.
+- **The harness drops a timed-out run into no column.** `Worker::ask` answers `None` on
+  `recv_timeout` and the file's runs are counted as neither passed, failed, nor not-run — so the
+  totals silently shrink and a slice that makes tests slower reads as a slice that fixed them.
+
+**Cost:** about an hour, most of it in the three engine builds.
+
+---
+
 ## nesting-cost — can the array literal be made cheap enough to raise the cap past 64?
 
 **Date:** 2026-07-27

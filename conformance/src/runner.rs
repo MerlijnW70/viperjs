@@ -9,6 +9,7 @@ use praxis::parser::parse_script;
 use praxis::vm::{Outcome as VmOutcome, Vm};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 /// What happened when a test was run.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,6 +52,57 @@ impl Outcome {
     }
 }
 
+/// Every outcome a killed worker leaves behind — what it answered, and what it did not.
+///
+/// Here rather than beside the supervisor that calls it because it is a *decision* about what a
+/// run came to, which is this module's subject, and because a decision is something the mutation
+/// ratchet can hold: the supervisor around it needs a filesystem and a stuck child to observe at
+/// all, and this needs neither.
+///
+/// A scenario that was announced and never answered has not passed, so it is a failure; but the
+/// *reason* distinguishes the one that hung from the ones that never got a turn. Announcements are
+/// in the order they will run, so the first outstanding scenario is the one the child was inside
+/// when the clock ran out and the rest are waiting behind it. Reporting all of them as "did not
+/// finish" would say that a file with two modes hung twice, which is not what happened.
+///
+/// `answered` comes back at the front, because a child that answered one mode and hung on the
+/// other has *told* us the first verdict and discarding it would turn a pass into a failure.
+pub fn unfinished(
+    mut answered: Vec<Outcome>,
+    outstanding: &[(String, bool)],
+    budget: Duration,
+) -> Vec<Outcome> {
+    for (position, (name, strict)) in outstanding.iter().enumerate() {
+        let why = match position {
+            0 => format!("it did not finish within {} seconds", budget.as_secs()),
+            _ => format!(
+                "an earlier run of the same file did not finish within {} seconds",
+                budget.as_secs()
+            ),
+        };
+        answered.push(Outcome {
+            name: name.clone(),
+            strict: *strict,
+            verdict: Verdict::Failed(why),
+        });
+    }
+    answered
+}
+
+/// What running one file is going to consist of — §11.2.2's modes, settled before the first runs.
+///
+/// Holds the source and the frontmatter so that deciding the modes and running them is one read of
+/// the file rather than two. The file is read once and may be run twice, and a file that changed
+/// between the two runs would be two different tests wearing one name.
+pub struct Plan {
+    /// The file, relative to `test/`.
+    pub name: String,
+    /// Which modes this file is run in, in the order they run.
+    pub modes: Vec<bool>,
+    source: String,
+    block: Frontmatter,
+}
+
 /// The harness: where test262 is, and the harness files it has read.
 pub struct Runner {
     root: PathBuf,
@@ -91,43 +143,71 @@ impl Runner {
         })
     }
 
-    /// Run one file, in both modes if its flags allow both.
-    pub fn run_file(&mut self, path: &Path) -> Vec<Outcome> {
+    /// What running one file will consist of, decided before any of it runs.
+    ///
+    /// Separate from running it because a worker has to be able to *say* what it is about to do:
+    /// a child that is killed mid-file cannot report, and the parent can only answer for the
+    /// scenarios it was told to expect. See [`crate::wire`] for what goes wrong without that.
+    ///
+    /// A file that settles without running — unreadable, or no frontmatter — answers `Err` with
+    /// the outcome that settles it. There is nothing to announce in that case and nothing that can
+    /// hang, so the distinction costs the caller one `match` and buys an honest count.
+    pub fn plan(&self, path: &Path) -> Result<Plan, Outcome> {
         let name = path
             .strip_prefix(self.root.join("test"))
             .unwrap_or(path)
             .to_string_lossy()
             .replace('\\', "/");
         let Ok(source) = std::fs::read_to_string(path) else {
-            return vec![Outcome {
+            return Err(Outcome {
                 name,
                 strict: false,
                 verdict: Verdict::Skipped("the file could not be read".to_string()),
-            }];
+            });
         };
         let Some(block) = Frontmatter::parse(&source) else {
-            return vec![Outcome {
+            return Err(Outcome {
                 name,
                 strict: false,
                 verdict: Verdict::Skipped("no frontmatter".to_string()),
-            }];
+            });
         };
         // §11.2.2 — the same source means different things in the two modes, so a file that names
         // neither is two tests rather than one.
-        let modes: &[bool] = if block.has("onlyStrict") {
-            &[true]
+        let modes: Vec<bool> = if block.has("onlyStrict") {
+            vec![true]
         } else if block.has("noStrict") || block.has("raw") || block.has("module") {
-            &[false]
+            vec![false]
         } else {
-            &[false, true]
+            vec![false, true]
         };
-        modes
-            .iter()
-            .map(|strict| Outcome {
-                name: name.clone(),
-                strict: *strict,
-                verdict: self.run_once(&source, &block, *strict),
-            })
+        Ok(Plan {
+            name,
+            source,
+            block,
+            modes,
+        })
+    }
+
+    /// Run one of a plan's scenarios.
+    pub fn run_planned(&mut self, plan: &Plan, strict: bool) -> Outcome {
+        Outcome {
+            name: plan.name.clone(),
+            strict,
+            verdict: self.run_once(&plan.source, &plan.block, strict),
+        }
+    }
+
+    /// Run one file, in both modes if its flags allow both.
+    pub fn run_file(&mut self, path: &Path) -> Vec<Outcome> {
+        let plan = match self.plan(path) {
+            Ok(plan) => plan,
+            Err(outcome) => return vec![outcome],
+        };
+        plan.modes
+            .clone()
+            .into_iter()
+            .map(|strict| self.run_planned(&plan, strict))
             .collect()
     }
 
@@ -411,6 +491,76 @@ fn text(heap: &Heap, id: praxis::heap::StringId) -> String {
 
 #[cfg(test)]
 mod tests {
+
+    /// The two modes of one file, in the order a worker announces them.
+    fn both_modes(name: &str) -> Vec<(String, bool)> {
+        vec![(name.to_string(), false), (name.to_string(), true)]
+    }
+
+    #[test]
+    fn a_file_that_hangs_answers_for_every_mode_it_said_it_would_run() {
+        // The defect this exists for. A file with both of §11.2.2's modes is two runs, and a
+        // worker killed inside the first used to leave *one* outcome behind — so the size of the
+        // suite fell by one for every timeout, and a change that made tests slower read as a
+        // change that removed them. Both are named here, or the count is still wrong.
+        let left = unfinished(Vec::new(), &both_modes("a.js"), Duration::from_secs(10));
+        assert_eq!(left.len(), 2);
+        assert_eq!(left[0].key(), "a.js");
+        assert_eq!(left[1].key(), "a.js (strict)");
+        assert!(
+            left.iter()
+                .all(|run| matches!(run.verdict, Verdict::Failed(_)))
+        );
+    }
+
+    #[test]
+    fn the_run_that_hung_is_named_as_such_and_the_one_behind_it_is_not() {
+        // Announcements are in the order they run, so the first outstanding scenario is the one
+        // the child was inside and the rest never got a turn. Told the same way round, a file with
+        // two modes would report that it hung twice — which is not what happened, and would double
+        // every timeout in the failure buckets the work list is read from.
+        let left = unfinished(Vec::new(), &both_modes("a.js"), Duration::from_secs(10));
+        let Verdict::Failed(hung) = &left[0].verdict else {
+            panic!("the run that did not finish is a failure"); // the test is about the reason
+        };
+        let Verdict::Failed(behind) = &left[1].verdict else {
+            panic!("the run behind it is a failure too"); // the test is about the reason
+        };
+        assert_eq!(hung, "it did not finish within 10 seconds");
+        assert_eq!(
+            behind,
+            "an earlier run of the same file did not finish within 10 seconds"
+        );
+    }
+
+    #[test]
+    fn what_a_dying_worker_already_answered_is_kept() {
+        // A child that answered the sloppy run and then hung on the strict one has *told* us the
+        // first verdict, and throwing it away would turn a pass into a failure. Only what is still
+        // outstanding is answered for.
+        let answered = vec![Outcome {
+            name: "a.js".to_string(),
+            strict: false,
+            verdict: Verdict::Passed,
+        }];
+        let left = unfinished(
+            answered,
+            &[("a.js".to_string(), true)],
+            Duration::from_secs(10),
+        );
+        assert_eq!(left.len(), 2);
+        assert!(matches!(left[0].verdict, Verdict::Passed));
+        assert_eq!(left[1].key(), "a.js (strict)");
+    }
+
+    #[test]
+    fn a_worker_that_died_saying_nothing_leaves_no_outcome_for_the_caller_to_name_it() {
+        // The one case where the parent genuinely cannot know how many runs the file was: it was
+        // killed before it said. `supervise` puts one failure in rather than guessing at two, and
+        // this is the function answering that it has nothing of its own to add.
+        assert!(unfinished(Vec::new(), &[], Duration::from_secs(10)).is_empty());
+    }
+
     use super::*;
 
     fn verdict(source: &str) -> Verdict {

@@ -1641,90 +1641,8 @@ built-ins/Array/prototype/reduceRight/resizable-buffer.js :: it threw TypeError:
 built-ins/Array/prototype/reduceRight/resizable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [
-  // Initial get length operation.
-  "Get:length",
-
-  // Lower and upper index are both present.
-  "Has:0",
-  "Get:0",
-  "Has:9007199254740990",
-  "Get:9007199254740990",
-  "Set:0",
-  "GetOwnPropertyDescriptor:0",
-  "DefineProperty:0",
-  "Set:9007199254740990",
-  "GetOwnPropertyDescriptor:9007199254740990",
-  "DefineProperty:9007199254740990",
-
-  // Lower and upper index are both absent.
-  "Has:1",
-  "Has:9007199254740989",
-
-  // Lower index is present, upper index is absent.
-  "Has:2",
-  "Get:2",
-  "Has:9007199254740988",
-  "Delete:2",
-  "Set:9007199254740988",
-  "GetOwnPropertyDescriptor:9007199254740988",
-  "DefineProperty:9007199254740988",
-
-  // Lower index is absent, upper index is present.
-  "Has:3",
-  "Has:9007199254740987",
-  "Get:9007199254740987",
-  "Set:3",
-  "GetOwnPropertyDescriptor:3",
-  "DefineProperty:3",
-  "Delete:9007199254740987",
-
-  // Stop exception.
-  "Has:4",
-  "Get:4",
-]
-built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [
-  // Initial get length operation.
-  "Get:length",
-
-  // Lower and upper index are both present.
-  "Has:0",
-  "Get:0",
-  "Has:9007199254740990",
-  "Get:9007199254740990",
-  "Set:0",
-  "GetOwnPropertyDescriptor:0",
-  "DefineProperty:0",
-  "Set:9007199254740990",
-  "GetOwnPropertyDescriptor:9007199254740990",
-  "DefineProperty:9007199254740990",
-
-  // Lower and upper index are both absent.
-  "Has:1",
-  "Has:9007199254740989",
-
-  // Lower index is present, upper index is absent.
-  "Has:2",
-  "Get:2",
-  "Has:9007199254740988",
-  "Delete:2",
-  "Set:9007199254740988",
-  "GetOwnPropertyDescriptor:9007199254740988",
-  "DefineProperty:9007199254740988",
-
-  // Lower index is absent, upper index is present.
-  "Has:3",
-  "Has:9007199254740987",
-  "Get:9007199254740987",
-  "Set:3",
-  "GetOwnPropertyDescriptor:3",
-  "DefineProperty:3",
-  "Delete:9007199254740987",
-
-  // Stop exception.
-  "Has:4",
-  "Get:4",
-]
+built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [   // Initial get length operation.   "Get:length",    // Lower and upper index are both present.   "Has:0",   "Get:0",   "Has:9007199254740990",   "Get:9007199254740990",   "Set:0",   "GetOwnPropertyDescriptor:0",   "DefineProperty:0",   "Set:9007199254740990",   "GetOwnPropertyDescriptor:9007199254740990",   "DefineProperty:9007199254740990",    // Lower and upper index are both absent.   "Has:1",   "Has:9007199254740989",    // Lower index is present, upper index is absent.   "Has:2",   "Get:2",   "Has:9007199254740988",   "Delete:2",   "Set:9007199254740988",   "GetOwnPropertyDescriptor:9007199254740988",   "DefineProperty:9007199254740988",    // Lower index is absent, upper index is present.   "Has:3",   "Has:9007199254740987",   "Get:9007199254740987",   "Set:3",   "GetOwnPropertyDescriptor:3",   "DefineProperty:3",   "Delete:9007199254740987",    // Stop exception.   "Has:4",   "Get:4", ]
+built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [   // Initial get length operation.   "Get:length",    // Lower and upper index are both present.   "Has:0",   "Get:0",   "Has:9007199254740990",   "Get:9007199254740990",   "Set:0",   "GetOwnPropertyDescriptor:0",   "DefineProperty:0",   "Set:9007199254740990",   "GetOwnPropertyDescriptor:9007199254740990",   "DefineProperty:9007199254740990",    // Lower and upper index are both absent.   "Has:1",   "Has:9007199254740989",    // Lower index is present, upper index is absent.   "Has:2",   "Get:2",   "Has:9007199254740988",   "Delete:2",   "Set:9007199254740988",   "GetOwnPropertyDescriptor:9007199254740988",   "DefineProperty:9007199254740988",    // Lower index is absent, upper index is present.   "Has:3",   "Has:9007199254740987",   "Get:9007199254740987",   "Set:3",   "GetOwnPropertyDescriptor:3",   "DefineProperty:3",   "Delete:9007199254740987",    // Stop exception.   "Has:4",   "Get:4", ]
 built-ins/Array/prototype/reverse/resizable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/reverse/resizable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/coerced-start-end-grow.js :: it threw TypeError: what was called is not a function
@@ -3892,6 +3810,7 @@ built-ins/JSON/parse/reviver-array-define-prop-err.js (strict) :: it threw an ob
 built-ins/JSON/parse/reviver-array-delete-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/JSON/parse/reviver-array-delete-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/JSON/parse/reviver-array-length-coerce-err.js :: it did not finish within 10 seconds
+built-ins/JSON/parse/reviver-array-length-coerce-err.js (strict) :: an earlier run of the same file did not finish within 10 seconds
 built-ins/JSON/parse/reviver-call-args-after-forward-modification.js :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/parse/reviver-call-args-after-forward-modification.js (strict) :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/parse/reviver-context-source-array-literal.js :: it threw an object with no name: context should be an object Expected SameValue(«"undefined"», «"object"») to be true

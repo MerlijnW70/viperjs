@@ -183,8 +183,24 @@ impl Expectations {
 /// with the raw reason on one side and the read-back reason on the other it reported as changed on
 /// every run forever — a line that could never be made green, which is the kind of entry a reader
 /// learns to scroll past.
+///
+/// A line cannot carry a *newline* either, and that one is worse than untidy. The format is one
+/// entry per line, so a reason containing one was written across several and read back as an entry
+/// plus a handful of nonsense ones made from its own continuation lines — which then reported as
+/// tests that had started passing, because no run ever produces a test called `  "Get:length",`.
+/// `Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js` quotes a whole JavaScript
+/// array in its message and put 36 such phantoms in the file, and the run they made un-green could
+/// not be made green by fixing anything.
+///
+/// So a newline becomes a space: the reason stays readable and greppable, comparison compares like
+/// with like, and the result is idempotent — canonicalising an already-stored reason yields itself,
+/// which is what lets a stored entry match a freshly produced one at all.
 fn canonical(reason: &str) -> String {
-    reason.trim_end().to_string()
+    reason
+        .replace("\r\n", " ")
+        .replace(['\r', '\n'], " ")
+        .trim_end()
+        .to_string()
 }
 
 /// The header line that records which test262 the entries were measured against.
@@ -213,6 +229,39 @@ mod tests {
             strict: false,
             verdict: Verdict::Failed(why.to_string()),
         }
+    }
+
+    #[test]
+    fn a_reason_with_a_newline_is_one_entry_and_not_an_entry_plus_rubbish() {
+        // `Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js` quotes a whole
+        // JavaScript array back in its failure message. The format is one entry per line, so the
+        // reason was written across several — and read back as the entry plus one nonsense entry
+        // per continuation line. Those then reported as tests that had started passing, because no
+        // run ever produces a test named `  "Get:length",`. 36 of them made the suite un-green in a
+        // way that fixing the engine could not cure.
+        let outcomes = [failed(
+            "reverse.js",
+            "expected the traps to be [\n  \"Get:length\",\n  \"Has:0\",\n]",
+        )];
+        let blessed = Expectations::from_outcomes(&outcomes, None);
+        let text = blessed.render();
+        let reread = Expectations::parse(&text);
+        // One entry, and it is the test's. Without folding the newline this is four.
+        assert_eq!(reread.len(), 1);
+        let judgement = reread.judge(&outcomes);
+        assert!(
+            judgement.fixed.is_empty(),
+            "a continuation line became a test that had started passing: {:?}",
+            judgement.fixed
+        );
+        assert!(judgement.changed.is_empty());
+        assert!(judgement.regressions.is_empty());
+        // A reason that really is different is still caught, folded or not.
+        let moved_on = [failed(
+            "reverse.js",
+            "expected the traps to be [\n  \"Has:1\",",
+        )];
+        assert_eq!(reread.judge(&moved_on).changed.len(), 1);
     }
 
     #[test]

@@ -17,7 +17,7 @@
 //! its core, and nothing is left running afterwards to accumulate. The cost is that an outcome has
 //! to cross a pipe, which is what [`crate::wire`] is for.
 
-use crate::runner::{Outcome, Runner, Verdict};
+use crate::runner::{Outcome, Runner, Verdict, unfinished};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, mpsc};
@@ -180,31 +180,47 @@ fn supervise(
             return;
         };
         let outcomes = match worker.run(file, budget) {
-            Some(outcomes) => outcomes,
+            Answer::Finished(outcomes) => outcomes,
             // The child did not answer in time, or lost the protocol. Either way it has been
-            // killed, and the test it was on is recorded as the failure it is: a test that does
+            // killed, and what it was running is recorded as the failure it is: a test that does
             // not finish has not passed, and saying so is what keeps one hang from quietly
             // shrinking the suite.
-            None => {
-                let name = name_of(root, file);
+            Answer::Died(mut outcomes) => {
+                // A child that died before saying anything at all — killed while reading the file,
+                // or unable to be written to — announced no scenarios, so there is nothing to name
+                // but the file. One outcome is then the honest answer rather than a guess at how
+                // many §11.2.2 would have given it.
+                if outcomes.is_empty() {
+                    outcomes.push(Outcome {
+                        name: name_of(root, file),
+                        strict: false,
+                        verdict: Verdict::Failed(format!(
+                            "it did not finish within {} seconds, before saying what it would run",
+                            budget.as_secs()
+                        )),
+                    });
+                }
                 match Worker::start(root) {
                     Some(fresh) => worker = fresh,
                     None => return,
                 }
-                vec![Outcome {
-                    name,
-                    strict: false,
-                    verdict: Verdict::Failed(format!(
-                        "it did not finish within {} seconds",
-                        budget.as_secs()
-                    )),
-                }]
+                outcomes
             }
         };
         if sender.send(outcomes).is_err() {
             return;
         }
     }
+}
+
+/// What came of putting one file through a worker.
+#[derive(Debug)]
+enum Answer {
+    /// The child answered for the whole file and is ready for another.
+    Finished(Vec<Outcome>),
+    /// The child was killed, and has to be replaced. These are the outcomes it managed before it
+    /// stopped, followed by one for every scenario it announced and never answered.
+    Died(Vec<Outcome>),
 }
 
 /// One child process, and the thread reading what it says.
@@ -246,12 +262,13 @@ impl Worker {
         Some(Self { child, lines })
     }
 
-    /// Put one file through the child, or answer `None` if it did not come back in time.
+    /// Put one file through the child and answer for every scenario it said it would run.
     ///
-    /// `None` leaves the child killed. There is no half-way state worth recovering: a worker that
-    /// missed its deadline may be in a loop that never ends, and the only thing to do with one of
-    /// those is stop it.
-    fn run(&mut self, file: &Path, budget: Duration) -> Option<Vec<Outcome>> {
+    /// [`Answer::Died`] leaves the child killed. There is no half-way state worth recovering: a
+    /// worker that missed its deadline may be in a loop that never ends, and the only thing to do
+    /// with one of those is stop it. What is recovered is what it *said* — the outcomes it managed
+    /// before it stopped, and one for each scenario it announced and never answered.
+    fn run(&mut self, file: &Path, budget: Duration) -> Answer {
         use std::io::Write;
         // A path with a newline in it would be two paths by the time it arrived. No checkout has
         // one, which is exactly why it is worth refusing rather than trusting.
@@ -262,27 +279,40 @@ impl Worker {
         });
         if !matches!(asked, Some(Ok(()))) {
             self.kill();
-            return None;
+            return Answer::Died(Vec::new());
         }
         let mut outcomes = Vec::new();
+        // What the child said it would run and has not yet answered for, in the order it will run
+        // them — so the first of them is the one it was in the middle of when it stopped.
+        let mut outstanding: Vec<(String, bool)> = Vec::new();
         loop {
             // The budget is against each *line*, and so against the test: a child that is
             // answering is a child that is working, and one that has stopped answering is the
             // case this exists for.
             let Ok(line) = self.lines.recv_timeout(budget) else {
                 self.kill();
-                return None;
+                return Answer::Died(unfinished(outcomes, &outstanding, budget));
             };
             if line == crate::wire::END_OF_BLOCK {
-                return Some(outcomes);
+                return Answer::Finished(outcomes);
             }
             match crate::wire::decode(&line) {
-                Some(outcome) => outcomes.push(outcome),
+                Some(crate::wire::Message::Planned { name, strict }) => {
+                    outstanding.push((name, strict));
+                }
+                Some(crate::wire::Message::Finished(outcome)) => {
+                    // Struck off by name *and* mode. By name alone, a file's two scenarios would
+                    // strike each other off and the second would look unannounced.
+                    outstanding.retain(|(name, strict)| {
+                        (name.as_str(), *strict) != (outcome.name.as_str(), outcome.strict)
+                    });
+                    outcomes.push(outcome);
+                }
                 // Anything else on stdout is not a verdict and must not become one — a corrupt
                 // line decoded as a pass would raise the number with a test that never ran.
                 None => {
                     self.kill();
-                    return None;
+                    return Answer::Died(unfinished(outcomes, &outstanding, budget));
                 }
             }
         }
@@ -321,9 +351,33 @@ pub fn work(root: &Path) {
     let output = std::io::stdout();
     let mut writer = std::io::BufWriter::new(output.lock());
     for line in input.lock().lines().map_while(Result::ok) {
-        for outcome in runner.run_file(Path::new(&line)) {
-            if writeln!(writer, "{}", crate::wire::encode(&outcome)).is_err() {
-                return;
+        match runner.plan(Path::new(&line)) {
+            // Every scenario is announced, and then flushed, *before* the first one runs. Both
+            // halves matter: announced afterwards it would say nothing about the run that hung,
+            // and left in the buffer it would not reach a parent that is about to kill this
+            // process for taking too long.
+            Ok(plan) => {
+                for strict in &plan.modes {
+                    let line = crate::wire::encode_plan(&plan.name, *strict);
+                    if writeln!(writer, "{line}").is_err() {
+                        return;
+                    }
+                }
+                if writer.flush().is_err() {
+                    return;
+                }
+                for strict in plan.modes.clone() {
+                    let outcome = runner.run_planned(&plan, strict);
+                    if writeln!(writer, "{}", crate::wire::encode(&outcome)).is_err() {
+                        return;
+                    }
+                }
+            }
+            // Nothing to announce: it is settled without running, so it cannot hang.
+            Err(outcome) => {
+                if writeln!(writer, "{}", crate::wire::encode(&outcome)).is_err() {
+                    return;
+                }
             }
         }
         // Flushed here rather than left to the buffer: the parent is waiting on lines, and a
