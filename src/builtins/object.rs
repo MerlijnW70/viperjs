@@ -73,8 +73,8 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
         // Steps 4 to 14's table, in the rows this heap keeps enough state to answer. `IsArray`
         // is step 4 and is a real question about the object rather than about its prototype, so
         // `Object.prototype.toString.call([])` says `[object Array]` and one on an object merely
-        // *given* `Array.prototype` does not. `Error` and `RegExp` read internal slots that do
-        // not exist yet; `Date` reads one that does.
+        // *given* `Array.prototype` does not. `Error`, `RegExp` and `Date` each read an internal
+        // slot, and the order between them is the specification's rather than convenient.
         // Step 4's `IsArray` looks through a proxy to its target, so a proxy over an array tags as
         // `[object Array]` — and a *revoked* one throws here rather than tagging as anything.
         Value::Object(object) if heap.is_array_through(object)? => "Array",
@@ -87,6 +87,12 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
             // wrapper rows below: a time value is a Number, and a Date reaching those would be
             // tagged `[object Number]`.
             Some(found) if found.date_value().is_some() => "Date",
+            // Step 7 — an `[[ErrorData]]` tags as Error. Asked of the object rather than of its
+            // prototype, which is the distinction the slot exists to make: an ordinary object
+            // *given* `Error.prototype` is `[object Object]`.
+            Some(found) if found.is_error() => "Error",
+            // Step 12 — and a `[[RegExpMatcher]]` as RegExp, on the same terms.
+            Some(found) if found.regexp().is_some() => "RegExp",
             // Steps 9 and 10 — a wrapper is tagged by what it wraps, which is why
             // `Object.prototype.toString.call(new Number(1))` is `[object Number]` and not
             // `[object Object]`.

@@ -38,6 +38,10 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     // `%Error.prototype%` when a script has replaced it with something that is not an object.
     let prototype = super::prototype_from(heap, call, vm.realm().error_prototype());
     let error = heap.new_object(Some(prototype));
+    // §20.5.1.1 step 2's `« [[ErrorData]] »`, which is the slot §20.1.3.6 step 7 asks for.
+    if let Some(object) = heap.object_mut(error) {
+        object.make_error();
+    }
 
     // §20.5.1.1 step 3 — `undefined` is *absent*, not a message. `new Error(undefined)` has no
     // own `message` at all and inherits the empty one, while `new Error("")` has an own empty
@@ -62,6 +66,10 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 fn aggregate_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let prototype = super::prototype_from(heap, call, vm.realm().aggregate_error_prototype());
     let error = heap.new_object(Some(prototype));
+    // §20.5.1.1 step 2's `« [[ErrorData]] »`, which is the slot §20.1.3.6 step 7 asks for.
+    if let Some(object) = heap.object_mut(error) {
+        object.make_error();
+    }
     // Step 3 — the message, on the same terms as any other error's: `undefined` is *absent*.
     let message = call.argument(1);
     if !matches!(message, Value::Undefined) {

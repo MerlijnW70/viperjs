@@ -316,6 +316,15 @@ pub struct Object {
     /// Boxed, because a compiled pattern owns a tree and every object would otherwise carry room
     /// for one.
     regexp: Option<Box<crate::heap::RegExp>>,
+    /// §20.5's `[[ErrorData]]`, whose *presence* is the whole of what it says.
+    ///
+    /// A `bool` and not an `Option<()>` for that reason: the slot holds `undefined` in the
+    /// specification and is never read, so what a program can learn from it is only that it is
+    /// there. §20.1.3.6 step 7 is the one thing that asks, and it is why
+    /// `Object.prototype.toString.call(new TypeError)` is `[object Error]` where an ordinary object
+    /// given `Error.prototype` is `[object Object]` — the tag is a question about the object and
+    /// not about its prototype chain, which is exactly the distinction the slot exists to make.
+    error_data: bool,
     /// The own properties, in the order they were created.
     ///
     /// The order is not incidental — §10.1.11 hands out string keys "in ascending chronological
@@ -378,6 +387,7 @@ impl Object {
             suspension: None,
             suspendable: None,
             regexp: None,
+            error_data: false,
             call: None,
             environment: None,
             lexical: None,
@@ -523,6 +533,20 @@ impl Object {
     /// The compiled pattern this object holds, if it is a regular expression — §22.2.3.
     pub fn regexp(&self) -> Option<&crate::heap::RegExp> {
         self.regexp.as_deref()
+    }
+
+    /// Whether this object has §20.5's `[[ErrorData]]`.
+    pub fn is_error(&self) -> bool {
+        self.error_data
+    }
+
+    /// Give it that slot — what §20.5.1.1 and §20.5.6.1.1 do when they make an error.
+    ///
+    /// Separate from making the object because every error is built the ordinary way first and
+    /// then marked: praxis makes four kinds of error object in three places, and a constructor
+    /// that took a flag would be a flag three callers could pass wrongly.
+    pub fn make_error(&mut self) {
+        self.error_data = true;
     }
 
     /// Make this object a regular expression, or replace the pattern it already held.

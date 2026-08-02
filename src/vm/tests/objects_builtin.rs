@@ -352,3 +352,50 @@ fn an_accessor_descriptor_is_accepted_when_its_halves_are_callable_or_absent() {
         "function"
     );
 }
+
+#[test]
+fn the_builtin_tag_is_read_from_an_internal_slot_and_not_from_the_prototype_chain() {
+    // §20.1.3.6 steps 4 to 14 are a table of internal slots, and the whole point of asking a slot
+    // is that a prototype cannot lie about it. Every row here has a twin below made with
+    // `Object.create`, and the twins are all `[object Object]` — which is what `instanceof` would
+    // get wrong and this does not.
+    let tag = |source: &str| run(&format!("Object.prototype.toString.call({source})"));
+    assert_eq!(tag("new Error('x')"), "[object Error]");
+    assert_eq!(tag("new TypeError('x')"), "[object Error]");
+    assert_eq!(tag("new AggregateError([])"), "[object Error]");
+    assert_eq!(tag("/x/"), "[object RegExp]");
+    assert_eq!(tag("new RegExp('x')"), "[object RegExp]");
+    assert_eq!(tag("new Date()"), "[object Date]");
+    assert_eq!(tag("[]"), "[object Array]");
+    // …and an object merely *given* one of those prototypes has none of their slots.
+    for prototype in ["Error", "TypeError", "RegExp", "Date", "Array"] {
+        assert_eq!(
+            tag(&format!("Object.create({prototype}.prototype)")),
+            "[object Object]",
+            "an object given {prototype}.prototype has no slot of its own"
+        );
+    }
+    // An error the *engine* threw is an error like any other — there is no second kind, and
+    // nothing a program can ask tells the two apart.
+    assert_eq!(
+        run("try { null.x; 'none' } catch (e) { Object.prototype.toString.call(e) }"),
+        "[object Error]"
+    );
+    assert_eq!(
+        run("try { undeclared_name_xyz; 'none' } catch (e) { \
+             Object.prototype.toString.call(e) }"),
+        "[object Error]"
+    );
+    // Step 15's `@@toStringTag` still wins over the table when it is a String, which is how a
+    // subclass renames itself — and is ignored when it is not.
+    assert_eq!(
+        run("var e = new Error('x'); e[Symbol.toStringTag] = 'Mine'; \
+             Object.prototype.toString.call(e)"),
+        "[object Mine]"
+    );
+    assert_eq!(
+        run("var e = new Error('x'); e[Symbol.toStringTag] = 7; \
+             Object.prototype.toString.call(e)"),
+        "[object Error]"
+    );
+}

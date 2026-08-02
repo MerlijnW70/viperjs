@@ -10,9 +10,11 @@ use super::*;
 fn a_literal_makes_a_regular_expression_and_a_new_one_each_time() {
     assert_eq!(run("typeof /a/"), "object");
     assert_eq!(run("/a/ instanceof RegExp"), "true");
+    // §20.1.3.6 step 12 — the tag comes from the `[[RegExpMatcher]]` slot, which is why an object
+    // given `RegExp.prototype` does not get it.
     assert_eq!(
         run("Object.prototype.toString.call(/a/)"),
-        "[object Object]"
+        "[object RegExp]"
     );
     // §13.2.7.3 — a **new** object per evaluation, so a pattern in a loop does not carry
     // `lastIndex` from one turn to the next. ES3 shared one object per literal and the change is

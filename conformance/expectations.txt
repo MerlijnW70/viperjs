@@ -1549,8 +1549,6 @@ built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.j
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
-built-ins/Array/prototype/toString/non-callable-join-string-tag.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Array/prototype/toString/non-callable-join-string-tag.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
@@ -2845,8 +2843,6 @@ built-ins/Error/isError/symbols.js :: it threw TypeError: what was called is not
 built-ins/Error/isError/symbols.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Error/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Error/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/prototype/constructor/S15.11.4.1_A1_T2.js :: it threw an object with no name: err.toString() must return "[object Error]" Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Error/prototype/constructor/S15.11.4.1_A1_T2.js (strict) :: it threw an object with no name: err.toString() must return "[object Error]" Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Error/prototype/stack/getter-cross-realm.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-cross-realm.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-data-property-shadows.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -2917,10 +2913,6 @@ built-ins/Error/prototype/stack/setter-via-assignment.js :: it threw TypeError: 
 built-ins/Error/prototype/stack/setter-via-assignment.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/toString/tostring-get-throws.js :: it threw an object with no name: name field getter should throw to cover abrupt completion return case in step 3 Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Error/prototype/toString/tostring-get-throws.js (strict) :: it threw an object with no name: name field getter should throw to cover abrupt completion return case in step 3 Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Error/tostring-1.js :: it threw an object with no name: new Error.toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Error/tostring-1.js (strict) :: it threw an object with no name: new Error.toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Error/tostring-2.js :: it threw an object with no name: Error().toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Error/tostring-2.js (strict) :: it threw an object with no name: Error().toString() returns "[object Error]" (Object.prototype.toString) Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/FinalizationRegistry/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/FinalizationRegistry/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -3605,38 +3597,26 @@ built-ins/Math/sumPrecise/takes-iterable.js :: it threw TypeError: what was call
 built-ins/Math/sumPrecise/takes-iterable.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/throws-on-non-number.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Math/sumPrecise/throws-on-non-number.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/NativeErrors/EvalError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/NativeErrors/EvalError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/EvalError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/EvalError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/RangeError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/NativeErrors/RangeError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/RangeError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/RangeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/ReferenceError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/NativeErrors/ReferenceError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/ReferenceError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/ReferenceError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/SyntaxError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/NativeErrors/SyntaxError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/SyntaxError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/SyntaxError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/TypeError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/NativeErrors/TypeError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/TypeError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/TypeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/URIError/is-error-object.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/NativeErrors/URIError/is-error-object.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/NativeErrors/URIError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/URIError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with no name: message should be an own property
@@ -3997,10 +3977,6 @@ built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js 
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js (strict) :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
-built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
-built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js (strict) :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
 built-ins/Object/prototype/toString/proxy-function-async.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
 built-ins/Object/prototype/toString/proxy-function-async.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
 built-ins/Object/prototype/toString/proxy-function.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
@@ -4372,8 +4348,6 @@ built-ins/RegExp/CharacterClassEscapes/character-class-whitespace-class-escape-n
 built-ins/RegExp/CharacterClassEscapes/character-class-whitespace-class-escape-negative-cases.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/CharacterClassEscapes/character-class-word-class-escape-negative-cases.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/CharacterClassEscapes/character-class-word-class-escape-negative-cases.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/S15.10.4.1_A6_T1.js :: it threw an object with no name: __re.toString() must return "[object "+"RegExp"+"]" Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
-built-ins/RegExp/S15.10.4.1_A6_T1.js (strict) :: it threw an object with no name: __re.toString() must return "[object "+"RegExp"+"]" Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
 built-ins/RegExp/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/Symbol.species/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/Symbol.species/return-value.js :: it threw TypeError: cannot read a property of something that is not an object

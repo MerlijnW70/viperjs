@@ -801,6 +801,12 @@ impl Realm {
     pub fn error(&self, heap: &mut Heap, kind: NativeError, message: &str) -> Value {
         let prototype = self.native_error_prototypes[kind.at()];
         let object = heap.new_object(Some(prototype));
+        // The same `[[ErrorData]]` §20.5.1.1 gives one a script constructs. An engine's own throw
+        // is not a lesser error: `Object.prototype.toString.call(caught)` says `[object Error]`
+        // whichever side made it, and a program cannot tell them apart by anything else either.
+        if let Some(found) = heap.object_mut(object) {
+            found.make_error();
+        }
         if !message.is_empty() {
             let message = text(heap, message);
             define(heap, object, "message", message);
