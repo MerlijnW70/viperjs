@@ -222,6 +222,13 @@ impl Writer {
         if self.open.contains(&object) {
             return Err(Abrupt::type_error("a circular structure has no JSON"));
         }
+        // …and a structure that is merely deep is not a cycle, so the check above never ends it.
+        // This walk has the fattest frames of §25.5's three — see `super::json::MAX_JSON_DEPTH` —
+        // so it is the one that decides the number, and it is guarded *after* the cycle check
+        // because a cycle has an answer of its own and reaching this first would rename it.
+        if self.depth >= super::json::MAX_JSON_DEPTH as usize {
+            return Err(super::json::too_deep());
+        }
         self.open.push(object);
         self.depth += 1;
         let written = match heap.is_array_through(object)? {

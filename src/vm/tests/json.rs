@@ -309,3 +309,145 @@ fn the_reviver_walks_what_was_parsed_and_may_remove_from_it() {
         "root"
     );
 }
+
+#[test]
+fn json_that_nests_past_the_cap_is_refused_rather_than_running_out_of_stack() {
+    // DR-0002 — a stack overflow is not a failure any `Result` can rescue and it takes the
+    // embedder's process with it. §25.5 puts no limit on nesting, so the refusal is praxis's and
+    // is reported as a RangeError: the text is perfectly good JSON, and what ran out is this
+    // engine's willingness to descend.
+    //
+    // All three of §25.5's walks recurse and all three were unbounded. Each gets a row, because
+    // one cap shared between them is bounded by whichever spends the most stack per level.
+    let deep = |wrappers: usize| {
+        format!("var s = '1'; for (var i = 0; i < {wrappers}; i++) {{ s = '[' + s + ']'; }} s")
+    };
+    // The reader: at the cap it parses, one past it refuses.
+    assert_eq!(
+        run(&format!("{} && JSON.parse(s) && 'read'", deep(64))),
+        "read"
+    );
+    assert_eq!(
+        run(&format!(
+            "{} && (function () {{ try {{ JSON.parse(s); return 'read'; }} \
+             catch (e) {{ return e.constructor.name; }} }})()",
+            deep(65)
+        )),
+        "RangeError"
+    );
+    // The reviver walk, over the same text — one deeper than the reader would accept is never
+    // reached, so this is asked at the cap and one past it like the reader.
+    assert_eq!(
+        run(&format!(
+            "{} && JSON.parse(s, function (k, v) {{ return v; }}) && 'revived'",
+            deep(64)
+        )),
+        "revived"
+    );
+    // The serialiser, over a graph built rather than parsed — `stringify` never sees the text.
+    let built = |levels: usize| {
+        format!(
+            "var o = {{}}; var t = o; for (var i = 0; i < {levels}; i++) {{ t.n = {{}}; t = t.n; }} o"
+        )
+    };
+    assert_eq!(
+        run(&format!("{} && JSON.stringify(o).length > 0", built(63))),
+        "true"
+    );
+    assert_eq!(
+        run(&format!(
+            "{} && (function () {{ try {{ JSON.stringify(o); return 'wrote'; }} \
+             catch (e) {{ return e.constructor.name; }} }})()",
+            built(64)
+        )),
+        "RangeError"
+    );
+    // A **cycle** keeps its own answer — §25.5.2.1 step 4's TypeError — because the cycle check is
+    // asked first. Reaching the depth cap instead would rename an error a program relies on.
+    assert_eq!(
+        run("var o = {}; o.self = o; \
+             (function () { try { JSON.stringify(o); return 'wrote'; } \
+              catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // …and the counter comes back down, so a *wide* document is not a deep one. Written the
+    // obvious way — raised on the way in and lowered only after the loop — this refuses
+    // `[[],[],[]…]` for being 2,000 deep when it is 2,000 wide and one deep.
+    assert_eq!(
+        run("var wide = '[' + new Array(2000).join('[],') + '[]]'; JSON.parse(wide).length"),
+        "2000"
+    );
+    assert_eq!(
+        run(
+            "var a = []; for (var i = 0; i < 2000; i++) { a.push([]); } \
+             JSON.stringify(a).length"
+        ),
+        "6001"
+    );
+}
+
+#[test]
+fn a_reviver_that_hands_back_a_deeper_graph_each_time_is_answered_rather_than_crashed() {
+    // The walk `revive` descends is **not** the text that was parsed. The reviver runs at every
+    // node and may put anything it likes where it was called, so the graph grows as the walk goes
+    // — which is why the reader's own cap cannot stand in for this one.
+    //
+    // This is test262's `built-ins/JSON/parse/reviver-array-length-coerce-err.js`, reduced. It
+    // walked praxis off the end of the stack, from eleven lines of script, and it is the reason
+    // the cap exists rather than an argument for it.
+    assert_eq!(
+        run(
+            "var uncoercible = { valueOf: function () { throw 'boom'; } }; \
+             var badLength = new Proxy([], { get: function (_, name) { \
+                 if (name === 'length') { return uncoercible; } } }); \
+             (function () { try { JSON.parse('[0,0]', function () { this[1] = badLength; }); \
+                 return 'ran'; } catch (e) { return typeof e === 'string' ? e : e.constructor.name; } })()"
+        ),
+        "RangeError"
+    );
+    // A reviver that grows the graph without a proxy does the same thing, so the guard is about
+    // the walk rather than about anything proxies do.
+    assert_eq!(
+        run("(function () { try { JSON.parse('[0]', function (k, v) { \
+                 return typeof v === 'number' ? { deeper: v } : v; }); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "ran"
+    );
+}
+
+#[test]
+fn walking_json_at_the_cap_fits_in_the_stack_it_claims_to_need() {
+    // What makes `MAX_JSON_DEPTH` a measurement rather than a hope, and the twin of the parser's
+    // `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need`. A cap the stack cannot afford is
+    // worse than no cap: the walk dies by overflow one level before the check meant to prevent
+    // exactly that.
+    //
+    // One mebibyte is the smallest thread stack in common use, and this is a debug build, whose
+    // frames are largest. Measured that way the reader dies between 750 and 800 wrappers, a
+    // reviver walk past 400, and the serialiser between 250 and 300 — so the serialiser is what
+    // the number has to fit inside, and if a slice adds frames between one level and the next
+    // this is where it says so.
+    let worker = std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(|| {
+            let deep = "var s = '1'; for (var i = 0; i < 64; i++) { s = '[' + s + ']'; } s";
+            let built =
+                "var o = {}; var t = o; for (var i = 0; i < 63; i++) { t.n = {}; t = t.n; } o";
+            [
+                run(&format!("{deep} && JSON.parse(s) && 'read'")),
+                run(&format!(
+                    "{deep} && JSON.parse(s, function (k, v) {{ return v; }}) && 'revived'"
+                )),
+                run(&format!("{built} && JSON.stringify(o).length > 0")),
+                // The three together, which is the shape a round trip actually takes.
+                run(&format!(
+                    "{deep} && JSON.stringify(JSON.parse(s, function (k, v) {{ return v; }})) === s"
+                )),
+            ]
+        })
+        .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement
+    let answers = worker
+        .join()
+        .unwrap_or_else(|_| panic!("walking at the cap needs more than the mebibyte it claims")); // a panic in the thread is the failure being reported
+    assert_eq!(answers, ["read", "revived", "true", "true"]);
+}

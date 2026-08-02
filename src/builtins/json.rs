@@ -10,13 +10,48 @@
 //! implementation is refused by another.
 //!
 //! The writing half is [`super::json_write`], and what it promises is written up there. The two
-//! meet only on the object they are installed on.
+//! meet only on the object they are installed on — and on [`MAX_JSON_DEPTH`], because all three of
+//! §25.5's walks recurse and a stack overflow is not a thing a `Result` can carry.
 
 use super::{define_method, key};
 use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, PropertyKey, StringId};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
+
+/// How deeply §25.5's three walks will nest before refusing — DR-0002 and DR-0006's rule.
+///
+/// All three recurse in Rust over something a script chooses: the reader over the text's nesting,
+/// [`revive`] over the object graph the reviver hands back, and [`super::json_write`]'s serialiser
+/// over the graph it is given. §25.5 puts no limit on any of them, and every engine has one — the
+/// alternative is a stack overflow, which DR-0002 says no `Result` can rescue and which takes the
+/// embedder's process with it.
+///
+/// **A count and not a stack measurement**, for DR-0006's reason: measuring would make which
+/// documents parse depend on how the engine was compiled. Measured on the 1 MiB stack Windows gives
+/// a program, in a debug build, whose frames are largest — the reader dies between 750 and 800, a
+/// `revive` past 400, and the **serialiser between 250 and 300**, which is the one this has to fit
+/// inside. 64 is the number every other cap in the engine uses (`MAX_NESTING_DEPTH`,
+/// `MAX_EXPRESSION_DEPTH`, `MAX_REENTRY_DEPTH`) and it sits at a quarter of the narrowest of those
+/// three, which is the margin the others do not have and this one can afford.
+///
+/// It costs nothing measurable: no JSON in test262 nests past a handful, and data that nests past
+/// 64 is machine-generated. Like `MAX_NESTING_DEPTH` this should become an embedder's number, when
+/// there is somebody who knows how much stack there actually is.
+pub(super) const MAX_JSON_DEPTH: u32 = 64;
+
+/// The refusal all three share — §25.5 has no error for this, so praxis picks one and explains it.
+///
+/// A **RangeError** rather than a SyntaxError, even from the reader. The text is perfectly good
+/// JSON; what ran out is this engine's willingness to descend, which is a resource question and is
+/// what `RangeError` means everywhere else here. A SyntaxError would also be indistinguishable from
+/// [`bad_json`], and a program cannot fix malformed text by making it shallower.
+pub(super) fn too_deep() -> Abrupt {
+    Abrupt::Raised(
+        crate::value::ErrorKind::Range,
+        "JSON nested too deeply for this engine",
+    )
+}
 
 /// Build the `JSON` object into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
@@ -60,6 +95,7 @@ fn parse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let mut reader = Reader {
         units: &units,
         at: 0,
+        depth: 0,
     };
     reader.spaces();
     let value = reader.value(vm, heap)?;
@@ -83,23 +119,38 @@ fn parse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let root = heap.new_object(Some(vm.realm().object_prototype()));
     let empty = key(heap, "");
     let _ = heap.define_own_property(root, empty, &PropertyDescriptor::data(value));
-    revive(vm, heap, root, empty, Value::Object(reviver))
+    revive(vm, heap, root, empty, Value::Object(reviver), 0)
 }
 
 /// §25.5.1.1 — hand each value to the reviver, innermost first.
+///
+/// `depth` is the walk's own, and it is **not** the depth of the text that was parsed. The reviver
+/// runs at every node and may put anything it likes where it was called, so what this descends
+/// through is a graph the script builds as the walk goes — see [`MAX_JSON_DEPTH`]. That is not a
+/// hypothetical: test262's `reviver-array-length-coerce-err.js` hands back a Proxy on every call and
+/// walked praxis off the end of the stack.
+///
+/// **Level 0 is the wrapper, which is not part of the document**, so the document's own root is
+/// level 1 and the cap is reached one level later than the reader's. That is what makes a text the
+/// reader accepts one the reviver can also walk: counted the same way, adding a reviver to a
+/// working `JSON.parse` would start refusing it at the deepest level the reader allows.
 fn revive(
     vm: &mut Vm,
     heap: &mut Heap,
     holder: ObjectId,
     name: PropertyKey,
     reviver: Value,
+    depth: u32,
 ) -> Completion<Value> {
+    if depth > MAX_JSON_DEPTH {
+        return Err(too_deep());
+    }
     let value = vm.get_property_key(Value::Object(holder), name, heap)?;
     if let Value::Object(object) = value {
         // §25.5.1.1 step 2.b — `EnumerableOwnPropertyNames` on the holder, which for a proxy is
         // its `ownKeys` trap.
         for key in vm.own_keys_through(object, heap)? {
-            let revived = revive(vm, heap, object, key, reviver)?;
+            let revived = revive(vm, heap, object, key, reviver, depth + 1)?;
             // Step 2.b.ii.2 — a reviver answering `undefined` *deletes* the property rather than
             // setting it to `undefined`, which is the only way it can remove one.
             match revived {
@@ -129,6 +180,13 @@ fn bad_json() -> Abrupt {
 struct Reader<'a> {
     units: &'a [u16],
     at: usize,
+    /// How many `{` and `[` are open — see [`MAX_JSON_DEPTH`].
+    ///
+    /// Counted on the reader rather than passed down, because `value` is reached from three places
+    /// and a parameter is three chances to forget one. Raised where a container opens and lowered
+    /// where it closes, including on the paths that return early: a reader that only lowered on the
+    /// way out of the loop would refuse a *wide* document — `[[],[],[]…]` — for being deep.
+    depth: u32,
 }
 
 impl Reader<'_> {
@@ -157,8 +215,8 @@ impl Reader<'_> {
     /// One `JSONValue`.
     fn value(&mut self, vm: &mut Vm, heap: &mut Heap) -> Completion<Value> {
         match self.peek() {
-            Some(0x7B) => self.object(vm, heap),
-            Some(0x5B) => self.array(vm, heap),
+            Some(0x7B) => self.nested(Self::object, vm, heap),
+            Some(0x5B) => self.nested(Self::array, vm, heap),
             Some(0x22) => Ok(Value::String(self.text(heap)?)),
             Some(_) if self.word("true") => Ok(Value::Boolean(true)),
             Some(_) if self.word("false") => Ok(Value::Boolean(false)),
@@ -166,6 +224,26 @@ impl Reader<'_> {
             Some(_) => self.number(),
             None => Err(bad_json()),
         }
+    }
+
+    /// Read one container, counting it against [`MAX_JSON_DEPTH`].
+    ///
+    /// The count comes back down however the container ended, including by refusal — a reader that
+    /// leaked a level per failed parse would answer differently for the second `JSON.parse` in a
+    /// program than for the first.
+    fn nested(
+        &mut self,
+        read: fn(&mut Self, &mut Vm, &mut Heap) -> Completion<Value>,
+        vm: &mut Vm,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        if self.depth >= MAX_JSON_DEPTH {
+            return Err(too_deep());
+        }
+        self.depth += 1;
+        let read = read(self, vm, heap);
+        self.depth -= 1;
+        read
     }
 
     /// `JSONObject`.
