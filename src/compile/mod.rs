@@ -111,43 +111,120 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
     compiler.chunk.strict = script.is_strict;
     // §16.1.7 step 8's `GlobalDeclarationInstantiation`. A script's `var`s belong to the *global
     // object*, not to a scope of its own — which is why `var x = 1` at the top level makes
-    // `globalThis.x` and a `let` never will. `VarDeclaredNames` of the whole body rather than of
-    // the top level, because a `var` inside a block or a loop belongs to the script all the same;
-    // that is the difference between `var` and everything that replaced it.
-    //
-    // `TopLevelVarDeclaredNames` would answer the same thing today. The two differ on exactly one
-    // production, a *function declaration* at the top level, which is var-scoped and which
-    // `hoist_functions` handles separately; this is the one that stays right for a Script.
-    //
-    // §16.1.7 steps 5 to 12 ask whether **every** name may be declared before creating **any** of
-    // them, and the order is the whole of what a program can see: `var a; function NaN() {}` leaves
-    // no `a` behind, because the refusal happens before anything is made. Written the obvious way
-    // round — check each as it is created — the names before the offending one would stand, and the
-    // script would be half-instantiated by an operation that threw.
-    for name in var_declared_names(&script.body) {
-        let index = compiler.name(name.name)?;
-        compiler.chunk.emit(Instruction::CheckGlobalVar(index));
-    }
-    // Step 11's question is the stricter one and is asked of function declarations only. Their
-    // names are walked here rather than inside `hoist_functions`, because that one *creates* as it
-    // goes and every check has to precede every creation.
-    for statement in &script.body {
-        let crate::ast::StmtKind::Function(function) = &statement.kind else {
-            continue;
-        };
-        let Some(name) = &function.name else {
-            continue;
-        };
-        let index = compiler.name(&name.name)?;
-        compiler.chunk.emit(Instruction::CheckGlobalFunction(index));
-    }
-    for name in var_declared_names(&script.body) {
-        let index = compiler.name(name.name)?;
-        compiler.chunk.emit(Instruction::DeclareGlobal(index));
-    }
+    // `globalThis.x` and a `let` never will. See `Compiler::instantiate_globals` for the three
+    // passes and why their order is observable.
+    compiler.instantiate_globals(&script.body)?;
     // §16.1.7 `GlobalDeclarationInstantiation` step 17 — a script's `let` and `const` go in the
     // global *declarative* record rather than onto the global object, which is why these get slots
     // like any other lexical binding while the `var`s above became properties.
+    compiler.declare_lexical_names(&script.body)?;
+    compiler.hoist_functions(&script.body)?;
+    compiler.statements(&script.body)?;
+    Ok(compiler.finish())
+}
+
+/// Where a direct `eval`'s `var` declarations go — §19.2.1.1's `varEnv`.
+///
+/// The one thing about an eval that its own source cannot decide. §19.2.1.1 step 12 hands the
+/// evaluated code the *caller's* variable environment, so which of these applies is a question
+/// about where the call was made, and only the interpreter knows the answer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EvalVars {
+    /// Onto the global object — a sloppy direct eval whose caller's variable scope is the script's.
+    ///
+    /// §16.1.7's split, reached by exactly the path an ordinary script's `var` takes, which is why
+    /// `eval("var x = 1"); globalThis.x` is 1 and a `let` beside it is not.
+    Global,
+    /// Into the eval's own scope, which is what step 14 does when the code is **strict**.
+    ///
+    /// A strict eval's declarations are discarded with it — `"use strict"; eval("var x = 1"); x` is
+    /// a ReferenceError — so the eval's own environment is a place they can go that is sized when
+    /// its chunk is compiled.
+    Own,
+    /// A sloppy `var` inside a function, which praxis refuses by name.
+    ///
+    /// §19.2.1.1 would add the binding to the *caller's* function scope, whose slot count was fixed
+    /// when that function was compiled. No name list makes a `Vec` longer, so this is the one shape
+    /// DR-0018 leaves open — refused with a message rather than quietly put somewhere else, because
+    /// somewhere else is a wrong answer that runs.
+    Caller,
+}
+
+/// §19.2.1.1 — compile eval'd source against the scopes its caller is *running* in.
+///
+/// The difference from [`compile_script`] is the chain. A script is compiled against nothing and
+/// resolves every name it does not declare to the global object; this is handed `chain` —
+/// **outermost first**, one entry per environment the caller is inside, each holding what that
+/// environment called its slots — and resolves into it exactly as a nested function's body is
+/// resolved into the scopes it was written in. DR-0018 is why the environments carry those names
+/// at all.
+///
+/// An entry may be **shorter than its environment's slots**, or empty: a scope the engine built for
+/// itself names nothing, and a slot past the end of a list belongs to a scope already left. Both
+/// mean "nothing resolves here", and the walk carries on outwards — which is the same answer the
+/// compiler would give for a scope that declares nothing. What the entry may *not* be is missing:
+/// a `LoadVariable`'s depth counts environments, so a level left out would make every name outside
+/// it resolve one hop too shallow.
+///
+/// Strictness is the tree's — [`crate::parser::parse_eval`] was told the caller's and folded §19.2.1.1
+/// step 5's two halves together before anything was parsed, because §11.2.1's early errors and every
+/// nested function's own strictness are settled there and cannot be set on a finished tree.
+pub fn compile_direct_eval(
+    script: &Script,
+    heap: &mut Heap,
+    chain: Vec<Vec<crate::heap::Binding>>,
+    vars: EvalVars,
+) -> Result<Chunk, CompileError> {
+    let mut compiler = Compiler::new(heap);
+    compiler.chunk.strict = script.is_strict;
+    compiler.outer = chain
+        .into_iter()
+        .map(|level| level.into_iter().map(Local::from).collect())
+        .collect();
+    compiler.seeded_scopes = compiler.outer.len();
+    // §19.2.1.1 step 14 — a strict eval's `var`s are its own, so the eval is not "the script" for
+    // the purpose that flag decides: `Bind::Var` puts them in slots rather than on the global.
+    compiler.global_vars = vars == EvalVars::Global;
+    match vars {
+        // §19.2.1.1's `EvalDeclarationInstantiation` against a global variable environment, which
+        // asks §16.1.7's questions in §16.1.7's order — the same three passes, from the same
+        // function, so that the two cannot drift.
+        EvalVars::Global => compiler.instantiate_globals(&script.body)?,
+        // Slots in the eval's own environment, hoisted before anything runs exactly as a function
+        // body's are — which is what step 14 asks for and what makes them go away with it.
+        EvalVars::Own => {
+            for name in var_declared_names(&script.body) {
+                compiler.declare(name.name);
+            }
+        }
+        // The refusal, and it is asked before anything is emitted so that the eval either runs or
+        // does nothing at all. A source with no `var` and no function declaration in it needs the
+        // caller's variable scope for nothing, and is compiled here like any other — which is most
+        // of what a direct eval is written for.
+        EvalVars::Caller => {
+            if let Some(name) = var_declared_names(&script.body).into_iter().next() {
+                return Err(unsupported(
+                    "a sloppy `var` inside a direct eval in a function",
+                    name.span,
+                ));
+            }
+            // A **function declaration** at the top level is var-scoped too and is not one of those
+            // names: `VarDeclaredNames` and `TopLevelVarDeclaredNames` differ on exactly this
+            // production, and praxis computes the first. Left out, `eval("function h(){}")` inside
+            // a function would put `h` in a slot that goes away with the eval — a name the caller
+            // asked for and cannot find, which is a wrong answer that runs.
+            if let Some(statement) = script
+                .body
+                .iter()
+                .find(|statement| matches!(statement.kind, crate::ast::StmtKind::Function(_)))
+            {
+                return Err(unsupported(
+                    "a sloppy function declaration inside a direct eval in a function",
+                    statement.span,
+                ));
+            }
+        }
+    }
     compiler.declare_lexical_names(&script.body)?;
     compiler.hoist_functions(&script.body)?;
     compiler.statements(&script.body)?;
@@ -165,11 +242,6 @@ struct Local {
     /// back — [`Compiler::leave_scope`] says why. So going out of scope is a flag rather than a
     /// truncation, and [`Compiler::resolve`] skips what is no longer in scope.
     live: bool,
-    /// Whether it was declared by `let` or `const` rather than by `var` or as a parameter.
-    ///
-    /// What it changes is the *dead zone*: a lexical binding starts uninitialised and reading it
-    /// before its declaration is a ReferenceError, where a `var` reads as `undefined`.
-    lexical: bool,
     /// Whether assigning to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
     ///
     /// Known here rather than at run time because the compiler resolved the binding: an
@@ -182,6 +254,22 @@ impl Local {
     /// Whether this is what `name` refers to from where the compiler is standing.
     fn answers_to(&self, name: &str) -> bool {
         self.live && &*self.name == name
+    }
+}
+
+impl From<crate::heap::Binding> for Local {
+    /// A slot of a **running** environment, read back as the compiler would have written it.
+    ///
+    /// `live` is unconditionally true because the list is only ever handed over for scopes that are
+    /// running: a name that had gone out of scope is not in it — see [`bindings_of`]. Whether the
+    /// binding was a `let` is not carried, and does not need to be: §9.1.1.1's dead zone is a slot
+    /// holding *nothing*, which the slot itself says at the moment it is read.
+    fn from(binding: crate::heap::Binding) -> Self {
+        Self {
+            name: binding.name,
+            live: true,
+            immutable: binding.immutable,
+        }
     }
 }
 
@@ -265,12 +353,33 @@ struct Compiler<'a> {
     /// the fields become a function of no arguments, called with the new object as its receiver,
     /// which is the same shape a static field's initialiser already uses and for the same reason.
     derived_fields: Option<u32>,
-    /// Whether this is the script rather than a function body.
+    /// Whether this is Script code rather than a function body.
     ///
     /// §14.2.2's completion value belongs to the script; what a function's statements evaluate to
     /// is nobody's business but `return`'s. So an expression statement inside a function discards
-    /// its value where one at the top level keeps it.
+    /// its value where one at the top level keeps it, and a `return` written at the top level is a
+    /// Syntax Error rather than a way out of anything.
+    ///
+    /// True for a direct `eval` too, however deep inside a function the call was written: §19.2.1.1
+    /// evaluates a **Script**, which is what makes `eval("1; ;")` answer 1 and `eval("return")` a
+    /// SyntaxError. That is not the same question as [`Compiler::global_vars`], and this field used
+    /// to answer both — which made every direct eval in a function evaluate to `undefined`.
     is_script: bool,
+    /// Whether a `var` here becomes a property of the global object rather than a slot.
+    ///
+    /// §16.1.7's split, and the half that is *not* about being a script. A script's `var`s are
+    /// global properties and a function's are slots — and §19.2.1.1 makes an eval's depend on
+    /// something neither of them can see: the caller's variable environment, and whether the
+    /// evaluated code is strict. See [`EvalVars`].
+    global_vars: bool,
+    /// How many enclosing scopes this compiler was handed before it compiled anything.
+    ///
+    /// Zero for a script and for a function body, whose `outer` is built by the caller and then
+    /// only grows and shrinks with the scopes this compilation opens. A direct `eval` is seeded
+    /// with the chain its caller is running in, so "no scope has been opened here" is a comparison
+    /// against that number rather than against zero — see [`Compiler::at_global_scope`], which is
+    /// the one question that has to tell the difference.
+    seeded_scopes: usize,
     /// The most slots that were in use at once.
     ///
     /// Not `locals.len()` at the end: a catch parameter's slot is given back when its block ends,
@@ -418,6 +527,8 @@ impl<'a> Compiler<'a> {
             this_binding: None,
             derived_fields: None,
             is_script: true,
+            global_vars: true,
+            seeded_scopes: 0,
         }
     }
 
@@ -445,6 +556,49 @@ impl<'a> Compiler<'a> {
         // and `high_water` is slots a *nested* scope needed, which belong to no name at all.
         chunk.bindings = bindings_of(&self.locals);
         chunk
+    }
+
+    /// §16.1.7's `GlobalDeclarationInstantiation`, which §19.2.1.1 asks for again.
+    ///
+    /// Three passes and the order between them is the whole of what a program can see. Steps 5 to
+    /// 12 ask whether **every** name may be declared before **any** of them is created, so
+    /// `var a; function NaN() {}` leaves no `a` behind: the refusal happens before anything is
+    /// made. Written the obvious way round — check each as it is created — the names before the
+    /// offending one would stand, and the global object would be half-instantiated by an operation
+    /// that threw. `language/eval-code/direct/non-definable-function-with-variable.js` is that
+    /// exact program.
+    ///
+    /// `VarDeclaredNames` of the whole body rather than of the top level, because a `var` inside a
+    /// block or a loop belongs to the script all the same; that is the difference between `var` and
+    /// everything that replaced it. `TopLevelVarDeclaredNames` would answer the same thing today —
+    /// the two differ on exactly one production, a **function declaration** at the top level, which
+    /// is var-scoped and which is why the middle pass walks the statements itself. Step 11's
+    /// question is the stricter one and is asked of those only.
+    ///
+    /// Shared with the direct `eval` whose caller's variable scope is the global object, because
+    /// §19.2.1.1 step 8 is these same questions and a second copy of them is a second thing to
+    /// keep right. It was a second copy for one commit, and the `CheckGlobalFunction` pass was the
+    /// half that got left out.
+    fn instantiate_globals(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
+        for name in var_declared_names(body) {
+            let index = self.name(name.name)?;
+            self.chunk.emit(Instruction::CheckGlobalVar(index));
+        }
+        for statement in body {
+            let crate::ast::StmtKind::Function(function) = &statement.kind else {
+                continue;
+            };
+            let Some(name) = &function.name else {
+                continue;
+            };
+            let index = self.name(&name.name)?;
+            self.chunk.emit(Instruction::CheckGlobalFunction(index));
+        }
+        for name in var_declared_names(body) {
+            let index = self.name(name.name)?;
+            self.chunk.emit(Instruction::DeclareGlobal(index));
+        }
+        Ok(())
     }
 
     /// Give `name` a slot if it does not have one, and answer which.
@@ -648,7 +802,6 @@ impl<'a> Compiler<'a> {
     fn declare_lexical(&mut self, name: &str, immutable: bool) -> u32 {
         let slot = self.declare_shadowing(name);
         if let Some(local) = self.locals.last_mut() {
-            local.lexical = true;
             local.immutable = immutable;
         }
         slot
@@ -715,13 +868,27 @@ impl<'a> Compiler<'a> {
             .emit(Instruction::StoreVariable(binding.depth, binding.index));
     }
 
-    /// Whether this compiler is the script's own, rather than some function's body.
+    /// Whether a declaration here belongs to the global object rather than to a scope.
     ///
-    /// Derived rather than stored, because it is already recorded: a function body is compiled
-    /// with the chain of scopes it is written inside, and only the script itself is written
-    /// inside none. A separate flag could disagree with that; this cannot.
+    /// Two conditions and both are needed, which is what one of them alone got wrong in each
+    /// direction.
+    ///
+    /// It used to ask `outer.is_empty()` — "is this compiler the script's own". That answers the
+    /// wrong thing for a direct `eval`, which is compiled *against* a chain and so is inside
+    /// something by that measure: its top-level `function h() {}` went into a slot discarded with
+    /// the eval, where §9.1.1.4.16 asks for a global function binding, and
+    /// `eval("function h(){}"); h()` was a ReferenceError.
+    ///
+    /// Asking [`Compiler::global_vars`] alone is wrong the other way. §14.1 makes a function
+    /// declaration inside a **block** that block's, and a script's `global_vars` is true wherever
+    /// in it the compiler has got to — so `{ function f() {} } f` would put `f` on the global
+    /// object, which is Annex B.3.3 and DR-0008 leaves that out.
+    ///
+    /// So: the var scope is the global object, **and** the compiler has not opened a scope since it
+    /// started. A function declaration is var-scoped, which is why the first half is the same field
+    /// a `var` asks rather than a second rule that could disagree with it.
     pub(super) fn at_global_scope(&self) -> bool {
-        self.outer.is_empty()
+        self.global_vars && self.outer.len() == self.seeded_scopes
     }
 
     /// The constant index holding `name` as a String, for the instructions that name a global.
@@ -869,7 +1036,6 @@ impl Compiler<'_> {
         self.locals.push(Local {
             name: name.into(),
             live: true,
-            lexical: false,
             immutable: false,
         });
         self.high_water = self.high_water.max(self.locals.len());

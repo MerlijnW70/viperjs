@@ -1,4 +1,8 @@
-//! §19.2.1's `eval` — the indirect half, and the call site that tells the two apart.
+//! §19.2.1's `eval` — both halves, and the call site that tells them apart.
+//!
+//! The rows worth reading twice are the ones where the *same text* answers differently through a
+//! direct call and an indirect one. That difference is the whole of §19.2.1.1, and an engine could
+//! pass every other row here with the two sharing one implementation.
 
 use super::*;
 
@@ -88,13 +92,16 @@ fn an_indirect_eval_declares_vars_globally_and_keeps_its_lets_to_itself() {
 fn a_call_is_a_direct_eval_only_when_the_name_eval_holds_eval_itself() {
     // §13.3.6.1 — two halves, and each on its own is not enough. The compiler sees the *spelling*
     // and the interpreter sees the *identity*, and a call is direct only when both agree.
-    //
-    // Direct eval needs the caller's scope, which praxis does not have yet, so it is refused by
-    // name. Running it in the global scope instead would be indirect eval wearing its clothes —
-    // right until the source mentions something the caller declared, and then quietly wrong.
+    assert_eq!(run("eval('1 + 1')"), "2");
+    // The half a program can actually observe: a direct eval reads the caller's scope and an
+    // indirect one does not, from the same text at the same place.
     assert_eq!(
-        run("try { eval('1 + 1'); } catch (e) { e.constructor.name }"),
-        "TypeError"
+        run("(function () { let hidden = 9; return eval('hidden'); })()"),
+        "9"
+    );
+    assert_eq!(
+        run("(function () { let hidden = 9; return (0, eval)('typeof hidden'); })()"),
+        "undefined"
     );
     // Spelled `eval` but holding something else: an ordinary call, and it must not be refused.
     assert_eq!(
@@ -186,5 +193,259 @@ fn evals_that_have_finished_do_not_count_against_the_next_one() {
              (0, eval)('2 + 2')"
         ),
         "4"
+    );
+}
+
+#[test]
+fn a_direct_eval_resolves_into_the_scopes_its_caller_is_running_in() {
+    // §19.2.1.1 step 12 — the evaluated source's outer scope is the caller's *running* lexical
+    // environment. praxis resolves a name to a depth and an index when it compiles, and this source
+    // did not exist then; DR-0018's name list on each environment is what makes it reachable.
+    assert_eq!(run("(function () { var a = 1; return eval('a'); })()"), "1");
+    assert_eq!(
+        run("(function () { var a = 1; eval('a = 2'); return a; })()"),
+        "2"
+    );
+    // A parameter, and the `arguments` object — which §10.2.11 makes for every non-arrow function
+    // and praxis skips when nothing read the name. A direct eval may read it and the compiler
+    // cannot have seen that, so the call site asks for one.
+    assert_eq!(run("(function (p) { return eval('p'); })('in')"), "in");
+    assert_eq!(
+        run("(function () { return eval('arguments[0]'); })('a0')"),
+        "a0"
+    );
+    // Every kind of scope between the call and the script, since each is one hop of the chain and
+    // a hop counted wrong reads a different variable rather than failing.
+    assert_eq!(
+        run("(function () { { let b = 7; return eval('b'); } })()"),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "(function () { for (let i = 0; i < 3; i++) { if (i === 2) { return eval('i'); } } })()"
+        ),
+        "2"
+    );
+    assert_eq!(
+        run("(function () { try { throw 7; } catch (e) { return eval('e'); } })()"),
+        "7"
+    );
+    assert_eq!(
+        run("(function () { switch (1) { case 1: let q = 'Q'; return eval('q'); } })()"),
+        "Q"
+    );
+    // The script's own environment is the end of every one of those chains.
+    assert_eq!(
+        run("let top = 3; (function () { return eval('top'); })()"),
+        "3"
+    );
+    // A name that is nowhere is still a global read, and still throws when there is no global.
+    assert_eq!(
+        run("globalThis.gd = 4; (function () { return eval('gd'); })()"),
+        "4"
+    );
+    assert_eq!(
+        run("try { eval('no_such_name_at_all'); } catch (e) { e.constructor.name }"),
+        "ReferenceError"
+    );
+}
+
+#[test]
+fn a_direct_eval_carries_the_mutability_of_what_it_resolved() {
+    // §9.1.1.1.5 — whether a write is a TypeError is decided by the compiler that resolved the
+    // name, so a compiler seeded from a running chain has to be told. Without it on the
+    // environment this assigns, silently, and `k` is 2 afterwards.
+    assert_eq!(
+        run(
+            "(function () { const k = 1; try { eval('k = 2'); return 'assigned'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run("(function () { const k = 1; try { eval('k = 2'); } catch (e) {} return k; })()"),
+        "1"
+    );
+    // …and a `let` beside it is writable, so this is the mutability travelling and not a blanket
+    // refusal to write anything an eval did not declare.
+    assert_eq!(
+        run("(function () { let m = 1; eval('m = 2'); return m; })()"),
+        "2"
+    );
+}
+
+#[test]
+fn what_a_direct_eval_declares_goes_where_its_callers_variable_scope_is() {
+    // §19.2.1.1 steps 12 to 14, which is three answers and not one.
+
+    // At the top level of a script the variable scope is the global object, exactly as §16.1.7
+    // puts a script's own `var` there — so this is the indirect mode's answer reached by the
+    // direct path, and a function declaration goes the same way.
+    assert_eq!(run("eval('var dv1 = 3'); globalThis.dv1"), "3");
+    assert_eq!(run("eval('function dh() { return 4; }'); dh()"), "4");
+    // …while the *lexical* scope is the eval's own and is discarded with it, which is what makes
+    // the two halves of one statement disagree.
+    assert_eq!(run("eval('let dl = 2; dl')"), "2");
+    assert_eq!(run("eval('let dl = 2;'); typeof dl"), "undefined");
+    // A `let` in the eval shadows a caller's binding for the eval's length and leaves it alone.
+    assert_eq!(
+        run("(function () { var a = 1; eval('let a = 2;'); return a; })()"),
+        "1"
+    );
+
+    // Step 14 — **strict** eval's declarations are its own wherever it is written, so they are
+    // slots in its own environment and go away with it.
+    assert_eq!(
+        run("(function () { 'use strict'; eval('var v = 1'); return typeof v; })()"),
+        "undefined"
+    );
+    // …and it is a binding while the eval runs, so the declaration works and only its *lifetime*
+    // is different. A refusal would pass the row above and fail this one.
+    assert_eq!(
+        run("(function () { 'use strict'; return eval('var v = 1; v'); })()"),
+        "1"
+    );
+    // Strictness comes from either side: the caller's, or the evaluated text's own directive.
+    assert_eq!(
+        run("(function () { eval('\"use strict\"; var v = 1;'); return typeof v; })()"),
+        "undefined"
+    );
+
+    // And the one shape DR-0018 leaves open: a sloppy `var` inside a function would have to grow
+    // an environment whose slot count was fixed when that function was compiled. Refused by name
+    // rather than put somewhere else, because somewhere else is a wrong answer that runs.
+    assert_eq!(
+        run("(function () { try { eval('var w = 1'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"),
+        "SyntaxError"
+    );
+    assert_eq!(
+        run(
+            "(function () { try { eval('function w() {}'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "SyntaxError"
+    );
+    // The refusal is about the *declaration* and not about being inside a function: an eval that
+    // declares nothing var-scoped is compiled there like anywhere else, which is most of them.
+    assert_eq!(
+        run("(function () { var a = 1; return eval('let b = 2; a + b'); })()"),
+        "3"
+    );
+}
+
+#[test]
+fn a_direct_eval_shares_the_scope_it_read_rather_than_a_copy_of_it() {
+    // The claim a snapshot would also satisfy every row above and fail here. A closure the eval
+    // made reads the caller's binding *later*, so the two must be one variable.
+    assert_eq!(
+        run(
+            "(function () { var a = 5; var f = eval('(function () { return a; })'); \
+             a = 6; return f(); })()"
+        ),
+        "6"
+    );
+    // …and a closure the caller made sees what the eval wrote.
+    assert_eq!(
+        run(
+            "(function () { var a = 5; var f = function () { return a; }; \
+             eval('a = 7'); return f(); })()"
+        ),
+        "7"
+    );
+    // An eval inside an eval is direct too, and reaches all the way out.
+    assert_eq!(
+        run("(function () { var a = 1; return eval('eval(\"a\")'); })()"),
+        "1"
+    );
+    // A function written *inside* the eval'd source has its own scope, and a direct eval in that
+    // resolves through both.
+    assert_eq!(
+        run(
+            "(function () { var a = 1; return eval('(function () { return eval(\"a\"); })()'); })()"
+        ),
+        "1"
+    );
+}
+
+#[test]
+fn a_direct_eval_is_script_code_however_deep_in_a_function_it_is_written() {
+    // §19.2.1.1 evaluates a **Script**, so §14.2.2's completion value applies and `return` is a
+    // Syntax Error. Both were wrong when one flag answered this question and where a `var` goes:
+    // every direct eval inside a function evaluated to `undefined`.
+    assert_eq!(run("(function () { return eval('1; ;'); })()"), "1");
+    assert_eq!(run("(function () { return eval('2'); })()"), "2");
+    // A declaration produces no value, so the completion value is `undefined` — asked of a strict
+    // body, since a sloppy `var` in a function is the shape that is refused.
+    assert_eq!(
+        run("(function () { 'use strict'; return typeof eval('var q;'); })()"),
+        "undefined"
+    );
+    assert_eq!(
+        run(
+            "(function () { try { eval('return 1'); } catch (e) { return e.constructor.name; } })()"
+        ),
+        "SyntaxError"
+    );
+    // §19.2.1.1 leaves `this` alone — a direct eval sees the caller's, where an indirect one gets
+    // the global object.
+    assert_eq!(
+        run("var o = { m: function () { return eval('this'); } }; o.m() === o"),
+        "true"
+    );
+}
+
+#[test]
+fn a_direct_eval_is_strict_when_either_side_says_so_and_the_parser_is_the_one_told() {
+    // §19.2.1.1 step 5. Strictness cannot be set on a finished tree: it decides §11.2.1's early
+    // errors and it settles the `is_strict` of every function written inside the text, both of
+    // which happen while the source is being read. So the caller's is handed to the parser.
+
+    // §10.2.1.2 step 3 — a strict function's `undefined` receiver is not replaced by the global
+    // object. The function is written *inside* the eval'd text and its own text says nothing about
+    // strictness, so it can only be strict by inheriting the caller's.
+    assert_eq!(
+        run(
+            "(function () { 'use strict'; return typeof eval('(function () { return this; })()'); })()"
+        ),
+        "undefined"
+    );
+    // …and from a sloppy caller the same text substitutes the global object, which is what makes
+    // this a test of the inheritance rather than of strict mode.
+    assert_eq!(
+        run("(function () { return typeof eval('(function () { return this; })()'); })()"),
+        "object"
+    );
+    // A `"use strict"` in the text alone does it too, from a sloppy caller.
+    assert_eq!(
+        run(
+            "(function () { return typeof eval('\"use strict\"; (function () { return this; })()'); })()"
+        ),
+        "undefined"
+    );
+
+    // §11.2.1's early errors, which are the half a tree cannot be told about afterwards: both of
+    // these parse in sloppy code and are Syntax Errors in strict code.
+    assert_eq!(
+        run(
+            "(function () { 'use strict'; try { eval('with (Math) { PI }'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "SyntaxError"
+    );
+    assert_eq!(
+        run(
+            "(function () { 'use strict'; try { eval('var o = {}; delete o;'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "SyntaxError"
+    );
+    // …and an indirect eval is never made strict by its caller, however strict the caller is:
+    // §19.2.1.1 asks about the call site and an indirect call has none to speak of.
+    assert_eq!(
+        run(
+            "(function () { 'use strict'; return typeof (0, eval)('(function () { return this; })()'); })()"
+        ),
+        "object"
     );
 }

@@ -677,29 +677,25 @@ impl Vm {
                     // §13.3.6.1 — the compiler saw the name `eval`; this is the other half of the
                     // question, which is whether that name holds `%eval%` *now*. The callee sits
                     // under its arguments, having been pushed first.
-                    let callee = self
+                    let callee_at = self
                         .stack
                         .len()
                         .checked_sub(count as usize + 1)
-                        .and_then(|at| self.stack.get(at).copied())
                         .ok_or(Fault::StackUnderflow)?;
+                    let callee = self.stack[callee_at];
                     if self.realm.is_eval(callee) {
-                        // §19.2.1.1's direct mode needs the caller's scope, and praxis resolves
-                        // names to numbered slots at compile time — so a chunk compiled here has
-                        // no way to reach the caller's bindings and a sloppy `var` in one would
-                        // have to grow an environment sized at compile time. Refused by name
-                        // rather than run in the global scope, because running it there would be
-                        // *indirect* eval wearing this one's clothes: the two differ exactly when
-                        // the eval'd code mentions something the caller declared, and quietly
-                        // answering the global's version of that name is a wrong answer rather
-                        // than a missing feature.
-                        let thrown = self.realm.error(
-                            heap,
-                            NativeError::Type,
-                            "a direct eval is not implemented yet — \
-                             (0, eval)(…) runs the same source in the global scope",
-                        );
-                        self.unwind(thrown, root, current, at)?;
+                        // §19.2.1.1 step 2 — anything but a String is answered *unchanged*, and the
+                        // arguments past the first are evaluated and discarded.
+                        let source = self.stack.get(callee_at + 1).copied();
+                        // The caller's strictness, from the code that is running rather than from
+                        // the function that holds it: §19.2.1.1 step 5 asks about the *call site*.
+                        let strict = running.is_strict();
+                        self.stack.truncate(callee_at);
+                        let answer = self.perform_direct_eval(source, strict, heap);
+                        match self.settle(answer, heap, root, current, at)? {
+                            Some(value) => self.stack.push(value),
+                            None => continue,
+                        }
                         continue;
                     }
                     self.enter(Entry::Plain, count, heap, root, current, at)?;

@@ -481,7 +481,7 @@ impl Compiler<'_> {
             // is what it used to ask: the moment a block or a catch opened one, a `var` beside it
             // took the *slot* path and became a binding of that block. `{ let a = 1; var foo = 2; }
             // foo` answered `undefined`.
-            Bind::Var if self.is_script => {
+            Bind::Var if self.global_vars => {
                 let index = self.name(name)?;
                 self.chunk.emit(Instruction::StoreGlobal(index));
             }

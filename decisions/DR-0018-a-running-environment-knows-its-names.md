@@ -123,6 +123,25 @@ computes `VarDeclaredNames` for the source it is handed.
 So this record buys the reads and the writes of bindings that already exist, which is most of what
 direct eval is used for, and names the one shape that is still missing rather than guessing at it.
 
+### What building it found that this record did not predict
+
+Two things, and neither was about scopes.
+
+**A `var`'s destination and "is this a Script" were one flag.** `Compiler::is_script` decided both
+where a `var` goes *and* whether §14.2.2's completion value is kept and whether `return` is a Syntax
+Error. Those coincide for a script and for a function body and come apart for exactly this: an eval
+inside a function is Script code whose `var`s are not the script's. With one flag, every direct eval
+written inside a function evaluated to `undefined` — `eval("1")` answered nothing. They are two
+fields now.
+
+**Strictness has to reach the parser, not the tree.** §19.2.1.1 step 5 makes eval'd text strict when
+its caller is, and that cannot be set on a finished tree: it decides §11.2.1's early errors — `with`,
+`delete x`, a duplicate parameter — and it settles the `is_strict` of every function written inside
+the text while that text is being read. Folded in afterwards, a strict caller's
+`eval("(function () { return this; })()")` still substituted the global object. `parse_eval` seeds
+the parser exactly as `parse_module` does, and the compiler then reads one answer instead of
+recomputing it.
+
 ## Why `with` is the same decision
 
 §14.11 needs a scope whose bindings are an object's properties, resolved by name at run time. It is

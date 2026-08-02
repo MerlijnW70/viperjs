@@ -1,0 +1,126 @@
+//! §19.2.1.1's **direct** mode — eval'd source resolved against the scopes its caller is running in.
+//!
+//! # Why this is not the built-in
+//!
+//! [`crate::builtins::eval`] is the function `eval` refers to, and it is reached only *indirectly*
+//! — `(0, eval)(…)`, `globalThis.eval(…)`, a callback it was passed as. §13.3.6.1 makes a call a
+//! direct eval when its callee is written as the bare name `eval` and turns out to be that very
+//! function, and §19.2.1.1 then gives it a different scope: a fresh declarative environment over
+//! the **caller's**, and the caller's variable environment.
+//!
+//! That difference cannot be expressed as an argument to a built-in. A native call has no handle on
+//! the environment the caller is running in — the interpreter has moved on to the callee's — so the
+//! decision is made where the call site is, which is here.
+//!
+//! # What makes it possible
+//!
+//! DR-0018. praxis resolves a name to a depth and an index when it compiles, and the source of an
+//! eval only exists at run time — so the compiler that handles it never saw the scopes it has to
+//! resolve into. Environments therefore carry what the source called their slots, and this walks
+//! the running chain, hands the compiler the names level by level, and lets it resolve exactly as
+//! it would into scopes it had built itself.
+
+use super::Vm;
+use crate::compile::{EvalVars, compile_direct_eval};
+use crate::heap::{Binding, EnvironmentId, Heap};
+use crate::value::{Completion, Value};
+use std::rc::Rc;
+
+impl Vm {
+    /// §19.2.1.1 `PerformEval(x, strictCaller, direct = true)`.
+    ///
+    /// `source` is the first argument the call site had, or `None` for `eval()` written with none.
+    /// The arguments past the first are evaluated and thrown away, which the call site has already
+    /// done by the time this is reached — §19.2.1.1 takes one argument and `eval(a, b)` still runs
+    /// `b`.
+    pub(super) fn perform_direct_eval(
+        &mut self,
+        source: Option<Value>,
+        strict_caller: bool,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        // §19.2.1.1 step 2 — anything that is not a String is answered unchanged and *not*
+        // converted, which is what stops `eval(o)` running whatever `o.toString` felt like.
+        let Some(Value::String(id)) = source else {
+            return Ok(source.unwrap_or(Value::Undefined));
+        };
+        let text = String::from_utf16_lossy(heap.string(id).unwrap_or(&[]));
+        // §19.2.1.1 step 5's strictness, and it is the *parser* that has to be told: it decides
+        // §11.2.1's early errors and settles `is_strict` for every function written inside the
+        // text before the tree comes back. Set on the finished tree instead, a strict caller's
+        // `eval("(function () { return this; })()")` still substituted the global object.
+        let script = match crate::parser::parse_eval(&text, strict_caller) {
+            Ok(script) => script,
+            Err(error) => {
+                return Err(crate::builtins::eval::syntax_error(
+                    self,
+                    heap,
+                    &error.kind.to_string(),
+                ));
+            }
+        };
+        // Either side made it strict, and the parser has already folded the two together — so this
+        // is one answer read back rather than a second `||` that could disagree with the first.
+        let chain = self.running_chain(heap);
+        let vars = self.eval_vars(script.is_strict);
+        let chunk = match compile_direct_eval(&script, heap, chain, vars) {
+            Ok(chunk) => chunk,
+            Err(error) => {
+                return Err(crate::builtins::eval::syntax_error(
+                    self,
+                    heap,
+                    &error.message(),
+                ));
+            }
+        };
+        // §19.2.1.1 step 12's `NewDeclarativeEnvironment(lexEnv)` — a child of the environment the
+        // caller is *running* in, which is the whole difference from the indirect mode's child of
+        // the global one. Named, so that an eval written inside this one resolves into it too.
+        let environment = heap.new_named_environment(
+            Some(self.environment),
+            chunk.locals(),
+            Rc::clone(chunk.bindings()),
+        );
+        self.run_script(&chunk, environment, heap)
+    }
+
+    /// §19.2.1.1 step 12's `varEnv`, as far as praxis can follow it — see [`EvalVars`].
+    ///
+    /// The question is only ever "is there a function between here and the script", because a
+    /// script's variable scope is the global object and a function's is an environment whose size
+    /// was fixed when it was compiled. Asked of the **frames above the floor** rather than of all
+    /// of them: a nested execution — a coercion, an indirect eval, a job — records where the
+    /// caller's frames ended, and the code inside it is at the top level of its own script however
+    /// deep the Rust stack is. Counted the other way, `(0, eval)("eval('var x = 1')")` would decide
+    /// it was inside whatever function happened to be running underneath.
+    fn eval_vars(&self, strict: bool) -> EvalVars {
+        match (strict, self.frames.len() > self.floor.frames) {
+            // §19.2.1.1 step 14 — strict code's declarations are its own and go away with it.
+            (true, _) => EvalVars::Own,
+            (false, true) => EvalVars::Caller,
+            (false, false) => EvalVars::Global,
+        }
+    }
+
+    /// The environments the caller is inside, **outermost first**, each with what it called its
+    /// slots.
+    ///
+    /// One entry per environment and never a gap, because a `LoadVariable`'s depth counts
+    /// environments: a level left out would make every name outside it resolve one hop too shallow,
+    /// which is a wrong value rather than a missing one. A level the engine built for itself has no
+    /// names and contributes an empty entry, which resolves nothing and is walked past.
+    ///
+    /// The walk terminates because a parent is always an environment that already existed when its
+    /// child was made — `Heap::new_environment` takes the parent as an argument — so a chain
+    /// strictly decreases and cannot close on itself.
+    fn running_chain(&self, heap: &Heap) -> Vec<Vec<Binding>> {
+        let mut chain = Vec::new();
+        let mut at: Option<EnvironmentId> = Some(self.environment);
+        while let Some(environment) = at {
+            chain.push(heap.environment_names(environment).unwrap_or(&[]).to_vec());
+            at = heap.environment_at(environment, 1);
+        }
+        chain.reverse();
+        chain
+    }
+}

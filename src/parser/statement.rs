@@ -51,9 +51,31 @@ pub fn parse_script(source: &str) -> Result<Script, ParseError> {
     Ok(script)
 }
 
+/// Parse `source` as the Script a direct `eval` evaluates — §19.2.1.1 step 5.
+///
+/// A Script in every way but one: **strict code makes the evaluated text strict**, whatever the
+/// text says. That has to be known here rather than afterwards, because strictness is not a flag
+/// the compiler can set on a finished tree. It decides §11.2.1's early errors — `with`, `delete x`,
+/// a duplicate parameter, an octal escape — and it is inherited by every function written inside,
+/// whose own `is_strict` the parser has already settled by the time the tree comes back.
+///
+/// Set before the first token is read, exactly as [`super::parse_module`] sets it, and for exactly
+/// the same reason: the goal decides what the first token may be.
+pub fn parse_eval(source: &str, strict_caller: bool) -> Result<Script, ParseError> {
+    let script = parse_script_seeded(source, strict_caller)?;
+    super::scope::check_labels(&script.body)?;
+    Ok(script)
+}
+
 /// [`parse_script`] up to but not including §16.1.1's label rules.
 fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
+    parse_script_seeded(source, false)
+}
+
+/// The same, starting out strict when something outside the text says so.
+fn parse_script_seeded(source: &str, strict: bool) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
+    parser.strict = strict;
     // §11.2.1: a `ScriptBody` may open with a Directive Prologue, and `"use strict"` in it makes
     // everything after strict — including everything nested, for ever.
     let (body, declares_strict) = parser.parse_body_with_prologue(TokenKind::Eof)?;
@@ -69,8 +91,9 @@ fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
     super::scope::check_declared_names(&body, super::scope::Level::Top)?;
     Ok(Script {
-        // A Script is strict only if it says so. A Module always is, which is M7's to record.
-        is_strict: declares_strict,
+        // A Script is strict only if it says so. A Module always is, which is M7's to record — and
+        // an eval is strict if its caller is, which is what `strict` was seeded with.
+        is_strict: declares_strict || strict,
         body,
         span: Span::new(0, source.len() as u32),
     })

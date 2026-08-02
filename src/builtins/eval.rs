@@ -1,4 +1,4 @@
-//! §19.2.1 — `eval`, and the half of it that needs no scope.
+//! §19.2.1 — `eval`, and the half of it that needs no scope of the caller's.
 //!
 //! # The two evals are two operations
 //!
@@ -10,12 +10,10 @@
 //! - indirect: a fresh declarative scope over the *global* one, whatever the caller was doing.
 //! - direct: a fresh declarative scope over the **caller's**, and the caller's variable scope.
 //!
-//! Only the first is built here. The second needs a running environment whose bindings can be
-//! found *by name*, and praxis resolves names to numbered slots when it compiles — so a chunk
-//! compiled separately has no way to reach the caller's variables, and a sloppy `var` inside one
-//! would have to grow an environment whose size was fixed at compile time. That is a change to the
-//! environment model rather than a function, so direct eval is refused by name until it lands:
-//! [`crate::compile::Instruction::CallDirectEval`] is how the call site knows to ask.
+//! Only the first is here. The second is in [`crate::vm`] and not in this file at all, because a
+//! native call has no handle on the environment its caller was running in — the interpreter has
+//! already moved on to the callee's. [`crate::compile::Instruction::CallDirectEval`] is what keeps
+//! the decision at the call site, where that handle still exists.
 //!
 //! # Why indirect eval needs nothing else
 //!
@@ -32,7 +30,7 @@ use crate::vm::Vm;
 
 /// §19.2.1 `eval(x)`, reached indirectly.
 ///
-/// A direct call never arrives here — the call site refuses first — so this is the indirect
+/// A direct call never arrives here — the call site answers it itself — so this is the indirect
 /// operation and does not ask which it is.
 pub(super) fn eval(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // §19.2.1.1 step 2 — anything that is not a String is answered unchanged, and *not* converted.
@@ -74,7 +72,10 @@ fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
 /// Built as an *object* rather than raised by kind and message, because [`Abrupt::Raised`] carries
 /// a `&'static str` and these messages are made from the source being evaluated. That is the
 /// distinction that type draws, and this is a case on the other side of it.
-fn syntax_error(vm: &mut Vm, heap: &mut Heap, message: &str) -> Abrupt {
+///
+/// Shared with the direct mode — [`crate::vm`] — so that the two report a text that will not parse
+/// the same way. §19.2.1.1 step 8 makes no distinction between them and neither should praxis.
+pub(crate) fn syntax_error(vm: &mut Vm, heap: &mut Heap, message: &str) -> Abrupt {
     Abrupt::Thrown(
         vm.realm()
             .error(heap, crate::realm::NativeError::Syntax, message),

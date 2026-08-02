@@ -87,9 +87,9 @@ mod try_catch;
 
 pub use self::error::{ParseError, ParseErrorKind};
 pub use self::module::parse_module;
-pub use self::statement::parse_script;
 #[cfg(test)]
 pub(crate) use self::statement::parse_script_with_label_rules_unchecked;
+pub use self::statement::{parse_eval, parse_script};
 
 use crate::ast::Expr;
 use crate::lexer::{Goal, Lexer, ReservedWord, Token, TokenKind};

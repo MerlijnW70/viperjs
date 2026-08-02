@@ -38,6 +38,7 @@ mod async_fn;
 mod async_generator;
 mod call;
 mod coerce;
+mod eval;
 mod execute;
 mod generator;
 mod global;

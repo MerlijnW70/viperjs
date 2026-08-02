@@ -270,6 +270,12 @@ impl Compiler<'_> {
         // one depends on what that name turns out to hold, which only the interpreter can see, so
         // the instruction carries the question rather than an answer.
         let direct_eval = matches!(&callee.kind, ExprKind::Identifier(name) if name == "eval");
+        // §10.2.11 step 19 makes an arguments object for every non-arrow function, and praxis skips
+        // it when the compiler saw nothing read the name. A direct eval can read it — the source
+        // does not exist yet, so there is nothing to have seen — and a slot nothing filled would
+        // answer `undefined` where the specification has an object. Whether this body has such a
+        // slot at all is a separate question, and one this flag does not decide.
+        self.uses_arguments |= direct_eval;
         self.chunk.emit(match (method, direct_eval) {
             (true, _) => Instruction::CallMethod(count),
             (false, true) => Instruction::CallDirectEval(count),
@@ -580,6 +586,7 @@ fn compile_body(
             .intern(&name.encode_utf16().collect::<Vec<_>>())
     });
     compiler.is_script = false;
+    compiler.global_vars = false;
     compiler.outer = outer;
     compiler.this_binding = nesting.this_binding;
     compiler.chunk.arrow = lexical == Lexical::Yes;
