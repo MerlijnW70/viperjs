@@ -7,6 +7,7 @@
 
 use crate::ast::{BinaryOperator, UnaryOperator};
 use crate::compile::{CompileError, ErrorKind};
+use crate::heap::Binding;
 use crate::span::Span;
 use crate::value::Value;
 use std::rc::Rc;
@@ -133,6 +134,31 @@ pub struct Chunk {
     /// *heap*, where cycles are made before user code runs; a tree of code has none, so the
     /// argument does not reach here.
     pub(super) functions: Vec<Rc<Chunk>>,
+    /// What the source called the slots of this body's *own* environment — DR-0018.
+    ///
+    /// The one the call builds, holding the parameters, the `var`s and the body's top-level
+    /// lexical bindings. A name's index is its slot. It may be **shorter** than
+    /// [`Chunk::locals`], which is a high-water mark across every level this body compiled: a slot
+    /// a nested scope needed and this level did not belongs to no name, and a resolver that finds
+    /// no name for it is right.
+    pub(super) bindings: Rc<[Binding]>,
+    /// One entry per scope this body opens, which [`Instruction::PushScope`] names by index.
+    ///
+    /// The slot count and the names arrive together because they are learned together: a block's
+    /// lexical names are known when it is entered, and the hidden slots its statements need are
+    /// made as they are compiled — so both are written back once the block has been walked. A
+    /// [`Instruction::CopyScope`] shares its scope's entry, which is what makes §14.7.4.7's copy
+    /// the same shape as the environment it copies rather than a second description of it.
+    pub(super) scopes: Vec<Scope>,
+}
+
+/// One scope a body opens: how many slots it has, and what the source called them.
+#[derive(Debug, Clone)]
+pub struct Scope {
+    /// How many variables it holds.
+    pub slots: u32,
+    /// What they are called, in slot order — see [`Binding`].
+    pub names: Rc<[Binding]>,
 }
 
 /// What a tagged template's object is made of — §13.2.8.3's two arrays.
@@ -733,6 +759,11 @@ pub enum Instruction {
     /// Emitted only for a block that declares something lexical. A block that declares nothing has
     /// no bindings to keep apart, and an environment per `{ }` would cost an allocation on every
     /// `if` in the program.
+    ///
+    /// The operand names a [`Scope`] of this chunk — [`Chunk::scope`] — rather than being the slot
+    /// count, because a scope carries its names as well; see [`Binding`]. One index and not two
+    /// operands: a scope's size and its names are one fact learned at one moment, and an
+    /// instruction that carried them apart could be patched with half of it.
     PushScope(u32),
     /// Leave it again, running in its parent — the other half of [`Instruction::PushScope`].
     ///
@@ -748,6 +779,10 @@ pub enum Instruction {
     /// same parent, not a child — copies the slots across, and runs in it. Nesting instead would
     /// deepen the chain by one per iteration, and a loop of a million would be a chain of a
     /// million.
+    ///
+    /// The operand names a [`Scope`] — [`Chunk::scope`] — and it is the *same* one the
+    /// [`Instruction::PushScope`] it copies names: a pass's environment is the same shape and holds
+    /// the same names as the one before it, which is what makes it a copy.
     CopyScope(u32),
     /// §15.5.4 `GeneratorStart` — make the generator, park everything after this, and answer it.
     ///
@@ -977,24 +1012,49 @@ impl Chunk {
         }
     }
 
-    /// Say how many slots an already-emitted [`Instruction::PushScope`] reserves.
+    /// Record what a scope turned out to be, and answer the index that names it.
     ///
-    /// The count is not known when the instruction is emitted: a block's lexical names are, but the
-    /// hidden slots its statements need are made as they are compiled. So it is written like a
-    /// jump's target — a placeholder now, the real number once the block has been walked.
+    /// Neither half is known when the [`Instruction::PushScope`] is emitted: a block's lexical
+    /// names are, but the hidden slots its statements need are made as they are compiled, and the
+    /// two have to agree on their order. So the whole entry is written once the block has been
+    /// walked, and the instructions that opened it are patched to point at it.
+    pub(super) fn add_scope(&mut self, scope: Scope) -> Result<u32, CompileError> {
+        let index = u32::try_from(self.scopes.len()).map_err(|_| CompileError {
+            kind: ErrorKind::TooLong,
+            span: Span::new(0, 0),
+        })?;
+        self.scopes.push(scope);
+        Ok(index)
+    }
+
+    /// Point an already-emitted scope instruction at the entry [`Chunk::add_scope`] made.
     ///
-    /// Separate from [`Chunk::patch_to`] rather than folded into `retarget`, because that function
-    /// is about *targets* and its exhaustiveness is what stops a new jump being forgotten. A slot
-    /// count arriving there would make "not a jump" a lie.
-    pub(super) fn patch_scope(&mut self, scope: Unpatched, slots: u32) {
+    /// Written like a jump's target — a placeholder now, the real index once the block has been
+    /// walked. Separate from [`Chunk::patch_to`] rather than folded into `retarget`, because that
+    /// function is about *targets* and its exhaustiveness is what stops a new jump being
+    /// forgotten. A scope index arriving there would make "not a jump" a lie.
+    pub(super) fn patch_scope(&mut self, scope: Unpatched, index: u32) {
         let Unpatched(at) = scope;
         if let Some(instruction) = self.code.get_mut(at) {
             *instruction = match *instruction {
-                Instruction::PushScope(_) => Instruction::PushScope(slots),
-                Instruction::CopyScope(_) => Instruction::CopyScope(slots),
+                Instruction::PushScope(_) => Instruction::PushScope(index),
+                Instruction::CopyScope(_) => Instruction::CopyScope(index),
                 other => other,
             };
         }
+    }
+
+    /// The scope at `index`, if there is one.
+    ///
+    /// Fallible on the same terms as [`Chunk::constant`]: the compiler never emits an index it did
+    /// not make an entry for, and a hand-built chunk may point anywhere.
+    pub fn scope(&self, index: u32) -> Option<&Scope> {
+        self.scopes.get(index as usize)
+    }
+
+    /// What the source called the slots of this body's own environment — DR-0018.
+    pub fn bindings(&self) -> &Rc<[Binding]> {
+        &self.bindings
     }
 
     /// Add an instruction.

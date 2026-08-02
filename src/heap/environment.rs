@@ -32,12 +32,38 @@
 
 use crate::heap::Heap;
 use crate::value::Value;
+use std::rc::Rc;
 
 /// An environment on the heap.
 ///
 /// Meaningful only to the [`Heap`] that issued it, on the same terms as every other handle here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EnvironmentId(pub(super) usize);
+
+/// What a source called one slot, for the one reader that has to ask by name — DR-0018.
+///
+/// Nothing in ordinary compiled code consults this. A name was resolved to a depth and an index
+/// when the code was compiled, and that is the whole of how a variable is found. A **direct**
+/// `eval` is the exception the record is about: §19.2.1.1 hands the evaluated source the caller's
+/// running lexical environment as its outer scope, and the compiler that handles that source never
+/// saw the scopes it has to resolve into. So the scopes carry their names.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Binding {
+    /// What the source calls it.
+    ///
+    /// A slot the compiler made for its own use is named with a leading `%`, which is in neither
+    /// `IdentifierStart` nor `IdentifierPart` — so it takes its place in the list, keeping index
+    /// and slot in step, and no source text can ask for it. A binding that has gone **out of
+    /// scope** before its environment ended is spelled the same way, and for the same reason: the
+    /// slot is still there and its name must no longer resolve.
+    pub name: Box<str>,
+    /// Whether assigning to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
+    ///
+    /// Carried because the compiler that resolves a name is the one that decides this, and a
+    /// compiler seeded from a running chain has nowhere else to learn it. Without it
+    /// `const x = 1; eval("x = 2")` would assign.
+    pub immutable: bool,
+}
 
 /// One scope's variables, and the scope it is written inside.
 #[derive(Debug)]
@@ -60,6 +86,25 @@ pub struct Environment {
     /// function called from anywhere still sees the scope it was written in, which is the
     /// difference between closures and dynamic scope.
     parent: Option<EnvironmentId>,
+    /// What the source called each slot, when a source named them at all.
+    ///
+    /// **The name at index *i* is the name of slot *i***, which is what lets a compiler seeded from
+    /// this chain emit the same `(depth, index)` the original compiler did, with no second
+    /// resolution rule to keep in step with the first. The list may be *shorter* than the slots —
+    /// a compiled body's slot count is a high-water mark across the scopes inside it — and a slot
+    /// past its end has no name and cannot be resolved to. DR-0018 is the long version.
+    ///
+    /// `None` is deliberate rather than a gap. The engine makes environments for its own purposes
+    /// — a bound function's, a job's, a script run by the host — whose slots no source named, and a
+    /// name list for them would be a list of names no program can write. An `eval` that reaches one
+    /// resolves nothing there and carries on outwards, which is the same answer it would get for a
+    /// scope that declares nothing.
+    ///
+    /// Shared with an [`Rc`] and not owned, because a loop that makes an environment per pass makes
+    /// the *same* list a million times. Refcounting is what DR-0010 refuses for heap **values**,
+    /// where cycles are built before user code runs; a list of names holds no value and can point
+    /// at nothing, so the argument does not reach here.
+    names: Option<Rc<[Binding]>>,
 }
 
 impl Environment {
@@ -75,14 +120,63 @@ impl Environment {
 }
 
 impl Heap {
-    /// A new environment with `size` slots, written inside `parent`.
+    /// A new environment with `size` slots, written inside `parent`, whose slots no source named.
+    ///
+    /// What the engine builds for itself. Compiled code goes through
+    /// [`Heap::new_named_environment`], because a scope a program wrote is a scope a direct `eval`
+    /// may have to resolve into.
     pub fn new_environment(&mut self, parent: Option<EnvironmentId>, size: usize) -> EnvironmentId {
+        self.push_environment(parent, size, None)
+    }
+
+    /// The same, for a scope whose slots the source named — DR-0018.
+    ///
+    /// `names` is trusted to be as long as `size`: the two come from one compiled scope, which is
+    /// where the invariant is established. A shorter list is not a fault, only a scope whose last
+    /// slots cannot be reached by name.
+    pub fn new_named_environment(
+        &mut self,
+        parent: Option<EnvironmentId>,
+        size: usize,
+        names: Rc<[Binding]>,
+    ) -> EnvironmentId {
+        self.push_environment(parent, size, Some(names))
+    }
+
+    /// What both of those do.
+    fn push_environment(
+        &mut self,
+        parent: Option<EnvironmentId>,
+        size: usize,
+        names: Option<Rc<[Binding]>>,
+    ) -> EnvironmentId {
         let id = EnvironmentId(self.environments.len());
         self.environments.push(Some(Environment {
             slots: vec![Some(Value::Undefined); size],
             parent,
+            names,
         }));
         id
+    }
+
+    /// What the source called this environment's slots, if it named them.
+    ///
+    /// The chain is walked outwards from a direct `eval` and each level's answer handed to the
+    /// compiler, which resolves into them exactly as it would into scopes it had built itself.
+    pub fn environment_names(&self, environment: EnvironmentId) -> Option<&[Binding]> {
+        self.environments
+            .get(environment.0)?
+            .as_ref()?
+            .names
+            .as_deref()
+    }
+
+    /// How many slots an environment has, or `None` for a handle this heap did not issue.
+    ///
+    /// Asked by the same walk, because a level's *depth* is counted in environments and its names
+    /// may run short of its slots — so the two numbers are not interchangeable.
+    pub fn environment_size(&self, environment: EnvironmentId) -> Option<usize> {
+        Some(self.environments.get(environment.0)?.as_ref()?.slots.len())
     }
 
     /// The environment `depth` parents out from `from`.
@@ -229,6 +323,46 @@ mod tests {
         assert!(matches!(from_second, Some(Some(Value::Number(value))) if value == 9.0));
     }
 
+    /// A name list, for the tests below.
+    fn named(names: &[(&str, bool)]) -> Rc<[Binding]> {
+        names
+            .iter()
+            .map(|(name, immutable)| Binding {
+                name: (*name).into(),
+                immutable: *immutable,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_scope_a_source_wrote_knows_what_it_called_its_slots() {
+        let mut heap = Heap::new();
+        let names = named(&[("x", false), ("k", true)]);
+        let scope = heap.new_named_environment(None, 2, Rc::clone(&names));
+        assert_eq!(heap.environment_names(scope), Some(&*names));
+        assert_eq!(heap.environment_size(scope), Some(2));
+        // The list and the slots are the same length and in the same order, which is the whole
+        // invariant: index 1 of the names is slot 1, and `k` is the `const`.
+        assert_eq!(heap.environment_names(scope).map(<[_]>::len), Some(2));
+        assert!(heap.environment_names(scope).is_some_and(|names| {
+            names[1].name.as_ref() == "k" && names[1].immutable && !names[0].immutable
+        }));
+    }
+
+    #[test]
+    fn a_scope_the_engine_made_for_itself_has_no_names_to_offer() {
+        // Not the same as a scope that names nothing: a bound function's environment and a job's
+        // hold slots no source wrote, so an `eval` reaching one must resolve nothing *here* and
+        // carry on outwards rather than stopping.
+        let mut heap = Heap::new();
+        let engine = heap.new_environment(None, 3);
+        assert_eq!(heap.environment_names(engine), None);
+        assert_eq!(heap.environment_size(engine), Some(3));
+        let empty = heap.new_named_environment(Some(engine), 0, named(&[]));
+        assert_eq!(heap.environment_names(empty), Some(&[][..]));
+        assert_eq!(heap.environment_size(empty), Some(0));
+    }
+
     #[test]
     fn a_handle_this_heap_does_not_know_answers_rather_than_panicking() {
         // The same narrow promise every handle here makes (DR-0010): no panic and no
@@ -242,6 +376,8 @@ mod tests {
         assert!(!heap.set_variable(past_the_end, 0, Value::Null));
         assert!(heap.environment_at(past_the_end, 0).is_some());
         assert!(heap.environment_at(past_the_end, 1).is_none());
+        assert_eq!(heap.environment_names(past_the_end), None);
+        assert_eq!(heap.environment_size(past_the_end), None);
         let _ = stranger;
     }
 }

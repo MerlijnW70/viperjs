@@ -341,3 +341,80 @@ fn a_for_head_gives_every_pass_its_own_binding() {
         "false"
     );
 }
+
+/// What a running scope calls its slots, reached through a closure that was made in it.
+///
+/// A function object holds the environment it was *defined* in, which is the only handle on a
+/// scope that a script has once the scope has been left. So the script under test parks a closure
+/// in the global `f` and this asks the closure where it came from — which is how the chain a
+/// direct `eval` would walk can be read from outside without an `eval`.
+fn scope_of(source: &str, out: u32) -> Vec<String> {
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+    vm.run(&chunk, &mut heap).expect("the chunk is well formed"); // same
+    let global = vm.realm().global();
+    let Some(crate::heap::Property {
+        kind:
+            PropertyKind::Data {
+                value: Value::Object(closure),
+                ..
+            },
+        ..
+    }) = own(&mut heap, global, "f")
+    else {
+        panic!("the script leaves a closure in `f`") // the test is about where it was made
+    };
+    let defined_in = heap
+        .object(closure)
+        .and_then(crate::heap::Object::environment)
+        .expect("a closure knows the scope it was written in"); // same
+    let at = heap
+        .environment_at(defined_in, out)
+        .expect("the chain reaches that far"); // same
+    heap.environment_names(at)
+        .expect("a scope a source wrote knows its names") // same
+        .iter()
+        .map(|binding| binding.name.to_string())
+        .collect()
+}
+
+#[test]
+fn a_running_scope_knows_what_the_source_called_its_slots() {
+    // DR-0018 — a name resolved when the code was compiled needs nothing at run time, and a
+    // direct `eval` needs everything: §19.2.1.1 hands the evaluated source the *running* lexical
+    // environment as its outer scope, so the scopes have to carry the names the compiler used up.
+    //
+    // Read through a closure rather than through an `eval`, because the resolver that uses these
+    // is the next slice and the lists are what it will be handed.
+
+    // A call's own environment — the parameters, then the `var`s.
+    assert_eq!(
+        scope_of(
+            "var f; (function (a) { var b; f = function () { return a + b; }; })(1);",
+            0
+        ),
+        ["a", "arguments", "b"]
+    );
+    // A block's, with the function's one hop further out. Two lists and not one is what makes a
+    // `let` in a block a binding of the block.
+    let source = "var f; (function (a) { { let b = 1; f = function () { return a + b; }; } })(1);";
+    assert_eq!(scope_of(source, 0), ["b"]);
+    assert_eq!(scope_of(source, 1), ["a", "arguments"]);
+    // §14.7.4.7's per-iteration copy is the same scope, so the closure the third pass made names
+    // what the first pass's did.
+    assert_eq!(
+        scope_of(
+            "var f; for (let i = 0; i < 3; i++) { f = function () { return i; }; }",
+            0
+        ),
+        ["i"]
+    );
+    // …and the script's own environment is at the end of every one of those chains, holding what
+    // §16.1.7 puts in it: the top-level lexical declarations, where a `var` is a global property.
+    assert_eq!(
+        scope_of("let seen = 1; var f = function () { return seen; };", 0),
+        ["seen"]
+    );
+}

@@ -870,10 +870,16 @@ impl Vm {
                     // entered this body is being answered, and it answers with an iterator result.
                     self.stack.push(result);
                 }
-                Instruction::PushScope(slots) => {
+                Instruction::PushScope(index) => {
                     // §8.3.2's `NewDeclarativeEnvironment` — a child of what is running, which is
                     // what makes an inner block see the outer one's names one hop out.
-                    self.environment = heap.new_environment(Some(self.environment), slots as usize);
+                    //
+                    // The names travel with it (DR-0018), since a direct `eval` written inside the
+                    // block resolves against this environment and not against a compiler.
+                    let scope = running.scope(index).ok_or(Fault::MissingScope)?;
+                    let (slots, names) = (scope.slots as usize, Rc::clone(&scope.names));
+                    self.environment =
+                        heap.new_named_environment(Some(self.environment), slots, names);
                 }
                 Instruction::PopScope => {
                     // A block always has something outside it — the function's own environment at
@@ -883,15 +889,17 @@ impl Vm {
                         .environment_at(self.environment, 1)
                         .ok_or(Fault::UnmatchedPopScope)?;
                 }
-                Instruction::CopyScope(slots) => {
+                Instruction::CopyScope(index) => {
                     // §14.7.4.7 — a *sibling*: the same parent, so a loop of a million iterations
                     // makes a million environments and not a chain a million deep. Each starts
                     // holding what the last one ended with, which is how `i++` carries forward
                     // while a closure made last time keeps the value it captured.
+                    let scope = running.scope(index).ok_or(Fault::MissingScope)?;
+                    let (slots, names) = (scope.slots, Rc::clone(&scope.names));
                     let parent = heap
                         .environment_at(self.environment, 1)
                         .ok_or(Fault::UnmatchedPopScope)?;
-                    let fresh = heap.new_environment(Some(parent), slots as usize);
+                    let fresh = heap.new_named_environment(Some(parent), slots as usize, names);
                     for index in 0..slots {
                         // §14.7.4.7 copies the *binding's value*, and an uninitialised one stays
                         // uninitialised: a `let` in the temporal dead zone at the moment the loop

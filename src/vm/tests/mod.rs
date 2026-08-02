@@ -356,6 +356,27 @@ fn a_chunk_that_does_not_make_sense_is_a_fault_and_not_a_panic() {
         Err(Fault::StackUnderflow)
     ));
 
+    // A scope named by an instruction and not recorded in the chunk. The compiler makes the entry
+    // before it patches the instruction that names it, so the two cannot come apart — which is
+    // exactly why this needs a chunk written by hand to reach at all.
+    let no_such_scope = Chunk::from_parts(vec![Instruction::PushScope(0)], Vec::new());
+    assert!(matches!(
+        vm.run(&no_such_scope, &mut heap),
+        Err(Fault::MissingScope)
+    ));
+    let no_such_copy = Chunk::from_parts(vec![Instruction::CopyScope(0)], Vec::new());
+    assert!(matches!(
+        vm.run(&no_such_copy, &mut heap),
+        Err(Fault::MissingScope)
+    ));
+    // …and a `PopScope` with nothing pushed reaches the end of the chain instead, which is a
+    // different fault because it is a different mistake.
+    let nothing_to_leave = Chunk::from_parts(vec![Instruction::PopScope], Vec::new());
+    assert!(matches!(
+        vm.run(&nothing_to_leave, &mut heap),
+        Err(Fault::UnmatchedPopScope)
+    ));
+
     // …and the machine still works afterwards, which is the other half of the claim: a fault
     // is about the chunk, not about the interpreter.
     let sound = Chunk::from_parts(

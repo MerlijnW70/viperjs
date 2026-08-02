@@ -41,16 +41,25 @@ is that the common path pays nothing for the rare one.
 
 ## The invariant
 
-**An environment's name list and its slot list are the same length and in the same order, or the
-environment has no name list at all.** A name at index *i* is the name of slot *i*, in every
-environment that has names — so a compiler seeded from the chain emits the same `(depth, index)`
-the original compiler would have, and there is no second resolution rule to keep in step with the
-first.
+**A name at index *i* is the name of slot *i*, in every environment that has names** — so a
+compiler seeded from the chain emits the same `(depth, index)` the original compiler would have,
+and there is no second resolution rule to keep in step with the first.
+
+This was first written as "the same length and in the same order", and the length half turned out
+to be a claim worth nothing and costing something. A compiled body's slot count is a *high-water
+mark* across every scope inside it, so a function whose nested block needed more slots than it did
+gets an environment with slots past its own last name. Making the lengths equal means padding those
+with names no source can spell — and a padded entry carries a mutability flag that no input can
+distinguish, which is what mutation coverage said by surviving a flip of it. A **prefix** gives the
+resolver everything it needs: index *i* is slot *i*, and a slot past the end of the list has no
+name and cannot be resolved to, which is the same answer the padding produced with one fewer thing
+to be wrong about.
 
 **And every name in the list is in scope for the whole life of the environment.** That is the half
-this record originally left implicit and the half praxis does not satisfy yet — see below. A list
-that held a name which is in scope for only part of the environment would need a position to be
-read against, and an eval has no position to offer.
+this record originally left implicit and the half praxis did not satisfy — see below, and see the
+note at the end of that section for how it was settled. A list that held a name which is in scope
+for only part of the environment would need a position to be read against, and an eval has no
+position to offer.
 
 The `None` case is deliberate rather than a gap: environments made by the engine for its own
 purposes — a bound function's, a job's — hold slots no source named, and a name list for them would
@@ -86,6 +95,21 @@ Giving them environments is owed regardless; doing it first is what makes the na
 That reordering is the real cost of direct eval and it was not visible from the outside. Whoever
 picks this up should land the six environments as their own slice, with the per-iteration and
 per-entry semantics each one implies, and only then attach names.
+
+### That is done, and here is what the names rest on
+
+The six landed. `for`-`in` and `for`-`of` needed nothing — their heads take four `%` slots and put
+a `let` in the §14.7.5.7 environment they already build — and `switch`, `catch`, `for await` and a
+class body each got an environment of their own. So the pairing the name list depends on is:
+**every scope that declares a name a source can spell opens an environment, and the ones that do
+not declare only `%` slots.** A block, a `for` head, a `catch` and a class body open one exactly
+when they declare something, which is the condition each of them already tested for its own reasons.
+
+The name list therefore does *not* consult the compiler's `live` flag, and cannot: by the time an
+environment is closed its level's own `leave_scope` has already run and marked everything in it
+dead, so a list masked by that flag is an empty list. What keeps the invariant is the pairing
+above and nothing else, which is why a construct that flattens a scope must not be added without
+re-reading this.
 
 ## What this does not settle
 

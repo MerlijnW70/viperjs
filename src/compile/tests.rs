@@ -375,3 +375,144 @@ fn a_function_is_given_an_arguments_object_only_if_it_reaches_for_one() {
     let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
     assert!(chunk.arguments().is_none());
 }
+
+/// What a chunk calls its own environment's slots, as plain strings.
+fn names(chunk: &Chunk) -> Vec<&str> {
+    chunk.bindings().iter().map(|at| &*at.name).collect()
+}
+
+/// What the scope at `index` of a chunk calls its slots.
+fn scope_names(chunk: &Chunk, index: u32) -> Vec<&str> {
+    chunk
+        .scope(index)
+        .expect("the chunk has that scope") // a compiler test needs the entry
+        .names
+        .iter()
+        .map(|at| &*at.name)
+        .collect()
+}
+
+#[test]
+fn a_scope_names_its_slots_in_slot_order_and_says_which_may_not_be_assigned() {
+    // DR-0018 — the list a direct `eval` resolves into. The claim is positional: the name at
+    // index *i* is the name of slot *i*, so a compiler seeded from this emits the same
+    // `(depth, index)` the compiler that built it would have.
+    //
+    // `arguments` is in it because §10.2.11 gives every non-arrow function the binding whether or
+    // not the body reads it — see `a_function_is_given_an_arguments_object_only_if_it_reaches_for
+    // _one`, which is about the *object*. The slot is a slot either way, and a list that skipped
+    // it would put every name after it one place too early.
+    let chunk = inner("function f(a, b) { var c; const d = 1; return a + b + c + d; }");
+    assert_eq!(names(&chunk), ["a", "b", "arguments", "c", "d"]);
+    // …and `const` travels with the name, because the compiler that resolves one is the only
+    // thing that knows, and a chain has nowhere else to learn it from.
+    let bindings = chunk.bindings();
+    assert_eq!(
+        bindings.iter().map(|at| at.immutable).collect::<Vec<_>>(),
+        [false, false, false, false, true]
+    );
+}
+
+#[test]
+fn a_slot_the_compiler_made_for_itself_keeps_its_place_under_a_name_no_source_can_spell() {
+    // Dropping them would shorten the list, and every name after one would then answer for the
+    // wrong slot. `%` is in neither `IdentifierStart` nor `IdentifierPart`, so a slot that keeps
+    // its place cannot be reached by anything a program can write.
+    let chunk = inner("function f(a) { for (var k in a) { a = k; } return a; }");
+    assert_eq!(names(&chunk)[0], "a");
+    assert!(names(&chunk).contains(&"k"));
+    assert!(
+        names(&chunk)
+            .iter()
+            .filter(|at| at.starts_with('%'))
+            .count()
+            >= 4,
+        "the four slots a `for`-`in` needs are in the list: {:?}",
+        names(&chunk)
+    );
+}
+
+#[test]
+fn a_block_that_declares_something_names_its_own_slots_and_not_the_functions() {
+    // A block's environment is where its `let` lives, so the block's list holds `b` and the
+    // function's holds `a` — which is the whole reason the two are separate scopes.
+    let chunk = inner("function f() { var a = 1; { let b = 2; return a + b; } }");
+    assert!(names(&chunk).contains(&"a"));
+    assert!(!names(&chunk).contains(&"b"));
+    assert_eq!(scope_names(&chunk, 0), ["b"]);
+    assert!(chunk.scope(1).is_none());
+}
+
+#[test]
+fn a_loops_per_iteration_copy_is_the_same_scope_as_the_one_it_copies() {
+    // §14.7.4.7 makes a *sibling* holding the same bindings, so the `CopyScope` names the entry
+    // its `PushScope` does. Two entries would be two descriptions of one scope, which is one more
+    // than can be kept in step.
+    let chunk = inner("function f() { for (let i = 0; i < 3; i++) { } }");
+    let opened: Vec<u32> = chunk
+        .code()
+        .iter()
+        .filter_map(|instruction| match instruction {
+            Instruction::PushScope(index) | Instruction::CopyScope(index) => Some(*index),
+            _ => None,
+        })
+        .collect();
+    assert!(opened.len() > 1, "the loop pushes and copies: {opened:?}");
+    assert!(opened.iter().all(|index| *index == opened[0]));
+    assert_eq!(scope_names(&chunk, opened[0]), ["i"]);
+}
+
+#[test]
+fn a_name_that_belongs_to_a_scope_is_named_by_that_scope_and_not_by_the_level_around_it() {
+    // The half of DR-0018 the last five commits were for. A name list has no position to be read
+    // against, where `resolve` consults `live` at the position it is compiling — so a scope whose
+    // names go out of scope while the level around it carries on has to *be* an environment, or
+    // its names would still be in the level's list and an `eval` after it would resolve one.
+    //
+    // A `catch` parameter, a `switch` case block and a class body are three of the constructs that
+    // used to flatten, and none of them leaves a name behind now.
+    for (source, gone) in [
+        (
+            "function f(a) { try { a(); } catch (e) { a = e; } return a; }",
+            "e",
+        ),
+        (
+            "function f(a) { switch (a) { case 1: let b = 1; a = b; } return a; }",
+            "b",
+        ),
+        (
+            "function f(a) { a = class C { m() { return C; } }; return a; }",
+            "C",
+        ),
+    ] {
+        let chunk = inner(source);
+        assert!(names(&chunk).contains(&"a"), "compiling {source}");
+        assert!(
+            !names(&chunk).contains(&gone),
+            "{gone} belongs to its own scope in {source}: {:?}",
+            names(&chunk)
+        );
+        assert!(
+            (0..)
+                .map_while(|index| chunk.scope(index))
+                .any(|scope| scope.names.iter().any(|at| &*at.name == gone)),
+            "…and some scope of {source} does name it"
+        );
+    }
+}
+
+#[test]
+fn a_slot_no_name_reached_is_left_out_of_the_list_rather_than_stood_in_for() {
+    // `Chunk::locals` is a high-water mark across every level the body compiled, so a body whose
+    // nested block needed more slots than it did gets an environment with slots past its own last
+    // name. What a resolver needs is that index *i* be slot *i*, which a prefix gives — so the list
+    // stops, and the slots past it belong to a scope that has already been left.
+    let chunk = inner("function f(a) { { let b = 1, c = 2, d = 3, e = 4; a = b + c + d + e; } }");
+    assert_eq!(names(&chunk), ["a", "arguments"]);
+    assert!(
+        chunk.bindings().len() < chunk.locals(),
+        "the block needed more slots than `f` did: {} of {}",
+        chunk.bindings().len(),
+        chunk.locals()
+    );
+}

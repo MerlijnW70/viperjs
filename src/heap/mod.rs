@@ -98,7 +98,7 @@ impl From<bool> for DefineOutcome {
 pub use self::buffer::{Buffer, Element, Numeric, View, clamp_if};
 pub use self::collect::{Collected, Roots};
 pub use self::collection::{Collection, CollectionKind};
-pub use self::environment::{Environment, EnvironmentId};
+pub use self::environment::{Binding, Environment, EnvironmentId};
 pub use self::helper::{Helper, Step};
 pub use self::matches::Matches;
 pub(crate) use self::object::MAX_PROTOTYPE_CHAIN;

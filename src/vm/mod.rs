@@ -84,6 +84,11 @@ pub enum Fault {
     UnmatchedPopScope,
     /// A `MakeFunction` naming a body this chunk does not have.
     MissingFunction,
+    /// A `PushScope` or `CopyScope` naming a scope this chunk does not have.
+    ///
+    /// The compiler records the entry before it patches the instruction that names it, so no chunk
+    /// it produces can reach this. A hand-written one can, which is the only way it is tested.
+    MissingScope,
     /// A `Return` with no call to return from.
     ReturnWithNoCall,
     /// An `Await` where no `async` function is running, or a `Yield` outside a generator.
@@ -301,8 +306,10 @@ impl Vm {
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
         // §16.1.7 — the script's own environment, and the root of every chain a function it
-        // declares will walk.
-        self.environment = heap.new_environment(None, chunk.locals());
+        // declares will walk. Named, because a direct `eval` at the top level of the script
+        // resolves into it exactly as one inside a function resolves into that call's.
+        self.environment =
+            heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
         // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined`, which is
         // the one place the two goal symbols disagree about it.
         self.this_value = Value::Object(self.realm.global());

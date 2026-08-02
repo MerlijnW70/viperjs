@@ -289,7 +289,8 @@ impl Vm {
         let Some(defined_in) = heap.object(object).and_then(Object::environment) else {
             return Err(Fault::MissingFunction);
         };
-        let environment = heap.new_environment(Some(defined_in), body.locals());
+        let environment =
+            heap.new_named_environment(Some(defined_in), body.locals(), Rc::clone(body.bindings()));
         for offset in 0..body.parameters().min(count) {
             let argument = self.stack[callee_at + 1 + offset];
             let index = u32::try_from(offset).unwrap_or(u32::MAX);

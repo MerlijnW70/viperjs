@@ -36,7 +36,7 @@ mod function;
 mod pattern;
 mod statement;
 
-pub use self::chunk::{Chunk, Instruction, ShortCircuit, SpreadCall, Template};
+pub use self::chunk::{Chunk, Instruction, Scope, ShortCircuit, SpreadCall, Template};
 
 use self::chunk::Unpatched;
 use crate::heap::Heap;
@@ -453,6 +453,10 @@ impl<'a> Compiler<'a> {
     fn finish(self) -> Chunk {
         let mut chunk = self.chunk;
         chunk.locals = self.high_water;
+        // Every scope this body opened has been closed by now, so `locals` is the body's own level
+        // and nothing else — which is exactly the environment the call builds. Any slack between it
+        // and `high_water` is slots a *nested* scope needed, which belong to no name at all.
+        chunk.bindings = bindings_of(&self.locals);
         chunk
     }
 
@@ -607,9 +611,15 @@ impl<'a> Compiler<'a> {
             kind: ErrorKind::TooLong,
             span: Span::new(0, 0),
         })?;
-        self.chunk.patch_scope(environment.scope, slots);
+        // DR-0018 — the scope carries what it called its slots, because a direct `eval` resolves
+        // against a *running* environment and has no compile-time chain to ask. Recorded here and
+        // not when the `PushScope` was emitted: the hidden slots the block's statements needed were
+        // made after it, and the names have to be in slot order to be worth anything.
+        let names = bindings_of(&self.locals);
+        let index = self.chunk.add_scope(chunk::Scope { slots, names })?;
+        self.chunk.patch_scope(environment.scope, index);
         for copy in environment.copies {
-            self.chunk.patch_scope(copy, slots);
+            self.chunk.patch_scope(copy, index);
         }
         if pop {
             self.chunk.emit(Instruction::PopScope);
@@ -978,6 +988,40 @@ struct ThisSlot {
     depth: u32,
     /// Which slot, in that environment.
     index: u32,
+}
+
+/// What a scope calls its slots, in slot order — DR-0018's name list.
+///
+/// **A slot the compiler made for itself keeps its `%` name** rather than being dropped. Dropping
+/// one would shorten the list and every name after it would then answer for the wrong slot; `%` is
+/// in neither `IdentifierStart` nor `IdentifierPart`, so leaving them in costs nothing a program
+/// can reach.
+///
+/// **The list may run shorter than the environment's slots, and that needs nothing.**
+/// [`Chunk::locals`] is a high-water mark across every level a body compiled, so a body whose
+/// nested block needed more slots than it did gets an environment with slots past its own last
+/// name. What a resolver needs is that index *i* be slot *i*, which a prefix gives; a slot past the
+/// end simply has no name, which is the same answer padding under an unspellable one would produce
+/// and one fewer thing to be wrong about.
+///
+/// **[`Local::live`] is not consulted, and that is the half worth explaining.** DR-0018 asks that
+/// every name in a list be in scope for the environment's whole life, because a list has no
+/// position to be read against where [`Compiler::resolve`] has one. That holds by construction and
+/// not by a check here: a scope whose names go out of scope while the level around it carries on —
+/// a `switch`, a `catch`, a class body — now opens an environment of its own, so its names go with
+/// it. What is left calling [`Compiler::leave_scope`] without an environment declares nothing a
+/// source can spell: a `for`-`in` and a `for`-`of` head take four `%` slots and put a `let` in
+/// their per-iteration environment, and a block, a `for` head and a `catch` open an environment
+/// exactly when they declare something. A new construct that flattened a scope would break this,
+/// which is why the pairing is stated there rather than left to be noticed here.
+fn bindings_of(locals: &[Local]) -> Rc<[crate::heap::Binding]> {
+    locals
+        .iter()
+        .map(|local| crate::heap::Binding {
+            name: local.name.clone(),
+            immutable: local.immutable,
+        })
+        .collect()
 }
 
 /// A refusal with a location.

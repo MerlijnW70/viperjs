@@ -64,7 +64,8 @@ fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
     // §19.2.1.1 step 12 — a *new* declarative environment, and its parent is the global scope and
     // not the caller's. `None` is how praxis spells the global scope for a script, which is what
     // makes a name the eval'd code does not declare resolve to a property of the global object.
-    let environment = heap.new_environment(None, chunk.locals());
+    let environment =
+        heap.new_named_environment(None, chunk.locals(), std::rc::Rc::clone(chunk.bindings()));
     vm.run_script(&chunk, environment, heap)
 }
 
