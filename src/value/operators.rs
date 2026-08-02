@@ -98,7 +98,7 @@ fn equal_across_types(left: Value, right: Value, heap: &Heap) -> bool {
 /// `None` where `ToNumber` of the same text would be NaN, and for anything with a decimal point or
 /// an exponent: `"1.5"` is a Number and no BigInt. The empty string is `0n`, which is the one
 /// place this agrees with `ToNumber` about something surprising.
-fn string_as_bigint(id: crate::heap::StringId, heap: &Heap) -> Option<BigInt> {
+pub(crate) fn string_as_bigint(id: crate::heap::StringId, heap: &Heap) -> Option<BigInt> {
     let text = String::from_utf16(heap.string(id)?).ok()?;
     let trimmed = text.trim_matches(|c: char| c.is_whitespace());
     if trimmed.is_empty() {

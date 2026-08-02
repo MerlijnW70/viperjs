@@ -199,3 +199,97 @@ fn json_refuses_a_bigint_rather_than_writing_a_number() {
         "TypeError"
     );
 }
+
+#[test]
+fn the_constructor_converts_on_purpose_what_the_operators_refuse_by_accident() {
+    // §21.2.1 — the explicit conversion. Every implicit one is refused, so this is how a program
+    // crosses between the two numeric types when it means to.
+    assert_eq!(run("String(BigInt(42))"), "42");
+    assert_eq!(
+        run("String(BigInt('0xff')) + ',' + String(BigInt('-7'))"),
+        "255,-7"
+    );
+    assert_eq!(run("String(BigInt(true)) + String(BigInt(false))"), "10");
+    assert_eq!(run("typeof BigInt(1)"), "bigint");
+    // §7.1.13 — and it refuses what it cannot do *exactly*. A Number that is not an integer has no
+    // BigInt, so this rounds nothing: `Number('1.5')` succeeds where this cannot.
+    for (source, error) in [
+        ("BigInt(1.5)", "RangeError"),
+        ("BigInt(NaN)", "RangeError"),
+        ("BigInt(Infinity)", "RangeError"),
+        // A String that is not an integer is a **SyntaxError**, which is the only conversion in
+        // the language that throws one: there is no BigInt for a NaN to be.
+        ("BigInt('1.5')", "SyntaxError"),
+        ("BigInt('abc')", "SyntaxError"),
+        ("BigInt(undefined)", "TypeError"),
+        ("BigInt(null)", "TypeError"),
+        ("BigInt(Symbol())", "TypeError"),
+        // §21.2.1 step 1 — not a constructor, like `Symbol`. A wrapper is what a method call makes
+        // for itself; there is no reason to ask for one.
+        ("new BigInt(1)", "TypeError"),
+    ] {
+        assert_eq!(
+            run(&format!(
+                "var e = 'none'; try {{ {source} }} catch (x) {{ e = x.constructor.name }} e"
+            )),
+            error,
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn the_prototype_answers_through_a_wrapper_and_directly() {
+    // §21.2.3.1's `ThisBigIntValue` takes both, because a method reached on a primitive has a
+    // wrapper as its receiver and one reached on `Object(1n)` was already wrapped.
+    assert_eq!(run("(255n).toString()"), "255");
+    assert_eq!(
+        run("(255n).toString(16) + ',' + (255n).toString(2)"),
+        "ff,11111111"
+    );
+    assert_eq!(run("(-255n).toString(16)"), "-ff");
+    assert_eq!(run("Object(1n).toString()"), "1");
+    assert_eq!(run("typeof (1n).valueOf()"), "bigint");
+    assert_eq!(run("Object.prototype.toString.call(1n)"), "[object BigInt]");
+    // A radix outside 2 to 36 is a RangeError, the same range `Number.prototype.toString` uses.
+    assert_eq!(
+        run("var e = 'none'; try { (1n).toString(1) } catch (x) { e = x.constructor.name } e"),
+        "RangeError"
+    );
+    // …and a method of this prototype on something that is not a BigInt refuses rather than
+    // guessing, which is what makes the wrapper's `[[BigIntData]]` a brand.
+    assert_eq!(
+        run(
+            "var e = 'none'; try { BigInt.prototype.toString.call(1) } catch (x) { e = x.constructor.name } e"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn as_int_n_is_where_a_bigint_is_given_a_width() {
+    // §21.2.2 — the two functions that exist because a BigInt has no width and the world it talks
+    // to does: a database identifier, a hash, a protocol field. Everything is modulo 2^bits; the
+    // pair differ only in whether the top bit is read as a sign.
+    assert_eq!(run("String(BigInt.asUintN(8, 255n))"), "255");
+    assert_eq!(run("String(BigInt.asIntN(8, 255n))"), "-1");
+    assert_eq!(run("String(BigInt.asUintN(8, 256n))"), "0");
+    assert_eq!(run("String(BigInt.asIntN(8, 128n))"), "-128");
+    assert_eq!(run("String(BigInt.asIntN(8, 127n))"), "127");
+    // A negative wraps *upwards* into the range, which is a modulo and not §6.1.6.2.6's remainder:
+    // `-1n % 256n` is `-1n` and this is `255n`.
+    assert_eq!(run("String(BigInt.asUintN(8, -1n))"), "255");
+    assert_eq!(
+        run("String(BigInt.asUintN(64, -1n))"),
+        "18446744073709551615"
+    );
+    assert_eq!(
+        run("String(BigInt.asIntN(64, 18446744073709551615n))"),
+        "-1"
+    );
+    // Zero bits is the empty width, and everything modulo one is zero.
+    assert_eq!(
+        run("String(BigInt.asUintN(0, 7n)) + String(BigInt.asIntN(0, 7n))"),
+        "00"
+    );
+}

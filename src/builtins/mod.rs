@@ -23,6 +23,7 @@ pub mod array_iterate;
 pub mod array_methods;
 pub mod array_sort;
 pub(crate) mod async_iterator;
+mod bigint;
 mod buffer;
 mod collection;
 pub(crate) mod date;
@@ -117,6 +118,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     regexp_symbols::install(heap, realm);
     string::install(heap, realm, global);
     symbol::install(heap, realm, global);
+    bigint::install(heap, realm, global);
 }
 
 /// A property key for a name the engine itself knows.

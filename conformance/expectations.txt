@@ -1222,8 +1222,8 @@ built-ins/Array/fromAsync/asyncitems-asynciterator-sync.js :: the test called $D
 built-ins/Array/fromAsync/asyncitems-asynciterator-sync.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/asyncitems-asynciterator-throws.js :: the test called $DONE with Test262Error: Expected a Test262Error to be thrown asynchronously but the function threw synchronously
 built-ins/Array/fromAsync/asyncitems-asynciterator-throws.js (strict) :: the test called $DONE with Test262Error: Expected a Test262Error to be thrown asynchronously but the function threw synchronously
-built-ins/Array/fromAsync/asyncitems-bigint.js :: the test called $DONE with ReferenceError: BigInt is not defined
-built-ins/Array/fromAsync/asyncitems-bigint.js (strict) :: the test called $DONE with ReferenceError: BigInt is not defined
+built-ins/Array/fromAsync/asyncitems-bigint.js :: the test called $DONE with TypeError: what was called is not a function
+built-ins/Array/fromAsync/asyncitems-bigint.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/asyncitems-boolean.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/asyncitems-boolean.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/asyncitems-function.js :: the test called $DONE with TypeError: what was called is not a function
@@ -1751,8 +1751,6 @@ built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it th
 built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/some/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/sort/call-with-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Array/prototype/sort/call-with-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Array/prototype/sort/comparefn-grow.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-grow.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/sort/comparefn-resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -1765,16 +1763,16 @@ built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/toLocaleString/resizable-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Array/prototype/toLocaleString/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-grow.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-grow.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-shrink.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-shrink.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-grow.js :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-grow.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-shrink.js :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/toLocaleString/user-provided-tolocalestring-shrink.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/toString/non-callable-join-string-tag.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Array/prototype/toString/non-callable-join-string-tag.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -2879,160 +2877,40 @@ built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js :: it threw an
 built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/xor/validate-arraytype-before-value-coercion.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Atomics/xor/validate-arraytype-before-value-coercion.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/BigInt/asIntN/arithmetic.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/arithmetic.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/asIntN.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/asIntN.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bigint-tobigint-errors.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bigint-tobigint-errors.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bigint-tobigint.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bigint-tobigint.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bits-toindex-errors.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bits-toindex-errors.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bits-toindex-toprimitive.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bits-toindex-toprimitive.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bits-toindex.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/bits-toindex.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/length.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/length.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/name.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/name.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/not-a-constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/not-a-constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/order-of-steps.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asIntN/order-of-steps.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/arithmetic.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/arithmetic.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/asUintN.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/asUintN.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bigint-tobigint-errors.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bigint-tobigint-errors.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bigint-tobigint.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bigint-tobigint.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bits-toindex-errors.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bits-toindex-errors.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bits-toindex-toprimitive.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bits-toindex-toprimitive.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bits-toindex.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/bits-toindex.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/length.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/length.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/name.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/name.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/not-a-constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/not-a-constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/order-of-steps.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/asUintN/order-of-steps.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/call-value-of-when-to-string-present.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/call-value-of-when-to-string-present.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-coercion.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-coercion.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-empty-string.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-empty-string.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-binary-string.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-binary-string.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-decimal-string.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-decimal-string.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-hex-string.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-hex-string.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-octal-string.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-octal-string.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-from-string-syntax-errors.js :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-built-ins/BigInt/constructor-from-string-syntax-errors.js (strict) :: it threw an object with no name: Expected a SyntaxError but got a ReferenceError
-built-ins/BigInt/constructor-integer.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-integer.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-trailing-leading-spaces.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/constructor-trailing-leading-spaces.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/infinity-throws-rangeerror.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/infinity-throws-rangeerror.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/is-a-constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/is-a-constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/length.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/length.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/name.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/name.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/nan-throws-rangeerror.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/nan-throws-rangeerror.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/negative-infinity-throws.rangeerror.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/negative-infinity-throws.rangeerror.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/non-integer-rangeerror.js :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/non-integer-rangeerror.js (strict) :: it threw an object with no name: Expected a RangeError but got a ReferenceError
-built-ins/BigInt/parseInt/nonexistent.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/parseInt/nonexistent.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prop-desc.js :: it threw an object with no name: BigInt should be an own property
-built-ins/BigInt/prop-desc.js (strict) :: it threw an object with no name: BigInt should be an own property
-built-ins/BigInt/proto.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/proto.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/Symbol.toStringTag.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/Symbol.toStringTag.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/prop-desc.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/prop-desc.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/proto.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/proto.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toLocaleString/not-a-constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toLocaleString/not-a-constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/BigInt/asIntN/bigint-tobigint-errors.js :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
+built-ins/BigInt/asIntN/bigint-tobigint-errors.js (strict) :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
+built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js :: it threw an object with no name
+built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js (strict) :: it threw an object with no name
+built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js :: it threw SyntaxError: this string is not a BigInt
+built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js (strict) :: it threw SyntaxError: this string is not a BigInt
+built-ins/BigInt/asIntN/bits-toindex-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/BigInt/asIntN/bits-toindex-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/BigInt/asIntN/bits-toindex-toprimitive.js :: it threw an object with no name
+built-ins/BigInt/asIntN/bits-toindex-toprimitive.js (strict) :: it threw an object with no name
+built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «-1n») to be true
+built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «-1n») to be true
+built-ins/BigInt/asUintN/bigint-tobigint-errors.js :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
+built-ins/BigInt/asUintN/bigint-tobigint-errors.js (strict) :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
+built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js :: it threw an object with no name
+built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js (strict) :: it threw an object with no name
+built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js :: it threw SyntaxError: this string is not a BigInt
+built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js (strict) :: it threw SyntaxError: this string is not a BigInt
+built-ins/BigInt/asUintN/bits-toindex-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/BigInt/asUintN/bits-toindex-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/BigInt/asUintN/bits-toindex-toprimitive.js :: it threw an object with no name
+built-ins/BigInt/asUintN/bits-toindex-toprimitive.js (strict) :: it threw an object with no name
+built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «1n») to be true
+built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «1n») to be true
+built-ins/BigInt/constructor-coercion.js :: it threw SyntaxError: this string is not a BigInt
+built-ins/BigInt/constructor-coercion.js (strict) :: it threw SyntaxError: this string is not a BigInt
+built-ins/BigInt/is-a-constructor.js :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
+built-ins/BigInt/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
 built-ins/BigInt/prototype/toString/a-z.js :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/BigInt/prototype/toString/a-z.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/BigInt/prototype/toString/default-radix.js :: it threw an object with no name: (-100n).toString() === '-100' Expected SameValue(«"[object Object]"», «"-100"») to be true
-built-ins/BigInt/prototype/toString/default-radix.js (strict) :: it threw an object with no name: (-100n).toString() === '-100' Expected SameValue(«"[object Object]"», «"-100"») to be true
-built-ins/BigInt/prototype/toString/length.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/length.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/name.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/name.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/not-a-constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/not-a-constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/prop-desc.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/prop-desc.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/prototype-call.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/prototype/toString/prototype-call.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/BigInt/prototype/toString/radix-2-to-36.js :: it threw an object with no name: 0, radix 2 Expected SameValue(«"[object Object]"», «"0"») to be true
-built-ins/BigInt/prototype/toString/radix-2-to-36.js (strict) :: it threw an object with no name: 0, radix 2 Expected SameValue(«"[object Object]"», «"0"») to be true
-built-ins/BigInt/prototype/toString/radix-err.js :: it threw an object with no name: 0, radix 0 Expected a RangeError to be thrown but no exception was thrown at all
-built-ins/BigInt/prototype/toString/radix-err.js (strict) :: it threw an object with no name: 0, radix 0 Expected a RangeError to be thrown but no exception was thrown at all
-built-ins/BigInt/prototype/toString/radix-tointegerorinfinity-throws-symbol.js :: it threw an object with no name: If _radix_ is Symbol, BigInt.prototype.toString must throw a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/prototype/toString/radix-tointegerorinfinity-throws-symbol.js (strict) :: it threw an object with no name: If _radix_ is Symbol, BigInt.prototype.toString must throw a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/prototype/toString/radix-tointegerorinfinity-throws-toprimitive-or-bigint.js :: it threw an object with no name: If _radix_ is BigInt, BigInt.prototype.toString must throw a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/prototype/toString/radix-tointegerorinfinity-throws-toprimitive-or-bigint.js (strict) :: it threw an object with no name: If _radix_ is BigInt, BigInt.prototype.toString must throw a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/prototype/toString/string-is-code-units-of-decimal-digits-only.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/string-is-code-units-of-decimal-digits-only.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/thisbigintvalue-not-valid-throws.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/toString/thisbigintvalue-not-valid-throws.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/BigInt/prototype/valueOf/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/BigInt/prototype/valueOf/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/BigInt/prototype/valueOf/length.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/length.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/name.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/name.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/not-a-constructor.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/not-a-constructor.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/prop-desc.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/prop-desc.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/return.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/return.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/this-value-invalid-object-throws.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/this-value-invalid-object-throws.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/this-value-invalid-primitive-throws.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/prototype/valueOf/this-value-invalid-primitive-throws.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/tostring-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/BigInt/tostring-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/BigInt/valueof-throws.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/BigInt/valueof-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-built-ins/BigInt/wrapper-object-ordinary-toprimitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/BigInt/wrapper-object-ordinary-toprimitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/BigInt/wrapper-object-ordinary-toprimitive.js :: it threw an object with no name: hint: default
+built-ins/BigInt/wrapper-object-ordinary-toprimitive.js (strict) :: it threw an object with no name: hint: default
 built-ins/Boolean/S9.2_A1_T1.js :: it threw ReferenceError: eval is not defined
 built-ins/Boolean/S9.2_A1_T1.js (strict) :: it threw ReferenceError: eval is not defined
 built-ins/Boolean/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -3243,8 +3121,8 @@ built-ins/DataView/prototype/setBigInt64/return-abrupt-from-tonumber-byteoffset.
 built-ins/DataView/prototype/setBigInt64/return-abrupt-from-tonumber-byteoffset.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
 built-ins/DataView/prototype/setBigInt64/set-values-little-endian-order.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigInt64/set-values-little-endian-order.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/set-values-return-undefined.js :: it threw ReferenceError: BigInt is not defined
-built-ins/DataView/prototype/setBigInt64/set-values-return-undefined.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/DataView/prototype/setBigInt64/set-values-return-undefined.js :: it threw TypeError: what was called is not a function
+built-ins/DataView/prototype/setBigInt64/set-values-return-undefined.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigInt64/to-boolean-littleendian.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigInt64/to-boolean-littleendian.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigInt64/toindex-byteoffset.js :: it threw TypeError: what was called is not a function
@@ -3937,8 +3815,8 @@ built-ins/Iterator/concat/inner-iterator-created-in-order.js :: it threw TypeErr
 built-ins/Iterator/concat/inner-iterator-created-in-order.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/concat/is-function.js :: it threw an object with no name: The value of `typeof Iterator.concat` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Iterator/concat/is-function.js (strict) :: it threw an object with no name: The value of `typeof Iterator.concat` is 'function' Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Iterator/concat/iterable-primitive-wrapper-objects.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Iterator/concat/iterable-primitive-wrapper-objects.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Iterator/concat/iterable-primitive-wrapper-objects.js :: it threw TypeError: what was called is not a function
+built-ins/Iterator/concat/iterable-primitive-wrapper-objects.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/concat/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Iterator/concat/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Iterator/concat/many-arguments.js :: it threw TypeError: what was called is not a function
@@ -4278,8 +4156,8 @@ built-ins/JSON/parse/reviver-object-delete-err.js :: it threw an object with no 
 built-ins/JSON/parse/reviver-object-delete-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/JSON/rawJSON/basic.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/rawJSON/basic.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/rawJSON/bigint-raw-json-can-be-stringified.js :: it threw ReferenceError: BigInt is not defined
-built-ins/JSON/rawJSON/bigint-raw-json-can-be-stringified.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/JSON/rawJSON/bigint-raw-json-can-be-stringified.js :: it threw TypeError: undefined and null cannot be destructured
+built-ins/JSON/rawJSON/bigint-raw-json-can-be-stringified.js (strict) :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/rawJSON/builtin.js :: it threw an object with no name: JSON.rawJSON is extensible
 built-ins/JSON/rawJSON/builtin.js (strict) :: it threw an object with no name: JSON.rawJSON is extensible
 built-ins/JSON/rawJSON/illegal-empty-and-start-end-chars.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
@@ -4300,12 +4178,12 @@ built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js :: it threw TypeE
 built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/JSON/stringify/value-bigint-cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/stringify/value-bigint-cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/value-bigint-order.js :: it threw ReferenceError: BigInt is not defined
-built-ins/JSON/stringify/value-bigint-order.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/JSON/stringify/value-bigint-tojson-receiver.js :: it threw ReferenceError: BigInt is not defined
-built-ins/JSON/stringify/value-bigint-tojson-receiver.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/JSON/stringify/value-bigint-tojson.js :: it threw ReferenceError: BigInt is not defined
-built-ins/JSON/stringify/value-bigint-tojson.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/JSON/stringify/value-bigint-order.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/JSON/stringify/value-bigint-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+built-ins/JSON/stringify/value-bigint-tojson-receiver.js :: it threw TypeError: a BigInt cannot be serialised to JSON
+built-ins/JSON/stringify/value-bigint-tojson-receiver.js (strict) :: it threw TypeError: a BigInt cannot be serialised to JSON
+built-ins/JSON/stringify/value-bigint-tojson.js :: it threw TypeError: a BigInt cannot be serialised to JSON
+built-ins/JSON/stringify/value-bigint-tojson.js (strict) :: it threw TypeError: a BigInt cannot be serialised to JSON
 built-ins/JSON/stringify/value-bigint.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/JSON/stringify/value-bigint.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Map/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -4401,8 +4279,8 @@ built-ins/Map/prototype/getOrInsertComputed/returns-value-if-key-is-present-diff
 built-ins/Map/prototype/getOrInsertComputed/returns-value-if-key-is-present-different-key-types.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/returns-value-normalized-zero-key.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/returns-value-normalized-zero-key.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/valid-keys.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Map/valid-keys.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Map/valid-keys.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Map/valid-keys.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/Math/Symbol.toStringTag.js :: it threw an object with no name: Expected SameValue(«undefined», «"Math"») to be true
 built-ins/Math/Symbol.toStringTag.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"Math"») to be true
 built-ins/Math/f16round/length.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -4605,8 +4483,6 @@ built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js :: it threw TypeError: Nu
 built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Number/return-abrupt-tonumber-value.js :: it threw an object with no name: NewTarget is undefined, {}.valueOf Expected a Test262Error but got a TypeError
 built-ins/Number/return-abrupt-tonumber-value.js (strict) :: it threw an object with no name: NewTarget is undefined, {}.valueOf Expected a Test262Error but got a TypeError
-built-ins/Object/bigint.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Object/bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/create/properties-arg-to-object-bigint.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object-bigint.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object.js :: it threw TypeError: a property-descriptor list must be an object
@@ -4845,8 +4721,6 @@ built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js 
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/toString/Object.prototype.toString.call-bigint.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object BigInt]"») to be true
-built-ins/Object/prototype/toString/Object.prototype.toString.call-bigint.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"[object BigInt]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-error.js (strict) :: it threw an object with no name: Object.prototype.toString.call(Error()) returns [object Error] Expected SameValue(«"[object Object]"», «"[object Error]"») to be true
 built-ins/Object/prototype/toString/Object.prototype.toString.call-regexp.js :: it threw an object with no name: Object.prototype.toString.call(/./) returns [object RegExp] Expected SameValue(«"[object Object]"», «"[object RegExp]"») to be true
@@ -4855,12 +4729,8 @@ built-ins/Object/prototype/toString/proxy-function-async.js :: it threw an objec
 built-ins/Object/prototype/toString/proxy-function-async.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
 built-ins/Object/prototype/toString/proxy-function.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
 built-ins/Object/prototype/toString/proxy-function.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js :: it threw an object with no name: generator function proxy without Symbol.toStringTag Expected SameValue(«"[object GeneratorFunction]"», «"[object Function]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js (strict) :: it threw an object with no name: generator function proxy without Symbol.toStringTag Expected SameValue(«"[object GeneratorFunction]"», «"[object Function]"») to be true
-built-ins/Object/prototype/toString/symbol-tag-override-bigint.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Object/prototype/toString/symbol-tag-override-bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.prototype.valueOf requires an object
@@ -6636,8 +6506,8 @@ built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an obj
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Set/set-iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Error but got a RangeError
 built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Error but got a RangeError
-built-ins/Set/valid-values.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Set/valid-values.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Set/valid-values.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/Set/valid-values.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -6886,16 +6756,16 @@ built-ins/String/prototype/includes/searchstring-is-regexp-throws.js :: it threw
 built-ins/String/prototype/includes/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/indexOf/S15.5.4.7_A3_T2.js :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/indexOf/S15.5.4.7_A3_T2.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/String/prototype/indexOf/position-tointeger-bigint.js :: it threw an object with no name: ToInteger: unbox object with internal slot => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/position-tointeger-bigint.js (strict) :: it threw an object with no name: ToInteger: unbox object with internal slot => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/String/prototype/indexOf/position-tointeger-bigint.js :: it threw an object with no name: ToInteger: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/String/prototype/indexOf/position-tointeger-bigint.js (strict) :: it threw an object with no name: ToInteger: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/indexOf/position-tointeger-errors.js :: it threw an object with no name: ToInteger: @@toPrimitive => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/indexOf/position-tointeger-errors.js (strict) :: it threw an object with no name: ToInteger: @@toPrimitive => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js :: it threw an object with no name
 built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js (strict) :: it threw an object with no name
 built-ins/String/prototype/indexOf/position-tointeger-wrapped-values.js :: it threw an object with no name: ToInteger: @@toPrimitive => true => 1 Expected SameValue(«0», «1») to be true
 built-ins/String/prototype/indexOf/position-tointeger-wrapped-values.js (strict) :: it threw an object with no name: ToInteger: @@toPrimitive => true => 1 Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/indexOf/searchstring-tostring-bigint.js :: it threw an object with no name: ToString: unbox object with internal slot => BigInt to String Expected SameValue(«-1», «2») to be true
-built-ins/String/prototype/indexOf/searchstring-tostring-bigint.js (strict) :: it threw an object with no name: ToString: unbox object with internal slot => BigInt to String Expected SameValue(«-1», «2») to be true
+built-ins/String/prototype/indexOf/searchstring-tostring-bigint.js :: it threw an object with no name: ToString: @@toPrimitive => BigInt to String Expected SameValue(«-1», «2») to be true
+built-ins/String/prototype/indexOf/searchstring-tostring-bigint.js (strict) :: it threw an object with no name: ToString: @@toPrimitive => BigInt to String Expected SameValue(«-1», «2») to be true
 built-ins/String/prototype/indexOf/searchstring-tostring-errors.js :: it threw an object with no name: ToString: unbox object with internal slot => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/indexOf/searchstring-tostring-errors.js (strict) :: it threw an object with no name: ToString: unbox object with internal slot => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js :: it threw an object with no name
@@ -6914,16 +6784,16 @@ built-ins/String/prototype/isWellFormed/return-abrupt-from-this.js :: it threw a
 built-ins/String/prototype/isWellFormed/return-abrupt-from-this.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/String/prototype/isWellFormed/returns-boolean.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/String/prototype/isWellFormed/returns-boolean.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/to-string-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/isWellFormed/to-string-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/isWellFormed/to-string-primitive.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/isWellFormed/to-string-primitive.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/isWellFormed/to-string.js :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/isWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/match/S15.5.4.10_A1_T3.js :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/match/S15.5.4.10_A1_T3.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -6938,8 +6808,8 @@ built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw 
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/match/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js :: it threw an object with no name: should not be called
@@ -6970,8 +6840,8 @@ built-ins/String/prototype/normalize/return-normalized-string.js :: it threw Typ
 built-ins/String/prototype/normalize/return-normalized-string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/repeat/repeat-string-n-times.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/String/prototype/repeat/repeat-string-n-times.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -6980,8 +6850,8 @@ built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js :: it thr
 built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js (strict) :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -6992,8 +6862,8 @@ built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js :: it threw
 built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js (strict) :: it threw the string poison
 built-ins/String/prototype/replaceAll/this-tostring.js :: it threw the string poison
 built-ins/String/prototype/replaceAll/this-tostring.js (strict) :: it threw the string poison
-built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/search/cstm-search-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -7008,8 +6878,8 @@ built-ins/String/prototype/search/this-value-not-obj-coercible.js :: it threw an
 built-ins/String/prototype/search/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/checking-by-using-eval.js :: it threw ReferenceError: eval is not defined
 built-ins/String/prototype/split/checking-by-using-eval.js (strict) :: it threw ReferenceError: eval is not defined
-built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js :: it threw an object with no name: should not be called
+built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js :: it threw an object with no name: should not be called
 built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/split/cstm-split-on-number-primitive.js :: it threw an object with no name: should not be called
@@ -7060,8 +6930,8 @@ built-ins/String/prototype/toWellFormed/return-abrupt-from-this.js :: it threw a
 built-ins/String/prototype/toWellFormed/return-abrupt-from-this.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/String/prototype/toWellFormed/returns-well-formed-string.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/String/prototype/toWellFormed/returns-well-formed-string.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/to-string-primitive.js :: it threw ReferenceError: BigInt is not defined
-built-ins/String/prototype/toWellFormed/to-string-primitive.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/String/prototype/toWellFormed/to-string-primitive.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/toWellFormed/to-string-primitive.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/toWellFormed/to-string.js :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/toWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/trimEnd/this-value-object-toprimitive-call-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -8086,10 +7956,10 @@ built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-
 built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-2.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-5.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-5.js (strict) :: it threw ReferenceError: Temporal is not defined
-built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-6.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-6.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-7.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-7.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-6.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-6.js (strict) :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-7.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-7.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/prop-desc.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/prototype/total/relativeto-argument-propertybag-calendar-invalid-iso-string.js :: it threw ReferenceError: Temporal is not defined
@@ -14710,8 +14580,8 @@ built-ins/Temporal/ZonedDateTime/compare/zoneddatetime-string-multiple-offsets.j
 built-ins/Temporal/ZonedDateTime/compare/zoneddatetime-string-multiple-offsets.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/zoneddatetime-string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/compare/zoneddatetime-string.js (strict) :: it threw ReferenceError: Temporal is not defined
-built-ins/Temporal/ZonedDateTime/construction-and-properties.js :: it threw ReferenceError: BigInt is not defined
-built-ins/Temporal/ZonedDateTime/construction-and-properties.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/Temporal/ZonedDateTime/construction-and-properties.js :: it threw ReferenceError: Temporal is not defined
+built-ins/Temporal/ZonedDateTime/construction-and-properties.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/ZonedDateTime/constructor.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/constructor.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/Temporal/ZonedDateTime/from/argument-object.js :: it threw ReferenceError: Temporal is not defined
@@ -17676,8 +17546,8 @@ built-ins/TypedArray/prototype/sort/BigInt/return-abrupt-from-this-out-of-bounds
 built-ins/TypedArray/prototype/sort/BigInt/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/sort/BigInt/return-same-instance.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/BigInt/return-same-instance.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArray/prototype/sort/BigInt/sortcompare-with-no-tostring.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/sort/BigInt/sortcompare-with-no-tostring.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/TypedArray/prototype/sort/BigInt/sortcompare-with-no-tostring.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/sort/BigInt/sortcompare-with-no-tostring.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/BigInt/sorted-values.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/BigInt/sorted-values.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/sort/comparefn-grow.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -17766,30 +17636,30 @@ built-ins/TypedArray/prototype/subarray/speciesctor-get-species-use-default-ctor
 built-ins/TypedArray/prototype/subarray/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tolocalestring-from-each-value.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tolocalestring-from-each-value.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tostring-from-each-value.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tostring-from-each-value.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-valueof-from-each-value.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-valueof-from-each-value.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tolocalestring-from-each-value.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tolocalestring-from-each-value.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tostring-from-each-value.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tostring-from-each-value.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-valueof-from-each-value.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-valueof-from-each-value.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/detached-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/empty-instance-returns-empty-string.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/empty-instance-returns-empty-string.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tolocalestring.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tolocalestring.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tostring.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tostring.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-valueof.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-valueof.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tolocalestring.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tolocalestring.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tostring.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tostring.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-valueof.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-valueof.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tolocalestring.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tolocalestring.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tostring.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tostring.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-valueof.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-valueof.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tolocalestring.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tolocalestring.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tostring.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tostring.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-valueof.js :: it threw ReferenceError: BigInt64Array is not defined
+built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-valueof.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/BigInt/return-result.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -17800,10 +17670,10 @@ built-ins/TypedArray/prototype/toLocaleString/resizable-buffer.js :: it threw Re
 built-ins/TypedArray/prototype/toLocaleString/resizable-buffer.js (strict) :: it threw ReferenceError: BigInt64Array is not defined
 built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-grow.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-grow.js (strict) :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-shrink.js :: it threw ReferenceError: BigInt is not defined
-built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-shrink.js (strict) :: it threw ReferenceError: BigInt is not defined
+built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-grow.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-grow.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-shrink.js :: it threw TypeError: what was called is not a function
+built-ins/TypedArray/prototype/toLocaleString/user-provided-tolocalestring-shrink.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/toString.js :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/toString.js (strict) :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/toString/BigInt/detached-buffer.js :: it threw ReferenceError: BigInt64Array is not defined
@@ -19693,14 +19563,12 @@ language/expressions/addition/S11.6.1_A1.js :: it threw ReferenceError: eval is 
 language/expressions/addition/S11.6.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/addition/S11.6.1_A2.2_T2.js :: it threw an object with no name: #1: var date = new Date(0); date + date === date.toString() + date.toString(). Actual: 0
 language/expressions/addition/S11.6.1_A2.2_T2.js (strict) :: it threw an object with no name: #1: var date = new Date(0); date + date === date.toString() + date.toString(). Actual: 0
-language/expressions/addition/bigint-and-number.js :: it threw an object with no name: Object(1n) + 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/addition/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) + 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/addition/bigint-errors.js :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return Symbol("1");}}) + 0n throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/addition/bigint-errors.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return Symbol("1");}}) + 0n throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/addition/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/addition/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/addition/bigint-wrapped-values.js :: it threw an object with no name: The result of (Object(2n) + 1n) is 3n Expected SameValue(«"[object Object]1"», «3n») to be true
-language/expressions/addition/bigint-wrapped-values.js (strict) :: it threw an object with no name: The result of (Object(2n) + 1n) is 3n Expected SameValue(«"[object Object]1"», «3n») to be true
+language/expressions/addition/bigint-wrapped-values.js :: it threw an object with no name: The result of (({[Symbol.toPrimitive]: function() {return 2n;}}) + 1n) is 3n Expected SameValue(«"[object Object]1"», «3n») to be true
+language/expressions/addition/bigint-wrapped-values.js (strict) :: it threw an object with no name: The result of (({[Symbol.toPrimitive]: function() {return 2n;}}) + 1n) is 3n Expected SameValue(«"[object Object]1"», «3n») to be true
 language/expressions/addition/coerce-symbol-to-prim-err.js :: it threw an object with no name: error thrown by left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/addition/coerce-symbol-to-prim-err.js (strict) :: it threw an object with no name: error thrown by left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/addition/coerce-symbol-to-prim-invocation.js :: it threw an object with no name: methods invoked in correct sequence Expected SameValue(«""», «"leftright"») to be true
@@ -19909,10 +19777,8 @@ language/expressions/await/for-await-of-interleaved.js :: the test called $DONE 
 language/expressions/await/for-await-of-interleaved.js (strict) :: the test called $DONE with Test262Error: Actual [Promise: 6, Await: [object Promise], Promise: 5, Await: [object Promise], Promise: 4, Await: [object Promise], Promise: 3, Promise: 2, Promise: 1, Promise: 0] and expected [Promise: 6, Promise: 5, Await: 3, Promise: 4, Promise: 3, Await: 2, Promise: 2, Promise: 1, Await: 1, Promise: 0] should have the same contents. Async/await and promises should be interleaved
 language/expressions/bitwise-and/S11.10.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-and/S11.10.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-and/bigint-and-number.js :: it threw an object with no name: Object(1n) & 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/bitwise-and/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) & 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/bitwise-and/bigint-non-primitive.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/bitwise-and/bigint-non-primitive.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
+language/expressions/bitwise-and/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/bitwise-and/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-and/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/bitwise-and/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-and/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -19921,14 +19787,12 @@ language/expressions/bitwise-and/order-of-evaluation.js :: it threw an object wi
 language/expressions/bitwise-and/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-not/S11.4.8_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-not/S11.4.8_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-not/bigint-non-primitive.js :: it threw an object with no name: The value of ~Object(1n) is -2n Expected SameValue(«-1», «-2n») to be true
-language/expressions/bitwise-not/bigint-non-primitive.js (strict) :: it threw an object with no name: The value of ~Object(1n) is -2n Expected SameValue(«-1», «-2n») to be true
+language/expressions/bitwise-not/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/bitwise-not/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-or/S11.10.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-or/S11.10.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-or/bigint-and-number.js :: it threw an object with no name: Object(1n) | 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/bitwise-or/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) | 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/bitwise-or/bigint-non-primitive.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/bitwise-or/bigint-non-primitive.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
+language/expressions/bitwise-or/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/bitwise-or/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-or/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/bitwise-or/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-or/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -19937,10 +19801,8 @@ language/expressions/bitwise-or/order-of-evaluation.js :: it threw an object wit
 language/expressions/bitwise-or/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-xor/S11.10.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/bitwise-xor/S11.10.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/bitwise-xor/bigint-and-number.js :: it threw an object with no name: Object(1n) ^ 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/bitwise-xor/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) ^ 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/bitwise-xor/bigint-non-primitive.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/bitwise-xor/bigint-non-primitive.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
+language/expressions/bitwise-xor/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/bitwise-xor/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-xor/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/bitwise-xor/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-xor/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -20423,8 +20285,6 @@ language/expressions/delete/non-reference-return-true.js :: it threw TypeError: 
 language/expressions/delete/non-reference-return-true.js (strict) :: it threw TypeError: cannot delete a property of something that is not an object
 language/expressions/division/S11.5.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/division/S11.5.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/division/bigint-and-number.js :: it threw an object with no name: Object(1n) / 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/division/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) / 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/division/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/division/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/division/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -20747,8 +20607,6 @@ language/expressions/equals/get-symbol-to-prim-err.js :: it threw an object with
 language/expressions/equals/get-symbol-to-prim-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/equals/to-prim-hint.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 language/expressions/equals/to-prim-hint.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/exponentiation/bigint-and-number.js :: it threw an object with no name: Object(1n) ** 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/exponentiation/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) ** 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/exponentiation/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/exponentiation/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/exponentiation/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -20827,10 +20685,8 @@ language/expressions/instanceof/symbol-hasinstance-to-boolean.js :: it threw Typ
 language/expressions/instanceof/symbol-hasinstance-to-boolean.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
 language/expressions/left-shift/S11.7.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/left-shift/S11.7.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/left-shift/bigint-and-number.js :: it threw an object with no name: Object(1n) << 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/left-shift/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) << 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/left-shift/bigint-non-primitive.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/left-shift/bigint-non-primitive.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
+language/expressions/left-shift/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/left-shift/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/left-shift/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/left-shift/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/left-shift/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -20883,8 +20739,6 @@ language/expressions/member-expression/computed-reference-null-or-undefined.js :
 language/expressions/member-expression/computed-reference-null-or-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/modulus/S11.5.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/modulus/S11.5.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/modulus/bigint-and-number.js :: it threw an object with no name: Object(1n) % 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/modulus/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) % 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/modulus/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/modulus/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/modulus/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -20893,8 +20747,6 @@ language/expressions/modulus/order-of-evaluation.js :: it threw an object with n
 language/expressions/modulus/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/multiplication/S11.5.1_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/multiplication/S11.5.1_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/multiplication/bigint-and-number.js :: it threw an object with no name: Object(1n) * 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/multiplication/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) * 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/multiplication/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/multiplication/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/multiplication/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -21061,10 +20913,8 @@ language/expressions/property-accessors/S11.2.1_A4_T3.js :: it threw an object w
 language/expressions/property-accessors/S11.2.1_A4_T3.js (strict) :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
 language/expressions/right-shift/S11.7.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/right-shift/S11.7.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/right-shift/bigint-and-number.js :: it threw an object with no name: Object(1n) >> 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/right-shift/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) >> 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/right-shift/bigint-non-primitive.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/right-shift/bigint-non-primitive.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
+language/expressions/right-shift/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/right-shift/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/right-shift/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/right-shift/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/right-shift/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -21081,8 +20931,6 @@ language/expressions/strict-equals/S11.9.4_A6.1.js :: it threw ReferenceError: e
 language/expressions/strict-equals/S11.9.4_A6.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/subtraction/S11.6.2_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/subtraction/S11.6.2_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/subtraction/bigint-and-number.js :: it threw an object with no name: Object(1n) - 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/subtraction/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) - 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/subtraction/bigint-toprimitive.js :: it threw an object with no name
 language/expressions/subtraction/bigint-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/subtraction/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
@@ -21125,24 +20973,20 @@ language/expressions/this/S11.1.1_A4.1.js :: it threw ReferenceError: eval is no
 language/expressions/this/S11.1.1_A4.1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/this/S11.1.1_A4.2.js :: it threw ReferenceError: eval is not defined
 language/expressions/this/S11.1.1_A4.2.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/typeof/bigint.js :: it threw ReferenceError: BigInt is not defined
-language/expressions/typeof/bigint.js (strict) :: it threw ReferenceError: BigInt is not defined
 language/expressions/typeof/syntax.js :: it threw ReferenceError: eval is not defined
 language/expressions/typeof/syntax.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/unary-minus/S11.4.7_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/unary-minus/bigint-non-primitive.js :: it threw an object with no name: The value of -Object(1n) is -1n Expected SameValue(«NaN», «-1n») to be true
-language/expressions/unary-minus/bigint-non-primitive.js (strict) :: it threw an object with no name: The value of -Object(1n) is -1n Expected SameValue(«NaN», «-1n») to be true
+language/expressions/unary-minus/bigint-non-primitive.js :: it threw an object with no name
+language/expressions/unary-minus/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/unary-plus/S11.4.6_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/unary-plus/S11.4.6_A1.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unary-plus/S9.3_A1_T2.js :: it threw ReferenceError: eval is not defined
 language/expressions/unary-plus/S9.3_A1_T2.js (strict) :: it threw ReferenceError: eval is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A1.js :: it threw ReferenceError: eval is not defined
 language/expressions/unsigned-right-shift/S11.7.3_A1.js (strict) :: it threw ReferenceError: eval is not defined
-language/expressions/unsigned-right-shift/bigint-and-number.js :: it threw an object with no name: Object(1n) >>> 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/unsigned-right-shift/bigint-and-number.js (strict) :: it threw an object with no name: Object(1n) >>> 1 throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/unsigned-right-shift/bigint-non-primitive.js :: it threw an object with no name: Object(0b101n) >>> Object(1n) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/unsigned-right-shift/bigint-non-primitive.js (strict) :: it threw an object with no name: Object(0b101n) >>> Object(1n) throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
+language/expressions/unsigned-right-shift/bigint-non-primitive.js :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 0b101n;}, valueOf: err, toString: err}) >>> 1n throws TypeError Expected a TypeError but got a Test262Error
+language/expressions/unsigned-right-shift/bigint-non-primitive.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 0b101n;}, valueOf: err, toString: err}) >>> 1n throws TypeError Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/bigint-toprimitive.js :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 2n;}, valueOf: err, toString: err}) >>> 0n throws TypeError Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/bigint-toprimitive.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 2n;}, valueOf: err, toString: err}) >>> 0n throws TypeError Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
