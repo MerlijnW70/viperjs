@@ -47,10 +47,45 @@ environment that has names — so a compiler seeded from the chain emits the sam
 the original compiler would have, and there is no second resolution rule to keep in step with the
 first.
 
+**And every name in the list is in scope for the whole life of the environment.** That is the half
+this record originally left implicit and the half praxis does not satisfy yet — see below. A list
+that held a name which is in scope for only part of the environment would need a position to be
+read against, and an eval has no position to offer.
+
 The `None` case is deliberate rather than a gap: environments made by the engine for its own
 purposes — a bound function's, a job's — hold slots no source named, and a name list for them would
 be a list of names no program can write. An eval that reaches one resolves nothing there and
 carries on outwards, which is the same answer it would get for a scope that declares nothing.
+
+## The invariant is not reachable from what the compiler holds today, and that is the finding
+
+Written above as though a level's names could simply be read off the compiler's `locals` at the end
+of compiling it. They cannot, and reading the compiler rather than assuming is what turned it up.
+
+A lexical scope in praxis does not always get an environment. `leave_scope` "takes every local
+declared since `mark` out of scope, **without giving its slot back**" — it sets `live = false` and
+leaves the entry where it is. Compiled code is right about this because `resolve` consults `live`
+*at the position it is compiling*: after `switch (1) { case 1: let a = 1; }` the name `a` no longer
+resolves, and an outer `a` resolves again. Verified, not assumed.
+
+A name list has no position and no `live` flag. Hand one built from that level to an eval and it
+resolves `a` after the switch — a binding that is out of scope, answering with whatever the slot
+still holds. The engine would be wrong in a way no existing test can see, because **the flattening
+is invisible to everything except an eval**.
+
+Eight constructs call `leave_scope`. Two of them open an environment of their own — a block (and
+only when it declares something, which is §14.2.2's own rule) and a `for (let …; …; …)` head. The
+other six do not: `for`-`in`, `for`-`of`, `switch`, `try`, a class body, and `for await`.
+
+**So the implementation is to stop flattening, not to describe the flattening.** Each of those six
+is a scope the specification already gives a record of its own — §14.12.4 for a switch, §14.15.3
+for a catch, §15.7.1 for a class body, §14.7.5.7 for the two `for` heads — so praxis is already
+non-conforming there in a way that happens to be unobservable, and eval is what would observe it.
+Giving them environments is owed regardless; doing it first is what makes the name list truthful.
+
+That reordering is the real cost of direct eval and it was not visible from the outside. Whoever
+picks this up should land the six environments as their own slice, with the per-iteration and
+per-entry semantics each one implies, and only then attach names.
 
 ## What this does not settle
 
