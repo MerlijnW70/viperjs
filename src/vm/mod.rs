@@ -24,6 +24,17 @@
 //! - `generator` — §15.5.4 and §27.5.1, which are the two ends of that: making a generator, and
 //!   resuming one.
 //! - `async_fn` — §27.7, which is the same suspension with a promise where the generator was.
+//! - `async_generator` — §27.6, which is both of those at once and neither of them.
+//! - `coerce` — §7.1.1's `ToPrimitive`, and the one place Rust re-enters the loop to get it.
+//! - `eval` — §19.2.1.1's **direct** mode, which resolves into the scopes the caller is *running*
+//!   in. The indirect half is a built-in; this one cannot be, because a native call has no handle
+//!   on its caller's environment.
+//! - `global` — §9.1.1.4's Global Environment Record, where a name falls when it falls out of
+//!   every scope.
+//! - `jobs` — §9.5's queue, and what it means for a job to run "later" (DR-0016).
+//! - `proxy` — §10.5's four internal methods a property access goes through.
+//! - `proxy_call` — §10.5.12 and §10.5.13, the two a proxy has only *sometimes*.
+//! - `proxy_shape` — §10.5's other seven, the ones about an object's shape rather than its values.
 //! - here — the loop, the frames, and the two kinds of failure.
 //!
 //! # A throw is an answer, not a failure

@@ -10,19 +10,30 @@
 //!
 //! Where a compiler's parts live.
 //!
+//! - `binding` — §8.6.2's binding patterns, and the declarations that hold one.
 //! - `chunk` — the code an embedder holds, and the instruction set.
+//! - `class` — §15.7's `ClassDefinitionEvaluation`.
+//! - `delegate` — §27.5.3.7 step 7's `yield*`, as the loop the clause describes.
 //! - `expression` — §13, and everything that leaves one value on the stack.
+//! - `for_await` — §14.7.5 over an async iterator, and the two awaits an ordinary loop has not.
 //! - `function` — §15.2, where a body becomes a chunk of its own and a call is emitted.
+//! - `pattern` — §13.15.5's destructuring *assignment*, which writes references rather than
+//!   making names. Its twin is `binding`, and the two are apart because the syntax trees are.
 //! - `statement` — §14, and everything that leaves the stack as it found it.
-//! - here — the [`Chunk`] an embedder holds, the instruction set, and how a name is resolved.
+//! - here — how a name is resolved, and the scopes a resolution walks.
 //!
-//! # What it can compile so far
+//! # What it refuses
 //!
-//! Expressions over the values that exist: literals, the unary operators, and the binary
-//! operators that need neither an object nor a name to look up. Everything else is a
-//! [`ErrorKind::Unsupported`] carrying the span of the thing it could not do — a refusal with
-//! a location, not a panic and not a silent wrong answer. That list shrinks with each slice, and
-//! the errors are how a reader can tell what is genuinely finished.
+//! A construct the compiler has not been taught is a [`ErrorKind::Unsupported`] carrying the span
+//! of the thing it could not do — a refusal with a location, not a panic and not a silent wrong
+//! answer. **The refusals are the list**: `grep unsupported(` says what is missing, and it is
+//! short. Read the spans as well as the messages — several name a construct in one *position*
+//! rather than the construct itself, so "a spread argument" is refused inside a `super()` call
+//! and nowhere else.
+//!
+//! There is no prose inventory here, deliberately. One would be a second copy of that list which
+//! nothing checks, and this file held one for long enough to be describing a compiler that could
+//! manage literals and the unary operators.
 
 use crate::ast::{Expr, Script, Stmt};
 use crate::value::Value;

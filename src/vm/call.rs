@@ -378,8 +378,12 @@ impl Vm {
                 _ => None,
             },
             function: Some(object),
-            // A generator's frame is not pushed here at all — see [`Vm::enter_generator`] — so this
-            // is an `async` function's context or nothing.
+            // An `async` function's context object, or nothing. A **generator's** own object is not
+            // known yet and reaches the frame later: the body is entered as an ordinary call and
+            // `Vm::start_generator` fills this in when `Instruction::GeneratorStart` runs, which is
+            // after the parameters. This used to say a generator's frame was not pushed here at
+            // all, which stopped being true when that instruction arrived — and contradicted the
+            // comment twenty lines above it.
             generator: context,
         });
         self.environment = environment;

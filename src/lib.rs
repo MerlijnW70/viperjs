@@ -36,6 +36,10 @@ pub mod vm;
 /// The engine version, as reported to embedders (`praxis::VERSION`).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// Two things about the comments that no compiler checks — see the module for why they are tests.
+#[cfg(test)]
+mod documentation;
+
 #[cfg(test)]
 mod tests {
     use super::*;

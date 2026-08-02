@@ -5,17 +5,17 @@
 //! why those are two separate decisions, and why the span is never allowed to become the
 //! second copy of the data.
 //!
-//! The tree grows one grammar slice at a time, so what is here is what the parser can build
-//! today: a `Script` of statements, and expressions down to `PrimaryExpression`.
-//!
 //! Split by grammar layer, the way §13 and §14 are:
 //!
 //! - `statement` — §14, plus the declarations that appear only in a `StatementList`.
 //! - `expression` — §13, down to the literals.
+//! - `literal` — the pieces the literal forms are made of (§13.2), and the regular-expression node.
 //! - `operator` — the operator enums of §13.4 – §13.15, and how each is written.
 //! - `pattern` — destructuring assignment patterns (§13.15.5), and what a literal covers.
 //! - `binding` — destructuring binding patterns (§14.3.3), which are the other kind.
 //! - `function` — function definitions (§15.2), and where their names go.
+//! - `module` — §16.2's `Module`, and the two declarations only it admits.
+//! - `export` — §16.2.3's `export`, which is the larger of those two.
 //!
 //! Everything is re-exported here, so `crate::ast::Whatever` names it wherever it lives.
 

@@ -49,6 +49,13 @@
 //! - `scope` — the early errors a statement list has about the names it declares (§14.2.1).
 //! - `try_catch` — `try`, `catch` and `finally` (§14.15), and the early errors on a handler.
 //! - `switch` — `switch` (§14.12), whose CaseBlock is one scope across all its clauses.
+//! - `body` — what a function body inherits from the production that opened it.
+//! - `class` — class definitions (§15.7), and the `super` they make legal (§13.3.7, §13.3.5).
+//! - `class_element` — what a class body is made of: methods, fields and static blocks.
+//! - `generator` — generators (§15.5), and the `[Yield]` grammar parameter they turn on.
+//! - `asynchronous` — everything `async`: functions (§15.8), generators (§15.6), arrows (§15.9).
+//! - `module` — the `Module` goal symbol and the `import` declarations only it admits (§16.2).
+//! - `export` — §16.2.3's declarations, and the two rules that read the finished list.
 //! - here — the `Parser` itself: the token it is looking at, how it advances, and the count
 //!   that bounds its recursion.
 

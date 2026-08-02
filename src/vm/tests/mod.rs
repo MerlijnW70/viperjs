@@ -57,6 +57,20 @@
 //! - `delegating` — §27.5.3.7 step 7's `yield*`, and the messages it passes both ways.
 //! - `asynchrony` — §15.8 and §27.7, where the promise stands in for the generator object.
 //! - `for_await` — §14.7.5.7 and §27.1.4, and the adapter that fakes an async iterator.
+//! - `classes` — §15.7's body: its methods, its fields, its statics, and the scope it is.
+//! - `collections` — §24.1 and §24.2's `Map` and `Set`.
+//! - `promises` — §27.2, and the ordering that is the whole point of it.
+//! - `proxy` — §10.5 and §28.2, the one object whose behaviour is written in JavaScript.
+//! - `reflection` — §28.1's `Reflect`, which is every internal method with a name.
+//! - `regexp` — §22.2's object, `exec`, and the literal that makes one.
+//! - `regexp_symbols` — §22.2.6's four `Symbol` methods, and what `String.prototype` does through
+//!   them.
+//! - `string_replace` — §22.1.3's five pattern methods.
+//! - `typed` — §23.2 and §10.4.5's TypedArrays.
+//! - `buffers` — §25.1's `ArrayBuffer` and §25.3's `DataView`.
+//! - `bigints` — §6.1.6.2 as a *language* value: the literal, the operators, what refuses to mix.
+//! - `date` — §21.4, its arithmetic, its text forms and reading them back.
+//! - `collecting` — the root set, checked against the collector rather than against a program.
 //!
 //! There was a `compile_error` helper here, for rows asserting that some construct is refused rather
 //! than mis-compiled. **There are no such rows left in this module** — every one was removed by the

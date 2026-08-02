@@ -485,7 +485,7 @@ pub(super) struct Nesting<'a> {
     /// Passed in rather than inherited from the enclosing compiler, because a body may *add*
     /// strictness with a directive of its own and the parser has already worked out the union. The
     /// one exception is a body praxis synthesises, which has no source to have a directive in and
-    /// takes the enclosing answer — see the `Nesting::inheriting` callers.
+    /// takes the enclosing answer — the callers that pass `Strict::Inherited`.
     strict: bool,
     /// What §10.2.9 calls the function, if the position it was written in says.
     naming: Naming<'a>,

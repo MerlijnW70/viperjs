@@ -6,16 +6,18 @@
 //! alternative — briefly, `Rc` cannot be a mark-sweep collector because it never frees a cycle,
 //! and JavaScript makes cycles before user code runs.
 //!
-//! # What is here so far
+//! # A handle is never stale, and that is a decision rather than a coincidence
 //!
-//! Strings. They come first because everything else needs them — a property key is a String or a
-//! Symbol, so the object model cannot be built underneath one — and because they are the
-//! simplest thing the heap will ever hold: a String has no prototype, no properties, and no
-//! identity beyond its contents. Getting the arena right against them costs nothing extra.
+//! There is a collector — [`Heap::collect`]'s mark and sweep, called by the host — and there is
+//! still no free list and no generation counter on a handle. A swept slot is *not reused*, so a
+//! handle either names what it always named or names a slot that is empty, and there is no third
+//! case where it names something else's object. DR-0010 has the argument and the cost: the
+//! footprint a collection reclaims is Strings, environments and buffers, and never an object's
+//! slot, which is why the collector's *schedule* is the host's problem and not this module's.
 //!
-//! Objects, Symbols, BigInts and the collector itself are the slices after this one. Nothing
-//! here is freed yet, which is why there is no free list and no generation counter on a handle:
-//! until a sweep exists, no slot is ever reused and a stale handle cannot be made.
+//! Reusing a slot is the next design here and it is a decision record rather than a patch: it
+//! needs generation-tagged handles, and without them a reused slot turns a stale handle into a
+//! wrong answer instead of an empty one.
 //!
 //! # Why a handle is not a reference
 //!
@@ -33,6 +35,29 @@
 //! - `enumerate` — §14.7.5.10, the names a `for`-`in` visits and the shadowing that decides them.
 //! - `collect` — mark and sweep, and what counts as a root.
 //! - `environment` — where a variable lives (§9.1), and what a closure holds on to.
+//! - `ordinary` — what the *heap* does with an object: §10.1's internal methods, and the ways one
+//!   is made. Its neighbour `object` is the type; this is the operations on it.
+//! - `callable` — what an object does when it is called, and what a Rust one is handed.
+//!
+//! Then one file per exotic object, each being §10.4's answer to "this is not an ordinary object
+//! and here is why":
+//!
+//! - `array` — §10.4.2's `length`, the one exotic that is not optional.
+//! - `string_object` — §10.4.3, which has a property per character and stores none of them.
+//! - `typed` — §10.4.5's integer-indexed object, which is what makes a TypedArray an array.
+//! - `proxy` — §10.5's target, handler, and the pair being revocable together.
+//!
+//! …and one per kind of state a built-in keeps, which is the rest of the file list:
+//!
+//! - `buffer` — §25.1's bytes, and what it means for one to be detached.
+//! - `collection` — §24.1 and §24.2's `Map` and `Set`, and why deleting leaves a hole.
+//! - `promise` — §27.2.6, what a Promise is underneath the methods.
+//! - `regexp` — §22.2.3's slots: what a `RegExp` *is*, apart from its properties.
+//! - `symbol` — §6.1.5 and §20.4.
+//! - `iteration` — §27.1, what an iterator remembers between two calls to `next`.
+//! - `helper` — §27.1.5's Iterator Helper, part-way through a `map`, `filter`, `take` or `drop`.
+//! - `matches` — §22.2.9's RegExp String Iterator, the state `matchAll` walks with.
+//! - `weak_ref` — §26.1 and §26.2, the one reference the collector does not follow.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
 mod arguments;
