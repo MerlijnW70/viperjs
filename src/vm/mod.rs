@@ -299,6 +299,16 @@ impl Vm {
         }
     }
 
+    /// Run a Module's body — §16.2.1.6 `ExecuteModule`.
+    ///
+    /// [`Vm::run`] with one thing changed, and it is the one thing §16.1.7 and §16.2.1.6 disagree
+    /// about: a Module's `this` is **`undefined`** where a Script's is the global object. Every
+    /// other difference between the two goal symbols is decided when the body is compiled — see
+    /// [`crate::compile::compile_module`] — and none of it reaches here.
+    pub fn run_module(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
+        self.run_with_this(chunk, Value::Undefined, heap)
+    }
+
     /// The intrinsics this machine belongs to — §9.3's realm.
     ///
     /// `Copy`, so this hands one out rather than lending it: a built-in that needs
@@ -312,6 +322,17 @@ impl Vm {
     /// The stack is cleared first, so a machine that faulted once is usable again: a fault says
     /// the chunk was wrong, not that the interpreter is now untrustworthy.
     pub fn run(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
+        let global = Value::Object(self.realm.global());
+        self.run_with_this(chunk, global, heap)
+    }
+
+    /// What both goal symbols do, given the `this` each is owed.
+    fn run_with_this(
+        &mut self,
+        chunk: &Chunk,
+        this_value: Value,
+        heap: &mut Heap,
+    ) -> Result<Outcome, Fault> {
         self.stack.clear();
         self.handlers.clear();
         self.frames.clear();
@@ -324,9 +345,10 @@ impl Vm {
         // resolves into it exactly as one inside a function resolves into that call's.
         self.environment =
             heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
-        // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined`, which is
-        // the one place the two goal symbols disagree about it.
-        self.this_value = Value::Object(self.realm.global());
+        // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined` (§16.2.1.6),
+        // which is the one place the two goal symbols disagree about it, and so is the one thing
+        // the caller has to say.
+        self.this_value = this_value;
         // §16.1.7 — nothing constructed the script, so its `new.target` is `undefined`. The parser
         // makes `new.target` at the top level a Syntax Error, so no program can read this one; it
         // is set for the same reason `this_value` is, which is that a machine run twice must not

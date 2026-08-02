@@ -30,6 +30,7 @@
 //! - `constructors` — §7.3.13, and which functions `new` may be written in front of.
 //! - `inheritance` — §15.7's `extends` and `super`, and a `this` that starts out unbound.
 //! - `private` — §15.7's `#x`, which is not a property by any test a program can make.
+//! - `modules` — §16.2's goal symbol, and the four things it does not share with a Script.
 //! - `names` — §10.2.9 and §8.6.3, and the positions that do *not* name a function.
 //! - `strict` — §11.2.1, and the three places sloppy mode is silent where strict throws.
 //! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
@@ -116,6 +117,7 @@ mod iterators;
 mod json;
 mod lexical;
 mod math;
+mod modules;
 mod names;
 mod number_format;
 mod object_state;
@@ -185,6 +187,21 @@ fn run(source: &str) -> String {
 fn describe_run(chunk: &Chunk, vm: &mut Vm, heap: &mut Heap) -> String {
     let outcome = vm.run(chunk, heap).expect("the chunk is well formed"); // the test is about what it evaluates to
     describe(outcome, heap)
+}
+
+/// Run a whole **module** and describe its completion value the way `String(x)` would.
+///
+/// §16.2's goal symbol, which is a different parser and a different compiler — see
+/// [`crate::compile::compile_module`]. Everything a module differs from a script by is decided by
+/// those two and by the `this` [`Vm::run_module`] sets, so this is the only way to reach any of it.
+fn run_module_source(source: &str) -> String {
+    let mut heap = Heap::new();
+    let module = crate::parser::parse_module(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = crate::compile::compile_module(&module, &mut heap).expect("the source compiles"); // same
+    let outcome = Vm::new(&mut heap)
+        .run_module(&chunk, &mut heap)
+        .expect("the chunk is well formed"); // same
+    describe(outcome, &mut heap)
 }
 
 /// Whether a script gets as far as being a chunk at all.

@@ -1072,6 +1072,14 @@ annexB/language/statements/try/catch-redeclared-var-statement-captured.js :: it 
 annexB/language/statements/try/catch-redeclared-var-statement-captured.js (strict) :: it did not parse: the catch parameter is already declared in the catch block
 annexB/language/statements/try/catch-redeclared-var-statement.js :: it did not parse: the catch parameter is already declared in the catch block
 annexB/language/statements/try/catch-redeclared-var-statement.js (strict) :: it did not parse: the catch parameter is already declared in the catch block
+built-ins/AbstractModuleSource/length.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/name.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/proto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/prototype.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/prototype/Symbol.toStringTag.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/prototype/constructor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/prototype/proto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
+built-ins/AbstractModuleSource/throw-from-constructor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AggregateError/cause-property.js :: it threw an object with no name: cause should be an own property
 built-ins/AggregateError/cause-property.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/AggregateError/message-method-prop-cast.js :: it threw TypeError: cannot convert an object to a primitive value
@@ -5829,6 +5837,7 @@ built-ins/ShadowRealm/prototype/evaluate/wrapped-functions-share-no-properties.j
 built-ins/ShadowRealm/prototype/evaluate/wrapped-functions-share-no-properties.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/descriptor.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/descriptor.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
+built-ins/ShadowRealm/prototype/importValue/import-value.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/length.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/length.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/name.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -5841,6 +5850,9 @@ built-ins/ShadowRealm/prototype/importValue/specifier-tostring.js :: it threw Re
 built-ins/ShadowRealm/prototype/importValue/specifier-tostring.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/throws-if-exportname-not-string.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/throws-if-exportname-not-string.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
+built-ins/ShadowRealm/prototype/importValue/throws-if-import-value-does-not-exist.js :: it threw ReferenceError: ShadowRealm is not defined
+built-ins/ShadowRealm/prototype/importValue/throws-typeerror-import-syntax-error.js :: it threw ReferenceError: ShadowRealm is not defined
+built-ins/ShadowRealm/prototype/importValue/throws-typeerror-import-throws.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/validates-realm-object.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/importValue/validates-realm-object.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/prototype/proto.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -16975,6 +16987,10 @@ language/expressions/class/async-method/dflt-params-ref-later.js :: it threw Ref
 language/expressions/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/expressions/class/cpn-class-expr-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-call-expr-identifier-reference-yield.js :: it did not parse: unexpected character
@@ -17358,6 +17374,11 @@ language/expressions/dynamic-import/catch/top-level-import-catch-import-source-s
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/import-defer/import-defer-async-module/main.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/main.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/promise-prototype-then-not-called.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/import-defer/sync/main.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
@@ -17622,6 +17643,7 @@ language/expressions/new/non-ctor-err-realm.js :: it threw TypeError: what was c
 language/expressions/new/non-ctor-err-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
+language/expressions/object/cpn-obj-lit-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
@@ -17811,6 +17833,94 @@ language/global-code/script-decl-var-collision.js (strict) :: it threw TypeError
 language/global-code/script-decl-var.js :: it threw TypeError: what was called is not a function
 language/global-code/script-decl-var.js (strict) :: it threw TypeError: what was called is not a function
 language/identifier-resolution/assign-to-global-undefined.js (strict) :: expected a ReferenceError at runtime time, and nothing was thrown
+language/import/import-defer/deferred-namespace-object/exotic-object-behavior.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/deferred-namespace-object/identity.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/deferred-namespace-object/json-module.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/deferred-namespace-object/to-string-tag.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/get-self-while-defer-evaluating/main.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/get-self-while-evaluating-async/main.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/get-self-while-evaluating.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/module-throws/third-party-evaluation-after-defer-import.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/module-throws/trigger-evaluation.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/syntax-error/import-defer-of-syntax-error-fails.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: expected `from`, found `*`
+language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-sync/module-imported-defer-and-eager.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-top-level-await/flattening-order/main.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-top-level-await/import-defer-async-module/main.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-top-level-await/import-defer-transitive-async-module/main.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-top-level-await/sync-dependency-of-deferred-async-module/main.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-defineOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-delete.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-get-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-getOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-hasProperty-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-hasProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-super-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-super-property-define.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-exported-then-super-property-set-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-getPrototypeOf.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-isExtensible.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-defineOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-delete.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-get-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-getOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-hasProperty-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-hasProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-super-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-super-property-define.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-not-exported-then-super-property-set-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-preventExtensions.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-private-name-access.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-set-string-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-set-string-not-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-setPrototypeOf.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-defineOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-delete.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-get-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-getOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-hasProperty-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-hasProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-super-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-super-property-define.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-other-super-property-set-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-defineOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-delete.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-get-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-getOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-hasProperty-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-hasProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-super-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-super-property-define.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/ignore-symbol-toStringTag-super-property-set-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-defineOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-delete.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-get-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-getOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-hasProperty-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-hasProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-super-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-super-property-define.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-exported-string-super-property-set-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-defineOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-delete.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-get-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-getOwnProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-hasProperty-in-prototype.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-hasProperty.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-super-get.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-super-property-define.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-not-exported-string-super-property-set-exported.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-ownPropertyKey-names.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-ownPropertyKeys-symbols.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-triggers/trigger-ownPropertyKeys.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/syntax/import-attributes.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/syntax/valid-defer-namespace.js :: it did not parse: expected `from`, found `*`
 language/line-terminators/comment-multi-lf.js :: expected a Test262Error and it threw an object with no name
 language/line-terminators/comment-multi-lf.js (strict) :: expected a Test262Error and it threw an object with no name
 language/line-terminators/comment-multi-ls.js :: expected a Test262Error and it threw an object with no name
@@ -17855,6 +17965,167 @@ language/literals/string/legacy-non-octal-escape-sequence-7-strict-explicit-prag
 language/literals/string/legacy-non-octal-escape-sequence-8-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/literals/string/legacy-non-octal-escape-sequence-9-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/literals/string/legacy-octal-escape-sequence-prologue-strict.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/module-code/eval-self-abrupt.js :: expected a Test262Error and it threw an object with no name
+language/module-code/top-level-await/await-awaits-thenable-not-callable.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-awaits-thenables-that-throw.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-awaits-thenables.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-expr-new-expr-reject.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-expr-reject-throws.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-expr-resolution.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/await-void-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/if-await-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/new-await-parens.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/block-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-in-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/for-of-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-block-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/if-expr-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/top-level-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/try-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/typeof-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/void-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-array-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-func-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-identifier.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-literal-number.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-literal-string.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-nested.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-new-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-null.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-obj-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-regexp.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-template-literal.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/syntax/while-await-expr-this.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/top-level-ticks-2.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/top-level-ticks.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/void-await-expr.js :: the chunk did not make sense: YieldOutsideGenerator
+language/module-code/top-level-await/while-dynamic-evaluation.js :: the chunk did not make sense: YieldOutsideGenerator
 language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
 language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
 language/statements/async-function/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
@@ -17975,6 +18246,7 @@ language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subseq
 language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.asyncDispose-called-if-subsequent-initializer-throws.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.asyncDispose-disposed-at-end-of-module.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncfunctionbody.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncfunctionbody.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.dispose-called-at-end-of-asyncgeneratorbody.js :: it did not parse: expected `;`, found an identifier
@@ -17989,12 +18261,14 @@ language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-
 language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/initializer-Symbol.dispose-called-if-subsequent-initializer-throws.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/initializer-Symbol.dispose-disposed-at-end-of-module.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/multiple-resources-disposed-in-reverse-order.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/multiple-resources-disposed-in-reverse-order.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-multiple-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/await-using/syntax/await-using-allowed-at-top-level-of-module.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-bindingidentifier.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-bindingidentifier.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-allows-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
@@ -18007,6 +18281,7 @@ language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js
 language/statements/await-using/syntax/await-using-outer-inner-using-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js :: it did not parse: this expression cannot be assigned to
 language/statements/await-using/syntax/await-using-valid-for-await-using-of-of.js (strict) :: it did not parse: this expression cannot be assigned to
+language/statements/await-using/syntax/await-using.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/throws-error-as-is-if-only-one-error-during-disposal.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/throws-error-as-is-if-only-one-error-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/throws-if-initializer-Symbol.asyncDispose-property-is-null.js :: it did not parse: expected `;`, found an identifier
@@ -18081,6 +18356,10 @@ language/statements/class/async-method/dflt-params-ref-later.js :: it threw Refe
 language/statements/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/statements/class/cpn-class-decl-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js :: the chunk did not make sense: YieldOutsideGenerator
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/class-element-decorator-call-expr-identifier-reference.js :: it did not parse: unexpected character
@@ -18372,6 +18651,7 @@ language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it
 language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/for-of/head-await-using-fresh-binding-per-iteration.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-let-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -18542,6 +18822,7 @@ language/statements/using/initializer-disposed-at-end-of-functionbody.js :: it d
 language/statements/using/initializer-disposed-at-end-of-functionbody.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-generatorbody.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-at-end-of-generatorbody.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/using/initializer-disposed-at-end-of-module.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-if-subsequent-initializer-throws-in-forstatement-head.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-if-subsequent-initializer-throws-in-forstatement-head.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/initializer-disposed-if-subsequent-initializer-throws.js :: it did not parse: expected `;`, found an identifier
@@ -18554,6 +18835,7 @@ language/statements/using/puts-initializer-on-top-of-disposableresourcestack-sub
 language/statements/using/puts-initializer-on-top-of-disposableresourcestack-subsequent-usings.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/static-init-await-binding-valid.js :: it did not parse: expected `;`, found `await`
 language/statements/using/static-init-await-binding-valid.js (strict) :: it did not parse: expected `;`, found `await`
+language/statements/using/syntax/using-allowed-at-top-level-of-module.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/syntax/using-allows-bindingidentifier.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/syntax/using-allows-bindingidentifier.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/syntax/using-allows-multiple-bindings.js :: it did not parse: expected `;`, found an identifier
@@ -18566,6 +18848,7 @@ language/statements/using/syntax/using-invalid-assignment-statement-body-for-of.
 language/statements/using/syntax/using-invalid-assignment-statement-body-for-of.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/syntax/using-outer-inner-using-bindings.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/syntax/using-outer-inner-using-bindings.js (strict) :: it did not parse: expected `;`, found an identifier
+language/statements/using/syntax/using.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/throws-error-as-is-if-only-one-error-during-disposal.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/throws-error-as-is-if-only-one-error-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/throws-if-initializer-Symbol.dispose-property-is-null.js :: it did not parse: expected `;`, found an identifier

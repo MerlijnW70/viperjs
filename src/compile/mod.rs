@@ -35,7 +35,7 @@
 //! nothing checks, and this file held one for long enough to be describing a compiler that could
 //! manage literals and the unary operators.
 
-use crate::ast::{Expr, Script, Stmt};
+use crate::ast::{Expr, Module, Script, Stmt};
 use crate::value::Value;
 mod binding;
 mod chunk;
@@ -132,6 +132,63 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
     compiler.hoist_functions(&script.body)?;
     compiler.statements(&script.body)?;
     Ok(compiler.finish())
+}
+
+/// Compile a whole Module — §16.2.1.6's `ExecuteModule`, as far as its own body goes.
+///
+/// A Module differs from a Script in four ways that all land here, and none of them is the
+/// grammar's `import` and `export`:
+///
+/// - It is **always strict** (§11.2.2), with no directive needed and none able to turn it off.
+/// - Its top-level declarations are **its own**, not the global object's. `var x = 1` in a module
+///   makes no `globalThis.x`, which is the split §16.1.7 makes for a Script reversed.
+/// - A function declared at the top level is *lexically* scoped: §16.2.1.1 asks a
+///   `ModuleItemList` for its `LexicallyDeclaredNames` where a `Script` is asked for its
+///   `TopLevelLexicallyDeclaredNames`, so `function f() {} function f() {}` is a redeclaration in
+///   a module and fine in a script.
+/// - Its `this` is `undefined` (§16.2.1.6), which is the one place the two goal symbols disagree
+///   about it and is the caller's to set — see [`crate::vm::Vm::run_module`].
+///
+/// `import` and `export` are refused here by name. They need a module *record* — a resolver, a
+/// link step, and bindings that point into another module's scope — and that is the rest of M7;
+/// a body that declares nothing across a module boundary needs none of it and runs today.
+pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, CompileError> {
+    let mut compiler = Compiler::new(heap);
+    compiler.chunk.strict = true;
+    // Script code for the two questions that flag decides — §14.2.2's completion value, and
+    // `return` at the top level being a Syntax Error — and *not* for where a `var` goes.
+    compiler.global_vars = false;
+    let statements = module_statements(module)?;
+    // §16.2.1.6 step 4's `InitializeEnvironment`, minus the imports: a module's `var`s are slots
+    // of its own scope, hoisted before anything runs exactly as a function body's are.
+    for name in var_declared_names(&statements) {
+        compiler.declare(name.name);
+    }
+    compiler.declare_lexical_names(&statements)?;
+    compiler.hoist_functions(&statements)?;
+    compiler.statements(&statements)?;
+    Ok(compiler.finish())
+}
+
+/// The statements of a module, refusing the two item kinds that need a module record.
+///
+/// Cloned rather than borrowed because a `ModuleItem` is not a `Stmt` and the walks below take a
+/// slice of statements. A module is compiled once, so the copy is paid once and buys every
+/// existing pass over a body unchanged.
+fn module_statements(module: &Module) -> Result<Vec<Stmt>, CompileError> {
+    let mut statements = Vec::new();
+    for item in &module.body {
+        match item {
+            crate::ast::ModuleItem::Statement(statement) => statements.push(statement.clone()),
+            crate::ast::ModuleItem::Import(declaration) => {
+                return Err(unsupported("an `import` declaration", declaration.span));
+            }
+            crate::ast::ModuleItem::Export(declaration) => {
+                return Err(unsupported("an `export` declaration", declaration.span));
+            }
+        }
+    }
+    Ok(statements)
 }
 
 /// Where a direct `eval`'s `var` declarations go — §19.2.1.1's `varEnv`.

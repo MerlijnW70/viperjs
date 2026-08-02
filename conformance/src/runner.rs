@@ -3,9 +3,9 @@
 use crate::Negative;
 use crate::frontmatter::Frontmatter;
 use praxis::compile::ErrorKind;
-use praxis::compile::compile_script;
+use praxis::compile::{compile_module, compile_script};
 use praxis::heap::Heap;
-use praxis::parser::parse_script;
+use praxis::parser::{parse_module, parse_script};
 use praxis::vm::{Outcome as VmOutcome, Vm};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -216,9 +216,7 @@ impl Runner {
         // A module is a different goal symbol with different scoping and its own `import`
         // machinery. Saying so is honest; running it as a script would report failures that are
         // about the harness rather than the engine.
-        if block.has("module") {
-            return Verdict::Skipped("modules are M7".to_string());
-        }
+
         if block.has("CanBlockIsFalse") || block.has("CanBlockIsTrue") {
             return Verdict::Skipped("agents are not implemented".to_string());
         }
@@ -319,13 +317,32 @@ fn judge_early(negative: Option<&Negative>, why: &str) -> Verdict {
     }
 }
 
+/// Which goal symbol a test's frontmatter asked for, with the tree it produced.
+///
+/// §16.1 and §16.2 are two productions and two compilers, and the difference is decided by one
+/// flag on the test rather than by anything in the text — so it is carried as a value here rather
+/// than by two copies of everything below.
+enum Goal {
+    /// §16.1's `Script`.
+    Script(praxis::ast::Script),
+    /// §16.2's `Module`.
+    Module(praxis::ast::Module),
+}
+
 /// Run a whole program and decide what its frontmatter says about the result.
 fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
     let negative = block.negative.as_ref();
     let mut heap = Heap::new();
+    // §16.2 — a module is a different goal symbol, read and compiled by its own pair. Everything
+    // after that is the same: a module throws, or does not, exactly as a script does.
+    let module = block.has("module");
 
-    let script = match parse_script(program) {
-        Ok(script) => script,
+    let parsed = match module {
+        true => parse_module(program).map(Goal::Module),
+        false => parse_script(program).map(Goal::Script),
+    };
+    let parsed = match parsed {
+        Ok(parsed) => parsed,
         Err(error) => {
             // §16's early errors are reported by the parser, and test262 calls that phase either
             // `parse` or `early`. Both mean "before anything ran", which is what praxis's parser
@@ -343,7 +360,11 @@ fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
     // afterwards — and they are as much a decision about the program as anything the parser says.
     // Skipping them let a test that expected no error at all disappear into the "not run" column
     // instead of failing, which is a hole in the ratchet rather than a kindness.
-    let chunk = match compile_script(&script, &mut heap) {
+    let compiled = match &parsed {
+        Goal::Script(script) => compile_script(script, &mut heap),
+        Goal::Module(module) => compile_module(module, &mut heap),
+    };
+    let chunk = match compiled {
         Ok(chunk) => chunk,
         Err(error) if matches!(error.kind, ErrorKind::BadPattern(_)) => {
             return judge_early(negative, &error.message());
@@ -351,7 +372,11 @@ fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
-    match vm.run(&chunk, &mut heap) {
+    let outcome = match module {
+        true => vm.run_module(&chunk, &mut heap),
+        false => vm.run(&chunk, &mut heap),
+    };
+    match outcome {
         Err(fault) => Verdict::Failed(format!("the chunk did not make sense: {fault:?}")),
         // Nothing was thrown, which for an ordinary test is the whole answer and for an async one
         // is not an answer at all: what it says about itself is in `$DONE`, which was called — or
@@ -819,9 +844,17 @@ var r = /(?i:a)/;",
     #[test]
     fn what_this_harness_cannot_honestly_run_is_skipped_and_says_which() {
         let root = checkout("declined");
-        // A module is a different goal symbol with its own scoping and `import` machinery.
+        // A module is a different goal symbol, and it **runs** — read by `parse_module` and
+        // compiled by `compile_module`, which is §16.2's half of the pair.
         let module = run(&root, "/*---\nflags: [module]\n---*/\nassert(true);");
-        assert!(matches!(&module[0].verdict, Verdict::Skipped(why) if why.contains("module")));
+        assert!(matches!(&module[0].verdict, Verdict::Passed), "{module:?}");
+        // What it still declines is a body that reaches across a module boundary, which needs the
+        // record `import` and `export` are resolved through.
+        let across = run(&root, "/*---\nflags: [module]\n---*/\nexport var a = 1;");
+        assert!(
+            matches!(&across[0].verdict, Verdict::Skipped(why) if why.contains("export")),
+            "{across:?}"
+        );
         // …and it is one run rather than two: a module is always strict, so there is no second
         // mode to measure.
         assert_eq!(module.len(), 1);
