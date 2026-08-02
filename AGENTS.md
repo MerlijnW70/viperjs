@@ -134,7 +134,7 @@ literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array
 resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eval.rs` and
 `compile_direct_eval`. That is what the environments' name lists are for, and it was worth 973 runs.
 
-Conformance as of this commit is **77.45% of test262** — 72,154 of 93,161 runs. Treat that number
+Conformance as of this commit is **77.53% of test262** — 72,226 of 93,161 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Only 2,300 runs are now *stopped* before anything executes, and they are nearly all M7:
 
@@ -164,6 +164,28 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
 **So the largest real subject left is M7** — modules 830, dynamic `import` 849 and `import.meta`
 288 are ~1,970 runs and one piece of work. Everything else above is a proposal, a decided
 exclusion, or blocked on a decision record.
+
+### Three slices are diagnosed and not built, so start from the design and not the bucket
+
+- **`with` — §14.11, 289 runs, the largest core item left.** DR-0018 ends by saying this needs
+  what that record establishes, and it now has it: a name can be resolved against a *running*
+  scope. What is still missing is the other half — an **object** environment record, whose
+  bindings are a target's properties, plus §14.11.2's `@@unscopables`. Every name in a `with`
+  body becomes a run-time lookup, so the compiler has to stop resolving to slots inside one.
+- **A parameter's dead zone — §10.2.11 step 21, 48 runs.** `function f(a = a) {}` and
+  `function f(a = b, b) {}` must both be a ReferenceError *when the default runs*, and praxis
+  runs them. With no duplicate names the clause creates each parameter binding **uninitialised**
+  and `IteratorBindingInitialization` fills it as the parameter is bound; praxis has the *call*
+  fill slots 0..n before the body starts, so every name is initialised before any default is
+  evaluated. The fix is to separate the two: for a non-simple list the call's slots become
+  hidden incoming values, the names become lexical bindings uninitialised ahead of the first
+  default, and each is initialised in turn. It touches the calling convention's slot layout,
+  which is why it is written down here rather than started at the end of a session.
+- **`new.target` and `super(…)` inside a direct `eval` in an arrow.** Both are refused where
+  §19.2.1.1 allows them, because whether an arrow was written inside a function is a *lexical*
+  fact that a running arrow's chunk does not record — and the parser knows it, refusing
+  `new.target` in a top-level arrow at compile time. Carrying that answer onto the chunk is the
+  whole slice.
 
 **63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
