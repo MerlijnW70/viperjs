@@ -278,7 +278,7 @@ impl Compiler<'_> {
             // *initialised* and callable before its own line.
             if let StmtKind::Class(class) = &statement.kind {
                 if let Some(name) = &class.name {
-                    let slot = self.declare_lexical(&name.name, false);
+                    let slot = self.declare_lexical(&name.name, crate::heap::Mutability::Mutable);
                     self.chunk.emit(Instruction::Uninitialise(slot));
                 }
                 continue;
@@ -296,7 +296,8 @@ impl Compiler<'_> {
                 // static-semantics one rather than a second copy here, because a name it missed
                 // would be a binding that never existed and a `ReferenceError` no source explains.
                 for name in crate::static_semantics::bound_names(&declarator.binding) {
-                    let slot = self.declare_lexical(name.name, immutable);
+                    let slot =
+                        self.declare_lexical(name.name, super::lexical_mutability(immutable));
                     self.chunk.emit(Instruction::Uninitialise(slot));
                 }
             }
@@ -717,7 +718,7 @@ impl Compiler<'_> {
         let immutable = declaration.kind == DeclarationKind::Const;
         let mut first = None;
         for name in crate::static_semantics::bound_names(&declarator.binding) {
-            let slot = self.declare_lexical(name.name, immutable);
+            let slot = self.declare_lexical(name.name, super::lexical_mutability(immutable));
             self.chunk.emit(Instruction::Uninitialise(slot));
             first.get_or_insert(slot);
         }

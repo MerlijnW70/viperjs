@@ -63,6 +63,60 @@ impl Compiler<'_> {
         self.emit_function(body, span)
     }
 
+    /// §15.2.5 `InstantiateOrdinaryFunctionExpression` — a function expression, and the scope that
+    /// holds its own name.
+    ///
+    /// Steps 3 to 5 and 9: a **named** function expression gets an environment of its own holding
+    /// an immutable binding of its name, and the function closes over that environment. It is the
+    /// only way such a function can refer to itself — an expression makes no binding outside — and
+    /// it is why `var f = function g() { return g; }` answers the function where `g` is otherwise
+    /// nowhere. §15.5.5, §15.6.4 and §15.8.4 defer to this for generators and `async`, so all four
+    /// kinds arrive here.
+    ///
+    /// A **declaration** does not come this way and must not: its name is a binding of the scope
+    /// around it, which is an ordinary mutable one — `function f() { f = 1; return f; }` called as
+    /// a declaration answers 1, and as an expression answers the function.
+    ///
+    /// The environment is a real one and not merely a level of the compiler's, for DR-0018's
+    /// reason: a scope only the compiler can see is one a direct `eval` written in the body cannot
+    /// resolve into. That is the same argument §15.7.14's class body makes, and this is the same
+    /// clause one production over.
+    pub(super) fn make_function_expression(
+        &mut self,
+        function: &Function,
+        naming: Naming<'_>,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let Some(written) = &function.name else {
+            // An anonymous one binds nothing a program can write, so there is no environment to
+            // make. §8.6.3 may still have given it a name — that is `naming`, and it is a property
+            // of the object rather than a binding anything resolves.
+            return self.make_function(function, naming, span);
+        };
+        let opened = self.enter_environment();
+        let mark = self.enter_scope();
+        // No `Uninitialise` before it, unlike §15.7.14's class name. A class evaluates its heritage
+        // and its computed keys inside its own scope, so its binding has a dead zone something can
+        // reach; between this binding being made and step 9 filling it there is only the making of
+        // the function object, which runs no code. An instruction nothing can observe is one no
+        // test can pin.
+        let slot = self.declare_lexical(&written.name, crate::heap::Mutability::OwnName);
+        let made = self.make_function(function, naming, span);
+        // Step 9's `InitializeBinding`, and it *peeks* rather than popping — the same terms as a
+        // store — so the function it wrote is still on the stack as the expression's value.
+        //
+        // Emitted even when the body was refused, which is not carelessness: a compile that fails
+        // anywhere discards the whole chunk, so instructions after the refusal are never run and
+        // never read. A guard here would be a branch no input can reach, and mutation coverage
+        // said so by surviving its removal.
+        self.chunk.emit(Instruction::Initialise(slot));
+        // Closed on the failing path too: a refusal deeper in the body leaves this compiler holding
+        // a scope it is no longer inside, and the next thing compiled would resolve one hop wrong.
+        self.leave_scope(mark);
+        self.leave_environment(opened)?;
+        made
+    }
+
     /// §15.3 — an arrow function.
     ///
     /// The same as a function expression in every way but three, and all three are the same fact:

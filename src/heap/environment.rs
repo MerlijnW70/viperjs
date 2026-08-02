@@ -57,12 +57,52 @@ pub struct Binding {
     /// scope** before its environment ended is spelled the same way, and for the same reason: the
     /// slot is still there and its name must no longer resolve.
     pub name: Box<str>,
-    /// Whether assigning to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
+    /// What an assignment to it does — §9.1.1.1.5.
     ///
     /// Carried because the compiler that resolves a name is the one that decides this, and a
     /// compiler seeded from a running chain has nowhere else to learn it. Without it
     /// `const x = 1; eval("x = 2")` would assign.
-    pub immutable: bool,
+    pub mutability: Mutability,
+}
+
+/// What an assignment to a binding does — §9.1.1.1.5, which has three answers and not two.
+///
+/// The two refusals are different, and §9.1.1.1.5 spells the difference as the `S` argument to
+/// `CreateImmutableBinding`. Step 2 sets `S` to true when the *binding* is a strict one whatever
+/// the assignment said; step 5.b then throws only when `S` is true. So an immutable binding created
+/// with `S` false is one that a sloppy assignment silently fails to change — which is not the same
+/// as one it changes, and is exactly what makes `function g() { g = 1; return g; }` answer the
+/// function rather than 1.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Mutability {
+    /// The assignment writes. Every `var`, `let`, parameter and catch binding.
+    Mutable,
+    /// §14.3.1's `const` — `CreateImmutableBinding(N, **true**)`, so every assignment is a
+    /// TypeError however the code around it is written.
+    Const,
+    /// §15.2.5's binding of a function expression's own name — `CreateImmutableBinding(N, false)`.
+    ///
+    /// The only binding in the language created that way, and the reason this is an enum rather
+    /// than a flag. The assignment never writes; it *says so* only in strict code.
+    OwnName,
+}
+
+impl Mutability {
+    /// Whether an assignment written in code of this strictness may change the binding.
+    ///
+    /// Both refusals answer `false` — the difference between them is only whether the refusal is
+    /// audible, which is [`Mutability::refusal_throws`].
+    pub fn writes(self) -> bool {
+        self == Self::Mutable
+    }
+
+    /// Whether refusing the assignment throws, rather than being silently ignored.
+    ///
+    /// §9.1.1.1.5 step 2 and step 5.b, read together: a `const` is a strict binding and forces the
+    /// throw itself, and everything else throws exactly when the assignment is in strict code.
+    pub fn refusal_throws(self, strict: bool) -> bool {
+        self == Self::Const || strict
+    }
 }
 
 /// One scope's variables, and the scope it is written inside.
@@ -324,12 +364,12 @@ mod tests {
     }
 
     /// A name list, for the tests below.
-    fn named(names: &[(&str, bool)]) -> Rc<[Binding]> {
+    fn named(names: &[(&str, Mutability)]) -> Rc<[Binding]> {
         names
             .iter()
-            .map(|(name, immutable)| Binding {
+            .map(|(name, mutability)| Binding {
                 name: (*name).into(),
-                immutable: *immutable,
+                mutability: *mutability,
             })
             .collect()
     }
@@ -337,7 +377,7 @@ mod tests {
     #[test]
     fn a_scope_a_source_wrote_knows_what_it_called_its_slots() {
         let mut heap = Heap::new();
-        let names = named(&[("x", false), ("k", true)]);
+        let names = named(&[("x", Mutability::Mutable), ("k", Mutability::Const)]);
         let scope = heap.new_named_environment(None, 2, Rc::clone(&names));
         assert_eq!(heap.environment_names(scope), Some(&*names));
         assert_eq!(heap.environment_size(scope), Some(2));
@@ -345,8 +385,16 @@ mod tests {
         // invariant: index 1 of the names is slot 1, and `k` is the `const`.
         assert_eq!(heap.environment_names(scope).map(<[_]>::len), Some(2));
         assert!(heap.environment_names(scope).is_some_and(|names| {
-            names[1].name.as_ref() == "k" && names[1].immutable && !names[0].immutable
+            names[1].name.as_ref() == "k"
+                && !names[1].mutability.writes()
+                && names[0].mutability.writes()
         }));
+        // The two refusals are different, and only one of them is audible in sloppy code — which
+        // is the whole reason this is three answers rather than a flag.
+        assert!(Mutability::Const.refusal_throws(false));
+        assert!(Mutability::OwnName.refusal_throws(true));
+        assert!(!Mutability::OwnName.refusal_throws(false));
+        assert!(!Mutability::OwnName.writes());
     }
 
     #[test]

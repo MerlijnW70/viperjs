@@ -372,7 +372,9 @@ impl Compiler<'_> {
             // *evaluated*, so a `function` keyword inside a loop makes one object per iteration.
             // Unnamed unless something above named it; §8.6.3 reaches only the positions that do,
             // and [`Compiler::named_evaluation`] is where each of those is listed.
-            ExprKind::Function(function) => self.make_function(function, Naming::default(), span),
+            ExprKind::Function(function) => {
+                self.make_function_expression(function, Naming::default(), span)
+            }
             // §15.3 — an arrow, which is a function expression that keeps the `this` around it.
             ExprKind::Arrow(arrow) => self.make_arrow(arrow, Naming::default(), span),
             // §15.7.12 — an expression leaves the constructor where it was evaluated. Its own name,

@@ -39,7 +39,7 @@ mod statement;
 pub use self::chunk::{Chunk, Instruction, Scope, ShortCircuit, SpreadCall, Template};
 
 use self::chunk::Unpatched;
-use crate::heap::Heap;
+use crate::heap::{Heap, Mutability};
 use crate::span::Span;
 use crate::static_semantics::var_declared_names;
 use std::rc::Rc;
@@ -242,12 +242,12 @@ struct Local {
     /// back — [`Compiler::leave_scope`] says why. So going out of scope is a flag rather than a
     /// truncation, and [`Compiler::resolve`] skips what is no longer in scope.
     live: bool,
-    /// Whether assigning to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
+    /// What an assignment to it does — §9.1.1.1.5, which has three answers.
     ///
     /// Known here rather than at run time because the compiler resolved the binding: an
-    /// environment does not have to carry a mutability bit per slot to answer a question that was
-    /// already settled when the name was looked up.
-    immutable: bool,
+    /// environment does not have to be asked a question that was already settled when the name was
+    /// looked up.
+    mutability: Mutability,
 }
 
 impl Local {
@@ -268,7 +268,7 @@ impl From<crate::heap::Binding> for Local {
         Self {
             name: binding.name,
             live: true,
-            immutable: binding.immutable,
+            mutability: binding.mutability,
         }
     }
 }
@@ -799,10 +799,10 @@ impl<'a> Compiler<'a> {
     /// safe: `{ let x = 1; f = () => x } { let y = 2 }` would have `f` answering 2 if `y` were
     /// given the slot `x` had finished with. Slots are cheap and closures are not repairable
     /// afterwards.
-    fn declare_lexical(&mut self, name: &str, immutable: bool) -> u32 {
+    fn declare_lexical(&mut self, name: &str, mutability: Mutability) -> u32 {
         let slot = self.declare_shadowing(name);
         if let Some(local) = self.locals.last_mut() {
-            local.immutable = immutable;
+            local.mutability = mutability;
         }
         slot
     }
@@ -826,11 +826,13 @@ impl<'a> Compiler<'a> {
     /// string to find a variable — §9.1's records, resolved once.
     fn binding(&self, name: &str) -> Option<Where> {
         if let Some(index) = self.resolve(name) {
-            let immutable = self.local(name).is_some_and(|local| local.immutable);
+            let mutability = self
+                .local(name)
+                .map_or(Mutability::Mutable, |local| local.mutability);
             return Some(Where {
                 depth: 0,
                 index,
-                immutable,
+                mutability,
             });
         }
         // Outwards, one scope at a time. The innermost enclosing scope is the *last* of `outer`,
@@ -846,11 +848,13 @@ impl<'a> Compiler<'a> {
             // conversion can fail on a source we accepted in the first place.
             let depth = u32::try_from(back + 1).ok()?; // bounded by the u32 source-length contract
             let index = u32::try_from(at).ok()?; // same
-            let immutable = scope.get(at).is_some_and(|local| local.immutable);
+            let mutability = scope
+                .get(at)
+                .map_or(Mutability::Mutable, |local| local.mutability);
             return Some(Where {
                 depth,
                 index,
-                immutable,
+                mutability,
             });
         }
         None
@@ -1006,11 +1010,19 @@ impl<'a> Compiler<'a> {
         let binding = self.binding(name);
         self.note_arguments(name, binding);
         match binding {
-            // §9.1.1.1.5 step 3 — a `const` refuses every assignment, and the compiler already
-            // knows which binding this is. What is left for run time is the throw, which happens
-            // *after* the right-hand side has run because §13.15.2 evaluates it first.
-            Some(binding) if binding.immutable => {
-                self.chunk.emit(Instruction::ThrowImmutableAssignment);
+            // §9.1.1.1.5 step 5 — an immutable binding refuses every assignment, and the compiler
+            // already knows which binding this is. What is left for run time is the *refusal*,
+            // which happens after the right-hand side has run because §13.15.2 evaluates it first.
+            //
+            // Step 5.b decides whether the refusal is audible, and it is a question about the code
+            // the assignment is written in as well as about the binding. A `const` throws wherever
+            // it is written; §15.2.5's function name throws only in strict code, and in sloppy code
+            // leaves the value where the store would have left it — an assignment evaluates to its
+            // right-hand side whether or not anything kept it.
+            Some(binding) if !binding.mutability.writes() => {
+                if binding.mutability.refusal_throws(self.chunk.strict) {
+                    self.chunk.emit(Instruction::ThrowImmutableAssignment);
+                }
                 Ok(())
             }
             Some(binding) => {
@@ -1036,7 +1048,7 @@ impl Compiler<'_> {
         self.locals.push(Local {
             name: name.into(),
             live: true,
-            immutable: false,
+            mutability: Mutability::Mutable,
         });
         self.high_water = self.high_water.max(self.locals.len());
         slot
@@ -1108,12 +1120,12 @@ struct Where {
     depth: u32,
     /// Which slot, in that environment.
     index: u32,
-    /// Whether writing to it is a TypeError — §9.1.1.1.5, and the whole of what `const` is.
+    /// What writing to it does — §9.1.1.1.5.
     ///
     /// Carried here rather than looked up again by whoever writes, because a second lookup is a
     /// second copy of the resolution rule: the two could disagree about *which* `x` a name means,
     /// and only one of them would be right. Resolving once answers both questions at once.
-    immutable: bool,
+    mutability: Mutability,
 }
 
 /// Where a derived constructor's `this` lives, from where the compiler is standing — DR-0015.
@@ -1156,9 +1168,21 @@ fn bindings_of(locals: &[Local]) -> Rc<[crate::heap::Binding]> {
         .iter()
         .map(|local| crate::heap::Binding {
             name: local.name.clone(),
-            immutable: local.immutable,
+            mutability: local.mutability,
         })
         .collect()
+}
+
+/// §14.3.1's two lexical declarations, as what an assignment to one does.
+///
+/// `let` and `const` are the only productions that reach here, so this answers one of two.
+/// [`Mutability::OwnName`] is §15.2.5's and is created where that clause is, which is the only
+/// place in the language that makes a binding a program cannot write to and cannot be told so.
+pub(super) fn lexical_mutability(immutable: bool) -> Mutability {
+    match immutable {
+        true => Mutability::Const,
+        false => Mutability::Mutable,
+    }
 }
 
 /// A refusal with a location.

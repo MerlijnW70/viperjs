@@ -238,3 +238,155 @@ fn a_method_is_not_a_constructor_and_has_no_prototype() {
         "true,object"
     );
 }
+
+#[test]
+fn a_named_function_expression_can_see_itself_and_nothing_outside_it_can_take_that_away() {
+    // §15.2.5 steps 3 to 5 and 9 — a named function *expression* gets an environment of its own
+    // holding an immutable binding of its name, and closes over it. It is the only way such a
+    // function can refer to itself: an expression makes no binding outside, so without this the
+    // name is whatever the surrounding scope happened to have, or nothing at all.
+    assert_eq!(
+        run("var f = function g() { return typeof g; }; f()"),
+        "function"
+    );
+    assert_eq!(run("var f = function g() { return g === f; }; f()"), "true");
+    // The binding is the *function's*, so it survives whatever happens to the name outside. Both
+    // halves matter: an outer binding of the same name is shadowed, and reassigning the name the
+    // expression was stored under does not reach it.
+    assert_eq!(
+        run("var g = 1; var f = function g() { return typeof g; }; f()"),
+        "function"
+    );
+    assert_eq!(
+        run("var f = function g() { return g; }; var h = f; f = 1; h() === h"),
+        "true"
+    );
+    // …and it is not visible from outside, which is what makes it the *function's* scope rather
+    // than a declaration in disguise.
+    assert_eq!(run("var f = function g() {}; typeof g"), "undefined");
+    // A recursive call through it works, which is the reason the clause exists at all.
+    assert_eq!(
+        run(
+            "var f = function fact(n) { return n <= 1 ? 1 : n * fact(n - 1); }; \
+             var kept = f; f = null; kept(5)"
+        ),
+        "120"
+    );
+    // Every kind of function expression, since §15.5.5, §15.6.4 and §15.8.4 all defer to §15.2.5.
+    assert_eq!(
+        run("var f = function* g() { yield typeof g; }; f().next().value"),
+        "function"
+    );
+    assert_eq!(
+        run("var f = async function g() { return typeof g; }; typeof f()"),
+        "object"
+    );
+    // An anonymous expression binds nothing, so §8.6.3's name is a property and not a scope.
+    assert_eq!(
+        run("var f = function () { return typeof f; }; f()"),
+        "function"
+    );
+    assert_eq!(run("(function () {}).name"), "");
+}
+
+#[test]
+fn a_declarations_name_is_the_scopes_and_an_expressions_name_is_its_own() {
+    // The same two words, `function g`, and two different bindings. A declaration's name belongs to
+    // the scope around it and is an ordinary mutable binding; an expression's belongs to the
+    // function. Assigning to it is where they part, and it is the whole reason the two productions
+    // cannot share one path.
+    assert_eq!(
+        run("function d() { d = 1; return typeof d; } d()"),
+        "number"
+    );
+    assert_eq!(
+        run("var f = function g() { g = 1; return typeof g; }; f()"),
+        "function"
+    );
+    // A method is not a `BindingIdentifier` either, so `{ m() { … } }` has no self-binding.
+    assert_eq!(
+        run("var o = { m: function () { return typeof m; } }; o.m()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("var o = { m() { return typeof m; } }; o.m()"),
+        "undefined"
+    );
+}
+
+#[test]
+fn assigning_to_a_function_expressions_own_name_is_refused_and_says_so_only_in_strict_code() {
+    // §9.1.1.1.5, and the reason praxis's mutability is three answers rather than a flag.
+    // §15.2.5 step 5 creates the binding with `CreateImmutableBinding(name, **false**)` — the only
+    // production in the language that passes `false` — so step 2 does not force the throw and step
+    // 5.b asks the *assignment* instead.
+    //
+    // Sloppy: the write never happens and nothing is said about it.
+    assert_eq!(
+        run("var f = function g() { g = 1; return g === f; }; f()"),
+        "true"
+    );
+    // …and the assignment still evaluates to its right-hand side, because that is what an
+    // assignment is worth whether or not anything kept it.
+    assert_eq!(run("var f = function g() { return (g = 7); }; f()"), "7");
+    // Strict: the same refusal, said out loud.
+    assert_eq!(
+        run(
+            "var f = function g() { 'use strict'; try { g = 1; return 'assigned'; } \
+             catch (e) { return e.constructor.name; } }; f()"
+        ),
+        "TypeError"
+    );
+    // Strict from the code around it rather than from the body's own directive, since §11.2.1
+    // makes strictness inherited.
+    assert_eq!(
+        run(
+            "'use strict'; var f = function g() { try { g = 1; return 'assigned'; } \
+             catch (e) { return e.constructor.name; } }; f()"
+        ),
+        "TypeError"
+    );
+    // A `const` is the other immutable binding and is *not* the same: §14.3.1 creates it with
+    // `CreateImmutableBinding(N, true)`, so it throws wherever it is written. The two rows below
+    // are the same program in the two strictnesses, and only one of them agrees with the rows
+    // above — which is what a single flag could not express.
+    assert_eq!(
+        run(
+            "const c = 1; (function () { try { c = 2; return 'assigned'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    // The right-hand side runs first either way — §13.15.2 evaluates it before the reference is
+    // written — so a refusal is not a way to skip it.
+    assert_eq!(
+        run("var ran = false; var f = function g() { g = (ran = true); return ran; }; f()"),
+        "true"
+    );
+}
+
+#[test]
+fn a_direct_eval_in_a_named_function_expression_resolves_its_name_too() {
+    // The binding is an environment's (DR-0018), not a slot the compiler kept to itself — so the
+    // one thing that resolves against a *running* scope can find it, and finds it with the right
+    // mutability.
+    assert_eq!(
+        run("var f = function g() { return eval('typeof g'); }; f()"),
+        "function"
+    );
+    assert_eq!(
+        run("var f = function g() { return eval('g') === f; }; f()"),
+        "true"
+    );
+    assert_eq!(
+        run("var f = function g() { eval('g = 1'); return g === f; }; f()"),
+        "true"
+    );
+    assert_eq!(
+        run(
+            "var f = function g() { 'use strict'; try { eval('g = 1'); return 'assigned'; } \
+             catch (e) { return e.constructor.name; } }; f()"
+        ),
+        "TypeError"
+    );
+}

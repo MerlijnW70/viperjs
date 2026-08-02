@@ -408,8 +408,14 @@ fn a_scope_names_its_slots_in_slot_order_and_says_which_may_not_be_assigned() {
     // thing that knows, and a chain has nowhere else to learn it from.
     let bindings = chunk.bindings();
     assert_eq!(
-        bindings.iter().map(|at| at.immutable).collect::<Vec<_>>(),
-        [false, false, false, false, true]
+        bindings.iter().map(|at| at.mutability).collect::<Vec<_>>(),
+        [
+            crate::heap::Mutability::Mutable,
+            crate::heap::Mutability::Mutable,
+            crate::heap::Mutability::Mutable,
+            crate::heap::Mutability::Mutable,
+            crate::heap::Mutability::Const,
+        ]
     );
 }
 

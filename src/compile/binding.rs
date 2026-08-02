@@ -525,7 +525,7 @@ impl Compiler<'_> {
                 let slot = match self.resolve_in_scope(name) {
                     Some(slot) => slot,
                     None => {
-                        let slot = self.declare_lexical(name, immutable);
+                        let slot = self.declare_lexical(name, super::lexical_mutability(immutable));
                         self.chunk.emit(Instruction::Uninitialise(slot));
                         slot
                     }

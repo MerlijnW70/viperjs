@@ -79,7 +79,7 @@ impl Compiler<'_> {
         let mark = self.enter_scope();
         let mut inner = None;
         if let Some(name) = &class.name {
-            let slot = self.declare_lexical(&name.name, true);
+            let slot = self.declare_lexical(&name.name, crate::heap::Mutability::Const);
             self.chunk.emit(Instruction::Uninitialise(slot));
             inner = Some(slot);
         }
