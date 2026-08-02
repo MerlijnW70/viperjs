@@ -134,7 +134,7 @@ literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array
 resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eval.rs` and
 `compile_direct_eval`. That is what the environments' name lists are for, and it was worth 973 runs.
 
-Conformance as of this commit is **77.29% of test262** — 72,004 of 93,161 runs. Treat that number
+Conformance as of this commit is **77.45% of test262** — 72,154 of 93,161 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Only 2,300 runs are now *stopped* before anything executes, and they are nearly all M7:
 
@@ -146,26 +146,26 @@ it. Only 2,300 runs are now *stopped* before anything executes, and they are nea
 | 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 110 | a property of strings |
 
-**So the skip list is no longer where the work is** — it is under a thousand runs per entry, and the
-~18,900 tests that **run and fail** are where the next slices come from. Sorted by reason, the
-largest are:
+**The skip list is no longer where the work is, and neither are the biggest failure buckets.**
+Sorted by reason the largest look actionable and mostly are not, which is worth doing once and
+writing down rather than re-deriving. Bucketed by *path*, what they actually are:
 
-| Runs | Reason | What it is |
+| Runs | Reason | What it really is |
 | --- | --- | --- |
-| 8,316 | `Temporal is not defined` | a trap — see below, and do not cost it as 8,316 cheap runs |
-| 1,270 | `what was called is not a function` | a grab-bag; bucket it by path before costing it |
-| 894 | `the heap has grown past what this engine will allocate` | DR-0013's budget meeting resizable buffers |
-| 471 | `a declaration may not stand where only a statement may` | worth reading: some of these are right |
-| 458 | `cannot read a property of something that is not an object` | another grab-bag |
-| 318 | `DisposableStack` / `AsyncDisposableStack` | the **explicit resource management** proposal — a Temporal in miniature |
+| 8,316 | `Temporal is not defined` | a proposal — see below |
+| 1,270 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync` 128, `Iterator.zip`/`zipKeyed`/`concat` 160, `Promise.allKeyed`/`allSettledKeyed` 92, `Map`/`WeakMap`'s `getOrInsert` 64, `Uint8Array` base64 32. The real remainder is `class` 77 and `DataView` 52 |
+| 894 | the heap budget | blocked on DR-0010 slot reuse, and the tests are time-bound |
+| 471 | `a declaration may not stand where only a statement may` | Annex B syntactic — excluded by DR-0008 |
+| 454 | `cannot read a property…` | **Atomics 224** (of which most need `$262.agent`, so ~80 are winnable in a one-thread engine) and **`Error.prototype.stack` 64**, which is a proposal |
 | 288 | `expected 'meta', found an identifier` | `import.meta`, which arrives with modules |
-| 114 | `ShadowRealm is not defined` | a proposal too |
+| 216 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
+| 238 | `Calling as constructor…` | all `Temporal` |
 
-The `eval` bucket that used to sit second at 1,500 is gone. Nothing left on that list is both large
-and one subject the way it was: the two biggest are proposals or grab-bags, so the next slice comes
-from bucketing one of the grab-bags **by path** (`awk -F/ '{print $1"/"$2}'`) rather than by reason.
+**So the largest real subject left is M7** — modules 830, dynamic `import` 849 and `import.meta`
+288 are ~1,970 runs and one piece of work. Everything else above is a proposal, a decided
+exclusion, or blocked on a decision record.
 
-**63.06% to 75.26% in five slices** (and 77.29% with the two after them), four of them §27.6 and its neighbourhood and the last §23.2's
+**63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
 `GetIterator(value, async)` (+1,590) — `GeneratorStart` becoming an instruction (+1,598), the
 `BigInt` type itself, and `BigInt64Array` (+1,432). The `GeneratorStart` one is worth reading before
@@ -174,6 +174,15 @@ touching that area: a generator's parameters are **not** part of its body, so
 Deciding it in `enter` instead put the whole parameter list inside the parked body, where it ran at
 the first `next` — invisible until a parameter can throw or be observed, and then 1,598 tests at
 once, most of them in `dstr` directories that have nothing to do with generators.
+
+**75.26% to 77.45% in seven more**, and the shape of them is worth knowing before picking the
+next: two were one architectural piece (a name list on every running scope, then direct `eval`
+resolving into it — +973), and the other five were small clauses that had been *hidden by a
+refusal or by a crash*. Deleting the direct-eval refusal exposed §15.2.5's named function
+expression (+36) and §10.2.4's restricted properties (+109 against 23); fixing a stack overflow
+in `JSON.parse` exposed §25.5.1.1's array walk (+2); and §20.1.3.6's last two rows (+26) were
+simply missing. **When a slice removes a refusal, budget for the ones behind it** — they are
+cheap, they are core, and nothing on the failure-bucket list names them.
 
 **A TypedArray's element is a `Value`, and that is what `BigInt64Array` cost.** Not the two kinds —
 those are eight bytes and a sign — but the fact that §23.2.1 gives two of the eleven a
