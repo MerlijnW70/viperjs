@@ -66,6 +66,12 @@ pub struct Realm {
     array_buffer_prototype: ObjectId,
     /// %ArrayBuffer% itself, which `slice`'s `SpeciesConstructor` falls back to.
     array_buffer_constructor: ObjectId,
+    /// %eval% — §19.2.1, held because §13.3.6.1 identifies a **direct** eval by object identity.
+    ///
+    /// Comparing against whatever the global object currently says under `eval` would answer
+    /// `globalThis.eval = f; eval(x)` wrongly: that is an ordinary call to `f`, not a direct eval.
+    /// The same reason `%Promise%` is kept here rather than looked up when it is needed.
+    eval_function: ObjectId,
     /// %DataView.prototype% — §25.3.4.
     data_view_prototype: ObjectId,
     /// %TypedArray.prototype% — §23.2.3, which every one of the nine inherits from.
@@ -347,6 +353,8 @@ impl Realm {
             array_buffer_prototype,
             // Replaced by `builtins::buffer::install`, which is where the constructor is made.
             array_buffer_constructor: array_buffer_prototype,
+            // Replaced below, once `builtins::global::install` has made it.
+            eval_function: global,
             data_view_prototype,
             typed_array_prototype,
             // Replaced below, once `builtins::typed::install` has made them.
@@ -401,6 +409,11 @@ impl Realm {
         // built-ins, which are handed a finished realm. Taken from the global *now*, before a
         // script can run and reassign one — which is precisely the difference between an intrinsic
         // and a property, and the whole point of holding them here.
+        // §13.3.6.1 needs this by identity, and it is discovered rather than allocated for the
+        // same reason `%ArrayBuffer%` is: the built-ins are handed a finished realm.
+        if let Some(found) = crate::builtins::global_object(heap, &realm, "eval") {
+            realm.eval_function = found;
+        }
         for (at, (name, _, _)) in crate::heap::KINDS.into_iter().enumerate() {
             if let Some(found) = crate::builtins::global_object(heap, &realm, name) {
                 realm.typed_constructors[at] = found;
@@ -493,6 +506,17 @@ impl Realm {
     /// %DataView.prototype% — §25.3.4.
     pub fn data_view_prototype(&self) -> ObjectId {
         self.data_view_prototype
+    }
+
+    /// Whether `callee` is §19.2.1's `eval` itself — §13.3.6.1's test for a **direct** eval.
+    ///
+    /// Identity and not a name, which is the whole of what that clause asks: the call is direct
+    /// when the thing being called *is* this function, however it was spelled and whatever the
+    /// global object currently says under `eval`. So `var eval = f; eval(x)` is an ordinary call,
+    /// and `globalThis.eval = f; eval(x)` is one too.
+    #[must_use]
+    pub fn is_eval(&self, callee: crate::value::Value) -> bool {
+        matches!(callee, crate::value::Value::Object(id) if id == self.eval_function)
     }
 
     /// %TypedArray.prototype% — §23.2.3.

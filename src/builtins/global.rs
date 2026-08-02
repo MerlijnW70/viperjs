@@ -25,6 +25,9 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("isNaN", 1, is_nan),
         ("parseFloat", 1, parse_float),
         ("parseInt", 2, parse_int),
+        // §19.2.1 — `eval` sits here with the other four because that is where it lives, and not
+        // because it is like them: it is the only one whose *call site* changes what it means.
+        ("eval", 1, super::eval::eval),
     ] {
         define_method(heap, realm, global, name, length, native);
     }

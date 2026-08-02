@@ -33,6 +33,7 @@
 //! - `names` — §10.2.9 and §8.6.3, and the positions that do *not* name a function.
 //! - `strict` — §11.2.1, and the three places sloppy mode is silent where strict throws.
 //! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
+//! - `eval` — §19.2.1's indirect half, and the call site that tells direct from indirect.
 //! - `for_of` — §14.7.5.7, and the four ways out of a loop that have to close its iterator.
 //! - `globals` — §19.2, and why `parseInt` is not `Number`.
 //! - `iterators` — §27.1, and where an iterator has got to that no script can reach.
@@ -86,6 +87,7 @@ mod constructors;
 mod date;
 mod delegating;
 mod destructuring;
+mod eval;
 mod for_await;
 mod for_in;
 mod for_of;

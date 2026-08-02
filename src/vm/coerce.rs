@@ -357,6 +357,68 @@ impl Vm {
         answer
     }
 
+    /// §19.2.1.1 `PerformEval` — run a whole compiled *script* here and answer its completion value.
+    ///
+    /// Not [`Vm::run`], which is the embedder's door and clears the stack, the frames and the
+    /// handlers before it starts. This is a script running in the middle of an expression, so
+    /// everything the caller had must still be there afterwards — the same promise
+    /// [`Vm::call_value`] makes, kept by the same bookkeeping.
+    ///
+    /// The environment is the caller's to choose and is passed in, because that is the *whole*
+    /// difference between §19.2.1.1's two modes: an indirect eval is given a fresh one over the
+    /// global scope, and a direct one would be given a child of the running scope. Nothing here
+    /// decides which.
+    ///
+    /// The completion value comes from `self.completion` rather than the stack. A script is not a
+    /// call and leaves nothing behind: §14.2.2's value is whatever its last value-producing
+    /// statement produced, which the loop records as it goes and which is why `eval("var x")` is
+    /// `undefined` while `eval("1; ;")` is 1.
+    pub(crate) fn run_script(
+        &mut self,
+        chunk: &Chunk,
+        environment: crate::heap::EnvironmentId,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        if self.reentries >= MAX_REENTRY_DEPTH {
+            return Err(Abrupt::Raised(
+                ErrorKind::Range,
+                "too much recursion in a conversion",
+            ));
+        }
+        let floor = std::mem::replace(
+            &mut self.floor,
+            Floor {
+                handlers: self.handlers.len(),
+                frames: self.frames.len(),
+            },
+        );
+        let saved_environment = std::mem::replace(&mut self.environment, environment);
+        let saved_completion = std::mem::replace(&mut self.completion, Value::Undefined);
+        let base = self.stack.len();
+        self.reentries += 1;
+
+        let mut current: Option<Rc<Chunk>> = None;
+        let mut at = 0_usize;
+        let answer = self
+            .execute(chunk, heap, &mut current, &mut at)
+            .map_err(fault)
+            .and_then(|()| match self.escaped.take() {
+                // A throw the eval'd code did not catch is the caller's to see, and unchanged:
+                // rebuilding it would hand the `catch` a different object than the `throw` made.
+                Some(thrown) => Err(Abrupt::Thrown(thrown)),
+                None => Ok(self.completion),
+            });
+
+        self.reentries -= 1;
+        // Whatever happened. A throw leaves half-built operands and the eval's own scope behind,
+        // and this is the one place that can put the caller back exactly as it was.
+        self.stack.truncate(base);
+        self.completion = saved_completion;
+        self.environment = saved_environment;
+        self.floor = floor;
+        answer
+    }
+
     /// Enter a compiled callee and run until it returns, with the floors and the count set.
     ///
     /// The environment and the `this` are saved and put back by hand. A `Return` restores them

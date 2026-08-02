@@ -652,6 +652,37 @@ impl Vm {
                     let how = if method { Entry::Method } else { Entry::Plain };
                     self.enter(how, count, heap, root, current, at)?;
                 }
+                Instruction::CallDirectEval(count) => {
+                    // §13.3.6.1 — the compiler saw the name `eval`; this is the other half of the
+                    // question, which is whether that name holds `%eval%` *now*. The callee sits
+                    // under its arguments, having been pushed first.
+                    let callee = self
+                        .stack
+                        .len()
+                        .checked_sub(count as usize + 1)
+                        .and_then(|at| self.stack.get(at).copied())
+                        .ok_or(Fault::StackUnderflow)?;
+                    if self.realm.is_eval(callee) {
+                        // §19.2.1.1's direct mode needs the caller's scope, and praxis resolves
+                        // names to numbered slots at compile time — so a chunk compiled here has
+                        // no way to reach the caller's bindings and a sloppy `var` in one would
+                        // have to grow an environment sized at compile time. Refused by name
+                        // rather than run in the global scope, because running it there would be
+                        // *indirect* eval wearing this one's clothes: the two differ exactly when
+                        // the eval'd code mentions something the caller declared, and quietly
+                        // answering the global's version of that name is a wrong answer rather
+                        // than a missing feature.
+                        let thrown = self.realm.error(
+                            heap,
+                            NativeError::Type,
+                            "a direct eval is not implemented yet — \
+                             (0, eval)(…) runs the same source in the global scope",
+                        );
+                        self.unwind(thrown, root, current, at)?;
+                        continue;
+                    }
+                    self.enter(Entry::Plain, count, heap, root, current, at)?;
+                }
                 Instruction::SpreadProperties => {
                     let source = self.pop()?;
                     let target = *self.stack.last().ok_or(Fault::StackUnderflow)?;

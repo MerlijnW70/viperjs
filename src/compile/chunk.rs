@@ -484,6 +484,14 @@ pub enum Instruction {
     ///
     /// The callee gets no receiver, so its `this` is §10.2.1.2's substitution: the global object.
     Call(u32),
+    /// The same call, made where the callee was written as the bare name `eval` — §13.3.6.1.
+    ///
+    /// A separate instruction because whether a call is a **direct** eval is a property of the
+    /// *syntax* that only the compiler can see, and of the callee's *identity* that only the
+    /// interpreter can. This carries the first half to the second: everything else about it is
+    /// [`Instruction::Call`], and it behaves as one whenever the callee turns out to be anything
+    /// but `%eval%` — which is exactly what makes `var eval = f; eval(x)` an ordinary call.
+    CallDirectEval(u32),
     /// Take a receiver, a callee and this many arguments, and call the callee *on* the receiver.
     ///
     /// A method call is not a plain call of a property's value. `o.m()` and `var f = o.m; f()`
@@ -1075,6 +1083,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::PopHandler
         | Instruction::MakeFunction(_)
         | Instruction::Call(_)
+        | Instruction::CallDirectEval(_)
         | Instruction::Construct(_)
         | Instruction::CallMethod(_)
         | Instruction::LoadThis

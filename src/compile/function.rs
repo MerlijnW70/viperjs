@@ -265,10 +265,15 @@ impl Compiler<'_> {
             kind: ErrorKind::TooLong,
             span,
         })?;
-        self.chunk.emit(if method {
-            Instruction::CallMethod(count)
-        } else {
-            Instruction::Call(count)
+        // §13.3.6.1 — a call whose callee is written as the bare name `eval` may be a *direct*
+        // eval, and only the compiler can see that it was written that way. Whether it really is
+        // one depends on what that name turns out to hold, which only the interpreter can see, so
+        // the instruction carries the question rather than an answer.
+        let direct_eval = matches!(&callee.kind, ExprKind::Identifier(name) if name == "eval");
+        self.chunk.emit(match (method, direct_eval) {
+            (true, _) => Instruction::CallMethod(count),
+            (false, true) => Instruction::CallDirectEval(count),
+            (false, false) => Instruction::Call(count),
         });
         Ok(())
     }

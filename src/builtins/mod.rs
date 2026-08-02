@@ -30,6 +30,7 @@ pub(crate) mod date;
 mod date_format;
 mod date_methods;
 pub mod error;
+pub mod eval;
 pub mod function;
 mod generator;
 pub mod global;
