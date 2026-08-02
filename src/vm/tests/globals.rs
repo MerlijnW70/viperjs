@@ -91,3 +91,123 @@ fn parse_float_takes_the_longest_prefix_that_is_a_decimal_literal() {
     assert_eq!(run("isNaN.length"), "1");
     assert_eq!(run("typeof parseInt"), "function");
 }
+
+#[test]
+fn a_function_declaration_may_not_name_a_global_property_it_could_not_write() {
+    // §9.1.1.4.16 `CanDeclareGlobalFunction` against §9.1.1.4.15's `var` question, and the pair is
+    // the point: a `var` that names an existing property leaves it exactly as it is, where a
+    // function declaration has to *put its function in* — so a property it could not write is a
+    // property it cannot declare over. §19.1 fixes `NaN` in place, which makes it the case that
+    // separates the two.
+    assert_eq!(
+        run("try { (0, eval)('var NaN;'); 'allowed' } catch (e) { e.constructor.name }"),
+        "allowed"
+    );
+    assert_eq!(
+        run("try { (0, eval)('function NaN() {}'); 'allowed' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // A property that is configurable may be declared over, whatever else it is.
+    assert_eq!(
+        run("globalThis.cfgName = 1; \
+             try { (0, eval)('function cfgName() {}'); typeof cfgName } catch (e) { e.constructor.name }"),
+        "function"
+    );
+    // …and so may a non-configurable one that is an ordinary, visible data property, because the
+    // declaration redefines it in place rather than replacing it. `var` makes exactly that shape.
+    assert_eq!(
+        run("(0, eval)('var varName;'); \
+             try { (0, eval)('function varName() {}'); typeof varName } catch (e) { e.constructor.name }"),
+        "function"
+    );
+    // Configurable is enough **on its own**, and this is the row that says so: a property that is
+    // configurable but neither writable nor enumerable is allowed by step 5 and would be refused
+    // by step 6. `globalThis.x = 1` cannot show that — it makes a property both tests accept.
+    //
+    // Asserted as "was it allowed" rather than by reading the binding afterwards, because
+    // §9.1.1.4.16's *storage* is a separate gap: it redefines the property where praxis still
+    // assigns to it, so a non-writable one keeps its old value. That is a bug about
+    // `CreateGlobalFunctionBinding` and not about `CanDeclareGlobalFunction`, and a row that
+    // conflated the two would go green when either was fixed.
+    assert_eq!(
+        run("Object.defineProperty(globalThis, 'hiddenCfg', \
+             { value: 1, configurable: true, writable: false, enumerable: false }); \
+             try { (0, eval)('function hiddenCfg() {}'); 'allowed' } catch (e) { e.constructor.name }"),
+        "allowed"
+    );
+    // …and step 6 needs **both** of its halves. A non-configurable property that is writable but
+    // hidden from enumeration is refused, which either half alone would allow.
+    assert_eq!(
+        run("Object.defineProperty(globalThis, 'hiddenVar', \
+             { value: 1, configurable: false, writable: true, enumerable: false }); \
+             try { (0, eval)('function hiddenVar() {}'); 'allowed' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // The mirror of it: enumerable but not writable, and also refused.
+    assert_eq!(
+        run("Object.defineProperty(globalThis, 'frozenVar', \
+             { value: 1, configurable: false, writable: false, enumerable: true }); \
+             try { (0, eval)('function frozenVar() {}'); 'allowed' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // An accessor is refused, by the same rule and a different route: not configurable, and not a
+    // writable data property either.
+    assert_eq!(
+        run(
+            "Object.defineProperty(globalThis, 'accName', { get: function () { return 1; }, configurable: false }); \
+             try { (0, eval)('function accName() {}'); 'allowed' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_script_that_cannot_declare_one_name_declares_none_of_them() {
+    // §16.1.7 asks about every declaration before it creates any, and the order is the whole of
+    // what a program can see. `shouldNotBeDefined` precedes the offending declaration in the
+    // source, so a check folded into each creation would leave it standing — the global object
+    // would be half-instantiated by an operation that threw.
+    assert_eq!(
+        run(
+            "try { (0, eval)('var shouldNotBeDefined; function NaN() {}'); } catch (e) {} \
+             typeof Object.getOwnPropertyDescriptor(globalThis, 'shouldNotBeDefined')"
+        ),
+        "undefined"
+    );
+    // The same when the refusal is the *first* declaration, so that the check is not merely
+    // happening to run early.
+    assert_eq!(
+        run(
+            "try { (0, eval)('function NaN() {} var alsoNotDefined;'); } catch (e) {} \
+             typeof Object.getOwnPropertyDescriptor(globalThis, 'alsoNotDefined')"
+        ),
+        "undefined"
+    );
+    // …and a script with nothing to refuse still declares everything it named.
+    assert_eq!(
+        run("(0, eval)('var fine1; function fine2() {}'); \
+             typeof fine1 + ',' + typeof fine2"),
+        "undefined,function"
+    );
+}
+
+#[test]
+fn a_global_object_that_takes_no_more_properties_refuses_a_new_var() {
+    // §9.1.1.4.15's other half, and the only way to refuse a `var` at all: a name that is not
+    // there already, on an object that will accept nothing new. Done last in its own script,
+    // because it cannot be undone.
+    assert_eq!(
+        run("Object.preventExtensions(globalThis); \
+             try { (0, eval)('var brandNewName;'); 'allowed' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // A `var` naming something the global object *already* has is still allowed, because it
+    // creates nothing — which is why the extensibility question never reaches it.
+    assert_eq!(
+        run(
+            "(0, eval)('var already;'); Object.preventExtensions(globalThis); \
+             try { (0, eval)('var already;'); 'allowed' } catch (e) { e.constructor.name }"
+        ),
+        "allowed"
+    );
+}

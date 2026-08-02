@@ -356,6 +356,27 @@ impl Vm {
                     let key = self.global_name(running, index, heap)?;
                     self.declare_global(key, heap);
                 }
+                Instruction::CheckGlobalVar(index) | Instruction::CheckGlobalFunction(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    let allowed = match instruction {
+                        Instruction::CheckGlobalFunction(_) => {
+                            self.can_declare_global_function(key, heap)
+                        }
+                        _ => self.can_declare_global_var(key, heap),
+                    };
+                    if !allowed {
+                        // §16.1.7 throws before anything is instantiated, and these instructions
+                        // are emitted before every `DeclareGlobal` for exactly that reason — so
+                        // unwinding from here leaves a global object the script never touched.
+                        let thrown = self.realm.error(
+                            heap,
+                            NativeError::Type,
+                            "this name cannot be declared on the global object",
+                        );
+                        self.unwind(thrown, root, current, at)?;
+                        continue;
+                    }
+                }
                 Instruction::DeleteGlobal(index) => {
                     let key = self.global_name(running, index, heap)?;
                     // §9.1.1.2.7 `DeleteBinding` is `[[Delete]]` of the binding object, and §10.1.10.1

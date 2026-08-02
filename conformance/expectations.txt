@@ -17151,16 +17151,6 @@ language/eval-code/indirect/global-env-rec-eval.js :: it threw TypeError: a dire
 language/eval-code/indirect/global-env-rec-eval.js (strict) :: it threw TypeError: a direct eval is not implemented yet — (0, eval)(…) runs the same source in the global scope
 language/eval-code/indirect/lex-env-heritage.js :: it threw ReferenceError: x is not defined
 language/eval-code/indirect/lex-env-heritage.js (strict) :: it threw ReferenceError: x is not defined
-language/eval-code/indirect/non-definable-function-with-function.js :: it threw an object with no name: declaration preceding Expected SameValue(«[object Object]», «undefined») to be true
-language/eval-code/indirect/non-definable-function-with-function.js (strict) :: it threw an object with no name: declaration preceding Expected SameValue(«[object Object]», «undefined») to be true
-language/eval-code/indirect/non-definable-function-with-variable.js :: it threw an object with no name: declaration preceding Expected SameValue(«[object Object]», «undefined») to be true
-language/eval-code/indirect/non-definable-function-with-variable.js (strict) :: it threw an object with no name: declaration preceding Expected SameValue(«[object Object]», «undefined») to be true
-language/eval-code/indirect/non-definable-global-function.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/eval-code/indirect/non-definable-global-function.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/eval-code/indirect/non-definable-global-generator.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/eval-code/indirect/non-definable-global-generator.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/eval-code/indirect/non-definable-global-var.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/eval-code/indirect/non-definable-global-var.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/eval-code/indirect/realm.js :: it threw TypeError: what was called is not a function
 language/eval-code/indirect/realm.js (strict) :: it threw TypeError: what was called is not a function
 language/eval-code/indirect/this-value-func.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object Object]») to be true

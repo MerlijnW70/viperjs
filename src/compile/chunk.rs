@@ -339,6 +339,21 @@ pub enum Instruction {
     /// `var x` different from `globalThis.x = 1`. An existing property is left alone: `var x`
     /// after `x` already holds something does not put `undefined` back, and that is hoisting.
     DeclareGlobal(u32),
+    /// Refuse now if this name could not become a global `var` — §9.1.1.4.15 `CanDeclareGlobalVar`.
+    ///
+    /// §16.1.7 asks about **every** declaration before it creates **any**, which is the whole
+    /// reason this is a separate instruction rather than a check inside `DeclareGlobal`. A script
+    /// that cannot declare one of its names must not have declared the others either, and a check
+    /// folded into the creation would leave the ones before it standing.
+    CheckGlobalVar(u32),
+    /// The same question for a function declaration — §9.1.1.4.16 `CanDeclareGlobalFunction`.
+    ///
+    /// Stricter than the `var` one and not by a little: a `var` may name any property that already
+    /// exists, where a function needs one that is configurable, or writable *and* enumerable. That
+    /// is why `var NaN;` at the top level is allowed and `function NaN() {}` is a TypeError — the
+    /// second would have to replace a property §19.1.1 fixed in place, and the first only has to
+    /// leave it alone.
+    CheckGlobalFunction(u32),
     /// Push a new empty ordinary object, inheriting from `Object.prototype`.
     NewObject,
     /// Push a new empty Array of this length, inheriting from `Array.prototype`.
@@ -1077,6 +1092,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)
         | Instruction::DeclareGlobal(_)
+        | Instruction::CheckGlobalVar(_)
+        | Instruction::CheckGlobalFunction(_)
         | Instruction::DeleteGlobal(_)
         | Instruction::SetCompletion
         | Instruction::Throw

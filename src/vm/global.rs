@@ -64,12 +64,57 @@ impl Vm {
         Some(self.get_property_key(Value::Object(global), key, heap))
     }
 
+    /// §9.1.1.4.15 `CanDeclareGlobalVar` — whether `var` may name this.
+    ///
+    /// Almost always yes. A `var` that names a property the global object already has is not a
+    /// redeclaration at all — it leaves the property exactly as it is — so the only way to refuse
+    /// one is a name that is *not* there on an object that will take no more properties, which is
+    /// `Object.preventExtensions(globalThis)`.
+    /// Written as one chain because "the realm has no global object" is not a state that exists —
+    /// a branch answering for it is a `false` no input can reach and no test can pin.
+    pub(super) fn can_declare_global_var(&self, key: PropertyKey, heap: &Heap) -> bool {
+        heap.object(self.realm.global())
+            .is_some_and(|object| object.get_own_property(key).is_some() || object.is_extensible())
+    }
+
+    /// §9.1.1.4.16 `CanDeclareGlobalFunction` — whether a function declaration may name this.
+    ///
+    /// The strict one, and the difference from the `var` question is the point: a function
+    /// declaration must *put its function in* the property, so a property it could not write is a
+    /// property it cannot declare over. §19.1's three — `undefined`, `NaN`, `Infinity` — are
+    /// exactly that shape, which is why `function NaN() {}` at the top level of a script is a
+    /// TypeError while `var NaN;` beside it is allowed.
+    ///
+    /// An **accessor** is refused for the same reason by a different route: it is neither
+    /// configurable nor a writable data property, so a declaration cannot replace it.
+    pub(super) fn can_declare_global_function(&self, key: PropertyKey, heap: &Heap) -> bool {
+        heap.object(self.realm.global()).is_some_and(|object| {
+            let Some(existing) = object.get_own_property(key) else {
+                // Not there yet, so the only question left is whether the object takes new ones.
+                return object.is_extensible();
+            };
+            // Step 5, then step 6: configurable is enough on its own, and a non-configurable
+            // property is still enough when it is an ordinary *visible* data property — because
+            // §9.1.1.4.16 then redefines it in place rather than replacing it. Both halves of that
+            // second test are load-bearing: a writable one that is hidden from enumeration is
+            // refused, which is the shape `Object.defineProperty` makes and a `var` never does.
+            existing.configurable
+                || (matches!(
+                    existing.kind,
+                    crate::heap::PropertyKind::Data { writable: true, .. }
+                ) && existing.enumerable)
+        })
+    }
+
     /// §9.1.1.4.17 `CreateGlobalVarBinding`, for a Script.
     ///
     /// Writable and enumerable like an ordinary property, and **not configurable** — which is
     /// what makes `var x` at the top level undeletable where `globalThis.x = 1` is not. A name
     /// that is already there keeps its value: `var x` after `x = 1` does not put `undefined`
     /// back, and that is what hoisting means for a global.
+    ///
+    /// Asks nothing about whether it *may*: [`Vm::can_declare_global_var`] has already been asked,
+    /// for every name in the script, before this ran for any of them.
     pub(super) fn declare_global(&self, key: PropertyKey, heap: &mut Heap) {
         let global = self.realm.global();
         if heap

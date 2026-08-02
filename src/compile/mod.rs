@@ -118,6 +118,29 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
     // `TopLevelVarDeclaredNames` would answer the same thing today. The two differ on exactly one
     // production, a *function declaration* at the top level, which is var-scoped and which
     // `hoist_functions` handles separately; this is the one that stays right for a Script.
+    //
+    // §16.1.7 steps 5 to 12 ask whether **every** name may be declared before creating **any** of
+    // them, and the order is the whole of what a program can see: `var a; function NaN() {}` leaves
+    // no `a` behind, because the refusal happens before anything is made. Written the obvious way
+    // round — check each as it is created — the names before the offending one would stand, and the
+    // script would be half-instantiated by an operation that threw.
+    for name in var_declared_names(&script.body) {
+        let index = compiler.name(name.name)?;
+        compiler.chunk.emit(Instruction::CheckGlobalVar(index));
+    }
+    // Step 11's question is the stricter one and is asked of function declarations only. Their
+    // names are walked here rather than inside `hoist_functions`, because that one *creates* as it
+    // goes and every check has to precede every creation.
+    for statement in &script.body {
+        let crate::ast::StmtKind::Function(function) = &statement.kind else {
+            continue;
+        };
+        let Some(name) = &function.name else {
+            continue;
+        };
+        let index = compiler.name(&name.name)?;
+        compiler.chunk.emit(Instruction::CheckGlobalFunction(index));
+    }
     for name in var_declared_names(&script.body) {
         let index = compiler.name(name.name)?;
         compiler.chunk.emit(Instruction::DeclareGlobal(index));
