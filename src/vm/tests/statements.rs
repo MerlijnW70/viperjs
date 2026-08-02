@@ -897,3 +897,39 @@ fn a_loop_written_inside_a_switch_can_still_be_labelled_and_jumped_to() {
         "2"
     );
 }
+
+#[test]
+fn a_finally_re_emitted_by_a_jump_is_compiled_in_the_scope_it_was_written_in() {
+    // `unwind_across` emits a `finally` again at every exit that leaves it, and it emits the
+    // `PopScope`s for the scopes that exit is leaving *first*. The compiler's own idea of which
+    // scopes are open did not follow, so the finally's names were resolved one hop too deep — a
+    // `break` out of a block inside a `try`/`finally` reached the interpreter as
+    // `Fault::MissingLocal`, from ordinary source and with no way to see it coming.
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (;;) { try { { let a = 1; break; } } finally { r += 'f'; } } return r; })()"
+        ),
+        "f"
+    );
+    // The finally reads a name from the scope *around* the block, which is the read that was
+    // resolving into the block's environment instead.
+    assert_eq!(
+        run("(function () { var out = 'no'; var tag = 'outer'; \
+             for (;;) { try { { let a = 1; break; } } finally { out = tag; } } return out; })()"),
+        "outer"
+    );
+    // Two scopes deep, so the correction is a count rather than a flag.
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (;;) { try { { let a = 1; { let b = 2; break; } } } finally { r += 'f'; } } return r; })()"
+        ),
+        "f"
+    );
+    // …and a `continue` out of the same shape, which crosses the same entries by the other rule.
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (var i = 0; i < 2; i++) { try { { let a = 1; continue; } } finally { r += 'f'; } } return r; })()"
+        ),
+        "ff"
+    );
+}

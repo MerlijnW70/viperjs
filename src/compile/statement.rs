@@ -799,6 +799,18 @@ impl Compiler<'_> {
     pub(super) fn unwind_across(&mut self, exit: Exit) -> Result<(), CompileError> {
         let stack = std::mem::take(&mut self.unwinds);
         let mut outcome = Ok(());
+        // The compiler's own idea of which scopes are open has to follow the code being emitted,
+        // because one of these crossings *compiles statements*: a `finally` is emitted again at
+        // every exit that leaves it, and it is written outside the scopes this walk has just been
+        // popping. Left as it was, a `break` out of a block inside a `try`/`finally` emitted the
+        // `PopScope` and then resolved the finally's own names one hop too deep — reaching the
+        // interpreter as `Fault::MissingLocal`, from ordinary source.
+        //
+        // Saved whole and put back at the end rather than unwound step by step, because the walk
+        // may stop early and the caller is still standing exactly where it was.
+        let held_locals = self.locals.clone();
+        let held_outer = self.outer.clone();
+        let held_marks = self.scope_marks.clone();
         for at in (0..stack.len()).rev() {
             let entry = &stack[at];
             let iterator = matches!(entry.what, Crossing::Iterator(..));
@@ -834,8 +846,15 @@ impl Compiler<'_> {
                     self.chunk.emit(Instruction::Pop);
                     Ok(())
                 }
+                // The instruction leaves the scope at run time, and the two lines under it leave
+                // it for the *compiler* too — so that a `finally` emitted after this one resolves
+                // its own names against the scope it was written in rather than one hop too deep.
                 Crossing::Scope => {
                     self.chunk.emit(Instruction::PopScope);
+                    if let Some(held) = self.outer.pop() {
+                        self.locals = held;
+                        self.scope_marks.pop();
+                    }
                     Ok(())
                 }
                 Crossing::Finally(body) => self.block(body),
@@ -846,6 +865,9 @@ impl Compiler<'_> {
             }
         }
         self.unwinds = stack;
+        self.locals = held_locals;
+        self.outer = held_outer;
+        self.scope_marks = held_marks;
         outcome
     }
     /// Compile a loop body with somewhere for `break` and `continue` to go.
