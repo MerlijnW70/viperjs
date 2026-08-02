@@ -811,6 +811,7 @@ impl Compiler<'_> {
         let held_locals = self.locals.clone();
         let held_outer = self.outer.clone();
         let held_marks = self.scope_marks.clone();
+        let held_this = self.this_binding;
         for at in (0..stack.len()).rev() {
             let entry = &stack[at];
             let iterator = matches!(entry.what, Crossing::Iterator(..));
@@ -854,6 +855,9 @@ impl Compiler<'_> {
                     if let Some(held) = self.outer.pop() {
                         self.locals = held;
                         self.scope_marks.pop();
+                        if let Some(slot) = &mut self.this_binding {
+                            slot.depth = slot.depth.saturating_sub(1);
+                        }
                     }
                     Ok(())
                 }
@@ -868,6 +872,7 @@ impl Compiler<'_> {
         self.locals = held_locals;
         self.outer = held_outer;
         self.scope_marks = held_marks;
+        self.this_binding = held_this;
         outcome
     }
     /// Compile a loop body with somewhere for `break` and `continue` to go.

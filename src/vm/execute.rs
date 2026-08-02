@@ -1234,13 +1234,16 @@ impl Vm {
                         .is_some_and(|held| held.private_element(name).is_some());
                     self.stack.push(Value::Boolean(held));
                 }
-                Instruction::BindThis(index) => {
+                Instruction::BindThis { depth, index } => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let binding = heap
+                        .environment_at(self.environment, depth)
+                        .ok_or(Fault::MissingLocal)?;
                     // §10.2.2's `BindThisValue` step 2 — already bound is a **ReferenceError**, and
                     // that is what makes two `super()` calls in one constructor an error rather than
                     // two constructions. Asked of the slot rather than tracked separately, so the
                     // question and the answer cannot come apart.
-                    match heap.variable(self.environment, index) {
+                    match heap.variable(binding, index) {
                         None => return Err(Fault::MissingLocal),
                         Some(Some(_)) => {
                             self.raise(
@@ -1254,7 +1257,7 @@ impl Vm {
                         }
                         Some(None) => {}
                     }
-                    if !heap.set_variable(self.environment, index, value) {
+                    if !heap.set_variable(binding, index, value) {
                         return Err(Fault::MissingLocal);
                     }
                 }

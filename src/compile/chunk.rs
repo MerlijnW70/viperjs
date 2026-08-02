@@ -655,7 +655,17 @@ pub enum Instruction {
     /// `super()` expression as well. Binding a second time is a **ReferenceError**, which is what
     /// makes two `super()` calls in one constructor an error rather than two constructions — so this
     /// cannot be [`Instruction::Initialise`], which writes whatever it finds.
-    BindThis(u32),
+    BindThis {
+        /// How many environments out the binding is — see [`Instruction::LoadThisBinding`].
+        ///
+        /// Carried for the same reason the *read* carries one, and it was missing here: the write
+        /// went to whatever environment was current, so a `super()` written inside any scope of its
+        /// own reached for a slot that scope has not got. `class D extends B { constructor() { {
+        /// let q = 1; super(); } } }` faulted with `MissingLocal`.
+        depth: u32,
+        /// Which slot, in that environment.
+        index: u32,
+    },
     /// Read a derived constructor's `this` — §9.1.1.3's `ResolveThisBinding` (DR-0015).
     ///
     /// Its own instruction rather than [`Instruction::LoadVariable`] for the message alone: the
@@ -1121,7 +1131,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::LoadSuperBase
         | Instruction::GetSuperProperty
         | Instruction::SetSuperProperty
-        | Instruction::BindThis(_)
+        | Instruction::BindThis { .. }
         | Instruction::LoadThisBinding { .. }
         | Instruction::CompleteDerivedReturn(_)
         | Instruction::Duplicate

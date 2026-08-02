@@ -722,3 +722,40 @@ fn a_prototype_chain_longer_than_the_engine_walks_answers_as_if_it_ended() {
         "true,1"
     );
 }
+
+#[test]
+fn super_binds_this_at_the_depth_it_was_written_at() {
+    // DR-0015 makes a derived constructor's `this` a *binding*, and §10.2.2's `BindThisValue` has
+    // to find it. The read carried a depth from the start; the **write** did not, so it went to
+    // whatever environment was running — and a `super()` written inside any scope of its own
+    // reached for a slot that scope has not got. `Fault::MissingLocal`, from ordinary source.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { { let q = 1; super(); this.x = q; } } } \
+             return new D().x; })()"),
+        "1"
+    );
+    // Two scopes deep, so the depth is a count rather than a flag.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { { let a = 1; { let b = 2; super(); this.x = a + b; } } } } \
+             return new D().x; })()"),
+        "3"
+    );
+    // A scope that declares nothing gets no environment, so this one was always right — it is here
+    // to say that the difference is the *environment* and not the braces.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { { super(); this.x = 1; } } } \
+             return new D().x; })()"),
+        "1"
+    );
+    // Inside a loop body, which is a scope of its own once its head is lexical — and the second
+    // pass is §10.2.2 step 2's already-bound ReferenceError rather than a second construction.
+    assert_eq!(
+        run("(function () { class B {} \
+             class D extends B { constructor() { for (let i = 0; i < 1; i++) { super(); this.x = i; } } } \
+             return new D().x; })()"),
+        "0"
+    );
+}

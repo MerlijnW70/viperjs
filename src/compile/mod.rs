@@ -535,6 +535,11 @@ impl<'a> Compiler<'a> {
     fn open_environment(&mut self, outer: usize) -> Environment {
         let held = std::mem::take(&mut self.locals);
         self.outer.push(held);
+        // DR-0015's `this` is a binding reached by a depth the compiler remembers, and a scope is
+        // one more hop to it — exactly as an enclosing arrow is. Only the arrow was counted.
+        if let Some(slot) = &mut self.this_binding {
+            slot.depth += 1;
+        }
         // A scope mark for the new level, and it has to be zero: `resolve_in_scope` asks "was this
         // name declared *here*", and a mark taken in the level that was just set aside would have
         // it looking past the whole of the new one. That is not a subtle failure — a `for (const
@@ -614,6 +619,9 @@ impl<'a> Compiler<'a> {
         // longer inside.
         self.unwinds.pop();
         self.scope_marks.pop();
+        if let Some(slot) = &mut self.this_binding {
+            slot.depth = slot.depth.saturating_sub(1);
+        }
         let Some(held) = self.outer.pop() else {
             // `enter_environment` pushed one and the two are called in pairs, so this is a
             // compiler that has lost track of itself rather than a program that did anything.

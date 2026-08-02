@@ -320,7 +320,10 @@ impl Compiler<'_> {
             self.chunk.emit(Instruction::SuperCall(count));
         }
         // Peeks, so the object stays for the fields below and for the expression's value.
-        self.chunk.emit(Instruction::BindThis(at.index));
+        self.chunk.emit(Instruction::BindThis {
+            depth: at.depth,
+            index: at.index,
+        });
         // Called with the object as its receiver, because §15.7.14 evaluates a field initialiser with
         // `this` bound to the instance and a call is the only thing that binds a receiver. The same
         // shape a static field's initialiser uses.
