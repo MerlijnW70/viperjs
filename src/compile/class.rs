@@ -70,6 +70,12 @@ impl Compiler<'_> {
         //
         // It is also what lets a named class *expression* see itself, since an expression has no
         // outer binding at all.
+        //
+        // An environment of its own, and not merely a level of the one around it: the binding is a
+        // scope's, and a scope that only the compiler can see is one a direct `eval` cannot — see
+        // DR-0018. Opened only for a *named* class, because an anonymous one binds nothing a
+        // program can write and the temporaries below are spelled with a `%` no source can.
+        let opened = class.name.is_some().then(|| self.enter_environment());
         let mark = self.enter_scope();
         let mut inner = None;
         if let Some(name) = &class.name {
@@ -247,6 +253,9 @@ impl Compiler<'_> {
             }
         }
         self.leave_scope(mark);
+        if let Some(opened) = opened {
+            self.leave_environment(opened)?;
+        }
         Ok(())
     }
 

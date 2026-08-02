@@ -716,3 +716,52 @@ fn a_static_block_runs_once_with_this_bound_to_the_constructor() {
         "1,2"
     );
 }
+
+#[test]
+fn a_class_body_is_a_scope_holding_an_immutable_binding_of_its_own_name() {
+    // §15.7.14 steps 4 to 7. The binding is a *scope's*, not a level of the one around it — which
+    // compiled code could not tell apart, because the compiler reads a liveness flag no running
+    // program can, and which a direct `eval` most certainly could. DR-0018 is the long version.
+    //
+    // Every row here passed before the environment existed and passes after it: that is the point
+    // of them. They say the scope's *semantics* are unchanged, so the change is where the binding
+    // lives and nothing else.
+    assert_eq!(
+        run("class C { m() { return C === D; } } var D = C; C = null; new D().m()"),
+        "true"
+    );
+    // Immutable — §15.7.14 makes the inner binding a `const` in all but name, so a method that
+    // assigns to it is a TypeError rather than a rebinding the other methods would then see.
+    assert_eq!(
+        run(
+            "class C { m() { try { C = 1; return 'assigned'; } catch (e) { return e.constructor.name; } } } \
+             new C().m()"
+        ),
+        "TypeError"
+    );
+    // A named class *expression* has no outer binding at all, so this scope is the only way it can
+    // see itself — and the name is not visible outside it.
+    assert_eq!(
+        run("var K = class Inner { m() { return typeof Inner; } }; new K().m()"),
+        "function"
+    );
+    assert_eq!(run("var K = class Inner {}; typeof Inner"), "undefined");
+    // A static block and a static method reach it by the same chain the instance methods do.
+    assert_eq!(
+        run("class C { static m() { return C; } } var D = C; C = null; D.m() === D"),
+        "true"
+    );
+    assert_eq!(
+        run("var seen; class C { static { seen = C; } } var D = C; C = null; seen === D"),
+        "true"
+    );
+    // A computed field name is evaluated once at definition time and its initialiser runs per
+    // construction, so the value outlives the definition in a temporary of this same scope — the
+    // constructor reaches it as any closure reaches an outer variable, one environment further out.
+    assert_eq!(
+        run("var calls = 0; function key() { calls++; return 'k'; } \
+             class C { [key()] = 1; } new C(); new C(); calls"),
+        "1"
+    );
+    assert_eq!(run("class C { ['k'] = 7; } new C().k"), "7");
+}
