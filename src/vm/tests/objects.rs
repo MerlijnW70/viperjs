@@ -792,3 +792,49 @@ fn the_proto_key_in_a_literal_sets_the_prototype_and_only_in_one_spelling() {
         "7"
     );
 }
+
+/// How many Strings a script leaves on the heap once it has run.
+///
+/// A fresh heap each time, so the answer is about the script and not about what ran before it.
+fn strings_left_by(source: &str) -> usize {
+    let mut heap = Heap::new();
+    let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+    Vm::new(&mut heap)
+        .run(&chunk, &mut heap)
+        .expect("the chunk is well formed"); // same
+    heap.string_count()
+}
+
+#[test]
+fn writing_one_element_a_hundred_times_does_not_leave_a_hundred_copies_of_its_name() {
+    // §7.1.19 turns the index `0` into the key `"0"`, and a key is *interned* — so the second
+    // write finds the name the first one filed and nothing new is allocated. Reaching that through
+    // `ToString` first did allocate one, handed it to the intern table, got the earlier copy back
+    // and abandoned the new one — a dead String per property access, which DR-0010 never gives
+    // back and DR-0013's budget goes on counting. A million writes to a single element cost 17 MiB
+    // of names for one value.
+    //
+    // Asked as "does it grow with the number of accesses" rather than as an absolute count,
+    // because what a script allocates otherwise is not this test's business.
+    let few = strings_left_by("var a = []; for (var i = 0; i < 4; i++) { a[0] = i; }");
+    let many = strings_left_by("var a = []; for (var i = 0; i < 400; i++) { a[0] = i; }");
+    assert_eq!(
+        few, many,
+        "a hundred times the accesses left {many} names against {few}"
+    );
+}
+
+#[test]
+fn a_computed_name_is_filed_once_however_many_objects_wear_it() {
+    // The same rule for a name rather than an index, and through a different conversion: the key
+    // here is spelled by `ToString` of a Number that is not an index at all. One entry in the
+    // intern table serves every write, so the count does not move with the number of them.
+    //
+    // The two sources differ *only* in the loop's bound, which is a Number constant. Written with
+    // one of them as a straight-line `o[1.5] = 1`, the other declares an `i` the first does not
+    // and the count is one higher for a reason that has nothing to do with the subject.
+    let once = strings_left_by("var o = {}; for (var i = 0; i < 1; i++) { o[1.5] = i; }");
+    let many = strings_left_by("var o = {}; for (var i = 0; i < 200; i++) { o[1.5] = i; }");
+    assert_eq!(once, many);
+}

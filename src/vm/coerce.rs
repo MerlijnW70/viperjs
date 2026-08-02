@@ -210,8 +210,23 @@ impl Vm {
         if let Value::Symbol(symbol) = primitive {
             return Ok(PropertyKey::from_symbol(symbol));
         }
-        let id = primitive.to_string(heap)?;
-        Ok(PropertyKey::from_string(heap, id))
+        // Interned from the text rather than from a String made to hold it. Going through
+        // `ToString` first would allocate an arena slot, hand it to the intern table, and have the
+        // table answer with the copy it already had — leaving the new one dead on the first access
+        // and every one after it. `a[i] = v` is this path, so that was a slot per element written.
+        match primitive.spelled(heap) {
+            Some(text) => Ok(PropertyKey::from_units(
+                heap,
+                &text.encode_utf16().collect::<Vec<_>>(),
+            )),
+            // A String, and only a String: `ToPrimitive` has answered so this is not an Object,
+            // and a Symbol was taken above. Its units are already on the heap, so `ToString` hands
+            // the handle straight back without allocating anything either.
+            None => {
+                let id = primitive.to_string(heap)?;
+                Ok(PropertyKey::from_string(heap, id))
+            }
+        }
     }
 
     /// A callable property of `object`, or `None` when it is absent or is not callable.

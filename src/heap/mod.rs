@@ -508,8 +508,29 @@ impl Heap {
     /// String, which is the same answer [`Heap::string`] gives it — see there for why that
     /// situation is bounded rather than detected.
     pub fn intern_id(&mut self, id: StringId) -> StringId {
-        let units = self.string(id).unwrap_or(&[]).to_vec();
-        self.intern(&units)
+        // Asked first without copying anything. The common case is a name that has been used
+        // before — `o[k]` in a loop, or the same key on a thousand objects — and answering it
+        // needs only to *read* the units, where the copy below exists solely to release the borrow
+        // on `strings` before `intern` takes the heap mutably.
+        let Some(units) = self.strings.get(id.0).and_then(Option::as_ref) else {
+            // A handle this heap never issued has no contents, so it interns as the empty String —
+            // the same answer [`Heap::string`] gives it, and for the same reason.
+            return self.intern(&[]);
+        };
+        // Asked without copying anything. The common case is a name that has been used before —
+        // `o[k]` in a loop, or the same key on a thousand objects — and answering it needs only to
+        // *read* the units.
+        if let Some(found) = self.interned.get(&**units) {
+            return *found;
+        }
+        // Not filed yet, and **this** handle becomes the one it is filed under. `intern` allocates
+        // a String on a miss because its caller holds units that are not on the heap; here they
+        // already are, so making a second String to hold the same text would leave the first one
+        // dead the moment the key is used — which is the whole shape this call is on the hot path
+        // of. The map still owns its key, which is the one copy that cannot be avoided.
+        let key = units.clone();
+        self.interned.insert(key, id);
+        id
     }
 
     /// How many Strings this heap holds.
@@ -709,6 +730,33 @@ mod tests {
         let second = heap.new_string(units("same"));
         assert_ne!(first, second);
         assert_eq!(heap.string(first), heap.string(second));
+    }
+
+    #[test]
+    fn interning_a_handle_answers_the_same_string_whether_the_table_had_it_or_not() {
+        // Two paths through `intern_id` and they must not disagree. The first call files the
+        // contents and answers the handle it was given; the second is asked about a *different*
+        // handle spelling the same thing and answers the first one — that is what makes a key a
+        // key. The second is also the path that reads the units where they lie instead of copying
+        // them out, so a fast path that looked in the wrong place would show up here as two
+        // different keys for one name.
+        let mut heap = Heap::new();
+        let first = heap.new_string(units("name"));
+        let second = heap.new_string(units("name"));
+        assert_ne!(first, second);
+        let filed = heap.intern_id(first);
+        assert_eq!(filed, first);
+        assert_eq!(heap.intern_id(second), first);
+        // Idempotent, which is the property the fast path is *for*: asking again about a handle
+        // already filed under itself allocates nothing and answers itself.
+        let before = heap.string_count();
+        assert_eq!(heap.intern_id(filed), first);
+        assert_eq!(heap.string_count(), before);
+        // A handle this heap never issued has no contents, so it interns as the empty String —
+        // the same answer `Heap::string` gives it, rather than a panic on the way past.
+        let elsewhere = StringId(heap.string_count() + 100);
+        let interned = heap.intern_id(elsewhere);
+        assert_eq!(heap.string(interned), Some(&[][..]));
     }
 
     #[test]

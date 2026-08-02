@@ -257,13 +257,22 @@ impl Value {
     /// A String argument is returned unchanged rather than copied, which §7.1.17 says by
     /// returning the argument itself and which is why this may hand back the handle it was given.
     ///
-    /// Total for the types that are here, and it will not stay that way for the same reason
-    /// [`Value::to_number`] will not: §7.1.17 throws a **TypeError** for a Symbol, and reaches
-    /// user code for an Object.
-    pub fn to_string(&self, heap: &mut Heap) -> Completion<StringId> {
-        // The four constants are spelled out rather than shared, because §7.1.17's table is a
-        // table: `String(null)` is `"null"` and not `typeof null`, which is `"object"`.
-        let text = match self {
+    /// The text §7.1.17 spells for this value, when spelling it needs nothing from the heap.
+    ///
+    /// `None` for the three that are not a fresh piece of text: a String already *is* one, a
+    /// Symbol refuses to become one, and an Object is not a primitive at all. Every other value
+    /// has an answer that is a handful of ASCII, computed here and owned by the caller.
+    ///
+    /// Separate from [`Value::to_string`] because a caller that is about to **intern** the answer
+    /// must not have a String allocated for it first. `to_string` puts one in the arena; interning
+    /// it then finds the canonical copy and abandons the one just made. That is one dead slot per
+    /// computed property access — `a[0] = x` in a loop of a million writes to a single element and
+    /// took 17 MiB doing it — and DR-0010 does not give a swept slot back, so DR-0013's budget
+    /// counts every one of them for as long as the heap lives.
+    pub(crate) fn spelled(&self, heap: &Heap) -> Option<String> {
+        Some(match self {
+            // The four constants are spelled out rather than shared, because §7.1.17's table is a
+            // table: `String(null)` is `"null"` and not `typeof null`, which is `"object"`.
             Self::Undefined => "undefined".to_string(),
             Self::Null => "null".to_string(),
             Self::Boolean(true) => "true".to_string(),
@@ -275,19 +284,37 @@ impl Value {
                 Some(value) => value.to_digits(10),
                 None => "0".to_string(),
             },
-            Self::String(id) => return Ok(*id),
-            // §7.1.17 step 2 — and this one is the reason the type is useful. A Symbol will not
-            // turn into text by accident, so `"key: " + Symbol()` is an error rather than a
-            // string with something unhelpful in the middle of it. `String(sym)` still works:
-            // §22.1.1.1 has a step of its own for exactly this, and it is the only way through.
-            Self::Symbol(_) => {
-                return Err(Abrupt::type_error(
+            Self::String(_) | Self::Symbol(_) | Self::Object(_) => return None,
+        })
+    }
+
+    /// `ToString` (§7.1.17) — the String a value is written as.
+    ///
+    /// Takes the heap by `&mut` because the answer is a String and a String has to live
+    /// somewhere; this is the first operation here that *makes* a value rather than reading one.
+    /// A String argument is returned unchanged rather than copied, which §7.1.17 says by
+    /// returning the argument itself and which is why this may hand back the handle it was given.
+    ///
+    /// A caller inside the engine that is going to *intern* the answer uses `spelled` instead —
+    /// the same table without the allocation, and not public because nothing outside can intern.
+    pub fn to_string(&self, heap: &mut Heap) -> Completion<StringId> {
+        // The three §7.1.17 does not simply spell. They are answered here rather than in
+        // [`Value::spelled`] because each needs something that function deliberately has not got:
+        // the existing handle, a way to fail, and a mutable heap to re-enter the interpreter with.
+        let Some(text) = self.spelled(heap) else {
+            return match self {
+                Self::String(id) => Ok(*id),
+                // §7.1.17 step 2 — and this one is the reason the type is useful. A Symbol will
+                // not turn into text by accident, so `"key: " + Symbol()` is an error rather than
+                // a string with something unhelpful in the middle of it. `String(sym)` still
+                // works: §22.1.1.1 has a step of its own for it, and it is the only way through.
+                Self::Symbol(_) => Err(Abrupt::type_error(
                     "a Symbol cannot be converted to a string",
-                ));
-            }
-            // §7.1.17 step 1 — the same conversion `ToNumber` does, with the other hint. `"" + x`
-            // and `1 * x` therefore ask an object two different questions.
-            Self::Object(_) => return self.to_primitive(heap, Hint::String)?.to_string(heap),
+                )),
+                // §7.1.17 step 1 — the same conversion `ToNumber` does, with the other hint.
+                // `"" + x` and `1 * x` therefore ask an object two different questions.
+                other => other.to_primitive(heap, Hint::String)?.to_string(heap),
+            };
         };
         // Every one of those is ASCII, so the UTF-16 encoding is a widening and cannot fail.
         Ok(heap.new_string(text.encode_utf16().collect()))

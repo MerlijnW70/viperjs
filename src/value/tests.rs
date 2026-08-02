@@ -482,6 +482,41 @@ fn to_string_of_a_string_hands_back_the_same_string_rather_than_a_copy() {
 }
 
 #[test]
+fn a_value_that_is_already_text_or_refuses_to_be_has_nothing_to_spell() {
+    // The three `spelled` answers `None` for, and the reason each is not a piece of fresh text: a
+    // String already is one, a Symbol refuses, and an Object is not a primitive. Anything else has
+    // an answer, and it is the same one §7.1.17 gives — so a caller may intern it directly.
+    let mut heap = Heap::new();
+    let text = heap.new_string("abc".encode_utf16().collect());
+    let symbol = heap.new_symbol(None);
+    let object = heap.new_object(None);
+    assert_eq!(Value::String(text).spelled(&heap), None);
+    assert_eq!(Value::Symbol(symbol).spelled(&heap), None);
+    assert_eq!(Value::Object(object).spelled(&heap), None);
+    assert_eq!(NULL.spelled(&heap).as_deref(), Some("null"));
+    assert_eq!(UNDEFINED.spelled(&heap).as_deref(), Some("undefined"));
+    assert_eq!(Value::Boolean(true).spelled(&heap).as_deref(), Some("true"));
+    assert_eq!(
+        Value::Boolean(false).spelled(&heap).as_deref(),
+        Some("false")
+    );
+    assert_eq!(Value::Number(1.5).spelled(&heap).as_deref(), Some("1.5"));
+}
+
+#[test]
+fn spelling_a_value_puts_no_string_on_the_heap() {
+    // The whole point of the function. `ToString` allocates because its answer *is* a String; this
+    // answers with the text instead, so a caller about to intern it does not leave a dead slot
+    // behind for every property access. DR-0010 never gives such a slot back.
+    let heap = Heap::new();
+    let before = heap.string_count();
+    for value in [UNDEFINED, NULL, Value::Boolean(true), Value::Number(42.0)] {
+        assert!(value.spelled(&heap).is_some());
+    }
+    assert_eq!(heap.string_count(), before);
+}
+
+#[test]
 fn a_string_is_typeof_string_and_is_true_unless_it_is_empty() {
     let mut heap = Heap::new();
     let empty = Value::String(heap.new_string(Vec::new()));
