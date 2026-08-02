@@ -3451,8 +3451,6 @@ built-ins/JSON/parse/reviver-array-define-prop-err.js :: it threw an object with
 built-ins/JSON/parse/reviver-array-define-prop-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/JSON/parse/reviver-array-delete-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/JSON/parse/reviver-array-delete-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/JSON/parse/reviver-array-length-coerce-err.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/JSON/parse/reviver-array-length-coerce-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/JSON/parse/reviver-call-args-after-forward-modification.js :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/parse/reviver-call-args-after-forward-modification.js (strict) :: it threw TypeError: undefined and null cannot be destructured
 built-ins/JSON/parse/reviver-context-source-array-literal.js :: it threw an object with no name: context should be an object Expected SameValue(«"undefined"», «"object"») to be true

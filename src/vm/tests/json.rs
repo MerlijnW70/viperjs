@@ -387,31 +387,95 @@ fn json_that_nests_past_the_cap_is_refused_rather_than_running_out_of_stack() {
 }
 
 #[test]
-fn a_reviver_that_hands_back_a_deeper_graph_each_time_is_answered_rather_than_crashed() {
-    // The walk `revive` descends is **not** the text that was parsed. The reviver runs at every
-    // node and may put anything it likes where it was called, so the graph grows as the walk goes
-    // — which is why the reader's own cap cannot stand in for this one.
+fn a_reviver_that_puts_something_deeper_where_the_walk_is_going_is_answered_rather_than_crashed() {
+    // The walk `revive` descends is **not** the text that was parsed. §25.5.1.1 hands the reviver
+    // the holder as its `this`, so it can replace a sibling the walk has not reached yet — and the
+    // graph therefore grows as the walk goes, which is why the reader's own cap cannot stand in
+    // for this one.
     //
-    // This is test262's `built-ins/JSON/parse/reviver-array-length-coerce-err.js`, reduced. It
-    // walked praxis off the end of the stack, from eleven lines of script, and it is the reason
-    // the cap exists rather than an argument for it.
+    // A hundred levels put where element 1 is about to be visited, from a two-element document.
     assert_eq!(
         run(
-            "var uncoercible = { valueOf: function () { throw 'boom'; } }; \
-             var badLength = new Proxy([], { get: function (_, name) { \
-                 if (name === 'length') { return uncoercible; } } }); \
-             (function () { try { JSON.parse('[0,0]', function () { this[1] = badLength; }); \
-                 return 'ran'; } catch (e) { return typeof e === 'string' ? e : e.constructor.name; } })()"
+            "var deep = {}; var t = deep;              for (var i = 0; i < 100; i++) { t.n = {}; t = t.n; }              (function () { try {                  JSON.parse('[0,0]', function (k, v) { this[1] = deep; return v; }); return 'ran';              } catch (e) { return e.constructor.name; } })()"
         ),
         "RangeError"
     );
-    // A reviver that grows the graph without a proxy does the same thing, so the guard is about
-    // the walk rather than about anything proxies do.
+    // …and the same shape inside the budget runs, so the row above is the cap firing rather than
+    // the trick itself being refused.
     assert_eq!(
-        run("(function () { try { JSON.parse('[0]', function (k, v) { \
-                 return typeof v === 'number' ? { deeper: v } : v; }); return 'ran'; } \
-             catch (e) { return e.constructor.name; } })()"),
+        run(
+            "var shallow = { a: { b: 1 } };              JSON.parse('[0,0]', function (k, v) { this[1] = shallow; return v; }) && 'ran'"
+        ),
         "ran"
+    );
+    // test262's `reviver-array-length-coerce-err.js`, reduced — the program that found the crash.
+    // It gets §25.5.1.1's own answer now: step 2.b.ii reads the array's `length`, and this one is
+    // answered by a proxy with something whose `valueOf` throws. Before the array branch existed
+    // that read never happened, the walk went into the *function object* behind `valueOf`, and
+    // praxis ran off the end of the stack instead.
+    assert_eq!(
+        run(
+            "var uncoercible = { valueOf: function () { throw 'boom'; } };              var badLength = new Proxy([], { get: function (_, name) {                  if (name === 'length') { return uncoercible; } } });              (function () { try { JSON.parse('[0,0]', function () { this[1] = badLength; });                  return 'ran'; } catch (e) { return typeof e === 'string' ? e : e.constructor.name; } })()"
+        ),
+        "boom"
+    );
+}
+
+#[test]
+fn the_reviver_walks_an_array_by_index_and_an_object_by_its_enumerable_names() {
+    // §25.5.1.1 steps 2.b and 2.c are two different walks, and praxis used to do neither: it asked
+    // every value for its own keys. Both halves of that are observable, and reaching them needs
+    // the value to be *in place* when the walk arrives — a reviver's return value replaces a
+    // property and is not descended into, so each row puts its subject where the walk is going.
+
+    // Step 2.b — an array is walked from `0` to `ToLength(Get(val, "length"))`, so **reading
+    // `length` is a step of the algorithm**: a proxy answering for it is called.
+    assert_eq!(
+        run("var reads = 0; \
+             var a = new Proxy([7, 8], { get: function (t, k) { \
+                 if (k === 'length') { reads++; } return t[k]; } }); \
+             JSON.parse('{\"x\":0,\"y\":0}', function (k, v) { \
+                 if (k === 'x') { this.y = a; } return v; }); \
+             reads"),
+        "1"
+    );
+    // …and an index the array has no property for is still visited, because the walk counts rather
+    // than asking which keys exist. A hole arrives as `undefined` and the reviver may fill it.
+    assert_eq!(
+        run("var a = [1]; a.length = 3; \
+             var out = JSON.parse('{\"x\":0,\"y\":0}', function (k, v) { \
+                 if (k === 'x') { this.y = a; return v; } \
+                 if (this === a) { return v === undefined ? 'filled' : v; } \
+                 return v; }); \
+             JSON.stringify(out.y)"),
+        "[1,\"filled\",\"filled\"]"
+    );
+
+    // Step 2.c — everything else by `EnumerableOwnPropertyNames`, which excludes two different
+    // things: a Symbol key, which is not a name a document could have had, and a **non-enumerable**
+    // property, which is not the walk's to visit.
+    assert_eq!(
+        run("var o = { seen: 1 }; \
+             Object.defineProperty(o, 'hidden', { value: 2, enumerable: false }); \
+             o[Symbol('s')] = 3; \
+             var names = []; \
+             JSON.parse('{\"x\":0,\"y\":0}', function (k, v) { \
+                 if (k === 'x') { this.y = o; } \
+                 if (this === o) { names.push(k); } return v; }); \
+             names.join(',')"),
+        "seen"
+    );
+    // The same rule read the other way, and the reason the crash happened: a **function** has
+    // `length` and `name` and neither is enumerable, so the walk does not go into one. Asking for
+    // every own key instead is what sent `revive` down through a `valueOf` into its own properties
+    // until the stack ran out.
+    assert_eq!(
+        run("var f = function () {}; var count = 0; \
+             JSON.parse('{\"x\":0,\"y\":0}', function (k, v) { \
+                 if (k === 'x') { this.y = f; } \
+                 if (this === f) { count++; } return v; }); \
+             count"),
+        "0"
     );
 }
 

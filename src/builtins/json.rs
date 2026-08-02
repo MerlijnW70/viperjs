@@ -147,9 +147,43 @@ fn revive(
     }
     let value = vm.get_property_key(Value::Object(holder), name, heap)?;
     if let Value::Object(object) = value {
-        // §25.5.1.1 step 2.b — `EnumerableOwnPropertyNames` on the holder, which for a proxy is
-        // its `ownKeys` trap.
-        for key in vm.own_keys_through(object, heap)? {
+        // §25.5.1.1 step 2.a — `IsArray`, which for a proxy asks its target through the chain
+        // rather than looking at the object in front of it.
+        let names = match heap.is_array_through(object)? {
+            // Step 2.b — an array is walked by **index**, from `0` to
+            // `ToLength(Get(val, "length"))`. Not by its own keys: the two differ on a sparse
+            // array, whose holes are visited and revived as `undefined`, and on an array whose
+            // `length` a getter or a proxy answers for — reading it is an observable step that
+            // may throw, and step 2.b.ii is where that throw comes from.
+            true => {
+                let length = key(heap, "length");
+                let length = vm.get_property_key(Value::Object(object), length, heap)?;
+                let length = super::array_methods::to_length(vm.to_number(length, heap)?);
+                (0..length)
+                    .map(|at| super::array_methods::index_key(heap, at))
+                    .collect()
+            }
+            // Step 2.c — everything else by `EnumerableOwnPropertyNames(val, key)`, which is two
+            // conditions and not one: a Symbol key is not a name the document could have had, and
+            // a **non-enumerable** property is not the walk's to visit. Asking for every own key
+            // instead is what sent this into a function's `length` and `name`.
+            false => {
+                let mut listed = Vec::new();
+                for found in vm.own_keys_through(object, heap)? {
+                    if found.as_string().is_none() {
+                        continue;
+                    }
+                    if vm
+                        .own_property_through(object, found, heap)?
+                        .is_some_and(|property| property.enumerable)
+                    {
+                        listed.push(found);
+                    }
+                }
+                listed
+            }
+        };
+        for key in names {
             let revived = revive(vm, heap, object, key, reviver, depth + 1)?;
             // Step 2.b.ii.2 — a reviver answering `undefined` *deletes* the property rather than
             // setting it to `undefined`, which is the only way it can remove one.
@@ -162,6 +196,10 @@ fn revive(
                         heap.define_own_property(object, key, &PropertyDescriptor::data(revived));
                 }
             }
+            // The walk visits as many elements as `length` said, and a document is not bounded by
+            // anything else — DR-0013's budget is what stops `{length: 2 ** 53}` from being a hang
+            // rather than a refusal.
+            super::array_methods::within_budget(heap)?;
         }
     }
     let name = Value::String(name.as_string().unwrap_or_else(|| heap.intern(&[])));
