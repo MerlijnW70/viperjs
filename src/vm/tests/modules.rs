@@ -65,3 +65,25 @@ fn a_modules_this_is_undefined() {
     assert_eq!(run("typeof this"), "object");
     assert_eq!(run("this === globalThis"), "true");
 }
+
+#[test]
+fn a_top_level_await_is_refused_rather_than_compiled_into_a_chunk_that_cannot_run() {
+    // §16.2.1.5.3 — a module may `await` at its top level, and a module that does is *asynchronous*:
+    // its evaluation answers a promise and everything importing it waits. praxis has none of that,
+    // and `Instruction::Await` parks the running execution — so at a module's top level it parked
+    // with nothing to park into and the interpreter answered `Fault::YieldOutsideGenerator`. That
+    // is a chunk that does not make sense, which is a bug rather than a missing feature, and 169
+    // conformance files reached it.
+    let mut heap = Heap::new();
+    let module = crate::parser::parse_module("await 1;").expect("a module may say this"); // the test is about the refusal
+    let error = crate::compile::compile_module(&module, &mut heap).expect_err("not built yet"); // same
+    assert_eq!(
+        error.kind,
+        crate::compile::ErrorKind::Unsupported("a top-level `await`")
+    );
+    // …and it is the *top level* that is refused, not `await`. One inside an `async` function in
+    // the same module has an execution to park and compiles.
+    let module = crate::parser::parse_module("async function f() { await 1; } f();")
+        .expect("a module may say this"); // same
+    assert!(crate::compile::compile_module(&module, &mut heap).is_ok());
+}

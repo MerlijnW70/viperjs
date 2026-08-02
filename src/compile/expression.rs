@@ -430,6 +430,15 @@ impl Compiler<'_> {
             // §27.7.5.3 — `await x` is a suspension like `yield`, and an expression like it: what
             // the promise settles with is what it evaluates to.
             ExprKind::Await(operand) => {
+                // §16.2.1.5.3 — a module may `await` at its top level, and then the module itself
+                // is asynchronous: its evaluation answers a promise, and everything importing it
+                // waits. praxis has none of that yet, and the instruction below needs an execution
+                // to park — so at the top level of a module it produced a chunk that parked with
+                // nothing to park into, which is a `Fault` rather than an answer. 160 conformance
+                // files reached it. Refused by name until the async module record exists.
+                if !self.chunk.is_async {
+                    return Err(unsupported("a top-level `await`", expression.span));
+                }
                 self.expression(operand)?;
                 self.chunk.emit(Instruction::Await);
                 Ok(())
