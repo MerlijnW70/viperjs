@@ -675,10 +675,22 @@ fn compile_body(
     // A *pattern* takes a slot too, and an unnamed one: the argument has to land somewhere before
     // it can be taken apart, and the names inside the pattern are separate bindings that the body
     // shares with its `var`s. So the slot is hidden and the pattern reads from it below.
+    //
+    // **A list that is not simple hides every one of them**, name or pattern, and gives the names
+    // bindings of their own below. Step 21 creates a parameter binding *uninitialised* when the
+    // list has no duplicates, and `IteratorBindingInitialization` fills it as the parameter is
+    // bound — so a default that reads a parameter not yet bound is in a dead zone, and
+    // `function f(a = a) {}` and `function f(a = b, b) {}` are both a ReferenceError. With the call
+    // writing straight into the named slots there was nothing uninitialised to read and both ran.
+    //
+    // A simple list keeps the direct slots. It has no defaults and no patterns, so nothing can
+    // observe an order it does not have — and it is every ordinary function, which should not pay
+    // a copy per call for a rule that cannot reach it.
+    let hidden = !parameters.is_simple();
     for parameter in parameters.items.iter() {
-        match &parameter.target {
-            Binding::Identifier(name) => compiler.declare(&name.name),
-            Binding::Pattern(_) => compiler.declare_hidden("argument"),
+        match (&parameter.target, hidden) {
+            (Binding::Identifier(name), false) => compiler.declare(&name.name),
+            _ => compiler.declare_hidden("argument"),
         };
     }
     compiler.chunk.parameters = compiler.locals.len();
@@ -697,7 +709,13 @@ fn compile_body(
         let Binding::Identifier(name) = rest.as_ref() else {
             return Err(unsupported("a destructuring rest parameter", span));
         };
-        compiler.chunk.rest = Some(compiler.declare(&name.name));
+        // Hidden like the rest of them: a rest parameter is what makes a list not simple, so this
+        // branch is only ever reached with `hidden` true. Written as the same choice all the same,
+        // because the two are one rule and a reader should not have to prove that here.
+        compiler.chunk.rest = Some(match hidden {
+            true => compiler.declare_hidden("argument"),
+            false => compiler.declare(&name.name),
+        });
     }
     // §10.2.11 steps 19 to 22 — the binding is made after the parameters and before the body, and
     // *not* when a parameter already took the name: `function f(arguments) { … }` has a parameter
@@ -731,6 +749,37 @@ fn compile_body(
         compiler.chunk.derived_this = Some(index);
     }
 
+    // §10.2.11 step 21 — every parameter's binding is created **before any of them is bound**, and
+    // with no duplicates it is created *uninitialised*. That ordering is the whole of the dead
+    // zone: `function f(a = b, b) {}` reads `b` while it is still nothing, and
+    // `function f(a = a) {}` reads its own. A duplicate name is a Syntax Error in a list that is
+    // not simple (§15.1.4), which the parser has already refused — so `hasDuplicates` is false
+    // here and step 21.b.ii's `undefined` never applies.
+    //
+    // Only the names. A pattern's slot is the hidden one the argument lands in, and the bindings a
+    // pattern makes are created by `destructure_parameter` as it walks — which is the one place
+    // this is narrower than the clause: a default that reads a name declared by a *later pattern*
+    // resolves outward instead of finding a dead zone.
+    let mut bound = Vec::new();
+    if hidden {
+        for parameter in parameters.items.iter() {
+            let Binding::Identifier(name) = &parameter.target else {
+                bound.push(None);
+                continue;
+            };
+            let slot = compiler.declare_lexical(&name.name, crate::heap::Mutability::Mutable);
+            compiler.chunk.emit(Instruction::Uninitialise(slot));
+            bound.push(Some(slot));
+        }
+        if let Some(rest) = &parameters.rest
+            && let Binding::Identifier(name) = rest.as_ref()
+        {
+            let slot = compiler.declare_lexical(&name.name, crate::heap::Mutability::Mutable);
+            compiler.chunk.emit(Instruction::Uninitialise(slot));
+            bound.push(Some(slot));
+        }
+    }
+
     // §10.2.11 step 24 — the defaults run *inside* the callee, before the body and after the
     // arguments object is made. So `arguments` holds what the call actually passed and a default
     // that filled in for a missing one is nowhere in it, which is right and is only visible
@@ -761,19 +810,37 @@ fn compile_body(
             compiler.chunk.emit(Instruction::Pop);
             compiler.chunk.patch(given)?;
         }
-        // …and *then* the pattern is taken apart, if it is one. The order is §10.2.11 step 24's:
-        // the default stands in for a missing argument first, and what the pattern reads is
-        // whichever of the two arrived. `function f({a} = {a: 1})` binds `a` to 1 when called
-        // with nothing.
-        match &parameter.target {
-            // A name is already in its slot; there is nothing to take apart, and asking anyway
-            // would store the slot back into itself.
-            Binding::Identifier(_) => {}
-            target => {
+        // …and *then* the parameter is bound. The order is §10.2.11 step 24's: the default stands
+        // in for a missing argument first, and what is bound — or what a pattern reads — is
+        // whichever of the two arrived. `function f({a} = {a: 1})` binds `a` to 1 when called with
+        // nothing.
+        match (&parameter.target, bound.get(at).copied().flatten()) {
+            // §14.3.1's `InitializeBinding`, which is where this parameter's dead zone ends and
+            // the next default may read it. The value comes out of the hidden slot the call filled
+            // and the default may have replaced.
+            (Binding::Identifier(_), Some(name)) => {
+                compiler.chunk.emit(Instruction::LoadVariable(0, slot));
+                compiler.chunk.emit(Instruction::Initialise(name));
+                compiler.chunk.emit(Instruction::Pop);
+            }
+            // A simple list writes straight into the named slot, so the call has already bound it
+            // and asking again would store the slot back into itself.
+            (Binding::Identifier(_), None) => {}
+            (target, _) => {
                 compiler.chunk.emit(Instruction::LoadVariable(0, slot));
                 compiler.destructure_parameter(target, span)?;
             }
         }
+    }
+    // §15.1 — and the rest last, which is where the grammar puts it. The call has already built
+    // the array into the hidden slot; this is only the binding it ends the dead zone of.
+    if let Some(rest) = compiler.chunk.rest
+        && let Some(Some(name)) = bound.last().copied()
+        && parameters.rest.is_some()
+    {
+        compiler.chunk.emit(Instruction::LoadVariable(0, rest));
+        compiler.chunk.emit(Instruction::Initialise(name));
+        compiler.chunk.emit(Instruction::Pop);
     }
 
     // §15.5.4 and §27.6.2 — the parameters are done, so this is where the generator is made and

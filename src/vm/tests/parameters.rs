@@ -278,3 +278,56 @@ fn a_parameter_may_be_a_pattern_and_is_taken_apart_after_its_default() {
         "1"
     );
 }
+
+#[test]
+fn a_parameter_is_in_a_dead_zone_until_it_is_bound() {
+    // §10.2.11 step 21 — with no duplicate names every parameter's binding is created
+    // *uninitialised*, and `IteratorBindingInitialization` fills it as the parameter is bound. So
+    // the bindings all exist before any default runs, and a default that reads one not yet bound
+    // reads nothing. praxis had the *call* write straight into the named slots, so there was never
+    // anything uninitialised and both of these ran.
+    assert_eq!(
+        run(
+            "(function () { try { (function (x = x) {})(); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "ReferenceError"
+    );
+    assert_eq!(
+        run(
+            "(function () { try { (function (x = y, y) {})(); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "ReferenceError"
+    );
+    // …and the body is never entered, which is what makes it the *parameter list* throwing.
+    assert_eq!(
+        run("var ran = false; try { (function (x = x) { ran = true; })(); } catch (e) {} ran"),
+        "false"
+    );
+    // Left to right: a default may read every parameter *before* it, because those are bound.
+    assert_eq!(run("(function (x, y = x) { return y; })(3)"), "3");
+    assert_eq!(run("(function (x = 1, y = x + 1) { return y; })()"), "2");
+    assert_eq!(
+        run("(function ({ a }, b = a) { return b; })({ a: 5 })"),
+        "5"
+    );
+    // An argument that was passed ends the dead zone as surely as a default does.
+    assert_eq!(run("(function (x = 9, y = x) { return y; })(4)"), "4");
+    // The rest is bound last, after every named parameter — and it is a binding like the others.
+    assert_eq!(
+        run("(function (a, ...r) { return a + ':' + r.join(); })(1, 2, 3)"),
+        "1:2,3"
+    );
+    assert_eq!(run("(function (...r) { return r.length; })(1, 2)"), "2");
+    // A parameter is mutable once bound, which the dead zone must not have taken away.
+    assert_eq!(run("(function (a = 1) { a = 7; return a; })()"), "7");
+    // A **simple** list keeps the direct slots and has no order to observe — no defaults, no
+    // patterns — so these are the rows that say the split did not change the ordinary function.
+    assert_eq!(run("(function (a, b) { return a + b; })(1, 2)"), "3");
+    assert_eq!(run("(function (a) { a = 2; return a; })(1)"), "2");
+    assert_eq!(
+        run("(function (a, b) { return typeof b; })(1)"),
+        "undefined"
+    );
+}
