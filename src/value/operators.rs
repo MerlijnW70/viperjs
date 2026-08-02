@@ -16,8 +16,173 @@
 //! it, and both need the interpreter — `instanceof` calls a method, `in` looks a key up.
 
 use crate::ast::BinaryOperator;
+use crate::bigint::BigInt;
 use crate::heap::Heap;
 use crate::value::{Abrupt, Completion, Hint, Value};
+
+/// §7.2.13 steps 3.c to 3.f — `<` where at least one side is a BigInt.
+///
+/// `None` is "not comparable", which is what a NaN produces and what makes `1n < NaN`,
+/// `1n > NaN` and `1n <= NaN` all false at once — the same fold a Number comparison goes through.
+/// A String that is not a BigInt does the same: §7.2.13 step 3.c returns undefined for it, so
+/// `1n < "abc"` is false and so is `1n > "abc"`.
+fn compare_across_types(left: Value, right: Value, heap: &Heap) -> Option<bool> {
+    let order = match (left, right) {
+        (Value::BigInt(a), Value::BigInt(b)) => heap.bigint(a)?.compare(heap.bigint(b)?),
+        (Value::BigInt(a), Value::Number(b)) => against_number(heap.bigint(a)?, b)?,
+        (Value::Number(a), Value::BigInt(b)) => against_number(heap.bigint(b)?, a)?.reverse(),
+        (Value::BigInt(a), Value::String(b)) => {
+            heap.bigint(a)?.compare(&string_as_bigint(b, heap)?)
+        }
+        (Value::String(a), Value::BigInt(b)) => string_as_bigint(a, heap)?.compare(heap.bigint(b)?),
+        // A Boolean, `null` or `undefined` against a BigInt reaches here having already been
+        // through `ToNumeric` at the call site, so there is nothing left that is not one of the
+        // pairs above.
+        _ => return None,
+    };
+    Some(order == std::cmp::Ordering::Less)
+}
+
+/// Where a BigInt sits relative to a Number, exactly — `None` for a NaN.
+///
+/// Exact on both sides. Turning the BigInt into an `f64` would put `2n ** 53n + 1n` and `2 ** 53`
+/// at the same place, and they are different numbers; turning the Number into a BigInt loses its
+/// fraction, which is what decides the comparison when the integer parts agree.
+fn against_number(left: &BigInt, right: f64) -> Option<std::cmp::Ordering> {
+    use std::cmp::Ordering;
+    if right.is_nan() {
+        return None;
+    }
+    // An infinity is comparable and equals no BigInt: every one of them is inside it.
+    if right.is_infinite() {
+        return Some(match right.is_sign_positive() {
+            true => Ordering::Less,
+            false => Ordering::Greater,
+        });
+    }
+    let whole = BigInt::from_f64(right.trunc())?;
+    Some(match left.compare(&whole) {
+        Ordering::Equal => {
+            // The integer parts agree, so the fraction decides — and which way depends on its
+            // sign: `1n < 1.5` and `-1n > -1.5`.
+            let fraction = right - right.trunc();
+            match fraction.partial_cmp(&0.0) {
+                Some(Ordering::Greater) => Ordering::Less,
+                Some(Ordering::Less) => Ordering::Greater,
+                _ => Ordering::Equal,
+            }
+        }
+        other => other,
+    })
+}
+
+/// §7.2.15 steps 4 and 5 — a BigInt and a Number, compared as points on the number line.
+///
+/// A Number that is not an integer is not any BigInt, and neither is a NaN or an infinity. The
+/// comparison is *exact* on both sides: converting the BigInt to an `f64` would make
+/// `2n ** 53n + 1n` equal `2 ** 53`, and they are different numbers.
+fn equal_across_types(left: Value, right: Value, heap: &Heap) -> bool {
+    let (big, number) = match (left, right) {
+        (Value::BigInt(big), Value::Number(number)) => (big, number),
+        (Value::Number(number), Value::BigInt(big)) => (big, number),
+        _ => return false,
+    };
+    match (heap.bigint(big), BigInt::from_f64(number)) {
+        (Some(big), Some(number)) => *big == number,
+        _ => false,
+    }
+}
+
+/// §7.1.14 `StringToBigInt` — the text of a BigInt, or `None` if it is not one.
+///
+/// `None` where `ToNumber` of the same text would be NaN, and for anything with a decimal point or
+/// an exponent: `"1.5"` is a Number and no BigInt. The empty string is `0n`, which is the one
+/// place this agrees with `ToNumber` about something surprising.
+fn string_as_bigint(id: crate::heap::StringId, heap: &Heap) -> Option<BigInt> {
+    let text = String::from_utf16(heap.string(id)?).ok()?;
+    let trimmed = text.trim_matches(|c: char| c.is_whitespace());
+    if trimmed.is_empty() {
+        return Some(BigInt::zero());
+    }
+    let (negative, rest) = match trimmed.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, trimmed.strip_prefix('+').unwrap_or(trimmed)),
+    };
+    // The three radix prefixes, which §7.1.14 accepts and which may not carry a sign.
+    let (radix, digits) = match rest.get(..2) {
+        Some("0x" | "0X") if !negative => (16, &rest[2..]),
+        Some("0o" | "0O") if !negative => (8, &rest[2..]),
+        Some("0b" | "0B") if !negative => (2, &rest[2..]),
+        _ => (10, rest),
+    };
+    if digits.is_empty() {
+        return None;
+    }
+    Some(BigInt::from_digits(digits, radix)?.negate_if(negative))
+}
+
+/// Put a BigInt result on the heap, or turn its refusal into the completion §6.1.6.2 names.
+fn bigint_value(
+    result: Result<BigInt, crate::bigint::Error>,
+    heap: &mut Heap,
+) -> Completion<Value> {
+    match result {
+        Ok(value) => Ok(Value::BigInt(heap.new_bigint(value))),
+        Err(error) => Err(refused(error)),
+    }
+}
+
+/// §7.1.3 `ToNumeric` for both operands, refusing the pair §13.15.3 step 3 forbids.
+///
+/// The whole of what BigInt adds to arithmetic. Every operator below used to read two `f64`s; the
+/// clause says to convert each operand to *a numeric type* and then insist the two agree, so
+/// `1n + 1` is a TypeError rather than `2` or `"11"`. There is no width at which a BigInt and a
+/// Number are the same value, so any implicit choice loses precision or magnitude — and the
+/// specification would rather stop.
+fn numeric_pair(left: Value, right: Value, heap: &mut Heap) -> Completion<Numeric> {
+    match (left, right) {
+        (Value::BigInt(a), Value::BigInt(b)) => {
+            // Cloned out of the heap because the operation may allocate into it, and a borrow of
+            // an arena cannot survive a push to it. A magnitude is a `Vec`; this is a copy of one.
+            let a = heap.bigint(a).cloned().unwrap_or_else(BigInt::zero);
+            let b = heap.bigint(b).cloned().unwrap_or_else(BigInt::zero);
+            Ok(Numeric::BigInts(a, b))
+        }
+        (Value::BigInt(_), _) | (_, Value::BigInt(_)) => Err(Abrupt::type_error(
+            "a BigInt and a Number cannot be mixed in arithmetic",
+        )),
+        _ => Ok(Numeric::Numbers(
+            left.to_number(heap)?,
+            right.to_number(heap)?,
+        )),
+    }
+}
+
+/// Which arithmetic an operator is about to do — §13.15.3 step 4's two branches.
+enum Numeric {
+    /// Both operands are Numbers, so §6.1.6.1's operations apply.
+    Numbers(f64, f64),
+    /// Both are BigInts, so §6.1.6.2's do.
+    BigInts(BigInt, BigInt),
+}
+
+/// What a BigInt operation that could not answer becomes — §6.1.6.2's three abrupt completions.
+fn refused(error: crate::bigint::Error) -> Abrupt {
+    match error {
+        crate::bigint::Error::DividedByZero => {
+            Abrupt::range_error("a BigInt cannot be divided by zero")
+        }
+        crate::bigint::Error::NegativeExponent => {
+            Abrupt::range_error("a BigInt cannot be raised to a negative power")
+        }
+        crate::bigint::Error::NoUnsignedShift => {
+            Abrupt::type_error("BigInts have no unsigned right shift")
+        }
+        crate::bigint::Error::TooLarge => {
+            Abrupt::range_error("this BigInt is larger than this engine will hold")
+        }
+    }
+}
 
 /// `ApplyStringOrNumericBinaryOperator` (§13.15.3) and the relational and equality operators.
 ///
@@ -36,17 +201,32 @@ pub fn apply_binary(
         // to a number first; this one asks whether either side is a String and concatenates if
         // so, which is why `1 + "1"` is `"11"` and `1 - "1"` is `0`.
         BinaryOperator::Add => return add(left, right, heap),
-        BinaryOperator::Subtract => Value::Number(left.to_number(heap)? - right.to_number(heap)?),
-        BinaryOperator::Multiply => Value::Number(left.to_number(heap)? * right.to_number(heap)?),
+        BinaryOperator::Subtract => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(a, b) => Value::Number(a - b),
+            Numeric::BigInts(a, b) => bigint_value(a.subtract(&b), heap)?,
+        },
+        BinaryOperator::Multiply => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(a, b) => Value::Number(a * b),
+            Numeric::BigInts(a, b) => bigint_value(a.multiply(&b), heap)?,
+        },
         // IEEE division, with no special case: `1/0` is `Infinity` and `0/0` is NaN, and neither
         // is an error. §6.1.6.1.5 says exactly this and nothing more.
-        BinaryOperator::Divide => Value::Number(left.to_number(heap)? / right.to_number(heap)?),
+        BinaryOperator::Divide => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(a, b) => Value::Number(a / b),
+            // §6.1.6.2.5 step 1 — a RangeError where a Number would be `Infinity`, because there
+            // is no BigInt infinity for it to be.
+            Numeric::BigInts(a, b) => bigint_value(a.divide(&b), heap)?,
+        },
         // §6.1.6.1.6 — the *remainder*, which keeps the sign of the dividend: `-1 % 2` is `-1`
         // and not `1`. Rust's `%` on `f64` is C's `fmod` and agrees exactly.
-        BinaryOperator::Remainder => Value::Number(left.to_number(heap)? % right.to_number(heap)?),
-        BinaryOperator::Exponent => {
-            Value::Number(exponentiate(left.to_number(heap)?, right.to_number(heap)?))
-        }
+        BinaryOperator::Remainder => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(a, b) => Value::Number(a % b),
+            Numeric::BigInts(a, b) => bigint_value(a.remainder(&b), heap)?,
+        },
+        BinaryOperator::Exponent => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(a, b) => Value::Number(exponentiate(a, b)),
+            Numeric::BigInts(a, b) => bigint_value(a.exponentiate(&b), heap)?,
+        },
         // §6.1.6.1.9 to §6.1.6.1.11 — "let shiftCount be ℝ(rnum) modulo 32", which is what makes
         // `1 << 32` be `1` and not `0`. Written as `wrapping_shl` rather than `% 32` before a
         // shift: that method is defined as masking the count to the width, so the two are one
@@ -54,29 +234,52 @@ pub fn apply_binary(
         //
         // The left operand of `>>>` is read as *unsigned*, which is the whole of the difference
         // between it and `>>`.
-        BinaryOperator::ShiftLeft => {
-            let count = right.to_uint32(heap)?;
-            Value::Number(f64::from(left.to_int32(heap)?.wrapping_shl(count)))
-        }
-        BinaryOperator::ShiftRight => {
-            let count = right.to_uint32(heap)?;
-            Value::Number(f64::from(left.to_int32(heap)?.wrapping_shr(count)))
-        }
-        BinaryOperator::ShiftRightUnsigned => {
-            let count = right.to_uint32(heap)?;
-            Value::Number(f64::from(left.to_uint32(heap)?.wrapping_shr(count)))
-        }
+        BinaryOperator::ShiftLeft => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(..) => {
+                let count = right.to_uint32(heap)?;
+                Value::Number(f64::from(left.to_int32(heap)?.wrapping_shl(count)))
+            }
+            Numeric::BigInts(a, b) => bigint_value(a.shift_left(&b), heap)?,
+        },
+        BinaryOperator::ShiftRight => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(..) => {
+                let count = right.to_uint32(heap)?;
+                Value::Number(f64::from(left.to_int32(heap)?.wrapping_shr(count)))
+            }
+            Numeric::BigInts(a, b) => bigint_value(a.shift_right(&b), heap)?,
+        },
+        BinaryOperator::ShiftRightUnsigned => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(..) => {
+                let count = right.to_uint32(heap)?;
+                Value::Number(f64::from(left.to_uint32(heap)?.wrapping_shr(count)))
+            }
+            // §6.1.6.2.11 — the one operator BigInt does not have. `>>>` fills from the left with
+            // zeros, which needs a width; a BigInt has none, so the clause refuses rather than
+            // pretending `>>` will do.
+            Numeric::BigInts(..) => {
+                return Err(Abrupt::type_error("BigInts have no unsigned right shift"));
+            }
+        },
         // §6.1.6.1.17 to §6.1.6.1.19 — through `ToInt32`, which is why `2147483648 | 0` is
         // `-2147483648` and why every bitwise operator throws away anything past 32 bits.
-        BinaryOperator::BitwiseAnd => {
-            Value::Number(f64::from(left.to_int32(heap)? & right.to_int32(heap)?))
-        }
-        BinaryOperator::BitwiseXor => {
-            Value::Number(f64::from(left.to_int32(heap)? ^ right.to_int32(heap)?))
-        }
-        BinaryOperator::BitwiseOr => {
-            Value::Number(f64::from(left.to_int32(heap)? | right.to_int32(heap)?))
-        }
+        BinaryOperator::BitwiseAnd => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(..) => {
+                Value::Number(f64::from(left.to_int32(heap)? & right.to_int32(heap)?))
+            }
+            Numeric::BigInts(a, b) => bigint_value(a.and(&b), heap)?,
+        },
+        BinaryOperator::BitwiseXor => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(..) => {
+                Value::Number(f64::from(left.to_int32(heap)? ^ right.to_int32(heap)?))
+            }
+            Numeric::BigInts(a, b) => bigint_value(a.xor(&b), heap)?,
+        },
+        BinaryOperator::BitwiseOr => match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(..) => {
+                Value::Number(f64::from(left.to_int32(heap)? | right.to_int32(heap)?))
+            }
+            Numeric::BigInts(a, b) => bigint_value(a.or(&b), heap)?,
+        },
         // §13.10.1 — all four relational operators are `IsLessThan` with the operands in one
         // order or the other, and `undefined` — "not comparable" — folded to `false`. That fold
         // is why `NaN < 1`, `NaN > 1` and `NaN <= 1` are all false at once.
@@ -115,9 +318,13 @@ fn add(left: Value, right: Value, heap: &mut Heap) -> Completion<Value> {
     let right = right.to_primitive(heap, Hint::Number)?;
     let either_is_a_string = matches!(left, Value::String(_)) || matches!(right, Value::String(_));
     if !either_is_a_string {
-        return Ok(Value::Number(
-            left.to_number(heap)? + right.to_number(heap)?,
-        ));
+        // Steps 1.d to 1.g — the same `ToNumeric` pair every other arithmetic operator uses, so
+        // `1n + 1` is a TypeError here too. The String test above comes first, which is why
+        // `1n + "a"` is `"1a"` and not an error: concatenation is not arithmetic.
+        return match numeric_pair(left, right, heap)? {
+            Numeric::Numbers(a, b) => Ok(Value::Number(a + b)),
+            Numeric::BigInts(a, b) => bigint_value(a.add(&b), heap),
+        };
     }
     // Step 1.c — *both* are converted to Strings, not just the one that was not: `1 + "a"` is
     // `"1a"` because `ToString(1)` is `"1"`, which is where §6.1.6.1.20 earns its place.
@@ -201,6 +408,12 @@ fn is_less_than(left: Value, right: Value, heap: &Heap) -> Completion<Option<boo
         };
         return Ok(Some(left < right));
     }
+    // Steps 3.c to 3.f — a BigInt is *compared* with anything numeric, unlike in arithmetic. The
+    // ordering is of mathematical values, so it is exact on both sides: a BigInt turned into an
+    // `f64` first would put `2n ** 53n + 1n` and `2 ** 53` in the wrong order to each other.
+    if matches!(left, Value::BigInt(_)) || matches!(right, Value::BigInt(_)) {
+        return Ok(compare_across_types(left, right, heap));
+    }
     // Steps 8 to 10 — everything else through `ToNumber`, and NaN is not less than, greater
     // than, or equal to anything.
     let (left, right) = (left.to_number(heap)?, right.to_number(heap)?);
@@ -226,7 +439,34 @@ pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> Completion<bo
         | (Value::Number(_), Value::Number(_))
         | (Value::String(_), Value::String(_))
         | (Value::Symbol(_), Value::Symbol(_))
+        | (Value::BigInt(_), Value::BigInt(_))
         | (Value::Object(_), Value::Object(_)) => left.is_strictly_equal(&right, heap),
+        // Steps 4 and 5 — a BigInt and a Number **are** compared, unlike in arithmetic, and
+        // mathematically: `1n == 1` is true where `1n + 1` is a TypeError. Comparing is asking
+        // whether two values are the same point on the number line, which is a question that has
+        // an answer at every width; arithmetic has to *produce* a value and would have to choose
+        // one. That is the whole of why one mixes and the other does not.
+        (Value::BigInt(_), Value::Number(_)) | (Value::Number(_), Value::BigInt(_)) => {
+            equal_across_types(left, right, heap)
+        }
+        // Steps 6 and 7's other half — a BigInt against a String reads the String as a BigInt, and
+        // text that is not an integer is simply *not equal* rather than an error: `1n == "1"` is
+        // true and `1n == "1.5"` is false.
+        (Value::BigInt(_), Value::String(id)) | (Value::String(id), Value::BigInt(_)) => {
+            match string_as_bigint(id, heap) {
+                Some(parsed) => {
+                    let other = match left {
+                        Value::BigInt(value) => value,
+                        _ => match right {
+                            Value::BigInt(value) => value,
+                            _ => return Ok(false),
+                        },
+                    };
+                    heap.bigint(other).is_some_and(|value| *value == parsed)
+                }
+                None => false,
+            }
+        }
         // Steps 2 and 3 — the pair that is equal without being the same, and the reason
         // `x == null` is the idiomatic test for "either of them".
         (Value::Undefined, Value::Null) | (Value::Null, Value::Undefined) => true,

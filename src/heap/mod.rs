@@ -196,6 +196,15 @@ pub const MAX_HEAP_BYTES: usize = 1 << 26;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StringId(pub(super) usize);
 
+/// Where a BigInt lives on the heap.
+///
+/// A handle for the reason a [`StringId`] is one: §6.1.6.2's integer has no width, so its size is
+/// the program's to choose and it cannot sit in a register. Unlike an [`ObjectId`] this addresses a
+/// *value* — two handles to equal digits are the same BigInt, and every comparison reads through
+/// them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct BigIntId(pub(super) usize);
+
 /// The arena every heap-allocated value lives in.
 ///
 /// One `Heap` is one realm on one thread (GOAL.md §3), so there is no locking here and no plan
@@ -209,6 +218,13 @@ pub struct Heap {
     /// to change one — so the spare capacity a `Vec` keeps for growth would be paid for by every
     /// string in the program and used by none of them.
     strings: Vec<Option<Box<[u16]>>>,
+    /// The BigInts, by the handle that addresses one.
+    ///
+    /// Not interned, and deliberately not: two BigInts with the same digits are the same *value*
+    /// and every relation says so by reading them, so sharing a slot would buy nothing an equality
+    /// does not already give. A table keyed by digits would also have to hash a magnitude of
+    /// arbitrary length on every literal.
+    bigints: Vec<Option<crate::bigint::BigInt>>,
     /// Where a given sequence of code units was interned, if it ever was.
     ///
     /// Only property keys go in here, and [`Heap::intern`] says why they must: two Strings with
@@ -404,6 +420,18 @@ impl Heap {
         let id = self.new_string(units.to_vec());
         self.interned.insert(units.into(), id);
         id
+    }
+
+    /// Put a BigInt on the heap and answer the handle that addresses it.
+    pub fn new_bigint(&mut self, value: crate::bigint::BigInt) -> BigIntId {
+        let id = BigIntId(self.bigints.len());
+        self.bigints.push(Some(value));
+        id
+    }
+
+    /// The BigInt a handle addresses, or `None` for a handle to a swept slot.
+    pub fn bigint(&self, id: BigIntId) -> Option<&crate::bigint::BigInt> {
+        self.bigints.get(id.0)?.as_ref()
     }
 
     /// Put a Symbol on the heap — §20.4.1.1 `SymbolDescriptiveString`'s subject, and §6.1.5's value.

@@ -137,7 +137,10 @@ fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
 fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
     let cases = [
         ("with (o) { x; }", "with"),
-        ("async function* g() { yield 1n; }", "a BigInt literal"),
+        (
+            "async function* g() { yield import('x'); }",
+            "a dynamic import",
+        ),
     ];
     for (source, what) in cases {
         let mut heap = Heap::new();

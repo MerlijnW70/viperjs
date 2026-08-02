@@ -137,6 +137,8 @@ pub struct Realm {
     /// `[@@iterator]` it inherits answers the generator itself, so `for (const x of gen())` walks
     /// the generator rather than looking for something else.
     generator_prototype: ObjectId,
+    /// %BigInt.prototype% — §21.2.3.
+    bigint_prototype: ObjectId,
     /// %IteratorPrototype% — §27.1.2, where `[@@iterator]` answers the receiver.
     ///
     /// Every iterator in the language inherits from this, however it was made, which is what makes
@@ -253,6 +255,7 @@ impl Realm {
         // §27.5.1 — a generator object inherits from %GeneratorPrototype%, which inherits from
         // %IteratorPrototype%. That second link is the whole of what makes a generator iterable.
         let generator_prototype = heap.new_object(Some(iterator_prototype));
+        let bigint_prototype = heap.new_object(Some(object_prototype));
         // §27.3.3 — and a generator *function* inherits from this, which is an ordinary object
         // whose `[[Prototype]]` is %Function.prototype%: a generator function is still a function.
         let generator_function_prototype = heap.new_object(Some(function_prototype));
@@ -342,6 +345,7 @@ impl Realm {
             async_iterator_prototype,
             async_from_sync_iterator_prototype,
             generator_prototype,
+            bigint_prototype,
             generator_function_prototype,
             async_generator_prototype,
             async_generator_function_prototype,
@@ -582,6 +586,11 @@ impl Realm {
     /// %AsyncFromSyncIteratorPrototype% — §27.1.4.2.
     pub fn async_from_sync_iterator_prototype(&self) -> ObjectId {
         self.async_from_sync_iterator_prototype
+    }
+
+    /// %BigInt.prototype% — §21.2.3, what a BigInt wrapper inherits from.
+    pub fn bigint_prototype(&self) -> ObjectId {
+        self.bigint_prototype
     }
 
     /// %GeneratorPrototype% — §27.5.1, what a generator object inherits from.

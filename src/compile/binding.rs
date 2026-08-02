@@ -399,7 +399,21 @@ impl Compiler<'_> {
                 self.constant(Value::String(id))
             }
             AstPropertyKey::Computed(expression) => self.expression(expression),
-            AstPropertyKey::BigInt(_) => Err(unsupported("a BigInt literal", Span::new(0, 0))),
+            // §13.2.5.1 — a numeric `PropertyName` is its *ToString*, and a BigInt's is its digits
+            // without the `n`. So `{ 1n: 'a' }` and `{ '1': 'a' }` are the same property, which is
+            // what makes `({1n: 'a'})[1]` answer `'a'`.
+            AstPropertyKey::BigInt(literal) => {
+                let Some(value) =
+                    crate::bigint::BigInt::from_digits(&literal.digits, literal.radix)
+                else {
+                    return Err(unsupported(
+                        "a BigInt property key this large",
+                        Span::new(0, 0),
+                    ));
+                };
+                let id = self.name_of(&value.to_digits(10));
+                self.constant(Value::String(id))
+            }
             // A private name is not a `PropertyName` at all — §15.7's `ClassElementName` is one *or*
             // a `PrivateIdentifier`. A private *field* never reaches here, because its Private Name
             // is minted at the class definition instead; what does is a private method, accessor or

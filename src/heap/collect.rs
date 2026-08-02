@@ -74,6 +74,8 @@ pub struct Collected {
     pub strings: usize,
     /// How many Symbols were unreachable.
     pub symbols: usize,
+    /// How many BigInts were unreachable.
+    pub bigints: usize,
 }
 
 impl Heap {
@@ -95,6 +97,7 @@ impl Heap {
             objects: vec![false; self.objects.len()],
             environments: vec![false; self.environments.len()],
             strings: vec![false; self.strings.len()],
+            bigints: vec![false; self.bigints.len()],
             symbols: vec![false; self.symbols.len()],
         };
         for value in &roots.values {
@@ -168,6 +171,14 @@ impl Heap {
         match value {
             Value::String(id) => {
                 if let Some(seen) = marked.strings.get_mut(id.index()) {
+                    *seen = true;
+                }
+            }
+            // §6.1.6.2's magnitude is the program's to size, so a BigInt nothing names is worth
+            // reclaiming for the same reason a String is — and unlike a String it is never
+            // interned, so nothing else is holding it.
+            Value::BigInt(id) => {
+                if let Some(seen) = marked.bigints.get_mut(id.index()) {
                     *seen = true;
                 }
             }
@@ -593,6 +604,7 @@ impl Heap {
             environments: 0,
             strings: 0,
             symbols: 0,
+            bigints: 0,
         };
         // Before anything is freed, because a weak collection that *survives* has to lose the
         // entries whose keys do not — that is the whole observable effect of weakness, and it is
@@ -645,6 +657,13 @@ impl Heap {
             *string = None;
             freed.strings += 1;
         }
+        for (value, marked) in self.bigints.iter_mut().zip(&marked.bigints) {
+            if *marked || value.is_none() {
+                continue;
+            }
+            *value = None;
+            freed.bigints += 1;
+        }
         for (symbol, marked) in self.symbols.iter_mut().zip(&marked.symbols) {
             if *marked || symbol.is_none() {
                 continue;
@@ -695,12 +714,19 @@ struct Marked {
     environments: Vec<bool>,
     strings: Vec<bool>,
     symbols: Vec<bool>,
+    bigints: Vec<bool>,
 }
 
 /// The index inside a handle, for the collector's own use.
 pub(super) trait Slot {
     /// Which slot of its arena this handle names.
     fn index(&self) -> usize;
+}
+
+impl Slot for crate::heap::BigIntId {
+    fn index(&self) -> usize {
+        self.0
+    }
 }
 
 impl Slot for StringId {

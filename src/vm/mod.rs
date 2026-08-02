@@ -620,13 +620,46 @@ fn apply_unary(operator: UnaryOperator, operand: Value, heap: &mut Heap) -> Comp
         }
         // §13.5.4 — unary `+` is `ToNumber` and nothing else, which is why `+x` is the shortest
         // spelling of it and why `+"1"` is `1` while `+"a"` is NaN.
+        // §13.5.4 step 3 has no BigInt case at all, and that is deliberate: `+1n` is a TypeError
+        // where every other unary operator has a BigInt meaning. Unary `+` *is* `ToNumber`, and
+        // asking a BigInt for a Number is the conversion §7.1.4 refuses — so the operator that
+        // looks harmless is the one BigInt does not have.
         UnaryOperator::Plus => Value::Number(operand.to_number(heap)?),
         // §13.5.5 — `ToNumber` and then negate. Negation is not subtraction from zero: `-0` is
         // `-0` where `0 - 0` is `+0`.
-        UnaryOperator::Minus => Value::Number(-operand.to_number(heap)?),
+        UnaryOperator::Minus => match operand {
+            // §13.5.5 step 3 — §6.1.6.2.1 for a BigInt, which is the same magnitude with the other
+            // sign. `-0n` is `0n`: there is no negative zero to keep.
+            Value::BigInt(id) => {
+                let negated = heap
+                    .bigint(id)
+                    .map_or_else(crate::bigint::BigInt::zero, crate::bigint::BigInt::negate);
+                Value::BigInt(heap.new_bigint(negated))
+            }
+            _ => Value::Number(-operand.to_number(heap)?),
+        },
         // §13.5.6 — `ToInt32` and then complement, so `~x` is `-(x + 1)` for a 32-bit `x`, and
         // `~"abc"` is `-1` because NaN becomes `+0` on the way through.
-        UnaryOperator::BitwiseNot => Value::Number(f64::from(!operand.to_int32(heap)?)),
+        UnaryOperator::BitwiseNot => match operand {
+            // §13.5.6 step 3 — §6.1.6.2.2, which is `-(x + 1)` at *every* width rather than at
+            // thirty-two of them. `~0n` is `-1n` and `~0` is also `-1`; the two part company as
+            // soon as the operand does not fit in an `i32`.
+            Value::BigInt(id) => {
+                let value = heap
+                    .bigint(id)
+                    .cloned()
+                    .unwrap_or_else(crate::bigint::BigInt::zero);
+                match value.not() {
+                    Ok(complement) => Value::BigInt(heap.new_bigint(complement)),
+                    Err(_) => {
+                        return Err(Abrupt::range_error(
+                            "this BigInt is larger than this engine will hold",
+                        ));
+                    }
+                }
+            }
+            _ => Value::Number(f64::from(!operand.to_int32(heap)?)),
+        },
         // §13.5.7 — `ToBoolean` and then negate, which is why `!!x` is the shortest cast.
         UnaryOperator::LogicalNot => Value::Boolean(!operand.to_boolean(heap)),
         // Refused by the compiler, which is where the message with a span comes from. Answering

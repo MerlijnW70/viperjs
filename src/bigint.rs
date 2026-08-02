@@ -118,6 +118,17 @@ impl BigInt {
         self.clone().with_sign(!self.negative)
     }
 
+    /// This value negated when `negative`, and unchanged otherwise.
+    ///
+    /// For a caller that has read a sign and some digits separately, which is what every text
+    /// form of a BigInt is.
+    pub fn negate_if(self, negative: bool) -> Self {
+        match negative {
+            true => self.negate(),
+            false => self,
+        }
+    }
+
     /// The magnitude, as a positive BigInt — `|x|`.
     pub fn magnitude_of(&self) -> Self {
         self.clone().with_sign(false)
@@ -343,6 +354,44 @@ impl BigInt {
         }
         trim(&mut limbs);
         Self::from_parts(limbs, negative)
+    }
+
+    /// The BigInt this `f64` names *exactly*, or `None` if it does not name one.
+    ///
+    /// `None` for a NaN, an infinity and anything with a fractional part — §7.2.15 step 5 asks
+    /// whether two values are the same point on the number line, and a Number that is not an
+    /// integer is not any BigInt.
+    ///
+    /// Exact, by taking the mantissa and the exponent apart rather than going through a decimal
+    /// string. That matters at the one place anybody notices: `2n ** 53n + 1n` and `2 ** 53` are
+    /// different numbers, and a conversion that went through `f64` in either direction would say
+    /// they are the same.
+    pub fn from_f64(value: f64) -> Option<Self> {
+        if !value.is_finite() || value.fract() != 0.0 {
+            return None;
+        }
+        let bits = value.to_bits();
+        let negative = bits >> 63 == 1;
+        let raw_exponent = ((bits >> 52) & 0x7FF) as i64;
+        let fraction = bits & 0x000F_FFFF_FFFF_FFFF;
+        // A subnormal has no implicit leading one and an exponent of -1074; a normal has both. The
+        // only subnormal that is an integer is zero, which the shift below then answers for.
+        let (mantissa, exponent) = match raw_exponent {
+            0 => (fraction, -1074),
+            _ => (fraction | 0x0010_0000_0000_0000, raw_exponent - 1075),
+        };
+        let magnitude = Self::from_u64(mantissa);
+        let shifted = match exponent >= 0 {
+            true => magnitude
+                .shift_left(&Self::from_u64(exponent as u64))
+                .ok()?,
+            // A negative exponent with no fractional part means the mantissa's low bits are zero,
+            // so this shift discards nothing — `value.fract()` above is what guarantees it.
+            false => magnitude
+                .shift_right(&Self::from_u64(exponent.unsigned_abs()))
+                .ok()?,
+        };
+        Some(shifted.with_sign(negative))
     }
 
     /// §12.9.3's `BigIntLiteral`, and §7.1.14's `StringToBigInt` — digits in a radix, read.

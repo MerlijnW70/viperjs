@@ -245,6 +245,7 @@ impl Vm {
             Value::Number(_) => heap.new_wrapper(self.realm.number_prototype(), value),
             Value::String(data) => heap.new_string_object(self.realm.string_prototype(), data),
             Value::Symbol(_) => heap.new_wrapper(self.realm.symbol_prototype(), value),
+            Value::BigInt(_) => heap.new_wrapper(self.realm.bigint_prototype(), value),
             Value::Undefined | Value::Null => {
                 return Err(Abrupt::type_error(
                     "undefined and null cannot be converted to an object",
@@ -291,6 +292,7 @@ impl Vm {
             Value::Number(_) => self.realm.number_prototype(),
             Value::Boolean(_) => self.realm.boolean_prototype(),
             Value::Symbol(_) => self.realm.symbol_prototype(),
+            Value::BigInt(_) => self.realm.bigint_prototype(),
             // A String is the one primitive whose wrapper has own properties, so the shortcut has
             // to answer them itself before falling through to the prototype: §10.4.3.5's
             // characters, and the `length` §10.4.3.4 puts beside them.

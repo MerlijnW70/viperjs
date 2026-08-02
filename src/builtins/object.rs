@@ -67,6 +67,9 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
         // instead, out of the `@@toStringTag` §20.4.3.5 puts on `Symbol.prototype` — which is
         // why deleting that property makes a Symbol tag as an ordinary object again.
         Value::Symbol(_) => "Object",
+        // §20.1.3.6 has no row for a BigInt either, and for the same reason: `[object BigInt]`
+        // comes from the `@@toStringTag` on `BigInt.prototype` rather than from this table.
+        Value::BigInt(_) => "Object",
         // Steps 4 to 14's table, in the rows this heap keeps enough state to answer. `IsArray`
         // is step 4 and is a real question about the object rather than about its prototype, so
         // `Object.prototype.toString.call([])` says `[object Array]` and one on an object merely

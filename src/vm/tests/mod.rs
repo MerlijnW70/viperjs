@@ -74,6 +74,7 @@ mod array_sort;
 mod arrays;
 mod arrows;
 mod asynchrony;
+mod bigints;
 mod bound;
 mod buffers;
 mod builtins;

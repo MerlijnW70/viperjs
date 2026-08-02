@@ -78,7 +78,7 @@ pub use self::operators::{apply_binary, is_loosely_equal};
 
 pub(crate) use self::number_to_string::number_to_string;
 pub(crate) use self::string_to_number::string_to_number;
-use crate::heap::{Heap, ObjectId, StringId, SymbolId};
+use crate::heap::{BigIntId, Heap, ObjectId, StringId, SymbolId};
 
 /// An ECMAScript language value (§6.1).
 ///
@@ -110,6 +110,17 @@ pub enum Value {
     /// properties are two objects, and `{} === {}` is false. That is why every equality relation
     /// compares the handle for this variant and the code units for a String.
     Object(ObjectId),
+    /// A BigInt — §6.1.6.2, an integer with no width.
+    ///
+    /// On the heap for the reason a String is: a value whose size a program chooses cannot sit in
+    /// a register. It is a *primitive* all the same — `1n === 1n` is true where `{} === {}` is
+    /// false — so every equality relation reads the digits behind this handle rather than the
+    /// handle itself, exactly as it does for a String.
+    ///
+    /// The type that does not mix. §6.1.6 gives Number and BigInt no common arithmetic at all:
+    /// `1n + 1` is a TypeError rather than `2` or `"11"`, because there is no width at which the
+    /// two agree and silently choosing one would lose either precision or magnitude.
+    BigInt(BigIntId),
     /// A Number — §6.1.6.1, an IEEE 754-2019 binary64 value.
     ///
     /// Every `f64` is a Number and every Number is an `f64`, with one wrinkle that costs work
@@ -131,6 +142,9 @@ impl Value {
             Self::Null => "object",
             Self::Boolean(_) => "boolean",
             Self::Number(_) => "number",
+            // §13.5.3's table has had a row for this since ES2020, and it is the only type whose
+            // `typeof` string was added after the operator existed.
+            Self::BigInt(_) => "bigint",
             Self::String(_) => "string",
             Self::Symbol(_) => "symbol",
             // §13.5.3's table again, and the one row that has to look inside: an Object is
@@ -155,6 +169,9 @@ impl Value {
             // §7.1.2's table again — a Symbol is always true, description or not. There is no
             // "empty Symbol" for the String rule's counterpart to be about.
             Self::Symbol(_) => true,
+            // §7.1.2 — zero is false and every other BigInt is true, which is the Number rule
+            // without the NaN: there is no BigInt that is not a number.
+            Self::BigInt(id) => heap.bigint(*id).is_some_and(|value| !value.is_zero()),
             // "If argument is the empty String, return false; otherwise return true." Only the
             // length is asked about, so `"0"` and `"false"` are both true — the two strings
             // every list of JavaScript surprises begins with.
@@ -186,6 +203,15 @@ impl Value {
             Self::Boolean(true) => 1.0,
             Self::Boolean(false) => 0.0,
             Self::Number(number) => *number,
+            // §7.1.4 step 2 — a **TypeError**, and this is the one people meet. `1n + 1` fails
+            // here rather than converting, because there is no width at which a BigInt and a
+            // Number agree: silently choosing one loses either precision or magnitude. The
+            // conversion exists, it is just not implicit — `Number(1n)` is how you ask for it.
+            Self::BigInt(_) => {
+                return Err(Abrupt::type_error(
+                    "a BigInt cannot be converted to a number",
+                ));
+            }
             // §7.1.4 step 3 — a Symbol has no numeric value and asking for one is a **TypeError**,
             // not a NaN. That is what makes `Symbol() + 1` an error where `undefined + 1` is
             // merely `NaN`: arithmetic on a Symbol is always a mistake, and the specification
@@ -243,6 +269,12 @@ impl Value {
             Self::Boolean(true) => "true".to_string(),
             Self::Boolean(false) => "false".to_string(),
             Self::Number(number) => number_to_string(*number),
+            // §7.1.17 — a BigInt *does* become text, unlike a Symbol: `String(1n)` is `"1"` and
+            // `` `${1n}` `` is `"1"`. Without the `n`, which is syntax rather than value.
+            Self::BigInt(id) => match heap.bigint(*id) {
+                Some(value) => value.to_digits(10),
+                None => "0".to_string(),
+            },
             Self::String(id) => return Ok(*id),
             // §7.1.17 step 2 — and this one is the reason the type is useful. A Symbol will not
             // turn into text by accident, so `"key: " + Symbol()` is an error rather than a

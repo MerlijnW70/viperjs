@@ -186,6 +186,10 @@ impl Writer {
             Value::Boolean(true) => Ok(Some("true".encode_utf16().collect())),
             Value::Boolean(false) => Ok(Some("false".encode_utf16().collect())),
             Value::String(id) => Ok(Some(quote(heap.string(id).unwrap_or(&[])))),
+            // §25.5.2.2 step 10 — a **TypeError**, and the only value JSON refuses outright. JSON
+            // has no integer syntax that survives a round trip past 2^53, so writing `1n` as `1`
+            // would produce text that parses back as a different value.
+            Value::BigInt(_) => Err(Abrupt::type_error("a BigInt cannot be serialised to JSON")),
             // §25.5.2.1 step 9 — a number JSON cannot write is `null`, because JSON has no NaN and
             // no infinities and the alternative would be text that does not parse back.
             Value::Number(number) if number.is_finite() => Ok(Some(

@@ -198,7 +198,19 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::HasPrivate);
                 Ok(())
             }
-            ExprKind::BigInt(_) => Err(unsupported("a BigInt literal", span)),
+            // §12.9.3's `BigIntLiteral`, read at compile time and carried as a constant — the same
+            // treatment a Number literal gets, and for the same reason: the digits do not change.
+            ExprKind::BigInt(literal) => {
+                let Some(value) =
+                    crate::bigint::BigInt::from_digits(&literal.digits, literal.radix)
+                else {
+                    // The lexer read these digits *in this radix*, so a refusal here is a magnitude
+                    // past what the engine will hold rather than a character that is not a digit.
+                    return Err(unsupported("a BigInt literal this large", span));
+                };
+                let id = self.heap.new_bigint(value);
+                self.constant(Value::BigInt(id))
+            }
             ExprKind::Call {
                 optional,
                 callee,
@@ -560,8 +572,19 @@ impl Compiler<'_> {
                     self.constant(Value::String(id))?;
                 }
                 AstPropertyKey::Computed(expression) => self.expression(expression)?,
-                AstPropertyKey::BigInt(_) | AstPropertyKey::Private(_) => {
-                    return Err(unsupported("a BigInt or private key", span));
+                // §13.2.5.1 — a numeric `PropertyName` is its *ToString*, and a BigInt's is its
+                // digits without the `n`. So `{ 1n: 'a' }` and `{ '1': 'a' }` name one property.
+                AstPropertyKey::BigInt(literal) => {
+                    let Some(value) =
+                        crate::bigint::BigInt::from_digits(&literal.digits, literal.radix)
+                    else {
+                        return Err(unsupported("a BigInt key this large", span));
+                    };
+                    let id = self.name_of(&value.to_digits(10));
+                    self.constant(Value::String(id))?;
+                }
+                AstPropertyKey::Private(_) => {
+                    return Err(unsupported("a private key", span));
                 }
             }
             match value {

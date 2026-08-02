@@ -85,6 +85,15 @@ impl Value {
             // is what makes `Symbol("a") === Symbol("a")` false and what makes a Symbol usable as
             // a key nothing else can collide with. The description takes no part.
             (Self::Symbol(left), Self::Symbol(right)) => left == right,
+            // §7.2.12's `BigInt::sameValue` — the *digits*, like a String and unlike an Object. A
+            // BigInt is a primitive whose identity is its value, so two handles to equal
+            // magnitudes are equal however they were arrived at.
+            (Self::BigInt(left), Self::BigInt(right)) => {
+                match (heap.bigint(*left), heap.bigint(*right)) {
+                    (Some(left), Some(right)) => left == right,
+                    _ => false,
+                }
+            }
             _ => false,
         }
     }
