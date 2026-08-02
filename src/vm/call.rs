@@ -318,7 +318,13 @@ impl Vm {
         // The values are every argument the call was given, and the map joins the first
         // `parameters` of them to the slots filled just above — which is what makes
         // `arguments[0]` and the first parameter one variable rather than two with equal values.
-        // A list that is not simple gets the unmapped object instead; see [`Heap::new_arguments`].
+        //
+        // **Two conditions and not one**, which is what step 22 actually says: the list must be
+        // simple *and the code must be sloppy*. Asking only about the list gave a strict function
+        // with plain parameters the mapped object, and the join is observable — `function f(a)
+        // { 'use strict'; a = 2; return arguments[0]; }` answered 2 where §10.2.11 says 1, because
+        // strict mode is where that link was taken away. It is also what a program uses to reach
+        // %ThrowTypeError% at all: the poisoned `callee` is the unmapped object's.
         if let Some(slot) = body.arguments() {
             let values: Vec<Value> = self.stack[callee_at + 1..callee_at + 1 + count].to_vec();
             let prototype = self.realm.object_prototype();
@@ -330,7 +336,7 @@ impl Vm {
                     parameters: body.parameters(),
                     callee: object,
                     thrower: self.realm.thrower(),
-                    mapped: body.simple_parameters(),
+                    mapped: body.simple_parameters() && !body.is_strict(),
                 },
             );
             heap.set_variable(environment, slot, Value::Object(arguments));

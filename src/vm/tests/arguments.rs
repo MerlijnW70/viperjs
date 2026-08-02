@@ -262,3 +262,152 @@ fn each_call_has_its_own_and_an_arrow_has_none() {
         "kept"
     );
 }
+
+#[test]
+fn caller_and_arguments_are_refused_through_any_function_rather_than_being_absent() {
+    // §10.2.4 `AddRestrictedFunctionProperties` — ES5's two ways of walking the call stack from
+    // inside a function, closed off. What replaced them is not their *absence*: they are accessor
+    // properties whose getter and setter both throw, so a program that asks gets a TypeError. The
+    // difference is what a feature test can see — `undefined` would say this engine has not got
+    // round to them.
+    assert_eq!(
+        run("function f() {} try { f.caller; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("function f() {} try { f.arguments; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("function f() {} try { f.caller = 1; 'wrote' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // Through an arrow, a method and a bound function too, since the pair is on the prototype they
+    // all share rather than on any of them.
+    assert_eq!(
+        run("try { (() => {}).caller; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { (function () {}).bind(null).arguments; 'read' } \
+             catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+
+    // §10.2.4 puts them on `Function.prototype` **and on no individual function**, which is where
+    // ES2015 moved them: ES5 gave every strict function a pair of its own, and this is the check
+    // that tells the two arrangements apart.
+    assert_eq!(
+        run("function f() { 'use strict'; } \
+             Object.prototype.hasOwnProperty.call(f, 'caller') + ',' + \
+             Object.prototype.hasOwnProperty.call(Function.prototype, 'caller')"),
+        "false,true"
+    );
+    // The descriptor: an accessor, both halves the same function, not enumerable, and
+    // **configurable** — the one attribute these two do not share with §17's usual shape, so that
+    // a host or a script may replace them.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Function.prototype, 'caller'); \
+             [typeof d.get, d.get === d.set, d.enumerable, d.configurable].join(',')"
+        ),
+        "function,true,false,true"
+    );
+}
+
+#[test]
+fn there_is_one_function_that_refuses_and_every_restricted_property_shares_it() {
+    // §10.2.4.1 %ThrowTypeError% is a single object per realm, and a program can see that it is:
+    // both halves of both restricted accessors are the same function, and so is the poisoned
+    // `callee` of an unmapped arguments object. Anything else would be four functions that behave
+    // alike, which is not what the specification says and is observable with `===`.
+    assert_eq!(
+        run(
+            "var caller = Object.getOwnPropertyDescriptor(Function.prototype, 'caller'); \
+             var args = Object.getOwnPropertyDescriptor(Function.prototype, 'arguments'); \
+             var callee = Object.getOwnPropertyDescriptor( \
+                 function () { 'use strict'; return arguments; }(), 'callee'); \
+             [caller.get === caller.set, caller.get === args.get, args.get === args.set, \
+              caller.get === callee.get, callee.get === callee.set].join(',')"
+        ),
+        "true,true,true,true,true"
+    );
+    // Its own shape, which is stricter than any other built-in's. `name` is the **empty string**
+    // and not `"ThrowTypeError"` — that is the specification's name for it, not one a program may
+    // read — and `length` and `name` are non-writable *and* non-configurable where §17 makes every
+    // other built-in's configurable.
+    assert_eq!(
+        run(
+            "var T = Object.getOwnPropertyDescriptor(Function.prototype, 'caller').get; \
+             var n = Object.getOwnPropertyDescriptor(T, 'name'); \
+             var l = Object.getOwnPropertyDescriptor(T, 'length'); \
+             [n.value === '', n.writable, n.configurable, l.value, l.writable, l.configurable] \
+                 .join(',')"
+        ),
+        "true,false,false,0,false,false"
+    );
+    // …and it is shut: not extensible, and frozen, so nothing can be hung on the one function every
+    // restricted property in the realm shares. It also has no `prototype` of its own and is not a
+    // constructor.
+    assert_eq!(
+        run(
+            "var T = Object.getOwnPropertyDescriptor(Function.prototype, 'caller').get; \
+             [Object.isExtensible(T), Object.isFrozen(T), \
+              Object.prototype.hasOwnProperty.call(T, 'prototype'), \
+              Object.getPrototypeOf(T) === Function.prototype].join(',')"
+        ),
+        "false,true,false,true"
+    );
+    // Calling it is the refusal itself, which is what the accessors are for.
+    assert_eq!(
+        run(
+            "var T = Object.getOwnPropertyDescriptor(Function.prototype, 'caller').get; \
+             try { T(); 'called' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_strict_functions_arguments_is_not_joined_to_its_parameters() {
+    // §10.2.11 step 22 asks **two** questions: the parameter list must be simple *and* the code
+    // must be sloppy. Asking only about the list gave a strict function the mapped object, and the
+    // join is observable in both directions.
+    assert_eq!(
+        run("function f(a) { 'use strict'; a = 2; return arguments[0]; } f(1)"),
+        "1"
+    );
+    assert_eq!(
+        run("function f(a) { 'use strict'; arguments[0] = 2; return a; } f(1)"),
+        "1"
+    );
+    // …where a sloppy one with the same parameters is one variable seen two ways, which is what
+    // makes this a test of the condition rather than of mapping being gone.
+    assert_eq!(
+        run("function g(a) { a = 2; return arguments[0]; } g(1)"),
+        "2"
+    );
+    assert_eq!(
+        run("function g(a) { arguments[0] = 2; return a; } g(1)"),
+        "2"
+    );
+    // Strictness inherited from the code around it counts too — §11.2.1 makes it a property of the
+    // body, not of the directive being written in that body.
+    assert_eq!(
+        run("'use strict'; function f(a) { a = 2; return arguments[0]; } f(1)"),
+        "1"
+    );
+    // And `callee` follows the same split: the function on a mapped object, poisoned on an
+    // unmapped one — §10.4.4.6 step 6, and the idiom ES2015 was closing off.
+    assert_eq!(
+        run("function g(a) { return arguments.callee === g; } g(1)"),
+        "true"
+    );
+    assert_eq!(
+        run(
+            "function f(a) { 'use strict'; try { return arguments.callee; } \
+             catch (e) { return e.constructor.name; } } f(1)"
+        ),
+        "TypeError"
+    );
+}

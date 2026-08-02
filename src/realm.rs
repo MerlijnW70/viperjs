@@ -285,6 +285,18 @@ impl Realm {
         // rather than in a builtin module because it is not reachable by name from any script:
         // its only appearances are as an accessor pair the specification puts in place.
         let thrower = heap.new_native_function(function_prototype, refuse);
+        // §10.2.4.1's own shape, and it is stricter than any other built-in's. `length` is 0 and
+        // `name` is the **empty string** — not `"ThrowTypeError"`, which is the specification's
+        // name for it and not a name any program may read — and both are non-writable *and*
+        // non-configurable, where §17 makes every other built-in's configurable. Then the object
+        // is sealed shut: `Object.isFrozen` of it is true, which is what stops a script attaching
+        // anything to the one function every restricted property in the realm shares.
+        crate::builtins::define_fixed(heap, thrower, "length", Value::Number(0.0));
+        let empty_name = heap.intern(&[]);
+        crate::builtins::define_fixed(heap, thrower, "name", Value::String(empty_name));
+        if let Some(object) = heap.object_mut(thrower) {
+            object.prevent_extensions();
+        }
         // §6.1.5.1 — each is described as `Symbol.iterator` and so on, which is what makes
         // `String(Symbol.iterator)` answer `"Symbol(Symbol.iterator)"`.
         let well_known = crate::builtins::WELL_KNOWN.map(|name| {

@@ -11,7 +11,7 @@
 //! `bind` makes a *new function object* with its own internal slots, which is a different thing
 //! and belongs with whatever else needs one.
 
-use crate::heap::{Bound, Heap, NativeCall, Object, ObjectId, PropertyKey};
+use crate::heap::{Bound, Heap, NativeCall, Object, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -307,4 +307,43 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     crate::builtins::define_fixed(heap, function, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(function));
     define_value(heap, global, "Function", Value::Object(function));
+
+    restrict(heap, realm, prototype);
+}
+
+/// §10.2.4 `AddRestrictedFunctionProperties` — the two names a function may not answer for.
+///
+/// `caller` and `arguments` were ES5's way to walk the call stack from inside a function, and
+/// ES5's strict mode closed it off. What replaced them is not their absence: they are **accessor**
+/// properties on `Function.prototype` whose getter and setter are both §10.2.4.1's
+/// %ThrowTypeError%, so reaching for either through any function is a TypeError rather than
+/// `undefined`. The difference matters to a program that asks — `f.caller` throwing is what says
+/// the language refuses, where `undefined` would say this engine has not got round to it.
+///
+/// On the *prototype* and on no individual function, which is where ES2015 moved them: ES5 put a
+/// pair on every strict function, and a test that asks
+/// `Object.prototype.hasOwnProperty.call(f, "caller")` can tell the two apart.
+///
+/// One %ThrowTypeError% for the realm and not one per property. §10.2.4.1 makes it a single object,
+/// and a program can see that: both halves of both accessors are the same function, and it is the
+/// same one an unmapped arguments object's `callee` is poisoned with.
+fn restrict(heap: &mut Heap, realm: &Realm, prototype: ObjectId) {
+    let thrower = realm.thrower();
+    for name in ["caller", "arguments"] {
+        let key = key(heap, name);
+        let _ = heap.define_own_property(
+            prototype,
+            key,
+            &PropertyDescriptor {
+                getter: Some(Value::Object(thrower)),
+                setter: Some(Value::Object(thrower)),
+                enumerable: Some(false),
+                // §10.2.4 step 2 — configurable, so a host or a script may replace them. That is
+                // the one attribute the two restricted properties do not share with §17's usual
+                // shape, and it is deliberate.
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+    }
 }

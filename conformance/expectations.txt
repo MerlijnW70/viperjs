@@ -2927,32 +2927,27 @@ built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
 built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
-built-ins/Function/15.3.5-1gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5-2gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-11gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-13gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-15gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-17gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-19gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-1gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-21gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-22gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-23gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-24gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-25gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-26gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-27gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-28gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-29gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-3gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-48gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-50gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-52gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-54gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-5gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-7gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/15.3.5.4_2-9gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/StrictFunction_restricted-properties.js (strict) :: it threw an object with no name: return func.caller throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Function/15.3.5.4_2-12gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-14gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-75gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-76gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-77gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-78gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-79gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-80gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-81gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-82gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-83gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-84gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-85gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-86gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-87gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-88gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-89gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-90gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-91gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-92gs.js :: it threw TypeError: this property may not be read or written
+built-ins/Function/15.3.5.4_2-93gs.js :: it threw TypeError: this property may not be read or written
 built-ins/Function/call-bind-this-realm-undef.js :: it threw TypeError: what was called is not a function
 built-ins/Function/call-bind-this-realm-undef.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/call-bind-this-realm-value.js :: it threw TypeError: what was called is not a function
@@ -3024,22 +3019,6 @@ built-ins/Function/prototype/apply/resizable-buffer.js :: it threw TypeError: a 
 built-ins/Function/prototype/apply/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/this-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/arguments/prop-desc.js :: it threw an object with no name: arguments should be an own property
-built-ins/Function/prototype/arguments/prop-desc.js (strict) :: it threw an object with no name: arguments should be an own property
-built-ins/Function/prototype/bind/15.3.4.5-20-2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-20-2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-20-3.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-20-3.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-21-2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-21-2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-21-3.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/15.3.4.5-21-3.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/BoundFunction_restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/BoundFunction_restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/S15.3.4.5_A1.js :: it threw an object with no name: baz() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/S15.3.4.5_A1.js (strict) :: it threw an object with no name: baz() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/S15.3.4.5_A2.js :: it threw an object with no name: baz() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/S15.3.4.5_A2.js (strict) :: it threw an object with no name: baz() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/bind/get-fn-realm-recursive.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/bind/get-fn-realm.js :: it threw TypeError: what was called is not a function
@@ -3059,10 +3038,6 @@ built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js (strict) :: it threw TypeEr
 built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/call/S15.3.4.4_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/caller-arguments/accessor-properties.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Function/prototype/caller-arguments/accessor-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Function/prototype/caller/prop-desc.js :: it threw an object with no name: caller should be an own property
-built-ins/Function/prototype/caller/prop-desc.js (strict) :: it threw an object with no name: caller should be an own property
 built-ins/Function/prototype/length.js :: it threw an object with no name: length should be an own property
 built-ins/Function/prototype/length.js (strict) :: it threw an object with no name: length should be an own property
 built-ins/Function/prototype/name.js :: it threw an object with no name: name should be an own property
@@ -3093,8 +3068,6 @@ built-ins/GeneratorFunction/instance-length.js :: it threw an object with no nam
 built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/instance-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
 built-ins/GeneratorFunction/instance-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «undefined») to be true
-built-ins/GeneratorFunction/instance-restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/GeneratorFunction/instance-restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/GeneratorFunction/instance-yield-expr-in-param.js :: it threw an object with no name: YieldExpression not permitted generally Expected a SyntaxError to be thrown but no exception was thrown at all
 built-ins/GeneratorFunction/instance-yield-expr-in-param.js (strict) :: it threw an object with no name: YieldExpression not permitted generally Expected a SyntaxError to be thrown but no exception was thrown at all
 built-ins/GeneratorFunction/invoked-as-constructor-no-arguments.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -3852,8 +3825,6 @@ built-ins/Object/defineProperty/15.2.3.6-4-150.js :: it threw an object with no 
 built-ins/Object/defineProperty/15.2.3.6-4-150.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Object/defineProperty/15.2.3.6-4-151.js :: it threw RangeError: an array length must be an integer index
 built-ins/Object/defineProperty/15.2.3.6-4-151.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-292-2.js (strict) :: it threw an object with no name: Expected a === 0, actually 20
-built-ins/Object/defineProperty/15.2.3.6-4-293-4.js (strict) :: it threw an object with no name: Expected "a === 0", actually 10
 built-ins/Object/defineProperty/coerced-P-grow.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/defineProperty/coerced-P-grow.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/defineProperty/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15445,24 +15416,6 @@ built-ins/Temporal/toStringTag/string.js :: it threw ReferenceError: Temporal is
 built-ins/Temporal/toStringTag/string.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/ThrowTypeError/distinct-cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/ThrowTypeError/distinct-cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ThrowTypeError/forbidden-arguments.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/ThrowTypeError/forbidden-arguments.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/ThrowTypeError/forbidden-caller.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/ThrowTypeError/forbidden-caller.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/ThrowTypeError/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/ThrowTypeError/is-function.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/ThrowTypeError/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/property-order.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/property-order.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/prototype.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/prototype.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/ThrowTypeError/unique-per-realm-function-proto.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/ThrowTypeError/unique-per-realm-function-proto.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/ThrowTypeError/unique-per-realm-non-simple.js :: it threw an object with no name: callee.get Expected SameValue(«undefined», «function () { [native code] }») to be true
-built-ins/ThrowTypeError/unique-per-realm-non-simple.js (strict) :: it threw an object with no name: callee.get Expected SameValue(«undefined», «function () { [native code] }») to be true
 built-ins/TypedArray/from/iter-access-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/from/iter-access-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/from/iter-invoke-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -16644,11 +16597,8 @@ harness/deepEqual-primitives-bigint.js :: it threw ReferenceError: compareEquali
 harness/deepEqual-primitives-bigint.js (strict) :: it threw ReferenceError: compareEquality is not defined
 harness/deepEqual-primitives.js :: it threw ReferenceError: compareEquality is not defined
 harness/deepEqual-primitives.js (strict) :: it threw ReferenceError: compareEquality is not defined
-language/arguments-object/10.6-10-c-ii-1-s.js (strict) :: it threw an object with no name: foo(10, "sss", 1) !== true
-language/arguments-object/10.6-13-c-1-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/arguments-object/10.6-13-c-3-s.js (strict) :: it threw an object with no name: desc.configurable Expected SameValue(«true», «false») to be true
-language/arguments-object/10.6-14-c-4-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/arguments-object/10.6-2gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+language/arguments-object/10.6-13-a-2.js :: it threw TypeError: this property may not be read or written
+language/arguments-object/10.6-13-a-3.js :: it threw TypeError: this property may not be read or written
 language/arguments-object/mapped/Symbol.iterator.js :: it threw an object with no name: Symbol(Symbol.iterator) should be an own property
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
@@ -16660,7 +16610,6 @@ language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-
 language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
 language/arguments-object/unmapped/Symbol.iterator.js :: it threw an object with no name: Symbol(Symbol.iterator) should be an own property
-language/arguments-object/unmapped/via-strict.js (strict) :: it threw an object with no name: foo(10,"sss",1) !== true
 language/computed-property-names/class/static/generator-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/computed-property-names/class/static/generator-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/computed-property-names/class/static/getter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -16795,8 +16744,6 @@ language/expressions/addition/coerce-symbol-to-prim-return-prim.js :: it threw a
 language/expressions/addition/coerce-symbol-to-prim-return-prim.js (strict) :: it threw an object with no name: Expected SameValue(«"1[object Object]"», «87») to be true
 language/expressions/addition/get-symbol-to-prim-err.js :: it threw an object with no name: error from property access of left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/addition/get-symbol-to-prim-err.js (strict) :: it threw an object with no name: error from property access of left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/arrow-function/ArrowFunction_restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/arrow-function/ArrowFunction_restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -17224,8 +17171,6 @@ language/expressions/class/private-static-field-multiple-evaluations-of-class-re
 language/expressions/class/private-static-getter-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw RangeError: too much recursion
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw RangeError: too much recursion
 language/expressions/comma/tco-final.js (strict) :: it threw RangeError: too much recursion
@@ -17891,7 +17836,6 @@ language/expressions/unsigned-right-shift/bigint-toprimitive.js :: it threw an o
 language/expressions/unsigned-right-shift/bigint-toprimitive.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 2n;}, valueOf: err, toString: err}) >>> 0n throws TypeError Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/yield/formal-parameters-after-reassignment-strict.js (strict) :: it threw an object with no name: First result `value` Expected SameValue(«32», «23») to be true
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
 language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
 language/function-code/10.4.3-1-19-s.js (strict) :: it threw an object with no name: my_eval("this") Expected SameValue(«undefined», «[object Object]») to be true
@@ -18238,8 +18182,6 @@ language/statements/class/definition/fn-name-method.js :: it threw an object wit
 language/statements/class/definition/fn-name-method.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/statements/class/definition/getters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/getters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/methods-restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/methods-restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/setters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/setters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/arrow-body-derived-cls-direct-eval-contains-superproperty-1.js :: it threw SyntaxError: `super` is only allowed inside a method
@@ -18402,8 +18344,6 @@ language/statements/class/method/dflt-params-ref-later.js :: it threw an object 
 language/statements/class/method/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/method/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/method/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/class/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/static-init-arguments-functions.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
@@ -18412,8 +18352,6 @@ language/statements/class/static-method-gen-non-configurable-err.js :: it threw 
 language/statements/class/static-method-gen-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/static-method-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/static-method-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/strict-mode/arguments-callee.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/strict-mode/arguments-callee.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-prototype.js :: it threw an object with no name: prototype has no constructor reference Expected SameValue(«true», «false») to be true
 language/statements/class/subclass/builtin-objects/GeneratorFunction/instance-prototype.js (strict) :: it threw an object with no name: prototype has no constructor reference Expected SameValue(«true», «false») to be true
 language/statements/class/subclass/builtin-objects/GeneratorFunction/regular-subclassing.js :: it threw SyntaxError: the source of a dynamic function does not parse
@@ -18592,28 +18530,6 @@ language/statements/for/tco-const-body.js (strict) :: it threw RangeError: too m
 language/statements/for/tco-let-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-lhs-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-var-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/function/13.2-10-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-10-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-13-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-13-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-14-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-14-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-17-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-17-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-18-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-18-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-19-b-3gs.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-2-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-21-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-22-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-25-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-26-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-30-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-30-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-4-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-5-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-6-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/function/13.2-9-s.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/function/S13.2.2_A14.js :: it threw an object with no name: #1: var obj = new FACTORY() does not lead to throwing exception
 language/statements/function/dflt-params-ref-later.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/function/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -18627,8 +18543,6 @@ language/statements/generators/dflt-params-ref-later.js :: it threw an object wi
 language/statements/generators/dflt-params-ref-later.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/generators/dflt-params-ref-self.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/generators/dflt-params-ref-self.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/generators/restricted-properties.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/generators/restricted-properties.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/generators/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/if/cptn-else-false-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
