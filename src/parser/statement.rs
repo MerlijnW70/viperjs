@@ -61,21 +61,36 @@ pub fn parse_script(source: &str) -> Result<Script, ParseError> {
 ///
 /// Set before the first token is read, exactly as [`super::parse_module`] sets it, and for exactly
 /// the same reason: the goal decides what the first token may be.
-pub fn parse_eval(source: &str, strict_caller: bool) -> Result<Script, ParseError> {
-    let script = parse_script_seeded(source, strict_caller)?;
+pub fn parse_eval(
+    source: &str,
+    strict_caller: bool,
+    context: super::body::EvalContext,
+) -> Result<Script, ParseError> {
+    let script = parse_script_seeded(
+        source,
+        strict_caller,
+        super::body::BodyContext::eval(context),
+    )?;
     super::scope::check_labels(&script.body)?;
     Ok(script)
 }
 
 /// [`parse_script`] up to but not including §16.1.1's label rules.
 fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
-    parse_script_seeded(source, false)
+    parse_script_seeded(source, false, super::body::BodyContext::SCRIPT)
 }
 
-/// The same, starting out strict when something outside the text says so.
-fn parse_script_seeded(source: &str, strict: bool) -> Result<Script, ParseError> {
+/// The same, starting out strict — and with the `super` and `new.target` rules — when something
+/// outside the text says so. §16.1.1 gives a Script neither; §19.2.1.1 gives an eval whatever the
+/// execution it was called from has.
+fn parse_script_seeded(
+    source: &str,
+    strict: bool,
+    body_context: super::body::BodyContext,
+) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
     parser.strict = strict;
+    parser.body_context = body_context;
     // §11.2.1: a `ScriptBody` may open with a Directive Prologue, and `"use strict"` in it makes
     // everything after strict — including everything nested, for ever.
     let (body, declares_strict) = parser.parse_body_with_prologue(TokenKind::Eof)?;

@@ -449,3 +449,74 @@ fn a_direct_eval_is_strict_when_either_side_says_so_and_the_parser_is_the_one_to
         "object"
     );
 }
+
+#[test]
+fn a_direct_eval_may_say_what_the_execution_around_it_may_say() {
+    // §19.2.1.1 steps 3.b and 5.d to 5.f — three questions about the execution the call was made
+    // from, each granting one construct to the evaluated text. The same characters are legal in one
+    // place and a Syntax Error in another, which is not something the text can decide and is why
+    // the parser has to be told rather than the tree corrected afterwards.
+
+    // Step 5.e — `super.a` needs the running function to have a `[[HomeObject]]`.
+    assert_eq!(
+        run("class A { m() { return 'base'; } } \
+             class B extends A { m() { return eval('super.m()'); } } new B().m()"),
+        "base"
+    );
+    assert_eq!(
+        run("var o = { m() { return eval('super.constructor === Object'); } }; o.m()"),
+        "true"
+    );
+    // …including from an **arrow** written inside the method, which has no home object of its own
+    // and is given the enclosing one when it is made.
+    assert_eq!(
+        run("class A { m() { return 9; } } \
+             class B extends A { m() { var f = () => eval('super.m()'); return f(); } } new B().m()"),
+        "9"
+    );
+    // A plain function is not a method however it is called, so the same text is refused there —
+    // §15.2.1 makes `super` in a `FunctionBody` a Syntax Error outright.
+    assert_eq!(
+        run(
+            "var f = function () { try { eval('super.x'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } }; \
+             var o = { m: f }; o.m()"
+        ),
+        "SyntaxError"
+    );
+    // …and at the top of a script there is no execution to inherit from at all.
+    assert_eq!(
+        run("try { eval('super.x'); 'ran' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+
+    // Step 5.d — `new.target` needs there to be a function around the call.
+    assert_eq!(
+        run("(function () { return eval('typeof new.target'); })()"),
+        "undefined"
+    );
+    // Read through a global rather than returned: §10.2.2 discards a primitive a constructor
+    // returns, so `new C()` would answer the object however true the comparison was.
+    assert_eq!(
+        run("function C() { globalThis.saw = eval('new.target === C'); } new C(); globalThis.saw"),
+        "true"
+    );
+    assert_eq!(
+        run("try { eval('new.target'); 'ran' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+
+    // Step 5.f — `super(…)` needs a derived constructor. praxis grants it to the parser and the
+    // *compiler* then says it has not built it, which is the ordinary division here: the grammar
+    // admits the construct and the refusal names what is missing. Before this it was refused as
+    // "`super` is only allowed inside a method", which diagnosed the wrong thing.
+    assert_eq!(
+        run("class A { constructor() { this.v = 1; } } \
+             class B extends A { constructor() { \
+                 try { eval('super()'); globalThis.said = 'ran'; } \
+                 catch (e) { globalThis.said = e.constructor.name; } \
+                 super(); } } \
+             new B(); globalThis.said"),
+        "SyntaxError"
+    );
+}

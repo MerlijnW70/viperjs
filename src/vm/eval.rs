@@ -49,7 +49,8 @@ impl Vm {
         // §11.2.1's early errors and settles `is_strict` for every function written inside the
         // text before the tree comes back. Set on the finished tree instead, a strict caller's
         // `eval("(function () { return this; })()")` still substituted the global object.
-        let script = match crate::parser::parse_eval(&text, strict_caller) {
+        let script = match crate::parser::parse_eval(&text, strict_caller, self.eval_context(heap))
+        {
             Ok(script) => script,
             Err(error) => {
                 return Err(crate::builtins::eval::syntax_error(
@@ -82,6 +83,63 @@ impl Vm {
             Rc::clone(chunk.bindings()),
         );
         self.run_script(&chunk, environment, heap)
+    }
+
+    /// §19.2.1.1 steps 3.b.ii to 3.b.iv — what the evaluated text is allowed to *say*.
+    ///
+    /// Three questions about the execution the call was made from, and every one of them is a
+    /// question only the interpreter can answer: `eval("super.m()")` is legal inside a method and a
+    /// Syntax Error at the top of a script, from identical text.
+    ///
+    /// `super.a` is granted by the running function having a **home object**, which is
+    /// `HasSuperBinding` said in praxis's terms — and it is right for an arrow too, because
+    /// `Instruction::InheritHome` copies the enclosing method's onto one when it is made.
+    ///
+    /// `new.target` is granted by there being a **non-arrow** function running. §19.2.1.1 step 3.a
+    /// asks `GetThisEnvironment()`, which walks *past* arrows — an arrow has no `this` and no
+    /// `new.target` of its own — so an arrow at the top level of a script reaches the script's
+    /// environment and grants nothing. Counting frames alone said otherwise, and
+    /// `language/eval-code/direct/new.target-arrow.js` is that program.
+    ///
+    /// An arrow written *inside* a function is refused too, and that is narrower than the clause.
+    /// Whether it was is a **lexical** fact — the parser knows it, and refuses `new.target` in a
+    /// top-level arrow at compile time — and a running arrow's chunk does not record it, so there
+    /// is nothing here to ask. Carrying the parser's answer through to the chunk is the fix and is
+    /// its own slice; until then this refuses rather than answering, which is the direction that
+    /// costs a Syntax Error instead of a wrong `new.target`.
+    ///
+    /// `super(…)` is granted by the running *chunk* being a derived constructor, and is narrower
+    /// for the same kind of reason: an arrow written inside one may contain a `SuperCall` and its
+    /// chunk is not the constructor's. Narrower rather than wider on purpose throughout — the
+    /// other way round accepts a `super()` with no constructor to reach.
+    fn eval_context(&self, heap: &Heap) -> crate::parser::EvalContext {
+        let frame = self
+            .frames
+            .last()
+            .filter(|_| self.frames.len() > self.floor.frames);
+        let arrow = frame
+            .and_then(|frame| frame.function)
+            .and_then(|function| heap.object(function))
+            .and_then(crate::heap::Object::lexical)
+            .is_some();
+        crate::parser::EvalContext {
+            in_function: frame.is_some() && !arrow,
+            in_method: frame
+                .and_then(|frame| frame.function)
+                .and_then(|function| heap.object(function))
+                .and_then(crate::heap::Object::home_object)
+                .is_some(),
+            in_derived_constructor: frame
+                .and_then(|frame| frame.function)
+                .and_then(|function| heap.object(function))
+                .and_then(crate::heap::Object::call)
+                .is_some_and(|callable| match callable {
+                    crate::heap::Callable::Bytecode(body) => body.derived_this().is_some(),
+                    // A built-in, a bound function or a resumption is not a constructor whose
+                    // `super()` could reach anything.
+                    _ => false,
+                }),
+        }
     }
 
     /// §19.2.1.1 step 12's `varEnv`, as far as praxis can follow it — see [`EvalVars`].

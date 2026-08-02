@@ -92,6 +92,7 @@ mod template;
 mod test_support;
 mod try_catch;
 
+pub use self::body::EvalContext;
 pub use self::error::{ParseError, ParseErrorKind};
 pub use self::module::parse_module;
 #[cfg(test)]

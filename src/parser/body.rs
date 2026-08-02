@@ -95,6 +95,23 @@ impl BodyContext {
         new_target_allowed: true,
     };
 
+    /// The Script a **direct** `eval` evaluates — §19.2.1.1 steps 5.d to 5.f.
+    ///
+    /// The one body whose context is decided at *run time*. §19.2.1.1 asks three questions about
+    /// the execution the call was made from — is there a function at all, does it have a `super`
+    /// binding, is it a derived constructor — and grants `new.target`, `super.a` and `super(…)`
+    /// one for one. So `eval("super.m()")` written inside a method is legal and the same text at
+    /// the top of a script is a Syntax Error, which is not something the text can decide.
+    pub(super) const fn eval(context: EvalContext) -> Self {
+        Self {
+            super_allowed: SuperAllowed {
+                property: context.in_method,
+                call: context.in_derived_constructor,
+            },
+            new_target_allowed: context.in_function,
+        }
+    }
+
     /// A `MethodDefinition`'s body, whose `super` is the caller's to say.
     pub(super) const fn method(super_allowed: SuperAllowed) -> Self {
         Self {
@@ -114,4 +131,19 @@ impl Parser<'_> {
     pub(super) fn super_call_allowed(&self) -> bool {
         self.body_context.super_allowed.call
     }
+}
+
+/// What §19.2.1.1 steps 3.b.ii to 3.b.iv learn about the execution a direct `eval` was called from.
+///
+/// A struct rather than three `bool` parameters in a row, which is a call whose arguments can be
+/// silently swapped — and these three are exactly alike to the compiler and answer for three
+/// different constructs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct EvalContext {
+    /// Step 3.b.ii — whether there is a function around the call at all. Grants `new.target`.
+    pub in_function: bool,
+    /// Step 3.b.iii's `HasSuperBinding` — whether that function is a method. Grants `super.a`.
+    pub in_method: bool,
+    /// Step 3.b.iv — whether it is a derived constructor. Grants `super(…)`.
+    pub in_derived_constructor: bool,
 }
