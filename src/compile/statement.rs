@@ -407,9 +407,9 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::StoreVariable(0, index));
         self.chunk.emit(Instruction::Pop);
 
-        // The head's binding, if it declares one. Made once and given its value on each pass —
-        // §14.7.5.5 makes it a *fresh* binding per iteration, which is only observable through a
-        // closure, and `Compiler::loop_marks` refuses that rather than getting it wrong.
+        // The head's binding, if it declares one. §14.7.5.5 makes it a *fresh* binding per
+        // iteration, which is only observable through a closure — so a lexical head opens an
+        // environment of its own below, once per pass, rather than reusing one slot for the walk.
         let top = self.here()?;
         self.chunk.emit(Instruction::LoadVariable(0, object));
         self.chunk.emit(Instruction::EnumerateNext(keys, index));

@@ -221,19 +221,6 @@ struct Compiler<'a> {
     /// Empty means the function body's own scope, which starts at slot zero — so `last()`
     /// defaulting to zero is the right answer rather than a missing case.
     scope_marks: Vec<usize>,
-    /// How many locals existed when each enclosing loop began, innermost last.
-    ///
-    /// What it is for is §14.7.4.7 `CreatePerIterationEnvironment`. A `let` written inside a loop
-    /// is a *fresh binding on every pass*, so a closure made on the third pass and one made on the
-    /// fourth must see different variables. praxis gives each lexical declaration one slot for the
-    /// whole call, which is right for every binding that is entered once and wrong for one that is
-    /// entered again — and the difference is only observable through a closure.
-    ///
-    /// So this records where each loop started, and making a function is refused while a lexical
-    /// binding declared inside the innermost loop is live. Refused rather than compiled, because
-    /// the alternative is every closure in the loop sharing one variable and answering the last
-    /// value — a wrong answer that looks like a working program.
-    /// Where `continue` goes — the top of the innermost loop's test, or its update.
     /// The `continue` list of each breakable statement, at the **same index** as its break list.
     ///
     /// `None` for a statement that may be broken out of and not continued — §14.12's switch is the
@@ -667,17 +654,6 @@ impl<'a> Compiler<'a> {
         slot
     }
 
-    /// Whether a function written here would close over a binding that a loop re-creates.
-    ///
-    /// True when the innermost enclosing loop has a live lexical binding declared inside it. See
-    /// Whether a function written here would close over a binding its loop re-creates.
-    ///
-    /// Only `for`-`of` and `for`-`in` now: their §14.7.5.7 environment is not built, so the head's
-    /// binding is one slot for the whole walk and every closure over it would answer with the last
-    /// value. A wrong answer that runs, which is what the refusal is for.
-    ///
-    /// A `for (let i = …; …; …)` head is *not* refused — §14.7.4.7's copy is emitted — and neither
-    /// is anything declared in a loop **body**, which lives in the body block's own environment and
     /// Take every local declared since `mark` out of scope, without giving its slot back.
     ///
     /// The slot stays taken for the rest of the function. See [`Compiler::declare_lexical`] — a
@@ -882,11 +858,6 @@ impl<'a> Compiler<'a> {
         }
     }
 }
-
-/// Compile `expression` onto the end of `chunk`.
-impl Compiler<'_> {}
-
-impl Compiler<'_> {}
 
 impl Compiler<'_> {
     /// Give `name` a slot of its own even if the name is already taken.
