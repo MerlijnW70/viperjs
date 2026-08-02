@@ -316,3 +316,40 @@ fn a_rejected_value_closes_the_sync_iterator_underneath() {
         "false"
     );
 }
+
+#[test]
+fn every_pass_of_a_for_await_binds_afresh_exactly_as_a_for_of_does() {
+    // §14.7.5.7 `ForIn/OfBodyEvaluation` step 3.e — a `let` or `const` head gets a **new**
+    // environment per iteration, so a closure made in the body keeps the value that pass had. The
+    // synchronous loop was given that when block scoping landed; `for await` is the same clause and
+    // was not, so its head was one binding for the whole walk and every closure answered with the
+    // last value.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; \
+             async function f() { \
+                 var fs = []; \
+                 for await (const x of [1, 2, 3]) fs.push(function () { return x; }); \
+                 return fs.map(function (g) { return g(); }).join(','); \
+             } \
+             f().then(function (v) { out = v; });",
+            "out"
+        ),
+        "1,2,3"
+    );
+    // `var` in the head is function-scoped and must *not* be copied — one binding, last value, in
+    // both loops. The two rows together are what say the copy follows the declaration kind.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; \
+             async function f() { \
+                 var fs = []; \
+                 for await (var y of [1, 2, 3]) fs.push(function () { return y; }); \
+                 return fs.map(function (g) { return g(); }).join(','); \
+             } \
+             f().then(function (v) { out = v; });",
+            "out"
+        ),
+        "3,3,3"
+    );
+}

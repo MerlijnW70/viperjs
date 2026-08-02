@@ -234,7 +234,15 @@ struct Compiler<'a> {
     /// the alternative is every closure in the loop sharing one variable and answering the last
     /// value — a wrong answer that looks like a working program.
     /// Where `continue` goes — the top of the innermost loop's test, or its update.
-    continues: Vec<Vec<Unpatched>>,
+    /// The `continue` list of each breakable statement, at the **same index** as its break list.
+    ///
+    /// `None` for a statement that may be broken out of and not continued — §14.12's switch is the
+    /// only one. Kept parallel rather than pushed only by loops because an exit's depth indexes the
+    /// break lists, and two stacks of different heights make that one number mean two things: a
+    /// `continue` inside a switch unwound to the *switch's* depth and left the discriminant on the
+    /// stack, and a `continue outer` to a loop written inside a switch indexed a continue list that
+    /// was not there and was never patched. Both faulted the interpreter from ordinary source.
+    continues: Vec<Option<Vec<Unpatched>>>,
     /// How deep into an expression the compiler currently is.
     depth: u32,
     /// The scopes this one is written inside, outermost first.
@@ -391,6 +399,15 @@ enum Crossing {
     Finally(Rc<[Stmt]>),
     /// A `for`-`of` iterator to close — §7.4.9 `IteratorClose`, in the slot holding it.
     Iterator(u32, Closing),
+    /// A value a statement left on the operand stack, which a jump out of that statement must drop.
+    ///
+    /// §14.12's switch is the only one: its discriminant is compared against each case in turn, so
+    /// it stays on the stack for the whole `CaseBlock` and is dropped where the cases converge. A
+    /// `break` lands on that convergence and needs nothing — but a `continue` or a `return` jumps
+    /// clean past it, and left there the value is still on the stack when the enclosing loop goes
+    /// round again. That is not a wrong answer, it is a `Fault::UnbalancedStack`: an operand stack
+    /// that no longer matches what the compiler believes about it.
+    Operand,
 }
 
 impl<'a> Compiler<'a> {

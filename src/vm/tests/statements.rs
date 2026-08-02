@@ -795,3 +795,105 @@ fn a_labelled_break_closes_exactly_the_iterators_it_leaves() {
         "1"
     );
 }
+
+#[test]
+fn a_switch_has_one_environment_over_all_of_its_cases() {
+    // §14.12.4 step 3 — `NewDeclarativeEnvironment` around the whole `CaseBlock`, and *one* of
+    // them: a `let` in one case is in scope in the next, and none of them is in scope outside.
+    assert_eq!(
+        run("let a = 'outer'; switch (1) { case 1: let a2 = 'inner'; } a"),
+        "outer"
+    );
+    assert_eq!(run("switch (1) { case 1: let h = 3; case 2: h }"), "3");
+    assert_eq!(
+        run("switch (99) { case 1: let e = 1; } 'fell through'"),
+        "fell through"
+    );
+    assert_eq!(run("switch (99) { default: let g = 7; g }"), "7");
+    // A closure made in a case keeps the case block's binding, which is what having an environment
+    // at all is for.
+    assert_eq!(
+        run("var f; switch (1) { case 1: let c = 5; f = function () { return c; }; } f()"),
+        "5"
+    );
+    // …and a switch entered twice makes its bindings twice, so two passes give two closures two
+    // values rather than one shared slot.
+    assert_eq!(
+        run("var fs = []; for (var i = 0; i < 2; i++) { \
+             switch (i) { case 0: case 1: let k = i; fs.push(function () { return k; }); } } \
+             fs.map(function (g) { return g(); }).join(',')"),
+        "0,1"
+    );
+}
+
+#[test]
+fn every_way_out_of_a_switch_leaves_its_discriminant_behind_exactly_once() {
+    // The discriminant stays on the operand stack for the whole `CaseBlock`, because each case is
+    // compared against it in turn. Falling off the end, a `break`, and no case matching at all all
+    // converge on the one `Pop` — but a `continue` and a `break` to an outer label jump clean past
+    // it, and those two **faulted the interpreter** before this: `UnbalancedStack`, from ordinary
+    // source, on the next pass of the enclosing loop.
+    assert_eq!(
+        run("var n = 0; for (var i = 0; i < 3; i++) { switch (i) { case 1: continue; } n++; } n"),
+        "2"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; for (var i = 0; i < 3; i++) { switch (i) { case 1: let d = 1; continue; } n++; } n"
+        ),
+        "2"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; outer: for (var i = 0; i < 3; i++) { switch (i) { case 1: break outer; } n++; } n"
+        ),
+        "1"
+    );
+    // A `return` is the exception and must **not** pop: the value it is returning is already on the
+    // stack above the discriminant, so tidying here would discard that instead — and a call throws
+    // its whole operand stack away regardless, so what is left under it was never a leak.
+    assert_eq!(
+        run("(function () { switch (1) { case 1: return 'returned'; } })()"),
+        "returned"
+    );
+    assert_eq!(
+        run("(function () { switch (1) { case 1: let a = 1; return 'with a let'; } })()"),
+        "with a let"
+    );
+}
+
+#[test]
+fn a_loop_written_inside_a_switch_can_still_be_labelled_and_jumped_to() {
+    // An exit's depth is one number indexing the break lists, and a switch pushes one of those
+    // without being continuable — so the two stacks came apart, a label recorded against the break
+    // list indexed a continue list that was not there, and the jump was never patched. It reached
+    // the interpreter as the `u32::MAX` placeholder and faulted with `JumpOutOfRange`.
+    assert_eq!(
+        run(
+            "var n = 0; switch (1) { case 1: outer: for (var i = 0; i < 3; i++) { n++; continue outer; } } n"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; switch (1) { case 1: outer: for (var i = 0; i < 3; i++) { n++; break outer; } } n"
+        ),
+        "1"
+    );
+    // The plain forms of both, in the same position, which never depended on the label lookup.
+    assert_eq!(
+        run("var n = 0; switch (1) { case 1: for (var i = 0; i < 3; i++) { n++; continue; } } n"),
+        "3"
+    );
+    assert_eq!(
+        run("var n = 0; switch (1) { case 1: for (var i = 0; i < 3; i++) { n++; break; } } n"),
+        "1"
+    );
+    // A switch nested in a switch, so the depth is off by more than one in both directions.
+    assert_eq!(
+        run(
+            "var n = 0; for (var i = 0; i < 3; i++) { switch (i) { case 0: switch (i) { case 0: continue; } } n++; } n"
+        ),
+        "2"
+    );
+}

@@ -24,8 +24,8 @@
 //! head binds and are the same question in both loops.
 
 use super::statement::Check;
-use super::{Closing, CompileError, Compiler, Instruction};
-use crate::ast::ForInOfStatement;
+use super::{Closing, CompileError, Compiler, Crossing, Instruction, Unwind};
+use crate::ast::{ForInOfStatement, ForInOfTarget};
 use crate::span::Span;
 
 impl Compiler<'_> {
@@ -61,8 +61,6 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
         self.chunk.emit(Instruction::StoreVariable(0, iterator));
         self.chunk.emit(Instruction::Pop);
-
-        let binding = self.for_in_binding(&statement.left, span)?;
 
         // §7.4.9 for the way out nothing jumps to: a throw from the body or from `next` itself.
         // The handler closes the iterator and throws the same thing onward.
@@ -109,15 +107,49 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::StoreVariable(0, closable));
         self.chunk.emit(Instruction::Pop);
 
-        self.assign_enumerated(&statement.left, binding, current, 0, span)?;
-        self.loop_body(
-            &statement.body,
-            Some((iterator, Closing::Awaited)),
-            |compiler| {
-                compiler.chunk.emit(Instruction::Jump(top));
-                Ok(top)
-            },
-        )?;
+        // §14.7.5.7 step 3.g — `NewDeclarativeEnvironment` **per pass**, holding the head's binding
+        // and nothing else, exactly as the synchronous loop gets. Made here rather than around the
+        // whole loop because the loop's own slots — the iterator, its `next`, the flag saying
+        // whether it may still be closed — have to outlive one pass and stay reachable from the
+        // handler above at a fixed depth.
+        //
+        // Without it a `for await (const x of …)` head was one binding for the whole walk, and
+        // every closure the body made answered with the last value.
+        let lexical = matches!(
+            &statement.left,
+            ForInOfTarget::Declaration(declaration) if declaration.kind.is_lexical()
+        );
+        // §7.4.9's entry for this loop's iterator, pushed here rather than left to `loop_body`,
+        // because the environment below sits **inside** it and the two have to be in that order.
+        // `unwind_across` stops at the first entry a jump does not cross, and a `continue`
+        // deliberately does not close the iterator — so with the iterator on top, a `continue`
+        // would stop there and never reach the environment it is certainly leaving.
+        let closes = self.unwinds.len();
+        self.unwinds.push(Unwind {
+            outer: self.breaks.len(),
+            what: Crossing::Iterator(iterator, Closing::Awaited),
+        });
+        let opened = lexical.then(|| self.enter_iteration_environment());
+        // Declared *inside* that environment, which is what puts the head's binding in the scope
+        // the pass owns. Read before it, as it was, and the slot would belong to the loop.
+        let binding = self.for_in_binding(&statement.left, span)?;
+        let deep = u32::from(lexical);
+        self.assign_enumerated(&statement.left, binding, current, deep, span)?;
+        let body = self.loop_body(&statement.body, None, |compiler| {
+            // Falling off the end of the pass leaves its environment, exactly as `break` and
+            // `continue` do — those emit their own on the way past, which is what recording it as
+            // an iteration environment arranges.
+            if lexical {
+                compiler.chunk.emit(Instruction::PopScope);
+            }
+            compiler.chunk.emit(Instruction::Jump(top));
+            Ok(top)
+        });
+        if let Some(opened) = opened {
+            self.leave_environment_already_popped(opened)?;
+        }
+        self.unwinds.truncate(closes);
+        body?;
         // Every `break` arrives having taken the handler down and closed for itself, so this is the
         // done path's business alone.
         let past = self.chunk.emit_jump(Instruction::Jump);

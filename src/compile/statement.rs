@@ -802,8 +802,13 @@ impl Compiler<'_> {
         for at in (0..stack.len()).rev() {
             let entry = &stack[at];
             let iterator = matches!(entry.what, Crossing::Iterator(..));
+            let operand = matches!(entry.what, Crossing::Operand);
             let crossed = match exit {
-                Exit::Return => true,
+                // A `return` leaves everything — except an *operand*. The value being returned is
+                // already on the stack above it, so a `Pop` here would discard that instead; and
+                // the frame's whole stack goes when the call returns, so what is left under it was
+                // never a leak. The two other jumps stay inside the frame and do have to tidy.
+                Exit::Return => !operand,
                 // An iterator belongs to its own loop rather than sitting inside it, which is the
                 // one place the two jumps differ: a `break` closes the target loop's own iterator
                 // and a `continue` does not, while a `finally` at that same depth was written in
@@ -823,6 +828,10 @@ impl Compiler<'_> {
                     for _ in 0..*count {
                         self.chunk.emit(Instruction::PopHandler);
                     }
+                    Ok(())
+                }
+                Crossing::Operand => {
+                    self.chunk.emit(Instruction::Pop);
                     Ok(())
                 }
                 Crossing::Scope => {
@@ -851,7 +860,7 @@ impl Compiler<'_> {
         after: impl FnOnce(&mut Self) -> Result<u32, CompileError>,
     ) -> Result<(), CompileError> {
         self.breaks.push(Vec::new());
-        self.continues.push(Vec::new());
+        self.continues.push(Some(Vec::new()));
         // §7.4.9 — the iterator this loop drives, if it drives one, recorded against this loop's
         // own index rather than against its body: a `continue` of *this* loop does not close it,
         // which is the one place an iterator differs from everything else on the stack. Taken as an
@@ -867,7 +876,7 @@ impl Compiler<'_> {
         let compiled = self.statement(body).and_then(|()| after(self));
         // The stacks come back down even when compilation failed, so that a later loop does
         // not inherit this one's pending jumps and patch them into its own end.
-        let continues = self.continues.pop().unwrap_or_default();
+        let continues = self.continues.pop().flatten().unwrap_or_default();
         let breaks = self.breaks.pop().unwrap_or_default();
         self.unwinds.truncate(mark);
         let continue_target = compiled?;
@@ -898,13 +907,39 @@ impl Compiler<'_> {
         // `let` in one case is in scope in the next, and its dead zone runs from the top of the
         // whole block: `switch (x) { case 1: y; break; case 2: let y; }` throws rather than
         // reading `undefined`. That is why the bindings are created here, before any test runs.
+        //
+        // And *one environment* over all of them, for the same reason — §14.12.4 step 3's
+        // `NewDeclarativeEnvironment` around the whole `CaseBlock`. Entered **before** the switch's
+        // own break list is pushed, which is what decides whether a `break` pops it: `unwind_across`
+        // crosses a scope entry only when its `outer` is *greater* than the exit's depth, so an
+        // entry recorded at the switch's own depth is left to the one `PopScope` below — where
+        // falling off the last case, a `break`, and no case matching at all all converge. A
+        // `continue` out to an enclosing loop has a smaller depth and does cross it, which is right.
+        let lexical = statement
+            .cases
+            .iter()
+            .any(|case| Self::declares_something_lexical(&case.body));
+        let opened = lexical.then(|| self.enter_environment());
+        // The discriminant stays on the stack for the whole `CaseBlock`, so a jump that leaves the
+        // switch without landing on the convergence below has to drop it. Recorded at the same
+        // depth as the environment and for the same reason: a `break` lands where it is popped
+        // anyway, and a `continue` or a `return` jumps clean past — which left the value on the
+        // stack and faulted the *next* pass of the enclosing loop with `UnbalancedStack`.
+        let unwinds = self.unwinds.len();
+        self.unwinds.push(Unwind {
+            outer: self.breaks.len(),
+            what: Crossing::Operand,
+        });
         let mark = self.enter_scope();
         for case in statement.cases.iter() {
             self.declare_lexical_names(&case.body)?;
         }
         // A `break` inside a switch leaves the switch, so it is a breakable statement like a
-        // loop — but not a *continuable* one, which is why only the break stack is pushed.
+        // loop — but not a *continuable* one. Both stacks are pushed all the same, with `None` for
+        // the second: an exit's depth is one number indexing both, so a switch that pushed only one
+        // of them would make that number mean something different on either side of itself.
         self.breaks.push(Vec::new());
+        self.continues.push(None);
 
         // The tests, in order, each jumping to where its body begins.
         let mut entries = Vec::new();
@@ -932,6 +967,13 @@ impl Compiler<'_> {
             self.statements(&case.body)?;
         }
         let after = self.here()?;
+        // Every way out of the case bodies arrives here, so this is where the case block's
+        // environment is left — once, on a path all three of them share.
+        self.leave_scope(mark);
+        self.unwinds.truncate(unwinds);
+        if let Some(opened) = opened {
+            self.leave_environment(opened)?;
+        }
         for (entry, start) in entries.into_iter().zip(&starts) {
             if let Some(entry) = entry {
                 self.chunk.patch_to(entry, *start);
@@ -939,17 +981,19 @@ impl Compiler<'_> {
         }
         match to_default.and_then(|at| starts.get(at)) {
             Some(start) => self.chunk.patch_to(fallback, *start),
-            None => self.chunk.patch(fallback)?,
+            // Aimed at `after` by name rather than at wherever the compiler has got to, because
+            // the `PopScope` above now sits between the two and a no-match path must run it.
+            None => self.chunk.patch_to(fallback, after),
         }
 
         // The discriminant is still under everything, and a `break` jumps here — so it is
         // discarded after the breaks land rather than before, or a break would leave it behind.
         let breaks = self.breaks.pop().unwrap_or_default();
+        self.continues.pop();
         for jump in breaks {
             self.chunk.patch_to(jump, after);
         }
         self.chunk.emit(Instruction::Pop);
-        self.leave_scope(mark);
         Ok(())
     }
 
@@ -1019,7 +1063,7 @@ impl Compiler<'_> {
         let pending = if leaving {
             self.breaks.get_mut(depth)
         } else {
-            self.continues.get_mut(depth)
+            self.continues.get_mut(depth).and_then(Option::as_mut)
         };
         if let Some(pending) = pending {
             pending.push(jump);
@@ -1032,23 +1076,25 @@ impl Compiler<'_> {
     /// The parser refuses either outside a loop, so an empty stack here is unreachable from
     /// source; refusing rather than emitting a jump to nowhere is what keeps it unreachable.
     fn leave_loop(&mut self, leaving: bool, span: Span) -> Result<(), CompileError> {
-        let pending = if leaving {
-            self.breaks.last_mut()
-        } else {
-            self.continues.last_mut()
+        // The target's depth, in the one scale everything else is measured in. A `break` leaves the
+        // innermost breakable statement whatever it is; a `continue` leaves the innermost
+        // *continuable* one, which is not the same thing the moment a switch is in between — and
+        // taking the innermost breakable for both is what unwound a `continue` to the switch's
+        // depth and left its discriminant behind.
+        let depth = match leaving {
+            true => self.breaks.len().checked_sub(1),
+            false => self.continues.iter().rposition(Option::is_some),
         };
-        if pending.is_none() {
+        let Some(depth) = depth else {
             return Err(unsupported("break or continue outside a loop", span));
-        }
-        // The innermost breakable is the target, and everything between here and it is crossed:
-        // a `finally` in between runs, an iterator in between is closed, a handler in between
-        // comes down.
-        self.unwind_across(Exit::of(leaving, self.breaks.len() - 1))?;
+        };
+        // Everything between here and it is crossed: a `finally` in between runs, an iterator in
+        // between is closed, a handler in between comes down, a scope in between is left.
+        self.unwind_across(Exit::of(leaving, depth))?;
         let jump = self.chunk.emit_jump(Instruction::Jump);
-        let pending = if leaving {
-            self.breaks.last_mut()
-        } else {
-            self.continues.last_mut()
+        let pending = match leaving {
+            true => self.breaks.get_mut(depth),
+            false => self.continues.get_mut(depth).and_then(Option::as_mut),
         };
         if let Some(pending) = pending {
             pending.push(jump);
