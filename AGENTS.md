@@ -130,7 +130,11 @@ the conformance harness that measures it — which from here is what says what t
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`. **`BigInt` is in**: the
 literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array`.
 
-Conformance as of this commit is **75.26% of test262** — 70,115 of 93,160 runs. Treat that number
+**And `eval` runs, both ways.** §19.2.1.1's indirect mode was already there; the **direct** mode
+resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eval.rs` and
+`compile_direct_eval`. That is what the environments' name lists are for, and it was worth 973 runs.
+
+Conformance as of this commit is **77.29% of test262** — 72,004 of 93,161 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Only 2,300 runs are now *stopped* before anything executes, and they are nearly all M7:
 
@@ -143,13 +147,25 @@ it. Only 2,300 runs are now *stopped* before anything executes, and they are nea
 | 110 | a property of strings |
 
 **So the skip list is no longer where the work is** — it is under a thousand runs per entry, and the
-~20,700 tests that **run and fail** are where the next slices come from. Sorted by reason, the
-largest are `Temporal` (8,316 — a trap, see below), **`eval` (1,500)**, `what was called is not a
-function` (1,332, a grab-bag worth bucketing by path), and `the heap has grown past what this engine
-will allocate` (894, which is DR-0013's budget meeting resizable buffers). `eval` is the largest
-thing on the list that is actually ES2015 and actually one subject.
+~18,900 tests that **run and fail** are where the next slices come from. Sorted by reason, the
+largest are:
 
-**63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
+| Runs | Reason | What it is |
+| --- | --- | --- |
+| 8,316 | `Temporal is not defined` | a trap — see below, and do not cost it as 8,316 cheap runs |
+| 1,270 | `what was called is not a function` | a grab-bag; bucket it by path before costing it |
+| 894 | `the heap has grown past what this engine will allocate` | DR-0013's budget meeting resizable buffers |
+| 471 | `a declaration may not stand where only a statement may` | worth reading: some of these are right |
+| 458 | `cannot read a property of something that is not an object` | another grab-bag |
+| 318 | `DisposableStack` / `AsyncDisposableStack` | the **explicit resource management** proposal — a Temporal in miniature |
+| 288 | `expected 'meta', found an identifier` | `import.meta`, which arrives with modules |
+| 114 | `ShadowRealm is not defined` | a proposal too |
+
+The `eval` bucket that used to sit second at 1,500 is gone. Nothing left on that list is both large
+and one subject the way it was: the two biggest are proposals or grab-bags, so the next slice comes
+from bucketing one of the grab-bags **by path** (`awk -F/ '{print $1"/"$2}'`) rather than by reason.
+
+**63.06% to 75.26% in five slices** (and 77.29% with the two after them), four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
 `GetIterator(value, async)` (+1,590) — `GeneratorStart` becoming an instruction (+1,598), the
 `BigInt` type itself, and `BigInt64Array` (+1,432). The `GeneratorStart` one is worth reading before
@@ -257,6 +273,22 @@ a wrong reading gets caught.
   a throw escaping a body left it saying `executing` for ever. Suspended is "it holds a parked
   execution", executing is "a live frame names it", completed is neither — all three are questions
   about somewhere else, and a field repeating the answers is a field that can disagree with them.
+- **A refusal can be holding up passing tests, and removing it turns them red.** Direct eval threw a
+  TypeError while it was unimplemented, and five tests asserting `assert.throws(TypeError, …)` were
+  passing on it. That is the previous point in its most expensive form: the regression is real on the
+  ratchet and is not a regression in the engine, and the only way to tell is to read each one and
+  name what it *actually* needs. Those five needed §15.2.5's named-function-expression self-binding
+  and a poisoned `caller` — two gaps the refusal had been hiding. **Expect this whenever a slice
+  removes a throw**, and say in the commit message which missing feature each newly-listed test now
+  genuinely needs.
+
+**One flag answering two questions is the bug this file keeps meeting.** `Compiler::is_script` decided
+both where a `var` goes and whether §14.2.2's completion value is kept; the two coincide for a script
+and for a function body and come apart for a direct `eval`, which is Script code inside a function.
+`at_global_scope` was `outer.is_empty()`, which meant both "the var scope is the global object" and
+"no scope has been opened here". `[[GeneratorState]]` above is the same shape. When a slice arrives
+that is the first thing to distinguish two meanings of one field, splitting it is the change — not a
+special case at the call site that happens to know which meaning it wants.
 
 The local loop is `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` **and**
 `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not cover
