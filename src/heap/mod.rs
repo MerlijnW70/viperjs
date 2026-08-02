@@ -327,6 +327,20 @@ impl Heap {
         self.buffer_bytes = self.buffer_bytes.saturating_add(length);
     }
 
+    /// Note that a buffer that held `before` bytes now holds `after` — §25.1.6.4's resize.
+    ///
+    /// The one place this total goes **down**. Everything else that allocates only adds, because
+    /// DR-0010 does not give a slot back and a detached buffer's bytes are not returned either —
+    /// but a resizable buffer shrinking really has given the memory up, and charging it as a fresh
+    /// allocation would make `for (;;) { ab.resize(0); ab.resize(n); }` read as a runaway and be
+    /// refused for memory it is not using.
+    pub fn charge_buffer_delta(&mut self, before: usize, after: usize) {
+        self.buffer_bytes = self
+            .buffer_bytes
+            .saturating_sub(before)
+            .saturating_add(after);
+    }
+
     /// How much more DR-0013 will allow, in bytes.
     ///
     /// What `ArrayBuffer` asks before it allocates rather than after. Every other allocation here

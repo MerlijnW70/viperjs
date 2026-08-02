@@ -485,3 +485,405 @@ fn a_conversion_may_detach_the_buffer_underneath_the_thing_that_is_using_it() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_buffer_given_a_maximum_may_be_resized_up_to_it_and_no_further() {
+    // §25.1.3.1's `maxByteLength` option is the whole of what makes a buffer resizable — §25.1.6.4
+    // step 2 asks for the slot, not for a flag — so a buffer made without one has no `resize` to
+    // offer and says so with a TypeError rather than a RangeError about the length.
+    assert_eq!(run("new ArrayBuffer(8).resizable"), "false");
+    assert_eq!(
+        run("new ArrayBuffer(4, { maxByteLength: 8 }).resizable"),
+        "true"
+    );
+    // §25.1.6.2 step 5 — a fixed buffer answers its *current* length rather than `undefined`,
+    // because a buffer that cannot be resized is already as long as it will ever be.
+    assert_eq!(run("new ArrayBuffer(8).maxByteLength"), "8");
+    assert_eq!(
+        run("new ArrayBuffer(4, { maxByteLength: 8 }).maxByteLength"),
+        "8"
+    );
+    // `undefined` under the key is "no opinion" and not a maximum of zero, so it makes the same
+    // fixed buffer as no options bag at all — which is what lets an option be passed through.
+    assert_eq!(
+        run("new ArrayBuffer(4, { maxByteLength: undefined }).resizable"),
+        "false"
+    );
+    assert_eq!(run("new ArrayBuffer(4, null).resizable"), "false");
+    // Both directions, and the two refusals either side of them.
+    assert_eq!(
+        run("var b = new ArrayBuffer(4, { maxByteLength: 8 }); b.resize(6); b.byteLength"),
+        "6"
+    );
+    assert_eq!(
+        run("var b = new ArrayBuffer(4, { maxByteLength: 8 }); b.resize(1); b.byteLength"),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); try { b.resize(9); } catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    assert_eq!(
+        run("try { new ArrayBuffer(4).resize(2); } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // §25.1.3.1 step 4 — and a buffer cannot start out longer than it may ever be.
+    assert_eq!(
+        run("try { new ArrayBuffer(9, { maxByteLength: 8 }); } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+}
+
+#[test]
+fn bytes_a_resize_uncovers_are_zero_and_never_what_used_to_be_there() {
+    // §25.1.3.1's rule that a program may read every byte of a buffer and find 0 does not stop
+    // applying because the byte arrived by growing. Shrinking and re-growing is the case that would
+    // give it away: the old bytes are still in the allocation right up until this says otherwise.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(1, { maxByteLength: 4 }); var v = new Uint8Array(b); v[0] = 9; b.resize(3); new Uint8Array(b)[2]"
+        ),
+        "0"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 4 }); new Uint8Array(b)[3] = 7; b.resize(1); b.resize(4); new Uint8Array(b)[3]"
+        ),
+        "0"
+    );
+}
+
+#[test]
+fn a_view_made_without_a_length_over_a_resizable_buffer_follows_it() {
+    // §10.4.5's `auto`. The two halves that decide it are both necessary and each is a row here: an
+    // explicit length pins the window however the buffer moves, and a fixed buffer has nothing to
+    // follow.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(2, { maxByteLength: 8 }); var v = new Uint8Array(b); b.resize(6); v.length"
+        ),
+        "6"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(6, { maxByteLength: 8 }); var v = new Uint8Array(b); b.resize(2); v.length"
+        ),
+        "2"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(6, { maxByteLength: 8 }); var v = new Uint8Array(b, 0, 3); b.resize(8); v.length"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run("var b = new ArrayBuffer(4); var v = new Uint8Array(b); v.length"),
+        "4"
+    );
+    // The offset is kept, so a tracking view starting part way along follows the *remainder*.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8, { maxByteLength: 16 }); var v = new Uint8Array(b, 4); b.resize(12); v.length"
+        ),
+        "8"
+    );
+    // …rounded down to a whole element, because a partial one at the end is not an element.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8, { maxByteLength: 16 }); var v = new Int32Array(b); b.resize(11); v.length"
+        ),
+        "2"
+    );
+    // An element that the buffer no longer covers is absent rather than stale, and one it has just
+    // come to cover is writable.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 4 }); var v = new Uint8Array(b); v[3] = 9; b.resize(1); typeof v[3]"
+        ),
+        "undefined"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(1, { maxByteLength: 4 }); var v = new Uint8Array(b); b.resize(3); v[2] = 5; v[2]"
+        ),
+        "5"
+    );
+    // A `DataView` tracks on the same terms, and keeps every byte rather than whole elements.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(2, { maxByteLength: 8 }); var d = new DataView(b); b.resize(5); d.byteLength"
+        ),
+        "5"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(6, { maxByteLength: 8 }); var d = new DataView(b, 0, 2); b.resize(8); d.byteLength"
+        ),
+        "2"
+    );
+}
+
+#[test]
+fn a_fixed_view_whose_buffer_shrank_under_it_is_refused_like_a_detached_one() {
+    // §10.4.5.2 `IsTypedArrayOutOfBounds`. `new Uint8Array(rab, 0, 4)` still names four elements
+    // after `rab.resize(2)` and only two of them exist, so every method that begins with
+    // `ValidateTypedArray` throws — where an array that merely *has* no elements walks nothing and
+    // answers. Only a fixed-length view can be in this state: a tracking one follows the buffer.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); var v = new Uint8Array(b, 0, 4); b.resize(2); try { v.fill(1); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); var v = new Uint8Array(b, 0, 4); b.resize(2); v.length"
+        ),
+        "0"
+    );
+    // …and it comes back when the buffer does, because nothing about the view was changed.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); var v = new Uint8Array(b, 0, 4); b.resize(2); b.resize(4); v.length"
+        ),
+        "4"
+    );
+    // A tracking view over the same buffer is never out of bounds, however far it shrinks.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); var v = new Uint8Array(b); b.resize(0); v.fill(1); v.length"
+        ),
+        "0"
+    );
+}
+
+#[test]
+fn a_shared_buffer_grows_and_will_not_shrink() {
+    // §25.2.5.4 is §25.1.6.4 with one rule added and one removed. The addition is the interesting
+    // one: a shrink would pull memory out from under a view another agent is reading through, and
+    // §25.2 exists so that memory can be shared without that being possible. It is a RangeError and
+    // not a silent no-op, so a program that believed it shrank one finds out.
+    assert_eq!(run("new SharedArrayBuffer(4).growable"), "false");
+    assert_eq!(
+        run("new SharedArrayBuffer(4, { maxByteLength: 8 }).growable"),
+        "true"
+    );
+    assert_eq!(
+        run("var b = new SharedArrayBuffer(4, { maxByteLength: 8 }); b.grow(7); b.byteLength"),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(4, { maxByteLength: 8 }); try { b.grow(2); } catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(4, { maxByteLength: 8 }); try { b.grow(9); } catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    // Neither name works on the other's kind of buffer, which is what keeps the two brands apart.
+    assert_eq!(
+        run(
+            "try { ArrayBuffer.prototype.resize.call(new SharedArrayBuffer(4, { maxByteLength: 8 }), 5); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run("typeof new SharedArrayBuffer(4, { maxByteLength: 8 }).resize"),
+        "undefined"
+    );
+}
+
+#[test]
+fn transferring_keeps_the_ceiling_and_transferring_to_fixed_length_drops_it() {
+    // §25.1.5.5 passes `preserve-resizability` and §25.1.5.6 passes `fixed-length`, which is the
+    // only difference between the two methods — and the only way in the language to turn a
+    // resizable buffer into a fixed one.
+    assert_eq!(
+        run("new ArrayBuffer(4, { maxByteLength: 8 }).transfer().maxByteLength"),
+        "8"
+    );
+    assert_eq!(
+        run("new ArrayBuffer(4, { maxByteLength: 8 }).transfer().resizable"),
+        "true"
+    );
+    assert_eq!(
+        run("new ArrayBuffer(4, { maxByteLength: 8 }).transferToFixedLength().resizable"),
+        "false"
+    );
+    // A fixed buffer transfers into a fixed one, so `transfer` does not *make* anything resizable.
+    assert_eq!(run("new ArrayBuffer(4).transfer().resizable"), "false");
+}
+
+#[test]
+fn an_array_like_longer_than_the_heap_is_refused_before_it_is_walked() {
+    // A loop counted by a number the program chose. `new Int8Array({ length: 2 ** 53 })` read
+    // absent properties into a Rust list that DR-0013's budget does not measure, so the check
+    // inside the loop never fired and nothing could stop it. The bound has to be on what is about
+    // to be produced, which is the same lesson `String.prototype.repeat` taught.
+    assert_eq!(
+        run("try { new Int8Array({ length: Math.pow(2, 53) }); } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+    // …while an array-like that could plausibly exist is still built.
+    assert_eq!(run("new Int8Array({ length: 3, 0: 7 })[0]"), "7");
+}
+
+#[test]
+fn resizing_a_buffer_whose_bytes_have_gone_is_refused_rather_than_reviving_it() {
+    // §25.1.6.4 step 4. A resizable buffer can still be detached — `transfer` does it — and the
+    // resize that follows must not put a `Vec` back where §25.1.3.3 took one away. It is the one
+    // ordering in this method that cannot be seen from the answer, only from what the buffer is
+    // afterwards, so both are asserted.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); b.transfer(); try { b.resize(6); } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); b.transfer(); try { b.resize(6); } catch (e) {} b.byteLength + ',' + b.detached"
+        ),
+        "0,true"
+    );
+}
+
+#[test]
+fn growing_a_shared_buffer_to_the_length_it_already_has_is_allowed() {
+    // §25.2.5.4's refusal is on *shrinking*, so the equal case is the boundary and it goes the
+    // permissive way: `grow(byteLength)` is a no-op and not a RangeError. Written the other way
+    // round it would refuse a program that grows to a length it computed and happened to already
+    // have, which is what a loop stepping towards a maximum does on its last turn.
+    assert_eq!(
+        run("var b = new SharedArrayBuffer(4, { maxByteLength: 8 }); b.grow(4); b.byteLength"),
+        "4"
+    );
+    // …and the same length exactly at the maximum, which is the other boundary and also allowed.
+    assert_eq!(
+        run("var b = new SharedArrayBuffer(4, { maxByteLength: 8 }); b.grow(8); b.byteLength"),
+        "8"
+    );
+    // A buffer with no maximum has no `grow` to offer, and says so with a TypeError about the
+    // buffer rather than a RangeError about the length.
+    assert_eq!(
+        run("try { new SharedArrayBuffer(4).grow(8); } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_shared_buffer_may_start_exactly_at_its_maximum_and_no_longer() {
+    // §25.2.2.1's step 2 check, and its boundary. Equal is allowed — a buffer that starts full is
+    // a perfectly ordinary thing to ask for — and one byte more is refused.
+    assert_eq!(
+        run("new SharedArrayBuffer(8, { maxByteLength: 8 }).byteLength"),
+        "8"
+    );
+    assert_eq!(
+        run(
+            "try { new SharedArrayBuffer(9, { maxByteLength: 8 }); } catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    // The same boundary for §25.1.3.1, so the two constructors cannot drift apart.
+    assert_eq!(
+        run("new ArrayBuffer(8, { maxByteLength: 8 }).byteLength"),
+        "8"
+    );
+}
+
+#[test]
+fn a_subarray_is_told_how_long_it_is_unless_the_array_it_came_from_tracks() {
+    // §23.2.3.30 step 16 — the *number of arguments* the species is constructed with is the whole
+    // of how "keep tracking" is said, and a program can count them. Three cases, and each is a
+    // different reason for the third argument to be there or not: a tracking array asked for
+    // everything to the end passes two, the same array given an explicit end passes three, and a
+    // fixed-length array always passes three however it is asked.
+    let counter = "var seen; \
+         function Spy(...args) { seen = args.length; return new Uint8Array(args[0], args[1], args[2]); } \
+         Spy[Symbol.species] = Spy; ";
+    assert_eq!(
+        run(&format!(
+            "{counter} var b = new ArrayBuffer(4, {{ maxByteLength: 8 }}); \
+             var v = new Uint8Array(b); v.constructor = Spy; v.subarray(1); seen"
+        )),
+        "2"
+    );
+    assert_eq!(
+        run(&format!(
+            "{counter} var b = new ArrayBuffer(4, {{ maxByteLength: 8 }}); \
+             var v = new Uint8Array(b); v.constructor = Spy; v.subarray(1, 3); seen"
+        )),
+        "3"
+    );
+    assert_eq!(
+        run(&format!(
+            "{counter} var v = new Uint8Array(4); v.constructor = Spy; v.subarray(1); seen"
+        )),
+        "3"
+    );
+    // A view over a resizable buffer that was given an explicit length does not track either, so
+    // it is the *view* being asked and not the buffer it sits on.
+    assert_eq!(
+        run(&format!(
+            "{counter} var b = new ArrayBuffer(4, {{ maxByteLength: 8 }}); \
+             var v = new Uint8Array(b, 0, 4); v.constructor = Spy; v.subarray(1); seen"
+        )),
+        "3"
+    );
+}
+
+#[test]
+fn a_data_view_that_no_longer_fits_its_buffer_says_so_before_it_says_anything_else() {
+    // §25.3.1.2, the `DataView` half of §10.4.5.2, and the two errors it has to keep apart. An
+    // out-of-bounds view is a TypeError about the *bounds*; something that was never a `DataView`
+    // is a TypeError about the receiver. Both are TypeErrors, so the message is the only thing that
+    // distinguishes them and it is what is asserted.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); var d = new DataView(b, 0, 4); b.resize(2); try { d.getInt8(0); } catch (e) { e.message }"
+        ),
+        "this DataView is outside the bounds of its buffer"
+    );
+    assert_eq!(
+        run("try { DataView.prototype.getInt8.call({}, 0); } catch (e) { e.message }"),
+        "this is not a DataView"
+    );
+    // A tracking `DataView` over the same shrinking buffer is never out of bounds, so it reads.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(4, { maxByteLength: 8 }); var d = new DataView(b); b.resize(2); d.byteLength"
+        ),
+        "2"
+    );
+}
+
+#[test]
+fn an_array_like_is_refused_against_the_room_that_is_left_and_not_a_fixed_number() {
+    // The bound is DR-0013's *remaining* allowance, so what counts as too long depends on what the
+    // heap already holds. Asserted by taking most of the budget first and then asking for a length
+    // that would have been perfectly ordinary on an empty heap: 100,000 elements is nothing, and
+    // there is no longer room to read them into.
+    //
+    // This is also the row that pins the guard. `{ length: 2 ** 53 }` above proves it refuses, but
+    // removing the guard makes *that* case run for ever rather than answer wrongly — and a test
+    // that hangs is not a test that fails. Here the unguarded path finishes in a moment and
+    // finishes with an array, so the two behaviours are told apart by an answer instead of by a
+    // clock.
+    assert_eq!(
+        run("var hog = new ArrayBuffer(63 * 1024 * 1024); \
+             try { new Int8Array({ length: 100000 }); } catch (e) { e.message }"),
+        "this array-like is longer than this engine will allocate"
+    );
+    // …and on a heap that has not been filled, the very same length is built without complaint.
+    // Two `run`s rather than one script, because a detached buffer's bytes are *not* given back to
+    // the budget — `transfer` moves them and charges the new buffer, so a script cannot undo the
+    // first line and the contrast has to be drawn between two heaps.
+    assert_eq!(run("new Int8Array({ length: 100000 }).length"), "100000");
+}

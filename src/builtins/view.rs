@@ -107,6 +107,11 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     }
     // Step 8 — an absent length means "to the end", which is not the same as 0 and is why the
     // argument cannot simply be converted with the others.
+    let tracking = matches!(call.argument(2), Value::Undefined)
+        && heap
+            .object(buffer)
+            .and_then(crate::heap::Object::buffer)
+            .is_some_and(|found| found.max_byte_length().is_some());
     let width = match call.argument(2) {
         Value::Undefined => length - offset,
         given => {
@@ -133,6 +138,10 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             length: width,
             // A `DataView` has no type of its own — it asks for one at every access.
             element: None,
+            // §25.3.2.1 step 15 — the same `auto` a TypedArray gets, and decided the same way: no
+            // explicit length over a resizable buffer. A `DataView` keeps every byte rather than a
+            // whole number of elements, because it has no element to be a whole number of.
+            tracking,
         });
     }
     Ok(Value::Object(object))
@@ -165,8 +174,17 @@ fn view_of(heap: &Heap, this: Value) -> Completion<View> {
     // view let `DataView.prototype.getFloat64.call(new Int8Array())` past this check and refuse a
     // few steps later with the wrong error — a RangeError about the bounds rather than a TypeError
     // about the receiver.
-    heap.object(object)
-        .and_then(crate::heap::Object::view)
+    // `any_view` rather than the stored view, because a `DataView` over a resizable buffer with no
+    // explicit length tracks that buffer — so its `[[ByteLength]]` is a question about the buffer
+    // *now* and the stored number is stale from the first `resize`.
+    // §25.3.1.2 — a `DataView` whose window no longer fits its buffer is refused on the same terms
+    // as a detached one, exactly as §23.2's methods refuse an out-of-bounds TypedArray.
+    if heap.view_out_of_bounds(object) {
+        return Err(Abrupt::type_error(
+            "this DataView is outside the bounds of its buffer",
+        ));
+    }
+    heap.any_view(object)
         .filter(|view| view.element.is_none())
         .ok_or_else(|| Abrupt::type_error("this is not a DataView"))
 }

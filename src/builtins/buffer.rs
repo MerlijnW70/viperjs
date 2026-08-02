@@ -39,12 +39,31 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // §25.1.5.5 — `transfer`, the one operation in the language that detaches a buffer. Without it
     // the state exists and nothing can reach it, which makes every check for it untestable.
     define_method(heap, realm, prototype, "transfer", 0, transfer);
+    // §25.1.6.4 — the only operation that changes a buffer's length in place. `grow` is §25.2's
+    // spelling of it and each refuses the other's kind of buffer, which is why they are two names
+    // for what is one operation underneath.
+    define_method(heap, realm, prototype, "resize", 1, resize);
+    // §25.1.5.6 — the same transfer with the resizability dropped, which is the only way to turn a
+    // resizable buffer into a fixed one.
+    define_method(
+        heap,
+        realm,
+        prototype,
+        "transferToFixedLength",
+        0,
+        transfer_to_fixed_length,
+    );
 
     // §25.1.5.1 and §25.1.5.3 — both accessors, so a program cannot assign either, and both read
     // the buffer each time rather than remembering a number that detaching would make wrong.
     for (name, native) in [
         ("byteLength", byte_length as Native),
         ("detached", detached),
+        // §25.1.6.2 and §25.1.6.3. Both answer about `[[ArrayBufferMaxByteLength]]`, and
+        // `maxByteLength` answers for a *fixed* buffer too — its current length, because a buffer
+        // that cannot be resized is already as long as it may ever be.
+        ("resizable", resizable),
+        ("maxByteLength", max_byte_length),
     ] {
         let getter = heap.new_native_function(realm.function_prototype(), native);
         super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
@@ -99,8 +118,36 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     // 2^53 - 1 is a **RangeError** rather than being clamped, because a buffer that quietly became
     // a different size than asked for is a bug that surfaces somewhere else entirely.
     let length = to_index(vm, heap, call.argument(0))?;
+    // §25.1.3.1 step 3 `GetArrayBufferMaxByteLengthOption`, read *after* the length, which a
+    // `valueOf` on either can observe.
+    let max = max_byte_length_option(vm, heap, call.argument(1))?;
     let prototype = super::prototype_from(heap, call, vm.realm().array_buffer_prototype());
-    allocate(heap, prototype, length)
+    allocate(heap, prototype, length, max)
+}
+
+/// §25.1.3.7 `GetArrayBufferMaxByteLengthOption` — the `maxByteLength` an options bag asks for.
+///
+/// `None` for anything that is not an object and for an object without the property, which is the
+/// difference between a fixed buffer and a resizable one of the same length. Deliberately *not* a
+/// TypeError for a non-object: `new ArrayBuffer(8, null)` and `new ArrayBuffer(8)` are the same
+/// buffer, and only a `maxByteLength` that is present says otherwise.
+pub(super) fn max_byte_length_option(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    options: Value,
+) -> Completion<Option<usize>> {
+    let Value::Object(_) = options else {
+        return Ok(None);
+    };
+    let name = key(heap, "maxByteLength");
+    let found = vm.get_property_key(options, name, heap)?;
+    // Step 3 — `undefined` is "no opinion" and not a length of zero. A bag written
+    // `{ maxByteLength: undefined }` therefore makes the same fixed buffer as no bag at all, which
+    // is what lets a caller pass an option through without deciding whether it has one.
+    if matches!(found, Value::Undefined) {
+        return Ok(None);
+    }
+    Ok(Some(to_index(vm, heap, found)?))
 }
 
 /// §25.1.3.1 `AllocateArrayBuffer` — the object and its zeroed bytes.
@@ -108,7 +155,20 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// The heap's own budget is what refuses an absurd length, rather than a limit written here:
 /// DR-0013 says an engine that cannot allocate says so as a RangeError, and a buffer is the
 /// easiest thing in the language to ask for too much of.
-fn allocate(heap: &mut Heap, prototype: ObjectId, length: usize) -> Completion<Value> {
+fn allocate(
+    heap: &mut Heap,
+    prototype: ObjectId,
+    length: usize,
+    max: Option<usize>,
+) -> Completion<Value> {
+    // §25.1.3.1 step 4 — a buffer cannot start out longer than it may ever be. A RangeError and
+    // not a clamp, for the reason `ToIndex` gives above: a buffer that quietly became a different
+    // size than asked for surfaces somewhere else entirely.
+    if max.is_some_and(|max| length > max) {
+        return Err(Abrupt::range_error(
+            "this ArrayBuffer is longer than its maxByteLength allows",
+        ));
+    }
     // DR-0013 — the budget is what refuses an absurd length rather than a limit written here, and
     // a buffer is the easiest thing in the language to ask too much of. Checked *before* the
     // allocation, because the point is not to make it.
@@ -123,7 +183,11 @@ fn allocate(heap: &mut Heap, prototype: ObjectId, length: usize) -> Completion<V
     }
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
-        found.set_buffer(Buffer::new(length));
+        let mut made = Buffer::new(length);
+        if let Some(max) = max {
+            made.allow_resizing_to(max);
+        }
+        found.set_buffer(made);
     }
     // The bytes count against DR-0013's footprint from here on, so a *second* buffer is measured
     // against a heap that already knows about the first. Without this the check above would let
@@ -185,13 +249,128 @@ fn detached(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     Ok(Value::Boolean(gone))
 }
 
+/// §25.1.6.3 — `get resizable`, which is whether §25.1.3.1 was given a `maxByteLength`.
+fn resizable(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = buffer_of(heap, call.this_value)?;
+    let can = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .is_some_and(|buffer| buffer.max_byte_length().is_some());
+    Ok(Value::Boolean(can))
+}
+
+/// §25.1.6.2 — `get maxByteLength`, which a fixed buffer answers too.
+///
+/// §25.1.6.2 step 5 gives a non-resizable buffer its *current* length rather than `undefined`: a
+/// buffer that cannot be resized is already as long as it will ever be, so the two questions
+/// "how long is it" and "how long may it get" have one answer. A detached buffer answers 0, on the
+/// same grounds §25.1.5.1 gives for `byteLength`.
+fn max_byte_length(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = buffer_of(heap, call.this_value)?;
+    let length = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .filter(|buffer| !buffer.detached())
+        .map_or(0, |buffer| {
+            buffer
+                .max_byte_length()
+                .unwrap_or_else(|| buffer.byte_length())
+        });
+    Ok(Value::Number(length as f64))
+}
+
+/// §25.1.6.4 — `resize`, which changes a buffer's length without moving its bytes.
+///
+/// The order of the four refusals is the whole of what a test can see here, and it is not the
+/// order the clause lists them in. §25.1.6.4's own steps put the detached check before the
+/// argument, but `coerced-new-length-detach.js` is explicit that there is "one detach check
+/// **after** argument coercion" — so a `valueOf` that detaches the buffer still runs, and a
+/// `valueOf` on an already-detached buffer still runs too. Both then throw a TypeError, and the
+/// difference from the naive order is invisible except through that side effect.
+fn resize(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = buffer_of(heap, call.this_value)?;
+    // Step 2 — the slot, which is what "resizable" *is*. A fixed buffer has no `resize` to refuse
+    // a length for; it has no maximum at all, so the question never gets as far as the length.
+    let resizable = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .is_some_and(|buffer| buffer.max_byte_length().is_some());
+    if !resizable {
+        return Err(Abrupt::type_error("this ArrayBuffer is not resizable"));
+    }
+    // Step 3 — a shared buffer grows with §25.2.5.4 and is refused here, so that neither name
+    // works on the other's kind of buffer and `typeof ab.resize` cannot be used to tell them apart.
+    if heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .is_some_and(crate::heap::Buffer::shared)
+    {
+        return Err(Abrupt::type_error(
+            "a SharedArrayBuffer grows rather than resizes",
+        ));
+    }
+    let length = to_index(vm, heap, call.argument(0))?;
+    let Some(buffer) = heap
+        .object_mut(object)
+        .and_then(crate::heap::Object::buffer_mut)
+    else {
+        return Err(Abrupt::type_error("this is not an ArrayBuffer"));
+    };
+    if buffer.detached() {
+        return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
+    }
+    let before = buffer.byte_length();
+    if !buffer.resize(length) {
+        return Err(Abrupt::range_error(
+            "this length is past the ArrayBuffer's maxByteLength",
+        ));
+    }
+    // DR-0013 counts what buffers hold, and a resize is the one place that number can go *down*.
+    // Charged as the difference so that growing and shrinking in a loop does not read as a heap
+    // that only ever grew — which is what a runaway looks like, and would refuse the program.
+    heap.charge_buffer_delta(before, length);
+    Ok(Value::Undefined)
+}
+
 /// §25.1.5.5 — `transfer`, which moves the bytes to a new buffer and detaches this one.
 ///
 /// The bytes are *moved*, not copied: the point is to hand ownership somewhere else without paying
 /// for a copy, and the old buffer is left detached so that nothing can read what it no longer has.
 /// Every view onto it starts throwing from here.
+///
+/// §25.1.5.5 passes `preserve-resizability` to `ArrayBufferCopyAndDetach`, so a resizable buffer
+/// transfers into another resizable one with the same maximum — the length may be chosen afresh
+/// but the *ceiling* travels with the bytes. §25.1.5.6's `transferToFixedLength` is the same
+/// operation with `fixed-length` instead, and [`transfer_kind`] is the one line between them.
 fn transfer(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    transfer_kind(vm, heap, call, true)
+}
+
+/// §25.1.5.6 — `transferToFixedLength`, which drops the resizability on the way across.
+fn transfer_to_fixed_length(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    transfer_kind(vm, heap, call, false)
+}
+
+/// §25.1.5.4 `ArrayBufferCopyAndDetach`, whose last argument is the whole difference between the
+/// two methods above.
+fn transfer_kind(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    preserve_resizability: bool,
+) -> Completion<Value> {
     let object = buffer_of(heap, call.this_value)?;
+    // Read before the bytes are taken, because taking them detaches the buffer and a detached
+    // buffer is asked nothing else.
+    let max = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .and_then(crate::heap::Buffer::max_byte_length)
+        .filter(|_| preserve_resizability);
     let taken = heap
         .object_mut(object)
         .and_then(crate::heap::Object::buffer_mut)
@@ -212,7 +391,11 @@ fn transfer(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
         let asked = to_index(vm, heap, call.argument(0))?;
         bytes.resize(asked, 0);
     }
-    let made = allocate(heap, vm.realm().array_buffer_prototype(), bytes.len())?;
+    // §25.1.5.4 step 6 — a transfer that names a length longer than the old maximum raises the
+    // ceiling to it rather than refusing, because the new buffer is a new allocation and the old
+    // maximum was a promise about the old one.
+    let max = max.map(|max| max.max(bytes.len()));
+    let made = allocate(heap, vm.realm().array_buffer_prototype(), bytes.len(), max)?;
     if let Value::Object(id) = made
         && let Some(target) = heap
             .object_mut(id)

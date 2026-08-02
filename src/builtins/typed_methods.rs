@@ -123,6 +123,14 @@ fn validate(heap: &Heap, this: Value) -> Completion<(ObjectId, View)> {
     {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     }
+    // §10.4.5.2 — and a window that no longer fits its buffer is refused on the same terms as a
+    // detached one. `new Uint8Array(rab, 0, 4)` after `rab.resize(2)` still names four elements
+    // and only two of them exist, so walking it would read past the end of the buffer.
+    if heap.view_out_of_bounds(object) {
+        return Err(Abrupt::type_error(
+            "this TypedArray is outside the bounds of its buffer",
+        ));
+    }
     Ok((object, view))
 }
 
@@ -393,15 +401,19 @@ fn subarray(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     let width = view.element.map_or(1, crate::heap::Element::width);
     let default = kind_constructor(vm, heap, object)?;
     let species = super::promise::species_of(vm, heap, object, default)?;
-    let made = vm.construct_value(
-        Value::Object(species),
-        &[
-            Value::Object(view.buffer),
-            Value::Number((view.offset + from * width) as f64),
-            Value::Number(taken as f64),
-        ],
-        heap,
-    )?;
+    // §23.2.3.30 step 16 — a subarray of a **length-tracking** array with no explicit end is itself
+    // length-tracking, and the way that is said is by constructing with *two* arguments instead of
+    // three. A third argument, even the right number, would pin the window: the new array would
+    // stop following the buffer the moment it was resized. The species can see the difference —
+    // these tests count the arguments it was called with.
+    let mut arguments = vec![
+        Value::Object(view.buffer),
+        Value::Number((view.offset + from * width) as f64),
+    ];
+    if !(view.tracking && matches!(call.argument(1), Value::Undefined)) {
+        arguments.push(Value::Number(taken as f64));
+    }
+    let made = vm.construct_value(Value::Object(species), &arguments, heap)?;
     // §23.2.4.3 step 4 — a species may answer anything at all, and what it answered has to be a
     // TypedArray. One that is not would be handed back as though it were, and every later use of
     // it would fail somewhere else entirely.
@@ -945,22 +957,27 @@ fn reduce_right(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 
 /// Both folds, which differ in direction and in nothing else.
 fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, backwards: bool) -> Completion<Value> {
-    let (_, view) = validate(heap, call.this_value)?;
+    let (object, view) = validate(heap, call.this_value)?;
     let callback = call.argument(0);
     if !heap.is_callable(callback) {
         return Err(Abrupt::type_error("the callback is not a function"));
     }
-    let values = elements(heap, view);
+    // §23.2.3.22 step 3 caches the **length** and step 8 re-reads each *element*, and the two are
+    // not the same decision. A callback that shrinks a resizable buffer therefore still gets the
+    // number of turns the array had when the fold started, and the turns past the new end are
+    // handed `undefined` — which a snapshot of the elements taken up front cannot express, because
+    // it would hand back what used to be there.
+    let count = view.count();
     let order: Vec<usize> = match backwards {
-        true => (0..values.len()).rev().collect(),
-        false => (0..values.len()).collect(),
+        true => (0..count).rev().collect(),
+        false => (0..count).collect(),
     };
     let mut steps = order.into_iter();
     // §23.2.3.22 step 5 — with no initial value the *first element* is one, and an empty array with
     // no initial value is a TypeError rather than `undefined`: there is no answer to give.
     let mut total = match call.arguments.len() {
         0..=1 => match steps.next() {
-            Some(index) => values[index],
+            Some(index) => element_now(heap, object, index),
             None => {
                 return Err(Abrupt::type_error(
                     "reduce of an empty TypedArray with no initial value",
@@ -970,20 +987,29 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, backwards: bool) ->
         _ => call.argument(1),
     };
     for index in steps {
+        let current = element_now(heap, object, index);
         total = vm.call_value(
             callback,
             Value::Undefined,
-            &[
-                total,
-                values[index],
-                Value::Number(index as f64),
-                call.this_value,
-            ],
+            &[total, current, Value::Number(index as f64), call.this_value],
             heap,
         )?;
         super::array_methods::within_budget(heap)?;
     }
     Ok(total)
+}
+
+/// The element at `index` **as the array is now** — §23.2.3.22 step 8's `Get(O, Pk)`.
+///
+/// The view is fetched afresh rather than passed in, because a length-tracking one is a different
+/// window after every resize and a caller holding the old one would read past the end of the
+/// buffer. `undefined` for an index the array no longer has, which is what `Get` answers for an
+/// out-of-range canonical numeric index and is the whole observable effect of shrinking mid-walk.
+fn element_now(heap: &mut Heap, object: ObjectId, index: usize) -> Value {
+    let Some(view) = heap.typed_view(object) else {
+        return Value::Undefined;
+    };
+    heap.element_at(view, index).unwrap_or(Value::Undefined)
 }
 
 /// §23.2.2.1 — `%TypedArray%.from`, which takes an iterable or an array-like and a mapper.

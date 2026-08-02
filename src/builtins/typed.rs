@@ -210,27 +210,22 @@ fn allocate(
         found.set_buffer(Buffer::new(bytes));
     }
     heap.charge_buffer(bytes);
-    Ok(make(heap, prototype, buffer, 0, bytes, element, clamped))
+    // A buffer this made itself is fixed, so the view over it has nothing to track.
+    let view = View {
+        buffer,
+        offset: 0,
+        length: bytes,
+        element: Some(element),
+        tracking: false,
+    };
+    Ok(make(heap, prototype, view, clamped))
 }
 
 /// The object itself, once its buffer and window are decided.
-fn make(
-    heap: &mut Heap,
-    prototype: ObjectId,
-    buffer: ObjectId,
-    offset: usize,
-    length: usize,
-    element: Element,
-    clamped: bool,
-) -> Value {
+fn make(heap: &mut Heap, prototype: ObjectId, view: View, clamped: bool) -> Value {
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
-        found.set_view(View {
-            buffer,
-            offset,
-            length,
-            element: Some(element),
-        });
+        found.set_view(view);
         if clamped {
             found.set_clamped();
         }
@@ -292,9 +287,22 @@ fn from_buffer(
             "this TypedArray is longer than its buffer",
         ));
     }
-    Ok(make(
-        heap, prototype, buffer, offset, length, element, clamped,
-    ))
+    // §23.2.5.1 step 8 — a view over a *resizable* buffer with no explicit length tracks it. Both
+    // halves are needed: an explicit length pins the window however the buffer moves, and a fixed
+    // buffer has nothing to track. This is the only place in §23.2 where `auto` is decided.
+    let tracking = asked.is_none()
+        && heap
+            .object(buffer)
+            .and_then(crate::heap::Object::buffer)
+            .is_some_and(|found| found.max_byte_length().is_some());
+    let view = View {
+        buffer,
+        offset,
+        length,
+        element: Some(element),
+        tracking,
+    };
+    Ok(make(heap, prototype, view, clamped))
 }
 
 /// §23.2.5.1 step 5.b — another TypedArray, or anything iterable, or an array-like.
@@ -349,6 +357,29 @@ fn array_like(vm: &mut Vm, heap: &mut Heap, source: ObjectId) -> Completion<Vec<
     let name = key(heap, "length");
     let length = vm.get_property_key(Value::Object(source), name, heap)?;
     let count = super::array_methods::to_length(vm.to_number(length, heap)?);
+    // DR-0013, and the bound is on what this is about to **produce** rather than on what was
+    // asked for. The list below lives in Rust memory, which `within_budget` does not measure, so
+    // `new Int8Array({ length: 2 ** 53 })` looped reading absent properties with nothing able to
+    // refuse it — the heap never grew, so the check inside the loop never fired. Same shape as
+    // `String.prototype.repeat`'s: a loop counted by a number a program chose.
+    //
+    // Asked as "could the heap hold the answer" rather than against a constant, because that is
+    // the only honest ceiling — and a `length` past it cannot produce a TypedArray whatever the
+    // elements turn out to be.
+    //
+    // Subtracted rather than compared, which is the idiom §25.1.3.1's allocation already uses here
+    // and for the same reason: the boundary of a comparison is a number no test can reach, because
+    // the allowance depends on what the heap already holds. Asking whether the room is *there*
+    // leaves nothing to be off by one about.
+    let room = usize::try_from(count)
+        .ok()
+        .and_then(|count| count.checked_mul(size_of::<Value>()))
+        .and_then(|wanted| heap.allowance().checked_sub(wanted));
+    if room.is_none() {
+        return Err(Abrupt::range_error(
+            "this array-like is longer than this engine will allocate",
+        ));
+    }
     let mut taken = Vec::new();
     for at in 0..count {
         let index = super::array_methods::index_key(heap, at);

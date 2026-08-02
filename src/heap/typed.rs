@@ -122,8 +122,77 @@ impl Heap {
     /// The view this object is, if it is a TypedArray rather than a `DataView` or anything else.
     #[must_use]
     pub fn typed_view(&self, object: ObjectId) -> Option<View> {
-        let view = self.object(object)?.view()?;
+        let view = self.any_view(object)?;
         view.element.map(|_| view)
+    }
+
+    /// §10.4.5.2 `IsTypedArrayOutOfBounds` — whether a view's window no longer fits its buffer.
+    ///
+    /// Only a **fixed-length** view can be out of bounds, and only over a resizable buffer: a
+    /// tracking view follows whatever length the buffer has and can never hang off the end, and a
+    /// fixed buffer cannot move underneath one. So this is exactly the case of `new Uint8Array(rab,
+    /// 0, 4)` after `rab.resize(2)`.
+    ///
+    /// Out of bounds is not the same as empty and is treated like *detached*: every method that
+    /// begins with `ValidateTypedArray` throws, where a view that merely has no elements walks
+    /// nothing and answers. Detachment itself is asked separately — it is a question about the
+    /// bytes, and this is a question about the window over them.
+    ///
+    /// Written as one chain rather than three early returns, because two of those returns would be
+    /// branches nothing can reach — an object that is not a view, and a view whose buffer is not a
+    /// buffer — and a `false` sitting in a branch no input takes is a `false` no test can pin.
+    #[must_use]
+    pub fn view_out_of_bounds(&self, object: ObjectId) -> bool {
+        self.object(object)
+            .and_then(super::Object::view)
+            .filter(|view| !view.tracking)
+            .and_then(|view| {
+                Some((
+                    view,
+                    self.object(view.buffer).and_then(super::Object::buffer)?,
+                ))
+            })
+            // A detached buffer is refused by the detach check rather than reported here, so that
+            // the two reasons cannot both fire and disagree about which error to give.
+            .is_some_and(|(view, buffer)| {
+                !buffer.detached() && view.offset + view.length > buffer.byte_length()
+            })
+    }
+
+    /// The view this object is — a TypedArray's or a `DataView`'s — with its length resolved.
+    ///
+    /// **The one place a stored `View` becomes a usable one.** A view that tracks a resizable
+    /// buffer has no length of its own (§10.4.5's `auto`), so the stored number is stale the moment
+    /// the buffer is resized. Resolving here rather than at each reader is what lets forty callers
+    /// go on asking `view.count()` and get today's answer: the `View` is a `Copy` snapshot handed
+    /// out by value, and this is where the snapshot is taken.
+    ///
+    /// A tracking view whose buffer has been detached resolves to a length of zero, which is what
+    /// every reader already treats as "nothing there".
+    #[must_use]
+    pub fn any_view(&self, object: ObjectId) -> Option<View> {
+        let mut view = self.object(object)?.view()?;
+        if !view.tracking {
+            // §10.4.5.1 — an out-of-bounds view has no elements at all, so a read finds nothing
+            // rather than reaching bytes that are no longer inside the buffer. The methods that
+            // refuse it outright ask `view_out_of_bounds`; this is what everything else sees.
+            if self.view_out_of_bounds(object) {
+                view.length = 0;
+            }
+            return Some(view);
+        }
+        let available = self
+            .object(view.buffer)
+            .and_then(super::Object::buffer)
+            .filter(|buffer| !buffer.detached())
+            .map_or(0, super::Buffer::byte_length);
+        // Rounded down to a whole number of elements, because a buffer resized to a length that is
+        // not a multiple of the element width leaves a partial element at the end that §10.4.5 does
+        // not make visible. A `DataView` has no element and keeps every byte.
+        let width = view.element.map_or(1, super::Element::width);
+        let usable = available.saturating_sub(view.offset);
+        view.length = usable - usable % width;
+        Some(view)
     }
 
     /// The value at `at` of a view, or `None` if there is nothing there.

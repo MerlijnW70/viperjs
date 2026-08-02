@@ -33,6 +33,13 @@ pub struct Buffer {
     /// `[[ArrayBufferDetachKey]]` at all. A shared buffer can never be detached, which is the
     /// whole of what "shared" means to an engine with one agent.
     shared: bool,
+    /// `[[ArrayBufferMaxByteLength]]` — present exactly when the buffer is resizable.
+    ///
+    /// §25.1.6.4 and §25.2.5.4 both spell their first step `RequireInternalSlot(O,
+    /// [[ArrayBufferMaxByteLength]])`, so "may this be resized" is not a flag beside a number: it
+    /// *is* whether the number is there. An `Option` says that, and a `bool` next to a `usize`
+    /// would let the two disagree.
+    max_byte_length: Option<usize>,
 }
 
 impl Buffer {
@@ -46,6 +53,7 @@ impl Buffer {
         Self {
             shared: false,
             bytes: Some(vec![0; length]),
+            max_byte_length: None,
         }
     }
 
@@ -55,6 +63,46 @@ impl Buffer {
         let mut made = Self::new(length);
         made.shared = true;
         made
+    }
+
+    /// Note that this buffer may be resized up to `max` — §25.1.3.1's `maxByteLength` option.
+    ///
+    /// The capacity is **not** reserved. §25.1.3.1 lets an implementation either allocate the
+    /// maximum up front or grow on demand, and growing on demand is what DR-0013's budget wants:
+    /// `new ArrayBuffer(0, { maxByteLength: 2 ** 30 })` is a line a program may write and reserving
+    /// a gibibyte for it would refuse the program for memory it has not asked to use yet.
+    pub fn allow_resizing_to(&mut self, max: usize) {
+        self.max_byte_length = Some(max);
+    }
+
+    /// `[[ArrayBufferMaxByteLength]]`, or `None` for a buffer fixed at its length.
+    #[must_use]
+    pub fn max_byte_length(&self) -> Option<usize> {
+        self.max_byte_length
+    }
+
+    /// §25.1.6.4 `resize` and §25.2.5.4 `grow`, once their callers have done the refusing.
+    ///
+    /// Answers whether the length was allowed — `false` for a buffer that was never resizable and
+    /// for a length past its maximum, which are a TypeError and a RangeError at the two call sites.
+    ///
+    /// A **detached** buffer is not one of the answers, and deliberately: both callers refuse one
+    /// before they get here (§25.1.6.4 step 4), and §25.2 has no way to detach at all, so a check
+    /// here would be a branch no input could reach. What it does instead is nothing — the bytes are
+    /// gone, so there is no `Vec` to resize and none is made, which is the one behaviour that
+    /// cannot resurrect a detached buffer however carelessly this is called.
+    ///
+    /// Growth is zeroed, on §25.1.3.1's grounds: bytes a program can read must never be whatever
+    /// was in that memory before. Shrinking drops the tail, and re-growing gives zeroes rather than
+    /// what used to be there — `Vec::resize` in both directions says exactly that.
+    pub fn resize(&mut self, length: usize) -> bool {
+        if self.max_byte_length.is_none_or(|max| length > max) {
+            return false;
+        }
+        if let Some(bytes) = self.bytes.as_mut() {
+            bytes.resize(length, 0);
+        }
+        true
     }
 
     /// Whether this is a `SharedArrayBuffer`.
@@ -339,6 +387,19 @@ pub struct View {
     /// length. Everything else about them — the buffer, the offset, the width, the detaching — is
     /// the same, so they are the same record with this field answered differently.
     pub element: Option<Element>,
+    /// Whether this window runs to the end of its buffer *whatever length that is* — §10.4.5's
+    /// `[[ArrayLength]]` of `auto`.
+    ///
+    /// A view made over a resizable buffer with no explicit length **tracks** it: resizing the
+    /// buffer changes the view's length, with no notification and nothing to re-derive. So `length`
+    /// above is not the answer for one of these and must not be read directly — [`crate::heap::Heap::typed_view`]
+    /// and [`crate::heap::Heap::any_view`] resolve it against the buffer on every call, which is what makes every
+    /// existing reader see the current length without knowing this field exists.
+    ///
+    /// False for every view over a fixed buffer, including one made without a length: there is
+    /// nothing to track when the buffer cannot change size, and saying otherwise would make
+    /// `byteLength` a computation where it is a constant.
+    pub tracking: bool,
 }
 
 impl View {

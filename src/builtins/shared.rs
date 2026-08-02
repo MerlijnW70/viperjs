@@ -44,6 +44,15 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         ));
     }
     let asked = super::buffer::to_index(vm, heap, call.argument(0))?;
+    // §25.2.2.1 step 2 — the same options bag §25.1.3.1 reads, under the same name. A growable
+    // SharedArrayBuffer is the shared half of a resizable one, and the only difference is that it
+    // may not shrink.
+    let max = super::buffer::max_byte_length_option(vm, heap, call.argument(1))?;
+    if max.is_some_and(|max| asked > max) {
+        return Err(Abrupt::range_error(
+            "this SharedArrayBuffer is longer than its maxByteLength allows",
+        ));
+    }
     super::array_methods::within_budget(heap)?;
     // DR-0013 — asked before the bytes are taken rather than noticed afterwards, because the
     // length is a number the program chose. `checked_sub` rather than a comparison for the reason
@@ -59,9 +68,77 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     let object = heap.new_object(Some(prototype));
     heap.charge_buffer(asked);
     if let Some(found) = heap.object_mut(object) {
-        found.set_buffer(crate::heap::Buffer::new_shared(asked));
+        let mut made = crate::heap::Buffer::new_shared(asked);
+        if let Some(max) = max {
+            made.allow_resizing_to(max);
+        }
+        found.set_buffer(made);
     }
     Ok(Value::Object(object))
+}
+
+/// §25.2.4.2 `get SharedArrayBuffer.prototype.growable`.
+fn growable(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = shared_buffer(heap, call.this_value)?;
+    let can = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .is_some_and(|buffer| buffer.max_byte_length().is_some());
+    Ok(Value::Boolean(can))
+}
+
+/// §25.2.4.4 `get SharedArrayBuffer.prototype.maxByteLength`.
+///
+/// A buffer that cannot grow answers its current length, exactly as §25.1.6.2 does for a fixed
+/// `ArrayBuffer` — and there is no detached case to consider, because §25.2 has no way to detach.
+fn max_byte_length(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = shared_buffer(heap, call.this_value)?;
+    let length = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .map_or(0, |buffer| {
+            buffer
+                .max_byte_length()
+                .unwrap_or_else(|| buffer.byte_length())
+        });
+    Ok(Value::Number(length as f64))
+}
+
+/// §25.2.4.3 `SharedArrayBuffer.prototype.grow`.
+///
+/// §25.1.6.4's `resize` with one rule added and one removed: a shared buffer may only get
+/// **bigger**, and it has no detached state to refuse. The growth-only rule is not tidiness — a
+/// shrink would pull memory out from under a view another agent is reading through, and §25.2
+/// exists precisely so that memory can be shared without that being possible.
+fn grow(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = shared_buffer(heap, call.this_value)?;
+    let growable = heap
+        .object(object)
+        .and_then(crate::heap::Object::buffer)
+        .is_some_and(|buffer| buffer.max_byte_length().is_some());
+    if !growable {
+        return Err(Abrupt::type_error("this SharedArrayBuffer is not growable"));
+    }
+    let length = super::buffer::to_index(vm, heap, call.argument(0))?;
+    let Some(buffer) = heap
+        .object_mut(object)
+        .and_then(crate::heap::Object::buffer_mut)
+    else {
+        return Err(Abrupt::type_error("this is not a SharedArrayBuffer"));
+    };
+    let before = buffer.byte_length();
+    // §25.2.4.3 step 8 — shrinking is a **RangeError** and not a silent no-op, so a program that
+    // believes it shrank a shared buffer finds out rather than carrying on with a wrong length.
+    if length < before {
+        return Err(Abrupt::range_error("a SharedArrayBuffer cannot shrink"));
+    }
+    if !buffer.resize(length) {
+        return Err(Abrupt::range_error(
+            "this length is past the SharedArrayBuffer's maxByteLength",
+        ));
+    }
+    heap.charge_buffer_delta(before, length);
+    Ok(Value::Undefined)
 }
 
 /// §25.2.4.1 `get SharedArrayBuffer.prototype.byteLength`.
@@ -330,19 +407,26 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     );
     define_value(heap, prototype, "constructor", Value::Object(constructor));
     define_method(heap, realm, prototype, "slice", 2, slice);
-    let getter = heap.new_native_function(realm.function_prototype(), byte_length);
-    super::define_function_metadata(heap, getter, "get byteLength", 0);
-    let name = key(heap, "byteLength");
-    let _ = heap.define_own_property(
-        prototype,
-        name,
-        &PropertyDescriptor {
-            getter: Some(Value::Object(getter)),
-            enumerable: Some(false),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        },
-    );
+    define_method(heap, realm, prototype, "grow", 1, grow);
+    for (name, native) in [
+        ("byteLength", byte_length as Native),
+        ("growable", growable),
+        ("maxByteLength", max_byte_length),
+    ] {
+        let getter = heap.new_native_function(realm.function_prototype(), native);
+        super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
+        let name = key(heap, name);
+        let _ = heap.define_own_property(
+            prototype,
+            name,
+            &PropertyDescriptor {
+                getter: Some(Value::Object(getter)),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+    }
     super::buffer::define_species(heap, realm, constructor);
     super::collection::tag_with(heap, realm, prototype, "SharedArrayBuffer");
 

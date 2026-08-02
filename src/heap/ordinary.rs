@@ -616,10 +616,10 @@ impl Heap {
         //
         // The view is copied out before anything else is asked of the object, because reading an
         // element needs the heap mutably and a borrow of the object would still be alive.
-        let element_view = self
-            .object(object)?
-            .view()
-            .filter(|view| view.element.is_some());
+        // `any_view` and not the stored one: a view that tracks a resizable buffer has no length
+        // of its own, and reading the stale number would answer elements past the end of a buffer
+        // that has been shrunk — an out-of-range read that looks exactly like a valid one.
+        let element_view = self.any_view(object).filter(|view| view.element.is_some());
         if let Some(view) = element_view
             && let Some(at) = typed::index_of(self, key, view.count())
         {
@@ -766,10 +766,8 @@ impl Heap {
     /// proxy trap to ask at each step.
     #[must_use]
     pub fn walk_stops_here(&self, object: ObjectId, key: PropertyKey) -> bool {
-        self.object(object).is_some_and(|found| {
-            found.view().is_some_and(|view| {
-                view.element.is_some() && typed::index_of(self, key, view.count()).is_some()
-            })
+        self.any_view(object).is_some_and(|view| {
+            view.element.is_some() && typed::index_of(self, key, view.count()).is_some()
         })
     }
 
@@ -786,10 +784,10 @@ impl Heap {
         // inherited property, which is the whole reason this stops here rather than answering
         // `None` and letting the walk continue: a program that puts something at
         // `Int32Array.prototype[9]` must not have it show up as an element.
-        let element_view = self
-            .object(object)?
-            .view()
-            .filter(|view| view.element.is_some());
+        // `any_view` and not the stored one: a view that tracks a resizable buffer has no length
+        // of its own, and reading the stale number would answer elements past the end of a buffer
+        // that has been shrunk — an out-of-range read that looks exactly like a valid one.
+        let element_view = self.any_view(object).filter(|view| view.element.is_some());
         if let Some(view) = element_view
             && let Some(index) = typed::index_of(self, key, view.count())
         {
