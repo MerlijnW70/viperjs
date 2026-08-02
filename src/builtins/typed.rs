@@ -26,7 +26,8 @@
 
 use super::{define_value, key};
 use crate::heap::{
-    Buffer, Element, Heap, Native, NativeCall, ObjectId, PropertyDescriptor, PropertyKey, View,
+    Buffer, Element, Heap, Native, NativeCall, Numeric, ObjectId, PropertyDescriptor, PropertyKey,
+    View,
 };
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
@@ -309,16 +310,27 @@ fn from_object(
     // one: a `Uint8Array` made from a `Float64Array` holds the truncated bytes and shares no
     // buffer with it. That is the difference from the buffer form above, and it is easy to
     // mistake one for the other.
-    let values: Vec<f64> = match heap.typed_view(source) {
-        Some(view) => (0..view.count())
-            .filter_map(|at| heap.element_at(view, at))
-            .collect(),
+    let values: Vec<Numeric> = match heap.typed_view(source) {
+        Some(view) => {
+            // §23.2.5.1.2 step 5 — the two content types are a **TypeError** and not a conversion:
+            // `new BigInt64Array(new Int8Array(1))` throws, and so does the reverse. This is the
+            // one copy in §23.2 that reads elements without going through `ToNumber` or `ToBigInt`
+            // at all, so without this check the bytes of one type would be written as the other's.
+            if view.element.is_some_and(Element::holds_big) != element.holds_big() {
+                return Err(Abrupt::type_error(
+                    "a BigInt TypedArray and a Number one cannot be copied into each other",
+                ));
+            }
+            (0..view.count())
+                .filter_map(|at| heap.numeric_at(view, at))
+                .collect()
+        }
         None => {
             let taken = super::promise_group::iterable_to_list(vm, heap, Value::Object(source))
                 .or_else(|_| array_like(vm, heap, source))?;
             let mut numbers = Vec::with_capacity(taken.len());
             for value in taken {
-                numbers.push(vm.to_number(value, heap)?);
+                numbers.push(vm.to_numeric(element.holds_big(), value, heap)?);
             }
             numbers
         }
@@ -326,7 +338,7 @@ fn from_object(
     let made = allocate(vm, heap, prototype, element, clamped, values.len())?;
     if let Value::Object(id) = made {
         for (at, value) in values.into_iter().enumerate() {
-            heap.write_element(id, at, value);
+            heap.write_element(id, at, &value);
         }
     }
     Ok(made)

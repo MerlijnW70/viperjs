@@ -124,6 +124,63 @@ impl Vm {
         primitive.to_number(heap)
     }
 
+    /// §7.1.13 `ToBigInt` of anything, including an object.
+    ///
+    /// The counterpart of [`Vm::to_number`], and deliberately not symmetrical with it: a **Number
+    /// is refused**, integer or not. §7.1.13 is the conversion that happens without being asked
+    /// for, and the whole point of §6.1.6.2's type is that crossing into it is something a program
+    /// says explicitly with `BigInt(…)`.
+    #[allow(clippy::wrong_self_convention)] // a conversion runs code, so it needs the machine
+    pub(crate) fn to_bigint(
+        &mut self,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<crate::bigint::BigInt> {
+        // Step 1 — `ToPrimitive` with the **Number** hint, so an object's `valueOf` is tried before
+        // its `toString` exactly as it is for a Number.
+        let primitive = self.to_primitive(value, Hint::Number, heap)?;
+        let converted = crate::builtins::bigint::to_bigint(primitive, heap)?;
+        crate::builtins::bigint::this_bigint(converted, heap)
+    }
+
+    /// §10.4.5.16 step 1 — the conversion a write to a TypedArray of this content type performs.
+    ///
+    /// The one place the two numeric types are chosen between by the *destination* rather than by
+    /// the value: a `BigInt64Array` runs §7.1.13 and every other kind runs §7.1.4, so
+    /// `bigOnes[0] = 1` and `bytes[0] = 1n` are both TypeErrors and neither is a truncation. Which
+    /// conversion runs is observable beyond the refusal, because both can call a `valueOf`.
+    #[allow(clippy::wrong_self_convention)] // same
+    pub(crate) fn to_numeric(
+        &mut self,
+        holds_big: bool,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<crate::heap::Numeric> {
+        match holds_big {
+            true => Ok(crate::heap::Numeric::BigInt(self.to_bigint(value, heap)?)),
+            false => Ok(crate::heap::Numeric::Number(self.to_number(value, heap)?)),
+        }
+    }
+
+    /// The same, for a TypedArray that has to be asked which content type it is.
+    ///
+    /// Anything that is not a TypedArray answers as a Number one, which is not a guess: every
+    /// caller has already established that it holds elements, and `holds_big` is a question only a
+    /// kind can answer.
+    #[allow(clippy::wrong_self_convention)] // same
+    pub(crate) fn to_numeric_of(
+        &mut self,
+        object: crate::heap::ObjectId,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<crate::heap::Numeric> {
+        let holds_big = heap
+            .typed_view(object)
+            .and_then(|view| view.element)
+            .is_some_and(crate::heap::Element::holds_big);
+        self.to_numeric(holds_big, value, heap)
+    }
+
     /// §7.1.17 `ToString` of anything, including an object.
     ///
     /// The **String** hint, so `toString` is tried before `valueOf` — which is what makes

@@ -20,7 +20,7 @@
 //! asks about the *element kind* rather than about sharing, which is the check these actually make.
 
 use super::{define_method, define_value, key};
-use crate::heap::{Element, Heap, Native, NativeCall, ObjectId, PropertyDescriptor, View};
+use crate::heap::{Element, Heap, Native, NativeCall, Numeric, ObjectId, PropertyDescriptor, View};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -131,15 +131,47 @@ impl Operation {
     ///
     /// The bitwise three are done on the *integer* form, because that is what they mean: `&` on a
     /// pair of doubles is not an operation, and every element kind these accept is an integer one.
-    fn apply(self, held: f64, given: f64) -> f64 {
-        let (left, right) = (held as i64, given as i64);
-        match self {
-            Self::Add => held + given,
-            Self::And => (left & right) as f64,
-            Self::Or => (left | right) as f64,
-            Self::Sub => held - given,
-            Self::Xor => (left ^ right) as f64,
-            Self::Exchange => given,
+    fn apply(self, held: &Numeric, given: &Numeric) -> Numeric {
+        match (held, given) {
+            (Numeric::Number(held), Numeric::Number(given)) => {
+                let (left, right) = (*held as i64, *given as i64);
+                Numeric::Number(match self {
+                    Self::Add => held + given,
+                    Self::And => (left & right) as f64,
+                    Self::Or => (left | right) as f64,
+                    Self::Sub => held - given,
+                    Self::Xor => (left ^ right) as f64,
+                    Self::Exchange => *given,
+                })
+            }
+            // §25.4.1.2's read-modify-write on a sixty-four bit slot, done on the **bits**. A
+            // BigInt element is stored two's complement and `low_u64` is exactly those bits, so
+            // every one of the six is the machine operation — where §6.1.6.2's arithmetic would
+            // allocate a magnitude on the way to being truncated back to the same eight bytes.
+            //
+            // Read back through `from_u64` and not through `from_bits`, because there is no sign
+            // to decide: this answer's only use is the write below, which takes its low sixty-four
+            // bits again, and those are the same eight bytes whichever way the top one was read.
+            // Whether it is a sign is a question for the next *read* of the cell — the same reason
+            // `setBigInt64` and `setBigUint64` are one native. Spelling it as a flag said
+            // otherwise, and no program could tell the two spellings apart.
+            (Numeric::BigInt(held), Numeric::BigInt(given)) => {
+                let (left, right) = (held.low_u64(), given.low_u64());
+                let bits = match self {
+                    Self::Add => left.wrapping_add(right),
+                    Self::And => left & right,
+                    Self::Or => left | right,
+                    Self::Sub => left.wrapping_sub(right),
+                    Self::Xor => left ^ right,
+                    Self::Exchange => right,
+                };
+                Numeric::BigInt(crate::bigint::BigInt::from_u64(bits))
+            }
+            // A Number against a BigInt, which no call can present: the value was converted by the
+            // array's own content type and the element was read from the array. Answering what was
+            // already there leaves the bytes alone, which is the only harmless thing to do with a
+            // pair that cannot arise.
+            _ => held.clone(),
         }
     }
 }
@@ -149,19 +181,30 @@ impl Operation {
 /// Answers the view and the position, because getting one without the other is never useful. The
 /// index is validated *after* the element kind, which is what §25.4.3.3 step 1 asks for: a
 /// `Float64Array` is refused before its index is even looked at.
-fn target(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<(View, usize)> {
+fn target(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<(View, Element, usize)> {
     let Value::Object(object) = call.argument(0) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
     };
     let Some(view) = heap.typed_view(object) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
     };
-    // §25.4.3.4 — the float kinds are refused. Atomics are about bit patterns a CPU can exchange,
-    // and a double is not one of those however well it holds an integer.
-    if matches!(
-        view.element,
-        Some(Element::Float32 | Element::Float64) | None
-    ) {
+    // §25.4.2.1 — `IsUnclampedIntegerElementType` or `IsBigIntElementType`, and nothing else. The
+    // float kinds are refused because atomics are about bit patterns a CPU can exchange and a
+    // double is not one of those however well it holds an integer; `Uint8ClampedArray` is refused
+    // because §7.1.11's saturation is not a bit pattern either — an atomic exchange that quietly
+    // wrote 255 for 300 would not be the exchange it was asked for. The `BigInt64` pair *is*
+    // accepted, and is the reason the kind comes back rather than being checked and dropped.
+    let Some(element) = view.element else {
+        return Err(Abrupt::type_error("this is not an integer TypedArray"));
+    };
+    let clamped = heap
+        .object(object)
+        .is_some_and(crate::heap::Object::is_clamped);
+    if clamped || matches!(element, Element::Float32 | Element::Float64) {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
     }
     if heap
@@ -177,7 +220,7 @@ fn target(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<(Vi
     if asked >= view.count() {
         return Err(Abrupt::range_error("that index is outside the TypedArray"));
     }
-    Ok((view, asked))
+    Ok((view, element, asked))
 }
 
 /// The five arithmetic operations and `exchange`, which differ only in [`Operation::apply`].
@@ -187,28 +230,28 @@ fn modify(
     call: &NativeCall<'_>,
     what: Operation,
 ) -> Completion<Value> {
-    let (view, at) = target(vm, heap, call)?;
+    let (view, element, at) = target(vm, heap, call)?;
     // The value is converted *after* the index is validated, and its conversion may run user code
-    // that detaches the buffer — so the write is checked again below rather than assumed.
-    let given = vm.to_number(call.argument(2), heap)?;
-    let Some(held) = heap.element_at(view, at) else {
+    // that detaches the buffer — so the write is checked again below rather than assumed. Which
+    // conversion is §25.4.3.1 step 3's: `ToBigInt` for the two 64-bit kinds and `ToNumber` for the
+    // six others, so `Atomics.add(new BigInt64Array(1), 0, 1)` is a TypeError.
+    let given = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
+    let Some(held) = heap.numeric_at(view, at) else {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     };
     let Value::Object(object) = call.argument(0) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
     };
-    heap.write_element(object, at, what.apply(held, given));
+    heap.write_element(object, at, &what.apply(&held, &given));
     // Every one of them answers the value that *was* there, which is what makes them atomic
     // read-modify-writes rather than writes.
-    Ok(Value::Number(held))
+    Ok(heap.numeric_value(held))
 }
 
 /// §25.4.3.9 `Atomics.load`.
 fn load(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (view, at) = target(vm, heap, call)?;
-    Ok(heap
-        .element_at(view, at)
-        .map_or(Value::Undefined, Value::Number))
+    let (view, _, at) = target(vm, heap, call)?;
+    Ok(heap.element_at(view, at).unwrap_or(Value::Undefined))
 }
 
 /// §25.4.3.13 `Atomics.store`.
@@ -216,35 +259,51 @@ fn load(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 /// The one that answers what it was *given* rather than what it wrote or what was there. The two
 /// differ: storing 300 into a `Uint8Array` writes 44 and answers 300.
 fn store(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (_, at) = target(vm, heap, call)?;
-    let given = vm.to_number(call.argument(2), heap)?;
+    let (_, element, at) = target(vm, heap, call)?;
+    let given = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
     let Value::Object(object) = call.argument(0) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
     };
-    heap.write_element(object, at, given);
-    Ok(Value::Number(super::string::to_integer_or_infinity(given)))
+    // §25.4.3.13 step 3 — a Number is put through `ToIntegerOrInfinity` *before* it is answered,
+    // where a BigInt is answered as it came. Both are the value the call was given rather than the
+    // bytes that were written, which differ: storing 300 into a `Uint8Array` writes 44 and
+    // answers 300.
+    let answer = match &given {
+        Numeric::Number(number) => Numeric::Number(super::string::to_integer_or_infinity(*number)),
+        big => big.clone(),
+    };
+    heap.write_element(object, at, &given);
+    Ok(heap.numeric_value(answer))
 }
 
 /// §25.4.3.3 `Atomics.compareExchange`.
 fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (view, at) = target(vm, heap, call)?;
-    let expected = vm.to_number(call.argument(1 + 1), heap)?;
-    let replacement = vm.to_number(call.argument(3), heap)?;
-    let Some(held) = heap.element_at(view, at) else {
+    let (view, element, at) = target(vm, heap, call)?;
+    let big = element.holds_big();
+    let expected = vm.to_numeric(big, call.argument(1 + 1), heap)?;
+    let replacement = vm.to_numeric(big, call.argument(3), heap)?;
+    let Some(held) = heap.numeric_at(view, at) else {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     };
     let Value::Object(object) = call.argument(0) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
     };
-    // The comparison is against the value **as the element kind stores it**, not against what was
-    // handed over: expecting 300 of a `Uint8Array` holding 44 is a match, because 300 stored there
-    // *is* 44. Comparing the raw arguments would never match and the write would never happen.
-    if let Some(element) = view.element
-        && element.read(&element.write(expected)) == held
-    {
-        heap.write_element(object, at, replacement);
+    // §25.4.3.3 step 9 — the comparison is against the expected value **as this kind would store
+    // it**, not against what was handed over: expecting 300 of a `Uint8Array` holding 44 is a
+    // match, because 300 stored there *is* 44. Comparing the raw arguments would never match and
+    // the write would never happen.
+    //
+    // One round trip and not two. What is held came out of the slot and re-encoding it could only
+    // give the bytes it was already read from, so the two sides are not symmetrical however alike
+    // they look — and a second encoding is a second place for §7.1.11's clamping to be asked for,
+    // where no answer to it is observable.
+    let stored = element
+        .write_numeric(&expected, false)
+        .map(|bytes| element.read(&bytes));
+    if stored.as_ref() == Some(&held) {
+        heap.write_element(object, at, &replacement);
     }
-    Ok(Value::Number(held))
+    Ok(heap.numeric_value(held))
 }
 
 /// §25.4.3.8 `Atomics.isLockFree`.

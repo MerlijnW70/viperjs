@@ -414,7 +414,10 @@ impl BigInt {
         // A negative exponent with no fractional part means the mantissa's low bits are zero, so
         // shifting the other way discards nothing; `value.fract()` above is what guarantees it.
         let places = Self::from_u64(exponent.unsigned_abs()).negate_if(exponent.is_negative());
-        let shifted = Self::from_u64(mantissa).shift_left(&places).ok()?;
+        // The only error a shift has is `TooLarge`, and `None` is already this function's answer
+        // for a Number with no BigInt — so the two agree. A finite double's exponent cannot reach
+        // `MAX_LIMBS` anyway, which makes this the contract rather than a case.
+        let shifted = Self::from_u64(mantissa).shift_left(&places).ok()?; // no BigInt for it
         Some(shifted.with_sign(negative))
     }
 
@@ -432,8 +435,11 @@ impl BigInt {
         let mut value = Self::zero();
         for digit in digits.chars() {
             let read = digit.to_digit(radix)?;
-            value = value.multiply(&base).ok()?;
-            value = value.add(&Self::from_u64(u64::from(read))).ok()?;
+            // Both errors are `TooLarge` and nothing else, and `None` is already what this answers
+            // for digits it cannot make a BigInt of — so more of them than `MAX_LIMBS` holds is
+            // one such reason rather than a different kind of failure.
+            value = value.multiply(&base).ok()?; // too many digits is "not a BigInt"
+            value = value.add(&Self::from_u64(u64::from(read))).ok()?; // same
         }
         Some(value)
     }

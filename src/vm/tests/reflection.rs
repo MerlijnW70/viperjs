@@ -300,3 +300,32 @@ fn own_keys_is_the_one_listing_that_hides_nothing() {
         "true,true,false"
     );
 }
+
+#[test]
+fn a_define_that_throws_throws_through_reflect_too_where_only_a_refusal_becomes_false() {
+    // §28.1.3 differs from §20.1.2.4 in one thing: a define §10.1.6.3 does not allow is `false`
+    // here and a TypeError there. Everything else a define can do reaches both the same way —
+    // §10.4.2.1's `ArraySetLength` and §10.4.5.16's conversion **throw**, and reporting either as
+    // a refusal would turn an error a program must see into a Boolean it is free to ignore.
+    assert_eq!(
+        run("Reflect.defineProperty(Object.freeze({ a: 1 }), 'a', { value: 2 })"),
+        "false"
+    );
+    assert_eq!(
+        run(
+            "try { Reflect.defineProperty([], 'length', { value: -1 }) } \
+             catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    assert_eq!(
+        run(
+            "try { Reflect.defineProperty(new BigInt64Array(1), 0, { value: 1 }) } \
+             catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and the ordinary define still answers `true`, which is what says the three above are the
+    // three outcomes and not one broken path.
+    assert_eq!(run("Reflect.defineProperty({}, 'a', { value: 1 })"), "true");
+}

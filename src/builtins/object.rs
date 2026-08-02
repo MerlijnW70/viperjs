@@ -663,9 +663,10 @@ fn object_argument(value: Value, wanted: &'static str) -> Completion<ObjectId> {
 
 /// Turn a define's outcome into the completion §20.1's `DefinePropertyOrThrow` wants.
 ///
-/// Two different errors, because they are two different mistakes: a rule that would not allow the
-/// property is a TypeError, and a value that is not a length at all is §10.4.2.4 step 2's
-/// RangeError. Written once so `defineProperty` and `defineProperties` cannot drift apart.
+/// Three different errors, because they are three different mistakes: a rule that would not allow
+/// the property is a TypeError, a value that is not a length at all is §10.4.2.4 step 2's
+/// RangeError, and a numeric of the wrong type for the array is §10.4.5.16's TypeError. Written
+/// once so `defineProperty` and `defineProperties` cannot drift apart.
 pub(crate) fn defined(outcome: DefineOutcome) -> Completion<()> {
     match outcome {
         DefineOutcome::Defined => Ok(()),
@@ -674,11 +675,33 @@ pub(crate) fn defined(outcome: DefineOutcome) -> Completion<()> {
             ErrorKind::Range,
             "an array length must be an integer index",
         )),
+        DefineOutcome::WrongContent => Err(Abrupt::type_error(
+            "this TypedArray holds the other numeric type",
+        )),
+    }
+}
+
+/// The same outcome as the Boolean §28.1.3's `Reflect.defineProperty` and §10.1.9's `[[Set]]` want.
+///
+/// The difference from [`defined`] is only in the **refusal**: §10.1.6.3 declining to redefine a
+/// property is what `Reflect.defineProperty` answers `false` for and `Object.defineProperty` throws
+/// for. The other two are not refusals at all — §10.4.2.1's `ArraySetLength` and §10.4.5.16's
+/// conversion *throw*, and a define that throws throws by every route to it. Written beside
+/// [`defined`] so the two cannot drift about which of the four is which, which is exactly how
+/// `Reflect.defineProperty([], "length", { value: -1 })` came to answer `false`.
+pub(crate) fn define_answer(outcome: DefineOutcome) -> Completion<Value> {
+    match outcome {
+        DefineOutcome::Refused => Ok(Value::Boolean(false)),
+        other => defined(other).map(|()| Value::Boolean(true)),
     }
 }
 
 /// An object's own property under `key`, if it has one.
-pub(super) fn own_property(heap: &Heap, object: ObjectId, key: PropertyKey) -> Option<Property> {
+pub(super) fn own_property(
+    heap: &mut Heap,
+    object: ObjectId,
+    key: PropertyKey,
+) -> Option<Property> {
     // Through the heap rather than the object's own table, so that §10.4.4.1's substitution
     // happens: a joined argument index reports the *parameter's* value, which is what makes
     // `Object.getOwnPropertyDescriptor(arguments, '0')` follow an assignment to `a`.

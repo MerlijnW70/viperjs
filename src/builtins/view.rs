@@ -63,7 +63,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     super::collection::tag_with(heap, realm, prototype, "DataView");
 }
 
-/// The eight pairs, each with the two natives that read and write it.
+/// The ten pairs, each with the two natives that read and write it.
 static READERS: &[(&str, Native, Native)] = &[
     ("Int8", get_int8, set_int8),
     ("Uint8", get_uint8, set_uint8),
@@ -73,7 +73,6 @@ static READERS: &[(&str, Native, Native)] = &[
     ("Uint32", get_uint32, set_uint32),
     ("Float32", get_float32, set_float32),
     ("Float64", get_float64, set_float64),
-    // §25.3.4's two BigInt pairs, whose names are not an `Element`'s — see [`Slot`].
     ("BigInt64", get_bigint64, set_big64),
     ("BigUint64", get_biguint64, set_big64),
 ];
@@ -197,7 +196,12 @@ fn byte_offset(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 }
 
 /// §25.3.1.1 `GetViewValue` — one read, once the type is known.
-fn get_value(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, slot: Slot) -> Completion<Value> {
+fn get_value(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    element: Element,
+) -> Completion<Value> {
     let view = view_of(heap, call.this_value)?;
     let at = super::buffer::to_index(vm, heap, call.argument(0))?;
     // §25.3.4's default is **big**-endian, so an absent argument is `false` — the opposite of the
@@ -207,10 +211,7 @@ fn get_value(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, slot: Slot) ->
     if detached(heap, view.buffer) {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     }
-    let width = match slot {
-        Slot::Number(element) => element.width(),
-        Slot::Big(_) => 8,
-    };
+    let width = element.width();
     if at + width > view.length {
         return Err(Abrupt::range_error(
             "this read is past the end of the DataView",
@@ -234,15 +235,8 @@ fn get_value(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, slot: Slot) ->
     // §25.3.1.1 step 16 — the `BigInt64` pair answers with a BigInt where the other eight answer
     // with a Number. The same eight bytes are `-1n` read as signed and a very large positive read
     // as unsigned, which is the whole of the difference between the two.
-    match slot {
-        Slot::Number(element) => Ok(Value::Number(element.read(&ordered))),
-        Slot::Big(signed) => {
-            let mut bits = [0u8; 8];
-            bits.copy_from_slice(&ordered);
-            let value = crate::bigint::BigInt::from_bits(u64::from_le_bytes(bits), signed);
-            Ok(Value::BigInt(heap.new_bigint(value)))
-        }
-    }
+    let numeric = element.read(&ordered);
+    Ok(heap.numeric_value(numeric))
 }
 
 /// §25.3.1.2 `SetViewValue` — one write.
@@ -250,45 +244,35 @@ fn set_value(
     vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
-    element: Option<Element>,
+    element: Element,
 ) -> Completion<Value> {
     let view = view_of(heap, call.this_value)?;
     let at = super::buffer::to_index(vm, heap, call.argument(0))?;
     // Step 4 — the *value* is converted before the endianness is read and before the bounds are
     // checked, so a `valueOf` that detaches the buffer is noticed by the check below rather than
     // by writing into bytes that have gone.
-    // …and *which* conversion depends on what is being written: §25.3.1.2 step 4 is `ToBigInt`
-    // for the BigInt pair and `ToNumber` for the rest, which is where a `DataView` first refuses
-    // to mix the two numeric types exactly as the operators do. The bytes are formed here as well, so
-    // that nothing later has to ask a second time which kind this is.
-    let mut bytes = match element {
-        Some(element) => element.write(vm.to_number(call.argument(1), heap)?),
-        None => {
-            let primitive = vm.to_primitive(call.argument(1), crate::value::Hint::Number, heap)?;
-            let Value::BigInt(id) = super::bigint::to_bigint(primitive, heap)? else {
-                return Err(Abrupt::type_error("this cannot be converted to a BigInt"));
-            };
-            // Everything modulo 2^64 — a fixed-width slot takes the low bits rather than refusing
-            // a value too large for it, which is what §21.2.2.2's `asUintN(64, …)` is.
-            heap.bigint(id)
-                .map_or(0, crate::bigint::BigInt::low_u64)
-                .to_le_bytes()
-                .to_vec()
-        }
-    };
+    //
+    // …and *which* conversion depends on the slot: §25.3.1.2 step 4 is `ToBigInt` for the BigInt
+    // pair and `ToNumber` for the rest, which is where a `DataView` refuses to mix the two numeric
+    // types exactly as the operators do. Everything modulo 2^64 for the pair — a fixed-width slot
+    // takes the low bits rather than refusing a value too large for it, which is §21.2.2.2's
+    // `asUintN(64, …)`.
+    let numeric = vm.to_numeric(element.holds_big(), call.argument(1), heap)?;
     let little = call.argument(2).to_boolean(heap);
     if detached(heap, view.buffer) {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     }
-    // Eight bytes for a BigInt, which is the one width §25.3.4 gives one — there is no sign in
-    // this function at all, because both setters write the same bits and only a *read* decides
-    // whether the top one means anything.
-    let width = element.map_or(8, Element::width);
+    let width = element.width();
     if at + width > view.length {
         return Err(Abrupt::range_error(
             "this write is past the end of the DataView",
         ));
     }
+    // §25.3.1.5, and the `Option` cannot be an absence here: the conversion above was chosen by
+    // this same kind, so the numeric it produced is the one this kind writes.
+    let mut bytes = element
+        .write_numeric(&numeric, false)
+        .unwrap_or_else(|| vec![0; width]);
     if !little {
         bytes.reverse();
     }
@@ -306,114 +290,99 @@ fn set_value(
 
 /// §25.3.4 — `getBigInt64`, where the top bit of the eight is a sign.
 fn get_bigint64(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Big(true))
+    get_value(vm, heap, call, Element::BigInt64)
 }
 
 /// §25.3.4 — `setBigInt64` **and** `setBigUint64`, which are one function.
 ///
 /// The two write the same eight bytes: a sign is something a *read* decides, and §25.3.1.2 has no
-/// step that consults one. Two natives differing in a flag neither of them used said otherwise.
+/// step that consults one. Two natives differing in a flag neither of them used said otherwise —
+/// which is also why the kind named here is arbitrary between the pair.
 fn set_big64(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, None)
+    set_value(vm, heap, call, Element::BigInt64)
 }
 
 /// §25.3.4 — `getBigUint64`, the same eight bytes with no sign among them.
 fn get_biguint64(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Big(false))
-}
-
-/// What one of §25.3.4's accessor pairs reads and writes.
-///
-/// A type beside [`Element`] rather than two more of its variants, and that is the honest shape for
-/// now: a `BigInt64Array` needs the same two kinds *in the element table*, and putting them there
-/// means every caller of `Element::read` has to answer for a value that is not a Number — including
-/// `Heap::element_property`, which is `&self` and so cannot allocate the BigInt it would need.
-/// `DataView` is the half that does not have that problem, because its accessors are natives with a
-/// heap to allocate into. So it is built first and the element table follows with the TypedArray.
-#[derive(Debug, Clone, Copy)]
-enum Slot {
-    /// One of the eight kinds that reads and writes a Number.
-    Number(Element),
-    /// §25.3.4's `BigInt64` pair, where the flag is whether the top bit is a sign.
-    Big(bool),
+    get_value(vm, heap, call, Element::BigUint64)
 }
 
 /// §25.3.4 — `getInt8`.
 fn get_int8(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Int8))
+    get_value(vm, heap, call, Element::Int8)
 }
 
 /// §25.3.4 — `setInt8`.
 fn set_int8(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Int8))
+    set_value(vm, heap, call, Element::Int8)
 }
 
 /// §25.3.4 — `getUint8`.
 fn get_uint8(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Uint8))
+    get_value(vm, heap, call, Element::Uint8)
 }
 
 /// §25.3.4 — `setUint8`.
 fn set_uint8(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Uint8))
+    set_value(vm, heap, call, Element::Uint8)
 }
 
 /// §25.3.4 — `getInt16`.
 fn get_int16(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Int16))
+    get_value(vm, heap, call, Element::Int16)
 }
 
 /// §25.3.4 — `setInt16`.
 fn set_int16(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Int16))
+    set_value(vm, heap, call, Element::Int16)
 }
 
 /// §25.3.4 — `getUint16`.
 fn get_uint16(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Uint16))
+    get_value(vm, heap, call, Element::Uint16)
 }
 
 /// §25.3.4 — `setUint16`.
 fn set_uint16(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Uint16))
+    set_value(vm, heap, call, Element::Uint16)
 }
 
 /// §25.3.4 — `getInt32`.
 fn get_int32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Int32))
+    get_value(vm, heap, call, Element::Int32)
 }
 
 /// §25.3.4 — `setInt32`.
 fn set_int32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Int32))
+    set_value(vm, heap, call, Element::Int32)
 }
 
 /// §25.3.4 — `getUint32`.
 fn get_uint32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Uint32))
+    get_value(vm, heap, call, Element::Uint32)
 }
 
 /// §25.3.4 — `setUint32`.
 fn set_uint32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Uint32))
+    set_value(vm, heap, call, Element::Uint32)
 }
 
 /// §25.3.4 — `getFloat32`.
 fn get_float32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Float32))
+    get_value(vm, heap, call, Element::Float32)
 }
 
 /// §25.3.4 — `setFloat32`.
 fn set_float32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Float32))
+    set_value(vm, heap, call, Element::Float32)
 }
 
 /// §25.3.4 — `getFloat64`.
 fn get_float64(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    get_value(vm, heap, call, Slot::Number(Element::Float64))
+    get_value(vm, heap, call, Element::Float64)
 }
 
 /// §25.3.4 — `setFloat64`.
 fn set_float64(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    set_value(vm, heap, call, Some(Element::Float64))
+    set_value(vm, heap, call, Element::Float64)
 }

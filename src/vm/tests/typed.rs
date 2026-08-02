@@ -1195,3 +1195,252 @@ fn a_canonical_index_stops_the_walk_for_every_operation_and_not_only_a_read() {
         "5"
     );
 }
+
+#[test]
+fn a_bigint_typed_array_holds_bigints_and_not_numbers() {
+    // §23.2.1's `[[ContentType]]`, from the outside. Two of the eleven kinds hold §6.1.6.2's type,
+    // and an element read out of one is a BigInt rather than a Number — which is the whole reason
+    // an element is a value and not an `f64`.
+    assert_eq!(run("typeof new BigInt64Array(1)[0]"), "bigint");
+    assert_eq!(
+        run("var a = new BigInt64Array(2); a[0] = -1n; a[1] = 7n; a[0] + ',' + a[1]"),
+        "-1,7"
+    );
+    // Eight bytes each, and §23.2.6.2's `BYTES_PER_ELEMENT` says so on the constructor.
+    assert_eq!(
+        run("var a = new BigUint64Array(3); \
+             a.length + ',' + a.byteLength + ',' + BigUint64Array.BYTES_PER_ELEMENT"),
+        "3,24,8"
+    );
+    // The two are one buffer read two ways, exactly as the `DataView` pair is: the same eight
+    // bytes are `-1n` signed and the largest `u64` unsigned.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a[0] = -1n; \
+             String(new BigUint64Array(a.buffer)[0])"),
+        "18446744073709551615"
+    );
+    // A value too large for the slot takes its low bits — §7.1.15's `ToBigInt64`, which is what a
+    // fixed width means and is not a refusal.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a[0] = 2n ** 63n; String(a[0])"),
+        "-9223372036854775808"
+    );
+    // §23.2.3.32's tag names the kind, so `Object.prototype.toString` tells the two apart.
+    assert_eq!(
+        run("Object.prototype.toString.call(new BigUint64Array(1))"),
+        "[object BigUint64Array]"
+    );
+}
+
+#[test]
+fn the_two_numeric_types_refuse_each_other_at_every_way_into_a_typed_array() {
+    // §10.4.5.16 step 1 — a write converts by the array's content type, and §7.1.4 throws for
+    // *every* BigInt while §7.1.13 throws for *every* Number. So the refusal is a fact about the
+    // pair of types and not about the value, and it is the same refusal by every route in.
+    //
+    // A plain assignment. Silent success here would be the worst outcome of the lot: §10.4.5.5
+    // discards an out-of-range write without complaint, so a missing conversion would look like
+    // one of those and write nothing while the program believed it had.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); try { a[0] = 1 } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(1); try { a[0] = 1n } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and the conversion runs even for an index the array does not have, which §10.4.5.5 step 1.b
+    // is explicit about: the write goes nowhere but the `valueOf` still happened.
+    assert_eq!(
+        run("var seen = 'no'; var a = new Int8Array(1); \
+             a[99] = { valueOf: function () { seen = 'yes'; return 1 } }; seen"),
+        "yes"
+    );
+    // Every method that takes a value asks the same question.
+    for source in [
+        "new BigInt64Array(2).fill(1)",
+        "new BigInt64Array(2).set([1])",
+        "new BigInt64Array(2).with(0, 1)",
+        "BigInt64Array.from([1])",
+        "BigInt64Array.of(1)",
+        "new BigInt64Array(new Int8Array(2))",
+        "new Int8Array(new BigInt64Array(2))",
+        "new BigInt64Array(2).set(new Int8Array(2))",
+        "new BigInt64Array(2).map(function () { return 1 })",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ {source} }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{source}"
+        );
+    }
+    // And each of them works when handed the type the array does hold, so the refusals above are
+    // the content-type check and not the method being broken.
+    assert_eq!(run("new BigInt64Array(2).fill(1n).join()"), "1,1");
+    assert_eq!(run("BigInt64Array.from([1n]).join()"), "1");
+    assert_eq!(run("BigInt64Array.of(1n).join()"), "1");
+    assert_eq!(run("new BigInt64Array(2).with(0, 5n).join()"), "5,0");
+    assert_eq!(
+        run("new BigInt64Array([1n]).map(function (v) { return v * 3n }).join()"),
+        "3"
+    );
+    assert_eq!(
+        run("var a = new BigInt64Array(2); a.set([7n], 1); a.join()"),
+        "0,7"
+    );
+    assert_eq!(
+        run("new BigUint64Array(new BigInt64Array([3n])).join()"),
+        "3"
+    );
+}
+
+#[test]
+fn a_define_at_an_element_refuses_the_other_numeric_type_by_throwing_and_not_by_answering_false() {
+    // §10.4.5.3 step 1.b.v hands the value to §10.4.5.16, which **throws** — where an index the
+    // array does not have is a refusal that answers `false`. A program can tell the two apart, and
+    // folding the first into the second would turn a TypeError into a quiet `false`.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); \
+             try { Reflect.defineProperty(a, 0, { value: 1 }) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("var a = new Int8Array(1); \
+             try { Reflect.defineProperty(a, 0, { value: 1n }) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // The refusal that is *not* a throw, for contrast: an index out of range.
+    assert_eq!(
+        run("Reflect.defineProperty(new BigInt64Array(1), 9, { value: 1n })"),
+        "false"
+    );
+    // …and the define that works, which is what says the throws above are about the type.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); \
+             Reflect.defineProperty(a, 0, { value: 42n }) + ',' + a[0]"),
+        "true,42"
+    );
+    // A value of neither numeric type is left as it was: §7.1.13 would *parse* a String and
+    // §7.1.4 would convert one, and a define carries a value with no interpreter to run either
+    // conversion with. So the two types refuse each other here and nothing else is judged.
+    assert_eq!(
+        run("var a = new Int8Array(1); Reflect.defineProperty(a, 0, { value: {} }) + ',' + a[0]"),
+        "true,0"
+    );
+    // §10.4.5.1 — the descriptor read back out carries a BigInt, and all three attributes are
+    // true, which is what makes an element writable and configurable like any other.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(new BigInt64Array(1), 0); \
+             typeof d.value + ',' + d.writable + ',' + d.enumerable + ',' + d.configurable"
+        ),
+        "bigint,true,true,true"
+    );
+}
+
+#[test]
+fn a_walk_over_a_bigint_array_sees_bigints_and_orders_them_as_bigints() {
+    // §23.2.3.29's default order for the type with no `NaN` and no negative zero: the plain
+    // comparison. An engine that sorted these as Numbers would go through `f64`, where
+    // `2n ** 63n` and `2n ** 63n + 1n` are the same value and would sort as equal.
+    assert_eq!(
+        run("new BigInt64Array([5n, -3n, 0n, 12n]).sort().join()"),
+        "-3,0,5,12"
+    );
+    assert_eq!(
+        run(
+            "var a = new BigUint64Array([0n, 2n ** 64n - 1n, 1n]); a.sort(); \
+             String(a[0]) + ',' + String(a[1]) + ',' + String(a[2])"
+        ),
+        "0,1,18446744073709551615"
+    );
+    // A comparator is handed the elements as values, so it can do BigInt arithmetic on them.
+    assert_eq!(
+        run("new BigInt64Array([1n, 3n, 2n]) \
+             .sort(function (x, y) { return x < y ? 1 : -1 }).join()"),
+        "3,2,1"
+    );
+    // §7.2.15 — a search compares *types* first, so the other numeric type finds nothing however
+    // equal the values look. `indexOf(-3)` on an array holding `-3n` is -1.
+    assert_eq!(
+        run("var a = new BigInt64Array([5n, -3n]); \
+             a.indexOf(-3n) + ',' + a.indexOf(-3) + ',' + a.includes(5n) + ',' + a.includes(5)"),
+        "1,-1,true,false"
+    );
+    // …and neither does anything that is not a numeric at all, by the same step.
+    assert_eq!(
+        run("var a = new BigInt64Array([5n]); a.indexOf('5') + ',' + a.lastIndexOf(5n)"),
+        "-1,0"
+    );
+    // §23.2.3.16 — `join` renders an element with §7.1.17, which for a BigInt is its digits and
+    // not whatever a Number's rendering would make of the bits.
+    assert_eq!(
+        run("new BigUint64Array([2n ** 64n - 1n]).join()"),
+        "18446744073709551615"
+    );
+    // The callback-driven walks and the folds all carry the element through unchanged.
+    assert_eq!(
+        run("String(new BigInt64Array([1n, 2n, 3n]).reduce(function (t, v) { return t + v }, 0n))"),
+        "6"
+    );
+    assert_eq!(
+        run("new BigInt64Array([1n, 2n, 3n]).filter(function (v) { return v > 1n }).join()"),
+        "2,3"
+    );
+    assert_eq!(
+        run("String(new BigInt64Array([1n, 2n]).find(function (v) { return v === 2n }))"),
+        "2"
+    );
+    // …and the copies, which move elements without a program ever seeing one.
+    assert_eq!(
+        run("new BigInt64Array([1n, 2n, 3n]).slice(1).join()"),
+        "2,3"
+    );
+    assert_eq!(
+        run("new BigInt64Array([1n, 2n, 3n]).reverse().join()"),
+        "3,2,1"
+    );
+    assert_eq!(
+        run("new BigInt64Array([1n, 2n, 3n]).copyWithin(0, 2).join()"),
+        "3,2,3"
+    );
+    assert_eq!(
+        run("new BigInt64Array([1n, 2n]).toReversed().join() + ';' \
+             + new BigInt64Array([2n, 1n]).toSorted().join()"),
+        "2,1;1,2"
+    );
+    assert_eq!(run("String(new BigInt64Array([1n, 2n]).at(-1))"), "2");
+    assert_eq!(run("[...new BigInt64Array([1n, 2n])].join()"), "1,2");
+}
+
+#[test]
+fn a_species_of_the_other_content_type_is_refused_before_anything_is_copied_into_it() {
+    // §23.2.4.2 step 4 — `TypedArraySpeciesCreate` checks the content type, which is what lets
+    // `slice`, `map` and `filter` copy elements across without each asking again. Without it the
+    // copy would reach a mismatched buffer and be discarded element by element, and the caller
+    // would receive a zeroed array of the right length and no complaint at all.
+    let species = "var a = new BigInt64Array([1n, 2n]); \
+                   a.constructor = function () {}; \
+                   a.constructor[Symbol.species] = Int8Array; ";
+    for method in ["a.slice(0)", "a.filter(function () { return true })"] {
+        assert_eq!(
+            run(&format!(
+                "{species} try {{ {method} }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{method}"
+        );
+    }
+    // A species of the *same* content type is fine, which is what says the check is about the
+    // content type and not about species being consulted at all.
+    assert_eq!(
+        run(
+            "var a = new BigInt64Array([1n, 2n]); a.constructor = function () {}; \
+             a.constructor[Symbol.species] = BigUint64Array; \
+             var b = a.slice(0); b.constructor.name + ',' + b.join()"
+        ),
+        "BigUint64Array,1,2"
+    );
+}

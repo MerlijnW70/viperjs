@@ -103,7 +103,8 @@ fn equal_to_string(big: crate::heap::BigIntId, text: crate::heap::StringId, heap
 /// an exponent: `"1.5"` is a Number and no BigInt. The empty string is `0n`, which is the one
 /// place this agrees with `ToNumber` about something surprising.
 pub(crate) fn string_as_bigint(id: crate::heap::StringId, heap: &Heap) -> Option<BigInt> {
-    let text = String::from_utf16(heap.string(id)?).ok()?;
+    // A lone surrogate is not a BigInt literal, and `None` is exactly that answer.
+    let text = String::from_utf16(heap.string(id)?).ok()?; // §7.1.14's "not a BigInt"
     let trimmed = text.trim_matches(|c: char| c.is_whitespace());
     if trimmed.is_empty() {
         return Some(BigInt::zero());

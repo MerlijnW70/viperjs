@@ -23,7 +23,7 @@ pub mod array_iterate;
 pub mod array_methods;
 pub mod array_sort;
 pub(crate) mod async_iterator;
-mod bigint;
+pub(crate) mod bigint;
 mod buffer;
 mod collection;
 pub(crate) mod date;

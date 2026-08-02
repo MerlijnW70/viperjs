@@ -149,10 +149,13 @@ fn every_atomic_answers_what_was_there_and_leaves_what_it_computed() {
 
 #[test]
 fn an_atomic_refuses_the_kinds_and_indices_an_ordinary_element_read_would_allow() {
-    // §25.4.3.4 `ValidateIntegerTypedArray` — the float kinds are refused outright. Atomics are
-    // about bit patterns a CPU can exchange, and a double is not one however well it holds an
-    // integer.
-    for kind in ["Float32Array", "Float64Array"] {
+    // §25.4.2.1 `ValidateIntegerTypedArray` — `IsUnclampedIntegerElementType` or
+    // `IsBigIntElementType`, and the three kinds that are neither are refused outright. The floats
+    // because atomics are about bit patterns a CPU can exchange and a double is not one however
+    // well it holds an integer; `Uint8ClampedArray` because §7.1.11's saturation is not one either.
+    // test262 spells the same list out as `nonAtomicsFriendlyTypedArrayConstructors` in
+    // `harness/testTypedArray.js`, which is the float kinds *concatenated with* `Uint8ClampedArray`.
+    for kind in ["Float32Array", "Float64Array", "Uint8ClampedArray"] {
         assert_eq!(
             run(&format!(
                 "try {{ Atomics.load(new {kind}(4), 0); }} catch (e) {{ e.constructor.name }}"
@@ -160,12 +163,20 @@ fn an_atomic_refuses_the_kinds_and_indices_an_ordinary_element_read_would_allow(
             "TypeError",
             "Atomics.load on a {kind}"
         );
+        // Refused by `store` too, whose validation is the same operation and could have drifted:
+        // a clamped array reaching the write is where the saturation would have been silent.
+        assert_eq!(
+            run(&format!(
+                "try {{ Atomics.store(new {kind}(4), 0, 3); }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "Atomics.store on a {kind}"
+        );
     }
-    // …and every integer kind is accepted.
+    // …and every *unclamped* integer kind is accepted.
     for kind in [
         "Int8Array",
         "Uint8Array",
-        "Uint8ClampedArray",
         "Int16Array",
         "Uint16Array",
         "Int32Array",
@@ -175,6 +186,22 @@ fn an_atomic_refuses_the_kinds_and_indices_an_ordinary_element_read_would_allow(
             run(&format!("Atomics.store(new {kind}(4), 0, 3)")),
             "3",
             "Atomics.store on a {kind}"
+        );
+    }
+    // The two BigInt kinds are accepted as well, and take a BigInt where the six above take a
+    // Number — §25.4.3.13 step 3 chooses the conversion by `[[ContentType]]`.
+    for kind in ["BigInt64Array", "BigUint64Array"] {
+        assert_eq!(
+            run(&format!("String(Atomics.store(new {kind}(4), 0, 3n))")),
+            "3",
+            "Atomics.store on a {kind}"
+        );
+        assert_eq!(
+            run(&format!(
+                "try {{ Atomics.store(new {kind}(4), 0, 3); }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "Atomics.store of a Number into a {kind}"
         );
     }
     // Anything that is not a TypedArray at all is refused before the index is looked at.
@@ -237,5 +264,94 @@ fn an_atomic_refuses_the_kinds_and_indices_an_ordinary_element_read_would_allow(
              + ',' + (typeof Atomics.wait)"
         ),
         "[object Atomics],object,undefined"
+    );
+}
+
+#[test]
+fn the_bitwise_atomics_on_a_bigint_array_are_the_operations_they_are_named_for() {
+    // §25.4.3.2, §25.4.3.11 and §25.4.3.15 on a sixty-four bit slot. Each pair below is chosen so
+    // that the *other* two operations would give a different answer — `0b1100` against `0b1010` is
+    // 8, 14 and 6 for `and`, `or` and `xor` — because three operations over the same bits are the
+    // easiest three in the engine to write in place of one another and have every round number
+    // still agree.
+    for (name, answer) in [("and", "8"), ("or", "14"), ("xor", "6")] {
+        assert_eq!(
+            run(&format!(
+                "var a = new BigUint64Array(1); a[0] = 12n; \
+                 String(Atomics.{name}(a, 0, 10n)) + ',' + String(a[0])"
+            )),
+            format!("12,{answer}"),
+            "Atomics.{name} on a BigUint64Array"
+        );
+    }
+    // The arithmetic two, and both **wrap** at sixty-four bits rather than growing: an element is
+    // a fixed-width slot however unbounded §6.1.6.2's type is. `0n - 1n` in one is the largest
+    // unsigned value, which is also what says the subtraction happened on the bits.
+    assert_eq!(
+        run("var a = new BigUint64Array(1); Atomics.sub(a, 0, 1n); String(a[0])"),
+        "18446744073709551615"
+    );
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a[0] = 2n ** 63n - 1n; \
+             Atomics.add(a, 0, 1n); String(a[0])"),
+        "-9223372036854775808"
+    );
+    // `exchange` keeps the new value and answers the old, which is what makes it the one operation
+    // here that ignores what was there.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a[0] = 5n; \
+             String(Atomics.exchange(a, 0, -2n)) + ',' + String(a[0])"),
+        "5,-2"
+    );
+    // A signed and an unsigned array over one buffer see the same bits, which is the whole of the
+    // difference between the two kinds and is decided by the *read* rather than by the write.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8); var s = new BigInt64Array(b); var u = new BigUint64Array(b); \
+             Atomics.sub(s, 0, 1n); String(s[0]) + ',' + String(u[0])"
+        ),
+        "-1,18446744073709551615"
+    );
+}
+
+#[test]
+fn compare_exchange_compares_what_the_slot_would_hold_and_never_a_clamped_form_of_it() {
+    // §25.4.3.3 step 9 compares **bytes**: the expected value is put through
+    // `NumericToRawBytes` for the array's own kind and matched against the bytes that are there.
+    // So expecting 300 of a `Uint8Array` holding 44 is a match, because 300 stored there *is* 44 —
+    // and a comparison against the raw argument would never match and the write would never
+    // happen at all.
+    assert_eq!(
+        run("var a = new Uint8Array(1); a[0] = 300; \
+             String(Atomics.compareExchange(a, 0, 300, 7)) + ',' + a[0]"),
+        "44,7"
+    );
+    // …and §7.1.11's *clamping* is not what forms those bytes, which is a distinction only a
+    // `Uint8Array` can show: 300 wraps to 44 and clamps to 255, and the cell holds 44. Clamping
+    // here would make the expectation 255, find no match, and leave the cell alone — a
+    // `compareExchange` that silently did nothing.
+    assert_eq!(
+        run(
+            "var a = new Uint8Array(1); a[0] = 300; Atomics.compareExchange(a, 0, 255, 7) + ',' + a[0]"
+        ),
+        "44,44"
+    );
+    // A mismatch answers what was there and writes nothing, which is the other half of the pair.
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a[0] = 5n; \
+             String(Atomics.compareExchange(a, 0, 4n, 9n)) + ',' + String(a[0])"),
+        "5,5"
+    );
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a[0] = 5n; \
+             String(Atomics.compareExchange(a, 0, 5n, 9n)) + ',' + String(a[0])"),
+        "5,9"
+    );
+    // The same wrapping the Number kinds get: an expectation past the width matches the cell that
+    // holds its low bits, because that is what storing it there would have produced.
+    assert_eq!(
+        run("var a = new BigUint64Array(1); a[0] = 7n; \
+             String(Atomics.compareExchange(a, 0, 2n ** 64n + 7n, 1n)) + ',' + String(a[0])"),
+        "7,1"
     );
 }

@@ -7,23 +7,18 @@
 
 use super::Vm;
 use crate::heap::{DefineOutcome, Heap, PropertyDescriptor, PropertyKey, PropertyKind, StringId};
-use crate::value::{Abrupt, Completion, ErrorKind, Value};
+use crate::value::{Abrupt, Completion, Value};
 
 /// What `[[Set]]` answers, out of what the define came to.
 ///
 /// The Boolean is thrown away by sloppy code and turned into a TypeError by strict code, so a
 /// refusal is not this function's business. §10.4.2.4 step 2 is: an array length that is not an
-/// integer index **throws**, and it is the one assignment in the language that does — which is
-/// exactly why a define answers three things rather than two.
+/// integer index **throws**, and it is the one assignment in the language that does. §10.4.5.16 is
+/// the other — which is why a define answers four things rather than two.
+///
+/// The same table `Reflect.defineProperty` needs, and shared with it rather than written twice.
 fn stored(outcome: DefineOutcome) -> Completion<Value> {
-    match outcome {
-        DefineOutcome::Defined => Ok(Value::Boolean(true)),
-        DefineOutcome::Refused => Ok(Value::Boolean(false)),
-        DefineOutcome::BadLength => Err(Abrupt::Raised(
-            ErrorKind::Range,
-            "an array length must be an integer index",
-        )),
-    }
+    crate::builtins::object::define_answer(outcome)
 }
 
 impl Vm {
@@ -411,12 +406,20 @@ impl Vm {
         // Before the receiver is consulted at all, because §10.4.5.5 step 1 does not consult it:
         // the element belongs to the buffer and no receiver can move it elsewhere.
         if let Some(index) = heap.typed_index(object, key) {
-            let number = self.to_number(value, heap)?;
+            // §10.4.5.16 step 1 — *which* conversion is chosen by the array's `[[ContentType]]`:
+            // §7.1.13 `ToBigInt` for the two 64-bit kinds and §7.1.4 `ToNumber` for the other nine.
+            // That is where the two numeric types stop mixing, and it is a throw rather than a
+            // truncation: `new BigInt64Array(1)[0] = 1` is a TypeError.
+            //
+            // Run **before** the index is judged, and for an out-of-range index too, because
+            // §10.4.5.5 step 1.b converts first: `ta[99] = {valueOf(){ throw 0 }}` throws even
+            // though the write itself would have gone nowhere.
+            let numeric = self.to_numeric_of(object, value, heap)?;
             // The conversion can detach the buffer, so the write is attempted afterwards and
             // simply finds nothing to write to — which is the same answer as an out-of-range index
             // and is what §10.4.5.5 step 1.b.i means by "return unused".
             if let Ok(at) = index {
-                heap.write_element(object, at, number);
+                heap.write_element(object, at, &numeric);
             }
             return Ok(Value::Boolean(true));
         }

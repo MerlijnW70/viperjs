@@ -19,7 +19,7 @@
 //! not canonical is an ordinary property, stored and read like any other — so `ta["00"] = 1` really
 //! does make a property, and `ta[0] = 1` does not.
 
-use crate::heap::{Element, Heap, ObjectId, Property, PropertyKey, PropertyKind, View};
+use crate::heap::{Heap, Numeric, ObjectId, Property, PropertyKey, PropertyKind, View};
 use crate::value::Value;
 
 /// §7.1.21 `CanonicalNumericIndexString`, as an index into a view of `count` elements.
@@ -73,17 +73,15 @@ impl Heap {
     /// one; they are enumerable so that `Object.keys` and `for`-`in` list them; and they are
     /// configurable, which was a change in ES2021 and is what lets `Object.defineProperty` be used
     /// on them at all.
-    pub(super) fn element_property(&self, view: View, at: usize) -> Option<Property> {
-        let element = view.element?;
-        let from = view.offset + at * element.width();
-        let bytes = self
-            .object(view.buffer)?
-            .buffer()?
-            .bytes()?
-            .get(from..from + element.width())?;
+    /// `&mut` because of the two kinds that hold a BigInt: §6.1.6.2's value lives in the heap and
+    /// reading one out of a buffer is therefore an allocation. Eight of the ten need nothing of the
+    /// sort, and it is the two that decide the signature — which is why `[[GetOwnProperty]]` and
+    /// everything above it takes a mutable heap for what reads like a pure question.
+    pub(super) fn element_property(&mut self, view: View, at: usize) -> Option<Property> {
+        let value = self.element_at(view, at)?;
         Some(Property {
             kind: PropertyKind::Data {
-                value: Value::Number(element.read(bytes)),
+                value,
                 writable: true,
             },
             enumerable: true,
@@ -98,12 +96,19 @@ impl Heap {
     /// **discarded** — in strict mode and sloppy alike. It is the one assignment in the language
     /// that fails silently by design, because a TypedArray's length cannot change and there is
     /// nowhere for the value to go.
-    pub(super) fn set_element(&mut self, view: View, at: usize, value: f64, clamped: bool) {
+    ///
+    /// A value of the *other* content type is discarded in the same way, because there is no
+    /// truncation that would be honest: §7.1.13 refuses a Number where a BigInt belongs, so a write
+    /// that reached here with one is a caller that skipped the conversion rather than a value to be
+    /// squeezed into eight bytes.
+    pub(super) fn set_element(&mut self, view: View, at: usize, value: &Numeric, clamped: bool) {
         let Some(element) = view.element else {
             return;
         };
         let from = view.offset + at * element.width();
-        let bytes = element.write(clamp_if(value, clamped));
+        let Some(bytes) = element.write_numeric(value, clamped) else {
+            return;
+        };
         if let Some(target) = self
             .object_mut(view.buffer)
             .and_then(super::Object::buffer_mut)
@@ -121,16 +126,38 @@ impl Heap {
         view.element.map(|_| view)
     }
 
-    /// The number at `at` of a view, or `None` if there is nothing there.
+    /// The value at `at` of a view, or `None` if there is nothing there.
+    ///
+    /// A Number for eight of the ten kinds and a BigInt for the other two, which is why this
+    /// answers a [`Value`] rather than the `f64` it once did: an element's *type* is a property of
+    /// its array, and a caller that assumed otherwise would read a `BigInt64Array` as empty.
+    ///
+    /// `None` for a `DataView`, which has no elements, for an index past the end, and for a
+    /// detached buffer — three different reasons that every caller treats the same way, because
+    /// §10.4.5 makes all three *absent* rather than any of them an error.
+    pub fn element_at(&mut self, view: View, at: usize) -> Option<Value> {
+        let numeric = self.numeric_at(view, at)?;
+        Some(self.numeric_value(numeric))
+    }
+
+    /// The same element, without making a JavaScript value of it.
+    ///
+    /// What a caller that is about to write the value straight into another buffer wants — `slice`,
+    /// `copyWithin`, `set` and the copy-constructor all move elements without a program ever seeing
+    /// one. Going through [`Heap::element_at`] would allocate a BigInt per element and read it back
+    /// out again, and this stays `&self` besides.
     #[must_use]
-    pub fn element_at(&self, view: View, at: usize) -> Option<f64> {
-        match self.element_property(view, at)?.kind {
-            PropertyKind::Data {
-                value: Value::Number(number),
-                ..
-            } => Some(number),
-            _ => None,
-        }
+    pub fn numeric_at(&self, view: View, at: usize) -> Option<Numeric> {
+        let element = view.element?;
+        let from = view.offset + at * element.width();
+        Some(
+            element.read(
+                self.object(view.buffer)?
+                    .buffer()?
+                    .bytes()?
+                    .get(from..from + element.width())?,
+            ),
+        )
     }
 
     /// Where `key` points in this object, if it is a TypedArray and `key` is a numeric index.
@@ -149,58 +176,61 @@ impl Heap {
     /// Nothing happens if the buffer has since been detached, which is what §10.4.5.5 step 1.b.i
     /// means by "return unused": the write is discarded rather than refused, because a TypedArray's
     /// elements are the buffer's bytes and there are none.
-    pub fn write_element(&mut self, object: ObjectId, at: usize, value: f64) {
+    pub fn write_element(&mut self, object: ObjectId, at: usize, value: &Numeric) {
         let Some(view) = self.typed_view(object) else {
             return;
         };
         let clamped = self.object(object).is_some_and(super::Object::is_clamped);
         self.set_element(view, at, value, clamped);
     }
+
+    /// A [`Numeric`] as a JavaScript value, allocating the BigInt when it is one.
+    ///
+    /// The step that makes reading a `BigInt64Array` need a mutable heap: §6.1.6.2's value has
+    /// identity in the heap where §6.1.6.1's is the bits themselves.
+    pub fn numeric_value(&mut self, numeric: Numeric) -> Value {
+        match numeric {
+            Numeric::Number(number) => Value::Number(number),
+            Numeric::BigInt(value) => Value::BigInt(self.new_bigint(value)),
+        }
+    }
+
+    /// The numeric a value already of one of the two numeric types names — `None` for anything else.
+    ///
+    /// The other direction, for a caller holding elements it read out earlier and is about to write
+    /// back. It performs **no conversion**: §7.1.4 and §7.1.13 can both run a program, and neither
+    /// belongs in a heap that has no interpreter to run one with.
+    pub fn as_numeric(&self, value: Value) -> Option<Numeric> {
+        match value {
+            Value::Number(number) => Some(Numeric::Number(number)),
+            Value::BigInt(id) => Some(Numeric::BigInt(self.bigint(id)?.clone())),
+            _ => None,
+        }
+    }
 }
 
-/// The eight concrete kinds, with the name each constructor carries — §23.2.5.
+/// The eleven concrete kinds, with the name each constructor carries — §23.2.5.
 ///
 /// In the order §23.2 lists them, which is by width and then by signedness. `Uint8Clamped` is the
-/// odd one and is here rather than in [`Element`] because it differs only in *how a value is
-/// written*: it is a `Uint8` that saturates instead of wrapping, and every other operation on it is
-/// identical.
-pub const KINDS: [(&str, Element, bool); 9] = [
-    ("Int8Array", Element::Int8, false),
-    ("Uint8Array", Element::Uint8, false),
-    ("Uint8ClampedArray", Element::Uint8, true),
-    ("Int16Array", Element::Int16, false),
-    ("Uint16Array", Element::Uint16, false),
-    ("Int32Array", Element::Int32, false),
-    ("Uint32Array", Element::Uint32, false),
-    ("Float32Array", Element::Float32, false),
-    ("Float64Array", Element::Float64, false),
+/// odd one and is here rather than in [`Element`](crate::heap::Element) because it differs only in
+/// *how a value is written*: it is a `Uint8` that saturates instead of wrapping, and every other
+/// operation on it is identical.
+///
+/// Two of the eleven — the `BigInt64` pair — hold a BigInt rather than a Number, which is a
+/// difference of a wholly different order: it changes what a write converts with and makes the two
+/// unassignable from the other nine in either direction. That question is
+/// [`Element::holds_big`](crate::heap::Element::holds_big) and not a column here, because it
+/// belongs to the *kind* and every one of its answers follows from the kind alone.
+pub const KINDS: [(&str, super::Element, bool); 11] = [
+    ("Int8Array", super::Element::Int8, false),
+    ("Uint8Array", super::Element::Uint8, false),
+    ("Uint8ClampedArray", super::Element::Uint8, true),
+    ("Int16Array", super::Element::Int16, false),
+    ("Uint16Array", super::Element::Uint16, false),
+    ("Int32Array", super::Element::Int32, false),
+    ("Uint32Array", super::Element::Uint32, false),
+    ("BigInt64Array", super::Element::BigInt64, false),
+    ("BigUint64Array", super::Element::BigUint64, false),
+    ("Float32Array", super::Element::Float32, false),
+    ("Float64Array", super::Element::Float64, false),
 ];
-
-/// §7.1.11 `ToUint8Clamp`, applied only where a `Uint8ClampedArray` asks for it.
-///
-/// Saturating rather than wrapping, and rounding halves to **even** rather than away from zero.
-/// Both are what pixel data wants: 300 is "as bright as it gets" rather than 44, and rounding half
-/// to even keeps a long run of averages from drifting upwards.
-///
-/// Here rather than beside the write it modifies, because it is the *only* thing that separates
-/// `Uint8ClampedArray` from `Uint8Array` — every read of their bytes is identical, so the whole of
-/// the difference between two of the nine kinds is this function.
-#[must_use]
-pub fn clamp_if(value: f64, clamped: bool) -> f64 {
-    if !clamped {
-        return value;
-    }
-    // No case for `NaN`: `f64::clamp` answers `NaN` for one, and every arithmetic below carries it
-    // through to the `write` that follows, where §7.1.9's cast turns it into 0 — which is the
-    // answer §7.1.11 step 1 asks for. Written out as a case it was a branch nothing could tell
-    // from its absence.
-    let bounded = value.clamp(0.0, 255.0);
-    let floor = bounded.floor();
-    match bounded - floor {
-        half if half > 0.5 => floor + 1.0,
-        half if half < 0.5 => floor,
-        // Exactly a half — to *even*, which `f64::round` does not do.
-        _ if floor % 2.0 == 0.0 => floor,
-        _ => floor + 1.0,
-    }
-}

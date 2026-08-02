@@ -127,33 +127,56 @@ the conformance harness that measures it — which from here is what says what t
 **M6 is what is in progress.** Classes, `Promise` and §9.5's job queue, `Map` and `Set`, `Reflect`,
 `Proxy`, `ArrayBuffer`, `DataView` and the TypedArrays were already in. **Generators, `yield`,
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
-and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
+and so are **async generators**, §27.6, in `src/vm/async_generator.rs`. **`BigInt` is in**: the
+literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array`.
 
-Conformance as of this commit is **73.73% of test262** — 68,683 of 93,160 runs. Treat that number
+Conformance as of this commit is **75.26% of test262** — 70,115 of 93,160 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
-it. Let the failure buckets choose the next slice, not intuition. The largest right now:
+it. Only 2,300 runs are now *stopped* before anything executes, and they are nearly all M7:
 
 | Runs | What stops them |
 | --- | --- |
-| 6,263 | `BigInt` literals |
 | 849 | dynamic `import` |
 | 830 | modules |
-| 306 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
-| 280 | `with` |
-| 280 | `with` |
+| 289 | `with` |
+| 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
+| 110 | a property of strings |
 
-**63.06% to 71.65% in three slices**, all of them §27.6 and its neighbourhood: async generators
-themselves (+4,814), `yield*` inside one — §15.5.5 step 4's `GetIterator(value, async)` (+1,590) —
-and then `GeneratorStart` becoming an instruction (+1,598). That last one is worth reading before
-touching this area: a generator's parameters are **not** part of its body, so
+**So the skip list is no longer where the work is** — it is under a thousand runs per entry, and the
+~20,700 tests that **run and fail** are where the next slices come from. Sorted by reason, the
+largest are `Temporal` (8,316 — a trap, see below), **`eval` (1,500)**, `what was called is not a
+function` (1,332, a grab-bag worth bucketing by path), and `the heap has grown past what this engine
+will allocate` (894, which is DR-0013's budget meeting resizable buffers). `eval` is the largest
+thing on the list that is actually ES2015 and actually one subject.
+
+**63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
+missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
+`GetIterator(value, async)` (+1,590) — `GeneratorStart` becoming an instruction (+1,598), the
+`BigInt` type itself, and `BigInt64Array` (+1,432). The `GeneratorStart` one is worth reading before
+touching that area: a generator's parameters are **not** part of its body, so
 `FunctionDeclarationInstantiation` runs at the call and only `GeneratorStart` parks what is left.
 Deciding it in `enter` instead put the whole parameter list inside the parked body, where it ran at
 the first `next` — invisible until a parameter can throw or be observed, and then 1,598 tests at
 once, most of them in `dstr` directories that have nothing to do with generators.
 
-**75% is `BigInt`**: 6,263 runs, a new numeric type through the value representation, every operator
-and every coercion. Nothing else on the list is within a factor of five, and the next largest things
-after it are Unicode property escapes (1,318) and per-iteration environments (1,234).
+**A TypedArray's element is a `Value`, and that is what `BigInt64Array` cost.** Not the two kinds —
+those are eight bytes and a sign — but the fact that §23.2.1 gives two of the eleven a
+`[[ContentType]]` of BigInt, and a BigInt lives in the heap. So `Heap::element_property` had to
+become `&mut self` to allocate one, and `own_property`, `find_own` and `has_property` above it with
+it. Three things follow that are worth knowing before touching §23.2 again:
+
+- **The destination chooses the conversion, never the value.** §10.4.5.16 runs `ToBigInt` for the
+  two and `ToNumber` for the nine, so `fill`, `with`, `set`, `from`, `of` and `map` all ask the
+  array they are writing *into* — which for `map` and `filter` is whatever `@@species` answered, not
+  the receiver. §23.2.4.2 step 4 refuses a species of the other content type, and that one check is
+  why the copies can move elements without each of them asking again.
+- **A read for a copy must not go through a `Value`.** `Heap::numeric_at` is `&self` and allocates
+  nothing; `element_at` is the one that makes a BigInt. `slice`, `copyWithin`, `reverse` and `set`
+  use the first, and a walk that hands elements to a callback uses the second.
+- **A mismatch writes nothing rather than truncating.** `Element::write` answers `None` for a
+  BigInt kind and `write_big` `None` for a Number one. A Number reaching a `BigInt64Array` is not a
+  value to squeeze into eight bytes — it is a program §7.1.13 should already have refused, and
+  writing it would turn a TypeError into a silent conversion.
 
 **Block scoping is done, and there is no refusal left in it.** A block that declares something
 gets its own environment (`Instruction::PushScope`); a `for (let i = …; …; …)` head gets §14.7.4.7's
@@ -188,7 +211,7 @@ frees something a later instruction reads — silently, as a wrong value rather 
 root set lives in `Vm::roots` and is checked against the collector in `vm::tests::collecting`,
 including the one case that distinguishes it: an intrinsic *nothing has reached yet*.
 
-**A compile error is not automatically a skip**A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
+**A compile error is not automatically a skip, and treating it as one hid failures.** §22.2.1's
 early errors are decided by the *compiler* — §12.9.5 reads a regular expression literal's shape and
 its pattern only afterwards — so `conformance` used to drop every one of them into "not run". 560
 runs came out of that column when it was fixed: 366 pass, and **194 fail and could not be seen
@@ -197,12 +220,14 @@ backwards is not symmetric: a *gap* recorded as an early error passes every test
 must be rejected", and a proposal's negative tests are exactly that shape. `(?i:…)` is the live
 example — see `regexp::Error::unimplemented`.
 
-**Two buckets are not ES2023 and must not be counted as cheap.** `Temporal` (3,476 runs) is a Stage
-3 proposal with a surface larger than `Date`, `Intl` and `RegExp` combined — building it would raise
-the number while making the engine no more of a JavaScript engine. The 306 runs that stop on `this
-is not a kind of group` are the same thing in miniature: they are `built-ins/RegExp/regexp-modifiers`
-and the `(?i:…)` syntax is Stage 3 as well. That bucket reads like a cheap 306 in a finished area,
-which is exactly why it is worth naming here. **Check a bucket's directory before costing it.**
+**Two buckets are not ES2023 and must not be counted as cheap.** `Temporal` — now **8,316 runs and
+the single largest failure bucket there is** — is a Stage 3 proposal with a surface larger than
+`Date`, `Intl` and `RegExp` combined. Building it would raise the number while making the engine no
+more of a JavaScript engine, and it will sit at the top of that list for as long as this file is
+worth reading. The 170 runs that stop on `this is not a kind of group` are the same thing in
+miniature: they are `built-ins/RegExp/regexp-modifiers` and the `(?i:…)` syntax is Stage 3 as well.
+That bucket reads like a cheap 170 in a finished area, which is exactly why it is worth naming here.
+**Check a bucket's directory before costing it.**
 
 **Read the *failure* buckets, not only that table.** The list above is what stopped the tests that
 never ran. Sorting the ~15,000 that **run and fail** by reason is what finds the slices worth a day:

@@ -123,11 +123,11 @@ fn define_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
     let name = super::object::property_key(heap, call.argument(1))?;
     let descriptor = super::object::to_property_descriptor(vm, heap, call.argument(2))?;
     // §28.1.3 answers the refusal rather than throwing it, which is the whole difference from
-    // `Object.defineProperty` — but a `RangeError` from an array's `length` is still a throw.
-    Ok(Value::Boolean(matches!(
-        vm.define_through(object, name, &descriptor, heap)?,
-        crate::heap::DefineOutcome::Defined
-    )))
+    // `Object.defineProperty` — but a define that *throws* still throws: §10.4.2.1's RangeError
+    // from an array's `length` and §10.4.5.16's TypeError from a TypedArray's content type are
+    // both raised by the define itself rather than reported as a refusal.
+    let outcome = vm.define_through(object, name, &descriptor, heap)?;
+    super::object::define_answer(outcome)
 }
 
 /// §28.1.4 — `Reflect.deleteProperty`, which is `delete` without the operator's sloppiness.

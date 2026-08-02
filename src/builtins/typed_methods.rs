@@ -20,12 +20,27 @@
 //! `sort` without a comparator is **numeric** here and lexicographic on `Array.prototype`. That is
 //! not a convenience: the elements are numbers and there is no reason to render them as strings
 //! first, and a TypedArray sorted as strings would put 10 before 9.
+//!
+//! # Two of the eleven kinds hold BigInts, and it shows in every method that takes a value
+//!
+//! §23.2.1's `[[ContentType]]` decides which conversion a write runs — §7.1.13 `ToBigInt` for
+//! `BigInt64Array` and `BigUint64Array`, §7.1.4 `ToNumber` for the other nine — and the two refuse
+//! each other outright. So `fill`, `with`, `set`, `from`, `of` and `map` all ask the *destination*
+//! what it holds rather than asking the value what it is, and `indexOf` finds nothing when handed
+//! the other type because §7.2.15 makes values of different types unequal without comparing them.
+//!
+//! Reading is the mirror of it: an element is a [`Value`] and not an `f64`, because for two kinds
+//! it is a BigInt. A walk that assumed otherwise would read a `BigInt64Array` as having no
+//! elements at all.
 
 use super::{define_method, key};
-use crate::heap::{Heap, Iterated, Iteration, Native, NativeCall, ObjectId, PropertyKey, View};
+use crate::heap::{
+    Element, Heap, Iterated, Iteration, Native, NativeCall, Numeric, ObjectId, PropertyKey, View,
+};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
+use std::cmp::Ordering;
 
 /// Put §23.2.3's methods on `%TypedArray%.prototype`.
 pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, constructor: ObjectId) {
@@ -111,16 +126,47 @@ fn validate(heap: &Heap, this: Value) -> Completion<(ObjectId, View)> {
     Ok((object, view))
 }
 
-/// The elements of a view, as numbers, in order.
+/// The elements of a view, as JavaScript values, in order.
 ///
 /// Taken once because every method that walks them may run a callback, and a callback can detach
 /// the buffer — §23.2.3.7 and its neighbours are explicit that the walk carries on with what it
 /// had. Reading each element afresh would make a detached buffer turn the rest of the walk into
 /// `undefined`s, which is a different answer.
-fn elements(heap: &Heap, view: View) -> Vec<f64> {
+fn elements(heap: &mut Heap, view: View) -> Vec<Value> {
     (0..view.count())
         .filter_map(|at| heap.element_at(view, at))
         .collect()
+}
+
+/// The same, for a method that is going to write them straight into another buffer.
+///
+/// `slice`, `copyWithin`, `reverse` and `set` move elements without a program ever seeing one, so
+/// there is nothing for a BigInt element to be allocated *as*. Reading them through [`elements`]
+/// would allocate one per element and immediately read it back out.
+fn numerics(heap: &Heap, view: View) -> Vec<Numeric> {
+    (0..view.count())
+        .filter_map(|at| heap.numeric_at(view, at))
+        .collect()
+}
+
+/// Whether this array's elements are BigInts — §23.2.1's `[[ContentType]]`, asked of an object.
+fn holds_big(heap: &Heap, object: ObjectId) -> bool {
+    heap.typed_view(object)
+        .and_then(|view| view.element)
+        .is_some_and(Element::holds_big)
+}
+
+/// Write a run of values into an array, converting each by *its* content type — §10.4.5.16.
+///
+/// The destination decides, which is why this takes the values as [`Value`]s and not as numerics:
+/// `map` and `filter` write into whatever `@@species` answered, and a species of a different
+/// content type is a TypeError at the write rather than a silent reinterpretation of the bytes.
+fn write_all(vm: &mut Vm, heap: &mut Heap, into: ObjectId, values: Vec<Value>) -> Completion<()> {
+    for (index, value) in values.into_iter().enumerate() {
+        let numeric = vm.to_numeric_of(into, value, heap)?;
+        heap.write_element(into, index, &numeric);
+    }
+    Ok(())
 }
 
 /// §7.3.20 `SpeciesConstructor` applied to a TypedArray, and a new one of `count` elements.
@@ -139,9 +185,19 @@ fn species_array(
         return Err(Abrupt::type_error("the species did not make a TypedArray"));
     };
     match heap.typed_view(id) {
-        Some(view) if view.count() >= count => Ok(made),
-        _ => Err(Abrupt::type_error("the species did not make a TypedArray")),
+        Some(view) if view.count() >= count => (),
+        _ => return Err(Abrupt::type_error("the species did not make a TypedArray")),
     }
+    // §23.2.4.2 step 4 — and of the **same content type** as the array it came from. A species
+    // that answered an `Int8Array` for a `BigInt64Array` is refused here rather than at the first
+    // write, which is what lets `slice`, `map` and `filter` copy elements across without each of
+    // them asking again: the only species they can reach holds what they hold.
+    if holds_big(heap, id) != holds_big(heap, object) {
+        return Err(Abrupt::type_error(
+            "the species made a TypedArray of the other content type",
+        ));
+    }
+    Ok(made)
 }
 
 /// The constructor of the kind `object` is — its `constructor` property, or `%Int8Array%` if it has
@@ -167,9 +223,7 @@ fn at(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> 
     let Ok(index) = usize::try_from(index as i64) else {
         return Ok(Value::Undefined);
     };
-    Ok(heap
-        .element_at(view, index)
-        .map_or(Value::Undefined, Value::Number))
+    Ok(heap.element_at(view, index).unwrap_or(Value::Undefined))
 }
 
 /// §23.2.3.9 — `fill`, which writes one value over a range.
@@ -177,8 +231,9 @@ fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
     let (object, view) = validate(heap, call.this_value)?;
     let count = view.count();
     // §23.2.3.9 step 4 — the *value* is converted before the ends are, which a `valueOf` on any of
-    // the three can observe.
-    let value = vm.to_number(call.argument(0), heap)?;
+    // the three can observe, and by the array's content type: `new BigInt64Array(1).fill(0)` is a
+    // TypeError where `.fill(0n)` fills.
+    let value = vm.to_numeric_of(object, call.argument(0), heap)?;
     let from = relative(vm, heap, call.argument(1), count, 0.0)?;
     let to = relative(vm, heap, call.argument(2), count, count as f64)?;
     // Step 10 — asked **again**, because all three conversions above can run a `valueOf` and a
@@ -187,7 +242,7 @@ fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
     // never told its data went away.
     validate(heap, call.this_value)?;
     for index in from..to {
-        heap.write_element(object, index, value);
+        heap.write_element(object, index, &value);
     }
     Ok(call.this_value)
 }
@@ -199,13 +254,17 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let from = relative(vm, heap, call.argument(0), count, 0.0)?;
     let to = relative(vm, heap, call.argument(1), count, count as f64)?;
     let taken = to.saturating_sub(from);
-    let values: Vec<f64> = (from..from + taken)
-        .filter_map(|index| heap.element_at(view, index))
+    let values: Vec<Numeric> = (from..from + taken)
+        .filter_map(|index| heap.numeric_at(view, index))
         .collect();
     let made = species_array(vm, heap, object, taken)?;
     if let Value::Object(id) = made {
+        // §23.2.3.26 step 14 — the copy is `SetValueInBuffer` between two arrays of the *same*
+        // element kind, so the numerics go straight across with no conversion. A species of a
+        // different kind gets each value written through §10.4.5.16 instead, which is why
+        // `write_element` is still the way in and not a byte copy.
         for (index, value) in values.into_iter().enumerate() {
-            heap.write_element(id, index, value);
+            heap.write_element(id, index, &value);
         }
     }
     Ok(made)
@@ -255,18 +314,19 @@ fn with(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         asked
     };
     // Step 6 before step 7 — the *value* is converted before the index is judged, so a `valueOf`
-    // that throws is what a program sees even when the index was out of range as well.
-    let replacement = vm.to_number(call.argument(1), heap)?;
+    // that throws is what a program sees even when the index was out of range as well. And by this
+    // array's content type, which is step 5's `If O.[[ContentType]] is bigint`.
+    let replacement = vm.to_numeric_of(object, call.argument(1), heap)?;
     let Ok(index) = usize::try_from(index as i64) else {
         return Err(Abrupt::range_error("that index is not in the TypedArray"));
     };
     if index >= count {
         return Err(Abrupt::range_error("that index is not in the TypedArray"));
     }
-    let values = elements(heap, view);
+    let values = numerics(heap, view);
     let made = same_kind(vm, heap, object, count)?;
     for (at, value) in values.into_iter().enumerate() {
-        let held = if at == index { replacement } else { value };
+        let held = if at == index { &replacement } else { &value };
         heap.write_element(made, at, held);
     }
     Ok(Value::Object(made))
@@ -276,10 +336,10 @@ fn with(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 fn to_reversed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let (object, view) = validate(heap, call.this_value)?;
     let count = view.count();
-    let values = elements(heap, view);
+    let values = numerics(heap, view);
     let made = same_kind(vm, heap, object, count)?;
     for (at, value) in values.into_iter().rev().enumerate() {
-        heap.write_element(made, at, value);
+        heap.write_element(made, at, &value);
     }
     Ok(Value::Object(made))
 }
@@ -294,22 +354,10 @@ fn to_sorted(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     }
     let (object, view) = validate(heap, call.this_value)?;
     let count = view.count();
-    let values = elements(heap, view);
-    let sorted = match matches!(comparator, Value::Undefined) {
-        true => {
-            let mut numeric = values;
-            numeric.sort_by(|left, right| {
-                numeric_order(*left)
-                    .partial_cmp(&numeric_order(*right))
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
-            numeric
-        }
-        false => sorted_by(vm, heap, values, comparator)?,
-    };
+    let sorted = ordered(vm, heap, view, comparator)?;
     let made = same_kind(vm, heap, object, count)?;
     for (at, value) in sorted.into_iter().enumerate() {
-        heap.write_element(made, at, value);
+        heap.write_element(made, at, &value);
     }
     Ok(Value::Object(made))
 }
@@ -364,17 +412,30 @@ fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
     // Every element is read *before* any is written, which matters when the two overlap: a source
     // that is a view onto the same buffer would otherwise be read through what had just been
     // written over it.
-    let values: Vec<f64> = match source {
+    let values: Vec<Numeric> = match source {
         Value::Object(id) if heap.typed_view(id).is_some() => {
+            // §23.2.3.24.1 step 5 — a source of the other content type is a **TypeError**, and it
+            // is the only check standing between the two: elements move across here without any
+            // conversion, so eight bytes of BigInt would otherwise land in a `Float64Array` as a
+            // double made of the same bits.
+            if holds_big(heap, id) != holds_big(heap, object) {
+                return Err(Abrupt::type_error(
+                    "a BigInt TypedArray and a Number one cannot be copied into each other",
+                ));
+            }
             let other = heap.typed_view(id).unwrap_or(view);
-            elements(heap, other)
+            numerics(heap, other)
         }
         _ => {
+            // §23.2.3.24.2 step 7 — an array-like or an iterable is read as values and each is
+            // converted by *this* array's content type, so `bigOnes.set([1])` throws where
+            // `bigOnes.set([1n])` writes.
             let taken = super::promise_group::iterable_to_list(vm, heap, source)
                 .or_else(|_| array_like(vm, heap, source))?;
+            let holds_big = holds_big(heap, object);
             let mut numbers = Vec::with_capacity(taken.len());
             for value in taken {
-                numbers.push(vm.to_number(value, heap)?);
+                numbers.push(vm.to_numeric(holds_big, value, heap)?);
             }
             numbers
         }
@@ -385,7 +446,7 @@ fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
         ));
     }
     for (index, value) in values.into_iter().enumerate() {
-        heap.write_element(object, offset + index, value);
+        heap.write_element(object, offset + index, &value);
     }
     Ok(Value::Undefined)
 }
@@ -416,12 +477,12 @@ fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
     let to = relative(vm, heap, call.argument(2), count, count as f64)?;
     // Read first, then write — the two runs may overlap, and copying element by element would read
     // through what it had already written.
-    let taken: Vec<f64> = (from..to)
-        .filter_map(|index| heap.element_at(view, index))
+    let taken: Vec<Numeric> = (from..to)
+        .filter_map(|index| heap.numeric_at(view, index))
         .take(count.saturating_sub(target))
         .collect();
     for (index, value) in taken.into_iter().enumerate() {
-        heap.write_element(object, target + index, value);
+        heap.write_element(object, target + index, &value);
     }
     Ok(call.this_value)
 }
@@ -429,10 +490,10 @@ fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
 /// §23.2.3.23 — `reverse`, in place.
 fn reverse(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let (object, view) = validate(heap, call.this_value)?;
-    let mut values = elements(heap, view);
+    let mut values = numerics(heap, view);
     values.reverse();
     for (index, value) in values.into_iter().enumerate() {
-        heap.write_element(object, index, value);
+        heap.write_element(object, index, &value);
     }
     Ok(call.this_value)
 }
@@ -448,22 +509,55 @@ fn sort(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         return Err(Abrupt::type_error("the comparator is not a function"));
     }
     let (object, view) = validate(heap, call.this_value)?;
-    let mut values = elements(heap, view);
-    if matches!(comparator, Value::Undefined) {
-        // §23.2.3.29's default: ascending, with `NaN` last and `-0` before `+0`. `sort_by` with a
-        // partial comparison cannot say either, so the key does it — every `NaN` sorts above every
-        // number, and the sign of a zero breaks the tie between two of them.
-        values.sort_by(|left, right| numeric_order(*left).total_cmp(&numeric_order(*right)));
-    } else {
-        // A comparator may run arbitrary code, so the values are sorted outside the heap and
-        // written back afterwards: a comparator that detached the buffer would otherwise be
-        // writing into bytes that had gone.
-        values = sorted_by(vm, heap, values, comparator)?;
-    }
+    let values = ordered(vm, heap, view, comparator)?;
     for (index, value) in values.into_iter().enumerate() {
-        heap.write_element(object, index, value);
+        heap.write_element(object, index, &value);
     }
     Ok(call.this_value)
+}
+
+/// A view's elements in §23.2.3.29's order — the body `sort` and `toSorted` share.
+///
+/// Two different sorts, and which one runs is decided before anything is read: the default compares
+/// the elements themselves, and a comparator is a program and has to be handed JavaScript values.
+/// Both sort **outside the heap** and are written back afterwards, because a comparator that
+/// detached the buffer would otherwise be writing into bytes that had gone.
+fn ordered(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    view: View,
+    comparator: Value,
+) -> Completion<Vec<Numeric>> {
+    if matches!(comparator, Value::Undefined) {
+        let mut values = numerics(heap, view);
+        values.sort_by(default_order);
+        return Ok(values);
+    }
+    let taken = elements(heap, view);
+    let values = sorted_by(vm, heap, taken, comparator)?;
+    Ok(values
+        .into_iter()
+        .filter_map(|value| heap.as_numeric(value))
+        .collect())
+}
+
+/// §23.2.3.29 `CompareTypedArrayElements` with no comparator — ascending, and total.
+///
+/// For Numbers: `NaN` last and `-0` before `+0`. `sort_by` with a partial comparison cannot say
+/// either, so the key does it — every `NaN` sorts above every number, and `total_cmp` separates the
+/// zeroes by sign. For BigInts neither question arises: there is no BigInt `NaN` and no negative
+/// zero, so it is the plain comparison.
+fn default_order(left: &Numeric, right: &Numeric) -> Ordering {
+    match (left, right) {
+        (Numeric::Number(left), Numeric::Number(right)) => {
+            numeric_order(*left).total_cmp(&numeric_order(*right))
+        }
+        (Numeric::BigInt(left), Numeric::BigInt(right)) => left.compare(right),
+        // A Number against a BigInt, which no array can present: every element of one array is of
+        // one kind, so the two here are always the same variant. Called equal rather than given an
+        // order, because there is no order between the two types to give.
+        _ => Ordering::Equal,
+    }
 }
 
 /// The key that puts `NaN` last and `-0` before `+0` — §23.2.3.29's ordering, as one number.
@@ -486,19 +580,14 @@ fn numeric_order(value: f64) -> f64 {
 fn sorted_by(
     vm: &mut Vm,
     heap: &mut Heap,
-    values: Vec<f64>,
+    values: Vec<Value>,
     comparator: Value,
-) -> Completion<Vec<f64>> {
-    let mut sorted: Vec<f64> = Vec::with_capacity(values.len());
+) -> Completion<Vec<Value>> {
+    let mut sorted: Vec<Value> = Vec::with_capacity(values.len());
     for value in values {
         let mut at = 0;
         while at < sorted.len() {
-            let answer = vm.call_value(
-                comparator,
-                Value::Undefined,
-                &[sorted[at], value].map(Value::Number),
-                heap,
-            )?;
+            let answer = vm.call_value(comparator, Value::Undefined, &[sorted[at], value], heap)?;
             let order = vm.to_number(answer, heap)?;
             // §23.2.3.29 step 4 — `NaN` from a comparator is treated as 0, which is "these are
             // equal", so a comparator that answers nonsense still terminates.
@@ -526,7 +615,10 @@ fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
     super::array_flat::to_locale_string(vm, heap, call)
 }
 
-/// §23.2.3.16 — `join`.
+/// §23.2.3.16 — `join`, whose elements become text by §7.1.17 and not by `number_to_string`.
+///
+/// The difference shows on two of the eleven kinds: `String(1n)` is `"1"` and `ToString` of a
+/// BigInt is §21.2.3.3's digits, where a Number's rendering knows nothing about them.
 fn join(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let (_, view) = validate(heap, call.this_value)?;
     let separator = match call.argument(0) {
@@ -539,10 +631,13 @@ fn join(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
                 .collect()
         }
     };
-    let joined: Vec<String> = elements(heap, view)
-        .into_iter()
-        .map(crate::value::number_to_string)
-        .collect();
+    let mut joined: Vec<String> = Vec::with_capacity(view.count());
+    for value in elements(heap, view) {
+        // Neither a Number nor a BigInt can throw here, and neither can call a program: `?` is the
+        // shape `to_string` has for the types that can, not a case this one reaches.
+        let id = value.to_string(heap)?;
+        joined.push(String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
+    }
     Ok(super::text(heap, &joined.join(&separator)))
 }
 
@@ -587,8 +682,11 @@ enum Search {
 /// The body all three share.
 fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> Completion<Value> {
     let (_, view) = validate(heap, call.this_value)?;
-    let values = elements(heap, view);
-    let wanted = call.argument(0);
+    let values = numerics(heap, view);
+    // §7.2.15 step 1 — values of different **types** are unequal without being compared, so
+    // anything that is not a numeric at all can match no element: `ta.indexOf("1")` is -1, and so
+    // is `bigOnes.indexOf(1)`. Taken as a numeric once rather than asked per element.
+    let wanted = heap.as_numeric(call.argument(0));
     let from = match call.arguments.len() {
         0..=1 => None,
         _ => Some(super::string::to_integer_or_infinity(
@@ -597,11 +695,12 @@ fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> C
     };
     // §23.2.3.13 and §23.2.3.14 differ in exactly one thing and it is not the direction: `includes`
     // uses `SameValueZero`, which finds `NaN`, and the other two use strict equality, which cannot.
-    let matches = |found: f64| match (how, wanted) {
-        (Search::Includes, Value::Number(number)) => {
-            (found.is_nan() && number.is_nan()) || found == number
+    // That distinction is about Numbers only — there is no BigInt `NaN` for either to disagree on.
+    let matches = |found: &Numeric| match (&wanted, found) {
+        (Some(Numeric::Number(number)), Numeric::Number(found)) => {
+            (how == Search::Includes && found.is_nan() && number.is_nan()) || found == number
         }
-        (_, Value::Number(number)) => found == number,
+        (Some(Numeric::BigInt(number)), Numeric::BigInt(found)) => found == number,
         _ => false,
     };
     let count = values.len();
@@ -621,12 +720,12 @@ fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> C
             let end = start(last).min(last);
             (0..=end.max(-1.0) as isize)
                 .rev()
-                .find(|index| *index >= 0 && matches(values[*index as usize]))
+                .find(|index| *index >= 0 && matches(&values[*index as usize]))
         }
         _ => {
             let begin = start(0.0).max(0.0) as usize;
             (begin..count)
-                .find(|index| matches(values[*index]))
+                .find(|index| matches(&values[*index]))
                 .map(|index| index as isize)
         }
     };
@@ -780,9 +879,9 @@ fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Compl
         true => (0..values.len()).rev().collect(),
         false => (0..values.len()).collect(),
     };
-    let mut kept: Vec<f64> = Vec::new();
+    let mut kept: Vec<Value> = Vec::new();
     for index in order {
-        let element = Value::Number(values[index]);
+        let element = values[index];
         let answer = vm.call_value(
             callback,
             receiver,
@@ -797,12 +896,11 @@ fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Compl
             Walk::FindIndex | Walk::FindLastIndex if truthy => {
                 return Ok(Value::Number(index as f64));
             }
-            // §23.2.3.21 step 6.c — the *answer* is converted and kept, in order, and the array to
-            // put them in is made afterwards: `filter` knows its length only when the walk is over.
-            Walk::Map => {
-                let number = vm.to_number(answer, heap)?;
-                kept.push(number);
-            }
+            // §23.2.3.21 step 6.c — the *answer* is kept, in order, and the array to put them in
+            // is made afterwards: `filter` knows its length only when the walk is over. Kept as a
+            // value rather than converted here, because §10.4.5.16 asks the **destination** which
+            // conversion to run and the destination does not exist yet.
+            Walk::Map => kept.push(answer),
             Walk::Filter if truthy => kept.push(values[index]),
             _ => {}
         }
@@ -817,9 +915,7 @@ fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Compl
         Walk::Map | Walk::Filter => {
             let made = species_array(vm, heap, object, kept.len())?;
             if let Value::Object(id) = made {
-                for (index, value) in kept.into_iter().enumerate() {
-                    heap.write_element(id, index, value);
-                }
+                write_all(vm, heap, id, kept)?;
             }
             Ok(made)
         }
@@ -853,7 +949,7 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, backwards: bool) ->
     // no initial value is a TypeError rather than `undefined`: there is no answer to give.
     let mut total = match call.arguments.len() {
         0..=1 => match steps.next() {
-            Some(index) => Value::Number(values[index]),
+            Some(index) => values[index],
             None => {
                 return Err(Abrupt::type_error(
                     "reduce of an empty TypedArray with no initial value",
@@ -868,7 +964,7 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, backwards: bool) ->
             Value::Undefined,
             &[
                 total,
-                Value::Number(values[index]),
+                values[index],
                 Value::Number(index as f64),
                 call.this_value,
             ],
@@ -897,6 +993,9 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         heap,
     )?;
     let id = made_typed_array(heap, made, taken.len())?;
+    // §23.2.2.1 step 8.d — each answer goes in through `Set`, so the conversion is §10.4.5.16's and
+    // is chosen by the array the constructor made: `BigInt64Array.from([1])` is a TypeError and
+    // `BigInt64Array.from([1n])` is not. The mapper runs first, and its answer is what is converted.
     for (index, value) in taken.into_iter().enumerate() {
         let mapped = match matches!(mapper, Value::Undefined) {
             true => value,
@@ -907,8 +1006,8 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
                 heap,
             )?,
         };
-        let number = vm.to_number(mapped, heap)?;
-        heap.write_element(id, index, number);
+        let numeric = vm.to_numeric_of(id, mapped, heap)?;
+        heap.write_element(id, index, &numeric);
     }
     Ok(made)
 }
@@ -924,10 +1023,7 @@ fn of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> 
         heap,
     )?;
     let id = made_typed_array(heap, made, call.arguments.len())?;
-    for (index, value) in call.arguments.iter().enumerate() {
-        let number = vm.to_number(*value, heap)?;
-        heap.write_element(id, index, number);
-    }
+    write_all(vm, heap, id, call.arguments.to_vec())?;
     Ok(made)
 }
 

@@ -21,8 +21,8 @@ use super::object::{Lexical, MAX_PROTOTYPE_CHAIN, ObjectId, PrivateElement, Susp
 use super::string_object;
 use super::typed;
 use super::{
-    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Object,
-    Property, PropertyDescriptor, PropertyKey, PropertyKind, StringId, SymbolId,
+    ArgumentsMap, Bound, Callable, DefineOutcome, Element, EnvironmentId, Heap, Iteration, Native,
+    Numeric, Object, Property, PropertyDescriptor, PropertyKey, PropertyKind, StringId, SymbolId,
 };
 use crate::compile::Chunk;
 use crate::value::Value;
@@ -501,16 +501,33 @@ impl Heap {
                 return DefineOutcome::Refused;
             }
             if let Some(value) = descriptor.value {
-                let number = match value {
-                    crate::value::Value::Number(number) => number,
-                    // A define carries a value that is already a Value, so there is no conversion
-                    // to run here and nothing that could throw — anything that is not a Number
-                    // writes as `NaN` would, which is what `ToNumber` of it would give for the
-                    // types a define can carry without a coercion step of its own.
-                    _ => f64::NAN,
+                // §10.4.5.3 step 1.b.v hands the value to §10.4.5.16, whose conversion is chosen by
+                // the array's `[[ContentType]]` — and the two numeric types refuse each other there
+                // unconditionally, whatever the value is. §7.1.4 `ToNumber` throws for *every*
+                // BigInt and §7.1.13 `ToBigInt` for *every* Number, so this is a question about the
+                // two types and not about the two values, and it can be asked without an
+                // interpreter to run a coercion with.
+                //
+                // A **throw** and not a refusal, which a program can tell apart:
+                // `Reflect.defineProperty(new BigInt64Array(1), 0, {value: 1})` raises a TypeError
+                // where the same call at an out-of-range index quietly answers `false`.
+                let holds_big = view.element.is_some_and(Element::holds_big);
+                let crossed = match value {
+                    Value::BigInt(_) => !holds_big,
+                    Value::Number(_) => holds_big,
+                    // Every other type has a conversion to *both*, so neither is refused here.
+                    _ => false,
                 };
+                if crossed {
+                    return DefineOutcome::WrongContent;
+                }
+                // A define carries a value that is already a Value, so there is no conversion to
+                // run here — anything that is neither Number nor BigInt writes as `NaN` would,
+                // which is what `ToNumber` of it would give for the types a define can carry
+                // without a coercion step of its own.
+                let numeric = self.as_numeric(value).unwrap_or(Numeric::Number(f64::NAN));
                 let clamped = self.object(object).is_some_and(Object::is_clamped);
-                self.set_element(view, at, number, clamped);
+                self.set_element(view, at, &numeric, clamped);
             }
             return DefineOutcome::Defined;
         }
@@ -573,7 +590,7 @@ impl Heap {
     /// The walk is bounded by the chain being acyclic, which
     /// [`Heap::set_prototype_of`] is what guarantees — and by a step count besides, because a
     /// guarantee that depends on every other path being correct is not one this may rely on.
-    pub fn has_property(&self, object: ObjectId, key: PropertyKey) -> bool {
+    pub fn has_property(&mut self, object: ObjectId, key: PropertyKey) -> bool {
         self.find_own(object, key).is_some()
     }
 
@@ -588,17 +605,27 @@ impl Heap {
     /// descriptor is the ordinary one with its value replaced, which is why
     /// `Object.getOwnPropertyDescriptor(arguments, 0)` reports a data property and not the
     /// accessor the specification's own note implements the map with.
-    pub fn own_property(&self, object: ObjectId, key: PropertyKey) -> Option<Property> {
-        let found = self.object(object)?;
+    ///
+    /// `&mut` for the sake of one kind of object: a `BigInt64Array`'s element is a BigInt, which
+    /// lives in the heap, so reading one out of a buffer allocates. Every caller of this and of
+    /// [`Heap::find_own`] therefore needs a mutable heap for what is otherwise a pure question.
+    pub fn own_property(&mut self, object: ObjectId, key: PropertyKey) -> Option<Property> {
         // §10.4.5.1 — a TypedArray's elements are answered from the buffer and are never stored, so
         // this comes *before* the table rather than after it: a canonical numeric index is an
         // element whatever the table happens to hold, and one out of range is absent.
-        if let Some(view) = found.view()
-            && view.element.is_some()
+        //
+        // The view is copied out before anything else is asked of the object, because reading an
+        // element needs the heap mutably and a borrow of the object would still be alive.
+        let element_view = self
+            .object(object)?
+            .view()
+            .filter(|view| view.element.is_some());
+        if let Some(view) = element_view
             && let Some(at) = typed::index_of(self, key, view.count())
         {
             return at.ok().and_then(|at| self.element_property(view, at));
         }
+        let found = self.object(object)?;
         let Some(property) = found.get_own_property(key).copied() else {
             // §10.4.3.5 — nothing stored, which for a String object is where its characters are.
             return string_object::character(self, found.string_data()?, key);
@@ -753,14 +780,17 @@ impl Heap {
     ///
     /// Asked through [`Heap::own_property`] rather than the object's own table, so that a joined
     /// argument index answers with its parameter's value however the read arrived.
-    pub fn find_own(&self, object: ObjectId, key: PropertyKey) -> Option<(ObjectId, Property)> {
+    pub fn find_own(&mut self, object: ObjectId, key: PropertyKey) -> Option<(ObjectId, Property)> {
         // §10.4.5.4 — a canonical numeric index of a TypedArray never reaches the prototype, even
         // when the array does not have it. `ta[99]` on a short array is `undefined` and not an
         // inherited property, which is the whole reason this stops here rather than answering
         // `None` and letting the walk continue: a program that puts something at
         // `Int32Array.prototype[9]` must not have it show up as an element.
-        if let Some(view) = self.object(object)?.view()
-            && view.element.is_some()
+        let element_view = self
+            .object(object)?
+            .view()
+            .filter(|view| view.element.is_some());
+        if let Some(view) = element_view
             && let Some(index) = typed::index_of(self, key, view.count())
         {
             return index

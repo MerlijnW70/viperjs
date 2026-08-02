@@ -165,7 +165,12 @@ fn value_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 ///
 /// Both, because a method reached through a wrapper has the wrapper as its receiver: `1n.toString()`
 /// wraps and `Object(1n).toString()` was already wrapped, and the two must answer the same.
-fn this_bigint(receiver: Value, heap: &Heap) -> Completion<BigInt> {
+///
+/// Also the unwrap every caller of [`to_bigint`] needs, which answers a `Value::BigInt` and leaves
+/// its handle to be looked up. That the two are one function is not a coincidence: "the BigInt this
+/// value is" has exactly one answer, and a second spelling of it would be a second place for a
+/// handle the heap does not know to be turned into something other than a TypeError.
+pub(crate) fn this_bigint(receiver: Value, heap: &Heap) -> Completion<BigInt> {
     let held = match receiver {
         Value::BigInt(id) => Some(id),
         Value::Object(id) => match heap.object(id).and_then(crate::heap::Object::primitive) {
