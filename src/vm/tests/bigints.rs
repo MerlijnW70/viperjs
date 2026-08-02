@@ -319,3 +319,49 @@ fn as_int_n_is_where_a_bigint_is_given_a_width() {
         "00"
     );
 }
+
+#[test]
+fn a_data_view_reads_and_writes_sixty_four_bits_as_a_bigint() {
+    // §25.3.4's `BigInt64` pair — eight bytes, and the *only* difference between the two is
+    // whether the top bit is read as a sign. Written once and read both ways says that in one
+    // line, which two separate assertions would not.
+    assert_eq!(
+        run(
+            "var d = new DataView(new ArrayBuffer(8)); d.setBigInt64(0, -1n);              String(d.getBigInt64(0)) + ',' + String(d.getBigUint64(0))"
+        ),
+        "-1,18446744073709551615"
+    );
+    // A value too large for the slot takes its low bits rather than being refused, which is what a
+    // fixed width *is* — the same arithmetic `BigInt.asUintN(64, …)` does.
+    assert_eq!(
+        run(
+            "var d = new DataView(new ArrayBuffer(8));              d.setBigUint64(0, 2n ** 64n + 7n); String(d.getBigUint64(0))"
+        ),
+        "7"
+    );
+    // Both endiannesses, since §25.3.4 defaults to *big* and the machine underneath does not.
+    assert_eq!(
+        run(
+            "var d = new DataView(new ArrayBuffer(8)); d.setBigInt64(0, 1n, true);              String(d.getBigInt64(0, true)) + ',' + String(d.getBigInt64(0))"
+        ),
+        "1,72057594037927936"
+    );
+    // §25.3.1.2 step 4 is `ToBigInt`, which **refuses a Number** — so a `DataView` will not mix
+    // the two numeric types either, and for the same reason the operators will not.
+    assert_eq!(
+        run(
+            "var d = new DataView(new ArrayBuffer(8)); var e = 'none';              try { d.setBigInt64(0, 1) } catch (x) { e = x.constructor.name } e"
+        ),
+        "TypeError"
+    );
+    // …which is exactly where `BigInt(1)` differs: §21.2.1 converts a Number *before* reaching
+    // §7.1.13's table, because an explicit call is a program saying it means to cross over.
+    assert_eq!(run("String(BigInt(1))"), "1");
+    // Past the end of the view is a RangeError, as it is for every other accessor.
+    assert_eq!(
+        run(
+            "var d = new DataView(new ArrayBuffer(8)); var e = 'none';              try { d.getBigInt64(1) } catch (x) { e = x.constructor.name } e"
+        ),
+        "RangeError"
+    );
+}

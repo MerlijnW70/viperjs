@@ -129,7 +129,7 @@ the conformance harness that measures it — which from here is what says what t
 `yield*`, `async` functions and `await` are now in too** — see DR-0017 and `src/vm/suspend.rs` —
 and so are **async generators**, §27.6, in `src/vm/async_generator.rs`.
 
-Conformance as of this commit is **73.59% of test262** — 68,557 of 93,160 runs. Treat that number
+Conformance as of this commit is **73.73% of test262** — 68,683 of 93,160 runs. Treat that number
 as perishable and re-measure rather than quoting it; the point of the figure is the work list under
 it. Let the failure buckets choose the next slice, not intuition. The largest right now:
 

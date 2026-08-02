@@ -66,15 +66,30 @@ fn convert(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     // body runs. A check of its own answered the same on every input — which is the difference
     // between a rule being enforced twice and being enforced once.
     let primitive = vm.to_primitive(call.argument(0), crate::value::Hint::Number, heap)?;
+    // Step 3 — a Number is *converted* here, where §7.1.13's table refuses one outright. That is
+    // the difference between asking for a BigInt and being handed one: `BigInt(1)` is `1n`, and
+    // `new DataView(…).setBigInt64(0, 1)` is a TypeError. The explicit call is where a program
+    // says it means to cross between the two numeric types.
+    if let Value::Number(number) = primitive {
+        return match BigInt::from_f64(number) {
+            Some(value) => Ok(Value::BigInt(heap.new_bigint(value))),
+            // §21.2.1 step 3's `NumberToBigInt` — a Number that is not an integer has no BigInt,
+            // so this refuses rather than rounding.
+            None => Err(Abrupt::range_error(
+                "only an integer Number can become a BigInt",
+            )),
+        };
+    }
     to_bigint(primitive, heap)
 }
 
 /// §7.1.13 `ToBigInt` — every conversion *into* the type, in one place.
 ///
-/// The asymmetry with `ToNumber` is the point. A Number becomes a BigInt only when it is already an
-/// integer, because rounding would answer a question nobody asked; a String becomes one only when
-/// it spells an integer, and a String that does not is a **SyntaxError** rather than a NaN — there
-/// is no BigInt for "not a number" to be.
+/// The asymmetry with `ToNumber` is the point. A **Number is refused outright**, integer or not,
+/// because this is the conversion that happens without being asked for — `BigInt(1)` works only
+/// because §21.2.1 handles a Number *before* reaching here. A String becomes one when it spells an
+/// integer, and one that does not is a **SyntaxError** rather than a NaN: there is no BigInt for
+/// "not a number" to be.
 pub(crate) fn to_bigint(value: Value, heap: &mut Heap) -> Completion<Value> {
     let converted = match value {
         Value::BigInt(_) => return Ok(value),
@@ -94,16 +109,14 @@ pub(crate) fn to_bigint(value: Value, heap: &mut Heap) -> Completion<Value> {
         Value::Object(_) => {
             return Err(Abrupt::type_error("this cannot be converted to a BigInt"));
         }
-        Value::Number(number) => match BigInt::from_f64(number) {
-            Some(value) => value,
-            // §7.1.13 step 2 — a Number that is not an integer has no BigInt, so this refuses
-            // rather than rounding. `BigInt(1.5)` and `BigInt(NaN)` fail for the same reason.
-            None => {
-                return Err(Abrupt::range_error(
-                    "only an integer Number can become a BigInt",
-                ));
-            }
-        },
+        // §7.1.13's table gives a Number a **TypeError**, integer or not — this is the *implicit*
+        // conversion, and the whole point of the type is that it does not happen by accident.
+        // `BigInt(1)` succeeds because §21.2.1 handles a Number before reaching here.
+        Value::Number(_) => {
+            return Err(Abrupt::type_error(
+                "a Number cannot be converted to a BigInt implicitly",
+            ));
+        }
         Value::String(id) => match crate::value::string_as_bigint(id, heap) {
             Some(value) => value,
             // §7.1.13 step 1's `StringToBigInt` — and its failure is a **SyntaxError**, which is

@@ -2943,90 +2943,30 @@ built-ins/DataView/proto-from-ctor-realm-sab.js :: it threw TypeError: what was 
 built-ins/DataView/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/buffer/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/buffer/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/buffer/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/buffer/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-auto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteLength/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/byteLength/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-auto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-fixed.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/byteOffset/resizable-array-buffer-fixed.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/byteOffset/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/getBigInt64/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/detached-buffer-after-toindex-byteoffset.js (strict) :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/index-is-out-of-range.js :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/index-is-out-of-range.js (strict) :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigInt64/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigInt64/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigInt64/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigInt64/negative-byteoffset-throws.js :: it threw an object with no name: DataView access at index -1 should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/negative-byteoffset-throws.js (strict) :: it threw an object with no name: DataView access at index -1 should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/DataView/prototype/getBigInt64/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/DataView/prototype/getBigInt64/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getBigInt64/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getBigInt64/return-abrupt-from-tonumber-byteoffset.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/getBigInt64/return-abrupt-from-tonumber-byteoffset.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/getBigInt64/return-value-clean-arraybuffer.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/return-value-clean-arraybuffer.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/return-values-custom-offset.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/return-values-custom-offset.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/return-values.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/return-values.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/to-boolean-littleendian.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/to-boolean-littleendian.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: throw when integerIndex < 0 Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: throw when integerIndex < 0 Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-wrapped-values.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-wrapped-values.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/detached-buffer-after-toindex-byteoffset.js (strict) :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/index-is-out-of-range.js :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/index-is-out-of-range.js (strict) :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigUint64/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigUint64/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigUint64/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/getBigUint64/negative-byteoffset-throws.js :: it threw an object with no name: DataView access at index -1 should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/negative-byteoffset-throws.js (strict) :: it threw an object with no name: DataView access at index -1 should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/DataView/prototype/getBigUint64/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
+built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js :: it threw an object with no name
+built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js (strict) :: it threw an object with no name
+built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
+built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
 built-ins/DataView/prototype/getBigUint64/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getBigUint64/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getBigUint64/return-abrupt-from-tonumber-byteoffset.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/getBigUint64/return-abrupt-from-tonumber-byteoffset.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/getBigUint64/return-value-clean-arraybuffer.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/return-value-clean-arraybuffer.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/return-values-custom-offset.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/return-values-custom-offset.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/return-values.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/return-values.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/to-boolean-littleendian.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/to-boolean-littleendian.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: throw when integerIndex < 0 Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: throw when integerIndex < 0 Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-toprimitive.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-toprimitive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-toprimitive.js :: it threw an object with no name
+built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-toprimitive.js (strict) :: it threw an object with no name
+built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
+built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
 built-ins/DataView/prototype/getFloat16/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/getFloat16/detached-buffer-after-toindex-byteoffset.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/getFloat16/index-is-out-of-range.js :: it threw an object with no name: getIndex == Infinity Expected a RangeError but got a TypeError
@@ -3061,76 +3001,26 @@ built-ins/DataView/prototype/getFloat16/toindex-byteoffset.js :: it threw TypeEr
 built-ins/DataView/prototype/getFloat16/toindex-byteoffset.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/getFloat32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getFloat32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getFloat32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getFloat32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getFloat64/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getFloat64/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getFloat64/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getFloat64/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getInt16/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt16/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getInt16/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt16/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getInt32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal-sab.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal-sab.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getInt8/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getInt8/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getInt8/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getInt8/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getUint16/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getUint16/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getUint16/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getUint16/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getUint32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getUint32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getUint32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getUint32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/getUint8/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/getUint8/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/getUint8/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/getUint8/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setBigInt64/detached-buffer-after-bigint-value.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/detached-buffer-after-bigint-value.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/detached-buffer-after-toindex-byteoffset.js (strict) :: it threw an object with no name: DataView access at index Infinity should throw Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/setBigInt64/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigInt64/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/index-check-before-value-conversion.js :: it threw an object with no name: setBigInt64(-1.5, poisoned) Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/index-check-before-value-conversion.js (strict) :: it threw an object with no name: setBigInt64(-1.5, poisoned) Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/index-is-out-of-range.js :: it threw an object with no name: getIndex == Infinity Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/index-is-out-of-range.js (strict) :: it threw an object with no name: getIndex == Infinity Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/setBigInt64/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/setBigInt64/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/setBigInt64/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/DataView/prototype/setBigInt64/negative-byteoffset-throws.js :: it threw an object with no name: DataView access at index -1 should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/negative-byteoffset-throws.js (strict) :: it threw an object with no name: DataView access at index -1 should throw Expected a RangeError but got a TypeError
-built-ins/DataView/prototype/setBigInt64/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/DataView/prototype/setBigInt64/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/DataView/prototype/setBigInt64/range-check-after-value-conversion.js :: it threw an object with no name: setBigInt64(100, poisoned) Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/range-check-after-value-conversion.js (strict) :: it threw an object with no name: setBigInt64(100, poisoned) Expected a Test262Error but got a TypeError
 built-ins/DataView/prototype/setBigInt64/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setBigInt64/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setBigInt64/return-abrupt-from-tobigint-value.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/return-abrupt-from-tobigint-value.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/return-abrupt-from-tonumber-byteoffset.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/return-abrupt-from-tonumber-byteoffset.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/DataView/prototype/setBigInt64/set-values-little-endian-order.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/set-values-little-endian-order.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/set-values-return-undefined.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/set-values-return-undefined.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/to-boolean-littleendian.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/to-boolean-littleendian.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/toindex-byteoffset.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigInt64/toindex-byteoffset.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigUint64/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setBigUint64/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/setBigUint64/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/DataView/prototype/setBigUint64/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/DataView/prototype/setBigUint64/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setBigUint64/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setFloat16/detached-buffer-after-number-value.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -3173,50 +3063,34 @@ built-ins/DataView/prototype/setFloat32/immutable-buffer.js :: it threw TypeErro
 built-ins/DataView/prototype/setFloat32/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setFloat32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setFloat32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setFloat32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setFloat32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setFloat64/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setFloat64/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setFloat64/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setFloat64/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setFloat64/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setFloat64/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setInt16/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setInt16/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setInt16/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setInt16/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setInt16/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setInt16/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setInt32/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setInt32/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setInt32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setInt32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setInt32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setInt32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setInt8/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setInt8/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setInt8/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setInt8/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setInt8/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setInt8/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setUint16/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint16/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint16/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setUint16/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setUint16/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setUint16/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setUint32/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint32/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint32/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setUint32/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setUint32/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setUint32/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/DataView/prototype/setUint8/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint8/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint8/resizable-buffer.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DataView/prototype/setUint8/resizable-buffer.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/DataView/prototype/setUint8/this-has-no-dataview-internal.js :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
-built-ins/DataView/prototype/setUint8/this-has-no-dataview-internal.js (strict) :: it threw an object with no name: TypedArray Expected a TypeError but got a RangeError
 built-ins/Date/proto-from-ctor-realm-one.js :: it threw TypeError: what was called is not a function
 built-ins/Date/proto-from-ctor-realm-one.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Date/proto-from-ctor-realm-two.js :: it threw TypeError: what was called is not a function

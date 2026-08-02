@@ -651,3 +651,45 @@ fn a_two_s_complement_negate_carries_through_a_zero_limb() {
         "4294967295"
     ); // same
 }
+
+#[test]
+fn sixty_four_bits_go_out_and_come_back_the_way_the_sign_says() {
+    // §25.3.1.2's eight bytes, both ways. The same bits are two different BigInts depending on
+    // whether the top one is read as a sign, which is the whole of the difference between
+    // `BigInt64Array` and `BigUint64Array`.
+    assert_eq!(shown(&BigInt::from_bits(u64::MAX, true)), "-1");
+    assert_eq!(
+        shown(&BigInt::from_bits(u64::MAX, false)),
+        "18446744073709551615"
+    );
+    assert_eq!(
+        shown(&BigInt::from_bits(1 << 63, true)),
+        "-9223372036854775808"
+    );
+    assert_eq!(
+        shown(&BigInt::from_bits(1 << 63, false)),
+        "9223372036854775808"
+    );
+    assert_eq!(shown(&BigInt::from_bits(0, true)), "0");
+    assert_eq!(shown(&BigInt::from_bits(7, true)), "7");
+    // Out again, where a value too large for the slot is taken modulo 2^64 rather than refused —
+    // which is what a fixed-width write is.
+    assert_eq!(big("-1").low_u64(), u64::MAX);
+    assert_eq!(big("18446744073709551615").low_u64(), u64::MAX);
+    assert_eq!(big("18446744073709551616").low_u64(), 0);
+    assert_eq!(big("0").low_u64(), 0);
+    assert_eq!(big("7").low_u64(), 7);
+    // …and a round trip through both, at the edges where a sign is decided.
+    for bits in [0u64, 1, 7, i64::MAX as u64, 1 << 63, u64::MAX] {
+        assert_eq!(
+            BigInt::from_bits(bits, true).low_u64(),
+            bits,
+            "signed {bits}"
+        );
+        assert_eq!(
+            BigInt::from_bits(bits, false).low_u64(),
+            bits,
+            "unsigned {bits}"
+        );
+    }
+}

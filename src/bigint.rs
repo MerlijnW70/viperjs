@@ -118,6 +118,33 @@ impl BigInt {
         self.clone().with_sign(!self.negative)
     }
 
+    /// The low 64 bits of this value's two's complement — what a fixed-width slot receives.
+    ///
+    /// §25.3.1.2 writes a BigInt into eight bytes, and §21.2.2.2's `asUintN(64, …)` is the same
+    /// arithmetic: everything modulo 2^64. A negative value is the bits its complement has, which
+    /// is why this reads the magnitude and then negates rather than truncating a signed number
+    /// that may not fit in one.
+    pub fn low_u64(&self) -> u64 {
+        let low = u64::from(self.magnitude.first().copied().unwrap_or(0));
+        let high = u64::from(self.magnitude.get(1).copied().unwrap_or(0));
+        let bits = low | (high << 32);
+        match self.negative {
+            true => bits.wrapping_neg(),
+            false => bits,
+        }
+    }
+
+    /// The BigInt these 64 bits name, read as signed or unsigned.
+    ///
+    /// The other direction, and the one place the two `BigInt64` element kinds differ: the same
+    /// eight bytes are `-1n` read as signed and `18446744073709551615n` read as unsigned.
+    pub fn from_bits(bits: u64, signed: bool) -> Self {
+        match signed && bits & 0x8000_0000_0000_0000 != 0 {
+            true => Self::from_u64(bits.wrapping_neg()).negate(),
+            false => Self::from_u64(bits),
+        }
+    }
+
     /// This value negated when `negative`, and unchanged otherwise.
     ///
     /// For a caller that has read a sign and some digits separately, which is what every text
