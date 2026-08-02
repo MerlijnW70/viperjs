@@ -200,15 +200,24 @@ fn species_array(
     Ok(made)
 }
 
-/// The constructor of the kind `object` is — its `constructor` property, or `%Int8Array%` if it has
-/// none, which is what `SpeciesConstructor`'s default is for.
+/// §23.2.4.2 step 1 — the **intrinsic** constructor for the kind `object` is.
+///
+/// The intrinsic and not the object's `constructor` property, which is what this used to read.
+/// §7.3.22 consults the property itself at step 2; handing it in as the *default* as well meant a
+/// species of `undefined` — step 5's "I have no opinion" — fell back to whatever the property said
+/// rather than to the kind. `sample.constructor = {}` then decided what `map` built with, and
+/// constructing a plain object is the TypeError 230 of §23.2's tests were reporting.
 fn kind_constructor(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<ObjectId> {
-    let name = key(heap, "constructor");
-    let found = vm.get_property_key(Value::Object(object), name, heap)?;
-    match found {
-        Value::Object(id) => Ok(id),
-        _ => Err(Abrupt::type_error("this TypedArray has no constructor")),
-    }
+    let element = heap
+        .typed_view(object)
+        .and_then(|view| view.element)
+        .ok_or_else(|| Abrupt::type_error("this is not a TypedArray"))?;
+    let clamped = heap
+        .object(object)
+        .is_some_and(crate::heap::Object::is_clamped);
+    vm.realm()
+        .typed_constructor(element, clamped)
+        .ok_or_else(|| Abrupt::type_error("this TypedArray has no constructor"))
 }
 
 /// §23.2.3.1 — `at`, which counts back from the end for a negative index.
@@ -254,10 +263,19 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let from = relative(vm, heap, call.argument(0), count, 0.0)?;
     let to = relative(vm, heap, call.argument(1), count, count as f64)?;
     let taken = to.saturating_sub(from);
+    let made = species_array(vm, heap, object, taken)?;
+    // §23.2.3.27 step 10.a — **after** the species has been made, and only when there is anything
+    // to copy. Both halves are observable: `SpeciesConstructor` reads `constructor` and then
+    // `@@species` off the receiver, so a getter on either can detach the buffer this is about to
+    // read, and a `slice()` of nothing must still answer the empty array it just made rather than
+    // throw. Read before the species instead, the copy would quietly hold what a detached buffer
+    // used to say.
+    if taken > 0 {
+        validate(heap, call.this_value)?;
+    }
     let values: Vec<Numeric> = (from..from + taken)
         .filter_map(|index| heap.numeric_at(view, index))
         .collect();
-    let made = species_array(vm, heap, object, taken)?;
     if let Value::Object(id) = made {
         // §23.2.3.26 step 14 — the copy is `SetValueInBuffer` between two arrays of the *same*
         // element kind, so the numerics go straight across with no conversion. A species of a
@@ -278,18 +296,11 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 /// and answer the subclass. Two spellings for the same-looking thing, and the difference is
 /// visible from one receiver.
 fn same_kind(vm: &mut Vm, heap: &mut Heap, object: ObjectId, count: usize) -> Completion<ObjectId> {
-    let element = heap.typed_view(object).and_then(|view| view.element);
-    let clamped = heap
-        .object(object)
-        .is_some_and(crate::heap::Object::is_clamped);
-    let named = crate::heap::KINDS
-        .iter()
-        .find(|(_, kind, clamps)| Some(*kind) == element && *clamps == clamped)
-        .map(|(name, _, _)| *name);
-    let found = named.and_then(|name| super::global_object(heap, &vm.realm(), name));
-    let Some(constructor) = found else {
-        return Err(Abrupt::type_error("this TypedArray has no kind"));
-    };
+    // Asked of the realm rather than looked up on the global by name. "Intrinsic" is the whole
+    // claim this function makes, and `globalThis.Uint8Array = something` is a line a script may
+    // write — after which a name lookup answers the something and `toSorted` on a `Uint8Array`
+    // builds one of those. The realm took the nine before any script ran.
+    let constructor = kind_constructor(vm, heap, object)?;
     let made = vm.construct_value(
         Value::Object(constructor),
         &[Value::Number(count as f64)],

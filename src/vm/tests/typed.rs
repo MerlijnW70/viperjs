@@ -1444,3 +1444,57 @@ fn a_species_of_the_other_content_type_is_refused_before_anything_is_copied_into
         "BigUint64Array,1,2"
     );
 }
+
+#[test]
+fn slice_notices_a_buffer_the_species_lookup_detached_but_only_when_it_would_copy() {
+    // §23.2.3.27 step 10 — the detached check sits *after* `TypedArraySpeciesCreate` and *inside*
+    // `if count > 0`, and both halves are observable from one script.
+    //
+    // §7.3.22 reads `constructor` off the receiver, so a getter there runs in the middle of
+    // `slice` and can detach the very buffer the copy is about to read. Checked before the species
+    // instead, this would answer a copy of what a detached buffer used to hold.
+    assert_eq!(
+        run("var a = new Int8Array(4); \
+             Object.defineProperty(a, 'constructor', { get: function () { a.buffer.transfer(); } }); \
+             try { a.slice(); 'no throw' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and a slice of *nothing* must not throw, because step 10 never runs. The species is still
+    // made and still detaches the buffer on the way, so the only difference between this row and
+    // the one above is the count — which is exactly what the guard is.
+    assert_eq!(
+        run("var a = new Int8Array(0); \
+             Object.defineProperty(a, 'constructor', { get: function () { a.buffer.transfer(); } }); \
+             var out = a.slice(); out.length + ',' + out.constructor.name"),
+        "0,Int8Array"
+    );
+    // The same boundary reached by asking for an empty range of a non-empty array: the receiver's
+    // buffer is detached and there is still nothing to copy, so there is still nothing to refuse.
+    assert_eq!(
+        run("var a = new Int8Array(4); \
+             Object.defineProperty(a, 'constructor', { get: function () { a.buffer.transfer(); } }); \
+             a.slice(2, 2).length"),
+        "0"
+    );
+}
+
+#[test]
+fn a_copy_of_the_same_kind_is_the_intrinsic_and_not_whatever_the_global_now_names() {
+    // §23.2.4.3 `TypedArrayCreateSameType` says *intrinsic*, and a script may write
+    // `globalThis.Int8Array = …` at any time. Looked up by name, `toSorted` would build whatever
+    // the name had come to mean; the realm took the nine before a script ran.
+    assert_eq!(
+        run(
+            "var a = new Int8Array([2, 1]); Int8Array = function () { return {}; }; \
+             a.toSorted().constructor.name"
+        ),
+        "Int8Array"
+    );
+    // §23.2.4.2's default is the same intrinsic, and `map` reaches it through `@@species` — so a
+    // `constructor` that is not a constructor at all is harmless when the species says nothing.
+    assert_eq!(
+        run("var a = new Int8Array([1, 2]); a.constructor = {}; \
+             a.map(function (v) { return v; }).constructor.name"),
+        "Int8Array"
+    );
+}

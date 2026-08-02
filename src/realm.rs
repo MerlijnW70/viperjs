@@ -70,6 +70,15 @@ pub struct Realm {
     data_view_prototype: ObjectId,
     /// %TypedArray.prototype% — §23.2.3, which every one of the nine inherits from.
     typed_array_prototype: ObjectId,
+    /// The concrete TypedArray constructors, in [`crate::heap::KINDS`] order.
+    ///
+    /// §23.2.4.2 step 1 wants "the intrinsic object associated with the constructor name in
+    /// `exemplar.[[TypedArrayName]]`" as `SpeciesConstructor`'s default, and *intrinsic* is the
+    /// operative word: it is `%Int8Array%` itself, not whatever the array's `constructor` property
+    /// says. Reading the property instead made `sample.constructor = {}` decide what `map` built
+    /// with, so a species of `undefined` fell back to a plain object and the copy tried to
+    /// construct it.
+    typed_constructors: [ObjectId; crate::heap::KINDS.len()],
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
     regexp_prototype: ObjectId,
@@ -340,6 +349,8 @@ impl Realm {
             array_buffer_constructor: array_buffer_prototype,
             data_view_prototype,
             typed_array_prototype,
+            // Replaced below, once `builtins::typed::install` has made them.
+            typed_constructors: [typed_array_prototype; crate::heap::KINDS.len()],
             map_prototype,
             regexp_prototype,
             async_iterator_prototype,
@@ -385,6 +396,15 @@ impl Realm {
         }
         if let Some(found) = crate::builtins::global_object(heap, &realm, "ArrayBuffer") {
             realm.array_buffer_constructor = found;
+        }
+        // The same discovery for the nine, and for the same reason: they are made by the
+        // built-ins, which are handed a finished realm. Taken from the global *now*, before a
+        // script can run and reassign one — which is precisely the difference between an intrinsic
+        // and a property, and the whole point of holding them here.
+        for (at, (name, _, _)) in crate::heap::KINDS.into_iter().enumerate() {
+            if let Some(found) = crate::builtins::global_object(heap, &realm, name) {
+                realm.typed_constructors[at] = found;
+            }
         }
         // Last, so that everything above it is inside the ceiling — see `Realm::intrinsics`.
         realm.seal(heap);
@@ -478,6 +498,25 @@ impl Realm {
     /// %TypedArray.prototype% — §23.2.3.
     pub fn typed_array_prototype(&self) -> ObjectId {
         self.typed_array_prototype
+    }
+
+    /// The intrinsic constructor for one of §23.2's eleven kinds — §23.2.4.2 step 1's default.
+    ///
+    /// Named by the pair that identifies a kind rather than by a string: `Uint8Array` and
+    /// `Uint8ClampedArray` read the same eight bits and are told apart only by the clamping, so an
+    /// `Element` alone would answer the wrong one of the two for half the programs that ask.
+    ///
+    /// `None` for a pair [`crate::heap::KINDS`] does not list, which no view can hold — a view's
+    /// element came from that table in the first place.
+    pub fn typed_constructor(
+        &self,
+        element: crate::heap::Element,
+        clamped: bool,
+    ) -> Option<ObjectId> {
+        let at = crate::heap::KINDS
+            .into_iter()
+            .position(|(_, known, known_clamped)| known == element && known_clamped == clamped)?;
+        self.typed_constructors.get(at).copied()
     }
 
     /// %Map.prototype% — §24.1.3.

@@ -16069,32 +16069,16 @@ built-ins/TypedArray/prototype/fill/resizable-buffer.js :: it threw TypeError: w
 built-ins/TypedArray/prototype/fill/resizable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/fill/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/fill/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/TypedArray/prototype/filter/BigInt/callbackfn-called-before-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/callbackfn-called-before-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/callbackfn-called-before-species.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/callbackfn-called-before-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/filter/BigInt/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/filter/BigInt/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/callbackfn-called-before-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/callbackfn-called-before-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/callbackfn-called-before-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/callbackfn-called-before-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/callbackfn-resize.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/filter/callbackfn-resize.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/filter/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: what was called is not a function
@@ -16109,16 +16093,8 @@ built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutabl
 built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/find/BigInt/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«undefined», «7n») to be true (Testing with BigInt64Array and makePassthrough.)
@@ -16325,16 +16301,8 @@ built-ins/TypedArray/prototype/map/BigInt/speciesctor-destination-resizable.js :
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js (strict) :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/callbackfn-resize.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -16353,16 +16321,8 @@ built-ins/TypedArray/prototype/map/speciesctor-destination-resizable.js :: it th
 built-ins/TypedArray/prototype/map/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-get-ctor-abrupt.js :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-get-ctor-abrupt.js (strict) :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-grow.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-grow.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-shrink.js :: it threw TypeError: what was called is not a function
@@ -16469,34 +16429,18 @@ built-ins/TypedArray/prototype/set/typedarray-arg-target-out-of-bounds.js :: it 
 built-ins/TypedArray/prototype/set/typedarray-arg-target-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/set/typedarray-arg-targetbuffer-detached-during-tointeger-offset-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/typedarray-arg-targetbuffer-detached-during-tointeger-offset-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/detached-buffer-custom-ctor-other-targettype.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/detached-buffer-custom-ctor-other-targettype.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/detached-buffer-custom-ctor-same-targettype.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/detached-buffer-custom-ctor-same-targettype.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/detached-buffer-speciesctor-get-species-custom-ctor-throws.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/detached-buffer-speciesctor-get-species-custom-ctor-throws.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/slice/BigInt/return-abrupt-from-this-out-of-bounds.js (strict) :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/coerced-start-end-grow.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/slice/coerced-start-end-grow.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/slice/coerced-start-end-shrink.js :: it threw an object with no name: Expected SameValue(«4», «2») to be true
 built-ins/TypedArray/prototype/slice/coerced-start-end-shrink.js (strict) :: it threw an object with no name: Expected SameValue(«4», «2») to be true
-built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-other-targettype.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-other-targettype.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-same-targettype.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-same-targettype.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/detached-buffer-speciesctor-get-species-custom-ctor-throws.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/detached-buffer-speciesctor-get-species-custom-ctor-throws.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/resizable-buffer.js :: it threw TypeError: what was called is not a function
@@ -16509,16 +16453,8 @@ built-ins/TypedArray/prototype/slice/speciesctor-destination-backed-by-immutable
 built-ins/TypedArray/prototype/slice/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-resize.js :: it threw an object with no name: Expected SameValue(«4», «2») to be true
 built-ins/TypedArray/prototype/slice/speciesctor-resize.js (strict) :: it threw an object with no name: Expected SameValue(«4», «2») to be true
 built-ins/TypedArray/prototype/slice/speciesctor-return-same-buffer-with-offset.js :: it threw an object with no name: Actual [20, 30, 40, 60] and expected [20, 20, 20, 60] should have the same contents.  (Testing with Float64Array and makePassthrough.)
@@ -16559,14 +16495,6 @@ built-ins/TypedArray/prototype/sort/sort-tonumber.js :: it threw TypeError: this
 built-ins/TypedArray/prototype/sort/sort-tonumber.js (strict) :: it threw TypeError: this ArrayBuffer has been detached (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/sorted-values-nan.js :: it threw an object with no name: #2 [4] Expected SameValue(«NaN», «Infinity») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/sorted-values-nan.js (strict) :: it threw an object with no name: #2 [4] Expected SameValue(«NaN», «Infinity») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/BigInt/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/subarray/coerced-begin-end-grow.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/subarray/coerced-begin-end-grow.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/subarray/coerced-begin-end-shrink.js :: it threw an object with no name: Expected a RangeError but got a TypeError
@@ -16575,14 +16503,6 @@ built-ins/TypedArray/prototype/subarray/resizable-buffer.js :: it threw TypeErro
 built-ins/TypedArray/prototype/subarray/resizable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/subarray/result-byteOffset-from-out-of-bounds.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArray/prototype/subarray/result-byteOffset-from-out-of-bounds.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArray/prototype/subarray/speciesctor-get-ctor-inherited.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-ctor-inherited.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-ctor.js :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-ctor.js (strict) :: it threw TypeError: this TypedArray has no constructor (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-use-default-ctor.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-use-default-ctor.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-this-out-of-bounds.js :: it threw an object with no name: implements ArrayBuffer.prototype.resize Expected SameValue(«"undefined"», «"function"») to be true

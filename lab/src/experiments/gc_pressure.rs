@@ -66,7 +66,13 @@ pub fn run(argument: Option<&str>) -> std::process::ExitCode {
     let finished = started.elapsed();
 
     let verdict = match outcome {
-        Ok(Outcome::Value(_)) => "completed".to_string(),
+        Ok(Outcome::Value(value)) => match value.to_string(&mut heap) {
+            Ok(id) => format!(
+                "completed: {}",
+                String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+            ),
+            Err(_) => "completed with something that will not print".to_string(),
+        },
         Ok(Outcome::Thrown(value)) => match value.to_string(&mut heap) {
             Ok(id) => format!(
                 "threw: {}",
