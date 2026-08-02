@@ -380,17 +380,14 @@ impl BigInt {
             0 => (fraction, -1074),
             _ => (fraction | 0x0010_0000_0000_0000, raw_exponent - 1075),
         };
-        let magnitude = Self::from_u64(mantissa);
-        let shifted = match exponent >= 0 {
-            true => magnitude
-                .shift_left(&Self::from_u64(exponent as u64))
-                .ok()?,
-            // A negative exponent with no fractional part means the mantissa's low bits are zero,
-            // so this shift discards nothing — `value.fract()` above is what guarantees it.
-            false => magnitude
-                .shift_right(&Self::from_u64(exponent.unsigned_abs()))
-                .ok()?,
-        };
+        // One shift with a *signed* count rather than a branch on its sign: `shift_left` already
+        // turns a negative count round, and a branch here would have had two arms answering the
+        // same for an exponent of zero — the one value at their boundary.
+        //
+        // A negative exponent with no fractional part means the mantissa's low bits are zero, so
+        // shifting the other way discards nothing; `value.fract()` above is what guarantees it.
+        let places = Self::from_u64(exponent.unsigned_abs()).negate_if(exponent.is_negative());
+        let shifted = Self::from_u64(mantissa).shift_left(&places).ok()?;
         Some(shifted.with_sign(negative))
     }
 

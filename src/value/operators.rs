@@ -50,9 +50,9 @@ fn compare_across_types(left: Value, right: Value, heap: &Heap) -> Option<bool> 
 /// fraction, which is what decides the comparison when the integer parts agree.
 fn against_number(left: &BigInt, right: f64) -> Option<std::cmp::Ordering> {
     use std::cmp::Ordering;
-    if right.is_nan() {
-        return None;
-    }
+    // No check for a NaN: `BigInt::from_f64` answers `None` for one, and `None` here *is* "not
+    // comparable". A guard of its own said the same thing on every input.
+    //
     // An infinity is comparable and equals no BigInt: every one of them is inside it.
     if right.is_infinite() {
         return Some(match right.is_sign_positive() {
@@ -65,7 +65,7 @@ fn against_number(left: &BigInt, right: f64) -> Option<std::cmp::Ordering> {
         Ordering::Equal => {
             // The integer parts agree, so the fraction decides — and which way depends on its
             // sign: `1n < 1.5` and `-1n > -1.5`.
-            let fraction = right - right.trunc();
+            let fraction = right.fract();
             match fraction.partial_cmp(&0.0) {
                 Some(Ordering::Greater) => Ordering::Less,
                 Some(Ordering::Less) => Ordering::Greater,
@@ -81,16 +81,20 @@ fn against_number(left: &BigInt, right: f64) -> Option<std::cmp::Ordering> {
 /// A Number that is not an integer is not any BigInt, and neither is a NaN or an infinity. The
 /// comparison is *exact* on both sides: converting the BigInt to an `f64` would make
 /// `2n ** 53n + 1n` equal `2 ** 53`, and they are different numbers.
-fn equal_across_types(left: Value, right: Value, heap: &Heap) -> bool {
-    let (big, number) = match (left, right) {
-        (Value::BigInt(big), Value::Number(number)) => (big, number),
-        (Value::Number(number), Value::BigInt(big)) => (big, number),
-        _ => return false,
-    };
-    match (heap.bigint(big), BigInt::from_f64(number)) {
-        (Some(big), Some(number)) => *big == number,
-        _ => false,
-    }
+fn equal_across_types(big: crate::heap::BigIntId, number: f64, heap: &Heap) -> bool {
+    heap.bigint(big)
+        .zip(BigInt::from_f64(number))
+        .is_some_and(|(big, number)| *big == number)
+}
+
+/// §7.2.15 steps 6 and 7 — a BigInt against a String, which is read as one.
+///
+/// Text that is not an integer is simply *not equal* rather than an error: `1n == "1"` is true and
+/// `1n == "1.5"` is false.
+fn equal_to_string(big: crate::heap::BigIntId, text: crate::heap::StringId, heap: &Heap) -> bool {
+    heap.bigint(big)
+        .zip(string_as_bigint(text, heap))
+        .is_some_and(|(big, text)| *big == text)
 }
 
 /// §7.1.14 `StringToBigInt` — the text of a BigInt, or `None` if it is not one.
@@ -441,32 +445,6 @@ pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> Completion<bo
         | (Value::Symbol(_), Value::Symbol(_))
         | (Value::BigInt(_), Value::BigInt(_))
         | (Value::Object(_), Value::Object(_)) => left.is_strictly_equal(&right, heap),
-        // Steps 4 and 5 — a BigInt and a Number **are** compared, unlike in arithmetic, and
-        // mathematically: `1n == 1` is true where `1n + 1` is a TypeError. Comparing is asking
-        // whether two values are the same point on the number line, which is a question that has
-        // an answer at every width; arithmetic has to *produce* a value and would have to choose
-        // one. That is the whole of why one mixes and the other does not.
-        (Value::BigInt(_), Value::Number(_)) | (Value::Number(_), Value::BigInt(_)) => {
-            equal_across_types(left, right, heap)
-        }
-        // Steps 6 and 7's other half — a BigInt against a String reads the String as a BigInt, and
-        // text that is not an integer is simply *not equal* rather than an error: `1n == "1"` is
-        // true and `1n == "1.5"` is false.
-        (Value::BigInt(_), Value::String(id)) | (Value::String(id), Value::BigInt(_)) => {
-            match string_as_bigint(id, heap) {
-                Some(parsed) => {
-                    let other = match left {
-                        Value::BigInt(value) => value,
-                        _ => match right {
-                            Value::BigInt(value) => value,
-                            _ => return Ok(false),
-                        },
-                    };
-                    heap.bigint(other).is_some_and(|value| *value == parsed)
-                }
-                None => false,
-            }
-        }
         // Steps 2 and 3 — the pair that is equal without being the same, and the reason
         // `x == null` is the idiomatic test for "either of them".
         (Value::Undefined, Value::Null) | (Value::Null, Value::Undefined) => true,
@@ -474,6 +452,19 @@ pub fn is_loosely_equal(left: Value, right: Value, heap: &Heap) -> Completion<bo
         // `ToNumber("")` is `+0`, which surprises everyone exactly once.
         (Value::Number(_), Value::String(_)) | (Value::String(_), Value::Number(_)) => {
             left.to_number(heap)? == right.to_number(heap)?
+        }
+        // Steps 4 and 5 — a BigInt and a Number **are** compared, unlike in arithmetic, and
+        // mathematically: `1n == 1` is true where `1n + 1` is a TypeError. Comparing is asking
+        // whether two values are the same point on the number line, which is a question that has
+        // an answer at every width; arithmetic has to *produce* a value and would have to choose
+        // one. That is the whole of why one mixes and the other does not.
+        (Value::BigInt(big), Value::Number(number))
+        | (Value::Number(number), Value::BigInt(big)) => equal_across_types(big, number, heap),
+        // Steps 6 and 7's other half — a BigInt against a String reads the String as a BigInt, and
+        // text that is not an integer is simply *not equal* rather than an error: `1n == "1"` is
+        // true and `1n == "1.5"` is false.
+        (Value::BigInt(big), Value::String(text)) | (Value::String(text), Value::BigInt(big)) => {
+            equal_to_string(big, text, heap)
         }
         // Steps 10 and 11 — a Boolean becomes a Number and the comparison starts again. That is
         // why `"1" == true` is true and `"true" == true` is false: the Boolean became `1`, and

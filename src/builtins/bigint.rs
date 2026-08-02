@@ -61,11 +61,10 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
 /// §21.2.1 `BigInt(value)` — the explicit conversion, which the operators refuse to do implicitly.
 fn convert(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    // Step 1 — `new BigInt(…)` is a TypeError. A wrapper is what a method call makes for itself;
-    // there is no reason for a program to ask for one.
-    if call.constructing() {
-        return Err(Abrupt::type_error("BigInt is not a constructor"));
-    }
+    // Step 1's `NewTarget is not undefined` is not checked here, and it is still true: a native
+    // function has no `[[Construct]]` in this engine, so `new BigInt(1)` is refused before this
+    // body runs. A check of its own answered the same on every input — which is the difference
+    // between a rule being enforced twice and being enforced once.
     let primitive = vm.to_primitive(call.argument(0), crate::value::Hint::Number, heap)?;
     to_bigint(primitive, heap)
 }
@@ -216,10 +215,10 @@ fn truncation_arguments(
 ///
 /// A remainder and then a correction, because §6.1.6.2.6's remainder keeps the sign of the dividend
 /// and a modulo does not: `-1n % 256n` is `-1n` where this wants `255n`.
+///
+/// No special case for a width of zero: `2^0` is one, everything modulo one is zero, and the
+/// correction leaves a zero alone. The shortcut answered the same on every input.
 fn wrap_to_width(value: &BigInt, bits: u64) -> Result<BigInt, crate::bigint::Error> {
-    if bits == 0 {
-        return Ok(BigInt::zero());
-    }
     let width = BigInt::from_u64(1).shift_left(&BigInt::from_u64(bits))?;
     let remainder = value.remainder(&width)?;
     match remainder.is_negative() {

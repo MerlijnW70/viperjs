@@ -151,7 +151,21 @@ fn a_string_is_read_as_a_bigint_where_one_is_expected() {
     // an error, which is the difference from `ToNumber` giving a NaN.
     assert_eq!(run("1n == '1'"), "true");
     assert_eq!(run("1n == ' 1 '"), "true");
+    // All three radix prefixes, which §7.1.14 accepts — and none of them may carry a sign, so a
+    // signed one is read as decimal, fails, and is simply not equal.
     assert_eq!(run("255n == '0xff'"), "true");
+    assert_eq!(run("255n == '0o377'"), "true");
+    assert_eq!(run("255n == '0b11111111'"), "true");
+    assert_eq!(
+        run("(-255n == '-0xff') + ',' + (-255n == '-0o377')"),
+        "false,false"
+    );
+    // A prefix with no digits after it is not a number at all — and it is *not* zero, which is
+    // what it would be if the digits were simply read as an empty run.
+    assert_eq!(
+        run("(0n == '0x') + ',' + (0n == '0o') + ',' + (0n == '0b')"),
+        "false,false,false"
+    );
     assert_eq!(run("-1n == '-1'"), "true");
     assert_eq!(run("0n == ''"), "true");
     assert_eq!(run("1n == '1.5'"), "false");
@@ -251,6 +265,18 @@ fn the_prototype_answers_through_a_wrapper_and_directly() {
     assert_eq!(run("Object(1n).toString()"), "1");
     assert_eq!(run("typeof (1n).valueOf()"), "bigint");
     assert_eq!(run("Object.prototype.toString.call(1n)"), "[object BigInt]");
+    // §21.2.3.5's attributes, which are what makes that tag *replaceable*: a script may delete it
+    // and get `[object Object]` back, and may not reach it by enumeration.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(BigInt.prototype, Symbol.toStringTag);              d.writable + ',' + d.enumerable + ',' + d.configurable"
+        ),
+        "false,false,true"
+    );
+    assert_eq!(
+        run("delete BigInt.prototype[Symbol.toStringTag]; Object.prototype.toString.call(1n)"),
+        "[object Object]"
+    );
     // A radix outside 2 to 36 is a RangeError, the same range `Number.prototype.toString` uses.
     assert_eq!(
         run("var e = 'none'; try { (1n).toString(1) } catch (x) { e = x.constructor.name } e"),

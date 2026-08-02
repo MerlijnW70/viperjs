@@ -88,12 +88,10 @@ impl Value {
             // §7.2.12's `BigInt::sameValue` — the *digits*, like a String and unlike an Object. A
             // BigInt is a primitive whose identity is its value, so two handles to equal
             // magnitudes are equal however they were arrived at.
-            (Self::BigInt(left), Self::BigInt(right)) => {
-                match (heap.bigint(*left), heap.bigint(*right)) {
-                    (Some(left), Some(right)) => left == right,
-                    _ => false,
-                }
-            }
+            (Self::BigInt(left), Self::BigInt(right)) => heap
+                .bigint(*left)
+                .zip(heap.bigint(*right))
+                .is_some_and(|(left, right)| left == right),
             _ => false,
         }
     }

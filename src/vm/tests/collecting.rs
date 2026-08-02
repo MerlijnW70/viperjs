@@ -156,6 +156,34 @@ fn a_queued_job_keeps_what_it_is_going_to_run_with() {
 }
 
 #[test]
+fn a_bigint_is_kept_while_something_names_it_and_freed_when_nothing_does() {
+    // §6.1.6.2's magnitude is the program's to size, so a BigInt nothing names is worth reclaiming
+    // for the same reason a String is — and unlike a String it is never interned, so the collector
+    // is the only thing that can.
+    assert_eq!(
+        survives("var kept = 2n ** 200n;", "kept === 2n ** 200n"),
+        "true"
+    );
+    // …and the other direction, which is what makes the first one mean something: a value the
+    // program has let go of does come back.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let script = parse_script("var kept = 1n; var dropped = 2n ** 200n; dropped = null;")
+        .expect("the setup parses"); // the test is about what is freed
+    let chunk = compile_script(&script, &mut heap).expect("the setup compiles"); // same
+    vm.run(&chunk, &mut heap).expect("the setup runs"); // same
+    let freed = vm.collect(&chunk, &mut heap);
+    assert!(
+        freed.bigints > 0,
+        "the dropped BigInt should have gone: {freed:?}"
+    );
+    // The one still named is still readable, digits and all.
+    let script = parse_script("String(kept)").expect("the question parses"); // same
+    let asked = compile_script(&script, &mut heap).expect("the question compiles"); // same
+    assert_eq!(describe_run(&asked, &mut vm, &mut heap), "1");
+}
+
+#[test]
 fn what_nothing_names_any_more_is_freed() {
     // The other direction, and it is what makes the tests above mean anything: a root set that
     // named *everything* would pass all of them and collect nothing. So this one asks the heap
