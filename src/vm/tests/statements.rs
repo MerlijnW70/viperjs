@@ -933,3 +933,99 @@ fn a_finally_re_emitted_by_a_jump_is_compiled_in_the_scope_it_was_written_in() {
         "ff"
     );
 }
+
+#[test]
+fn a_var_belongs_to_its_function_however_many_scopes_it_is_written_inside() {
+    // §14.3.2 — hoisting has already given a `var` a slot in the function, so the declaration is a
+    // *store* to that binding and not a new one. `Compiler::declare` searches only the innermost
+    // level, so inside a block with an environment of its own it made a second binding and stored
+    // into that instead — and the value never reached the name anyone could read.
+    assert_eq!(
+        run("(function () { { let a = 1; var x = 2; } return x; })()"),
+        "2"
+    );
+    assert_eq!(
+        run("(function () { try { null.y } catch (e) { var x = 2; } return x; })()"),
+        "2"
+    );
+    // Assigning to an existing `var` from inside a scope, which is the same resolution by the
+    // other route and was already right — here so the pair cannot drift.
+    assert_eq!(
+        run("(function () { var x = 1; { let a = 2; x = 3; } return x; })()"),
+        "3"
+    );
+    // Two scopes deep, so the depth is a count rather than a flag.
+    assert_eq!(
+        run("(function () { { let a = 1; { let b = 2; var x = 3; } } return x; })()"),
+        "3"
+    );
+    // …and read *before* the block runs, which is what hoisting means: the binding is there and
+    // holds nothing, rather than being made when the declaration is reached.
+    assert_eq!(
+        run("(function () { var seen = typeof x; { let a = 1; var x = 2; } return seen; })()"),
+        "undefined"
+    );
+}
+
+#[test]
+fn a_var_in_a_script_is_a_global_property_wherever_it_is_written() {
+    // §16.1.7 — a script's `var` goes in the global variable scope, and no block it is written
+    // inside changes that. The question used to be asked as "are any scopes open", which stopped
+    // being true the moment a block or a catch opened one: the `var` then took the slot path and
+    // became a binding of that block, so `{ let a = 1; var foo = 2; } foo` answered `undefined`.
+    assert_eq!(run("{ let a = 1; var foo = 2; } foo"), "2");
+    assert_eq!(run("{ let a = 1; var foo = 2; } globalThis.foo"), "2");
+    assert_eq!(
+        run("try { throw 1 } catch (e) { var foo = 'in catch'; } foo"),
+        "in catch"
+    );
+    assert_eq!(run("for (let i = 0; i < 1; i++) { var foo = 3; } foo"), "3");
+    // A `let` beside it still does not become a property, which is the half that was always right
+    // and is what makes the two answers different at all.
+    assert_eq!(
+        run("{ let a = 1; var foo = 2; } typeof globalThis.a"),
+        "undefined"
+    );
+}
+
+#[test]
+fn a_catch_parameter_is_a_binding_of_the_catch_and_of_nothing_around_it() {
+    // §14.15.3 — an environment of its own, and only when there *is* a parameter: `catch { }`
+    // evaluates its block in the scope around it.
+    assert_eq!(
+        run("var e = 'outer'; try { null.x } catch (e) {} e"),
+        "outer"
+    );
+    assert_eq!(run("try { null.x } catch (e) {} typeof e"), "undefined");
+    // A closure made in the catch keeps that catch's parameter, and two catches keep their own.
+    assert_eq!(
+        run("var f; try { throw 'caught' } catch (e) { f = function () { return e; }; } f()"),
+        "caught"
+    );
+    assert_eq!(
+        run(
+            "var a, b; try { throw 1 } catch (e) { a = function () { return e; }; } \
+             try { throw 2 } catch (e) { b = function () { return e; }; } a() + ',' + b()"
+        ),
+        "1,2"
+    );
+    // The exits out of it, which is where an environment usually goes wrong.
+    assert_eq!(
+        run("(function () { for (;;) { try { null.x } catch (e) { break; } } return 'ok'; })()"),
+        "ok"
+    );
+    assert_eq!(
+        run(
+            "(function () { var r = ''; for (;;) { try { null.x } catch (e) { break; } finally { r += 'f'; } } return r; })()"
+        ),
+        "f"
+    );
+    assert_eq!(
+        run("(function () { try { null.x } catch (e) { return 'returned'; } })()"),
+        "returned"
+    );
+    // §14.15.3's optional binding gets no environment at all, and a pattern declares every name in
+    // it — both are the parameter question asked at its two edges.
+    assert_eq!(run("try { null.x } catch { 'no param' }"), "no param");
+    assert_eq!(run("try { throw { a: 5 } } catch ({ a }) { a }"), "5");
+}

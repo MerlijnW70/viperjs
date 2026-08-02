@@ -1252,6 +1252,16 @@ impl Compiler<'_> {
         // §14.15.3 — the catch parameter is a *block-scoped* binding of its own, so it is given a
         // slot for the duration of the catch block and taken away again. `catch { }` with no
         // parameter is ES2019's optional binding: the value is simply discarded.
+        //
+        // §14.15.3 gives it an environment of its own, and **only** when there is a parameter:
+        // `catch { }` evaluates its block in the scope around it, where `catch (e) { }` does not.
+        // Without one the parameter was a slot in the level around it, kept out of sight by a
+        // liveness flag only the compiler can read — which is invisible to compiled code and not
+        // to a direct `eval`. DR-0018 is the long version.
+        let opened = handler
+            .parameter
+            .is_some()
+            .then(|| self.enter_environment());
         let outer_locals = self.enter_scope();
         match &handler.parameter {
             Some(parameter) => {
@@ -1268,6 +1278,12 @@ impl Compiler<'_> {
         }
         self.block(&handler.body)?;
         self.leave_scope(outer_locals);
+        // Left before a `finally` around it can run: a jump out takes the environment down on the
+        // way past, and `unwind_across` walks from the top — so the `PopScope` is emitted ahead of
+        // the `finally`'s statements, which are compiled against the scope outside the catch.
+        if let Some(opened) = opened {
+            self.leave_environment(opened)?;
+        }
         self.chunk.patch(past_the_catch)
     }
     /// Make the function objects a body's declarations describe, before any of it runs.

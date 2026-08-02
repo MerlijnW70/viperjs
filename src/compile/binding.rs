@@ -475,15 +475,34 @@ impl Compiler<'_> {
     /// Give one name the value on top of the stack, consuming it.
     pub(super) fn bind_name(&mut self, name: &str, how: Bind) -> Result<(), CompileError> {
         match how {
-            // A `var` at the top level of a script is a property of the global object, not a slot.
-            Bind::Var if self.at_global_scope() => {
+            // A `var` **anywhere in a script** is a property of the global object, not a slot —
+            // §16.1.7 puts it in the global variable scope however many blocks it is written
+            // inside. Asked as "is this chunk the script" and not as "are any scopes open", which
+            // is what it used to ask: the moment a block or a catch opened one, a `var` beside it
+            // took the *slot* path and became a binding of that block. `{ let a = 1; var foo = 2; }
+            // foo` answered `undefined`.
+            Bind::Var if self.is_script => {
                 let index = self.name(name)?;
                 self.chunk.emit(Instruction::StoreGlobal(index));
             }
-            Bind::Var => {
-                let slot = self.declare(name);
-                self.chunk.emit(Instruction::StoreVariable(0, slot));
-            }
+            // §14.3.2 — a `var` belongs to the *function*, however many blocks it is written
+            // inside, and hoisting has already given it a slot there. So it is **resolved** rather
+            // than declared: `declare` searches only the innermost level, so inside a block that
+            // has an environment of its own it made a second binding and stored into that, and
+            // `(function () { { let a = 1; var x = 2; } return x; })()` answered `undefined`.
+            //
+            // The fallback declares locally, for a `var` no hoisting pass reached — a shape the
+            // compiler should not produce, and one that binds *something* rather than storing into
+            // a slot that is not there.
+            Bind::Var => match self.binding(name) {
+                Some(at) => self
+                    .chunk
+                    .emit(Instruction::StoreVariable(at.depth, at.index)),
+                None => {
+                    let slot = self.declare(name);
+                    self.chunk.emit(Instruction::StoreVariable(0, slot));
+                }
+            },
             Bind::Made => {
                 let Some(slot) = self.resolve_in_scope(name) else {
                     // The head declared it a moment ago, so this is a compiler that has lost
