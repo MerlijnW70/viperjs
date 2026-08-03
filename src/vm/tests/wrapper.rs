@@ -79,10 +79,44 @@ fn a_method_of_one_kind_will_not_read_the_other_kind() {
         run("try { Number.prototype.valueOf.call({}); } catch (e) { e.name }"),
         "TypeError"
     );
-    // §21.1.3 — `Number.prototype` is an ordinary object and not a Number wrapper, so it has no
-    // primitive of its own to answer with.
+    // §21.1.3 and §20.3.3 — each of these prototypes **is** an instance of its own kind, holding
+    // the primitive its methods then answer with: `+0` and `false`. So these are not TypeErrors,
+    // and `Number.prototype.toString()` is the string a program actually gets.
+    assert_eq!(run("Number.prototype.valueOf()"), "0");
+    assert_eq!(run("Number.prototype.toString()"), "0");
+    assert_eq!(run("Number.prototype.toString(2)"), "0");
+    assert_eq!(run("Number.prototype.toFixed(2)"), "0.00");
+    assert_eq!(run("Boolean.prototype.valueOf()"), "false");
+    assert_eq!(run("Boolean.prototype.toString()"), "false");
+    // §22.1.3 says the same of `String.prototype`, whose primitive is the empty String — praxis
+    // has always made that one a String exotic object, which is what carries it.
+    assert_eq!(run("String.prototype.valueOf()"), "");
+    assert_eq!(run("String.prototype.length"), "0");
+    // …which is visible from outside as well, because §20.1.3.6 reads the same slots.
     assert_eq!(
-        run("try { Number.prototype.valueOf.call(Number.prototype); } catch (e) { e.name }"),
+        run("[Number.prototype, Boolean.prototype, String.prototype] \
+             .map(function (p) { return Object.prototype.toString.call(p) }).join(',')"),
+        "[object Number],[object Boolean],[object String]"
+    );
+    // Two prototypes deliberately do **not** do this, and the split is per-clause rather than a
+    // rule: §21.4.4 and §22.2.6 say in as many words that `Date.prototype` and `RegExp.prototype`
+    // are ordinary objects and are *not* instances.
+    assert_eq!(
+        run("try { Date.prototype.getTime(); } catch (e) { e.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("[Date.prototype, RegExp.prototype] \
+             .map(function (p) { return Object.prototype.toString.call(p) }).join(',')"),
+        "[object Object],[object Object]"
+    );
+    // The two kinds are still told apart, which is what one slot holding a `Value` rests on.
+    assert_eq!(
+        run("try { Boolean.prototype.valueOf.call(Number.prototype); } catch (e) { e.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { Number.prototype.valueOf.call(Boolean.prototype); } catch (e) { e.name }"),
         "TypeError"
     );
     // A primitive receiver answers itself, which is what a built-in sees: §10.3.1 does no

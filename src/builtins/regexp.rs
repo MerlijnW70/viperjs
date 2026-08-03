@@ -337,11 +337,13 @@ fn compile(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 }
 
 /// §22.2.6.13 `RegExp.prototype.source`.
-fn source(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    // §22.2.6.13 step 3 — the *prototype itself* answers `(?:)` rather than throwing, because it is
-    // an ordinary object and not a regular expression. The one place `this_regexp` is not used.
-    let Value::Object(object) = call.this_value else {
-        return Err(Abrupt::type_error("source requires a regular expression"));
+fn source(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Some(object) = regexp_or_prototype(vm, heap, call.this_value)? else {
+        // §22.2.6.13 step 3.a — the prototype itself answers `(?:)`, which is an empty
+        // non-capturing group: the source text of a pattern that matches the empty string, so
+        // that `RegExp.prototype.toString()` is `/(?:)/` and parses back.
+        let text: Vec<u16> = "(?:)".encode_utf16().collect();
+        return Ok(Value::String(heap.intern(&text)));
     };
     let Some(found) = heap.object(object).and_then(crate::heap::Object::regexp) else {
         return Err(Abrupt::type_error("source requires a regular expression"));
@@ -351,15 +353,70 @@ fn source(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 }
 
 /// §22.2.6.4 `RegExp.prototype.flags`.
-fn flags(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_regexp(heap, call.this_value)?;
-    let spelled = heap
+///
+/// **Reads the eight accessors as properties**, in the order the clause lists them, rather than
+/// the flags the receiver was built with. That is not a nicety: step 2 is the only receiver check
+/// there is — no `[[OriginalFlags]]` is required — so this works on any object at all, and a
+/// subclass overriding `global` is obeyed. Which is also why `RegExp.prototype.flags` is `""`
+/// rather than a TypeError: each `Get` reaches the accessor below, which answers `undefined` for
+/// the prototype, and eight `undefined`s spell nothing.
+fn flags(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 2, and the whole of it.
+    if !matches!(call.this_value, Value::Object(_)) {
+        return Err(Abrupt::type_error("this method requires an object"));
+    }
+    let mut spelled: Vec<u16> = Vec::new();
+    // Steps 4 to 19, and the order is observable: each `Get` may run a getter that throws or that
+    // watches, and `flags/get-order.js` asserts this exact sequence.
+    for (name, letter) in [
+        ("hasIndices", b'd'),
+        ("global", b'g'),
+        ("ignoreCase", b'i'),
+        ("multiline", b'm'),
+        ("dotAll", b's'),
+        ("unicode", b'u'),
+        ("unicodeSets", b'v'),
+        ("sticky", b'y'),
+    ] {
+        let slot = key(heap, name);
+        let held = vm.get_property_key(call.this_value, slot, heap)?;
+        if held.to_boolean(heap) {
+            spelled.push(u16::from(letter));
+        }
+    }
+    Ok(Value::String(heap.intern(&spelled)))
+}
+
+/// The regular expression a receiver is, `None` for `%RegExp.prototype%`, or a TypeError.
+///
+/// §22.2.6's accessors all share step 3: an object with no `[[OriginalSource]]` is a TypeError
+/// **unless it is the prototype itself**, which answers a default instead. The prototype is an
+/// ordinary object rather than a regular expression — §22.2.6 says so in as many words, unlike
+/// §21.1.3's `Number.prototype` — so without this carve-out reading `RegExp.prototype.source`
+/// would throw, and `RegExp.prototype.toString()` with it.
+fn regexp_or_prototype(
+    vm: &Vm,
+    heap: &Heap,
+    receiver: Value,
+) -> Completion<Option<crate::heap::ObjectId>> {
+    let Value::Object(object) = receiver else {
+        return Err(Abrupt::type_error(
+            "this method requires a regular expression",
+        ));
+    };
+    if heap
         .object(object)
         .and_then(crate::heap::Object::regexp)
-        .map(|found| found.flags().spelled())
-        .unwrap_or_default();
-    let units: Vec<u16> = spelled.encode_utf16().collect();
-    Ok(Value::String(heap.intern(&units)))
+        .is_some()
+    {
+        return Ok(Some(object));
+    }
+    match object == vm.realm().regexp_prototype() {
+        true => Ok(None),
+        false => Err(Abrupt::type_error(
+            "this method requires a regular expression",
+        )),
+    }
 }
 
 /// §22.2.6.14 `RegExp.prototype.toString`.
@@ -384,8 +441,14 @@ fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// Each is the same question about a different letter, so they share a body and differ in a
 /// closure's worth of state that a `fn` pointer cannot hold. Hence eight small functions and one
 /// helper, rather than eight copies.
-fn flag_of(heap: &Heap, receiver: Value, read: fn(Flags) -> bool) -> Completion<Value> {
-    let object = this_regexp(heap, receiver)?;
+fn flag_of(vm: &Vm, heap: &Heap, receiver: Value, read: fn(Flags) -> bool) -> Completion<Value> {
+    let Some(object) = regexp_or_prototype(vm, heap, receiver)? else {
+        // §22.2.6.6 step 3.a and its seven siblings — the prototype answers **`undefined`**, and
+        // not `false`. The difference is what `RegExp.prototype.flags` is built out of: `undefined`
+        // is falsy, so the letter is left out, and a program asking `"global" in RegExp.prototype`
+        // still finds the accessor.
+        return Ok(Value::Undefined);
+    };
     let answer = heap
         .object(object)
         .and_then(crate::heap::Object::regexp)
@@ -413,29 +476,29 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let accessors: [(&str, crate::heap::Native); 10] = [
         ("source", source),
         ("flags", flags),
-        ("hasIndices", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.indices)
+        ("hasIndices", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.indices)
         }),
-        ("global", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.global)
+        ("global", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.global)
         }),
-        ("ignoreCase", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.ignore_case)
+        ("ignoreCase", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.ignore_case)
         }),
-        ("multiline", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.multiline)
+        ("multiline", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.multiline)
         }),
-        ("dotAll", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.dot_all)
+        ("dotAll", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.dot_all)
         }),
-        ("unicode", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.unicode)
+        ("unicode", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.unicode)
         }),
-        ("unicodeSets", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.unicode_sets)
+        ("unicodeSets", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.unicode_sets)
         }),
-        ("sticky", |_, heap, call| {
-            flag_of(heap, call.this_value, |flags| flags.sticky)
+        ("sticky", |vm, heap, call| {
+            flag_of(vm, heap, call.this_value, |flags| flags.sticky)
         }),
     ];
     for (name, native) in accessors {

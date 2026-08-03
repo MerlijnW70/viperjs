@@ -1576,16 +1576,6 @@ built-ins/BigInt/wrapper-object-ordinary-toprimitive.js :: it threw an object wi
 built-ins/BigInt/wrapper-object-ordinary-toprimitive.js (strict) :: it threw an object with no name: hint: default
 built-ins/Boolean/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Boolean/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Boolean/prototype/S15.6.3.1_A1.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/Boolean/prototype/S15.6.3.1_A1.js (strict) :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T1.js :: it threw TypeError: Boolean.prototype.toString requires a boolean
-built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T1.js (strict) :: it threw TypeError: Boolean.prototype.toString requires a boolean
-built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T2.js :: it threw TypeError: Boolean.prototype.toString requires a boolean
-built-ins/Boolean/prototype/toString/S15.6.4.2_A1_T2.js (strict) :: it threw TypeError: Boolean.prototype.toString requires a boolean
-built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T1.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T1.js (strict) :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T2.js :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
-built-ins/Boolean/prototype/valueOf/S15.6.4.3_A1_T2.js (strict) :: it threw TypeError: Boolean.prototype.valueOf requires a boolean
 built-ins/DataView/custom-proto-access-detaches-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-detaches-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-resizes-buffer-invalid-by-length.js :: it threw an object with no name: Expected SameValue(«null», «undefined») to be true
@@ -2790,8 +2780,6 @@ built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with 
 built-ins/NativeErrors/URIError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/cause_property_native_error.js :: it threw an object with no name: cause should be an own property
 built-ins/NativeErrors/cause_property_native_error.js (strict) :: it threw an object with no name: cause should be an own property
-built-ins/Number/15.7.4-1.js :: it threw an object with no name: s Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
-built-ins/Number/15.7.4-1.js (strict) :: it threw an object with no name: s Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
 built-ins/Number/parseFloat.js :: it threw an object with no name: Expected SameValue(«undefined», «function parseFloat() { [native code] }») to be true
 built-ins/Number/parseFloat.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «function parseFloat() { [native code] }») to be true
 built-ins/Number/parseFloat/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -2802,104 +2790,8 @@ built-ins/Number/parseInt/not-a-constructor.js :: it threw an object with no nam
 built-ins/Number/parseInt/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Number/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Number/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Number/prototype/S15.7.3.1_A2_T1.js :: it threw an object with no name: Number.prototype.toString() must return "[object Number]" Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
-built-ins/Number/prototype/S15.7.3.1_A2_T1.js (strict) :: it threw an object with no name: Number.prototype.toString() must return "[object Number]" Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
-built-ins/Number/prototype/S15.7.3.1_A2_T2.js :: it threw an object with no name: Number.prototype.toString() must return "[object Number]" Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
-built-ins/Number/prototype/S15.7.3.1_A2_T2.js (strict) :: it threw an object with no name: Number.prototype.toString() must return "[object Number]" Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
-built-ins/Number/prototype/S15.7.3.1_A3.js :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/S15.7.3.1_A3.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/S15.7.4_A1.js :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/S15.7.4_A1.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-0.js :: it threw TypeError: Number.prototype.toExponential requires a number
-built-ins/Number/prototype/toExponential/this-is-0-fractiondigits-is-0.js (strict) :: it threw TypeError: Number.prototype.toExponential requires a number
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T01.js :: it threw TypeError: Number.prototype.toFixed requires a number
-built-ins/Number/prototype/toFixed/S15.7.4.5_A1.1_T01.js (strict) :: it threw TypeError: Number.prototype.toFixed requires a number
-built-ins/Number/prototype/toPrecision/return-abrupt-tointeger-precision.js :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/toPrecision/return-abrupt-tointeger-precision.js (strict) :: it threw an object with no name: valueOf Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/toPrecision/this-is-0-precision-is-1.js :: it threw TypeError: Number.prototype.toPrecision requires a number
-built-ins/Number/prototype/toPrecision/this-is-0-precision-is-1.js (strict) :: it threw TypeError: Number.prototype.toPrecision requires a number
-built-ins/Number/prototype/toPrecision/undefined-precision-arg.js :: it threw TypeError: Number.prototype.toPrecision requires a number
-built-ins/Number/prototype/toPrecision/undefined-precision-arg.js (strict) :: it threw TypeError: Number.prototype.toPrecision requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A1_T01.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A1_T01.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A1_T02.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A1_T02.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A1_T03.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A1_T03.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T01.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T01.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T02.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T02.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T03.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T03.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T04.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T04.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T05.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T05.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T06.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T06.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T07.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T07.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T08.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T08.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T09.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T09.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T10.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T10.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T11.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T11.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T12.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T12.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T13.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T13.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T14.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T14.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T15.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T15.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T16.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T16.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T17.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T17.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T18.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T18.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T19.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T19.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T20.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T20.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T21.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T21.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T22.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T22.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T23.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T23.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T24.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T24.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T25.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T25.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T26.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T26.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T27.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T27.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T28.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T28.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T29.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T29.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T30.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T30.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T31.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T31.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T32.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T32.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T33.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T33.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T34.js :: it threw TypeError: Number.prototype.toString requires a number
-built-ins/Number/prototype/toString/S15.7.4.2_A2_T34.js (strict) :: it threw TypeError: Number.prototype.toString requires a number
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T01.js :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T01.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Object/create/properties-arg-to-object-bigint.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object-bigint.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object.js :: it threw TypeError: a property-descriptor list must be an object
@@ -4534,16 +4426,8 @@ built-ins/RegExp/proto-from-ctor-realm.js :: it threw TypeError: what was called
 built-ins/RegExp/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/Symbol.match/builtin-success-g-set-lastindex.js :: it threw an object with no name: Expected SameValue(«0», «2») to be true
-built-ins/RegExp/prototype/Symbol.match/builtin-success-g-set-lastindex.js (strict) :: it threw an object with no name: Expected SameValue(«0», «2») to be true
-built-ins/RegExp/prototype/Symbol.match/coerce-global.js :: it threw an object with no name: value: undefined Expected SameValue(«2», «1») to be true
-built-ins/RegExp/prototype/Symbol.match/coerce-global.js (strict) :: it threw an object with no name: value: undefined Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js :: it threw an object with no name: Expected a CustomError but got a Test262Error
 built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js (strict) :: it threw an object with no name: Expected a CustomError but got a Test262Error
-built-ins/RegExp/prototype/Symbol.match/get-global-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.match/get-global-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.match/get-unicode-error.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.match/get-unicode-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js :: it threw an object with no name: Expected SameValue(«3», «4») to be true
@@ -4572,10 +4456,6 @@ built-ins/RegExp/prototype/Symbol.replace/coerce-unicode.js :: it threw an objec
 built-ins/RegExp/prototype/Symbol.replace/coerce-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
 built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js :: it threw an object with no name: Expected a CustomError but got a Test262Error
 built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js (strict) :: it threw an object with no name: Expected a CustomError but got a Test262Error
-built-ins/RegExp/prototype/Symbol.replace/get-global-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.replace/get-global-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.replace/get-unicode-error.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.replace/get-unicode-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js :: it threw an object with no name: Expected SameValue(«"a"», «null») to be true
 built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js (strict) :: it threw an object with no name: Expected SameValue(«"a"», «null») to be true
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -4638,8 +4518,6 @@ built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-failure.js :: it th
 built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-failure.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/dotAll/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/dotAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/dotAll/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/dotAll/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/exec/duplicate-named-groups-properties.js :: it did not parse: two groups have the same name
 built-ins/RegExp/prototype/exec/duplicate-named-groups-properties.js (strict) :: it did not parse: two groups have the same name
 built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js :: it did not parse: two groups have the same name
@@ -4652,58 +4530,22 @@ built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an objec
 built-ins/RegExp/prototype/exec/success-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/flags/coercion-dotall.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-dotall.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-global.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-global.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-hasIndices.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-hasIndices.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-ignoreCase.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-ignoreCase.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-multiline.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-multiline.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-sticky.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-sticky.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-unicode.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/coercion-unicode.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/get-order.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/get-order.js (strict) :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/rethrow.js :: it threw an object with no name: Let hasIndices be ToBoolean(? Get(R, "hasIndices")) Expected a Test262Error but got a TypeError
-built-ins/RegExp/prototype/flags/rethrow.js (strict) :: it threw an object with no name: Let hasIndices be ToBoolean(? Get(R, "hasIndices")) Expected a Test262Error but got a TypeError
-built-ins/RegExp/prototype/flags/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/flags/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/global/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/global/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/global/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/global/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/hasIndices/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/hasIndices/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/hasIndices/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/hasIndices/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/ignoreCase/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/ignoreCase/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/ignoreCase/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/ignoreCase/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/multiline/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/multiline/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/multiline/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/multiline/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/source/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/source/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/source/this-val-regexp-prototype.js :: it threw TypeError: source requires a regular expression
-built-ins/RegExp/prototype/source/this-val-regexp-prototype.js (strict) :: it threw TypeError: source requires a regular expression
 built-ins/RegExp/prototype/sticky/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/sticky/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/sticky/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/sticky/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/unicode/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/unicode/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/unicode/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/unicode/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/prototype/unicodeSets/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/unicodeSets/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/unicodeSets/this-val-regexp-prototype.js :: it threw TypeError: this method requires a regular expression
-built-ins/RegExp/prototype/unicodeSets/this-val-regexp-prototype.js (strict) :: it threw TypeError: this method requires a regular expression
 built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class-escape.js :: it did not parse: this character must be escaped inside a class in a v pattern
 built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class-escape.js (strict) :: it did not parse: this character must be escaped inside a class in a v pattern
 built-ins/RegExp/unicodeSets/generated/character-class-difference-character-class.js :: it did not parse: this character must be escaped inside a class in a v pattern

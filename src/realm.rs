@@ -238,8 +238,17 @@ impl Realm {
         // it is why `Array.prototype.length` is 0 rather than absent, and why `Array.isArray` of
         // it is true.
         let array_prototype = heap.new_array(object_prototype, 0);
-        let boolean_prototype = heap.new_object(Some(object_prototype));
-        let number_prototype = heap.new_object(Some(object_prototype));
+        // §20.3.3 and §21.1.3 — these two are **not** ordinary objects: each is an instance of
+        // its own kind, holding the primitive its methods then answer with. So
+        // `Number.prototype.toString()` is `"0"` and `Boolean.prototype.valueOf()` is `false`,
+        // where an ordinary object would make both a TypeError from `thisNumberValue`.
+        //
+        // Three of the five wrappers do this and two do not: §22.1.3 gives `String.prototype` the
+        // empty String (it is made below, as a String exotic object), while §21.4.4 and §22.2.6
+        // say in as many words that `Date.prototype` and `RegExp.prototype` are ordinary and are
+        // *not* instances. The split is per-clause and there is no rule to derive it from.
+        let boolean_prototype = heap.new_wrapper(object_prototype, Value::Boolean(false));
+        let number_prototype = heap.new_wrapper(object_prototype, Value::Number(0.0));
         let date_prototype = heap.new_object(Some(object_prototype));
         let symbol_prototype = heap.new_object(Some(object_prototype));
         let aggregate_error_prototype = heap.new_object(Some(error_prototype));

@@ -315,3 +315,113 @@ fn compile_replaces_what_a_regular_expression_is_in_place() {
         "a"
     );
 }
+
+#[test]
+fn the_regexp_prototype_is_not_a_regular_expression_and_the_accessors_say_so() {
+    // §22.2.6 makes `RegExp.prototype` an ordinary object with no `[[OriginalSource]]` — unlike
+    // §21.1.3's `Number.prototype`, which *is* an instance. So every accessor needs step 3's
+    // carve-out, and without it reading `RegExp.prototype.source` throws.
+    assert_eq!(run("RegExp.prototype.source"), "(?:)");
+    assert_eq!(run("RegExp.prototype.flags"), "");
+    assert_eq!(run("RegExp.prototype.toString()"), "/(?:)/");
+    // `(?:)` is not decoration: it is the source of a pattern matching the empty string, so what
+    // `toString` builds out of it parses back to an equivalent regular expression.
+    assert_eq!(run("new RegExp(RegExp.prototype.source).test('')"), "true");
+    // **`undefined`, not `false`** — which is what makes `flags` above the empty string rather
+    // than eight letters, since `undefined` is falsy and each letter is left out.
+    assert_eq!(
+        run(
+            "['hasIndices', 'global', 'ignoreCase', 'multiline', 'dotAll', 'unicode', \
+              'unicodeSets', 'sticky'] \
+             .map(function (n) { return String(RegExp.prototype[n]) }).join(',')"
+        ),
+        "undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined"
+    );
+    // The carve-out is for the prototype and for nothing else: any other object without the slot
+    // is still the TypeError §22.2.6 step 3 asks for, and so is a primitive.
+    for source in [
+        "Object.getOwnPropertyDescriptor(RegExp.prototype, 'source').get.call({})",
+        "Object.getOwnPropertyDescriptor(RegExp.prototype, 'global').get.call({})",
+        "Object.getOwnPropertyDescriptor(RegExp.prototype, 'source').get.call(1)",
+        "Object.getOwnPropertyDescriptor(RegExp.prototype, 'global').get.call(undefined)",
+        "Object.getOwnPropertyDescriptor(RegExp.prototype, 'source').get.call(Object.create(RegExp.prototype))",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ {source}; 'no error' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{source}"
+        );
+    }
+    // …and a real regular expression is unaffected by any of it.
+    assert_eq!(run("/ab+c/giy.source"), "ab+c");
+    assert_eq!(run("/ab+c/giy.flags"), "giy");
+    assert_eq!(run("/a/.global + ',' + /a/g.global"), "false,true");
+}
+
+#[test]
+fn the_flags_getter_reads_the_eight_properties_and_not_the_slots() {
+    // §22.2.6.4's only receiver check is step 2, "is an Object" — there is no `[[OriginalFlags]]`
+    // requirement at all. So this works on any object, and a subclass overriding one of the eight
+    // is obeyed. Reading the receiver's own flag bits instead would answer `""` for both of these.
+    assert_eq!(
+        run(
+            "Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get \
+             .call({global: true, sticky: true})"
+        ),
+        "gy"
+    );
+    assert_eq!(
+        run("class R extends RegExp { get global() { return true } } new R('a', 'i').flags"),
+        "gi"
+    );
+    // Every letter, in the order §22.2.6.4 lists them — which is not alphabetical and is not the
+    // order the accessors are installed in.
+    assert_eq!(
+        run(
+            "Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get.call({ \
+                hasIndices: 1, global: 1, ignoreCase: 1, multiline: 1, \
+                dotAll: 1, unicode: 1, unicodeSets: 1, sticky: 1 })"
+        ),
+        "dgimsuvy"
+    );
+    // Each is `ToBoolean`, so any truthy value counts and any falsy one does not.
+    assert_eq!(
+        run(
+            "Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get \
+             .call({global: 'yes', sticky: 0, multiline: {}})"
+        ),
+        "gm"
+    );
+    // The reads happen in that order and are observable, because each may run a getter. This is
+    // `flags/get-order.js`, which no implementation reading slots can pass.
+    assert_eq!(
+        run("var seen = []; var o = {}; \
+             ['hasIndices', 'global', 'ignoreCase', 'multiline', 'dotAll', 'unicode', \
+              'unicodeSets', 'sticky'].forEach(function (n) { \
+                Object.defineProperty(o, n, {get: function () { seen.push(n); return false }}) \
+             }); \
+             Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get.call(o); \
+             seen.join(',')"),
+        "hasIndices,global,ignoreCase,multiline,dotAll,unicode,unicodeSets,sticky"
+    );
+    // …and a getter that throws stops the whole thing, rather than being counted as false.
+    assert_eq!(
+        run("var o = {get global() { throw new EvalError('x') }}; \
+             try { Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get.call(o) } \
+             catch (e) { e.constructor.name }"),
+        "EvalError"
+    );
+    // Step 2 is still a real check: a primitive receiver is a TypeError.
+    for receiver in ["1", "'a'", "undefined", "null", "true"] {
+        assert_eq!(
+            run(&format!(
+                "try {{ Object.getOwnPropertyDescriptor(RegExp.prototype, 'flags').get.call({receiver}); \
+                 'no error' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{receiver}"
+        );
+    }
+}
