@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **81.02% of test262** — 75,478 of 93,161 runs. Treat that number as
+Conformance as of this commit is **81.26% of test262** — 75,702 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 344 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -179,10 +179,10 @@ and mostly are not, which is worth doing once and writing down rather than re-de
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
 
-### 79.38% to 81.02% in thirteen slices, and what they have in common
+### 79.38% to 81.26% in sixteen slices, and what they have in common
 
-None of them was a feature. Every one was a clause praxis had *nearly* right, and twelve of the
-thirteen were found by bucketing the failures rather than by reading a list of what is missing.
+None of them was a feature. Every one was a clause praxis had *nearly* right, and fifteen of the
+sixteen were found by bucketing the failures rather than by reading a list of what is missing.
 
 **Three of the twelve are one shape**, and it is the one worth carrying: *a clause names a
 completion, a flag or a step that praxis collapsed into one path serving two callers.* §9.1.1.4.17's
@@ -230,6 +230,21 @@ completion, a flag or a step that praxis collapsed into one path serving two cal
 12. **§10.4.5.2 step 8's first disjunct** (+60) — a *tracking* view whose **offset** is past the
     shrunk buffer is out of bounds. The doc claimed one could never hang off the end, which is true
     of its end and false of its start.
+13. **§14.2.2's `UpdateEmpty`** (+104) — eight statement forms begin "Let V be undefined" and are
+    therefore never EMPTY, so `eval("1; if (true) ;")` is `undefined`. Three forms really are
+    empty and had to stay so, which is why the list is exact rather than "most statements".
+14. **§6.2.5.6 step 6** (+46) — strict code may not create a global by assigning to an undeclared
+    name. The instruction's own comment said praxis "does not yet carry a strictness through to
+    here"; it had for some time.
+15. **§13.10.2 step 2** (+74) — `instanceof` asks the right operand what it means. Its doc said
+    the step would arrive "when Symbols arrive"; they had.
+
+**A second shape, and it cost three slices in a row to see: a doc comment that says what a clause
+*will* need is a claim nothing checks.** Three of the sixteen were a comment stating the missing
+step correctly — §13.10.2's `@@hasInstance` "when Symbols arrive", §6.2.5.6's strictness "not
+carried through to here", §10.4.5.2's tracking view that "can never hang off the end". Each was
+written by someone who had read the clause, and each outlived the condition it described. **Grep
+the area's comments for what they promise before costing it as missing.**
 
 **The shape worth carrying: a bucket spread evenly over an area's whole surface is one common path,
 not many faults.** Slice 3 wore the name of every `Array.prototype` and `TypedArray.prototype`
