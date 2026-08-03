@@ -29,6 +29,42 @@ reproducible.
 
 ---
 
+## direct-eval-var — is the 128-run refusal really three cases, one of them free?
+
+**Date:** 2026-08-04
+**Question:** `a sloppy var inside a direct eval in a function` is the largest thing praxis refuses
+by name. A recorded plan said most of it needs **no** growable environment: a name the caller's
+variable scope already has needs no slot, and a name shadowed by a lexical binding between
+`lexEnv` and `varEnv` is a SyntaxError §19.2.1.3 owes anyway. **Is that split real?**
+**Setup:** built it. `Vm::var_environment` — set when a call opens its environment, saved and
+restored on `Frame` beside `environment`, untouched by `PushScope`/`PopScope`, because nothing in
+a flat chain says which level is the variable one. Its depth goes to the compiler on
+`EvalVars::Caller`, and each var-declared name is sorted by comparing its resolved depth against
+it: shallower is a SyntaxError, equal is "already there", deeper or absent stays refused.
+
+**Result: reverted. 0 fixed, 18 regressed, net -103 runs.**
+
+The machinery works — `function f(){ var x = 1; eval("var x = 2"); return x }` answers 2 where it
+threw before, a bare `var x` leaves the slot alone, and `{ let y; eval("var y") }` is a
+SyntaxError. What it does **not** do is win a single test, and it breaks the `declare-arguments`
+family outright.
+
+**Why, and it is the part worth keeping:** praxis puts a function's parameters, its `arguments`,
+its `var`s *and* its body's `let`s in **one environment**, where §10.2.11 has up to three. So a
+depth comparison cannot tell "bound in the variable environment" from "bound in a scope between
+here and it" — they are the same number. The `declare-arguments` tests are exactly that
+distinction: they expect a SyntaxError because `arguments` is bound in a scope the walk passes
+*through*, and with one environment the check reads it as the destination and accepts.
+
+So the split is real in the specification and not expressible against praxis's environments. **The
+prerequisite is §10.2.11's environment split — a parameter scope separate from the variable scope
+when the parameter list has expressions — and that is a bigger slice than the one it unblocks.**
+
+**Cost:** an hour, and the ratchet earned its keep: every hand-written probe answered correctly and
+the suite still said no. A change that is right about the cases you thought of and wrong about the
+ones you did not is exactly what a conformance number is for.
+
+
 ## run-module — does the engine run somebody else's library?
 
 **Date:** 2026-08-04
