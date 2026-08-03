@@ -16031,72 +16031,6 @@ language/expressions/compound-assignment/S11.13.2_A6.6_T1.js :: it threw SyntaxE
 language/expressions/compound-assignment/S11.13.2_A6.7_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/compound-assignment/S11.13.2_A6.8_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/compound-assignment/S11.13.2_A6.9_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/compound-assignment/S11.13.2_A7.10_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.10_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.10_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.10_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.10_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.10_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.11_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.11_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.11_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.11_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.11_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.11_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.1_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.1_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.1_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.1_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.1_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.1_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.2_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.2_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.2_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.2_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.2_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.2_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.3_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.3_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.3_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.3_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.3_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.3_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.4_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.4_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.4_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.4_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.4_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.4_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.5_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.5_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.5_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.5_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.5_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.5_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.6_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.6_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.6_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.7_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.7_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.7_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.7_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.7_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.7_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.8_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.8_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.8_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.8_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.8_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.8_T4.js (strict) :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.9_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.9_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.9_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.9_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/compound-assignment/S11.13.2_A7.9_T4.js :: it threw an object with no name: Expected true but got false
-language/expressions/compound-assignment/S11.13.2_A7.9_T4.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--10.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--11.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -16541,24 +16475,18 @@ language/expressions/less-than/bigint-and-boolean.js (strict) :: it threw an obj
 language/expressions/less-than/bigint-and-symbol.js :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/less-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-and/tco-right.js (strict) :: it threw RangeError: too much recursion
-language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
@@ -16651,12 +16579,6 @@ language/expressions/optional-chaining/optional-call-preserves-this.js (strict) 
 language/expressions/postfix-decrement/S11.3.2_A5_T1.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
 language/expressions/postfix-decrement/S11.3.2_A5_T2.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
 language/expressions/postfix-decrement/S11.3.2_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 1. Actual: undefined
-language/expressions/postfix-decrement/S11.3.2_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-decrement/S11.3.2_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-decrement/S11.3.2_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-decrement/S11.3.2_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-decrement/S11.3.2_A6_T3.js :: it threw an object with no name: Expected true but got false
-language/expressions/postfix-decrement/S11.3.2_A6_T3.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/postfix-decrement/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
@@ -16667,12 +16589,6 @@ language/expressions/postfix-increment/11.3.1-2-1gs.js (strict) :: expected a Sy
 language/expressions/postfix-increment/S11.3.1_A5_T1.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
 language/expressions/postfix-increment/S11.3.1_A5_T2.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
 language/expressions/postfix-increment/S11.3.1_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 3. Actual: undefined
-language/expressions/postfix-increment/S11.3.1_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-increment/S11.3.1_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-increment/S11.3.1_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-increment/S11.3.1_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/postfix-increment/S11.3.1_A6_T3.js :: it threw an object with no name: Expected true but got false
-language/expressions/postfix-increment/S11.3.1_A6_T3.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/postfix-increment/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
@@ -16683,12 +16599,6 @@ language/expressions/prefix-decrement/11.4.5-2-2gs.js (strict) :: expected a Syn
 language/expressions/prefix-decrement/S11.4.5_A5_T1.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
 language/expressions/prefix-decrement/S11.4.5_A5_T2.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
 language/expressions/prefix-decrement/S11.4.5_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 1. Actual: undefined
-language/expressions/prefix-decrement/S11.4.5_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-decrement/S11.4.5_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-decrement/S11.4.5_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-decrement/S11.4.5_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-decrement/S11.4.5_A6_T3.js :: it threw an object with no name: Expected true but got false
-language/expressions/prefix-decrement/S11.4.5_A6_T3.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/prefix-decrement/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
@@ -16698,12 +16608,6 @@ language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue
 language/expressions/prefix-increment/S11.4.4_A5_T1.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
 language/expressions/prefix-increment/S11.4.4_A5_T2.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
 language/expressions/prefix-increment/S11.4.4_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 3. Actual: undefined
-language/expressions/prefix-increment/S11.4.4_A6_T1.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-increment/S11.4.4_A6_T1.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-increment/S11.4.4_A6_T2.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-increment/S11.4.4_A6_T2.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/prefix-increment/S11.4.4_A6_T3.js :: it threw an object with no name: Expected true but got false
-language/expressions/prefix-increment/S11.4.4_A6_T3.js (strict) :: it threw an object with no name: Expected true but got false
 language/expressions/prefix-increment/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number

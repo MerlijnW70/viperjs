@@ -990,9 +990,17 @@ impl Compiler<'_> {
         // that — a compound form that copied two values could not read either of them back.
         let reference = self.property_reference(target, Keep::Nothing)?;
         let width = reference.width();
+        // §6.2.5.5 — a reference that is going to be read *and* written settles its key first, so
+        // that `o[p] += 1` calls `p.toString()` once and `null[p] += 1` throws before it calls it
+        // at all. A plain `=` reads nothing, so it converts once anyway and needs none of this.
+        let computed = matches!(target.kind, ExprKind::ComputedMember { .. });
+        let settle = reference.prepare(computed);
         match compound_operator(operator) {
             None if operator == AssignmentOperator::Assign => self.expression(value)?,
             Some(binary) => {
+                if let Some(settle) = settle {
+                    self.chunk.emit(settle);
+                }
                 self.chunk.emit(Instruction::DuplicateTop(width));
                 self.chunk.emit(reference.get());
                 self.expression(value)?;
@@ -1006,6 +1014,9 @@ impl Compiler<'_> {
                     Some(condition) => condition,
                     None => return Err(unsupported("a logical assignment", span)),
                 };
+                if let Some(settle) = settle {
+                    self.chunk.emit(settle);
+                }
                 self.chunk.emit(Instruction::DuplicateTop(width));
                 self.chunk.emit(reference.get());
                 let circuit_fired = self
@@ -1080,6 +1091,13 @@ impl Compiler<'_> {
                 // the same guarantee `o[f()] += 1` needs, and the same instructions.
                 let reference = self.property_reference(argument, Keep::Nothing)?;
                 let width = reference.width();
+                // The same settling a compound assignment does, and for the same reason: this
+                // reference is read and then written, so `o[p]++` must convert `p` once.
+                if let Some(settle) =
+                    reference.prepare(matches!(argument.kind, ExprKind::ComputedMember { .. }))
+                {
+                    self.chunk.emit(settle);
+                }
                 self.chunk.emit(Instruction::DuplicateTop(width));
                 self.chunk.emit(reference.get());
                 self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
@@ -1376,6 +1394,23 @@ impl Reference {
             Self::Ordinary => Instruction::SetProperty,
             Self::Super => Instruction::SetSuperProperty,
             Self::Private => Instruction::SetPrivate,
+        }
+    }
+
+    /// The instruction that settles this reference's key, for one that is read *and* written.
+    ///
+    /// `None` for `o.#x`, whose Private Name is not a property key and needs no conversion, and
+    /// for a reference whose key is written down — see [`Instruction::PrepareKey`] for what the
+    /// conversion happening twice costs.
+    pub(super) fn prepare(self, computed: bool) -> Option<Instruction> {
+        match self {
+            Self::Private => None,
+            // The base sits directly under the key for `o[p]`, and under the receiver as well for
+            // `super[p]` — which is `width` minus the key itself.
+            Self::Ordinary | Self::Super if computed => Some(Instruction::PrepareKey {
+                base: self.width() - 1,
+            }),
+            Self::Ordinary | Self::Super => None,
         }
     }
 

@@ -447,6 +447,28 @@ pub enum Instruction {
         /// The clause's `D`.
         deletable: Deletable,
     },
+    /// Settle a property reference's key, in §6.2.5.5's order — for a reference read *and* written.
+    ///
+    /// The stack holds a base and a key, and this replaces the key with the one `ToPropertyKey`
+    /// makes of it, leaving the base alone. Two things about it are the whole reason it exists,
+    /// and both are steps of `GetValue` and `PutValue` rather than of any operator:
+    ///
+    /// - **`ToObject` of the base comes first.** So `null[prop] += 1` is a TypeError before
+    ///   `prop.toString()` is called, where converting the key on the way to the base calls it and
+    ///   then throws.
+    /// - **The Reference Record is mutated**, so the conversion happens *once*. A compound
+    ///   assignment reads and writes one reference, and without this each end converts the key
+    ///   again — `o[p] += 1` called `p.toString()` twice, which §13.15.2's own test262 file
+    ///   asserts it must not.
+    ///
+    /// Emitted only where a reference is both read and written — a compound assignment, a logical
+    /// assignment, an update. A plain `o[p] = v` converts once anyway, and `o.x` has a key that is
+    /// a constant.
+    PrepareKey {
+        /// How deep the base sits under the key: one for `o[p]`, two for `super[p]`, whose
+        /// receiver is pushed under its base.
+        base: u32,
+    },
     /// Refuse now if this name could not become a global `var` — §9.1.1.4.15 `CanDeclareGlobalVar`.
     ///
     /// §16.1.7 asks about **every** declaration before it creates **any**, which is the whole
@@ -1313,6 +1335,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)
         | Instruction::DeclareGlobal { .. }
+        | Instruction::PrepareKey { .. }
         | Instruction::CheckGlobalVar(_)
         | Instruction::CheckGlobalFunction(_)
         | Instruction::DeleteGlobal(_)

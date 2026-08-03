@@ -1051,6 +1051,37 @@ impl Vm {
                     let getter = matches!(instruction, Instruction::DefineGetter);
                     self.define_accessor(getter, heap, root, current, at)?;
                 }
+                Instruction::PrepareKey { base } => {
+                    // §6.2.5.5 step 3.a — `ToObject` of the base, which is where a nullish one
+                    // becomes a TypeError. Peeked rather than popped: the reference stays where it
+                    // is, and only the key is replaced.
+                    let depth = usize::try_from(base).unwrap_or(usize::MAX);
+                    let Some(under) = self.stack.len().checked_sub(depth + 1) else {
+                        return Err(Fault::UnbalancedStack);
+                    };
+                    let Some(&receiver) = self.stack.get(under) else {
+                        return Err(Fault::UnbalancedStack);
+                    };
+                    if matches!(receiver, Value::Undefined | Value::Null) {
+                        let thrown = Err(Abrupt::type_error(
+                            "cannot read a property of something that is not an object",
+                        ));
+                        match self.settle(thrown, heap, root, current, at)? {
+                            Some(_) => continue,
+                            None => continue,
+                        }
+                    }
+                    // Step 3.b — and the key is written back, which is what makes the conversion
+                    // happen once for a reference that is read and then written.
+                    let key = self.pop()?;
+                    let settled = self
+                        .to_property_key(key, heap)
+                        .map(crate::heap::PropertyKey::to_value);
+                    match self.settle(settled, heap, root, current, at)? {
+                        Some(key) => self.stack.push(key),
+                        None => continue,
+                    }
+                }
                 Instruction::GetProperty => {
                     let key = self.pop()?;
                     let base = self.pop()?;

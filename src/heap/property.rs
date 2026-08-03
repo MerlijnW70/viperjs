@@ -76,6 +76,19 @@ impl PropertyKey {
         Self::String(heap.intern_id(id))
     }
 
+    /// The Value that names this key — the inverse of §7.1.19, which needs no conversion.
+    ///
+    /// A key is a String or a Symbol and both are Values already, so this loses nothing and
+    /// `ToPropertyKey` of what comes back is the key it came from. That round trip is what lets a
+    /// settled key be left on the operand stack for a later instruction to use.
+    #[must_use]
+    pub fn to_value(self) -> crate::value::Value {
+        match self {
+            Self::String(id) => crate::value::Value::String(id),
+            Self::Symbol(id) => crate::value::Value::Symbol(id),
+        }
+    }
+
     /// The String this key is, if it is one.
     ///
     /// `None` for a Symbol, and every caller has to say what it does about that — which is the

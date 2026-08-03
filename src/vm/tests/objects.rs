@@ -838,3 +838,133 @@ fn a_computed_name_is_filed_once_however_many_objects_wear_it() {
     let many = strings_left_by("var o = {}; for (var i = 0; i < 200; i++) { o[1.5] = i; }");
     assert_eq!(once, many);
 }
+
+#[test]
+fn a_reference_that_is_read_and_written_settles_its_key_once_and_after_the_base() {
+    // §6.2.5.5's `GetValue` and `PutValue` both convert a property reference's key — and both
+    // *write the converted key back into the Reference Record*, so a compound assignment, which
+    // reads and then writes one reference, converts it once. Without that, `o[p] += 1` calls
+    // `p.toString()` twice.
+    assert_eq!(
+        run(
+            "var n = 0; var o = {}; var p = {toString: function () { n++; return 'k' }}; \
+             o[p] ^= 0; n"
+        ),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; var o = {k: 1}; var p = {toString: function () { n++; return 'k' }}; \
+             o[p]++; n + ',' + o.k"
+        ),
+        "1,2"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; var o = {}; var p = {toString: function () { n++; return 'k' }}; \
+             o[p] ||= 5; n + ',' + o.k"
+        ),
+        "1,5"
+    );
+    assert_eq!(
+        run(
+            "var n = 0; var o = {k: 1}; var p = {toString: function () { n++; return 'k' }}; \
+             o[p] &&= 5; n + ',' + o.k"
+        ),
+        "1,5"
+    );
+    // …and the order within one: step 3.a's `ToObject` of the **base** comes before step 3.b's
+    // `ToPropertyKey`, so a nullish base throws before the key's `toString` is called at all —
+    // and before the right-hand side is evaluated.
+    assert_eq!(
+        run("var log = []; var base = null; \
+             var p = {toString: function () { log.push('key'); return 'k' }}; \
+             var rhs = function () { log.push('rhs'); return 0 }; \
+             try { base[p] ^= rhs() } catch (e) { log.push(e.constructor.name) } log.join(',')"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("var log = []; var base; \
+             var p = {toString: function () { log.push('key'); return 'k' }}; \
+             try { base[p]++ } catch (e) { log.push(e.constructor.name) } log.join(',')"),
+        "TypeError"
+    );
+    // The whole sequence for a base that is fine: the key once, then the right-hand side, and no
+    // second conversion after it.
+    assert_eq!(
+        run("var log = []; var o = {}; \
+             var p = {toString: function () { log.push('key'); return 'k' }}; \
+             var rhs = function () { log.push('rhs'); return 1 }; \
+             o[p] ^= rhs(); log.join(',')"),
+        "key,rhs"
+    );
+    // A plain `=` reads nothing, so it converts once anyway — and it converts **after** the
+    // right-hand side, because `PutValue` is step 8 and nothing before it touches the key.
+    assert_eq!(
+        run("var log = []; var o = {}; \
+             var p = {toString: function () { log.push('key'); return 'k' }}; \
+             o[p] = (log.push('rhs'), 1); log.join(',')"),
+        "rhs,key"
+    );
+}
+
+#[test]
+fn settling_a_key_changes_nothing_a_program_could_otherwise_see() {
+    // The settled key is left on the stack as the String or Symbol it became, and `ToPropertyKey`
+    // of that is itself — so every kind of key still reaches the property it names.
+    assert_eq!(run("var o = {k: 1}; o['k'] += 2; o.k"), "3");
+    assert_eq!(run("var o = {}; o[0] = 1; o[0] += 2; o[0]"), "3");
+    assert_eq!(run("var a = [1, 2]; a[1] += 10; a.join(',')"), "1,12");
+    assert_eq!(
+        run("var s = Symbol('s'); var o = {}; o[s] = 1; o[s] += 1; o[s]"),
+        "2"
+    );
+    assert_eq!(
+        run("var o = {}; o[undefined] = 1; o[undefined] += 1; o['undefined']"),
+        "2"
+    );
+    // A Symbol key still cannot be converted with `ToString`, which is what makes the Symbol
+    // branch of the conversion load-bearing rather than a shortcut.
+    assert_eq!(
+        run("var s = Symbol('s'); var o = {}; o[s] ||= 7; String(o[s])"),
+        "7"
+    );
+    // A `super[p]` reference is one value wider — §13.3.7.1 pushes the receiver under the base —
+    // so the base this checks sits one deeper. Both the conversion count and the reference's own
+    // shape have to be right, or the stack unbalances.
+    //
+    // The answer also says which object each end reached: `super[p]` *reads* the home object's
+    // prototype, where `k` is 0 and falsy, and *writes* the receiver — so the instance gains a `k`
+    // of 9 and `A.prototype.k` is left as it was.
+    assert_eq!(
+        run(
+            "var n = 0; var p = {toString: function () { n++; return 'k' }}; \
+             class A {} A.prototype.k = 0; \
+             class B extends A { go() { super[p] ||= 9; \
+                return n + ',' + this.k + ',' + A.prototype.k } } \
+             new B().go()"
+        ),
+        "1,9,0"
+    );
+    // A written-down key needs no settling at all and is unaffected — including a private name,
+    // which is not a property key and must never be handed to `ToPropertyKey`.
+    assert_eq!(
+        run("class C { #x = 1; go() { this.#x += 2; return this.#x } } new C().go()"),
+        "3"
+    );
+    assert_eq!(
+        run("class C { #x = 1; go() { this.#x++; return this.#x } } new C().go()"),
+        "2"
+    );
+    // A getter and a setter on the same key are both reached through the one settled key, which
+    // is the row that would notice a key converted once and then *used* twice differently.
+    assert_eq!(
+        run(
+            "var seen = []; var o = {get k() { seen.push('get'); return 1 }, \
+             set k(v) { seen.push('set ' + v) }}; \
+             var p = {toString: function () { seen.push('key'); return 'k' }}; \
+             o[p] += 4; seen.join(',')"
+        ),
+        "key,get,set 5"
+    );
+}
