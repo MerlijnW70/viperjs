@@ -150,6 +150,35 @@ pub struct Chunk {
     /// [`Instruction::CopyScope`] shares its scope's entry, which is what makes §14.7.4.7's copy
     /// the same shape as the environment it copies rather than a second description of it.
     pub(super) scopes: Vec<Scope>,
+    /// §16.2.1.3's `ImportEntries` — what this module takes from other modules.
+    ///
+    /// Empty for every chunk but a module's. The *slot* is this module's; what it is bound to is
+    /// decided when the graph is linked, because until then there is no environment to bind it to.
+    pub(super) imports: Vec<ImportEntry>,
+    /// §16.2.1.3's `ExportEntries` — what other modules may take from this one.
+    pub(super) exports: Vec<ExportEntry>,
+}
+
+/// One `import` binding — §16.2.1.3's `ImportEntry`.
+#[derive(Debug, Clone)]
+pub struct ImportEntry {
+    /// The `ModuleSpecifier`, exactly as written. Where it points is the host's business.
+    pub specifier: Box<str>,
+    /// The name to ask that module for, or `None` for `import * as n` — a namespace rather than a
+    /// binding, which is the one import that is a *value* and not another module's slot.
+    pub import_name: Option<Box<str>>,
+    /// The slot in *this* module's environment the import binding occupies, or `None` for
+    /// `import "a";` — which binds nothing and is written for the other module being evaluated.
+    pub slot: Option<u32>,
+}
+
+/// One `export` — §16.2.1.3's `ExportEntry`, in the one shape praxis resolves.
+#[derive(Debug, Clone)]
+pub struct ExportEntry {
+    /// The name other modules ask for.
+    pub export_name: Box<str>,
+    /// The slot in this module's environment that holds it.
+    pub slot: u32,
 }
 
 /// One scope a body opens: how many slots it has, and what the source called them.
@@ -1086,6 +1115,16 @@ impl Chunk {
     /// What the source called the slots of this body's own environment — DR-0018.
     pub fn bindings(&self) -> &Rc<[Binding]> {
         &self.bindings
+    }
+
+    /// What this module takes from others — §16.2.1.3's `ImportEntries`.
+    pub fn imports(&self) -> &[ImportEntry] {
+        &self.imports
+    }
+
+    /// What others may take from it — §16.2.1.3's `ExportEntries`.
+    pub fn exports(&self) -> &[ExportEntry] {
+        &self.exports
     }
 
     /// Add an instruction.

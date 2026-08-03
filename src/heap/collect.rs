@@ -595,6 +595,12 @@ impl Heap {
             if let Some(object) = self.environment_binding_object(id) {
                 self.mark_object(object, marked);
             }
+            // §16.2.1.5.2's import bindings, which reach *sideways* rather than outwards: an
+            // importing module names slots of a module its parent chain never touches, so a walk
+            // that followed only parents would free the exporter's environment under it.
+            for (from, _) in self.environment_aliases(id) {
+                self.mark_environment(from, marked);
+            }
             next = self.environment_parent(id);
         }
     }
@@ -703,6 +709,15 @@ impl Heap {
             .unwrap_or_default()
     }
 
+    /// The environments an environment's import bindings reach into — §16.2.1.5.2.
+    fn environment_aliases(&self, id: EnvironmentId) -> Vec<(EnvironmentId, u32)> {
+        self.imports
+            .iter()
+            .filter(|((importer, _), _)| *importer == id)
+            .map(|(_, target)| *target)
+            .collect()
+    }
+
     /// An environment's parent, if it has one and exists.
     fn environment_parent(&self, id: EnvironmentId) -> Option<EnvironmentId> {
         self.environments
@@ -771,6 +786,40 @@ mod tests {
             ..PropertyDescriptor::EMPTY
         };
         assert!(heap.define_own_property(object, key, &descriptor));
+    }
+
+    #[test]
+    fn an_import_binding_keeps_the_module_it_reaches_into() {
+        // §16.2.1.5.2's bindings reach **sideways** rather than outwards: an importing module names
+        // slots of a module its parent chain never touches. A walk that followed only parents would
+        // free the exporter's environment under it, and the importer would then read a slot that is
+        // not there — which is a wrong value rather than a crash, and the worst kind.
+        let mut heap = Heap::new();
+        let exporter = heap.new_environment(None, 1);
+        let importer = heap.new_environment(None, 1);
+        let held = heap.new_object(None);
+        assert!(heap.set_variable(exporter, 0, Value::Object(held)));
+        assert!(heap.bind_import(importer, 0, exporter, 0));
+        // Only the *importer* is rooted. Everything the exporter holds has to survive through the
+        // binding alone.
+        let roots = Roots {
+            environments: vec![importer],
+            ..Roots::default()
+        };
+        heap.collect(&roots);
+        assert!(heap.object(held).is_some(), "the exported value survives");
+        assert!(matches!(
+            heap.variable(importer, 0),
+            Some(Some(Value::Object(_)))
+        ));
+        // …and an environment nothing reaches, by a parent or a binding, is still freed — or the
+        // test above would pass with a collector that frees nothing.
+        let mut heap = Heap::new();
+        let unreached = heap.new_environment(None, 1);
+        let orphan = heap.new_object(None);
+        assert!(heap.set_variable(unreached, 0, Value::Object(orphan)));
+        heap.collect(&Roots::default());
+        assert!(heap.object(orphan).is_none());
     }
 
     #[test]

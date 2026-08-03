@@ -6,9 +6,10 @@ use praxis::compile::ErrorKind;
 use praxis::compile::{compile_module, compile_script};
 use praxis::heap::Heap;
 use praxis::parser::{parse_module, parse_script};
-use praxis::vm::{Outcome as VmOutcome, Vm};
+use praxis::vm::{Graph, Outcome as VmOutcome, Vm};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::time::Duration;
 
 /// What happened when a test was run.
@@ -101,6 +102,12 @@ pub struct Plan {
     pub modes: Vec<bool>,
     source: String,
     block: Frontmatter,
+    /// The directory the file is in — §16.2.1.7's resolution base for a module's specifiers.
+    ///
+    /// A specifier in test262 is a relative path beside the test, and `INTERPRETING.md` says so.
+    /// Kept on the plan rather than recomputed because the run has the path and the evaluation
+    /// does not.
+    beside: PathBuf,
 }
 
 /// The harness: where test262 is, and the harness files it has read.
@@ -186,6 +193,7 @@ impl Runner {
             source,
             block,
             modes,
+            beside: path.parent().unwrap_or(&self.root).to_path_buf(),
         })
     }
 
@@ -194,7 +202,13 @@ impl Runner {
         Outcome {
             name: plan.name.clone(),
             strict,
-            verdict: self.run_once(&plan.source, &plan.block, strict),
+            verdict: self.run_once(
+                &plan.source,
+                &plan.block,
+                strict,
+                &plan.beside,
+                plan.name.rsplit('/').next().map(str::to_string),
+            ),
         }
     }
 
@@ -212,11 +226,14 @@ impl Runner {
     }
 
     /// Run one file in one mode.
-    fn run_once(&mut self, source: &str, block: &Frontmatter, strict: bool) -> Verdict {
-        // A module is a different goal symbol with different scoping and its own `import`
-        // machinery. Saying so is honest; running it as a script would report failures that are
-        // about the harness rather than the engine.
-
+    fn run_once(
+        &mut self,
+        source: &str,
+        block: &Frontmatter,
+        strict: bool,
+        beside: &Path,
+        beside_name: Option<String>,
+    ) -> Verdict {
         if block.has("CanBlockIsFalse") || block.has("CanBlockIsTrue") {
             return Verdict::Skipped("agents are not implemented".to_string());
         }
@@ -257,7 +274,7 @@ impl Runner {
             program.push_str(DONE);
         }
         program.push_str(source);
-        evaluate(&program, block, asynchronous)
+        evaluate(&program, block, asynchronous, beside, beside_name)
     }
 }
 
@@ -317,6 +334,40 @@ fn judge_early(negative: Option<&Negative>, why: &str) -> Verdict {
     }
 }
 
+/// What the entry module is called inside the graph.
+///
+/// A name no specifier can be, so it cannot collide with one a test writes. The entry is not
+/// imported by anything, so nothing ever asks for it by name — it is only how the graph and the
+/// evaluation agree about where to start.
+const ENTRY: &str = "\u{0}entry";
+
+/// Read, parse and compile everything `specifier` reaches, into `graph`.
+///
+/// §16.2.1.7's `HostLoadImportedModule`, and it is depth-first because a module's own imports are
+/// only known once it has been parsed. A specifier already in the graph is one a diamond or a
+/// cycle has reached before, and stopping there is what makes both terminate.
+fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Result<(), String> {
+    let Some(chunk) = graph.get(from).cloned() else {
+        return Ok(());
+    };
+    for entry in chunk.imports() {
+        let specifier = &*entry.specifier;
+        if graph.get(specifier).is_some() {
+            continue;
+        }
+        let path = beside.join(specifier.replace('/', std::path::MAIN_SEPARATOR_STR));
+        let Ok(source) = std::fs::read_to_string(&path) else {
+            return Err(format!("no module beside the test at {specifier:?}"));
+        };
+        let parsed = parse_module(&source)
+            .map_err(|error| format!("an imported module did not parse: {}", error.kind))?;
+        let compiled = compile_module(&parsed, heap).map_err(|error| error.message())?;
+        graph.insert(specifier, Rc::new(compiled));
+        gather(graph, specifier, beside, heap)?;
+    }
+    Ok(())
+}
+
 /// Which goal symbol a test's frontmatter asked for, with the tree it produced.
 ///
 /// §16.1 and §16.2 are two productions and two compilers, and the difference is decided by one
@@ -330,7 +381,13 @@ enum Goal {
 }
 
 /// Run a whole program and decide what its frontmatter says about the result.
-fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
+fn evaluate(
+    program: &str,
+    block: &Frontmatter,
+    asynchronous: bool,
+    beside: &Path,
+    beside_name: Option<String>,
+) -> Verdict {
     let negative = block.negative.as_ref();
     let mut heap = Heap::new();
     // §16.2 — a module is a different goal symbol, read and compiled by its own pair. Everything
@@ -372,9 +429,37 @@ fn evaluate(program: &str, block: &Frontmatter, asynchronous: bool) -> Verdict {
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
-    let outcome = match module {
-        true => vm.run_module(&chunk, &mut heap),
-        false => vm.run(&chunk, &mut heap),
+    // §16.2.1.7 `HostLoadImportedModule` is the host's, and this host is a directory: a specifier
+    // is a path beside the test. Everything it reaches is read, parsed and compiled here, and the
+    // engine is handed a graph it can link — see `praxis::vm::Graph`.
+    //
+    // *Every* module goes through this, including one that imports nothing: linking a graph of one
+    // is what §16.2.1.6 says to do, and a second path for the empty case would be a branch whose
+    // two sides must agree for ever without anything checking that they do.
+    let outcome = if module {
+        let mut graph = Graph::new();
+        let root = Rc::new(chunk);
+        graph.insert(ENTRY, Rc::clone(&root));
+        // A module may import *itself* — `instn-named-bndng-cls.js` does, to watch its own binding
+        // in its dead zone — so the entry answers to the specifiers that name it as well. The
+        // engine keys a module by its chunk rather than by the name that reached it, so these are
+        // all one record and the body runs once.
+        if let Some(file) = beside_name {
+            graph.insert(&file, Rc::clone(&root));
+            graph.insert(&format!("./{file}"), Rc::clone(&root));
+        }
+        if let Err(why) = gather(&mut graph, ENTRY, beside, &mut heap) {
+            return Verdict::Skipped(why);
+        }
+        match vm.run_module_graph(ENTRY, &graph, &mut heap) {
+            Ok(Ok(outcome)) => Ok(outcome),
+            // §16.2.1.5's own errors — a specifier nothing answers, a name nothing exports. A host
+            // reports both as a SyntaxError, which is the phase test262 calls `resolution`.
+            Ok(Err(error)) => return judge_early(negative, &error.message()),
+            Err(fault) => Err(fault),
+        }
+    } else {
+        vm.run(&chunk, &mut heap)
     };
     match outcome {
         Err(fault) => Verdict::Failed(format!("the chunk did not make sense: {fault:?}")),
@@ -597,7 +682,8 @@ mod tests {
             true => format!("{DONE}{source}"),
             false => source.to_string(),
         };
-        evaluate(&program, &block, asynchronous)
+        // No directory: these rows are about deciding a verdict, and none of them imports.
+        evaluate(&program, &block, asynchronous, Path::new("."), None)
     }
 
     #[test]
@@ -773,6 +859,133 @@ Promise.resolve().then(function () { $DONE(); });"
     }
 
     #[test]
+    fn a_module_test_is_run_as_a_module_and_a_script_test_is_not() {
+        // §16.1 and §16.2 are two goal symbols, and the frontmatter's one word is the whole of what
+        // decides between them here. `this` is the cheapest thing that tells them apart: §16.2.1.6
+        // gives a module's top level `undefined`, and §16.1.6 gives a script the global object.
+        let root = checkout("goal-symbol");
+        let outcomes = run(
+            &root,
+            "/*---
+description: x
+flags: [module]
+---*/
+if (this !== undefined) { throw 1; }",
+        );
+        assert!(
+            outcomes.iter().all(|run| run.verdict == Verdict::Passed),
+            "{outcomes:?}"
+        );
+        // …and the same source as a script sees the global object instead, so neither row passes by
+        // the harness having only one path.
+        let outcomes = run(
+            &root,
+            "/*---
+description: x
+---*/
+if (this !== globalThis) { throw 1; }",
+        );
+        assert!(
+            outcomes.iter().all(|run| run.verdict == Verdict::Passed),
+            "{outcomes:?}"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_modules_imports_are_read_from_beside_the_test() {
+        // §16.2.1.7 `HostLoadImportedModule` is the host's to answer, and test262's host is a
+        // directory: `import { x } from './dep.js'` means the file next to the test. Nothing in the
+        // engine can find that file, so this is the harness's own half of the module goal.
+        let root = checkout("beside");
+        std::fs::write(
+            root.join("test").join("dep.js"),
+            "export var from_dep = 6; export default 7;",
+        )
+        .expect("writable"); // the test needs the file
+        let outcomes = run(
+            &root,
+            "/*---
+description: x
+flags: [module]
+---*/
+             import seven, { from_dep } from './dep.js';
+             if (from_dep + seven !== 13) { throw 1; }",
+        );
+        assert!(
+            outcomes.iter().all(|run| run.verdict == Verdict::Passed),
+            "{outcomes:?}"
+        );
+        // A specifier nothing answers is the *host* failing rather than the test, so it is skipped
+        // and not counted as a failure of the engine.
+        let outcomes = run(
+            &root,
+            "/*---
+description: x
+flags: [module]
+---*/
+import { a } from './nowhere.js';",
+        );
+        assert!(
+            outcomes
+                .iter()
+                .all(|run| matches!(run.verdict, Verdict::Skipped(_))),
+            "{outcomes:?}"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_module_two_others_import_is_read_once_and_a_cycle_terminates() {
+        // Depth-first over a graph, so the only thing that makes it stop is the check that a
+        // specifier already gathered is not gathered again. Without it a diamond compiles a module
+        // twice — two records for one file, and §16.2.1.6's "evaluated once" quietly broken — and a
+        // cycle does not return at all.
+        let root = checkout("diamond");
+        for (file, text) in [
+            (
+                "shared.js",
+                "globalThis.runs = (globalThis.runs || 0) + 1; export var n = 1;",
+            ),
+            (
+                "left.js",
+                "import { n } from './shared.js'; export var l = n;",
+            ),
+            (
+                "right.js",
+                "import { n } from './shared.js'; export var r = n;",
+            ),
+            // A cycle: each names the other, and the pair is reachable from the test.
+            (
+                "ping.js",
+                "import { pong } from './pong.js'; export var ping = 1;",
+            ),
+            (
+                "pong.js",
+                "import { ping } from './ping.js'; export var pong = 2;",
+            ),
+        ] {
+            std::fs::write(root.join("test").join(file), text).expect("writable"); // same
+        }
+        let outcomes = run(
+            &root,
+            "/*---
+description: x
+flags: [module]
+---*/
+             import { l } from './left.js';
+             import { r } from './right.js';
+             import { ping } from './ping.js';
+             if (l + r !== 2 || globalThis.runs !== 1 || ping !== 1) { throw 1; }",
+        );
+        assert!(
+            outcomes.iter().all(|run| run.verdict == Verdict::Passed),
+            "{outcomes:?}"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
     fn a_strict_run_prepends_the_prologue_and_a_sloppy_one_does_not() {
         // Observable because §12.9.3.1 keeps Annex B's legacy octal literals out of strict code
         // and B.1.1 allows them everywhere else — so the same source parses in one mode and not
@@ -848,12 +1061,21 @@ var r = /(?i:a)/;",
         // compiled by `compile_module`, which is §16.2's half of the pair.
         let module = run(&root, "/*---\nflags: [module]\n---*/\nassert(true);");
         assert!(matches!(&module[0].verdict, Verdict::Passed), "{module:?}");
-        // What it still declines is a body that reaches across a module boundary, which needs the
-        // record `import` and `export` are resolved through.
-        let across = run(&root, "/*---\nflags: [module]\n---*/\nexport var a = 1;");
+        // …including one that exports, which the graph the host resolves is linked through.
+        let exports = run(&root, "/*---\nflags: [module]\n---*/\nexport var a = 1;");
         assert!(
-            matches!(&across[0].verdict, Verdict::Skipped(why) if why.contains("export")),
-            "{across:?}"
+            matches!(&exports[0].verdict, Verdict::Passed),
+            "{exports:?}"
+        );
+        // What it still declines is the three forms that reach into another module's *list* rather
+        // than at a name of its own — a namespace object, an `export *`, a re-export.
+        let star = run(
+            &root,
+            "/*---\nflags: [module]\n---*/\nexport * from './a.js';",
+        );
+        assert!(
+            matches!(&star[0].verdict, Verdict::Skipped(why) if why.contains("export")),
+            "{star:?}"
         );
         // …and it is one run rather than two: a module is always strict, so there is no second
         // mode to measure.

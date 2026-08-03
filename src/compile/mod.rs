@@ -47,7 +47,9 @@ mod function;
 mod pattern;
 mod statement;
 
-pub use self::chunk::{Chunk, Instruction, Scope, ShortCircuit, SpreadCall, Template};
+pub use self::chunk::{
+    Chunk, ExportEntry, ImportEntry, Instruction, Scope, ShortCircuit, SpreadCall, Template,
+};
 
 use self::chunk::Unpatched;
 use crate::heap::{Heap, Mutability};
@@ -158,6 +160,17 @@ pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, Compile
     // Script code for the two questions that flag decides — §14.2.2's completion value, and
     // `return` at the top level being a Syntax Error — and *not* for where a `var` goes.
     compiler.global_vars = false;
+    // §16.2.1.5.2 step 9 — the import bindings are created **first**, before anything the body
+    // declares, and they are immutable: `import {a} from "x"; a = 1` is a TypeError, which is what
+    // `Mutability::Const` on the binding says. They are also *uninitialised* until the graph is
+    // linked, so a name read before its module is evaluated finds a dead zone rather than
+    // `undefined`.
+    for item in &module.body {
+        let crate::ast::ModuleItem::Import(declaration) = item else {
+            continue;
+        };
+        declare_imports(&mut compiler, declaration);
+    }
     let statements = module_statements(module)?;
     // §16.2.1.6 step 4's `InitializeEnvironment`, minus the imports: a module's `var`s are slots
     // of its own scope, hoisted before anything runs exactly as a function body's are.
@@ -166,8 +179,239 @@ pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, Compile
     }
     compiler.declare_lexical_names(&statements)?;
     compiler.hoist_functions(&statements)?;
-    compiler.statements(&statements)?;
+    // The body, in source order and item by item. Not `statements` again: `export default <expr>`
+    // is not a statement and has to be compiled where it stands, because what it evaluates runs
+    // between the statements around it.
+    for item in &module.body {
+        match item {
+            crate::ast::ModuleItem::Statement(statement) => compiler.statement(statement)?,
+            crate::ast::ModuleItem::Import(_) => {}
+            crate::ast::ModuleItem::Export(declaration) => match &declaration.kind {
+                crate::ast::ExportKind::Declaration(statement) => compiler.statement(statement)?,
+                crate::ast::ExportKind::Default(crate::ast::ExportDefault::Declaration(
+                    statement,
+                )) => match declared_name(statement) {
+                    // Named: an ordinary declaration, already hoisted, and the export below points
+                    // at the binding it made.
+                    Some(_) => compiler.statement(statement)?,
+                    // Anonymous: there is no binding to point at, so one is made here under the
+                    // name §16.2.3.7 gives it — and §8.6.3 calls the function `"default"`.
+                    None => {
+                        let slot = compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable);
+                        compiler.default_declaration(statement)?;
+                        compiler.chunk.emit(Instruction::Initialise(slot));
+                        compiler.chunk.emit(Instruction::Pop);
+                    }
+                },
+                // §16.2.3.7 — the value is bound to a name no source can spell and exported as
+                // `default`. `*default*` is the specification's own spelling for it, and the `*`
+                // is what makes it unreachable from the module that declares it.
+                crate::ast::ExportKind::Default(crate::ast::ExportDefault::Expression(value)) => {
+                    let slot = compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable);
+                    // §8.6.3 — `export default function () {}` is a named position and the name is
+                    // `"default"`, which is the one place a function is called that.
+                    compiler.named_evaluation("default", value)?;
+                    compiler.chunk.emit(Instruction::Initialise(slot));
+                    compiler.chunk.emit(Instruction::Pop);
+                }
+                crate::ast::ExportKind::Named(_) => {}
+                crate::ast::ExportKind::All { .. } | crate::ast::ExportKind::NamedFrom { .. } => {}
+            },
+        }
+    }
+    // §16.2.1.3's `ExportEntries`, gathered *after* the body so that every name they point at has
+    // the slot it will keep. An export is not a declaration and adds nothing: `export var a = 1`
+    // declares `a` exactly as the same line without the word would, and the export is a second
+    // fact about the name.
+    for item in &module.body {
+        let crate::ast::ModuleItem::Export(declaration) = item else {
+            continue;
+        };
+        record_exports(&mut compiler, declaration)?;
+    }
     Ok(compiler.finish())
+}
+
+/// §16.2.1.3 — one `import`'s entries, as slots the link step will bind to another module's.
+fn declare_imports(compiler: &mut Compiler<'_>, declaration: &crate::ast::ImportDeclaration) {
+    use crate::ast::ImportClause;
+    let specifier: Box<str> = String::from_utf16_lossy(&declaration.specifier).into();
+    // `import "a";` binds nothing and is written for the other module being evaluated. The edge in
+    // the graph is still there, so the entry is recorded with no name and no slot — the link step
+    // needs to know the dependency exists even when nothing crosses it.
+    let Some(clause) = &declaration.clause else {
+        compiler.chunk.imports.push(chunk::ImportEntry {
+            specifier,
+            import_name: None,
+            slot: None,
+        });
+        return;
+    };
+    let mut names: Vec<(&str, Option<Box<str>>)> = Vec::new();
+    match clause {
+        ImportClause::Default(name) => names.push((&name.name, Some("default".into()))),
+        ImportClause::Namespace(name) => names.push((&name.name, None)),
+        ImportClause::Named(specifiers) => {
+            for entry in specifiers {
+                names.push((&entry.local.name, Some(export_name(&entry.imported))));
+            }
+        }
+        ImportClause::DefaultAndNamespace(default, namespace) => {
+            names.push((&default.name, Some("default".into())));
+            names.push((&namespace.name, None));
+        }
+        ImportClause::DefaultAndNamed(default, specifiers) => {
+            names.push((&default.name, Some("default".into())));
+            for entry in specifiers {
+                names.push((&entry.local.name, Some(export_name(&entry.imported))));
+            }
+        }
+    }
+    for (local, imported) in names {
+        // No `Uninitialise`, unlike every other lexical binding. §16.2.1.5.2 binds an import to
+        // *another module's* slot before any body runs, and this instruction would run after that
+        // — so it would reach through the binding and put the **exporting** module's slot back in
+        // its dead zone, which is a module clearing a variable it does not own. The dead zone an
+        // import has is the exporter's own, which is exactly right: reading an import before its
+        // module has evaluated finds the exporter's uninitialised `let`.
+        let slot = compiler.declare_lexical(local, Mutability::Const);
+        compiler.chunk.imports.push(chunk::ImportEntry {
+            specifier: specifier.clone(),
+            import_name: imported,
+            slot: Some(slot),
+        });
+    }
+}
+
+/// §16.2.1.3 — one `export`'s entries, once the body has given every name its slot.
+fn record_exports(
+    compiler: &mut Compiler<'_>,
+    declaration: &crate::ast::ExportDeclaration,
+) -> Result<(), CompileError> {
+    use crate::ast::ExportKind;
+    let specifiers: Vec<(Box<str>, Box<str>)> = match &declaration.kind {
+        // `export {a, b as c}` — of names this module declares, which the body has given slots.
+        ExportKind::Named(specifiers) => specifiers
+            .iter()
+            .map(|entry| (export_name(&entry.local), export_name(&entry.exported)))
+            .collect(),
+        // `export var a = 1;` and its four siblings — the declaration has run as itself, and every
+        // name it bound is exported under its own spelling.
+        ExportKind::Declaration(statement) => {
+            let one = std::slice::from_ref(statement);
+            // Both walks, because the five things `export` may stand in front of are split across
+            // them: a `var` is var-declared, a `let`, a `const` and a `class` are lexical, and a
+            // function declaration is one or the other depending on where it stands.
+            let mut names: Vec<Box<str>> = var_declared_names(one)
+                .into_iter()
+                .chain(crate::static_semantics::lexically_declared_names(one))
+                .map(|name| Box::<str>::from(name.name))
+                .collect();
+            if let crate::ast::StmtKind::Function(function) = &statement.kind
+                && let Some(name) = &function.name
+            {
+                names.push(Box::<str>::from(&*name.name));
+            }
+            names.sort();
+            names.dedup();
+            names.into_iter().map(|name| (name.clone(), name)).collect()
+        }
+        // §16.2.3.7 — `export default`, whose exported name is `default` whatever the thing is
+        // called here. A *declaration* keeps its own name too, so `export default function f() {}`
+        // binds `f` and exports `default`; an expression has only the unspellable slot.
+        ExportKind::Default(what) => {
+            let local: Box<str> = match what {
+                crate::ast::ExportDefault::Expression(_) => DEFAULT_EXPORT.into(),
+                crate::ast::ExportDefault::Declaration(statement) => {
+                    match declared_name(statement) {
+                        Some(name) => name,
+                        // `export default function () {}` — anonymous, so §16.2.3.7 gives it the
+                        // same unspellable binding an expression gets.
+                        None => DEFAULT_EXPORT.into(),
+                    }
+                }
+            };
+            vec![(local, "default".into())]
+        }
+        ExportKind::All { .. } | ExportKind::NamedFrom { .. } => {
+            return Err(unsupported(
+                "an `export` that reaches into another module",
+                declaration.span,
+            ));
+        }
+    };
+    for (local, exported) in specifiers {
+        // §16.2.1.1 makes an `export` of a name nothing declares an early error, so a name with no
+        // slot here is one this compiler failed to place rather than one a program can write.
+        let Some(slot) = compiler.resolve(&local) else {
+            return Err(unsupported(
+                "an `export` of a name this module does not declare",
+                declaration.span,
+            ));
+        };
+        compiler.chunk.exports.push(chunk::ExportEntry {
+            export_name: exported,
+            slot,
+        });
+    }
+    Ok(())
+}
+
+/// §16.2.3.7's binding for a default export with no name of its own.
+///
+/// The specification's own spelling, and the `*` is the point: it is not an `IdentifierName`, so
+/// the module that declares it cannot read it back and only the export list reaches it.
+const DEFAULT_EXPORT: &str = "*default*";
+
+impl Compiler<'_> {
+    /// Build the value of an anonymous `export default` declaration — §16.2.3.7.
+    ///
+    /// A `function` or a `class` with no name, which is a shape no other position in the grammar
+    /// admits: everywhere else a declaration must be named, and the hoisting passes assume it. So
+    /// this makes the object the way an *expression* would and leaves it on the stack, and §8.6.3
+    /// gives it the name `"default"` — the one place a function is called that.
+    fn default_declaration(&mut self, statement: &Stmt) -> Result<(), CompileError> {
+        match &statement.kind {
+            crate::ast::StmtKind::Function(function) => self.make_function(
+                function,
+                self::function::Naming::of("default"),
+                statement.span,
+            ),
+            crate::ast::StmtKind::Class(class) => {
+                self.class(class, self::function::Naming::of("default"), statement.span)
+            }
+            // §16.2.3's `HoistableDeclaration` and `ClassDeclaration` are the only two the
+            // production admits, and the parser has already refused everything else.
+            _ => Err(unsupported(
+                "an `export default` of something that is not a declaration",
+                statement.span,
+            )),
+        }
+    }
+}
+
+/// The single name a declaration binds, when it has one.
+///
+/// `export default function f() {}` keeps `f` as a binding of the module *and* exports `default`,
+/// so the export entry has to point at `f`'s slot rather than at a second copy of the function.
+fn declared_name(statement: &Stmt) -> Option<Box<str>> {
+    match &statement.kind {
+        crate::ast::StmtKind::Function(function) => {
+            function.name.as_ref().map(|name| Box::from(&*name.name))
+        }
+        crate::ast::StmtKind::Class(class) => {
+            class.name.as_ref().map(|name| Box::from(&*name.name))
+        }
+        _ => None,
+    }
+}
+
+/// A `ModuleExportName` as the text another module asks for.
+fn export_name(name: &crate::ast::ModuleExportName) -> Box<str> {
+    match name {
+        crate::ast::ModuleExportName::Identifier(text) => text.clone(),
+        crate::ast::ModuleExportName::String(units) => String::from_utf16_lossy(units).into(),
+    }
 }
 
 /// The statements of a module, refusing the two item kinds that need a module record.
@@ -180,12 +424,37 @@ fn module_statements(module: &Module) -> Result<Vec<Stmt>, CompileError> {
     for item in &module.body {
         match item {
             crate::ast::ModuleItem::Statement(statement) => statements.push(statement.clone()),
-            crate::ast::ModuleItem::Import(declaration) => {
-                return Err(unsupported("an `import` declaration", declaration.span));
-            }
-            crate::ast::ModuleItem::Export(declaration) => {
-                return Err(unsupported("an `export` declaration", declaration.span));
-            }
+            // Its bindings were declared above; it contributes no statements.
+            crate::ast::ModuleItem::Import(_) => {}
+            // §16.2.3 — an `export` in front of a declaration takes nothing away: the declaration
+            // is hoisted and scoped exactly as it would be without the word, and the export is a
+            // second fact about the names it binds.
+            crate::ast::ModuleItem::Export(declaration) => match &declaration.kind {
+                crate::ast::ExportKind::Declaration(statement) => {
+                    statements.push(statement.clone())
+                }
+                // §16.2.3.7's `[+Default]` is what lets a declaration here have **no name**, which
+                // no other position allows. A named one is hoisted like any other; an anonymous one
+                // has nothing to hoist and is built where it stands, into the unspellable slot.
+                crate::ast::ExportKind::Default(crate::ast::ExportDefault::Declaration(
+                    statement,
+                )) => {
+                    if declared_name(statement).is_some() {
+                        statements.push(statement.clone());
+                    }
+                }
+                crate::ast::ExportKind::Named(_)
+                | crate::ast::ExportKind::Default(crate::ast::ExportDefault::Expression(_)) => {}
+                // The two that reach into another module's *list* rather than at a name of its
+                // own. Both need §16.2.1.6.3's `ResolveExport` to walk further than one module,
+                // and a namespace object for `export * as n`.
+                crate::ast::ExportKind::All { .. } | crate::ast::ExportKind::NamedFrom { .. } => {
+                    return Err(unsupported(
+                        "an `export` that reaches into another module",
+                        declaration.span,
+                    ));
+                }
+            },
         }
     }
     Ok(statements)

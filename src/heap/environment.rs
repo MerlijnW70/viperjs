@@ -37,7 +37,7 @@ use std::rc::Rc;
 /// An environment on the heap.
 ///
 /// Meaningful only to the [`Heap`] that issued it, on the same terms as every other handle here.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnvironmentId(pub(super) usize);
 
 /// What a source called one slot, for the one reader that has to ask by name — DR-0018.
@@ -308,6 +308,50 @@ impl Heap {
         Some(at)
     }
 
+    /// §16.2.1.5.2 `CreateImportBinding` — make slot `index` of `environment` *be* `at` of `from`.
+    ///
+    /// Answers whether there was a slot to bind. A link step that names a slot which is not there
+    /// is a compiler that lost track of its own tables rather than anything a program did, and the
+    /// caller has nowhere better to put that than the same `false` every other write here answers.
+    pub fn bind_import(
+        &mut self,
+        environment: EnvironmentId,
+        index: u32,
+        from: EnvironmentId,
+        at: u32,
+    ) -> bool {
+        let Some(found) = self
+            .environments
+            .get(environment.0)
+            .and_then(Option::as_ref)
+        else {
+            return false;
+        };
+        if index as usize >= found.slots.len() {
+            return false;
+        }
+        self.imports.insert((environment, index), (from, at));
+        true
+    }
+
+    /// Where a slot really lives, following one import binding if it is one.
+    ///
+    /// **One hop and not a chain.** §16.2.1.5.2 binds an importing name to a *resolved* export,
+    /// and §16.2.1.6.3's `ResolveExport` has already followed every re-export to the module that
+    /// declares the name — so an alias always names a real slot, and following further would be
+    /// following something that is not there. A module graph may be cyclic and this must not be.
+    fn resolved(&self, environment: EnvironmentId, index: u32) -> (EnvironmentId, u32) {
+        // A table beside the environments rather than a field on each, because a field is paid by
+        // every program in the language and DR-0013's budget counts `size_of::<Option<Environment>>`
+        // — a `Vec` there put twenty-four bytes on every scope ever made to serve the one construct
+        // that needs it, and a conformance file duly ran out of heap. What a program without modules
+        // pays instead is this lookup, which on an empty tree is the check that its root is there.
+        match self.imports.get(&(environment, index)) {
+            Some(&(from, at)) => (from, at),
+            None => (environment, index),
+        }
+    }
+
     /// What a slot of an environment holds, if there is such a slot at all.
     ///
     /// Two layers of absence, and they are different failures. The outer `None` is a slot the
@@ -315,6 +359,7 @@ impl Heap {
     /// — a [`crate::vm::Fault`]. The inner one is §9.1.1.1's uninitialised binding, which a script
     /// reaches every time it reads a `let` above its declaration — a ReferenceError.
     pub fn variable(&self, environment: EnvironmentId, index: u32) -> Option<Option<Value>> {
+        let (environment, index) = self.resolved(environment, index);
         self.environments
             .get(environment.0)?
             .as_ref()?
@@ -339,6 +384,7 @@ impl Heap {
 
     /// The slot itself, for the two operations that write one.
     fn slot_mut(&mut self, environment: EnvironmentId, index: u32) -> Option<&mut Option<Value>> {
+        let (environment, index) = self.resolved(environment, index);
         self.environments
             .get_mut(environment.0)
             .and_then(Option::as_mut)
@@ -485,6 +531,78 @@ mod tests {
         let empty = heap.new_named_environment(Some(engine), 0, named(&[]));
         assert_eq!(heap.environment_names(empty), Some(&[][..]));
         assert_eq!(heap.environment_size(empty), Some(0));
+    }
+
+    #[test]
+    fn an_import_binding_is_another_environments_slot_and_not_a_copy_of_it() {
+        // §16.2.1.5.2 `CreateImportBinding`. Two modules are two chains with no depth between them,
+        // so a `(depth, index)` cannot reach across — the slot has to say where it really lives,
+        // and everything that reads or writes one has to follow it.
+        let mut heap = Heap::new();
+        let exporter = heap.new_named_environment(None, 1, named(&[("n", Mutability::Mutable)]));
+        let importer = heap.new_named_environment(None, 1, named(&[("n", Mutability::Const)]));
+        assert!(heap.set_variable(exporter, 0, Value::Number(1.0)));
+        // Before the binding the two are unrelated, which is what makes the row after it mean
+        // something.
+        assert!(matches!(
+            heap.variable(importer, 0),
+            Some(Some(Value::Undefined))
+        ));
+        assert!(heap.bind_import(importer, 0, exporter, 0));
+        assert!(matches!(
+            heap.variable(importer, 0),
+            Some(Some(Value::Number(value))) if value == 1.0
+        ));
+        // …and it is *live*: what the exporting module does afterwards is what the importer reads,
+        // which is the whole reason an import is not an assignment.
+        assert!(heap.set_variable(exporter, 0, Value::Number(2.0)));
+        assert!(matches!(
+            heap.variable(importer, 0),
+            Some(Some(Value::Number(value))) if value == 2.0
+        ));
+        // A write through the binding reaches the exporter's slot too. Nothing in the language
+        // does this — §16.2.1.5.2's binding is immutable and the compiler refuses the assignment —
+        // but the heap is asked by more than the compiler, and answering two different ways for a
+        // read and a write would be a slot that disagrees with itself.
+        assert!(heap.set_variable(importer, 0, Value::Number(3.0)));
+        assert!(matches!(
+            heap.variable(exporter, 0),
+            Some(Some(Value::Number(value))) if value == 3.0
+        ));
+        // A slot the environment does not have cannot be bound, which is the link step naming
+        // something the compiler's tables did not — a bug rather than a program.
+        assert!(!heap.bind_import(importer, 1, exporter, 0));
+        assert!(!heap.bind_import(EnvironmentId(9999), 0, exporter, 0));
+        // …and the *last* slot can, so the bound is where it says it is.
+        let wider = heap.new_named_environment(None, 2, named(&[("a", Mutability::Mutable)]));
+        assert!(heap.bind_import(wider, 1, exporter, 0));
+        assert!(matches!(
+            heap.variable(wider, 1),
+            Some(Some(Value::Number(value))) if value == 3.0
+        ));
+    }
+
+    #[test]
+    fn an_environment_nothing_imported_answers_for_its_own_slots() {
+        // The table is beside the environments rather than on them because a field is paid by every
+        // scope in every program — DR-0013's budget counts `size_of::<Option<Environment>>`, and a
+        // `Vec` there cost a conformance file its heap. What that costs is a lookup on every read,
+        // and what it must not do is change an answer for a slot nobody bound.
+        let mut heap = Heap::new();
+        let plain = heap.new_named_environment(None, 1, named(&[("a", Mutability::Mutable)]));
+        assert!(heap.set_variable(plain, 0, Value::Number(4.0)));
+        assert!(matches!(
+            heap.variable(plain, 0),
+            Some(Some(Value::Number(value))) if value == 4.0
+        ));
+        // …and once *any* module has linked, an environment nothing imported still answers for
+        // itself. The table is keyed by the slot and not by the heap having one.
+        let other = heap.new_named_environment(None, 1, named(&[("b", Mutability::Mutable)]));
+        assert!(heap.bind_import(other, 0, plain, 0));
+        assert!(matches!(
+            heap.variable(plain, 0),
+            Some(Some(Value::Number(value))) if value == 4.0
+        ));
     }
 
     #[test]

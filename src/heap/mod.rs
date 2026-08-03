@@ -278,6 +278,12 @@ pub struct Heap {
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
     /// frame is gone and the variables are not. See [`Environment`].
     environments: Vec<Option<Environment>>,
+    /// §16.2.1.5.2's import bindings — which slots are really another environment's.
+    ///
+    /// Beside the environments rather than on them: an `import` is the only thing in the language
+    /// that makes one, and a field would be paid by every scope in every program. Empty is the
+    /// common case and is the first thing `Heap::variable` asks about.
+    pub(super) imports: std::collections::BTreeMap<(EnvironmentId, u32), (EnvironmentId, u32)>,
     /// Every Symbol ever made — §6.1.5, where a handle is the value rather than a name for one.
     ///
     /// Its own arena for the reason the others have theirs: a [`SymbolId`] cannot address a String

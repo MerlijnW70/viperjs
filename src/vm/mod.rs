@@ -33,6 +33,7 @@
 //! - `global` — §9.1.1.4's Global Environment Record, where a name falls when it falls out of
 //!   every scope.
 //! - `jobs` — §9.5's queue, and what it means for a job to run "later" (DR-0016).
+//! - `module` — §16.2.1's records: linking a graph of modules, and evaluating it in order.
 //! - `proxy` — §10.5's four internal methods a property access goes through.
 //! - `proxy_call` — §10.5.12 and §10.5.13, the two a proxy has only *sometimes*.
 //! - `proxy_shape` — §10.5's other seven, the ones about an object's shape rather than its values.
@@ -56,11 +57,14 @@ mod execute;
 mod generator;
 mod global;
 mod jobs;
+mod module;
 mod property;
 mod proxy;
 mod proxy_call;
 mod proxy_shape;
 mod suspend;
+
+pub use self::module::{Graph, LinkError};
 
 use self::call::Frame;
 pub(crate) use self::jobs::Job;
@@ -309,6 +313,20 @@ impl Vm {
         self.run_with_this(chunk, Value::Undefined, heap)
     }
 
+    /// Run one module's body in an environment the link step already made — §16.2.1.6.
+    ///
+    /// Apart from [`Vm::run_module`] because a linked module's environment is *not* fresh: its
+    /// import slots were bound before anything ran, and making a new one here would throw that
+    /// away and leave every imported name unbound.
+    fn run_module_in(
+        &mut self,
+        chunk: &Chunk,
+        environment: crate::heap::EnvironmentId,
+        heap: &mut Heap,
+    ) -> Result<Outcome, Fault> {
+        self.run_prepared(chunk, environment, Value::Undefined, heap)
+    }
+
     /// The intrinsics this machine belongs to — §9.3's realm.
     ///
     /// `Copy`, so this hands one out rather than lending it: a built-in that needs
@@ -333,6 +351,26 @@ impl Vm {
         this_value: Value,
         heap: &mut Heap,
     ) -> Result<Outcome, Fault> {
+        // §16.1.7 — the code's own environment, and the root of every chain a function it declares
+        // will walk. Named, because a direct `eval` at the top level resolves into it exactly as
+        // one inside a function resolves into that call's.
+        let environment =
+            heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
+        self.run_prepared(chunk, environment, this_value, heap)
+    }
+
+    /// The same, in an environment the caller already has — §16.2.1.6's linked module.
+    ///
+    /// A linked module's environment is *not* fresh: its import slots were bound to other modules'
+    /// before anything ran, and making a new one here would throw that away and leave every
+    /// imported name unbound.
+    fn run_prepared(
+        &mut self,
+        chunk: &Chunk,
+        environment: crate::heap::EnvironmentId,
+        this_value: Value,
+        heap: &mut Heap,
+    ) -> Result<Outcome, Fault> {
         self.stack.clear();
         self.handlers.clear();
         self.frames.clear();
@@ -340,11 +378,7 @@ impl Vm {
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
-        // §16.1.7 — the script's own environment, and the root of every chain a function it
-        // declares will walk. Named, because a direct `eval` at the top level of the script
-        // resolves into it exactly as one inside a function resolves into that call's.
-        self.environment =
-            heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
+        self.environment = environment;
         // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined` (§16.2.1.6),
         // which is the one place the two goal symbols disagree about it, and so is the one thing
         // the caller has to say.
