@@ -1,10 +1,13 @@
-//! §B.2.2's four accessor methods, and §B.3.3's extra `var` a block-level function declaration
-//! makes.
+//! The three clauses of Annex B praxis implements, which have nothing to do with each other.
 //!
-//! Two clauses of one annex, and they have nothing to do with each other beyond that. They are
-//! together because DR-0008 is about where the line through Annex B falls, and both are on the near
-//! side of it: §B.2.2 is a set of methods that changes no grammar, and §B.3.3 is conditioned on
-//! strictness alone. See [`crate::compile`]'s `annex_b` for the rules the second one turns on.
+//! - **§B.2.2** — `Object.prototype`'s four accessor methods.
+//! - **§B.2.3** — `String.prototype`'s thirteen that wrap a string in an HTML tag.
+//! - **§B.3.3** — the extra `var` binding a block-level function declaration makes.
+//!
+//! They are together because DR-0008 is about where the line through Annex B falls and all three
+//! are on the near side of it: the first two change no grammar and are conditioned on nothing at
+//! all, and the third is conditioned on strictness, which the compiler already knows. See
+//! [`crate::compile`]'s `annex_b` for the rules the last one turns on.
 
 use super::*;
 
@@ -518,4 +521,152 @@ fn a_direct_eval_gets_the_extension_where_its_variable_scope_can_take_one() {
     );
     // …and an indirect eval is a Script of its own, which is the global path again.
     assert_eq!(run("(0, eval)('{ function g() { return 2 } }'); g()"), "2");
+}
+
+#[test]
+fn the_thirteen_html_methods_wrap_a_string_in_the_tag_the_clause_names() {
+    // §B.2.3, and the tag is not the method's name in nine of the thirteen — which is the whole
+    // reason the mapping is a table rather than something derived from the name.
+    assert_eq!(run("'x'.big()"), "<big>x</big>");
+    assert_eq!(run("'x'.blink()"), "<blink>x</blink>");
+    assert_eq!(run("'x'.bold()"), "<b>x</b>");
+    assert_eq!(run("'x'.fixed()"), "<tt>x</tt>");
+    assert_eq!(run("'x'.italics()"), "<i>x</i>");
+    assert_eq!(run("'x'.small()"), "<small>x</small>");
+    assert_eq!(run("'x'.strike()"), "<strike>x</strike>");
+    assert_eq!(run("'x'.sub()"), "<sub>x</sub>");
+    assert_eq!(run("'x'.sup()"), "<sup>x</sup>");
+    // The four that take an attribute, two of which share a tag with something else: `anchor` and
+    // `link` are both `a`, and `fontcolor` and `fontsize` are both `font`.
+    assert_eq!(run("'x'.anchor('n')"), "<a name=\"n\">x</a>");
+    assert_eq!(run("'x'.link('u')"), "<a href=\"u\">x</a>");
+    assert_eq!(run("'x'.fontcolor('c')"), "<font color=\"c\">x</font>");
+    assert_eq!(run("'x'.fontsize(3)"), "<font size=\"3\">x</font>");
+    // §B.2.3.2.1 step 2 — the receiver goes through `ToString`, so a number receiver works and a
+    // `toString` of the caller's is called.
+    assert_eq!(run("String.prototype.big.call(42)"), "<big>42</big>");
+    assert_eq!(
+        run("String.prototype.anchor.call(42, 42)"),
+        "<a name=\"42\">42</a>"
+    );
+    assert_eq!(
+        run("'x'.anchor({toString: function () { return 'q' }})"),
+        "<a name=\"q\">x</a>"
+    );
+    // Step 1's `RequireObjectCoercible`, which is what makes these TypeErrors rather than the
+    // string `"undefined"` wrapped in a tag.
+    for source in [
+        "String.prototype.big.call(undefined)",
+        "String.prototype.big.call(null)",
+        "String.prototype.anchor.call(undefined)",
+        "String.prototype.anchor.call(null, 'n')",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ {source}; 'no error' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn only_a_quotation_mark_is_escaped_and_only_in_the_attribute() {
+    // §B.2.3.2.1 step 4.b escapes `"` and nothing else, so that a quotation mark cannot close the
+    // attribute it is inside. That is the whole of the escaping.
+    assert_eq!(
+        run("'x'.anchor(String.fromCharCode(34))"),
+        "<a name=\"&quot;\">x</a>"
+    );
+    assert_eq!(
+        run("'x'.anchor('a' + String.fromCharCode(34) + 'b' + String.fromCharCode(34) + 'c')"),
+        "<a name=\"a&quot;b&quot;c\">x</a>"
+    );
+    // …and `<`, `&` and `>` are **not** escaped, in the attribute or in the content. The output is
+    // not valid HTML and that is what the clause says — a kinder answer here would be a divergence
+    // wearing a safety argument, and test262 asserts the bare `<` in three files.
+    assert_eq!(run("'<'.big()"), "<big><</big>");
+    assert_eq!(run("'<'.anchor('<')"), "<a name=\"<\"><</a>");
+    assert_eq!(run("'&'.bold()"), "<b>&</b>");
+    assert_eq!(run("'x'.anchor('a&b')"), "<a name=\"a&b\">x</a>");
+    // A quotation mark in the *content* is left alone, which is the other half of "only in the
+    // attribute" and is what an escape applied to the whole result would get wrong.
+    assert_eq!(run("String.fromCharCode(34).big()"), "<big>\"</big>");
+}
+
+#[test]
+fn the_receiver_is_converted_before_the_attribute_value_is_looked_at() {
+    // §B.2.3.2.1's steps are numbered and the order is observable: step 2 converts the receiver
+    // and step 4.a the attribute. With both throwing, the receiver's error is the one that
+    // escapes — an implementation that read its argument first would answer the other.
+    assert_eq!(
+        run(
+            "var receiver = {toString: function () { throw new RangeError('r') }}; \
+             var attribute = {toString: function () { throw new EvalError('a') }}; \
+             try { String.prototype.anchor.call(receiver, attribute) } \
+             catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    // …and with only the attribute throwing, it is the attribute's.
+    assert_eq!(
+        run(
+            "try { ''.anchor({toString: function () { throw new EvalError('a') }}) } \
+             catch (e) { e.constructor.name }"
+        ),
+        "EvalError"
+    );
+    // A method that takes no attribute never looks at an argument at all, so one that would throw
+    // is simply ignored — which is what the empty attribute name in the table decides.
+    assert_eq!(
+        run("'x'.big({toString: function () { throw new EvalError('a') }})"),
+        "<big>x</big>"
+    );
+}
+
+#[test]
+fn each_of_the_thirteen_is_an_ordinary_method_of_string_prototype() {
+    // §10.3's shape, which every test262 file for these checks: a `length` of one where an
+    // attribute is taken and zero where none is, the method's own name, not enumerable, and not a
+    // constructor.
+    assert_eq!(
+        run("['anchor', 'link', 'fontcolor', 'fontsize'] \
+             .map(function (n) { return String.prototype[n].length }).join(',')"),
+        "1,1,1,1"
+    );
+    assert_eq!(
+        run(
+            "['big', 'blink', 'bold', 'fixed', 'italics', 'small', 'strike', 'sub', 'sup'] \
+             .map(function (n) { return String.prototype[n].length }).join(',')"
+        ),
+        "0,0,0,0,0,0,0,0,0"
+    );
+    assert_eq!(
+        run("String.prototype.bold.name + ',' + String.prototype.fontcolor.name"),
+        "bold,fontcolor"
+    );
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(String.prototype, 'big'); \
+             [d.writable, d.enumerable, d.configurable].join(',')"
+        ),
+        "true,false,true"
+    );
+    // §10.3 — a built-in method has no `[[Construct]]`, so `new` is a TypeError rather than an
+    // object wrapping a tag.
+    assert_eq!(
+        run("try { new String.prototype.big(); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // All thirteen are there and are functions, which is the one row that would notice a table
+    // entry left out — the reason they are installed from a table at all.
+    assert_eq!(
+        run(
+            "['anchor', 'big', 'blink', 'bold', 'fixed', 'fontcolor', 'fontsize', 'italics', \
+              'link', 'small', 'strike', 'sub', 'sup'] \
+             .filter(function (n) { return typeof String.prototype[n] === 'function' }).length"
+        ),
+        "13"
+    );
 }

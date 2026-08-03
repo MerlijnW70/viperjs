@@ -74,6 +74,7 @@ pub fn well_known_at(name: &str) -> usize {
 }
 mod string;
 mod string_edit;
+mod string_html;
 mod string_index;
 mod string_replace;
 mod wrapper;
