@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **80.69% of test262** — 75,174 of 93,161 runs. Treat that number as
+Conformance as of this commit is **80.78% of test262** — 75,252 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 344 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -179,7 +179,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
 
-### 79.38% to 80.69% in eight slices, and what they have in common
+### 79.38% to 80.78% in nine slices, and what they have in common
 
 None of them was a feature. Every one was a clause praxis had *nearly* right, and seven of the eight
 were found by bucketing the failures rather than by reading a list of what is missing.
@@ -209,6 +209,9 @@ were found by bucketing the failures rather than by reading a list of what is mi
 7. **§6.2.5.5's settled key** (+96) — `GetValue` and `PutValue` both convert a property
    reference's key *and write it back*, so `o[p] += 1` converts once. And `ToObject` of the base
    comes **first**, so `null[p] += rhs()` throws before either `p.toString()` or `rhs()` runs.
+8. **§22.2.1's `ClassSetExpression`** (+78 passing, +78 honestly refused) — a `v` pattern's class
+   is a set expression, and its three operations are three quantifiers over the operands rather
+   than sets to compute.
 
 **The shape worth carrying: a bucket spread evenly over an area's whole surface is one common path,
 not many faults.** Slice 3 wore the name of every `Array.prototype` and `TypedArray.prototype`
@@ -256,12 +259,14 @@ doc says which line to change if data ever arrives.
   bindings in such an eval sidestep it — they go in the eval's own scope, because every test reads
   them from inside the eval — and `compile_direct_eval` says so, so the next attempt does not
   mistake it for the general fix.
-- **`v`-flag set notation — 156 runs, and the largest core-language item left.**
-  `built-ins/RegExp/unicodeSets` fails on three parse errors: a character that must be escaped
-  inside a class in a `v` pattern (78), one that may not be escaped in a Unicode pattern (42), and a
-  doubled punctuator a `v` pattern reserves (36). praxis takes the flag and refuses §22.2.1's
-  `ClassSetExpression` — the difference `[[a-z]--[aeiou]]` and `\q{abc}` need. Grammar and matcher
-  work, and not a proposal: ES2024.
+- **A class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
+  `ClassSetExpression` is built: `[[a-z]--[aeiou]]`, `[\d&&[0-4]]` and nesting all work, and the
+  three operations turned out to be three quantifiers over the operands rather than sets to build.
+  What remains is the two operands that match more than one code point — `\q{abc|def}` and
+  `\p{RGI_Emoji}` — and **both are refused by name rather than as bad syntax**, deliberately: they
+  are legal, so calling them a syntax error would pass every test asserting a pattern must be
+  rejected. Building them is a matcher change (a class stops being a code-point predicate), not a
+  parser one.
 - **A coercion can detach or resize the buffer under a TypedArray method — ~58 runs** across
   `set` 12, `includes` 10, `join` 8, `copyWithin` 8, `indexOf`/`lastIndexOf` 12, `slice` 4, `sort`
   2, `at` 2. Every one coerces an argument and then works from a length read *before* it, where the
