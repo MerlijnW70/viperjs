@@ -15,6 +15,12 @@ fn main() -> std::process::ExitCode {
         Some("hot-shapes") => {
             return experiments::hot_shapes::run(std::env::args().nth(2).as_deref());
         }
+        Some("run-module") => {
+            return experiments::run_module::run(
+                std::env::args().nth(2).as_deref(),
+                std::env::args().nth(3).as_deref(),
+            );
+        }
         Some("nesting-cost") => {
             return experiments::nesting_cost::run(std::env::args().nth(2).as_deref());
         }
@@ -28,6 +34,7 @@ fn main() -> std::process::ExitCode {
             println!();
             println!("  gc-pressure    what the property-escapes bucket costs in time and memory");
             println!("  hot-shapes     where the interpreter's time and allocations go, per shape");
+            println!("  run-module     run a real module graph off the disk");
             println!("  nesting-cost   how much stack a nesting level costs, per shape");
             println!();
             println!("Start one:  create lab/src/experiments/<name>.rs, register it in main.rs,");

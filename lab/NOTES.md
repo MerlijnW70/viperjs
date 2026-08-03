@@ -29,6 +29,62 @@ reproducible.
 
 ---
 
+## run-module — does the engine run somebody else's library?
+
+**Date:** 2026-08-04
+**Question:** `examples/parse` sweeps a repository and answers "does it parse", which is the front
+end only. §16.2's linker, the namespace objects and the live bindings are runtime, and had never
+been pointed at a graph written by somebody who had never heard of praxis. **Does a real library
+link and run, and what breaks first?**
+**Setup:** `cargo run -p praxis-lab --release -- run-module <entry.js>`, against a three.js
+checkout at 1,640 files and 736,000 lines. The host walks each chunk's `imports()`, reads and
+compiles what they name, and hands the whole graph to `Vm::run_module_graph`.
+
+**Result: it runs, and the numbers are right.**
+
+The parse sweep first: **1,640 of 1,642 files parsed, 0 panicked, 21.4 MB in 1.1 s.** The two
+failures are the same emscripten blob (`draco_decoder.js`) and are `MAX_NESTING_DEPTH`, not a
+grammar gap — brace nesting there peaks at 38 against a limit of 64, so what it exceeds is
+*expression* depth. It parses at a limit of 128. Raising it is DR-0006's business and wants
+`nesting-cost`'s stack figure first, so the number is recorded and nothing was changed.
+
+Then the graphs. Ten of three.js's math modules link and evaluate — `Frustum` pulls twelve
+modules — and a probe that imports four of them computes correctly through both an interpreter
+path and an independent one:
+
+| | |
+| --- | --- |
+| `a.dot(b)` | 32 |
+| `a.cross(b)` | -3, 6, -3 |
+| `a.length()` | 3.741657 |
+| `Matrix4.makeRotationY(π/2)` on +X | 0, 0, -1 |
+| the same rotation as a `Quaternion` | 0, 0, -1 |
+| `[...new Vector3(7,8,9)]` | 7, 8, 9 |
+
+Twelve linked ES modules, 816 us. The matrix and quaternion routes agreeing is the row worth
+having: they are different code in three.js and different instructions here.
+
+**The finding is about the embedding surface, and it is real.** `Vm::run_module_graph` looks a
+specifier up **exactly as written** — `self.resolved.get(&entry.specifier)` — and the
+`ModuleLoader` hook is consulted only for §13.3.10's dynamic `import()`, never at link time. So a
+host cannot supply a graph in which two directories both say `./MathUtils.js` meaning different
+files; there is nowhere to put the resolution. three.js's math tree happens to be one directory
+and survives, and anything larger will not. The experiment reports a clash rather than letting the
+second file silently replace the first, which is what makes the limit visible instead of wrong.
+
+**And an hour went into an engine bug that was not one.** The first version called
+`Vm::run_module` — which runs *one* module chunk — and every imported binding read `undefined`.
+`typeof fn` answered `"undefined"`, `fn()` threw "what was called is not a function", and it
+reduced to a two-file repro that looked exactly like a broken linker. It was the wrong entry
+point: linking is `run_module_graph` and it is handed every chunk up front. **The engine's own
+`run_graph` test helper says so in four lines and reading it first would have saved the hour.**
+
+**Cost:** two hours. `Vm::to_string` being `pub(crate)` is worth knowing too — a thrown Error
+cannot be printed from outside the crate, and `examples/evaluate.rs` settles for `[object]`. The
+runner reads `name` and `message` off the object instead, which is the whole diagnosis and needs
+no new API.
+
+
 ## hot-shapes — is the interpreter's ceiling speed, or is it something else?
 
 **Date:** 2026-08-03
