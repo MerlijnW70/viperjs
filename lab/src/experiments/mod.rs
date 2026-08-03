@@ -2,4 +2,5 @@
 //! verdict is written.
 
 pub mod gc_pressure;
+pub mod hot_shapes;
 pub mod nesting_cost;

@@ -12,6 +12,9 @@ fn main() -> std::process::ExitCode {
         Some("gc-pressure") => {
             return experiments::gc_pressure::run(std::env::args().nth(2).as_deref());
         }
+        Some("hot-shapes") => {
+            return experiments::hot_shapes::run(std::env::args().nth(2).as_deref());
+        }
         Some("nesting-cost") => {
             return experiments::nesting_cost::run(std::env::args().nth(2).as_deref());
         }
@@ -24,6 +27,7 @@ fn main() -> std::process::ExitCode {
             println!("praxis-lab — experiments before commitment (see lab/README.md)");
             println!();
             println!("  gc-pressure    what the property-escapes bucket costs in time and memory");
+            println!("  hot-shapes     where the interpreter's time and allocations go, per shape");
             println!("  nesting-cost   how much stack a nesting level costs, per shape");
             println!();
             println!("Start one:  create lab/src/experiments/<name>.rs, register it in main.rs,");

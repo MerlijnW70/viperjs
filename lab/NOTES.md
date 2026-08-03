@@ -29,6 +29,71 @@ reproducible.
 
 ---
 
+## hot-shapes — is the interpreter's ceiling speed, or is it something else?
+
+**Date:** 2026-08-03
+**Question:** "Optimise the bytecode compiler" and "refine the GC" were both proposed as the next
+milestone, and `gc-pressure` had already left two numbers pointing at the interpreter without
+chasing them: `for (let i …)` costing 4.2 us/iteration over `for (var i …)`, and `a[0] = i`
+costing 1.9 us and 17 MiB/million. **Which of the two proposals do those numbers actually
+support?**
+**Setup:** `cargo run -p praxis-lab --release -- hot-shapes`. Twelve source shapes, 100,000
+passes each, chosen so that every interesting quantity is a *difference between two rows that
+differ in one thing*. Each row reports time per pass, arena retained per pass, and — the column
+that settles it — arena retained per pass **after a full collection**.
+
+**Result:** neither proposal is the fix, and the second is refuted outright.
+
+| shape | ns/pass | retained | after gc |
+| --- | --- | --- | --- |
+| `fn-empty-var` | 156 | 2 B | 2 B |
+| `fn-empty-let` | 213 | **74 B** | **74 B** |
+| `empty-var` (script level) | 353 | 2 B | 2 B |
+| `empty-let-captured` | out of heap | **671 B** | **671 B** |
+| `named-store` | 549 | 2 B | 2 B |
+| `element-store` | 814 | 2 B | 2 B |
+| `element-store-growing` | 1777 | 28 B | 28 B |
+| `call` | 677 | **74 B** | **74 B** |
+
+**The after-gc column is identical to the retained column in every row.** A full collection
+reclaims *nothing*. What these shapes retain is not garbage a schedule would catch — it is arena
+slots DR-0010 declines to reuse, and no collector and no schedule can give them back. That is the
+GC proposal answered for the second time and by a different route than `gc-pressure` took.
+
+**The binding constraint is a ceiling, not a speed.** A function call retains 74 B of
+unreclaimable arena. Against DR-0013's 64 MiB budget that is **about 900,000 calls before any
+program dies**, whatever it does with the results — and a `for (let …)` whose body closes over the
+binding retains 671 B/pass, so it dies at about 100,000. Four of the twelve shapes cannot run a
+million passes at all. This limits every praxis program, not the `property-escapes` tests
+specially, and it is why that bucket is the shape it is.
+
+**Two corrections to this notebook's own record.** `gc-pressure`'s "`for (let i …)` vs
+`for (var i …)`: 4.79 s against 0.63 s, 4.2 us/iteration" is a **wrong attribution**. Measured
+inside a function, where both are slots, the per-iteration environment costs **57 ns** — two
+orders of magnitude less. Most of the old gap was that a script-level `var` is a *global-object
+property*: the same empty loop is 353 ns/pass at script level and 156 ns/pass inside a function,
+a 197 ns penalty per access that has nothing to do with `let`. Any future measurement of scope
+cost must run inside a function or it measures the global object instead.
+
+**What the compiler proposal is worth, exactly.** Eliding §14.7.4.7's per-iteration copy when
+nothing captures the binding saves 57 ns and 74 B per iteration. It is real and it is worth doing;
+it is not the fix. It cannot touch `call`'s 74 B, and it must **not** be applied to the capturing
+case — that is the 671 B row, and the copy is what makes it correct.
+
+**The one honest allocation finding** is `element-store-growing`: 28 B/pass and 963 ns over a
+fixed index. That is the array's backing growth, not a per-store object, and it is the only row
+where the memory is doing work.
+
+**Verdict: PARKED as an optimisation question; ESCALATED as a limit.** Neither "optimise the
+compiler" nor "improve the GC" is the next thing. **DR-0010 slot reuse with generation-tagged
+handles** is, and AGENTS.md already calls it "a decision record, not a patch". This experiment is
+the number that record was missing: without it, praxis cannot call a function a million times.
+
+**Cost:** about an hour. Most of it was one harness bug worth repeating — `Outcome::Thrown` is
+`Ok`, so the first run reported the four shapes that *exhausted the heap* as the four fastest.
+A benchmark that does not check what it measured will report a crash as a speed-up.
+
+
 ## name-resolution — what would it cost to resolve every name at run time?
 
 **Date:** 2026-08-03
