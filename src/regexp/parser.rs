@@ -14,7 +14,10 @@
 //! only then is the body parsed — which is also how `\k<name>` can be an error for naming nothing
 //! while `\1` with no groups at all is one too.
 
-use super::syntax::{Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern};
+use super::syntax::{
+    Assertion, ClassEscape, ClassItem, ClassOperation, ClassSet, Error, Flags, GroupKind, Node,
+    Pattern,
+};
 use crate::unicode_id::{is_id_continue, is_id_start};
 use crate::unicode_property::Property;
 use std::collections::HashSet;
@@ -404,17 +407,53 @@ impl Reader<'_> {
         Err(Error::at("a group name is not closed"))
     }
 
-    /// §22.2.1 `CharacterClass`.
+    /// §22.2.1 `CharacterClass`, at the top level of a pattern.
+    ///
+    /// The contents are a [`ClassSet`] whichever flag is in force, and a plain union is unwrapped
+    /// back into the node's own item list — which is what keeps `[a-z]` one level deep for the
+    /// matcher and for everything else that reads a tree. Only a set *operation* needs a level of
+    /// its own, and it gets one nested inside a union of one.
     fn class(&mut self) -> Result<Node, Error> {
+        let set = self.class_set()?;
+        match set.operation {
+            ClassOperation::Union => Ok(Node::Class {
+                negated: set.negated,
+                items: set.items,
+            }),
+            // The negation belongs to the class and the operation to what is inside it, which is
+            // the order `[^\d&&[0-4]]` is written in and the order it has to be evaluated in.
+            _ => Ok(Node::Class {
+                negated: set.negated,
+                items: vec![ClassItem::Nested(ClassSet {
+                    negated: false,
+                    ..set
+                })],
+            }),
+        }
+    }
+
+    /// §22.2.1's `ClassContents`, from the `[` through the `]`.
+    ///
+    /// Called for the outermost class and, in a `v` pattern, for every `[…]` written inside one.
+    fn class_set(&mut self) -> Result<ClassSet, Error> {
         self.at += 1;
         let negated = self.eat('^');
         let mut items = Vec::new();
+        let mut operation = ClassOperation::Union;
         loop {
             match self.peek() {
                 None => return Err(Error::at("a character class is not closed")),
                 Some(']') => {
                     self.at += 1;
-                    return Ok(Node::Class { negated, items });
+                    // `[a--]` has an operator and one operand short of a use for it.
+                    if operation != ClassOperation::Union && items.len() < 2 {
+                        return Err(Error::at("a set operation needs an operand on both sides"));
+                    }
+                    return Ok(ClassSet {
+                        negated,
+                        operation,
+                        items,
+                    });
                 }
                 Some(_) => {}
             }
@@ -430,12 +469,37 @@ impl Reader<'_> {
                     "this punctuator is doubled, which a v pattern reserves inside a class",
                 ));
             }
-            let first = self.class_atom()?;
+            let first = self.class_operand()?;
+            // A separator decides what this level is, and every one after it has to agree: §22.2.1
+            // gives `ClassIntersection` and `ClassSubtraction` separate productions and neither
+            // admits the other, so `[\d&&\w--a]` has no derivation and `[[\d&&\w]--a]` is how
+            // to write it.
+            if let Some(next) = self.class_operator() {
+                // Empty means this is the first separator and it decides the level. Otherwise it
+                // has to be the one already chosen — which refuses a second operator *and* a union
+                // that has already collected operands, since `Union` is never what a separator says.
+                if !items.is_empty() && operation != next {
+                    return Err(Error::at(
+                        "a set operation may not be mixed with a union or with the other operation",
+                    ));
+                }
+                operation = next;
+                items.push(first);
+                continue;
+            }
+            // An operand with no separator after it ends the list, so anything before the `]` that
+            // is not the last operand is a union appearing where the operator was promised.
+            if operation != ClassOperation::Union && self.peek() != Some(']') {
+                return Err(Error::at(
+                    "every operand of a set operation must be separated by the same operator",
+                ));
+            }
             // `-` between two atoms makes a range, but a `-` before the closing `]` is itself an
-            // atom: `[a-]` is `a` and `-`, not an unfinished range.
+            // atom: `[a-]` is `a` and `-`, not an unfinished range. §22.2.1 puts a range in
+            // `ClassUnion` only, which is what the refusal above has established this is.
             if self.peek() == Some('-') && self.text.get(self.at + 1) != Some(&']') {
                 self.at += 1;
-                let second = self.class_atom()?;
+                let second = self.class_operand()?;
                 let (ClassItem::Single(low), ClassItem::Single(high)) = (&first, &second) else {
                     // §22.2.1.1 — a class escape stands for a set and cannot be an end of a range.
                     // Annex B reads `[\d-x]` as three atoms; DR-0008 leaves that out.
@@ -451,6 +515,49 @@ impl Reader<'_> {
             }
             items.push(first);
         }
+    }
+
+    /// The separator after an operand, if there is one — §22.2.1's `&&` and `--`.
+    ///
+    /// Consumes it. `&&` carries a `[lookahead ≠ &]`, so `&&&` is not an intersection with an
+    /// ampersand after it — it is the doubled punctuator the refusal above catches.
+    fn class_operator(&mut self) -> Option<ClassOperation> {
+        if !self.flags.unicode_sets {
+            return None;
+        }
+        match self.text[self.at..] {
+            ['&', '&', ..] if self.text.get(self.at + 2) != Some(&'&') => {
+                self.at += 2;
+                Some(ClassOperation::Intersection)
+            }
+            ['-', '-', ..] => {
+                self.at += 2;
+                Some(ClassOperation::Difference)
+            }
+            _ => None,
+        }
+    }
+
+    /// §22.2.1's `ClassSetOperand`, or a `u` pattern's `ClassAtom`.
+    ///
+    /// The one thing a `v` pattern adds is the nested class, which is why `[` is among the
+    /// characters it makes an error of when written alone: inside a `v` class a bracket is not a
+    /// bracket, it is an operand opening.
+    fn class_operand(&mut self) -> Result<ClassItem, Error> {
+        if self.flags.unicode_sets && self.peek() == Some('[') {
+            return Ok(ClassItem::Nested(self.class_set()?));
+        }
+        // §22.2.1's `ClassStringDisjunction` — `\q{abc|def}`, an operand that matches *strings*
+        // rather than code points. Refused as **unsupported** and not as a syntax error, which is
+        // the difference between a gap and a rule: `\q{}` is a legal `v` operand, so reporting it
+        // as bad syntax would pass every test asserting a pattern must be rejected and would be a
+        // wrong answer in the one direction this engine cannot afford. It is the same refusal
+        // `\p{RGI_Emoji}` gets, and for the same reason — a class that can match more than one
+        // code point is a matcher change rather than a parser one.
+        if self.flags.unicode_sets && matches!(self.text[self.at..], ['\\', 'q', '{', ..]) {
+            return Err(Error::unsupported("a class of strings"));
+        }
+        self.class_atom()
     }
 
     /// One entry inside `[…]` — a character, or an escape that may stand for a set.

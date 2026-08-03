@@ -425,3 +425,172 @@ fn the_flags_getter_reads_the_eight_properties_and_not_the_slots() {
         );
     }
 }
+
+#[test]
+fn a_v_pattern_takes_the_three_set_operations_over_a_class() {
+    // §22.2.1's `ClassSetExpression`. `--` is difference and `&&` is intersection, and a class
+    // written inside a class is an operand — which is the whole of what the `v` flag reserved its
+    // extra punctuation for.
+    assert_eq!(run("/^[[0-9]--_]+$/v.test('019')"), "true");
+    assert_eq!(run("/^[[0-9]--_]+$/v.test('_')"), "false");
+    assert_eq!(run("/[[a-z]--[aeiou]]/v.test('b')"), "true");
+    assert_eq!(run("/[[a-z]--[aeiou]]/v.test('a')"), "false");
+    assert_eq!(run("/^[\\d&&[0-4]]+$/v.test('034')"), "true");
+    assert_eq!(run("/^[\\d&&[0-4]]+$/v.test('5')"), "false");
+    assert_eq!(
+        run("/[\\w&&\\d]/v.test('5') + ',' + /[\\w&&\\d]/v.test('a')"),
+        "true,false"
+    );
+    // A union needs no operator, and a nested class in one is just more operands.
+    assert_eq!(
+        run(
+            "/[[a-c][x-z]]/v.test('b') + ',' + /[[a-c][x-z]]/v.test('y') + ',' \
+             + /[[a-c][x-z]]/v.test('m')"
+        ),
+        "true,true,false"
+    );
+    // More than two operands, which each operation takes.
+    assert_eq!(
+        run("/[\\w&&[a-z]&&[a-c]]/v.test('b') + ',' + /[\\w&&[a-z]&&[a-c]]/v.test('d')"),
+        "true,false"
+    );
+    assert_eq!(
+        run("/[[a-z]--[aeiou]--[b-d]]/v.test('f') + ',' + /[[a-z]--[aeiou]--[b-d]]/v.test('c')"),
+        "true,false"
+    );
+    // The **negation belongs to the class and the operation to what is inside it**, which is the
+    // order it is written in: `[0-9]--[0-4]` is `{5..9}`, and the `^` takes everything else.
+    assert_eq!(
+        run("/^[^[0-9]--[0-4]]$/v.test('7') + ',' + /^[^[0-9]--[0-4]]$/v.test('2')"),
+        "false,true"
+    );
+    // …and a nested `[^…]` is negated before the level above combines it, which is a different
+    // question and a different answer.
+    assert_eq!(
+        run("/^[\\d&&[^0-4]]$/v.test('7') + ',' + /^[\\d&&[^0-4]]$/v.test('2')"),
+        "true,false"
+    );
+    // Nesting goes as deep as it is written.
+    assert_eq!(
+        run(
+            "/^[[[a-z]--[aeiou]]&&[a-f]]$/v.test('b') + ',' + /^[[[a-z]--[aeiou]]&&[a-f]]$/v.test('e')"
+        ),
+        "true,false"
+    );
+    // A property escape is an operand like any other, and `i` still does not reach one — §22.2.2.9
+    // folds the pattern's literals and ranges and not its sets.
+    assert_eq!(
+        run("/[\\p{ASCII}&&[a-c]]/v.test('b') + ',' + /[\\p{ASCII}&&[a-c]]/v.test('z')"),
+        "true,false"
+    );
+}
+
+#[test]
+fn a_u_pattern_reads_the_same_brackets_as_ordinary_characters() {
+    // The one place `v` is not merely more capable than `u` but *different*, which is why §22.2.1
+    // makes the two flags refuse each other. Every one of these is a class of characters under
+    // `u` and a set expression under `v`.
+    assert_eq!(run("/^[[]$/u.test('[')"), "true");
+    assert_eq!(run("/^[a[b]+$/u.test('a[b')"), "true");
+    assert_eq!(run("/^[&&]+$/u.test('&&')"), "true");
+    // …and where `u` reads brackets as characters it also reads `]` as a closer, so the shapes a
+    // `v` pattern nests are not merely different under `u` — several of them have no derivation
+    // at all. `[[a-c]]` closes at the first `]` and leaves a second with nothing to match, and
+    // `[a--b]` is the range `a` to `-`, which runs backwards.
+    assert_eq!(
+        run("try { new RegExp('[[a-c]]', 'u'); 'no error' } catch (e) { e.message }"),
+        "a regular expression has an unmatched ]"
+    );
+    assert_eq!(
+        run("try { new RegExp('[a--b]', 'u'); 'no error' } catch (e) { e.message }"),
+        "a character class range runs backwards"
+    );
+    // The same text under `v` is a difference, and an empty one: `a` minus `b` still holds `a`,
+    // and nothing there matches `-`.
+    assert_eq!(
+        run("/^[a--b]+$/v.test('a') + ',' + /^[a--b]+$/v.test('-')"),
+        "true,false"
+    );
+    // …and `v` refuses the doubled punctuators it has not given a meaning to, which is what the
+    // reservation was for.
+    assert_eq!(
+        run("try { new RegExp('[!!]', 'v'); 'no error' } catch (e) { e.message }"),
+        "this punctuator is doubled, which a v pattern reserves inside a class"
+    );
+    assert_eq!(run("/^[!!]+$/u.test('!!')"), "true");
+    // A plain range is still a range in a `v` pattern — §22.2.1 puts `ClassSetRange` in
+    // `ClassUnion`, so it is the operation this class already is.
+    assert_eq!(run("/^[a-z]+$/v.test('qed')"), "true");
+    assert_eq!(run("/^[a-z0-9]+$/v.test('q3d')"), "true");
+}
+
+#[test]
+fn the_two_set_operations_do_not_mix_and_neither_mixes_with_a_union() {
+    // §22.2.1 gives `ClassIntersection` and `ClassSubtraction` separate productions and neither
+    // admits the other, so one level is one operation and nesting is how to write both.
+    for source in [
+        "new RegExp('[\\\\d&&\\\\w--a]', 'v')",
+        "new RegExp('[a--b&&c]', 'v')",
+        "new RegExp('[a&&b--c]', 'v')",
+        "new RegExp('[ab&&c]', 'v')",
+        "new RegExp('[a&&bc]', 'v')",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ {source}; 'no error' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "SyntaxError",
+            "{source}"
+        );
+    }
+    // …and nesting is how both are written together, which is the row that says the refusal above
+    // is about the *level* rather than about the operations.
+    assert_eq!(
+        run("/^[[\\d&&[0-8]]--[0-4]]$/v.test('7') + ',' + /^[[\\d&&[0-8]]--[0-4]]$/v.test('9')"),
+        "true,false"
+    );
+    // An operator with nothing on one side of it.
+    assert_eq!(
+        run("try { new RegExp('[a--]', 'v'); 'no error' } catch (e) { e.message }"),
+        "a set operation needs an operand on both sides"
+    );
+    assert_eq!(
+        run("try { new RegExp('[--a]', 'v'); 'no error' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+    // §22.2.1's `[lookahead ≠ &]` on `&&`: a third ampersand is not an intersection with one after
+    // it. **The message is the assertion**, because both readings refuse this and they refuse it
+    // for different reasons — taking the first two as an operator leaves `&b` as two operands with
+    // no separator, where declining to gives the doubled punctuator the reservation is for.
+    assert_eq!(
+        run("try { new RegExp('[a&&&b]', 'v'); 'no error' } catch (e) { e.message }"),
+        "this punctuator is doubled, which a v pattern reserves inside a class"
+    );
+}
+
+#[test]
+fn a_class_that_would_match_strings_is_refused_by_name_and_not_as_bad_syntax() {
+    // §22.2.1's `ClassStringDisjunction` — `\q{abc|def}`, an operand matching *strings* rather
+    // than code points, and a matcher change rather than a parser one.
+    //
+    // The refusal is **unsupported** and not a syntax error, and the difference is the whole
+    // reason this row exists: `\q{}` is a legal `v` operand, so calling it bad syntax would pass
+    // every test asserting that a pattern must be rejected — a gap wearing a rule's clothes. Same
+    // for `\p{RGI_Emoji}`, which is the other way a class comes to match more than one code point.
+    assert_eq!(
+        run("var p = '[' + String.fromCharCode(92) + 'q{abc}]'; \
+             try { new RegExp(p, 'v'); 'no error' } catch (e) { e.message }"),
+        "a class of strings"
+    );
+    assert_eq!(
+        run("try { new RegExp('\\\\p{RGI_Emoji}', 'v'); 'no error' } catch (e) { e.message }"),
+        "a property of strings"
+    );
+    // …and outside a `v` pattern `\q` is an ordinary escape question, which this must not have
+    // changed: `u` refuses it as the syntax error it is there.
+    assert_eq!(
+        run("var p = '[' + String.fromCharCode(92) + 'q{abc}]'; \
+             try { new RegExp(p, 'u'); 'no error' } catch (e) { e.message }"),
+        "this character may not be escaped in a Unicode pattern"
+    );
+}

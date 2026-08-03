@@ -176,6 +176,46 @@ pub enum ClassItem {
     Escape(ClassEscape),
     /// `\p{…}` inside a class, which stands for a set for the same reason and so cannot either.
     Property(crate::unicode_property::Property),
+    /// A nested class, or a set operation over several — §22.2.1's `ClassSetExpression`.
+    ///
+    /// Only a `v` pattern makes one. A `u` pattern's `[` inside a class is an ordinary bracket and
+    /// a `v` pattern's opens this, which is the difference the two flags cannot share a pattern
+    /// over.
+    Nested(ClassSet),
+}
+
+/// A class's contents, and how they combine — §22.2.1's `ClassSetExpression`.
+///
+/// The top level of every class is one of these, and so is every `[…]` written inside one. Which
+/// is why the *negation* lives here rather than beside the operation: `[^\d&&[0-4]]` negates the
+/// intersection, and a nested `[^…]` negates its own contents before the level above combines it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClassSet {
+    /// Whether it was written `[^…]`.
+    pub negated: bool,
+    /// What joins the items.
+    pub operation: ClassOperation,
+    /// The operands, in the order written.
+    pub items: Vec<ClassItem>,
+}
+
+/// The three ways §22.2.1 joins a class's operands.
+///
+/// They do not mix at one level: `ClassIntersection` and `ClassSubtraction` are separate
+/// productions and neither admits the other, so `[\d&&\w--a]` is a Syntax Error and
+/// `[[\d&&\w]--a]` is how to write it. That is what makes this one value per level rather than
+/// one per separator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ClassOperation {
+    /// The ordinary class: anything that matches any operand.
+    ///
+    /// The only one a `u` pattern has, and the only one that admits a *range* — §22.2.1 puts
+    /// `ClassSetRange` in `ClassUnion` and nowhere else, so `[a-z&&b-d]` has no derivation.
+    Union,
+    /// `&&` — everything that matches **every** operand.
+    Intersection,
+    /// `--` — everything matching the first operand and none of the rest.
+    Difference,
 }
 
 /// What a `(` opened.

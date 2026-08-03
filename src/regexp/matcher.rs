@@ -30,7 +30,7 @@
 //! abandoned. Abandoning reports *no match*, which the specification does not authorise; it is the
 //! least bad of three bad answers and it is written down here rather than hidden.
 
-use super::syntax::{Assertion, ClassEscape, ClassItem, GroupKind, Node, Pattern};
+use super::syntax::{Assertion, ClassEscape, ClassItem, ClassOperation, GroupKind, Node, Pattern};
 
 /// How much work one match attempt may cost before it is abandoned.
 ///
@@ -642,7 +642,12 @@ impl<'a> Matcher<'a> {
 
     /// Whether a character is among a class's items — the class's own `[^…]` is the caller's.
     fn in_class(&self, found: u32, items: &[ClassItem]) -> bool {
-        items.iter().any(|item| match item {
+        items.iter().any(|item| self.in_item(found, item))
+    }
+
+    /// Whether one operand of a class holds this code point.
+    fn in_item(&self, found: u32, item: &ClassItem) -> bool {
+        match item {
             ClassItem::Single(code) => self.same(found, *code),
             ClassItem::Range(low, high) => {
                 (*low..=*high).contains(&found)
@@ -656,7 +661,38 @@ impl<'a> Matcher<'a> {
             // property is neither. `\p{Lu}` therefore does not match `a` in an `i` pattern, which
             // is the one place a set behaves unlike the range spelling out the same code points.
             ClassItem::Property(property) => property.contains(found),
-        })
+            ClassItem::Nested(set) => self.in_set(found, set),
+        }
+    }
+
+    /// §22.2.2.9's `ClassSetExpression`, as the set algebra it describes.
+    ///
+    /// The three operations are the three quantifiers over the operands and nothing more, which is
+    /// what makes this a predicate rather than a set to build: a union asks whether **any** operand
+    /// holds the code point, an intersection whether **every** one does, and a difference whether
+    /// the first does and none of the rest. Computing the sets and intersecting them would answer
+    /// the same and would have to represent them.
+    ///
+    /// The negation is applied last, and it belongs to this level rather than to the operation:
+    /// `[^\d&&[0-4]]` is everything outside the intersection, and a nested `[^…]` is negated
+    /// before the level above combines it.
+    fn in_set(&self, found: u32, set: &crate::regexp::syntax::ClassSet) -> bool {
+        let inside = match set.operation {
+            ClassOperation::Union => set.items.iter().any(|item| self.in_item(found, item)),
+            ClassOperation::Intersection => set.items.iter().all(|item| self.in_item(found, item)),
+            // Written as one expression rather than a match on "is there a first operand", because
+            // the parser refuses an operator with fewer than two — so the empty case is a tree
+            // nothing builds, and an arm for it would answer something no input could check.
+            // `is_some_and` gives it the same `false` an empty union gets, with nothing to flip.
+            ClassOperation::Difference => {
+                let mut operands = set.items.iter();
+                operands
+                    .next()
+                    .is_some_and(|first| self.in_item(found, first))
+                    && !operands.any(|item| self.in_item(found, item))
+            }
+        };
+        inside != set.negated
     }
 
     /// §22.2.2.6's four assertions.
