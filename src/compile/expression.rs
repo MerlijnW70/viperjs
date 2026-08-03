@@ -297,8 +297,9 @@ impl Compiler<'_> {
                 };
                 match compound_operator(*operator) {
                     // `a = v`, which is one of §8.6.3's named positions: `f = function () {}` gives
-                    // the function the name `f`. Only a plain `=` — `f ||= function () {}` does not
-                    // name it, because §13.15.2's compound forms are not in the list.
+                    // the function the name `f`. The three *logical* forms are named positions too
+                    // — see the arm below — and only the arithmetic ones are not, because
+                    // `f += function () {}` has no production that mentions `NamedEvaluation`.
                     None if *operator == AssignmentOperator::Assign => {
                         self.named_evaluation(name, value)?;
                     }
@@ -332,7 +333,14 @@ impl Compiler<'_> {
                         // No `Pop` for the old value: `JumpKeeping` keeps it only on the path that
                         // jumps, and consumes it on the one that falls through — which is the whole
                         // reason `a || b` answers `b` rather than leaving both behind.
-                        self.expression(value)?;
+                        //
+                        // §13.15.2's evaluation for the three logical forms has a step 5 that the
+                        // arithmetic ones do not: `IsAnonymousFunctionDefinition(rhs)` and
+                        // `IsIdentifierRef(lhs)` together make this a `NamedEvaluation` position,
+                        // so `value ||= () => {}` names the arrow `"value"`. Grouping it with
+                        // `+=` because both are spelled "compound" is the mistake to avoid — the
+                        // list §8.6.3 draws on is per-production, not per-category.
+                        self.named_evaluation(name, value)?;
                         self.store_name(name)?;
                         return self.chunk.patch(over_the_store);
                     }

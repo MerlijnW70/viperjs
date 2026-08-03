@@ -15353,24 +15353,6 @@ language/expressions/less-than/bigint-and-boolean.js (strict) :: it threw an obj
 language/expressions/less-than/bigint-and-symbol.js :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/less-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-and/tco-right.js (strict) :: it threw RangeError: too much recursion
-language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
-language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js (strict) :: it threw an object with no name: value Expected SameValue(«""», «"value"») to be true
 language/expressions/logical-or/tco-right.js (strict) :: it threw RangeError: too much recursion
 language/expressions/member-expression/computed-reference-null-or-undefined.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/member-expression/computed-reference-null-or-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error

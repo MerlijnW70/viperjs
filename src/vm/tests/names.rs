@@ -56,10 +56,13 @@ fn the_positions_that_do_not_name_a_function_leave_it_with_the_empty_string() {
         run("(function () { var o = {}; o.p = function () {}; return o.p.name; })()"),
         ""
     );
-    // Nor is a compound assignment on the list, however plain the name is.
+    // A **logical** assignment *is* on the list — §13.15.2's evaluation for `&&=`, `||=` and `??=`
+    // has a step 5 that the arithmetic forms have no equivalent of. This row asserted the opposite
+    // for as long as the compiler did, which is what an overfitted test looks like from the
+    // inside: it read as a rule about "compound assignment" and was a description of a bug.
     assert_eq!(
         run("(function () { var f = 0; f ||= function () {}; return f.name; })()"),
-        ""
+        "f"
     );
     // Nor anything that merely *evaluates* to a function: a parenthesised comma expression, a call, a
     // conditional. Each of these is where an implementation that named by assignment would be wrong.
@@ -389,4 +392,33 @@ fn a_direct_eval_in_a_named_function_expression_resolves_its_name_too() {
         ),
         "TypeError"
     );
+}
+
+#[test]
+fn the_three_logical_assignments_name_what_they_assign_and_the_arithmetic_ones_do_not() {
+    // §13.15.2's evaluation for `&&=`, `||=` and `??=` has a step 5 the arithmetic forms have no
+    // equivalent of: `IsAnonymousFunctionDefinition(rhs)` and `IsIdentifierRef(lhs)` together make
+    // this a `NamedEvaluation` position. Grouping the three with `+=` because all four are spelled
+    // "compound" is the mistake — §8.6.3's list is drawn per-production, not per-category.
+    assert_eq!(run("var v = 1; v &&= () => {}; v.name"), "v");
+    assert_eq!(run("var v = 0; v ||= () => {}; v.name"), "v");
+    assert_eq!(run("var v; v ??= () => {}; v.name"), "v");
+    // Every anonymous definition, not only arrows.
+    assert_eq!(run("var v = 0; v ||= function () {}; v.name"), "v");
+    assert_eq!(run("var v = 0; v ||= class {}; v.name"), "v");
+    assert_eq!(run("var v = 0; v ||= function* () {}; v.name"), "v");
+    assert_eq!(run("var v = 0; v ||= async function () {}; v.name"), "v");
+    // …and a definition that is *not* anonymous keeps its own name, which is what says the naming
+    // is `NamedEvaluation` rather than an assignment overwriting a name.
+    assert_eq!(run("var v = 0; v ||= function named() {}; v.name"), "named");
+    // Step 5 wants `IsIdentifierRef` of the **target**, so a property target names nothing —
+    // there is no identifier for it to take the name of.
+    assert_eq!(run("var o = {}; o.p ||= () => {}; o.p.name"), "");
+    assert_eq!(run("var o = {}; o['q'] ??= () => {}; o.q.name"), "");
+    // The arithmetic forms have no such step, and `+` on a function would not reach one anyway.
+    assert_eq!(run("var v = 0; v += function () {}; typeof v"), "string");
+    // The short circuit still decides whether anything is assigned at all: a name is only given
+    // to a function the operator actually evaluated.
+    assert_eq!(run("var v = 1; v ||= () => {}; v"), "1");
+    assert_eq!(run("var n = 0; var v = 1; v ||= (n = 1, () => {}); n"), "0");
 }

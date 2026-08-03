@@ -25,11 +25,17 @@
 //! the grammar at all. So `for (var a, b in c)` and `for (var a = 1 of b)` have no derivation.
 //!
 //! `for (var a = 1 in b)` is the exception, and it is refused here. Annex B.3.5 restores an
-//! initialiser to exactly that one shape — `var`, `in`, and non-strict code — and unlike the
-//! catch-block extension of B.3.4 it is conditioned on strictness, which this parser does not yet
-//! track. Accepting it unconditionally would therefore be wrong in strict code, where every host
-//! must refuse it; refusing it is wrong only for sloppy code on a host that implements B.3.5. The
-//! narrower mistake is the one to make until strict mode exists, and the test below says so.
+//! initialiser to exactly that one shape — `var`, `in`, a `BindingIdentifier` rather than a
+//! pattern, and non-strict code — so refusing it is right everywhere except sloppy code on a host
+//! that implements B.3.5.
+//!
+//! **The reason recorded here used to be that this parser did not track strictness. It does** —
+//! `Parser::strict`, set by the Directive Prologue and accurate at this point — so that is no
+//! longer what stands in the way. What does is the *runtime* half: §B.3.5 evaluates the
+//! initialiser and assigns it **before** `ForIn/OfHeadEvaluation` runs, which is a shape the
+//! compiler has nowhere to put, and the whole clause is worth one run of test262. Costed and left
+//! deliberately; the condition here is one `&& !self.strict` away whenever the other half is
+//! written.
 
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
@@ -327,9 +333,9 @@ mod tests {
             );
         }
         // Annex B.3.5 restores an initialiser to exactly one shape — `var`, `in`, non-strict —
-        // and it is refused here because it is conditioned on strictness, which this parser does
-        // not track. Wrong for sloppy code on a host that implements B.3.5; right everywhere
-        // else, including strict code on every host. The day strict mode exists, this changes.
+        // and it is still refused here. Not for want of strictness, which this parser now has:
+        // §B.3.5 assigns the initialiser *before* the head is evaluated, and that is the half the
+        // compiler cannot yet express. The module doc says which line changes when it can.
         assert_eq!(
             script_error("for (var a = 1 in b);").kind,
             ParseErrorKind::ForInOfBindingHasInitializer
