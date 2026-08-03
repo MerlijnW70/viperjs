@@ -1580,10 +1580,6 @@ built-ins/DataView/proto-from-ctor-realm-sab.js :: it threw TypeError: what was 
 built-ins/DataView/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/byteLength/resizable-array-buffer-auto.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/DataView/prototype/byteLength/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/DataView/prototype/byteOffset/resizable-array-buffer-auto.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/DataView/prototype/byteOffset/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js :: it threw an object with no name
@@ -3556,8 +3552,8 @@ built-ins/RegExp/property-escapes/generated/General_Category_-_Cased_Letter.js :
 built-ins/RegExp/property-escapes/generated/General_Category_-_Cased_Letter.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Close_Punctuation.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Close_Punctuation.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Control.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Control.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Currency_Symbol.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3608,8 +3604,8 @@ built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Symbol.js :
 built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Symbol.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Paragraph_Separator.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Paragraph_Separator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Punctuation.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Punctuation.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Separator.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3654,8 +3650,8 @@ built-ins/RegExp/property-escapes/generated/Math.js :: it threw RangeError: the 
 built-ins/RegExp/property-escapes/generated/Math.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Noncharacter_Code_Point.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Noncharacter_Code_Point.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Pattern_White_Space.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Pattern_White_Space.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Quotation_Mark.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -14160,8 +14156,6 @@ built-ins/TypedArray/from/iter-next-value-error.js :: it threw an object with no
 built-ins/TypedArray/from/iter-next-value-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/prototype/at/coerced-index-resize.js :: it threw an object with no name: Expected SameValue(«0», «undefined») to be true
 built-ins/TypedArray/prototype/at/coerced-index-resize.js (strict) :: it threw an object with no name: Expected SameValue(«0», «undefined») to be true
-built-ins/TypedArray/prototype/at/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/at/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/byteOffset/BigInt/resizable-array-buffer-auto.js :: it threw an object with no name: following shrink (out of bounds) Expected SameValue(«8», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/byteOffset/BigInt/resizable-array-buffer-auto.js (strict) :: it threw an object with no name: following shrink (out of bounds) Expected SameValue(«8», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/byteOffset/BigInt/resizable-array-buffer-fixed.js :: it threw an object with no name: following shrink (out of bounds) Expected SameValue(«8», «0») to be true (Testing with BigInt64Array and makePassthrough.)
@@ -14182,10 +14176,6 @@ built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js :: it
 built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js (strict) :: it threw an object with no name: should throw TypeError as array is detached Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/copyWithin/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/copyWithin/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/entries/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/entries/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/every/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/every/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/every/BigInt/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
@@ -14194,16 +14184,12 @@ built-ins/TypedArray/prototype/every/callbackfn-resize.js :: it threw an object 
 built-ins/TypedArray/prototype/every/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/every/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/every/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/every/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/every/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/every/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/every/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/fill/BigInt/fill-values-conversion-once.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/fill/BigInt/fill-values-conversion-once.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/fill/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/fill/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/fill/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/fill/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/filter/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/BigInt/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
@@ -14216,8 +14202,6 @@ built-ins/TypedArray/prototype/filter/callbackfn-resize.js :: it threw an object
 built-ins/TypedArray/prototype/filter/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/filter/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/filter/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/filter/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutable-buffer.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
@@ -14234,8 +14218,6 @@ built-ins/TypedArray/prototype/find/predicate-call-changes-value.js :: it threw 
 built-ins/TypedArray/prototype/find/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«undefined», «7») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/find/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/find/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/find/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/find/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/findIndex/BigInt/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«-1», «2») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findIndex/BigInt/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«-1», «2») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findIndex/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
@@ -14244,8 +14226,6 @@ built-ins/TypedArray/prototype/findIndex/predicate-call-changes-value.js :: it t
 built-ins/TypedArray/prototype/findIndex/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«-1», «2») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/findIndex/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/findIndex/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/findLast/BigInt/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«undefined», «7n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLast/BigInt/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«undefined», «7n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLast/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, undefined, 0] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
@@ -14254,8 +14234,6 @@ built-ins/TypedArray/prototype/findLast/predicate-call-changes-value.js :: it th
 built-ins/TypedArray/prototype/findLast/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«undefined», «7») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findLast/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/findLast/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/findLast/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/findLastIndex/BigInt/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«-1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLastIndex/BigInt/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«-1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLastIndex/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, undefined, 0] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
@@ -14264,8 +14242,6 @@ built-ins/TypedArray/prototype/findLastIndex/predicate-call-changes-value.js :: 
 built-ins/TypedArray/prototype/findLastIndex/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«-1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/findLastIndex/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/findLastIndex/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/forEach/BigInt/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
@@ -14274,8 +14250,6 @@ built-ins/TypedArray/prototype/forEach/callbackfn-resize.js :: it threw an objec
 built-ins/TypedArray/prototype/forEach/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/forEach/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/forEach/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/forEach/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/forEach/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/BigInt/detached-buffer-during-fromIndex-returns-false-for-zero.js :: it threw an object with no name: Expected SameValue(«true», «false») to be true (Testing with BigInt64Array and makePassthrough.)
@@ -14292,8 +14266,6 @@ built-ins/TypedArray/prototype/includes/detached-buffer-during-fromIndex-returns
 built-ins/TypedArray/prototype/includes/detached-buffer-during-fromIndex-returns-true-for-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/length-zero-returns-false.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/includes/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/includes/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/includes/search-undefined-after-shrinking-buffer.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/search-undefined-after-shrinking-buffer.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/BigInt/detached-buffer-during-fromIndex-returns-minus-one-for-zero.js :: it threw an object with no name: Expected SameValue(«0», «-1») to be true (Testing with BigInt64Array and makePassthrough.)
@@ -14306,8 +14278,6 @@ built-ins/TypedArray/prototype/indexOf/detached-buffer-during-fromIndex-returns-
 built-ins/TypedArray/prototype/indexOf/detached-buffer-during-fromIndex-returns-minus-one-for-zero.js (strict) :: it threw an object with no name: Expected SameValue(«0», «-1») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/indexOf/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/indexOf/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/join/BigInt/custom-separator-result-from-tostring-on-each-simple-value.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/BigInt/custom-separator-result-from-tostring-on-each-simple-value.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/BigInt/detached-buffer-during-fromIndex-returns-single-comma.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
@@ -14324,16 +14294,12 @@ built-ins/TypedArray/prototype/join/custom-separator-result-from-tostring-on-eac
 built-ins/TypedArray/prototype/join/custom-separator-result-from-tostring-on-each-value.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/detached-buffer-during-fromIndex-returns-single-comma.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/detached-buffer-during-fromIndex-returns-single-comma.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/join/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/separator-tostring-once-after-resized.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/TypedArray/prototype/join/separator-tostring-once-after-resized.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/TypedArray/prototype/keys/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/TypedArray/prototype/keys/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/TypedArray/prototype/keys/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/keys/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/detached-buffer-during-fromIndex-returns-minus-one-for-zero.js :: it threw an object with no name: Expected SameValue(«0», «-1») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/detached-buffer-during-fromIndex-returns-minus-one-for-zero.js (strict) :: it threw an object with no name: Expected SameValue(«0», «-1») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
@@ -14346,8 +14312,6 @@ built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js :: i
 built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/negative-index-and-resize-to-smaller.js :: it threw an object with no name: For index -1 Expected SameValue(«3», «2») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/negative-index-and-resize-to-smaller.js (strict) :: it threw an object with no name: For index -1 Expected SameValue(«3», «2») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/lastIndexOf/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/lastIndexOf/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/map/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
@@ -14362,8 +14326,6 @@ built-ins/TypedArray/prototype/map/callbackfn-resize.js :: it threw an object wi
 built-ins/TypedArray/prototype/map/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/map/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/map/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/map/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/map/speciesctor-destination-backed-by-immutable-buffer.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
@@ -14380,18 +14342,12 @@ built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-set-value-during-iterati
 built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduce/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, undefined] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/reduce/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, undefined] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/reduce/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/reduce/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/reduceRight/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/reduceRight/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/reverse/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/reverse/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/reverse/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/reverse/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/set/BigInt/array-arg-primitive-toobject.js :: it threw TypeError: this is not something to copy from (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/BigInt/array-arg-primitive-toobject.js (strict) :: it threw TypeError: this is not something to copy from (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/set/BigInt/array-arg-return-abrupt-from-src-get-value.js :: it threw an object with no name: values are set until exception (Testing with BigInt64Array and makePassthrough.)
@@ -14430,8 +14386,6 @@ built-ins/TypedArray/prototype/set/target-shrink-mid-iteration.js :: it threw an
 built-ins/TypedArray/prototype/set/target-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [1, 1, 1] and expected [1, 2, 4] should have the same contents.
 built-ins/TypedArray/prototype/set/target-shrink-source-length-getter.js :: it threw an object with no name: Actual [1, 2, 4] and expected [0, 2, 4] should have the same contents.
 built-ins/TypedArray/prototype/set/target-shrink-source-length-getter.js (strict) :: it threw an object with no name: Actual [1, 2, 4] and expected [0, 2, 4] should have the same contents.
-built-ins/TypedArray/prototype/set/this-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError but got a Error
-built-ins/TypedArray/prototype/set/this-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError but got a Error
 built-ins/TypedArray/prototype/set/typedarray-arg-src-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/set/typedarray-arg-src-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/set/typedarray-arg-src-range-greather-than-target-throws-rangeerror.js :: it threw an object with no name: 2 + Infinity > 2 Expected a RangeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -14448,8 +14402,6 @@ built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-custom-ctor-
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/detached-buffer-speciesctor-get-species-custom-ctor-throws.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/detached-buffer-speciesctor-get-species-custom-ctor-throws.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/slice/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/slice/speciesctor-destination-backed-by-immutable-buffer.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-destination-resizable.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
@@ -14466,18 +14418,12 @@ built-ins/TypedArray/prototype/some/callbackfn-resize.js :: it threw an object w
 built-ins/TypedArray/prototype/some/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/some/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/some/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/some/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/some/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/sort/comparefn-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/sort/comparefn-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js :: it threw an object with no name: Actual [7, 8] and expected [10, 9] should have the same contents.
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js (strict) :: it threw an object with no name: Actual [7, 8] and expected [10, 9] should have the same contents.
 built-ins/TypedArray/prototype/sort/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/sort/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/sort/resizable-buffer-default-comparator.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/sort/resizable-buffer-default-comparator.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/sort/sort-tonumber.js :: it threw TypeError: this ArrayBuffer has been detached (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/sort-tonumber.js (strict) :: it threw TypeError: this ArrayBuffer has been detached (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/sorted-values-nan.js :: it threw an object with no name: #2 [4] Expected SameValue(«NaN», «Infinity») to be true (Testing with Float64Array and makePassthrough.)
@@ -14486,16 +14432,12 @@ built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-ar
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toLocaleString/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/toLocaleString/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/toString.js :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/toString.js (strict) :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/values/make-out-of-bounds-after-exhausted.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 built-ins/TypedArray/prototype/values/make-out-of-bounds-after-exhausted.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 built-ins/TypedArray/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/TypedArray/prototype/values/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/TypedArray/prototype/values/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/values/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js :: it threw RangeError: that index is not in the TypedArray
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js (strict) :: it threw RangeError: that index is not in the TypedArray
 built-ins/TypedArray/prototype/with/negative-index-resize-to-out-of-bounds.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -15301,8 +15243,6 @@ language/computed-property-names/class/static/method-prototype.js (strict) :: it
 language/computed-property-names/class/static/setter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/computed-property-names/class/static/setter-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/destructuring/binding/keyed-destructuring-property-reference-target-evaluation-order-with-bindings.js :: it threw an object with no name: Actual [binding::source, binding::sourceKey, sourceKey, get source, binding::defaultValue, binding::varTarget] and expected [binding::source, binding::sourceKey, sourceKey, binding::varTarget, get source, binding::defaultValue] should have the same contents.
-language/destructuring/binding/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/destructuring/binding/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/directive-prologue/func-decl-inside-func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/directive-prologue/func-decl-no-semi-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/directive-prologue/func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all

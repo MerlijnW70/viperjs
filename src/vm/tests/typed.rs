@@ -1498,3 +1498,104 @@ fn a_copy_of_the_same_kind_is_the_intrinsic_and_not_whatever_the_global_now_name
         "Int8Array"
     );
 }
+
+#[test]
+fn a_tracking_view_is_out_of_bounds_when_its_offset_is_past_the_buffer() {
+    // §10.4.5.2 step 8 has two disjuncts and a **tracking** view is subject to the first. Step 6
+    // gives it a `byteOffsetEnd` of the buffer's own length, so its end can never hang off — but
+    // its *start* can, and `new Uint8Array(rab, 4)` after `rab.resize(2)` begins past everything
+    // there is. No length it could follow makes that a window.
+    let out_of_bounds = |method: &str| {
+        run(&format!(
+            "var rab = new ArrayBuffer(8, {{maxByteLength: 16}}); \
+             var t = new Uint8Array(rab, 4); rab.resize(2); \
+             try {{ t.{method}; 'no error' }} catch (e) {{ e.constructor.name }}"
+        ))
+    };
+    // Every method that begins with `ValidateTypedArray` refuses it — which is most of §23.2.3,
+    // including the three that read nothing at all.
+    for method in [
+        "keys()",
+        "values()",
+        "entries()",
+        "at(0)",
+        "fill(1)",
+        "copyWithin(0, 1)",
+        "slice(0)",
+        "indexOf(1)",
+        "includes(1)",
+        "join(',')",
+        "reverse()",
+        "sort()",
+        "map(function (x) { return x })",
+        "filter(function () { return true })",
+        "forEach(function () {})",
+        "set([1])",
+        "toLocaleString()",
+    ] {
+        assert_eq!(out_of_bounds(method), "TypeError", "{method}");
+    }
+    // `subarray` is deliberately not on that list: §23.2.3.30 step 6 gives an out-of-bounds source
+    // a length of **zero** rather than calling `ValidateTypedArray`, so it goes on to build a view
+    // — and the view it would build starts past the buffer, which §23.2.5.1 refuses with a
+    // **RangeError**. A different error from a different clause, and test262 asserts it.
+    assert_eq!(out_of_bounds("subarray(0)"), "RangeError");
+    // …and `length` and `byteOffset` are *not* among them: §10.4.5.11's getters answer rather than
+    // throwing, so a program can still ask what became of it.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab, 4); rab.resize(2); t.length + ',' + t.byteOffset"),
+        "0,4"
+    );
+    // **The boundary is `>` and not `>=`.** An offset landing exactly at the end is a window on the
+    // empty remainder: in bounds, and with no elements. Those are different answers, and this is
+    // the row that tells them apart.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab, 4); rab.resize(4); \
+             Array.from(t.keys()).length + ',' + t.length"),
+        "0,0"
+    );
+    // A tracking view with **no** offset is never out of bounds however small the buffer gets,
+    // which is what the old reading got right and is why it survived.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab); rab.resize(2); \
+             Array.from(t.keys()).join(',') + '|' + t.length"),
+        "0,1|2"
+    );
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab); rab.resize(0); \
+             Array.from(t.keys()).length + ',' + t.length"),
+        "0,0"
+    );
+    // Growing back puts it in bounds again — the question is asked of the buffer as it is now, and
+    // nothing is remembered about its having been out.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab, 4); rab.resize(2); rab.resize(8); \
+             Array.from(t.keys()).length"),
+        "4"
+    );
+    // A view over a **fixed** buffer cannot be out of bounds at all, there being nothing to move.
+    assert_eq!(
+        run("var t = new Uint8Array(new ArrayBuffer(8), 4); Array.from(t.keys()).length"),
+        "4"
+    );
+    // §25.3's `DataView` is the same rule over the same window, and praxis shares the code.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var d = new DataView(rab, 4); rab.resize(2); \
+             try { d.getUint8(0); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and a *fixed-length* view is out of bounds by the second disjunct, which this must not have
+    // broken: its end hangs off even though its start does not.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab, 0, 4); rab.resize(2); \
+             try { Array.from(t.keys()); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}

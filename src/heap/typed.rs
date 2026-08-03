@@ -128,35 +128,52 @@ impl Heap {
 
     /// §10.4.5.2 `IsTypedArrayOutOfBounds` — whether a view's window no longer fits its buffer.
     ///
-    /// Only a **fixed-length** view can be out of bounds, and only over a resizable buffer: a
-    /// tracking view follows whatever length the buffer has and can never hang off the end, and a
-    /// fixed buffer cannot move underneath one. So this is exactly the case of `new Uint8Array(rab,
-    /// 0, 4)` after `rab.resize(2)`.
+    /// Step 8 has **two** disjuncts and a tracking view is subject to the first of them. This doc
+    /// used to say a tracking view "follows whatever length the buffer has and can never hang off
+    /// the end", which is true of its *end* and false of its **start**: `new Uint8Array(rab, 4)`
+    /// after `rab.resize(2)` begins past everything there is, and no length it could follow makes
+    /// that a window. Step 6 gives such a view a `byteOffsetEnd` of the buffer's own length — so
+    /// only the offset can put it out of bounds, and it does.
+    ///
+    /// The boundary is `>` and not `>=`: an offset landing exactly at the end is a window on the
+    /// empty remainder, which is in bounds and has no elements. Those are different answers —
+    /// see below.
     ///
     /// Out of bounds is not the same as empty and is treated like *detached*: every method that
     /// begins with `ValidateTypedArray` throws, where a view that merely has no elements walks
     /// nothing and answers. Detachment itself is asked separately — it is a question about the
     /// bytes, and this is a question about the window over them.
-    ///
-    /// Written as one chain rather than three early returns, because two of those returns would be
-    /// branches nothing can reach — an object that is not a view, and a view whose buffer is not a
-    /// buffer — and a `false` sitting in a branch no input takes is a `false` no test can pin.
     #[must_use]
     pub fn view_out_of_bounds(&self, object: ObjectId) -> bool {
-        self.object(object)
-            .and_then(super::Object::view)
-            .filter(|view| !view.tracking)
-            .and_then(|view| {
-                Some((
-                    view,
-                    self.object(view.buffer).and_then(super::Object::buffer)?,
-                ))
-            })
-            // A detached buffer is refused by the detach check rather than reported here, so that
-            // the two reasons cannot both fire and disagree about which error to give.
-            .is_some_and(|(view, buffer)| {
-                !buffer.detached() && view.offset + view.length > buffer.byte_length()
-            })
+        // The two lookups share one `else`, which is not tidiness: an object that is not a view is
+        // reachable and a view whose buffer is not a buffer is not, so a `return false` of its own
+        // for the second would be one no input could flip. Mutation coverage said exactly that when
+        // this was written as two.
+        let Some((view, buffer)) =
+            self.object(object)
+                .and_then(super::Object::view)
+                .and_then(|view| {
+                    Some((
+                        view,
+                        self.object(view.buffer).and_then(super::Object::buffer)?,
+                    ))
+                })
+        else {
+            return false;
+        };
+        // A detached buffer is refused by the detach check rather than reported here, so that the
+        // two reasons cannot both fire and disagree about which error to give.
+        if buffer.detached() {
+            return false;
+        }
+        let bytes = buffer.byte_length();
+        // Step 8's first disjunct, which both kinds of view are subject to.
+        if view.offset > bytes {
+            return true;
+        }
+        // Step 8's second, which needs an end of the view's own — step 6 gives a tracking view the
+        // buffer's, so for one of those this comparison is `bytes > bytes` and never fires.
+        !view.tracking && view.offset + view.length > bytes
     }
 
     /// The view this object is — a TypedArray's or a `DataView`'s — with its length resolved.
