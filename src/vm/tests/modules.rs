@@ -325,3 +325,213 @@ fn a_bare_import_is_an_edge_that_binds_nothing() {
         "yes"
     );
 }
+
+#[test]
+fn a_namespace_object_is_the_module_seen_as_an_object() {
+    // §10.4.6 — one property per export, each a **live** read of the exporting module's slot. A
+    // snapshot taken at link time would answer 0 below for ever.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "dep",
+                    "export let n = 0; export function bump() { n = n + 1; } export default 9;"
+                ),
+                (
+                    "main",
+                    "import * as ns from 'dep'; ns.bump(); ns.bump(); \
+                     ns.n + ':' + ns.default + ':' + typeof ns"
+                ),
+            ],
+            "main"
+        ),
+        "2:9:object"
+    );
+    // §16.2.1.10 memoises one object per module, so two importers of the same module — and two
+    // clauses in one importer — see the *same* namespace.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export var a = 1;"),
+                ("left", "import * as ns from 'dep'; export var l = ns;"),
+                (
+                    "main",
+                    "import * as ns from 'dep'; import { l } from 'left'; ns === l"
+                ),
+            ],
+            "main"
+        ),
+        "true"
+    );
+}
+
+#[test]
+fn a_namespace_refuses_every_way_of_changing_it() {
+    // §10.4.6.9's `[[Set]]`, §10.4.6.11's `[[Delete]]` and §10.4.6.2's extensibility. A module is
+    // strict, so each of the first two is a TypeError rather than the silent failure sloppy code
+    // would get.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export var a = 1;"),
+                (
+                    "main",
+                    "import * as ns from 'dep'; \
+                     var out = []; \
+                     try { ns.a = 2; } catch (e) { out.push('set:' + e.constructor.name); } \
+                     try { delete ns.a; } catch (e) { out.push('delete:' + e.constructor.name); } \
+                     try { ns.fresh = 1; } catch (e) { out.push('add:' + e.constructor.name); } \
+                     out.push('extensible:' + Object.isExtensible(ns)); \
+                     var elsewhere = {}; \
+                     out.push('reflect:' + Reflect.set(ns, 'a', 3, elsewhere)); \
+                     out.push('elsewhere:' + ('a' in elsewhere)); \
+                     out.push('proto:' + Object.getPrototypeOf(ns)); \
+                     out.push('a:' + ns.a); \
+                     out.join(' ')"
+                ),
+            ],
+            "main"
+        ),
+        // §10.4.6.9 refuses whatever the receiver is, and writes nothing to it. An ordinary
+        // `[[Set]]` would find a writable data property here — an export reports `writable: true` —
+        // and would go on to define the name on the *receiver*, answering true.
+        "set:TypeError delete:TypeError add:TypeError extensible:false reflect:false \
+         elsewhere:false proto:null a:1"
+    );
+}
+
+#[test]
+fn a_namespaces_names_are_sorted_and_a_symbol_is_not_one_of_them() {
+    // §10.4.6.10 — by code unit, which is the one enumeration order in the language that is not
+    // the order things were written in. `@@toStringTag` comes after them all and is not enumerable.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "dep",
+                    "export var zebra = 1; export var apple = 2; export default 3; \
+                     export var Banana = 4;"
+                ),
+                (
+                    "main",
+                    "import * as ns from 'dep'; \
+                     Object.keys(ns).join(',') + '|' + Object.prototype.toString.call(ns) + \
+                     '|' + ('apple' in ns) + ('nope' in ns)"
+                ),
+            ],
+            "main"
+        ),
+        // `B` is 0x42 and `a` is 0x61, so an upper-case name sorts before every lower-case one —
+        // which alphabetical order would not do and code-unit order does.
+        "Banana,apple,default,zebra|[object Module]|truefalse"
+    );
+    // §10.4.6.5 — an export is a **data** property, not an accessor, and `writable: true` beside a
+    // `[[Set]]` that always refuses.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export var a = 1;"),
+                (
+                    "main",
+                    "import * as ns from 'dep'; \
+                     var d = Object.getOwnPropertyDescriptor(ns, 'a'); \
+                     [d.value, d.writable, d.enumerable, d.configurable].join(',')"
+                ),
+            ],
+            "main"
+        ),
+        "1,true,true,false"
+    );
+}
+
+#[test]
+fn reading_a_namespaces_export_before_its_module_ran_is_a_reference_error() {
+    // §10.4.6.8 step 9 — the dead zone reached through an object rather than through a name. An
+    // importer always evaluates *after* what it imports, so the only way to see a module's binding
+    // before its `let` has run is for the module to hold its own namespace — which a self-import
+    // gives it, and which §16.2.1.10 makes the same object either way.
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "import * as me from 'self'; \
+                 var before = 'none'; \
+                 try { me.late; } catch (e) { before = e.constructor.name; } \
+                 export let late = 1; \
+                 before + ':' + me.late"
+            )],
+            "self"
+        ),
+        "ReferenceError:1"
+    );
+    // §16.2.3.7 — `export default <expression>` is a **lexical** declaration of `*default*`, so it
+    // has a dead zone like any other; `export default function () {}` is hoisted and does not.
+    // Nothing in the module can spell the name, so its own namespace is the only way to see either.
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "import * as me from 'self';                  var caught = 'none';                  try { me.default; } catch (e) { caught = e.constructor.name; }                  export default 5;                  caught + ':' + me.default"
+            )],
+            "self"
+        ),
+        "ReferenceError:5"
+    );
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "import * as me from 'self'; \
+                 var early = me.default; \
+                 export default function () {} \
+                 typeof early + ':' + (early === me.default)"
+            )],
+            "self"
+        ),
+        // The **same** function, not merely a function at both moments: hoisting it and then
+        // building it again where it stands would answer `function:false`, and the binding the
+        // export points at would be a second object nothing else had ever seen.
+        "function:true"
+    );
+    // A class default is the other half of the same rule: §16.2.3.7 leaves it lexical, so unlike a
+    // function it has a dead zone *and* is built where it stands.
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "import * as me from 'self'; \
+                 var caught = 'none'; \
+                 try { me.default; } catch (e) { caught = e.constructor.name; } \
+                 export default class { m() { return 7; } } \
+                 caught + ':' + new me.default().m()"
+            )],
+            "self"
+        ),
+        "ReferenceError:7"
+    );
+    // §10.4.6.5 step 4 — and *asking about* the property throws too, because the descriptor is
+    // built out of `[[Get]]`. That is why `Object.keys` on a namespace can throw at all: it asks
+    // each name whether it is enumerable, which cannot be answered without the value.
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "import * as me from 'self';                  var out = [];                  try { Object.keys(me); } catch (e) { out.push('keys:' + e.constructor.name); }                  try { Object.getOwnPropertyDescriptor(me, 'late'); }                    catch (e) { out.push('descriptor:' + e.constructor.name); }                  try { Object.prototype.hasOwnProperty.call(me, 'late'); }                    catch (e) { out.push('has:' + e.constructor.name); }                  export let late = 1;                  out.join(' ')"
+            )],
+            "self"
+        ),
+        "keys:ReferenceError descriptor:ReferenceError has:ReferenceError"
+    );
+    // …and a name the module does not export at all is `undefined` rather than an error, which is
+    // the difference between a binding that is not ready and one that does not exist.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export var a = 1;"),
+                ("main", "import * as ns from 'dep'; String(ns.nope)"),
+            ],
+            "main"
+        ),
+        "undefined"
+    );
+}

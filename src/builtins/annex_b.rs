@@ -86,7 +86,7 @@ fn look_up(heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Val
         // property found part-way up answers `undefined` and stops the walk rather than being
         // stepped over, so the answer is "the accessor you would reach" and not "the nearest
         // accessor anywhere above you".
-        if let Some(property) = own_property(heap, walk, key) {
+        if let Some(property) = own_property(heap, walk, key)? {
             return Ok(match (property.kind, half) {
                 (PropertyKind::Accessor { getter, .. }, Half::Getter) => getter,
                 (PropertyKind::Accessor { setter, .. }, Half::Setter) => setter,

@@ -545,6 +545,15 @@ impl Vm {
         if let Some(answer) = self.proxy_own_property(object, key, heap)? {
             return Ok(answer);
         }
+        // §10.4.6.5 step 4 — a namespace's descriptor is built from `[[Get]]`, so a binding still in
+        // its dead zone makes *asking about the property* a ReferenceError and not only reading it.
+        // That is why `Object.keys(ns)` throws inside a cycle: it asks each name whether it is
+        // enumerable, and the answer cannot be given without the value.
+        if let Some(crate::heap::Export::Uninitialised) = heap.namespace_export(object, key) {
+            return Err(crate::value::Abrupt::reference_error(
+                "a module binding was read before its module gave it a value",
+            ));
+        }
         Ok(heap.own_property(object, key))
     }
 

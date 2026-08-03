@@ -230,7 +230,7 @@ fn ignoring_setter(
         ));
     }
     let value = call.argument(0);
-    match super::object::own_property(heap, receiver, name).is_some() {
+    match super::object::own_property(heap, receiver, name)?.is_some() {
         // It already has one of its own, so write through it — which may itself be an accessor.
         true => {
             super::set_or_throw(vm, heap, receiver, name, value)?;

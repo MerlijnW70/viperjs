@@ -43,7 +43,7 @@ use std::collections::HashMap;
 /// An object on the heap.
 ///
 /// Meaningful only to the [`Heap`] that issued it, on the same terms as [`crate::heap::StringId`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectId(pub(crate) usize);
 
 /// Which kind of execution an object holds parked — §27.5.1's or §27.7's.

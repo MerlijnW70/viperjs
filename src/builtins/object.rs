@@ -182,14 +182,14 @@ pub fn value_of(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Comple
 pub fn has_own_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let key = property_key(heap, call.argument(0))?;
     let object = this_object(call, "Object.prototype.hasOwnProperty requires an object")?;
-    Ok(Value::Boolean(own_property(heap, object, key).is_some()))
+    Ok(Value::Boolean(own_property(heap, object, key)?.is_some()))
 }
 
 /// §20.1.2.13 `Object.hasOwn(o, key)` — the same question without borrowing a method.
 pub fn has_own(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
     let key = property_key(heap, call.argument(1))?;
-    Ok(Value::Boolean(own_property(heap, object, key).is_some()))
+    Ok(Value::Boolean(own_property(heap, object, key)?.is_some()))
 }
 
 /// §20.1.3.4 `Object.prototype.propertyIsEnumerable`.
@@ -205,7 +205,7 @@ pub fn property_is_enumerable(
     )?;
     // Own only, and `false` rather than an error when there is no such property — which is why
     // it cannot be used to ask whether a property exists at all.
-    let answer = own_property(heap, object, key).is_some_and(|property| property.enumerable);
+    let answer = own_property(heap, object, key)?.is_some_and(|property| property.enumerable);
     Ok(Value::Boolean(answer))
 }
 
@@ -702,16 +702,29 @@ pub(crate) fn define_answer(outcome: DefineOutcome) -> Completion<Value> {
     }
 }
 
-/// An object's own property under `key`, if it has one.
+/// An object's own property under `key`, if it has one — §10.1.5 `[[GetOwnProperty]]`.
+///
+/// A completion and not a plain answer, for one kind of object: §10.4.6.5 builds a namespace's
+/// descriptor out of `[[Get]]`, so a binding still in its dead zone makes even *asking* about the
+/// property a ReferenceError. Every caller therefore has to say what it does about that, which is
+/// the point — `hasOwnProperty` on such a name throws where it would otherwise answer `true`.
+///
+/// This is the path that does **not** consult a Proxy's trap. Where the trap is wanted, the caller
+/// uses [`Vm::own_property_through`] instead.
 pub(super) fn own_property(
     heap: &mut Heap,
     object: ObjectId,
     key: PropertyKey,
-) -> Option<Property> {
+) -> Completion<Option<Property>> {
+    if let Some(crate::heap::Export::Uninitialised) = heap.namespace_export(object, key) {
+        return Err(crate::value::Abrupt::reference_error(
+            "a module binding was read before its module gave it a value",
+        ));
+    }
     // Through the heap rather than the object's own table, so that §10.4.4.1's substitution
     // happens: a joined argument index reports the *parameter's* value, which is what makes
     // `Object.getOwnPropertyDescriptor(arguments, '0')` follow an assignment to `a`.
-    heap.own_property(object, key)
+    Ok(heap.own_property(object, key))
 }
 
 /// §7.1.19 `ToPropertyKey`.

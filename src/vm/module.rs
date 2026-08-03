@@ -22,8 +22,11 @@
 //! A cycle evaluates in the order the depth-first walk reaches it, which is §16.2.1.6's order, but
 //! there is no `[[Status]]` machinery to make a *self*-import legal — a module that imports itself
 //! reads its own bindings in the dead zone, which is what the specification says and is reached
-//! here by having nothing else. Namespace objects (`import * as n`), `export *` and re-exports are
-//! refused when the module is compiled, so nothing here has to answer for them.
+//! here by having nothing else. `export *` and re-exports are refused when the module is compiled,
+//! so nothing here has to answer for them.
+//!
+//! A namespace object (`import * as n`) is made here, by §16.2.1.10 — one per module however many
+//! importers ask for one, which is what makes two importers' namespaces the same object.
 
 use super::{Fault, Outcome, Vm};
 use crate::compile::Chunk;
@@ -117,15 +120,43 @@ impl Vm {
             return Ok(Err(error));
         }
         // §16.2.1.5.2 `InitializeEnvironment` — and only now, when every environment exists.
+        //
+        // §16.2.1.10's `GetModuleNamespace` memoises one namespace object per *module*, so that
+        // `import * as a from "m"` and `import * as b from "m"` in two importers give the same
+        // object and `a === b`. Keyed by the same identity the environments are, for the same
+        // reason: two specifiers may name one module.
+        let mut namespaces: BTreeMap<usize, crate::heap::ObjectId> = BTreeMap::new();
         for chunk in &order {
             for entry in chunk.imports() {
-                let (Some(slot), Some(name)) = (entry.slot, entry.import_name.as_ref()) else {
-                    // `import "a";` binds nothing, and `import * as n` is a namespace object the
-                    // compiler refuses — so there is nothing to bind either way.
+                let Some(slot) = entry.slot else {
+                    // `import "a";` binds nothing and is written for the other module being
+                    // evaluated. The edge is still in the graph, which is what makes that happen.
                     continue;
                 };
                 let Some(from) = graph.get(&entry.specifier) else {
                     return Ok(Err(LinkError::Unresolved(entry.specifier.to_string())));
+                };
+                let Some(&here) = environments.get(&identity(chunk)) else {
+                    continue;
+                };
+                // §16.2.1.5.2 step 1.a — `import * as n` binds an ordinary initialised slot holding
+                // the namespace object, and **not** one of the module's own slots. That is the one
+                // import that is a value rather than an alias, which is why it is settled here
+                // rather than by `bind_import` below.
+                let Some(name) = entry.import_name.as_ref() else {
+                    let Some(&there) = environments.get(&identity(from)) else {
+                        continue;
+                    };
+                    let namespace = match namespaces.get(&identity(from)) {
+                        Some(&made) => made,
+                        None => {
+                            let made = self.module_namespace(from, there, heap);
+                            namespaces.insert(identity(from), made);
+                            made
+                        }
+                    };
+                    heap.set_variable(here, slot, crate::value::Value::Object(namespace));
+                    continue;
                 };
                 let Some(exported) = from
                     .exports()
@@ -137,10 +168,7 @@ impl Vm {
                         name: name.to_string(),
                     }));
                 };
-                let (Some(&here), Some(&there)) = (
-                    environments.get(&identity(chunk)),
-                    environments.get(&identity(from)),
-                ) else {
+                let Some(&there) = environments.get(&identity(from)) else {
                     continue;
                 };
                 heap.bind_import(here, slot, there, exported.slot);
@@ -161,6 +189,32 @@ impl Vm {
             }
         }
         Ok(Ok(outcome))
+    }
+}
+
+impl Vm {
+    /// §16.2.1.10 `GetModuleNamespace` — the object `import * as n` binds.
+    ///
+    /// Every export the module has, pointed at the slot it lives in, so that reading a property is
+    /// reading the binding rather than a copy taken now. `@@toStringTag` comes from the realm,
+    /// which is the only thing about a namespace the heap cannot settle on its own.
+    fn module_namespace(
+        &self,
+        chunk: &Rc<Chunk>,
+        environment: EnvironmentId,
+        heap: &mut Heap,
+    ) -> crate::heap::ObjectId {
+        let exports = chunk
+            .exports()
+            .iter()
+            .map(|export| (export.export_name.clone(), export.slot))
+            .collect();
+        heap.new_namespace(
+            environment,
+            exports,
+            self.realm
+                .well_known(crate::builtins::well_known_at("toStringTag")),
+        )
     }
 }
 

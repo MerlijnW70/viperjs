@@ -178,7 +178,34 @@ pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, Compile
         compiler.declare(name.name);
     }
     compiler.declare_lexical_names(&statements)?;
+    // §16.2.3.7 — `export default` of anything but a `HoistableDeclaration` is a **lexical**
+    // declaration of `*default*`, so the name is created here and left uninitialised. A module can
+    // reach it: its own namespace object exports `default`, and reading that before the statement
+    // has run is §10.4.6.8's dead zone rather than `undefined`. Skipped for a function default,
+    // which §16.2.3.7 hoists initialised like any other function declaration.
+    let default_slot = match module.body.iter().find_map(default_expression) {
+        Some(DefaultKind::Lexical) => {
+            let slot = compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable);
+            compiler.chunk.emit(Instruction::Uninitialise(slot));
+            Some(slot)
+        }
+        Some(DefaultKind::Hoisted) | None => None,
+    };
     compiler.hoist_functions(&statements)?;
+    // §16.2.3.7 — an anonymous function default is a `HoistableDeclaration`, so it is made and
+    // bound *here* with the named ones rather than where it is written. Apart from
+    // `hoist_functions` only because that walk is over statements and this declaration is not one:
+    // it has no name, which is the shape no other position in the grammar admits.
+    let default_slot = match module.body.iter().find_map(hoisted_default) {
+        Some(statement) => {
+            let slot = compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable);
+            compiler.default_declaration(statement)?;
+            compiler.chunk.emit(Instruction::Initialise(slot));
+            compiler.chunk.emit(Instruction::Pop);
+            Some(slot)
+        }
+        None => default_slot,
+    };
     // The body, in source order and item by item. Not `statements` again: `export default <expr>`
     // is not a statement and has to be compiled where it stands, because what it evaluates runs
     // between the statements around it.
@@ -194,20 +221,26 @@ pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, Compile
                     // Named: an ordinary declaration, already hoisted, and the export below points
                     // at the binding it made.
                     Some(_) => compiler.statement(statement)?,
-                    // Anonymous: there is no binding to point at, so one is made here under the
-                    // name §16.2.3.7 gives it — and §8.6.3 calls the function `"default"`.
+                    // Anonymous, so there is no binding to point at and one was made under the
+                    // name §16.2.3.7 gives it. A *function* was hoisted above and has nothing
+                    // left to do here; a class was left in its dead zone and is built where it
+                    // stands.
                     None => {
-                        let slot = compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable);
-                        compiler.default_declaration(statement)?;
-                        compiler.chunk.emit(Instruction::Initialise(slot));
-                        compiler.chunk.emit(Instruction::Pop);
+                        if !matches!(statement.kind, crate::ast::StmtKind::Function(_)) {
+                            let slot = default_slot
+                                .unwrap_or_else(|| unreachable_default_slot(&mut compiler));
+                            compiler.default_declaration(statement)?;
+                            compiler.chunk.emit(Instruction::Initialise(slot));
+                            compiler.chunk.emit(Instruction::Pop);
+                        }
                     }
                 },
                 // §16.2.3.7 — the value is bound to a name no source can spell and exported as
                 // `default`. `*default*` is the specification's own spelling for it, and the `*`
                 // is what makes it unreachable from the module that declares it.
                 crate::ast::ExportKind::Default(crate::ast::ExportDefault::Expression(value)) => {
-                    let slot = compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable);
+                    let slot =
+                        default_slot.unwrap_or_else(|| unreachable_default_slot(&mut compiler));
                     // §8.6.3 — `export default function () {}` is a named position and the name is
                     // `"default"`, which is the one place a function is called that.
                     compiler.named_evaluation("default", value)?;
@@ -355,6 +388,64 @@ fn record_exports(
         });
     }
     Ok(())
+}
+
+/// How §16.2.3.7 binds an `export default` that has no name of its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DefaultKind {
+    /// An expression or a class — a lexical declaration, uninitialised until the statement runs.
+    Lexical,
+    /// A function — a `HoistableDeclaration`, made and bound before the body starts.
+    Hoisted,
+}
+
+/// Which of the two this item is, or `None` if it is not an unnamed `export default` at all.
+///
+/// A *named* declaration keeps its own binding and `*default*` is never made, so it is `None` too:
+/// the export entry points at the name the source wrote.
+fn default_expression(item: &crate::ast::ModuleItem) -> Option<DefaultKind> {
+    let crate::ast::ModuleItem::Export(declaration) = item else {
+        return None;
+    };
+    match &declaration.kind {
+        crate::ast::ExportKind::Default(crate::ast::ExportDefault::Expression(_)) => {
+            Some(DefaultKind::Lexical)
+        }
+        crate::ast::ExportKind::Default(crate::ast::ExportDefault::Declaration(statement)) => {
+            match (&statement.kind, declared_name(statement)) {
+                (_, Some(_)) => None,
+                (crate::ast::StmtKind::Function(_), None) => Some(DefaultKind::Hoisted),
+                (_, None) => Some(DefaultKind::Lexical),
+            }
+        }
+        _ => None,
+    }
+}
+
+/// The anonymous function an `export default` hoists, if this item is one.
+fn hoisted_default(item: &crate::ast::ModuleItem) -> Option<&Stmt> {
+    let crate::ast::ModuleItem::Export(declaration) = item else {
+        return None;
+    };
+    let crate::ast::ExportKind::Default(crate::ast::ExportDefault::Declaration(statement)) =
+        &declaration.kind
+    else {
+        return None;
+    };
+    match default_expression(item)? {
+        DefaultKind::Hoisted => Some(statement),
+        DefaultKind::Lexical => None,
+    }
+}
+
+/// The `*default*` slot, for the two paths that cannot be reached without one having been made.
+///
+/// [`default_expression`] answers for the same item the body loop is about to compile, so a module
+/// with an `export default` always has the slot by the time either reaches this. Making a second
+/// one is the honest answer to "this cannot happen": a spare slot nothing reads, where a panic
+/// would be an outage.
+fn unreachable_default_slot(compiler: &mut Compiler<'_>) -> u32 {
+    compiler.declare_lexical(DEFAULT_EXPORT, Mutability::Mutable)
 }
 
 /// §16.2.3.7's binding for a default export with no name of its own.

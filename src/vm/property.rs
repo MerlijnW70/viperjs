@@ -318,6 +318,18 @@ impl Vm {
             if let Some(answer) = self.proxy_get(walk, key, receiver, heap)? {
                 return Ok(answer);
             }
+            // §10.4.6.8 — a namespace's exported name is read out of the exporting module's slot,
+            // and a binding still in its dead zone is a **ReferenceError** rather than `undefined`.
+            // That is the one thing about a namespace only the interpreter can answer, which is why
+            // the read is here and the descriptor is in the heap.
+            if let Some(export) = heap.namespace_export(walk, key) {
+                return match export {
+                    crate::heap::Export::Value(value) => Ok(value),
+                    crate::heap::Export::Uninitialised => Err(Abrupt::reference_error(
+                        "a module binding was read before its module gave it a value",
+                    )),
+                };
+            }
             if let Some(property) = heap.own_property(walk, key) {
                 return match property.kind {
                     PropertyKind::Data { value, .. } => Ok(value),
@@ -397,6 +409,12 @@ impl Vm {
         // value, which is what §6.2.5.5's `Set` reports.
         if let Some(accepted) = self.proxy_set(object, key, value, receiver, heap)? {
             return Ok(Value::Boolean(accepted));
+        }
+        // §10.4.6.9 — a namespace refuses every write, whatever the key and whatever it holds. Its
+        // exports report `writable: true` all the same: the attribute describes the *binding*, which
+        // the exporting module may still assign to, not what may be done through this object.
+        if heap.is_namespace(object) {
+            return Ok(Value::Boolean(false));
         }
         // §10.4.5.5 — a write to a canonical numeric index goes into the buffer, and one that is
         // out of range is **discarded**: not an error, in strict mode or sloppy, because a
@@ -623,6 +641,11 @@ impl Vm {
         // §10.4.4.5 step 4 — a deleted index stops being the parameter it was, whatever happens
         // to the property itself. Broken *before* the delete, because the delete may refuse and
         // the link is about the index rather than about what is at it.
+        // §10.4.6.11 — an exported name may not be deleted. A key that is *not* an export is
+        // absent, and deleting an absent property answers true, so only the export needs saying.
+        if heap.namespace_export(object, key).is_some() {
+            return Ok(Value::Boolean(false));
+        }
         heap.unmap_argument(object, key);
         let gone = heap.delete_own_property(object, key);
         Ok(Value::Boolean(gone))

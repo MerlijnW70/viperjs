@@ -218,6 +218,11 @@ impl Heap {
     /// a String object's characters are own keys and naming one means making the String `"0"`, so
     /// this is where the question is asked from and why it needs the heap by exclusive reference.
     pub fn own_property_keys(&mut self, object: ObjectId) -> Vec<PropertyKey> {
+        // §10.4.6.10 — the sorted export names ahead of the object's own, which is the one
+        // enumeration order in the language that is not the order things were written in.
+        if let Some(keys) = self.namespace_keys(object) {
+            return keys;
+        }
         let stored = self
             .object(object)
             .map_or_else(Vec::new, |found| found.own_property_keys(self));
@@ -619,6 +624,13 @@ impl Heap {
         // `any_view` and not the stored one: a view that tracks a resizable buffer has no length
         // of its own, and reading the stale number would answer elements past the end of a buffer
         // that has been shrunk — an out-of-range read that looks exactly like a valid one.
+        // §10.4.6.5 — a namespace's exported names are answered from the exporting module's slots
+        // and nothing is ever stored for them, so this comes before the table for the reason a
+        // TypedArray's elements do. A Symbol falls through to the object, which is where
+        // `@@toStringTag` is.
+        if self.is_namespace(object) && key.as_string().is_some() {
+            return self.namespace_property(object, key);
+        }
         let element_view = self.any_view(object).filter(|view| view.element.is_some());
         if let Some(view) = element_view
             && let Some(at) = typed::index_of(self, key, view.count())

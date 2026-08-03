@@ -223,6 +223,12 @@ impl Heap {
             if let Some(environment) = object.environment() {
                 self.mark_environment(environment, marked);
             }
+            // §10.4.6 — a namespace object reads a module's slots and nothing on this walk points
+            // at that module's chain, exactly as an import binding reaches sideways. Freeing it
+            // would leave a namespace whose every property reads a slot that is gone.
+            if let Some(environment) = self.namespace_environment(id) {
+                self.mark_environment(environment, marked);
+            }
             // An arrow's captured `this` is reachable *through the arrow*, and nothing else may
             // be holding it: `function F() { return () => this; }` leaves the constructed object
             // alive only because the arrow it returned points at it.

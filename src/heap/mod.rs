@@ -57,6 +57,8 @@
 //! - `iteration` — §27.1, what an iterator remembers between two calls to `next`.
 //! - `helper` — §27.1.5's Iterator Helper, part-way through a `map`, `filter`, `take` or `drop`.
 //! - `matches` — §22.2.9's RegExp String Iterator, the state `matchAll` walks with.
+//! - `namespace` — §10.4.6's module namespace exotic object, whose properties are a module's
+//!   slots read live.
 //! - `weak_ref` — §26.1 and §26.2, the one reference the collector does not follow.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
@@ -72,6 +74,7 @@ mod environment;
 mod helper;
 mod iteration;
 mod matches;
+mod namespace;
 mod object;
 mod ordinary;
 mod promise;
@@ -86,6 +89,7 @@ mod weak_ref;
 pub use self::arguments::{ArgumentsMap, Incoming};
 pub use self::callable::{Bound, Callable, Native, NativeCall, Resumption};
 pub use self::iteration::{Iterated, Iteration};
+pub use self::namespace::Export;
 pub use self::symbol::{Symbol, SymbolId};
 
 /// What `[[DefineOwnProperty]]` came to.
@@ -284,6 +288,13 @@ pub struct Heap {
     /// that makes one, and a field would be paid by every scope in every program. Empty is the
     /// common case and is the first thing `Heap::variable` asks about.
     pub(super) imports: std::collections::BTreeMap<(EnvironmentId, u32), (EnvironmentId, u32)>,
+    /// §10.4.6's namespace objects — which objects are one, and what each reads.
+    ///
+    /// Beside the objects for the reason the table above is beside the environments: an `Object`
+    /// sits inline in the arena, so a field there is charged to every object any program makes, and
+    /// a namespace arrives once per imported module. Membership *is* the marker — see
+    /// [`namespace::Namespace`].
+    namespaces: std::collections::BTreeMap<ObjectId, namespace::Namespace>,
     /// Every Symbol ever made — §6.1.5, where a handle is the value rather than a name for one.
     ///
     /// Its own arena for the reason the others have theirs: a [`SymbolId`] cannot address a String
