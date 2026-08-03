@@ -474,6 +474,14 @@ impl Abrupt {
     pub const fn reference_error(message: &'static str) -> Self {
         Self::Raised(ErrorKind::Reference, message)
     }
+
+    /// §20.5.5.6, for a URI that cannot be encoded or does not decode.
+    ///
+    /// The narrowest of the six: §19.2.6's four functions are the only things in the language
+    /// that raise it, which is why it arrived last.
+    pub const fn uri_error(message: &'static str) -> Self {
+        Self::Raised(ErrorKind::Uri, message)
+    }
 }
 
 /// The result of an operation that may throw — §6.2.4's normal and throw completions.

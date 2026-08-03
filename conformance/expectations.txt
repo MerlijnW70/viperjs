@@ -716,8 +716,8 @@ built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
@@ -2561,8 +2561,8 @@ built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw RangeError
 built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Map/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Map/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js :: it threw TypeError: what was called is not a function
@@ -2804,14 +2804,6 @@ built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-46.js :: it threw an object
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-46.js (strict) :: it threw an object with no name: toStringAccessed !== true
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-47.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-47.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-10.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-11.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-9.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js :: it threw an object with no name: result1[expResult[p1]] !== true
-built-ins/Object/getOwnPropertyNames/15.2.3.4-4-1.js (strict) :: it threw an object with no name: result1[expResult[p1]] !== true
 built-ins/Object/groupBy/callback-arg.js :: it threw TypeError: what was called is not a function
 built-ins/Object/groupBy/callback-arg.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Object/groupBy/callback-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -14710,8 +14702,8 @@ built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw RangeE
 built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakMap/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js :: it threw TypeError: what was called is not a function
@@ -14771,354 +14763,22 @@ built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw RangeError: th
 built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/decodeURI/S15.1.3.1_A1.10_T1.js :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.10_T1.js (strict) :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.11_T1.js :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.11_T1.js (strict) :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.11_T2.js :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 7) and  string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.11_T2.js (strict) :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 7) and  string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.12_T1.js :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 4) and string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.12_T1.js (strict) :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 4) and string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.12_T2.js :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 7) and string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.12_T2.js (strict) :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 7) and string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.12_T3.js :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 10) and string.charAt(k + 11)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.12_T3.js (strict) :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 10) and string.charAt(k + 11)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.13_T1.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.13_T1.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.13_T2.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.13_T2.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.14_T1.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T1.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T2.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T2.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T3.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T3.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T4.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.14_T4.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.15_T1.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T1.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T2.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T2.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T3.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T3.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T4.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T4.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T5.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T5.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T6.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.15_T6.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.1_T1.js :: it threw an object with no name: #1: If string.charAt(k) equal "%" and k + 2 >= string.length, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.1_T1.js (strict) :: it threw an object with no name: #1: If string.charAt(k) equal "%" and k + 2 >= string.length, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.2_T1.js :: it threw an object with no name: #1: If string.charAt(k+1) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.2_T1.js (strict) :: it threw an object with no name: #1: If string.charAt(k+1) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.2_T2.js :: it threw an object with no name: #1: If string.charAt(k+2) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.2_T2.js (strict) :: it threw an object with no name: #1: If string.charAt(k+2) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURI/S15.1.3.1_A1.3_T1.js :: it threw an object with no name: #0080-00BF
-built-ins/decodeURI/S15.1.3.1_A1.3_T1.js (strict) :: it threw an object with no name: #0080-00BF
-built-ins/decodeURI/S15.1.3.1_A1.3_T2.js :: it threw an object with no name: #00F8-00FF
-built-ins/decodeURI/S15.1.3.1_A1.3_T2.js (strict) :: it threw an object with no name: #00F8-00FF
-built-ins/decodeURI/S15.1.3.1_A1.4_T1.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.4_T1.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.5_T1.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.5_T1.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.6_T1.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.6_T1.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.7_T1.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.7_T1.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURI/S15.1.3.1_A1.8_T1.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.8_T1.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.8_T2.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.8_T2.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURI/S15.1.3.1_A1.9_T1.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.9_T1.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.9_T2.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.9_T2.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.9_T3.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A1.9_T3.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURI/S15.1.3.1_A2.1_T1.js :: it threw an object with no name: #0000 throws
-built-ins/decodeURI/S15.1.3.1_A2.1_T1.js (strict) :: it threw an object with no name: #0000 throws
-built-ins/decodeURI/S15.1.3.1_A2.2_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.2_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.3_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.3_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.4_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.4_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.5_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A2.5_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A3_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A3_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A3_T2.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A3_T2.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A3_T3.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A3_T3.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T2.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T2.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T3.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T3.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T4.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A4_T4.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.2.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.2.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.3.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.3.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.4.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.4.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.6.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.6.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.7.js :: it threw an object with no name: #1.2: new decodeURI() throw TypeError. Actual: ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A5.7.js (strict) :: it threw an object with no name: #1.2: new decodeURI() throw TypeError. Actual: ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A6_T1.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/S15.1.3.1_A6_T1.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/name.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/name.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/not-a-constructor.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/not-a-constructor.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/decodeURI/prop-desc.js :: it threw an object with no name: decodeURI should be an own property
-built-ins/decodeURI/prop-desc.js (strict) :: it threw an object with no name: decodeURI should be an own property
-built-ins/decodeURIComponent/S15.1.3.2_A1.10_T1.js :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.10_T1.js (strict) :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.11_T1.js :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.11_T1.js (strict) :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.11_T2.js :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 7) and  string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.11_T2.js (strict) :: it threw an object with no name: #1: If B = 1110xxxx (n = 3) and (string.charAt(k + 7) and  string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.12_T1.js :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 4) and string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.12_T1.js (strict) :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 4) and string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.12_T2.js :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 7) and string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.12_T2.js (strict) :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 7) and string.charAt(k + 8)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.12_T3.js :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 10) and string.charAt(k + 11)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.12_T3.js (strict) :: it threw an object with no name: #1: If B = 11110xxx (n = 4) and (string.charAt(k + 10) and string.charAt(k + 11)) do not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.13_T1.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.13_T1.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.13_T2.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.13_T2.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T1.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T1.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T2.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T2.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T3.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T3.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T4.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.14_T4.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T1.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T1.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T2.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T2.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T3.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T3.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T4.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T4.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T5.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T5.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T6.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.15_T6.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.1_T1.js :: it threw an object with no name: #1: If string.charAt(k) equal "%" and k + 2 >= string.length, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.1_T1.js (strict) :: it threw an object with no name: #1: If string.charAt(k) equal "%" and k + 2 >= string.length, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.2_T1.js :: it threw an object with no name: #1: If string.charAt(k+1) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.2_T1.js (strict) :: it threw an object with no name: #1: If string.charAt(k+1) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.2_T2.js :: it threw an object with no name: #1: If string.charAt(k+2) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.2_T2.js (strict) :: it threw an object with no name: #1: If string.charAt(k+2) does not represent hexadecimal digits, throw URIError
-built-ins/decodeURIComponent/S15.1.3.2_A1.3_T1.js :: it threw an object with no name: #0080-00BF
-built-ins/decodeURIComponent/S15.1.3.2_A1.3_T1.js (strict) :: it threw an object with no name: #0080-00BF
-built-ins/decodeURIComponent/S15.1.3.2_A1.3_T2.js :: it threw an object with no name: #00F8-00FF
-built-ins/decodeURIComponent/S15.1.3.2_A1.3_T2.js (strict) :: it threw an object with no name: #00F8-00FF
-built-ins/decodeURIComponent/S15.1.3.2_A1.4_T1.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.4_T1.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.5_T1.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.5_T1.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.6_T1.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.6_T1.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.7_T1.js :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.7_T1.js (strict) :: it threw an object with no name: #00C0-00DF
-built-ins/decodeURIComponent/S15.1.3.2_A1.8_T1.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.8_T1.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.8_T2.js :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.8_T2.js (strict) :: it threw an object with no name: #00E0-00EF
-built-ins/decodeURIComponent/S15.1.3.2_A1.9_T1.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.9_T1.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.9_T2.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.9_T2.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.9_T3.js :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A1.9_T3.js (strict) :: it threw an object with no name: #00F0-00F7
-built-ins/decodeURIComponent/S15.1.3.2_A2.1_T1.js :: it threw an object with no name: #0000 throws
-built-ins/decodeURIComponent/S15.1.3.2_A2.1_T1.js (strict) :: it threw an object with no name: #0000 throws
-built-ins/decodeURIComponent/S15.1.3.2_A2.2_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.2_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.3_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.3_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.4_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.4_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A3_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A3_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A3_T2.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A3_T2.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A3_T3.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A3_T3.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T2.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T2.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T3.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T3.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T4.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A4_T4.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.2.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.2.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.3.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.3.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.4.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.4.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.6.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.6.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.7.js :: it threw an object with no name: #1.2: new decodeURIComponent() throw TypeError. Actual: ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A5.7.js (strict) :: it threw an object with no name: #1.2: new decodeURIComponent() throw TypeError. Actual: ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A6_T1.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/S15.1.3.2_A6_T1.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/name.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/name.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/not-a-constructor.js :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/not-a-constructor.js (strict) :: it threw ReferenceError: decodeURIComponent is not defined
-built-ins/decodeURIComponent/prop-desc.js :: it threw an object with no name: decodeURIComponent should be an own property
-built-ins/decodeURIComponent/prop-desc.js (strict) :: it threw an object with no name: decodeURIComponent should be an own property
-built-ins/decodeURIComponent/throw-URIError.js :: it threw an object with no name: #1: %ED%BF%BF (surrogate pair) should throw URIError Expected a URIError but got a ReferenceError
-built-ins/decodeURIComponent/throw-URIError.js (strict) :: it threw an object with no name: #1: %ED%BF%BF (surrogate pair) should throw URIError Expected a URIError but got a ReferenceError
-built-ins/encodeURI/S15.1.3.3_A1.1_T1.js :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURI/S15.1.3.3_A1.1_T1.js (strict) :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURI/S15.1.3.3_A1.1_T2.js :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURI/S15.1.3.3_A1.1_T2.js (strict) :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURI/S15.1.3.3_A1.2_T1.js :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURI/S15.1.3.3_A1.2_T1.js (strict) :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURI/S15.1.3.3_A1.2_T2.js :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURI/S15.1.3.3_A1.2_T2.js (strict) :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURI/S15.1.3.3_A1.3_T1.js :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURI/S15.1.3.3_A1.3_T1.js (strict) :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURI/S15.1.3.3_A2.1_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.1_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.2_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.2_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.3_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.3_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.4_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.4_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.4_T2.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.4_T2.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.5_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A2.5_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.1_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.1_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.2_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.2_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.2_T2.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.2_T2.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.2_T3.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.2_T3.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.3_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A3.3_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T2.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T2.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T3.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T3.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T4.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A4_T4.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.2.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.2.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.3.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.3.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.4.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.4.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.6.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.6.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.7.js :: it threw an object with no name: #1.2: new encodeURI() throw TypeError. Actual: ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A5.7.js (strict) :: it threw an object with no name: #1.2: new encodeURI() throw TypeError. Actual: ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A6_T1.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/S15.1.3.3_A6_T1.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/name.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/name.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/not-a-constructor.js :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/not-a-constructor.js (strict) :: it threw ReferenceError: encodeURI is not defined
-built-ins/encodeURI/prop-desc.js :: it threw an object with no name: encodeURI should be an own property
-built-ins/encodeURI/prop-desc.js (strict) :: it threw an object with no name: encodeURI should be an own property
-built-ins/encodeURIComponent/S15.1.3.4_A1.1_T1.js :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.1_T1.js (strict) :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.1_T2.js :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.1_T2.js (strict) :: it threw an object with no name: #DC00-DFFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.2_T1.js :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.2_T1.js (strict) :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.2_T2.js :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.2_T2.js (strict) :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.3_T1.js :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURIComponent/S15.1.3.4_A1.3_T1.js (strict) :: it threw an object with no name: #D800-DBFF
-built-ins/encodeURIComponent/S15.1.3.4_A2.1_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.1_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.2_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.2_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.3_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.3_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.4_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.4_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.4_T2.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.4_T2.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.5_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A2.5_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.1_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.1_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.2_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.2_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.2_T2.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.2_T2.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.2_T3.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.2_T3.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.3_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A3.3_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T2.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T2.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T3.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T3.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T4.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A4_T4.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.2.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.2.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.3.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.3.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.4.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.4.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.6.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.6.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.7.js :: it threw an object with no name: #1.2: new encodeURIComponent() throw TypeError. Actual: ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A5.7.js (strict) :: it threw an object with no name: #1.2: new encodeURIComponent() throw TypeError. Actual: ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A6_T1.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/S15.1.3.4_A6_T1.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/name.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/name.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/not-a-constructor.js :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/not-a-constructor.js (strict) :: it threw ReferenceError: encodeURIComponent is not defined
-built-ins/encodeURIComponent/prop-desc.js :: it threw an object with no name: encodeURIComponent should be an own property
-built-ins/encodeURIComponent/prop-desc.js (strict) :: it threw an object with no name: encodeURIComponent should be an own property
+built-ins/decodeURI/S15.1.3.1_A2.5_T1.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/decodeURI/S15.1.3.1_A2.5_T1.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/decodeURI/S15.1.3.1_A5.2.js :: it threw an object with no name: #3: delete decodeURI.length; decodeURI.length !== undefined
+built-ins/decodeURI/S15.1.3.1_A5.2.js (strict) :: it threw an object with no name: #3: delete decodeURI.length; decodeURI.length !== undefined
+built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/decodeURIComponent/S15.1.3.2_A5.2.js :: it threw an object with no name: #3: delete decodeURIComponent.length; decodeURIComponent.length !== undefined
+built-ins/decodeURIComponent/S15.1.3.2_A5.2.js (strict) :: it threw an object with no name: #3: delete decodeURIComponent.length; decodeURIComponent.length !== undefined
+built-ins/encodeURI/S15.1.3.3_A5.2.js :: it threw an object with no name: #3: delete encodeURI.length; encodeURI.length !== undefined
+built-ins/encodeURI/S15.1.3.3_A5.2.js (strict) :: it threw an object with no name: #3: delete encodeURI.length; encodeURI.length !== undefined
+built-ins/encodeURIComponent/S15.1.3.4_A5.2.js :: it threw an object with no name: #3: delete encodeURIComponent.length; encodeURIComponent.length !== undefined
+built-ins/encodeURIComponent/S15.1.3.4_A5.2.js (strict) :: it threw an object with no name: #3: delete encodeURIComponent.length; encodeURIComponent.length !== undefined
 built-ins/eval/length-non-configurable.js :: it threw an object with no name: #3: delete eval.length; eval.length !== undefined
 built-ins/eval/length-non-configurable.js (strict) :: it threw an object with no name: #3: delete eval.length; eval.length !== undefined
 built-ins/global/10.2.1.1.3-4-16-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/global/10.2.1.1.3-4-18-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/global/S10.2.3_A1.1_T2.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/global/S10.2.3_A1.1_T2.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/global/S10.2.3_A1.2_T2.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/global/S10.2.3_A1.2_T2.js (strict) :: it threw ReferenceError: decodeURI is not defined
-built-ins/global/S10.2.3_A1.3_T2.js :: it threw ReferenceError: decodeURI is not defined
-built-ins/global/S10.2.3_A1.3_T2.js (strict) :: it threw ReferenceError: decodeURI is not defined
 built-ins/isFinite/toprimitive-call-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/isFinite/toprimitive-call-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/isFinite/toprimitive-get-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all

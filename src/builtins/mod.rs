@@ -54,6 +54,7 @@ mod shared;
 mod symbol;
 mod typed;
 mod typed_methods;
+mod uri;
 mod view;
 mod weak;
 mod weak_ref;
@@ -92,6 +93,9 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // `Object` first: `Object.prototype` is where every chain ends, so a built-in installed
     // before it would inherit from a prototype with no methods on it yet.
     global::install(heap, realm, global);
+    // §19.2.6's four sit beside §19.2's other five and are installed apart from them only because
+    // percent-escaping is a page of its own — nothing about the order matters here.
+    uri::install(heap, realm, global);
     object::install(heap, realm, global);
     annex_b::install(heap, realm);
     error::install(heap, realm, global);
