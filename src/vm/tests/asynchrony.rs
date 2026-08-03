@@ -478,3 +478,67 @@ fn an_async_generator_is_what_for_await_walks() {
         "false"
     );
 }
+
+#[test]
+fn an_async_generator_awaits_the_value_it_yields_and_an_ordinary_one_does_not() {
+    // §27.6.3.8 step 5 — `AsyncGeneratorYield` awaits the value *before* handing it out, which
+    // §27.5.3.7's ordinary `GeneratorYield` does not. That one step is the whole difference, and
+    // it is what makes a rejected promise reject the promise `next()` answered rather than being
+    // handed over as a value nobody looked inside.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; var e = new Error('x'); \
+             async function* g() { yield Promise.reject(e); yield 'unreachable' } \
+             var it = g(); \
+             it.next().then(function (v) { out = 'resolved:' + v.value }, \
+                            function (r) { out = 'rejected:' + (r === e) });",
+            "out"
+        ),
+        "rejected:true"
+    );
+    // A resolved promise is unwrapped for the same reason, so the *value* is what it settled to.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; \
+             async function* g() { yield Promise.resolve(7) } \
+             g().next().then(function (v) { out = v.value + ',' + v.done });",
+            "out"
+        ),
+        "7,false"
+    );
+    // …and a thenable is awaited like any other, which is what says this is `Await` and not a
+    // test for `Promise`.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; \
+             async function* g() { yield {then: function (ok) { ok(9) }} } \
+             g().next().then(function (v) { out = String(v.value) });",
+            "out"
+        ),
+        "9"
+    );
+    // The generator is **closed** by the rejection, so the next `next()` answers done — which is
+    // what makes the first row a rejection rather than a value that happens to be a promise.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; var e = new Error('x'); \
+             async function* g() { yield Promise.reject(e); yield 'unreachable' } \
+             var it = g(); \
+             it.next().then(null, function () { \
+                it.next().then(function (v) { out = v.done + ',' + String(v.value) }) });",
+            "out"
+        ),
+        "true,undefined"
+    );
+    // An ordinary generator does **not** await, so the promise object itself is the value. This is
+    // the row that says the step belongs to §27.6 and not to `yield`.
+    assert_eq!(
+        run("function* g() { yield Promise.resolve(1) } \
+             var v = g().next().value; typeof v.then"),
+        "function"
+    );
+    assert_eq!(
+        run("function* g() { yield {a: 1} } g().next().value.a"),
+        "1"
+    );
+}

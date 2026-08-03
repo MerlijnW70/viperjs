@@ -1060,20 +1060,10 @@ built-ins/AsyncGeneratorFunction/prototype/constructor.js :: it threw an object 
 built-ins/AsyncGeneratorFunction/prototype/constructor.js (strict) :: it threw an object with no name: constructor descriptor should not be writable
 built-ins/AsyncGeneratorFunction/prototype/prototype.js :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object AsyncGenerator]») to be true
 built-ins/AsyncGeneratorFunction/prototype/prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object AsyncGenerator]») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-await-order.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-await-order.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-order-state-executing.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-order-state-executing.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-order.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «3») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-order.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «3») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-promise-resolve-order.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «3») to be true
-built-ins/AsyncGeneratorPrototype/next/request-queue-promise-resolve-order.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «3») to be true
 built-ins/AsyncGeneratorPrototype/next/this-val-not-async-generator.js :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/next/this-val-not-async-generator.js (strict) :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/next/this-val-not-object.js :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/next/this-val-not-object.js (strict) :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/return/request-queue-order-state-executing.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorPrototype/return/request-queue-order-state-executing.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «2») to be true
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js (strict) :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
@@ -1088,8 +1078,6 @@ built-ins/AsyncGeneratorPrototype/return/this-val-not-async-generator.js :: it t
 built-ins/AsyncGeneratorPrototype/return/this-val-not-async-generator.js (strict) :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/return/this-val-not-object.js :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/return/this-val-not-object.js (strict) :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/throw/request-queue-order-state-executing.js :: the test called $DONE with Test262Error: Expected SameValue(«2», «1») to be true
-built-ins/AsyncGeneratorPrototype/throw/request-queue-order-state-executing.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«2», «1») to be true
 built-ins/AsyncGeneratorPrototype/throw/return-rejected-promise.js :: it threw an object with no name: Promise rejected.
 built-ins/AsyncGeneratorPrototype/throw/return-rejected-promise.js (strict) :: it threw an object with no name: Promise rejected.
 built-ins/AsyncGeneratorPrototype/throw/this-val-not-async-generator.js :: it threw TypeError: what was resumed is not a generator
@@ -3568,8 +3556,8 @@ built-ins/RegExp/property-escapes/generated/General_Category_-_Cased_Letter.js :
 built-ins/RegExp/property-escapes/generated/General_Category_-_Cased_Letter.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Close_Punctuation.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Close_Punctuation.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js :: it did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/General_Category_-_Connector_Punctuation.js (strict) :: an earlier run of the same file did not finish within 10 seconds
 built-ins/RegExp/property-escapes/generated/General_Category_-_Control.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Control.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Currency_Symbol.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3620,8 +3608,8 @@ built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Symbol.js :
 built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Symbol.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Paragraph_Separator.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Paragraph_Separator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js :: it did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/General_Category_-_Private_Use.js (strict) :: an earlier run of the same file did not finish within 10 seconds
 built-ins/RegExp/property-escapes/generated/General_Category_-_Punctuation.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Punctuation.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/General_Category_-_Separator.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3666,8 +3654,8 @@ built-ins/RegExp/property-escapes/generated/Math.js :: it threw RangeError: the 
 built-ins/RegExp/property-escapes/generated/Math.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Noncharacter_Code_Point.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Noncharacter_Code_Point.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js :: it did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js (strict) :: an earlier run of the same file did not finish within 10 seconds
 built-ins/RegExp/property-escapes/generated/Pattern_White_Space.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Pattern_White_Space.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Quotation_Mark.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -15552,14 +15540,6 @@ language/expressions/async-function/nameless-dflt-params-ref-self.js (strict) ::
 language/expressions/async-function/nameless-eval-var-scope-syntax-err.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/async-generator/eval-body-proto-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/async-generator/eval-body-proto-realm.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/async-generator/named-yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/async-generator/named-yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/async-generator/named-yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/named-yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/named-yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/named-yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/named-yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/named-yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/async-generator/named-yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/async-generator/named-yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/async-generator/named-yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -15572,14 +15552,6 @@ language/expressions/async-generator/named-yield-star-sync-return.js :: the test
 language/expressions/async-generator/named-yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/async-generator/named-yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/async-generator/named-yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/async-generator/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/async-generator/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/async-generator/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/async-generator/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/async-generator/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/async-generator/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/async-generator/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -15592,12 +15564,6 @@ language/expressions/async-generator/yield-star-sync-return.js :: the test calle
 language/expressions/async-generator/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/async-generator/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/async-generator/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/async-generator/yield-thenable-create-resolving-functions-reject.js :: the test called $DONE with Test262Error: isConstructor invoked with a non-function value
-language/expressions/async-generator/yield-thenable-create-resolving-functions-reject.js (strict) :: the test called $DONE with Test262Error: isConstructor invoked with a non-function value
-language/expressions/async-generator/yield-thenable-create-resolving-functions-resolve.js :: the test called $DONE with Test262Error: isConstructor invoked with a non-function value
-language/expressions/async-generator/yield-thenable-create-resolving-functions-resolve.js (strict) :: the test called $DONE with Test262Error: isConstructor invoked with a non-function value
-language/expressions/await/for-await-of-interleaved.js :: the test called $DONE with Test262Error: Actual [Promise: 6, Await: [object Promise], Promise: 5, Await: [object Promise], Promise: 4, Await: [object Promise], Promise: 3, Promise: 2, Promise: 1, Promise: 0] and expected [Promise: 6, Promise: 5, Await: 3, Promise: 4, Promise: 3, Await: 2, Promise: 2, Promise: 1, Await: 1, Promise: 0] should have the same contents. Async/await and promises should be interleaved
-language/expressions/await/for-await-of-interleaved.js (strict) :: the test called $DONE with Test262Error: Actual [Promise: 6, Await: [object Promise], Promise: 5, Await: [object Promise], Promise: 4, Await: [object Promise], Promise: 3, Promise: 2, Promise: 1, Promise: 0] and expected [Promise: 6, Promise: 5, Await: 3, Promise: 4, Promise: 3, Await: 2, Promise: 2, Promise: 1, Await: 1, Promise: 0] should have the same contents. Async/await and promises should be interleaved
 language/expressions/bitwise-and/bigint-non-primitive.js :: it threw an object with no name
 language/expressions/bitwise-and/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/bitwise-and/bigint-toprimitive.js :: it threw an object with no name
@@ -15638,14 +15604,6 @@ language/expressions/call/tco-non-eval-function-dynamic.js :: it threw SyntaxErr
 language/expressions/call/tco-non-eval-function.js :: it threw RangeError: too much recursion
 language/expressions/call/tco-non-eval-global.js :: it threw RangeError: too much recursion
 language/expressions/call/tco-non-eval-with.js :: it threw RangeError: too much recursion
-language/expressions/class/async-gen-method-static/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/class/async-gen-method-static/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/class/async-gen-method-static/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method-static/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method-static/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method-static/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method-static/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method-static/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/class/async-gen-method-static/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/async-gen-method-static/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/async-gen-method-static/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -15658,14 +15616,6 @@ language/expressions/class/async-gen-method-static/yield-star-sync-return.js :: 
 language/expressions/class/async-gen-method-static/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/async-gen-method-static/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/async-gen-method-static/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/class/async-gen-method/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/class/async-gen-method/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/class/async-gen-method/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/async-gen-method/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/class/async-gen-method/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/async-gen-method/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/async-gen-method/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -15713,14 +15663,6 @@ language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarge
 language/expressions/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
 language/expressions/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/expressions/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method-static/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/class/elements/async-gen-private-method-static/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/elements/async-gen-private-method-static/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/elements/async-gen-private-method-static/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -15733,14 +15675,6 @@ language/expressions/class/elements/async-gen-private-method-static/yield-star-s
 language/expressions/class/elements/async-gen-private-method-static/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/elements/async-gen-private-method-static/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/elements/async-gen-private-method-static/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/class/elements/async-gen-private-method/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/class/elements/async-gen-private-method/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/elements/async-gen-private-method/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/class/elements/async-gen-private-method/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -16039,8 +15973,6 @@ language/expressions/dynamic-import/eval-export-dflt-expr-gen-anon.js :: the tes
 language/expressions/dynamic-import/eval-export-dflt-expr-gen-named.js :: the test's status could not be read
 language/expressions/dynamic-import/eval-export-dflt-expr-in.js :: the test's status could not be read
 language/expressions/dynamic-import/eval-self-once-module.js :: the test's status could not be read
-language/expressions/dynamic-import/for-await-resolution-and-error-agen-yield.js :: the test called $DONE with Test262Error: a Expected SameValue(«undefined», «42») to be true
-language/expressions/dynamic-import/for-await-resolution-and-error-agen-yield.js (strict) :: the test called $DONE with Test262Error: a Expected SameValue(«undefined», «42») to be true
 language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js :: the test called $DONE with Test262Error: Expected an error, but observed no error
 language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js (strict) :: the test called $DONE with Test262Error: Expected an error, but observed no error
 language/expressions/dynamic-import/import-attributes/2nd-param-non-object.js :: the test called $DONE with Test262Error: Promise for boolean was not rejected.
@@ -16345,14 +16277,6 @@ language/expressions/object/fn-name-fn.js :: it threw an object with no name: na
 language/expressions/object/fn-name-fn.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/fn-name-gen.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/fn-name-gen.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next-catch.js :: the test never called $DONE
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/expressions/object/method-definition/async-gen-yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/expressions/object/method-definition/async-gen-yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/object/method-definition/async-gen-yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/object/method-definition/async-gen-yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -16710,14 +16634,6 @@ language/statements/async-function/evaluation-default-that-throws.js (strict) ::
 language/statements/async-function/let-newline-await-in-async-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/async-generator/return-undefined-implicit-and-explicit.js :: the test called $DONE with Test262Error: Actual [tick 1, g1 ret, g2 ret, g3 ret, g4 ret, tick 2] and expected [tick 1, g1 ret, g2 ret, tick 2, g3 ret, g4 ret] should have the same contents. Ticks for implicit and explicit return undefined
 language/statements/async-generator/return-undefined-implicit-and-explicit.js (strict) :: the test called $DONE with Test262Error: Actual [tick 1, g1 ret, g2 ret, g3 ret, g4 ret, tick 2] and expected [tick 1, g1 ret, g2 ret, tick 2, g3 ret, g4 ret] should have the same contents. Ticks for implicit and explicit return undefined
-language/statements/async-generator/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/statements/async-generator/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/statements/async-generator/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/async-generator/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/async-generator/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/async-generator/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/async-generator/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/async-generator/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/statements/async-generator/yield-return-then-getter-ticks.js :: the test called $DONE with Test262Error: Actual [start, tick 1, tick 2] and expected [start, tick 1, get then, tick 2] should have the same contents. Ticks for return with thenable getter
 language/statements/async-generator/yield-return-then-getter-ticks.js (strict) :: the test called $DONE with Test262Error: Actual [start, tick 1, tick 2] and expected [start, tick 1, get then, tick 2] should have the same contents. Ticks for return with thenable getter
 language/statements/async-generator/yield-star-async-from-sync-iterator-inaccessible.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -16876,14 +16792,6 @@ language/statements/await-using/throws-suppressederror-if-multiple-errors-during
 language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/block/tco-stmt-list.js (strict) :: it threw RangeError: too much recursion
 language/statements/block/tco-stmt.js (strict) :: it threw RangeError: too much recursion
-language/statements/class/async-gen-method-static/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/statements/class/async-gen-method-static/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/statements/class/async-gen-method-static/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method-static/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method-static/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method-static/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method-static/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method-static/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/statements/class/async-gen-method-static/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/async-gen-method-static/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/async-gen-method-static/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -16896,14 +16804,6 @@ language/statements/class/async-gen-method-static/yield-star-sync-return.js :: t
 language/statements/class/async-gen-method-static/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/statements/class/async-gen-method-static/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/statements/class/async-gen-method-static/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/statements/class/async-gen-method/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/statements/class/async-gen-method/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/statements/class/async-gen-method/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/async-gen-method/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/statements/class/async-gen-method/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/async-gen-method/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/async-gen-method/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -16973,14 +16873,6 @@ language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget
 language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
 language/statements/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method-static/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/statements/class/elements/async-gen-private-method-static/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/elements/async-gen-private-method-static/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/elements/async-gen-private-method-static/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -16993,14 +16885,6 @@ language/statements/class/elements/async-gen-private-method-static/yield-star-sy
 language/statements/class/elements/async-gen-private-method-static/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/statements/class/elements/async-gen-private-method-static/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/statements/class/elements/async-gen-private-method-static/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-catch.js :: the test never called $DONE
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-catch.js (strict) :: the test never called $DONE
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-for-await-of-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-for-await-of-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-yield-star-async-iterator.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next-yield-star-async-iterator.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next.js :: the test called $DONE with Test262Error: Promise incorrectly resolved.
-language/statements/class/elements/async-gen-private-method/yield-promise-reject-next.js (strict) :: the test called $DONE with Test262Error: Promise incorrectly resolved.
 language/statements/class/elements/async-gen-private-method/yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/elements/async-gen-private-method/yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/statements/class/elements/async-gen-private-method/yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function

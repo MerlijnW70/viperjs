@@ -463,6 +463,21 @@ impl Compiler<'_> {
                         self.chunk.emit(Instruction::Constant(index));
                     }
                 }
+                // §27.6.3.8 step 5 — `AsyncGeneratorYield` **awaits the value before yielding it**,
+                // which an ordinary generator's §27.5.3.7 does not. So `yield Promise.reject(e)` in
+                // an `async function*` rejects the promise `next()` answered, where without this
+                // the promise object itself is handed out as the value and the rejection is never
+                // seen. `yield` with no argument awaits `undefined`, which is a job and not a
+                // no-op: it is a turn of the queue whose order a program can observe.
+                //
+                // Asked of asynchrony **alone**, with no test that this is a generator: `yield` is
+                // an expression only where §15.5's `[Yield]` parameter is set, which is a generator
+                // body and nothing else — an arrow written inside one does not inherit it, and a
+                // field initialiser does not either. So a chunk compiling this is always a
+                // generator, and a second half to the condition would be one no input could flip.
+                if self.chunk.is_async() {
+                    self.chunk.emit(Instruction::Await);
+                }
                 self.chunk.emit(Instruction::Yield);
                 // §27.5.1.3 — `gen.return(v)` resumes the body *at this `yield`* with a return
                 // completion, so every `finally` between here and the end runs and every open
