@@ -29,6 +29,17 @@ use crate::vm::Vm;
 /// to the string path when `x` has no `Symbol.replace`. Anything else that is not callable is a
 /// TypeError rather than a silent fall through, so a misspelled method is reported rather than
 /// ignored.
+///
+/// # Every caller asks "is it an Object" first, and that is a 2025 normative change
+///
+/// §22.1.3's six pattern-taking methods used to reach here for anything that was neither
+/// `undefined` nor null; they now do so only for an **Object**. The difference is a primitive, and
+/// it is observable: `GetMethod` on one goes through `ToObject`, so the lookup lands on
+/// `Number.prototype` or `String.prototype` — which a script can install a getter on.
+/// `"a1b".match(1)` must not call it, and test262 has a file per method per primitive kind saying
+/// so. The guard is at each call site rather than here because two of the six do more inside it
+/// than call this: `replaceAll` and `matchAll` also run §7.2.8's `IsRegExp`, which looks up
+/// `%Symbol.match%` and would reach the same prototype.
 pub(super) fn method_of(
     vm: &mut Vm,
     heap: &mut Heap,
@@ -379,7 +390,7 @@ fn replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     let with = call.argument(1);
     // Step 2 — the Symbol method is looked for **before** the receiver is converted, so a pattern
     // that handles the whole operation sees an unconverted `this`.
-    if !matches!(pattern, Value::Undefined | Value::Null)
+    if matches!(pattern, Value::Object(_))
         && let Some(replacer) = method_of(vm, heap, pattern, "replace")?
     {
         return vm.call_value(replacer, pattern, &[call.this_value, with], heap);
@@ -407,7 +418,7 @@ fn replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 fn replace_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let pattern = call.argument(0);
     let with = call.argument(1);
-    if !matches!(pattern, Value::Undefined | Value::Null) {
+    if matches!(pattern, Value::Object(_)) {
         // Step 2.b — a pattern that is *not* global is refused outright, because replacing all of
         // something with a pattern that stops at the first match could not do what was asked. The
         // check is here rather than in the delegate so that it happens whatever the delegate does.
@@ -474,7 +485,7 @@ fn pattern_from(vm: &mut Vm, heap: &mut Heap, given: Value) -> Completion<crate:
 /// §22.1.3.14 `String.prototype.match`.
 fn string_match(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let pattern = call.argument(0);
-    if !matches!(pattern, Value::Undefined | Value::Null)
+    if matches!(pattern, Value::Object(_))
         && let Some(matcher) = method_of(vm, heap, pattern, "match")?
     {
         return vm.call_value(matcher, pattern, &[call.this_value], heap);
@@ -509,7 +520,7 @@ fn invoke_symbol(
 /// §22.1.3.15 `String.prototype.matchAll`.
 fn match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let pattern = call.argument(0);
-    if !matches!(pattern, Value::Undefined | Value::Null) {
+    if matches!(pattern, Value::Object(_)) {
         // Step 2.b — the same global-flag demand `replaceAll` makes, and for the same reason:
         // iterating every match with a pattern that stops at the first is not a thing to allow
         // quietly.
@@ -550,7 +561,7 @@ fn match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// §22.1.3.21 `String.prototype.search`.
 fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let pattern = call.argument(0);
-    if !matches!(pattern, Value::Undefined | Value::Null)
+    if matches!(pattern, Value::Object(_))
         && let Some(searcher) = method_of(vm, heap, pattern, "search")?
     {
         return vm.call_value(searcher, pattern, &[call.this_value], heap);

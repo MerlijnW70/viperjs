@@ -227,10 +227,11 @@ fn pad_end(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 /// A regular-expression separator is step 2, and arrives with `RegExp`.
 fn split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // §22.1.3.23 step 2 — the separator's `Symbol.split` takes over if it has one, which is how a
-    // regular expression separator works at all. Looked for *before* the receiver is converted, on
-    // the same terms as the other four methods that take a pattern.
+    // regular expression separator works at all. Looked for *before* the receiver is converted, and
+    // only for an **Object** — see [`super::string_replace::method_of`] for why a primitive is not
+    // asked at all, which is the same rule the other five pattern-taking methods follow.
     let separator = call.argument(0);
-    if !matches!(separator, Value::Undefined | Value::Null)
+    if matches!(separator, Value::Object(_))
         && let Some(splitter) = super::string_replace::method_of(vm, heap, separator, "split")?
     {
         return vm.call_value(

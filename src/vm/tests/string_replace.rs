@@ -322,3 +322,128 @@ fn a_symbol_method_that_is_not_callable_is_reported_as_that_and_not_as_a_failed_
         );
     }
 }
+
+#[test]
+fn a_primitive_pattern_never_has_its_symbol_method_looked_up() {
+    // §22.1.3's six pattern-taking methods reach for `%Symbol.match%` and its siblings only when
+    // the pattern **is an Object** — a 2025 normative change from "neither undefined nor null".
+    // The difference is observable because `GetMethod` on a primitive goes through `ToObject`, so
+    // the lookup would land on a wrapper prototype a script can install a getter on.
+    //
+    // One row per method, each poisoning the key on the prototype the primitive would convert to,
+    // and each asserting the method still did its ordinary work.
+    let poison = |kind: &str, symbol: &str| {
+        format!(
+            "Object.defineProperty({kind}.prototype, Symbol.{symbol}, \
+             {{get: function () {{ throw new Test262Error('should not be called') }}, \
+               configurable: true}}); "
+        )
+    };
+    assert_eq!(
+        run(&format!(
+            "{}var m = 'a1b1c'.match(1); m.index + ',' + m.input + ',' + m[0]",
+            poison("Number", "match")
+        )),
+        "1,a1b1c,1"
+    );
+    assert_eq!(
+        run(&format!(
+            "{}'a-b-c'.split('-').join('|')",
+            poison("String", "split")
+        )),
+        "a|b|c"
+    );
+    assert_eq!(
+        run(&format!(
+            "{}'a1b'.replace(1, 'X')",
+            poison("Number", "replace")
+        )),
+        "aXb"
+    );
+    assert_eq!(
+        run(&format!(
+            "{}'a1b1'.replaceAll(1, 'X')",
+            poison("Number", "replace")
+        )),
+        "aXbX"
+    );
+    assert_eq!(
+        run(&format!("{}'a1b'.search(1)", poison("Number", "search"))),
+        "1"
+    );
+    assert_eq!(
+        run(&format!(
+            "{}Array.from('a1b1'.matchAll(1)).length",
+            poison("Number", "matchAll")
+        )),
+        "2"
+    );
+    // A boolean and a BigInt convert to their own prototypes, which is the same rule and two more
+    // objects a script could have written to.
+    assert_eq!(
+        run(&format!(
+            "{}'atrueb'.replace(true, 'X')",
+            poison("Boolean", "replace")
+        )),
+        "aXb"
+    );
+    assert_eq!(
+        run(&format!(
+            "{}'a1b'.replace(1n, 'X')",
+            poison("BigInt", "replace")
+        )),
+        "aXb"
+    );
+    // …and `undefined` and null were never asked either, which the old condition already had
+    // right and this must not have broken.
+    assert_eq!(run("'aundefinedb'.split(undefined).length"), "1");
+    assert_eq!(run("'a'.replace(undefined, 'X')"), "a");
+    assert_eq!(run("String('anullb'.replace(null, 'X'))"), "aXb");
+}
+
+#[test]
+fn an_object_pattern_is_still_asked_and_is_still_obeyed() {
+    // The other side of the rule, which is the whole reason the methods delegate at all: an
+    // **Object** with the symbol takes over the operation entirely, and sees an unconverted `this`.
+    assert_eq!(
+        run("'ignored'.match({[Symbol.match]: function (s) { return 'took ' + s }})"),
+        "took ignored"
+    );
+    assert_eq!(
+        run("'ignored'.replace({[Symbol.replace]: function (s, w) { return s + '/' + w }}, 'w')"),
+        "ignored/w"
+    );
+    assert_eq!(
+        run("'ignored'.search({[Symbol.search]: function () { return 42 }})"),
+        "42"
+    );
+    assert_eq!(
+        run("'ignored'.split({[Symbol.split]: function (s) { return ['a', s] }}).join('|')"),
+        "a|ignored"
+    );
+    // A regular expression is an Object, so every one of these still goes through the pattern.
+    assert_eq!(run("'a1b'.match(/\\d/)[0]"), "1");
+    assert_eq!(run("'a-b'.split(/-/).join('|')"), "a|b");
+    assert_eq!(run("'aXb'.replace(/X/, 'Y')"), "aYb");
+    assert_eq!(run("'aXbX'.replaceAll(/X/g, 'Y')"), "aYbY");
+    assert_eq!(run("'abc'.search(/b/)"), "1");
+    assert_eq!(run("Array.from('a1b1'.matchAll(/\\d/g)).length"), "2");
+    // §7.2.8's `IsRegExp` is inside the same guard, so `replaceAll`'s demand for a global flag is
+    // asked of an Object and of nothing else — a non-global one is refused…
+    assert_eq!(
+        run("try { 'a'.replaceAll(/a/, 'b'); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …including one that merely *claims* to be a pattern, which is what makes `IsRegExp` a
+    // question about behaviour rather than about how the object was made.
+    assert_eq!(
+        run(
+            "try { 'a'.replaceAll({[Symbol.match]: true, flags: ''}, 'b'); 'no error' } \
+             catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and a primitive is not asked, so it is not refused either: `1` has no flags and is simply
+    // searched for as text.
+    assert_eq!(run("'a1b1'.replaceAll(1, 'X')"), "aXbX");
+}

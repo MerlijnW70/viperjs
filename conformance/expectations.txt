@@ -4916,14 +4916,6 @@ built-ins/String/prototype/isWellFormed/to-string.js :: it threw an object with 
 built-ins/String/prototype/isWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
-built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/match/duplicate-named-groups-properties.js :: it did not parse: two groups have the same name
 built-ins/String/prototype/match/duplicate-named-groups-properties.js (strict) :: it did not parse: two groups have the same name
 built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js :: it did not parse: two groups have the same name
@@ -4932,12 +4924,6 @@ built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw 
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/match/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js (strict) :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
 built-ins/String/prototype/matchAll/toString-this-val.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -4964,50 +4950,18 @@ built-ins/String/prototype/normalize/return-normalized-string.js :: it threw Typ
 built-ins/String/prototype/normalize/return-normalized-string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/repeat/repeat-string-n-times.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/String/prototype/repeat/repeat-string-n-times.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js (strict) :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js :: it threw the string poison
 built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js (strict) :: it threw the string poison
 built-ins/String/prototype/replaceAll/this-tostring.js :: it threw the string poison
 built-ins/String/prototype/replaceAll/this-tostring.js (strict) :: it threw the string poison
-built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-number-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-string-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/search/cstm-search-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/search/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-number-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-number-primitive.js (strict) :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-string-primitive.js :: it threw an object with no name: should not be called
-built-ins/String/prototype/split/cstm-split-on-string-primitive.js (strict) :: it threw an object with no name: should not be called
 built-ins/String/prototype/split/instance-is-math.js :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/instance-is-math.js (strict) :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/limit-touint32-error.js :: it threw an object with no name: ToUint32 should be called on the limit before ToString on the separator. Expected a ExpectedError to be thrown but no exception was thrown at all
