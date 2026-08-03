@@ -120,6 +120,44 @@ impl Walk {
         // makes it a branch nothing can test. §7.4.9 wants both cases silent and both are.
         let _ = vm.call_value(method, self.iterator, &[], heap);
     }
+
+    /// §7.4.9 `IteratorClose` again, with a **normal** completion — so what it finds is reported.
+    ///
+    /// The difference from [`Walk::close`] is step 4, and it is the clause's own: closing carries a
+    /// completion, and step 4 keeps *that* one when it is a throw. Every caller of the swallowing
+    /// form above is abandoning a walk because something already went wrong, so the close's own
+    /// trouble is discarded by the clause rather than by convenience. §27.1.4's Iterator Helper
+    /// `return` is the caller on the other side: it closes with `NormalCompletion(unused)`, so
+    /// there is nothing for step 4 to keep and steps 5 and 6 are what the program sees.
+    ///
+    /// Three ways that is visible, and test262 has a file per helper for each: a `return` **getter**
+    /// that throws (step 2), a `return` that throws when called (step 5), and one that answers a
+    /// primitive (step 6, a TypeError of the clause's own making).
+    pub(super) fn close_reporting(&self, vm: &mut Vm, heap: &mut Heap) -> Completion<()> {
+        let name = key(heap, "return");
+        // Step 2 — inside `Completion(...)`, so a throwing getter is `innerResult` and step 5
+        // reports it. With a normal completion to keep there is nothing between the two.
+        let method = vm.get_property_key(self.iterator, name, heap)?;
+        // Step 3.b — §7.3.11 reads null as absent too, and an absent `return` is not a failure to
+        // close: there was nothing to tell.
+        if matches!(method, Value::Undefined | Value::Null) {
+            return Ok(());
+        }
+        if !heap.is_callable(method) {
+            return Err(Abrupt::type_error(
+                "this iterator's return is not a function",
+            ));
+        }
+        let answered = vm.call_value(method, self.iterator, &[], heap)?;
+        // Step 6 — the answer has to be an object, and it is otherwise unexamined. This is the one
+        // TypeError §7.4.9 raises itself rather than passing on.
+        match answered {
+            Value::Object(_) => Ok(()),
+            _ => Err(Abrupt::type_error(
+                "this iterator's return did not answer an object",
+            )),
+        }
+    }
 }
 
 /// Build the three iterator prototypes into `heap`.

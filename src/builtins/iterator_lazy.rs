@@ -366,10 +366,17 @@ fn helper_return(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
         return Err(Abrupt::type_error("this is not an Iterator Helper"));
     };
     // Closing twice closes the source once — the second `return` finds a helper that has already
-    // finished and has nothing left to pass on.
+    // finished and has nothing left to pass on. Which is also why a helper whose source ran out on
+    // its own does not forward: it is finished, and §7.4.9 is not owed a second telling.
+    //
+    // **Reporting rather than swallowing.** §27.1.4's `return` closes with a normal completion, so
+    // §7.4.9 step 4 has nothing to keep and what the close finds is what the caller sees — a
+    // throwing `return`, a throwing `return` *getter*, and a `return` answering a primitive are
+    // three errors this method raises. The helper is marked finished first, so a source that throws
+    // on the way out is still only asked once.
     if !state.done {
         finish(heap, object);
-        Walk::of(state.source, state.next).close(vm, heap);
+        Walk::of(state.source, state.next).close_reporting(vm, heap)?;
     }
     Ok(result(vm, heap, Value::Undefined, true))
 }

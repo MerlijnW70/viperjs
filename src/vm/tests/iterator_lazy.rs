@@ -291,3 +291,139 @@ fn a_bad_argument_closes_the_iterator_without_ever_reading_next() {
         );
     }
 }
+
+#[test]
+fn a_helpers_return_reports_what_closing_the_source_found() {
+    // §27.1.4's Iterator Helper `return` closes the underlying iterator with a **normal**
+    // completion, so §7.4.9 step 4 has nothing to keep and steps 2, 5 and 6 are what the program
+    // sees. Every other close in this engine is abandoning a walk because something already went
+    // wrong, and the clause discards the close's own trouble there — which is why one helper does
+    // the opposite of the other five callers rather than sharing their answer.
+    //
+    // Step 5, the ordinary way: a `return` that throws when called.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: false, value: 1} } \
+               return() { throw new EvalError('r') } } \
+             var t = new T().map(function (x) { return 0 }); t.next(); \
+             try { t.return(); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "EvalError"
+    );
+    // Step 2 — the `return` **getter** throws, so the close never gets as far as calling anything.
+    // A close that swallowed would not tell these two apart, and neither would one that only
+    // guarded the call.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: false, value: 1} } \
+               get return() { throw new EvalError('g') } } \
+             var t = new T().map(function (x) { return 0 }); t.next(); \
+             try { t.return(); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "EvalError"
+    );
+    // Step 6 — a `return` answering a primitive is a **TypeError of the clause's own**, which is
+    // the one error §7.4.9 raises rather than passes on.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: false, value: 1} } \
+               return() { return 1 } } \
+             var t = new T().filter(function () { return true }); \
+             try { t.return(); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and an object answer is accepted without being looked at.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: false, value: 1} } \
+               return() { return {} } } \
+             var t = new T().map(function (x) { return x }); var r = t.return(); \
+             r.value + ',' + r.done"
+        ),
+        "undefined,true"
+    );
+    // §7.3.11's other half: a `return` that is *there* and is not callable is a TypeError, and it
+    // is raised before the call rather than by it — which is the whole of what the check is worth,
+    // since calling a number would be a TypeError too. The **message** is the assertion, because
+    // that is the only thing the two orders differ in.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: false, value: 1} } }              var o = new T(); o.return = 1;              var t = Iterator.prototype.map.call(o, function (x) { return x }); t.next();              try { t.return(); 'no error' } catch (e) { e.constructor.name + ': ' + e.message }"
+        ),
+        "TypeError: this iterator's return is not a function"
+    );
+    // §7.3.11 reads an absent `return` as nothing to tell, which is not a failure to close.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: false, value: 1} } } \
+             var t = new T().take(5); var r = t.return(); r.value + ',' + r.done"
+        ),
+        "undefined,true"
+    );
+    // A helper that has not been started yet still closes its source — §27.1.4's
+    // `suspended-start` arm — so this throws before `next` has ever been called.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: true, value: undefined} } \
+               return() { throw new EvalError('r') } } \
+             var t = new T().map(function (x) { return 0 }); \
+             try { t.return(); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "EvalError"
+    );
+}
+
+#[test]
+fn a_source_that_ran_out_is_not_told_a_second_time() {
+    // The other half, and the reason the reporting close sits behind a test of the helper's own
+    // state: once the source has said `done` the helper is finished, and §7.4.9 is not owed a
+    // telling. So this `return` throws nothing even though the source's would.
+    assert_eq!(
+        run(
+            "class T extends Iterator { next() { return {done: true, value: undefined} } \
+               return() { throw new EvalError('r') } } \
+             var t = new T().map(function (x) { return 0 }); t.next(); \
+             try { t.return(); 'not forwarded' } catch (e) { 'threw ' + e.constructor.name }"
+        ),
+        "not forwarded"
+    );
+    // …and neither does a second `return`, the first having finished it. The helper is marked
+    // finished *before* the close, which is what makes a throwing source asked exactly once.
+    assert_eq!(
+        run("var count = 0; \
+             class T extends Iterator { next() { return {done: false, value: 1} } \
+               return() { count++; return {} } } \
+             var t = new T().map(function (x) { return x }); \
+             t.return(); t.return(); t.return(); count"),
+        "1"
+    );
+    assert_eq!(
+        run("var count = 0; \
+             class T extends Iterator { next() { return {done: false, value: 1} } \
+               return() { count++; throw new EvalError('r') } } \
+             var t = new T().map(function (x) { return x }); \
+             try { t.return() } catch (e) {} \
+             try { t.return() } catch (e) {} count"),
+        "1"
+    );
+    // Every helper closes the same way, which is what says this is one code path and not six.
+    for helper in [
+        "map(function (x) { return x })",
+        "filter(function () { return true })",
+        "take(5)",
+        "drop(0)",
+        "flatMap(function (x) { return [x] })",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "class T extends Iterator {{ next() {{ return {{done: false, value: 1}} }} \
+                   return() {{ throw new EvalError('r') }} }} \
+                 var t = new T().{helper}; t.next(); \
+                 try {{ t.return(); 'no error' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "EvalError",
+            "{helper}"
+        );
+    }
+}
