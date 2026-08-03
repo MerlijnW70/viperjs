@@ -671,13 +671,40 @@ impl Heap {
             *object = None;
             freed.objects += 1;
         }
-        for (environment, marked) in self.environments.iter_mut().zip(&marked.environments) {
-            if *marked || environment.is_none() {
+        // DR-0019 — an environment's slot goes back on the free list and its generation moves on,
+        // which is what stops `environments.len()` growing and with it DR-0013's footprint. The
+        // generation is what makes the reuse safe to look at: a handle issued for the *previous*
+        // use of this slot now disagrees and reads as `None`, where before this it would have
+        // found whatever was put there next.
+        // Three lists walked in lockstep rather than indexed: the marks and the generations are
+        // both built at the arena's length, so a `get` on either would need a default that no
+        // index could reach — mutation coverage duly called one out. `zip` says the same thing
+        // structurally and leaves nothing to be wrong about.
+        let mut reusable = Vec::new();
+        for (index, ((environment, generation), seen)) in self
+            .environments
+            .iter_mut()
+            .zip(self.environment_generations.iter_mut())
+            .zip(&marked.environments)
+            .enumerate()
+        {
+            if *seen || environment.is_none() {
                 continue;
             }
             *environment = None;
             freed.environments += 1;
+            // A slot whose generation would wrap is **retired** rather than freed: put back, it
+            // would one day issue a handle indistinguishable from one that named an older value,
+            // and "a handle names its own value or nothing" would stop being true. Nothing can
+            // reach it — four billion reuses of one slot is more collections than DR-0013's budget
+            // can drive — which is why the wrap is declined here rather than asserted against.
+            if let Some(next) = generation.checked_add(1) {
+                *generation = next;
+                reusable.push(index);
+            }
         }
+        // Collected first and appended after, because the loop above holds the arena mutably.
+        self.free_environments.append(&mut reusable);
         for (string, marked) in self.strings.iter_mut().zip(&marked.strings) {
             if *marked || string.is_none() {
                 continue;

@@ -93,6 +93,23 @@ the number that record was missing: without it, praxis cannot call a function a 
 `Ok`, so the first run reported the four shapes that *exhausted the heap* as the four fastest.
 A benchmark that does not check what it measured will report a crash as a speed-up.
 
+**Implemented the same day — DR-0019, environments only.** A free list per arena plus a generation
+in the handle's spare 32 bits. The reuse check this experiment gained afterwards is the number:
+100,000 calls, collect, 100,000 calls again — the first run grows the arena by **7,458,300 B** and
+the second by **816 B**. Nine thousandfold, and the ceiling this entry was written about is gone
+for environments.
+
+Two things the table could *not* show, and it took a run each to see why:
+
+- **A collection at the end of a loop moves nothing**, so the "after gc" column stayed at 74 B
+  even once reuse worked. `footprint` counts `environments.len()`, and freeing a slot does not
+  shorten the `Vec` — it makes the slot available. Only a **second** loop distinguishes reuse from
+  tombstones, which is what `reuse_check` runs.
+- **Conformance did not move at all**: 76,456 passing before and after, byte for byte. Right, and
+  worth stating — `Vm::collect` is the host's to call and the interpreter runs none on a timer, so
+  reuse changes what a program *can* do rather than what any current test does. The objects,
+  strings, symbols and BigInt arenas are still tombstoned; they are the same change and are next.
+
 
 ## name-resolution — what would it cost to resolve every name at run time?
 

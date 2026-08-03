@@ -282,6 +282,18 @@ pub struct Heap {
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
     /// frame is gone and the variables are not. See [`Environment`].
     environments: Vec<Option<Environment>>,
+    /// Which use each environment slot is on — DR-0019.
+    ///
+    /// Bumped when a sweep puts a slot back, and compared against the generation a handle carries.
+    /// Parallel to `environments` rather than a field on `Environment`, because it has to outlive
+    /// the record: the question a stale handle asks is about a slot whose `Environment` is gone.
+    environment_generations: Vec<u32>,
+    /// Environment slots a sweep has freed, waiting to be handed out again — DR-0019.
+    ///
+    /// The whole reason `environments.len()` stops growing, and with it DR-0013's footprint. A
+    /// slot whose generation would wrap is **not** put back here: it is retired, which is what
+    /// makes "a handle names its own value or nothing" true without an exception.
+    free_environments: Vec<usize>,
     /// §16.2.1.5.2's import bindings — which slots are really another environment's.
     ///
     /// Beside the environments rather than on them: an `import` is the only thing in the language

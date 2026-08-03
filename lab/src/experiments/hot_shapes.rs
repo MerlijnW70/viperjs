@@ -175,6 +175,7 @@ pub fn run(argument: Option<&str>) -> std::process::ExitCode {
             floor = Some(elapsed);
         }
     }
+    reuse_check();
     println!("\nread the differences, not the rows — see this module's doc for the pairs.");
     println!("OUT OF HEAP is DR-0013's budget reached: the row stopped early and its time is not");
     println!("comparable. It is a result — that shape cannot run a million passes at all.");
@@ -208,4 +209,57 @@ fn measure(body: &str) -> Option<(Duration, usize, usize, bool)> {
     vm.collect(&chunk, &mut heap);
     let after = heap.footprint().saturating_sub(before);
     Some((elapsed, grew, after, finished))
+}
+
+/// DR-0019's claim, checked directly: does a collection make the slots available again?
+///
+/// The table above cannot show this, and it took a run to see why. `Heap::footprint` counts
+/// `environments.len()`, and freeing a slot does not shorten the `Vec` — it makes the slot
+/// *reusable*. So a collection at the end of a loop moves nothing, and the only thing that tells
+/// reuse from tombstones is whether a **second** loop has to grow the arena at all.
+///
+/// Which is what this measures: the same loop twice with a collection between. With tombstones
+/// the second run costs what the first did. With DR-0019's free list it costs nothing.
+fn reuse_check() {
+    let source = format!(
+        "var N = {ITERATIONS}; function f(a) {{ return a }}          var s = 0; for (var i = 0; i < N; i++) {{ s = f(i); }} s"
+    );
+    let mut heap = Heap::new();
+    let Ok(script) = parse_script(&source) else {
+        return;
+    };
+    let Ok(chunk) = compile_script(&script, &mut heap) else {
+        return;
+    };
+    let start = heap.footprint();
+    let mut vm = Vm::new(&mut heap);
+    if vm.run(&chunk, &mut heap).is_err() {
+        return;
+    }
+    let after_first = heap.footprint();
+    vm.collect(&chunk, &mut heap);
+    let swept = heap.footprint();
+    if vm.run(&chunk, &mut heap).is_err() {
+        return;
+    }
+    let after_second = heap.footprint();
+    let first = after_first.saturating_sub(start);
+    let second = after_second.saturating_sub(swept);
+    println!(
+        "
+DR-0019 — {ITERATIONS} calls, collect, {ITERATIONS} calls again:"
+    );
+    println!("  first run grew the arena by  {first:>9} B");
+    println!(
+        "  the collection gave back     {:>9} B",
+        after_first.saturating_sub(swept)
+    );
+    println!("  second run grew it by        {second:>9} B");
+    println!(
+        "  => slots are {}",
+        match second * 4 < first {
+            true => "REUSED",
+            false => "tombstones — the second run paid again",
+        }
+    );
 }

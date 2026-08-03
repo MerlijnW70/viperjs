@@ -40,6 +40,35 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnvironmentId(pub(super) usize);
 
+impl EnvironmentId {
+    /// How many low bits of the handle are the index — DR-0019's split of the one word.
+    ///
+    /// Thirty-two, and neither half is tight: DR-0013's budget cannot hold four billion
+    /// environments, and four billion reuses of one slot is more collections than a heap this size
+    /// can produce. The point of writing it as a constant is that both halves are then checked
+    /// against the same number rather than against two spellings of it.
+    const INDEX_BITS: u32 = 32;
+
+    /// A handle for slot `index` at `generation`.
+    pub(super) fn at(index: usize, generation: u32) -> Self {
+        Self(index | ((generation as usize) << Self::INDEX_BITS))
+    }
+
+    /// Which slot of the arena this names.
+    pub(super) fn index(self) -> usize {
+        self.0 & ((1 << Self::INDEX_BITS) - 1)
+    }
+
+    /// Which use of that slot this names — DR-0019.
+    ///
+    /// The whole of what distinguishes a live handle from one issued before a sweep put the slot
+    /// back. A read whose generation disagrees answers `None`, which is the answer an index past
+    /// the end has always given, so nothing downstream gains a case.
+    pub(super) fn generation(self) -> u32 {
+        (self.0 >> Self::INDEX_BITS) as u32
+    }
+}
+
 /// What a source called one slot, for the one reader that has to ask by name — DR-0018.
 ///
 /// Nothing in ordinary compiled code consults this. A name was resolved to a depth and an index
@@ -207,14 +236,60 @@ impl Heap {
         size: usize,
         names: Option<Rc<[Binding]>>,
     ) -> EnvironmentId {
-        let id = EnvironmentId(self.environments.len());
-        self.environments.push(Some(Environment {
+        self.place(Environment {
             slots: vec![Some(Value::Undefined); size],
             parent,
             names,
             binding_object: None,
-        }));
-        id
+        })
+    }
+
+    /// Put `record` in a slot and answer the handle that names it — DR-0019's allocator.
+    ///
+    /// A freed slot if there is one, and a fresh one otherwise. Every environment in the engine
+    /// comes from here, which is what lets the free list be trusted: a construction that pushed
+    /// directly would hand out a handle whose generation was whatever the last use left behind.
+    fn place(&mut self, record: Environment) -> EnvironmentId {
+        match self.free_environments.pop() {
+            Some(index) => {
+                let generation = self
+                    .environment_generations
+                    .get(index)
+                    .copied()
+                    .unwrap_or(0);
+                self.environments[index] = Some(record);
+                EnvironmentId::at(index, generation)
+            }
+            None => {
+                let index = self.environments.len();
+                self.environments.push(Some(record));
+                self.environment_generations.push(0);
+                EnvironmentId::at(index, 0)
+            }
+        }
+    }
+
+    /// The record a handle names, or `None` because it names none — DR-0019's invariant.
+    ///
+    /// Three ways to answer `None` and they are one answer: an index past the end, a slot a sweep
+    /// emptied, and a slot that has been handed out again since this handle was issued. The third
+    /// is the one this record exists for, and it is deliberately indistinguishable from the other
+    /// two — a reader that already handled a foreign handle handles a stale one for free.
+    fn record(&self, id: EnvironmentId) -> Option<&Environment> {
+        let index = id.index();
+        if self.environment_generations.get(index).copied()? != id.generation() {
+            return None;
+        }
+        self.environments.get(index)?.as_ref()
+    }
+
+    /// The same, for the two operations that write.
+    fn record_mut(&mut self, id: EnvironmentId) -> Option<&mut Environment> {
+        let index = id.index();
+        if self.environment_generations.get(index).copied()? != id.generation() {
+            return None;
+        }
+        self.environments.get_mut(index)?.as_mut()
     }
 
     /// §9.1.1.2 `NewObjectEnvironment` — a scope whose bindings are `object`'s properties.
@@ -228,14 +303,12 @@ impl Heap {
         parent: Option<EnvironmentId>,
         object: crate::heap::ObjectId,
     ) -> EnvironmentId {
-        let id = EnvironmentId(self.environments.len());
-        self.environments.push(Some(Environment {
+        self.place(Environment {
             slots: Vec::new(),
             parent,
             names: None,
             binding_object: Some(object),
-        }));
-        id
+        })
     }
 
     /// §14.11's scope: `object`'s properties **and** `size` slots of praxis's own.
@@ -249,8 +322,8 @@ impl Heap {
         names: Rc<[Binding]>,
         object: crate::heap::ObjectId,
     ) -> EnvironmentId {
-        let id = EnvironmentId(self.environments.len());
-        self.environments.push(Some(Environment {
+        let _ = names;
+        self.place(Environment {
             slots: vec![Some(Value::Undefined); size],
             parent,
             // **Not** the names, deliberately. A name list is what a resolution walk reads, and
@@ -259,9 +332,7 @@ impl Heap {
             // index from compiled code and by nothing else.
             names: None,
             binding_object: Some(object),
-        }));
-        let _ = names;
-        id
+        })
     }
 
     /// The object an environment's bindings live on, if it is §9.1.1.2's kind.
@@ -269,10 +340,7 @@ impl Heap {
         &self,
         environment: EnvironmentId,
     ) -> Option<crate::heap::ObjectId> {
-        self.environments
-            .get(environment.0)?
-            .as_ref()?
-            .binding_object()
+        self.record(environment)?.binding_object()
     }
 
     /// What the source called this environment's slots, if it named them.
@@ -280,11 +348,7 @@ impl Heap {
     /// The chain is walked outwards from a direct `eval` and each level's answer handed to the
     /// compiler, which resolves into them exactly as it would into scopes it had built itself.
     pub fn environment_names(&self, environment: EnvironmentId) -> Option<&[Binding]> {
-        self.environments
-            .get(environment.0)?
-            .as_ref()?
-            .names
-            .as_deref()
+        self.record(environment)?.names.as_deref()
     }
 
     /// How many slots an environment has, or `None` for a handle this heap did not issue.
@@ -292,7 +356,7 @@ impl Heap {
     /// Asked by the same walk, because a level's *depth* is counted in environments and its names
     /// may run short of its slots — so the two numbers are not interchangeable.
     pub fn environment_size(&self, environment: EnvironmentId) -> Option<usize> {
-        Some(self.environments.get(environment.0)?.as_ref()?.slots.len())
+        Some(self.record(environment)?.slots.len())
     }
 
     /// The environment `depth` parents out from `from`.
@@ -303,7 +367,7 @@ impl Heap {
     pub fn environment_at(&self, from: EnvironmentId, depth: u32) -> Option<EnvironmentId> {
         let mut at = from;
         for _ in 0..depth {
-            at = self.environments.get(at.0)?.as_ref()?.parent?;
+            at = self.record(at)?.parent?;
         }
         Some(at)
     }
@@ -360,12 +424,7 @@ impl Heap {
     /// reaches every time it reads a `let` above its declaration — a ReferenceError.
     pub fn variable(&self, environment: EnvironmentId, index: u32) -> Option<Option<Value>> {
         let (environment, index) = self.resolved(environment, index);
-        self.environments
-            .get(environment.0)?
-            .as_ref()?
-            .slots
-            .get(index as usize)
-            .copied()
+        self.record(environment)?.slots.get(index as usize).copied()
     }
 
     /// Put a slot back into §9.1.1.1's uninitialised state, answering whether there was one.
@@ -385,9 +444,7 @@ impl Heap {
     /// The slot itself, for the two operations that write one.
     fn slot_mut(&mut self, environment: EnvironmentId, index: u32) -> Option<&mut Option<Value>> {
         let (environment, index) = self.resolved(environment, index);
-        self.environments
-            .get_mut(environment.0)
-            .and_then(Option::as_mut)
+        self.record_mut(environment)
             .and_then(|found| found.slots.get_mut(index as usize))
     }
 

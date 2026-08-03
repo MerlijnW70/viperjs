@@ -534,3 +534,80 @@ fn a_foreign_or_missing_object_handle_answers_rather_than_panicking() {
     // object's set of private names fixed once it has them.
     assert!(!heap.add_private_element(real, name, method));
 }
+
+#[test]
+fn a_swept_environment_slot_is_handed_out_again_and_the_old_handle_names_nothing() {
+    use crate::heap::Roots;
+    // DR-0019. Two claims, and the second is the reason the first is allowed: a freed slot is
+    // reused, and a handle issued for the *previous* use of that slot reads as `None` rather than
+    // as whatever now lives there.
+    let mut heap = Heap::new();
+    let first = heap.new_environment(None, 1);
+    heap.set_variable(first, 0, Value::Number(1.0));
+    assert!(matches!(heap.variable(first, 0), Some(Some(Value::Number(n))) if n == 1.0));
+    // Nothing roots it, so a collection takes it.
+    assert_eq!(heap.collect(&Roots::default()).environments, 1);
+    assert!(heap.variable(first, 0).is_none());
+    // The next environment gets that same slot back — which is what stops the arena growing, and
+    // is the whole of what DR-0019 buys.
+    let second = heap.new_environment(None, 1);
+    assert_eq!(first.index(), second.index());
+    assert_ne!(first.generation(), second.generation());
+    heap.set_variable(second, 0, Value::Number(2.0));
+    assert!(matches!(heap.variable(second, 0), Some(Some(Value::Number(n))) if n == 2.0));
+    // …and the stale handle still names nothing. **Without the generation it would read `2`** — a
+    // wrong value rather than a detected mistake, which is the failure this record exists to
+    // prevent and the reason a free list alone was not adopted.
+    assert!(heap.variable(first, 0).is_none());
+    assert!(heap.environment_size(first).is_none());
+    assert!(heap.environment_names(first).is_none());
+    // Depth 1 and not depth 0: a walk of zero parents never consults the arena, so it hands back
+    // the handle it was given — stale or not. That is harmless rather than a gap, because every
+    // read *through* the answer goes through the accessor and gets `None` there; but it is the one
+    // operation here that a stale handle survives, and saying so beats asserting the tidier thing.
+    assert!(heap.environment_at(first, 1).is_none());
+    assert!(!heap.set_variable(first, 0, Value::Number(3.0)));
+    assert!(!heap.uninitialise(first, 0));
+    // The write the stale handle attempted must not have reached the live one.
+    assert!(matches!(heap.variable(second, 0), Some(Some(Value::Number(n))) if n == 2.0));
+}
+
+#[test]
+fn a_reachable_environment_keeps_its_slot_and_its_handle_across_a_collection() {
+    use crate::heap::Roots;
+    // The other half, without which the test above would pass for a heap that freed everything.
+    let mut heap = Heap::new();
+    let kept = heap.new_environment(None, 1);
+    heap.set_variable(kept, 0, Value::Number(7.0));
+    let roots = Roots {
+        values: Vec::new(),
+        environments: vec![kept],
+    };
+    assert_eq!(heap.collect(&roots).environments, 0);
+    assert!(matches!(heap.variable(kept, 0), Some(Some(Value::Number(n))) if n == 7.0));
+    // …and a new environment does **not** take a live slot, so the two stay distinct.
+    let other = heap.new_environment(None, 1);
+    assert_ne!(kept.index(), other.index());
+}
+
+#[test]
+fn reusing_a_slot_is_what_stops_the_arena_growing() {
+    use crate::heap::Roots;
+    // The claim DR-0019 is *for*, as a heap fact rather than a benchmark: a thousand environments
+    // made and freed one after another occupy one slot, not a thousand.
+    let mut heap = Heap::new();
+    let before = heap.footprint();
+    for _ in 0..1_000 {
+        let short_lived = heap.new_environment(None, 1);
+        heap.set_variable(short_lived, 0, Value::Number(1.0));
+        heap.collect(&Roots::default());
+    }
+    // A shape rather than a number: ten slots' worth of room, against the thousand that tombstones
+    // would have left behind.
+    let grew = heap.footprint() - before;
+    assert!(
+        grew < 10 * size_of::<Option<crate::heap::Environment>>(),
+        "the arena grew by {grew} bytes"
+    );
+    assert_eq!(heap.environment_count(), 0);
+}
