@@ -909,15 +909,13 @@ Promise.resolve().then(function () { $DONE(); });"
         // Nothing ran, so nothing can be said about what it would have done. Counting these as
         // failures would write the same sentence into the expectations file thousands of times
         // and bury the ones that mean something.
-        // A destructuring rest parameter, because this row needs something the compiler still
-        // refuses and the example has to be replaced each time one of them lands — `class C {}`
-        // was here until classes compiled, `function* g() {}` until generators did, and
-        // `async function f() {}` until `await` did, at which point the row was asserting the
-        // opposite of what it says.
+        // §16.2.1.9's `import.meta`, because this row needs something the compiler still refuses
+        // and the example has to be replaced each time one of them lands — `class C {}` was here
+        // until classes compiled, `function* g() {}` until generators did, `async function f() {}`
+        // until `await` did, and a destructuring rest parameter until §15.1 did. A **module**,
+        // because nothing a script can say is refused any more.
         assert!(matches!(
-            verdict(
-                "/*---\ndescription: a destructuring rest parameter\n---*/\nfunction f(...[a]) {}"
-            ),
+            verdict("/*---\ndescription: x\nflags: [module]\n---*/\nimport.meta;"),
             Verdict::Skipped(_)
         ));
         // A *parse* failure is not skipped: the parser is finished, so a file it refuses is a

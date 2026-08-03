@@ -331,3 +331,48 @@ fn a_parameter_is_in_a_dead_zone_until_it_is_bound() {
         "undefined"
     );
 }
+
+#[test]
+fn a_rest_parameter_may_be_a_pattern_and_is_taken_apart_like_any_other() {
+    // §15.1 — `FunctionRestParameter : BindingRestElement`, whose binding may be a pattern. The
+    // call builds the array either way; a pattern only changes what is done with it afterwards.
+    assert_eq!(
+        run("function f(...[a, b]) { return a + ':' + b; } f(1, 2)"),
+        "1:2"
+    );
+    // An element the call did not reach is `undefined`, exactly as it is in any array pattern.
+    assert_eq!(
+        run("function f(...[a, b]) { return a + ':' + b; } f(1)"),
+        "1:undefined"
+    );
+    // …and a default inside the pattern fills that in, which is the pattern's rule and not the
+    // parameter list's.
+    assert_eq!(
+        run("function f(...[a = 'x', b = 'y']) { return a + ':' + b; } f(1)"),
+        "1:y"
+    );
+    // An object pattern reads the array's *properties*, so `length` is the one every call has.
+    assert_eq!(
+        run("function f(...{length}) { return length; } f('a', 'b', 'c')"),
+        "3"
+    );
+    // A nested rest inside the pattern, which is where the two rules meet.
+    assert_eq!(
+        run("function f(...[first, ...others]) { return first + ':' + others.join(); } f(1, 2, 3)"),
+        "1:2,3"
+    );
+    // Named parameters in front of it still take theirs first, and the pattern sees only the rest.
+    assert_eq!(
+        run("function f(a, ...[b, c]) { return [a, b, c].join(); } f(1, 2, 3)"),
+        "1,2,3"
+    );
+    // It works wherever a parameter list does — an arrow and a method, not only a declaration.
+    assert_eq!(run("var g = (...[a]) => a; g(9)"), "9");
+    assert_eq!(run("var o = { m(...[a]) { return a; } }; o.m(8)"), "8");
+    // §10.2.11 — the list is not simple, so `arguments` is unmapped and holds what was passed
+    // rather than what the pattern named.
+    assert_eq!(
+        run("function f(...[a]) { return arguments.length + ':' + arguments[1]; } f(1, 2)"),
+        "2:2"
+    );
+}

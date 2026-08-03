@@ -705,17 +705,20 @@ fn compile_body(
     // §15.1 — the rest parameter is last and takes a slot of its own, which the *call* fills: the
     // arguments past the named parameters are on the stack at entry and reachable from nowhere
     // else, so building the array is the call's job and not the body's.
-    if let Some(rest) = &parameters.rest {
-        let Binding::Identifier(name) = rest.as_ref() else {
-            return Err(unsupported("a destructuring rest parameter", span));
-        };
+    if parameters.rest.is_some() {
         // Hidden like the rest of them: a rest parameter is what makes a list not simple, so this
         // branch is only ever reached with `hidden` true. Written as the same choice all the same,
         // because the two are one rule and a reader should not have to prove that here.
-        compiler.chunk.rest = Some(match hidden {
-            true => compiler.declare_hidden("argument"),
-            false => compiler.declare(&name.name),
-        });
+        //
+        // §15.1 lets the rest be a `BindingPattern` — `function f(...[a, b])` — and that changes
+        // nothing here: the *slot* is what the call fills with the array, and a pattern's own names
+        // are made by `destructure_parameter` where it is taken apart, exactly as a named
+        // parameter's pattern is.
+        // Always hidden, and the `hidden` flag is not consulted: a rest parameter is *what makes* a
+        // list not simple, so the other arm was one nothing could reach. §15.1 lets the rest be a
+        // `BindingPattern` too, and that changes nothing here — the slot is what the call fills with
+        // the array, and a pattern's own names are made where it is taken apart.
+        compiler.chunk.rest = Some(compiler.declare_hidden("argument"));
     }
     // §10.2.11 steps 19 to 22 — the binding is made after the parameters and before the body, and
     // *not* when a parameter already took the name: `function f(arguments) { … }` has a parameter
@@ -835,12 +838,26 @@ fn compile_body(
     // §15.1 — and the rest last, which is where the grammar puts it. The call has already built
     // the array into the hidden slot; this is only the binding it ends the dead zone of.
     if let Some(rest) = compiler.chunk.rest
-        && let Some(Some(name)) = bound.last().copied()
-        && parameters.rest.is_some()
+        && let Some(target) = parameters.rest.as_deref()
     {
-        compiler.chunk.emit(Instruction::LoadVariable(0, rest));
-        compiler.chunk.emit(Instruction::Initialise(name));
-        compiler.chunk.emit(Instruction::Pop);
+        match (target, bound.last().copied().flatten()) {
+            // A name, whose dead zone this ends — the array is already in the hidden slot.
+            (Binding::Identifier(_), Some(name)) => {
+                compiler.chunk.emit(Instruction::LoadVariable(0, rest));
+                compiler.chunk.emit(Instruction::Initialise(name));
+                compiler.chunk.emit(Instruction::Pop);
+            }
+            // A simple list, where the call wrote straight into the named slot. Nothing to do, and
+            // reading the slot back into itself is what doing something would amount to.
+            (Binding::Identifier(_), None) => {}
+            // §15.1 — a pattern, taken apart exactly as a named parameter's is. The value it reads
+            // is the array the call built, which is why this needs no iterator of its own:
+            // `function f(...[a, b])` destructures an Array like any other.
+            (target, _) => {
+                compiler.chunk.emit(Instruction::LoadVariable(0, rest));
+                compiler.destructure_parameter(target, span)?;
+            }
+        }
     }
 
     // §15.5.4 and §27.6.2 — the parameters are done, so this is where the generator is made and

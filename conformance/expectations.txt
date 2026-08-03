@@ -16730,6 +16730,8 @@ language/expressions/addition/get-symbol-to-prim-err.js :: it threw an object wi
 language/expressions/addition/get-symbol-to-prim-err.js (strict) :: it threw an object with no name: error from property access of left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/arrow-function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/arrow-function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/arrow-function/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/arrow-function/strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-array-3.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-4.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -17619,10 +17621,14 @@ language/expressions/function/name-arguments-strict-body.js :: expected a Syntax
 language/expressions/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/function/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/generators/eval-body-proto-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/generators/eval-body-proto-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/generators/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/greater-than/bigint-and-boolean.js :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
 language/expressions/greater-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
 language/expressions/greater-than/bigint-and-symbol.js :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
@@ -17749,8 +17755,12 @@ language/expressions/object/method-definition/name-name-prop-symbol.js :: it thr
 language/expressions/object/method-definition/name-name-prop-symbol.js (strict) :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
 language/expressions/object/scope-gen-meth-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/object/scope-gen-meth-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/object/scope-gen-meth-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-meth-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-meth-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/object/scope-meth-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/expressions/object/scope-meth-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/setter-param-arguments-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/object/setter-param-eval-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/optional-chaining/eval-optional-call.js :: it threw an object with no name: fn() returns "global" value from indirect eval Expected SameValue(«"local"», «"global"») to be true
@@ -18660,8 +18670,12 @@ language/statements/function/name-arguments-strict-body.js :: expected a SyntaxE
 language/statements/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/statements/function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/statements/function/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/statements/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
+language/statements/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/if/cptn-else-false-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/if/cptn-else-false-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/if/cptn-else-false-nrml.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true

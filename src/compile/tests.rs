@@ -50,15 +50,17 @@ fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // A destructuring rest parameter, because this row needs something the compiler still refuses
     // and the example has to be replaced each time one of them lands — `import('x')` was here until
     // §13.3.10 arrived, and before that a `class`, a generator, and an `await`.
+    // Compiled as a **module**, because nothing a *script* can say is refused any more: every row
+    // this test has held — a class, a generator, an `await`, a dynamic import, a destructuring rest
+    // parameter — has landed, and §16.2.1.9's `import.meta` is what is left. The row has to be
+    // replaced again when it lands, and if there is nothing to replace it with then this test has
+    // outlived the thing it was watching.
     let cases = [
-        ("(function (...[a]) {})", "a destructuring rest parameter"),
-        (
-            "1 ? (function (...{a}) {}) : 3",
-            "a destructuring rest parameter",
-        ),
+        ("import.meta", "import.meta"),
+        ("1 ? import.meta : 3", "import.meta"),
     ];
     for (source, what) in cases {
-        let error = compile(source).expect_err("not implemented yet"); // the test is about the error
+        let error = compile_as_module(source).expect_err("not implemented yet"); // the test is about the error
         assert_eq!(
             error.kind,
             ErrorKind::Unsupported(what),
@@ -306,14 +308,18 @@ fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
 fn a_refusal_deep_inside_an_expression_carries_the_inner_span() {
     // The refusal comes from where the trouble is, not from the top: an engine that reported
     // the whole line would be useless on a long one.
-    let error = compile("1 + 2 * (3 - (function (...[a]) {})())").expect_err("not implemented yet"); // same
-    assert_eq!(
-        error.kind,
-        ErrorKind::Unsupported("a destructuring rest parameter")
-    );
-    // The function expression, not the whole line: 0..37 is what an engine that reported the
-    // statement would say.
-    assert_eq!(error.span, Span::new(13, 35));
+    let error = compile_as_module("1 + 2 * (3 - import.meta)").expect_err("not implemented yet"); // same
+    assert_eq!(error.kind, ErrorKind::Unsupported("import.meta"));
+    // The meta property, not the whole line: 0..24 is what an engine that reported the statement
+    // would say.
+    assert_eq!(error.span, Span::new(13, 24));
+}
+
+/// Compile `source` as a **Module**, for the refusals a script can no longer reach.
+fn compile_as_module(source: &str) -> Result<Chunk, crate::compile::CompileError> {
+    let mut heap = Heap::new();
+    let module = crate::parser::parse_module(source).expect("the source parses"); // a row that does not is the bug
+    crate::compile::compile_module(&module, &mut heap)
 }
 
 /// The body of the first function written in `source`.

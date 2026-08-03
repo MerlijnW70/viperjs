@@ -165,12 +165,12 @@ fn what_a_function_evaluates_to_is_not_the_scripts_completion_value() {
 
 #[test]
 fn what_functions_cannot_do_yet_says_which_and_where() {
-    let mut heap = Heap::new();
-    let script = parse_script("function f(...[a]) {}").expect("the row parses"); // a row that does not is the bug
-    let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+    // Nothing, as it turns out. Every row this test has held has landed — the last was §15.1's
+    // destructuring rest parameter — so what it asserts now is that the shape it used to refuse
+    // works, and the test is kept rather than deleted so that a future refusal has somewhere to go.
     assert_eq!(
-        error.kind,
-        crate::compile::ErrorKind::Unsupported("a destructuring rest parameter")
+        run("function f(...[a, ...rest]) { return a + ':' + rest.join(); } f(1, 2, 3)"),
+        "1:2,3"
     );
 }
 

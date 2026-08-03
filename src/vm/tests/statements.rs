@@ -135,20 +135,19 @@ fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
 
 #[test]
 fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
-    // Two constructs the compiler still refuses. This row used to be `with`, which is the shape
-    // AGENTS.md warns about: a test that asserts a refusal outlives the refusal it describes, and
-    // then asserts the opposite of what the engine does.
+    // The one construct the compiler still refuses, in two positions. This row used to be `with`,
+    // which is the shape AGENTS.md warns about: a test that asserts a refusal outlives the refusal
+    // it describes, and then asserts the opposite of what the engine does. Every other row it has
+    // held has landed, and nothing a **script** can say is refused any more — so these are modules.
     let cases = [
-        ("function f(...[a]) {}", "a destructuring rest parameter"),
-        (
-            "async function* g() { yield (function (...[a]) {}); }",
-            "a destructuring rest parameter",
-        ),
+        ("import.meta;", "import.meta"),
+        ("async function* g() { yield import.meta; }", "import.meta"),
     ];
     for (source, what) in cases {
         let mut heap = Heap::new();
-        let script = parse_script(source).expect("the source parses"); // the test is about compiling
-        let error = compile_script(&script, &mut heap).expect_err("not implemented yet"); // same
+        let module = crate::parser::parse_module(source).expect("the source parses"); // the test is about compiling
+        let error =
+            crate::compile::compile_module(&module, &mut heap).expect_err("not implemented yet"); // same
         assert_eq!(
             error.kind,
             crate::compile::ErrorKind::Unsupported(what),
@@ -354,16 +353,21 @@ fn a_finally_that_cannot_be_compiled_is_reported_from_the_innermost_one() {
     // *last* — and if a later one compiled cleanly, would report no failure at all and emit a
     // `break` past a block that was never built.
     //
-    // Two different refusals, so that "the first one" and "the last one" are distinguishable
-    // answers rather than the same sentence arriving by two routes.
-    let source = "while (1) { try { try { break; } finally { function f(...[a]) {} } } \
-                  finally { import('x'); } }";
+    // One refusal in the *inner* `finally`, and an ordinary statement in the outer. This used to
+    // use two different ones, so that "the first" and "the last" were distinguishable answers
+    // rather than one sentence arriving by two routes — but every refusal this test has held has
+    // since landed, and §16.2.1.9's `import.meta` is the only one left in the engine. What survives
+    // is the half that matters: a compiler that carried on past the inner failure would report
+    // **no** failure at all, and emit a `break` past a block it never built.
+    let source = "while (1) { try { try { break; } finally { import.meta; } } \
+                  finally { globalThis.x = 1; } }";
     let mut heap = Heap::new();
-    let script = parse_script(source).expect("the source parses"); // the test is about compiling
-    let error = compile_script(&script, &mut heap).expect_err("the inner finally is refused"); // same
+    let module = crate::parser::parse_module(source).expect("the source parses"); // the test is about compiling
+    let error = crate::compile::compile_module(&module, &mut heap)
+        .expect_err("the inner finally is refused"); // same
     assert_eq!(
         error.kind,
-        crate::compile::ErrorKind::Unsupported("a destructuring rest parameter")
+        crate::compile::ErrorKind::Unsupported("import.meta")
     );
 }
 
