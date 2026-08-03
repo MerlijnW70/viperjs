@@ -141,40 +141,31 @@ dynamic `import()`, and a top-level `await` that what imports the module waits f
 `src/vm/module.rs` is the linker, `src/heap/namespace.rs` the exotic object and `src/vm/loader.rs`
 the host hook.
 
-**And Annex B's block-level function declarations run.** DR-0008 was reversed and §B.3.2, §B.3.3 and
-§B.3.4 are in, in sloppy code — `src/compile/annex_b.rs` decides which declarations earn the extra
-`var` binding. That was the last thing between the engine and 80%, and the section below is what it
-cost.
+**And Annex B's block-level function declarations run**, along with §B.2.3's thirteen HTML methods.
+DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code — `src/compile/annex_b.rs`
+decides which declarations earn the extra `var` binding. That was the last thing between the engine
+and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **80.02% of test262** — 74,546 of 93,161 runs. Treat that number as
+Conformance as of this commit is **80.69% of test262** — 75,174 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 344 runs are now *stopped* before anything executes:
+Only 344 runs are now *stopped* before anything executes, and none of them is worth building:
+`(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
+`$262.agent` 18 is a one-thread engine's limit, and the rest is `import.meta` 6, `super` in an
+arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are proposals.
 
-| Runs | What stops them |
-| --- | --- |
-| 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
-| 110 | a property of strings |
-| 18 | `$262.agent`, which a one-thread engine has no answer for |
-| 16 | `super` and `new.target` inside a direct `eval` in an arrow |
-| 6 | `import.meta` |
-| 24 | a module beside the test that does not parse, one proposal at a time |
-
-**The skip list is empty of anything worth building, and the failure buckets are where the work is.**
-Sorted by reason the largest look actionable and mostly are not, which is worth doing once and
-writing down rather than re-deriving. Bucketed by *path*, what they actually are:
+**The failure buckets are the whole work list now.** Sorted by reason the largest look actionable
+and mostly are not, which is worth doing once and writing down rather than re-deriving:
 
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
-| ~965 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync` 128, `Iterator.zip`/`zipKeyed`/`concat` 160, `Promise.allKeyed`/`allSettledKeyed` 92, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64. The real remainder is `class` 45 and `DataView` 52 |
+| ~939 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16` |
 | 894 | the heap budget | 878 are `RegExp/property-escapes`, and the lab has **parked** them — see below |
-| 454 | `cannot read a property…` | **Atomics 224** (of which most need `$262.agent`, so ~80 are winnable in a one-thread engine) and **`Error.prototype.stack` 64**, which is a proposal |
-| 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two separate proposals, not `import.meta` |
+| 454 | `cannot read a property…` | **Atomics 316** (most needing `$262.agent`, so ~80 are winnable in a one-thread engine) and `Error.prototype.stack` 64, a proposal |
+| 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |
 | 238 | `Calling as constructor…` | all `Temporal` |
 | 224 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
 | 176 + 142 | `DisposableStack`, `AsyncDisposableStack` | the same proposal's library half |
-| **128** | **a sloppy `var` inside a direct eval in a function** | **the largest refusal praxis still owns — see below** |
-| 118 | `ShadowRealm is not defined` | a proposal |
 
 **Two buckets have been costed and must not be re-costed.**
 
@@ -184,17 +175,52 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
   budget. These need an interpreter several times faster, which is M8. The experiment's two real
   findings — a throwaway heap String per computed property key, and a timed-out run landing in no
   column — are both **fixed**; do not go looking for them again.
-- **Annex B's block-level function declarations were 645 runs and are now built.** DR-0008 was
-  reversed and the clause is in; see the section below for what it cost, because three of the four
-  expensive parts were not in the clause.
+- **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
+  combined.** Building it would raise the number while making the engine no more of a JavaScript
+  engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### 79.38% to 80.69% in eight slices, and what they have in common
+
+None of them was a feature. Every one was a clause praxis had *nearly* right, and seven of the eight
+were found by bucketing the failures rather than by reading a list of what is missing.
+
+1. **Annex B §B.3** (+571) — DR-0008's reversal, built. See the section below; it is the only one
+   of the eight that was on anybody's list.
+2. **§19.2.1.1's `D`** (+22) — `CreateGlobalVarBinding(N, D)` has one parameter and its two callers
+   disagree about it. §16.1.7 passes `false` for a Script and §19.2.1.1 `true` for an `eval`, so
+   `eval("var x = 1"); delete x` answered `false`. **When a spec operation takes a flag, check every
+   caller passes its own.**
+3. **§21.1.1.1's `ToNumeric`** (+164) — `Number(1n)` threw. Step 1.a is `ToNumeric` and not
+   `ToNumber`, which is the only place in the language a BigInt crosses without a second word from
+   the program. None of the 164 is in `built-ins/Number`: they are `Array` and `TypedArray` methods
+   over a resizable buffer, whose harness reads elements back through `Number(n)`.
+4. **Annex B §B.2.3** (+164) — the thirteen HTML methods, `"x".bold()`. One `CreateHTML` and a
+   table, because the order of its two conversions is observable and would otherwise have to be got
+   right thirteen times.
+5. **§21.1.3 and §20.3.3's prototypes** (+158) — `Number.prototype` and `Boolean.prototype` **are**
+   instances holding `+0` and `false`, so `Number.prototype.toString()` is `"0"`. §22.1.3 says the
+   same of `String.prototype`; §21.4.4 and §22.2.6 say the *opposite* of `Date.prototype` and
+   `RegExp.prototype`. The split is per-clause with nothing to derive it from — which is why the
+   same slice had to give §22.2.6's ten accessors their prototype carve-out, and make
+   `RegExp.prototype.flags` read the eight as **properties** in the clause's order.
+6. **§22.1.3's `regexp is an Object`** (+46) — a 2025 normative change. The six pattern-taking
+   methods look up `%Symbol.match%` and its siblings only for an Object, because `GetMethod` on a
+   primitive goes through `ToObject` and lands on a wrapper prototype a script can write to.
+7. **§6.2.5.5's settled key** (+96) — `GetValue` and `PutValue` both convert a property
+   reference's key *and write it back*, so `o[p] += 1` converts once. And `ToObject` of the base
+   comes **first**, so `null[p] += rhs()` throws before either `p.toString()` or `rhs()` runs.
+
+**The shape worth carrying: a bucket spread evenly over an area's whole surface is one common path,
+not many faults.** Slice 3 wore the name of every `Array.prototype` and `TypedArray.prototype`
+method it stopped, and was one word in `Number`.
 
 ### §B.3 is built, and what it actually cost is worth reading before touching that area
 
-DR-0008 was reversed on 2026-08-03 and B.3 landed the same day: **+571 runs, no regressions**, which
-is what took the suite past 80%. §B.3.4's `if (x) function f() {}`, §B.3.2's `L: function f() {}`,
-§B.3.3's extra `var` binding and §B.3.3.5's duplicate-function carve-out are all in —
-`src/compile/annex_b.rs` decides which declarations earn the binding and its module doc is the long
-version. Four things around it cost more than the clause did, and each is a shape that recurs:
+DR-0008 was reversed on 2026-08-03 and B.3 landed the same day: **+571 runs, no regressions**.
+§B.3.4's `if (x) function f() {}`, §B.3.2's `L: function f() {}`, §B.3.3's extra `var` binding and
+§B.3.3.5's duplicate-function carve-out are all in — `src/compile/annex_b.rs` decides which
+declarations earn the binding and its module doc is the long version. Four things around it cost
+more than the clause did, and each is a shape that recurs:
 
 - **§B.3.2 needs a *position* rule as well as strictness.** §14.6.1 and its five siblings make
   `IsLabelledFunction(Statement)` a Syntax Error wherever a body is a `Statement` rather than a
@@ -204,9 +230,7 @@ version. Four things around it cost more than the clause did, and each is a shap
 - **A `switch` was instantiating no functions at all**, and neither was a labelled declaration in a
   block. §14.12.4 step 3 hands the whole `CaseBlock` to `BlockDeclarationInstantiation`; praxis
   opened the environment, made no slot, and left the statement doing nothing because hoisting was
-  supposed to have done it. `switch (x) { case 1: function f() {} }` bound nothing, silently. This
-  is the third time that exact pair of half-truths has produced a wrong answer — see DR-0008's own
-  history and `Compiler::hoisted`.
+  supposed to have done it. `switch (x) { case 1: function f() {} }` bound nothing, silently.
 - **The global path is not `at_global_scope`.** That question answers two at once — the var scope is
   the global object, *and* no scope has been opened here — and the second half is false inside the
   block, which is the only place §B.3.3's copy is ever emitted. A first attempt asked it there and a
@@ -216,41 +240,48 @@ version. Four things around it cost more than the clause did, and each is a shap
   instantiatedVarNames does not contain F" is satisfied by the primitives. A guard in front of
   either was a branch no program could distinguish, and mutation coverage said so.
 
-**One divergence is deliberate and recorded.** §B.3.3.5 lets
-`{ function f() {} function f() {} }` parse, and read as written neither declaration is then
-eligible for the `var` binding — replacing either with `var f` leaves the other lexically declaring
-`f` in the same list, which §14.2.1's second rule refuses and B.3.3.5 does not relax. Every browser
-answers with the second function. No test262 file measures it, so the letter is what is implemented;
-`src/compile/annex_b.rs`'s module doc says which line to change if data ever arrives.
+**One divergence is deliberate and recorded.** §B.3.3.5 lets `{ function f() {} function f() {} }`
+parse, and read as written neither declaration is then eligible for the `var` binding — replacing
+either with `var f` leaves the other lexically declaring `f` in the same list, which §14.2.1's
+second rule refuses and B.3.3.5 does not relax. Every browser answers with the second function. No
+test262 file measures it, so the letter is what is implemented; `src/compile/annex_b.rs`'s module
+doc says which line to change if data ever arrives.
 
 ### What is left, in the order the numbers put it
 
 - **A sloppy `var` or function declaration inside a direct `eval` in a function — 128 runs**, and
-  now the largest thing praxis refuses by name. §19.2.1.1 adds the binding to the *caller's*
-  variable environment, whose slot count was fixed when that function was compiled, so DR-0018
-  leaves it open. It is a real slice: an environment that can grow, or a compiled-in reservation.
-  §B.3.3's own bindings in such an eval sidestep it — they go in the eval's own scope, because
-  every test that reads them does so from inside the eval — and that is written down in
-  `compile_direct_eval` so the next attempt does not mistake it for the general fix.
-- **`import.meta` — 6 runs.** §16.2.1.9's host hook, and the registry it would hang off is built.
-- **§13.15.2's order inside a `with` — 10 runs.** An assignment evaluates its target *reference*
-  before the value; inside a `with` praxis evaluates the value first, which shows up as a proxy
-  seeing one `has` where the specification asks for two.
-- **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Both are refused
-  where §19.2.1.1 allows them, because whether an arrow was written inside a function is a
-  *lexical* fact that a running arrow's chunk does not record — and the parser knows it, refusing
-  `new.target` in a top-level arrow at compile time. Carrying that answer onto the chunk is the
-  whole slice.
-- **§9.1.1.4.18's `CreateGlobalFunctionBinding` does not replace a property — 3 runs.** A function
-  declaration over an existing configurable global should redefine it as a writable, enumerable data
-  property; praxis leaves it as it found it, which is `CreateGlobalVarBinding`'s rule and not this
-  one.
-
-**One parameter can be the whole of a clause.** §9.1.1.4.17 is `CreateGlobalVarBinding(N, D)`, and
-its two callers disagree about `D`: §16.1.7 passes `false` for a Script and §19.2.1.1 passes `true`
-for an `eval`. praxis passed `false` for both, so `eval("var x = 1"); delete x` answered `false` —
-22 runs, and found only because the Annex B tests newly reached the descriptor. When a clause takes
-a flag, check every caller passes its own.
+  the largest thing praxis refuses by name. §19.2.1.1 adds the binding to the *caller's* variable
+  environment, whose slot count was fixed when that function was compiled, so DR-0018 leaves it
+  open. It is a real slice: an environment that can grow, or a compiled-in reservation. §B.3.3's own
+  bindings in such an eval sidestep it — they go in the eval's own scope, because every test reads
+  them from inside the eval — and `compile_direct_eval` says so, so the next attempt does not
+  mistake it for the general fix.
+- **`v`-flag set notation — 156 runs, and the largest core-language item left.**
+  `built-ins/RegExp/unicodeSets` fails on three parse errors: a character that must be escaped
+  inside a class in a `v` pattern (78), one that may not be escaped in a Unicode pattern (42), and a
+  doubled punctuator a `v` pattern reserves (36). praxis takes the flag and refuses §22.2.1's
+  `ClassSetExpression` — the difference `[[a-z]--[aeiou]]` and `\q{abc}` need. Grammar and matcher
+  work, and not a proposal: ES2024.
+- **A coercion can detach or resize the buffer under a TypedArray method — ~58 runs** across
+  `set` 12, `includes` 10, `join` 8, `copyWithin` 8, `indexOf`/`lastIndexOf` 12, `slice` 4, `sort`
+  2, `at` 2. Every one coerces an argument and then works from a length read *before* it, where the
+  clause says to look again. The rules differ per method and that is the cost: `copyWithin`, `fill`
+  and `slice` **throw**, while `includes`, `indexOf` and `lastIndexOf` set the length to zero and
+  answer `-1`/`false`. Several of these files also use the immutable-`ArrayBuffer` harness, so check
+  what a row is really asking before counting it.
+- **§13.15.2's order inside a `with` — 49 runs.** An assignment resolves its target *reference*
+  before reading the value, and a compound one writes back through the **same** reference. praxis
+  resolves the name twice, so a getter that deletes the property between them writes to a different
+  binding. `src/vm/dynamic.rs` already has `Resolved`, which is §9.4.2's Reference; what is missing
+  is a way to keep one across two instructions, and the right-hand side can throw between them —
+  so it needs the unwind discipline the operand stack has, not a field.
+- **`ArraySetLength` cannot run a `valueOf` — ~30 runs.** `[].length = {valueOf(){return 3}}` throws
+  and `[].length = 1n` is a RangeError where §10.4.2.4 propagates `ToUint32`'s TypeError.
+  `set_array_length` is on `Heap`, which has no interpreter to re-enter — that is DR-0011's seam.
+- **`import.meta` — 6 runs**, §16.2.1.9's host hook, and the registry it would hang off is built.
+- **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Whether an arrow was
+  written inside a function is a *lexical* fact a running arrow's chunk does not record, and the
+  parser knows it. Carrying that answer onto the chunk is the whole slice.
 
 **63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
