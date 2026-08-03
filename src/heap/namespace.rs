@@ -118,7 +118,7 @@ impl Heap {
         }
         // §10.4.6.2 — never extensible from the moment it is complete. Nothing can add a property
         // to a namespace, and `Object.isExtensible` on one answers false.
-        if let Some(found) = self.objects.get_mut(object.0).and_then(Option::as_mut) {
+        if let Some(found) = self.objects.get_mut(object) {
             found.prevent_extensions();
         }
         self.namespaces.insert(

@@ -146,7 +146,7 @@ impl Heap {
         loop {
             let mut grew = false;
             for (slot, object) in self.objects.iter().enumerate() {
-                let Some(collection) = object.as_ref().and_then(Object::collection) else {
+                let Some(collection) = object.and_then(Object::collection) else {
                     continue;
                 };
                 if !collection.kind().weak() {
@@ -648,30 +648,26 @@ impl Heap {
         // an optimisation with no test behind it: the entries are dropped either way a moment
         // later, so no input could tell the guard from its absence. Cheaper to walk them than to
         // carry a branch nothing can justify.
-        for object in self.objects.iter_mut() {
-            if let Some(collection) = object.as_mut().and_then(Object::collection_mut)
+        for mut object in self.objects.iter_mut() {
+            if let Some(collection) = object.as_deref_mut().and_then(Object::collection_mut)
                 && collection.kind().weak()
             {
                 collection.retain_keys(|key| reachable(key, marked));
             }
             // §26.2's cells go the same way and for the same reason: a cell whose target the walk
-            // could not reach is a cell nothing can ask about again. A `WeakRef`'s target needs no
-            // pruning — DR-0010 leaves the freed slot empty and never reuses it, so the handle
-            // itself becomes the answer `deref` gives.
-            if let Some(Weak::Registry(registry)) = object.as_mut().and_then(Object::weak_mut) {
+            // could not reach is a cell nothing can ask about again. A `WeakRef`'s target still
+            // needs no pruning, but **not for the reason this said before DR-0019**: the slot is
+            // reused now, so "left empty for ever" is no longer what makes the handle safe. The
+            // generation is. A `WeakRef` holding a swept target reads `None` through the same
+            // accessor everything else does, whoever has the slot since.
+            if let Some(Weak::Registry(registry)) = object.and_then(Object::weak_mut) {
                 registry.retain_cells(|target| reachable(target.as_value(), marked));
             }
         }
         // Zipped rather than indexed. The marks were sized from the arenas and nothing allocates
         // between, so the two are the same length — and `zip` says that rather than an index with
         // a default for a case that cannot happen.
-        for (object, marked) in self.objects.iter_mut().zip(&marked.objects) {
-            if *marked || object.is_none() {
-                continue;
-            }
-            *object = None;
-            freed.objects += 1;
-        }
+        freed.objects += self.objects.sweep(&marked.objects, |_| {});
         // DR-0019 — an environment's slot goes back on the free list and its generation moves on,
         // which is what stops `environments.len()` growing and with it DR-0013's footprint. The
         // generation is what makes the reuse safe to look at: a handle issued for the *previous*
@@ -680,28 +676,19 @@ impl Heap {
         // DR-0019 — the arena frees, bumps the generation and remembers the slot. An environment
         // gives nothing else back: its slots are inside the record and go with it.
         freed.environments += self.environments.sweep(&marked.environments, |_| {});
-        for (string, marked) in self.strings.iter_mut().zip(&marked.strings) {
-            if *marked || string.is_none() {
-                continue;
-            }
-            // The units go back to the budget DR-0013 keeps, because they are genuinely given
-            // back: the `Box` is dropped here. The *slot* is not — it stays as a `None` for as
-            // long as the arena does, which is the cost DR-0010 accepted in exchange for a handle
-            // that can never dangle, and which `Heap::footprint` therefore goes on counting.
-            self.string_units -= string.as_ref().map_or(0, |units| units.len());
-            *string = None;
-            freed.strings += 1;
-        }
+        // The units go back to DR-0013's budget, because they are genuinely given back: the `Box`
+        // is dropped. That is what the arena's farewell hook is for, and Strings are the only
+        // arena that has anything to give back besides the slot itself. Counted into a local and
+        // subtracted after, because the sweep holds the arena while the closure runs.
+        let mut returned = 0;
+        freed.strings += self
+            .strings
+            .sweep(&marked.strings, |units| returned += units.len());
+        self.string_units -= returned;
         // DR-0019 — the arena frees, bumps the generation and remembers the slot. A BigInt gives
         // nothing else back: its magnitude is inside the value and goes with it.
         freed.bigints += self.bigints.sweep(&marked.bigints, |_| {});
-        for (symbol, marked) in self.symbols.iter_mut().zip(&marked.symbols) {
-            if *marked || symbol.is_none() {
-                continue;
-            }
-            *symbol = None;
-            freed.symbols += 1;
-        }
+        freed.symbols += self.symbols.sweep(&marked.symbols, |_| {});
         // §20.4.2.2's registry is a **strong** reference and is deliberately not swept: a
         // registered Symbol outlives every realm, because `Symbol.for("a")` must answer the same
         // Symbol however long ago the last holder of it was collected. It was marked as a root
@@ -709,9 +696,15 @@ impl Heap {
         //
         // The intern table would otherwise keep pointing at freed Strings, and a later `intern`
         // of the same text would hand back a handle to nothing.
+        //
+        // **Through the generation-checked accessor, and DR-0019 says why.** This asked
+        // `strings.get(id.index()).is_some()` — the raw slot — which was right only while nothing
+        // was reused: once a slot comes back holding *different text*, that test keeps the stale
+        // entry and the next `intern` of the old text answers with a handle to the new one. Two
+        // property keys collapsed into one, silently. The type system now refuses the raw form,
+        // which is the whole reason `Arena` takes a handle and never an index.
         let strings = &self.strings;
-        self.interned
-            .retain(|_, id| strings.get(id.index()).is_some_and(Option::is_some));
+        self.interned.retain(|_, id| strings.get(*id).is_some());
         freed
     }
 

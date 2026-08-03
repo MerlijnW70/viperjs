@@ -108,6 +108,20 @@ impl<T> Arena<T> {
         self.slots.len()
     }
 
+    /// Every slot, for the collector's own passes over what is *in* the arena.
+    ///
+    /// Handle-free on purpose, and the exception that proves the rule: marking and pruning ask
+    /// "what is in slot n", which is a question about the arena rather than about any handle
+    /// naming it. Nothing outside `collect` has business with these.
+    pub(super) fn iter(&self) -> impl Iterator<Item = Option<&T>> {
+        self.slots.iter().map(Option::as_ref)
+    }
+
+    /// The same, for the passes that prune what they find.
+    pub(super) fn iter_mut(&mut self) -> impl Iterator<Item = Option<&mut T>> {
+        self.slots.iter_mut().map(Option::as_mut)
+    }
+
     /// Free every slot `marked` did not reach, and answer how many that was.
     ///
     /// `farewell` is run on each value before it goes, for the one arena that has to give

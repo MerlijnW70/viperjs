@@ -45,7 +45,6 @@ impl Heap {
         environment: EnvironmentId,
         lexical: Option<Lexical>,
     ) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Bytecode(body));
         object.environment = Some(environment);
@@ -55,8 +54,7 @@ impl Heap {
         // object — see [`Heap::set_home_object`].
         object.home = lexical.and_then(|captured| captured.home);
         object.lexical = lexical;
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// Put one of §27.5.1's three resumption methods on the heap.
@@ -70,11 +68,9 @@ impl Heap {
         kind: crate::heap::Resumption,
         asynchronous: bool,
     ) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Resume { kind, asynchronous });
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// One of §27.7.5.3's two resumption closures, as a function object.
@@ -86,11 +82,9 @@ impl Heap {
         context: ObjectId,
         kind: crate::heap::ReactionKind,
     ) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(None);
         object.call = Some(Callable::Revive { kind, context });
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// Put a built-in function object on the heap — `CreateBuiltinFunction` (§10.3.4).
@@ -117,11 +111,9 @@ impl Heap {
 
     /// `CreateBuiltinFunction` (§10.3.4), for both kinds.
     fn built_in(&mut self, prototype: ObjectId, native: Native, constructs: bool) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.call = Some(Callable::Native { native, constructs });
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// Give an object that already exists a `[[Call]]` running `native`.
@@ -143,11 +135,9 @@ impl Heap {
     /// No environment and no code of its own. A bound function has nothing to close over — what
     /// it holds is another function and the two things a call to it is already decided about.
     pub fn new_bound_function(&mut self, prototype: Option<ObjectId>, bound: Bound) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(prototype);
         object.call = Some(Callable::Bound(bound));
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// Put a wrapper for a primitive on the heap — §20.3.1.1, §21.1.1.1 and §22.1.1.1.
@@ -157,11 +147,9 @@ impl Heap {
     /// has ordinary properties, an ordinary prototype and no exotic behaviour, which is why
     /// `new Number(1).x = 2` works exactly as it does on `{}`.
     pub fn new_wrapper(&mut self, prototype: ObjectId, primitive: Value) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.primitive = Some(primitive);
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// Put a Date on the heap — §21.4.2.1's `OrdinaryCreateFromConstructor` with `[[DateValue]]`.
@@ -170,11 +158,9 @@ impl Heap {
     /// NaN for anything out of range, and the object it lands in is a perfectly ordinary Date whose
     /// every getter reports NaN. There is no separate "invalid" state to represent.
     pub fn new_date(&mut self, prototype: ObjectId, time: f64) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.date = Some(time);
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// §10.4.3.4 `StringCreate` — a String exotic object over `data`.
@@ -293,18 +279,14 @@ impl Heap {
     /// Ordinary but for the position it remembers, which is a slot rather than a property so that
     /// nothing in the language can move it. See [`crate::heap::Iteration`].
     pub fn new_iterator(&mut self, prototype: ObjectId, iteration: Iteration) -> ObjectId {
-        let id = ObjectId(self.objects.len());
         let mut object = Object::new(Some(prototype));
         object.iteration = Some(Box::new(iteration));
-        self.objects.push(Some(object));
-        id
+        self.objects.place(object)
     }
 
     /// Put an ordinary object on the heap — `OrdinaryObjectCreate` (§10.1.12).
     pub fn new_object(&mut self, prototype: Option<ObjectId>) -> ObjectId {
-        let id = ObjectId(self.objects.len());
-        self.objects.push(Some(Object::new(prototype)));
-        id
+        self.objects.place(Object::new(prototype))
     }
 
     /// The object `id` refers to, or `None` if this heap has nothing there.
@@ -312,12 +294,12 @@ impl Heap {
     /// The same narrow promise [`Heap::string`] makes about a foreign handle, for the same
     /// reason: no panic and no out-of-range read, and no detection.
     pub fn object(&self, id: ObjectId) -> Option<&Object> {
-        self.objects.get(id.0)?.as_ref()
+        self.objects.get(id)
     }
 
     /// The object `id` refers to, to be changed.
     pub fn object_mut(&mut self, id: ObjectId) -> Option<&mut Object> {
-        self.objects.get_mut(id.0)?.as_mut()
+        self.objects.get_mut(id)
     }
 
     /// Park `parked` in `holder` — §27.5.1's `[[GeneratorContext]]`, filled in.
@@ -364,7 +346,7 @@ impl Heap {
 
     /// How many objects this heap holds.
     pub fn object_count(&self) -> usize {
-        self.objects.iter().filter(|slot| slot.is_some()).count()
+        self.objects.live()
     }
 
     /// `[[DefineOwnProperty]]` (§10.1.6) — apply `descriptor` to `object`'s `key`, if the rules
@@ -842,7 +824,7 @@ impl Heap {
         name: SymbolId,
         element: PrivateElement,
     ) -> bool {
-        let Some(object) = self.objects.get_mut(object.0).and_then(Option::as_mut) else {
+        let Some(object) = self.objects.get_mut(object) else {
             return false;
         };
         let elements = object.private.get_or_insert_with(Vec::new);
@@ -859,7 +841,7 @@ impl Heap {
     /// object with no `#x` is a TypeError rather than a new field, which is what makes the set of
     /// private names an object carries fixed at construction and usable as a brand.
     pub fn set_private_field(&mut self, object: ObjectId, name: SymbolId, value: Value) -> bool {
-        let Some(object) = self.objects.get_mut(object.0).and_then(Option::as_mut) else {
+        let Some(object) = self.objects.get_mut(object) else {
             return false;
         };
         let Some(elements) = object.private.as_mut() else {
@@ -888,7 +870,7 @@ impl Heap {
     /// nobody could ever see be `false` is a branch no test can pin, which mutation coverage said by
     /// surviving a flip of it.
     pub fn set_home_object(&mut self, function: ObjectId, home: ObjectId) {
-        if let Some(object) = self.objects.get_mut(function.0).and_then(Option::as_mut) {
+        if let Some(object) = self.objects.get_mut(function) {
             object.home = Some(home);
         }
     }

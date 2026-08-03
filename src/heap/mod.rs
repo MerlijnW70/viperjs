@@ -258,7 +258,7 @@ pub struct Heap {
     /// A `Box<[u16]>` and not a `Vec<u16>`: a String is immutable once made — §6.1.4 gives no way
     /// to change one — so the spare capacity a `Vec` keeps for growth would be paid for by every
     /// string in the program and used by none of them.
-    strings: Vec<Option<Box<[u16]>>>,
+    strings: arena::Arena<Box<[u16]>>,
     /// The BigInts, by the handle that addresses one.
     ///
     /// Not interned, and deliberately not: two BigInts with the same digits are the same *value*
@@ -282,7 +282,7 @@ pub struct Heap {
     /// A separate arena from the strings, so that an [`ObjectId`] cannot address a String and the
     /// compiler says so — one arena per type is DR-0010's second consequence, after the shape of
     /// the handle itself.
-    objects: Vec<Option<Object>>,
+    objects: arena::Arena<Object>,
     /// Every environment ever made — one per call, plus the script's.
     ///
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
@@ -306,7 +306,7 @@ pub struct Heap {
     /// Its own arena for the reason the others have theirs: a [`SymbolId`] cannot address a String
     /// and the compiler says so. Nothing is ever removed while the collector does not reach here,
     /// on the same terms as the rest.
-    symbols: Vec<Option<Symbol>>,
+    symbols: arena::Arena<Symbol>,
     /// §20.4.2.2's global Symbol registry — what `Symbol.for` has already handed out.
     ///
     /// Keyed by the *interned* String, so `Symbol.for("a")` twice is one Symbol. The registry
@@ -387,10 +387,8 @@ impl Heap {
     /// so it is valid by construction — see DR-0010 for why the handle is a `usize` rather than
     /// something narrower that would need one.
     pub fn new_string(&mut self, units: Vec<u16>) -> StringId {
-        let id = StringId(self.strings.len());
         self.string_units += units.len();
-        self.strings.push(Some(units.into_boxed_slice()));
-        id
+        self.strings.place(units.into_boxed_slice())
     }
 
     /// Roughly how many bytes this heap has taken, and the number DR-0013's budget is against.
@@ -505,7 +503,7 @@ impl Heap {
     /// that needs an identifier on every handle, and one realm on one thread means no script can
     /// produce the situation — see DR-0010 for the whole of the argument.
     pub fn string(&self, id: StringId) -> Option<&[u16]> {
-        self.strings.get(id.0)?.as_deref()
+        self.strings.get(id).map(|units| &**units)
     }
 
     /// The one String on this heap with these contents, allocating it if there is not one yet.
@@ -550,12 +548,10 @@ impl Heap {
     /// A fresh Symbol every time, which is the entire contract: `Symbol("a") === Symbol("a")` is
     /// false, and there is no way to ask for one that already exists except through the registry.
     pub fn new_symbol(&mut self, description: Option<StringId>) -> SymbolId {
-        let id = SymbolId(self.symbols.len());
-        self.symbols.push(Some(Symbol {
+        self.symbols.place(Symbol {
             description,
             registered: None,
-        }));
-        id
+        })
     }
 
     /// The Symbol `key` names in §20.4.2.2's registry, made and filed if it is not there yet.
@@ -568,7 +564,7 @@ impl Heap {
             return *found;
         }
         let id = self.new_symbol(Some(key));
-        if let Some(Some(symbol)) = self.symbols.get_mut(id.index()) {
+        if let Some(symbol) = self.symbols.get_mut(id) {
             symbol.registered = Some(key);
         }
         self.registry.insert(key, id);
@@ -579,7 +575,7 @@ impl Heap {
     ///
     /// The same narrow promise [`Heap::string`] makes about a foreign handle, for the same reason.
     pub fn symbol(&self, id: SymbolId) -> Option<&Symbol> {
-        self.symbols.get(id.index())?.as_ref()
+        self.symbols.get(id)
     }
 
     /// What a Symbol was described as, if anything — §20.4.3.2's `[[Description]]`.
@@ -594,7 +590,7 @@ impl Heap {
 
     /// How many Symbols this heap holds.
     pub fn symbol_count(&self) -> usize {
-        self.symbols.iter().filter(|slot| slot.is_some()).count()
+        self.symbols.live()
     }
 
     /// The interned String with these contents, if this heap has already interned one.
@@ -617,7 +613,7 @@ impl Heap {
         // before — `o[k]` in a loop, or the same key on a thousand objects — and answering it
         // needs only to *read* the units, where the copy below exists solely to release the borrow
         // on `strings` before `intern` takes the heap mutably.
-        let Some(units) = self.strings.get(id.0).and_then(Option::as_ref) else {
+        let Some(units) = self.strings.get(id) else {
             // A handle this heap never issued has no contents, so it interns as the empty String —
             // the same answer [`Heap::string`] gives it, and for the same reason.
             return self.intern(&[]);
@@ -643,7 +639,7 @@ impl Heap {
     /// For tests and for whatever reports on the heap later. It counts allocations rather than
     /// live values, which is the same number until something sweeps.
     pub fn string_count(&self) -> usize {
-        self.strings.iter().filter(|slot| slot.is_some()).count()
+        self.strings.live()
     }
 }
 
