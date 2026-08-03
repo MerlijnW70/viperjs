@@ -535,3 +535,243 @@ fn reading_a_namespaces_export_before_its_module_ran_is_a_reference_error() {
         "undefined"
     );
 }
+
+#[test]
+fn a_re_export_names_another_modules_binding_and_makes_none_of_its_own() {
+    // §16.2.1.3 — an indirect export is **not** an import: `a` leaves this module without ever
+    // being a name in it, which is why the middle module below cannot read what it passes on.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "deep",
+                    "export let a = 1; export function bump() { a = a + 1; }"
+                ),
+                ("middle", "export { a, bump } from 'deep';"),
+                ("main", "import { a, bump } from 'middle'; bump(); a"),
+            ],
+            "main"
+        ),
+        "2"
+    );
+    assert_eq!(
+        run_graph(
+            &[
+                ("deep", "export var a = 1;"),
+                (
+                    "middle",
+                    "export { a } from 'deep'; \
+                     export var saw = typeof a === 'undefined' ? 'unbound' : 'bound';"
+                ),
+                ("main", "import { saw } from 'middle'; saw"),
+            ],
+            "main"
+        ),
+        // A module is strict, so reading a name nothing bound would throw — `typeof` is the one
+        // operator that asks without reading.
+        "unbound"
+    );
+    // A chain of them: §16.2.1.6.3 walks as far as it has to, and the binding it lands on is the
+    // one the original module has.
+    assert_eq!(
+        run_graph(
+            &[
+                ("one", "export let n = 5;"),
+                ("two", "export { n } from 'one';"),
+                ("three", "export { n as m } from 'two';"),
+                ("main", "import { m } from 'three'; m"),
+            ],
+            "main"
+        ),
+        "5"
+    );
+}
+
+#[test]
+fn a_star_export_carries_every_name_but_default() {
+    // §16.2.1.6.2 step 5.b — the one name a star does not bring, which is what makes
+    // `export * from "m"` safe to write over a module that has a default.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "deep",
+                    "export var a = 1; export var b = 2; export default 3;"
+                ),
+                ("middle", "export * from 'deep'; export default 4;"),
+                (
+                    "main",
+                    "import d, { a, b } from 'middle'; a + ':' + b + ':' + d"
+                ),
+            ],
+            "main"
+        ),
+        "1:2:4"
+    );
+    // …and it is transitive: a star of a star reaches the original binding.
+    assert_eq!(
+        run_graph(
+            &[
+                ("one", "export var deep = 7;"),
+                ("two", "export * from 'one';"),
+                ("three", "export * from 'two';"),
+                ("main", "import { deep } from 'three'; deep"),
+            ],
+            "main"
+        ),
+        "7"
+    );
+    // A cycle of star exports terminates — §16.2.1.6.2 step 1 and §16.2.1.6.3 step 1 — rather than
+    // walking for ever, and the name is still found by the path that has it.
+    assert_eq!(
+        run_graph(
+            &[
+                ("left", "export * from 'right'; export var here = 1;"),
+                ("right", "export * from 'left'; export var there = 2;"),
+                ("main", "import { here, there } from 'left'; here + there"),
+            ],
+            "main"
+        ),
+        "3"
+    );
+}
+
+#[test]
+fn a_name_two_star_exports_disagree_about_is_refused_only_when_it_is_asked_for() {
+    // §16.2.1.6.3 step 6.c — ambiguous, which is a SyntaxError for the *import* and not for the
+    // module that has it: `middle` below is perfectly usable so long as nobody asks for `same`.
+    let modules: &[(&str, &str)] = &[
+        ("left", "export var same = 1; export var only_left = 10;"),
+        ("right", "export var same = 2;"),
+        ("middle", "export * from 'left'; export * from 'right';"),
+    ];
+    let mut asking: Vec<(&str, &str)> = modules.to_vec();
+    asking.push(("main", "import { only_left } from 'middle'; only_left"));
+    assert_eq!(run_graph(&asking, "main"), "10");
+    // …and the same graph, asked for the ambiguous name, refuses before anything runs.
+    let mut heap = Heap::new();
+    let mut graph = crate::vm::Graph::new();
+    let mut refusing: Vec<(&str, &str)> = modules.to_vec();
+    refusing.push(("main", "import { same } from 'middle'; same"));
+    for (specifier, source) in &refusing {
+        let parsed = crate::parser::parse_module(source).expect("parses"); // the test is about linking
+        let chunk = crate::compile::compile_module(&parsed, &mut heap).expect("compiles"); // same
+        graph.insert(specifier, std::rc::Rc::new(chunk));
+    }
+    let mut vm = Vm::new(&mut heap);
+    let refused = vm
+        .run_module_graph("main", &graph, &mut heap)
+        .expect("well formed"); // same
+    assert!(
+        matches!(refused, Err(ref error) if error.message().contains("does not export")),
+        "{refused:?}"
+    );
+    // A diamond is **not** ambiguous: both paths reach the same binding, so the answer agrees with
+    // itself and the name resolves.
+    assert_eq!(
+        run_graph(
+            &[
+                ("base", "export var shared = 4;"),
+                ("left", "export * from 'base';"),
+                ("right", "export * from 'base';"),
+                ("middle", "export * from 'left'; export * from 'right';"),
+                ("main", "import { shared } from 'middle'; shared"),
+            ],
+            "main"
+        ),
+        "4"
+    );
+}
+
+#[test]
+fn a_star_export_under_a_name_is_the_other_modules_whole_namespace() {
+    // §16.2.1.6.3 step 3.a.ii — `export * as n from "m"` exports one name whose value is `m`'s
+    // namespace object, and not any binding of `m`.
+    assert_eq!(
+        run_graph(
+            &[
+                ("deep", "export var a = 1; export var b = 2;"),
+                ("middle", "export * as inner from 'deep';"),
+                (
+                    "main",
+                    "import { inner } from 'middle'; import * as direct from 'deep'; \
+                     Object.keys(inner).join(',') + ':' + (inner === direct)"
+                ),
+            ],
+            "main"
+        ),
+        // §16.2.1.10 memoises one namespace per module, so the one reached this way is the same
+        // object a direct `import * as` gives.
+        "a,b:true"
+    );
+    // …and a namespace object built over re-exports lists them all, which is §16.2.1.6.2 feeding
+    // §10.4.6.10.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "deep",
+                    "export var z = 1; export var a = 2; export default 3;"
+                ),
+                ("middle", "export * from 'deep'; export var own = 4;"),
+                (
+                    "main",
+                    "import * as ns from 'middle'; Object.keys(ns).join(',')"
+                ),
+            ],
+            "main"
+        ),
+        "a,own,z"
+    );
+}
+
+#[test]
+fn a_namespace_accepts_a_define_only_when_it_changes_nothing() {
+    // §10.4.6.6 — the descriptor has to match the export exactly, attributes and all. A bare
+    // `{ value }` does not: an omitted `configurable` is read as `false`… and the export's is
+    // false too, so what refuses it is the *value* alone being restated as a full descriptor.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export var a = 1;"),
+                (
+                    "main",
+                    "import * as ns from 'dep';                      var out = [];                      out.push('same:' + Reflect.defineProperty(ns, 'a',                        { value: 1, writable: true, enumerable: true, configurable: false }));                      out.push('other:' + Reflect.defineProperty(ns, 'a', { value: 2 }));                      out.push('configurable:' + Reflect.defineProperty(ns, 'a',                        { value: 1, writable: true, enumerable: true, configurable: true }));                      out.push('accessor:' + Reflect.defineProperty(ns, 'a',                        { get: function () { return 1; } }));                      out.push('fresh:' + Reflect.defineProperty(ns, 'b', { value: 1 }));                      out.push('a:' + ns.a);                      out.join(' ')"
+                ),
+            ],
+            "main"
+        ),
+        "same:true other:false configurable:false accessor:false fresh:false a:1"
+    );
+}
+
+#[test]
+fn a_re_export_requires_its_module_even_when_no_name_crosses() {
+    // §16.2.1.4's `[[RequestedModules]]` — `export {} from "m"` names nothing and still depends
+    // on `m`, so a specifier nothing answers is a resolution error rather than a line with no
+    // effect. Without the edge the module was never loaded and the line did nothing at all.
+    let mut heap = Heap::new();
+    let mut graph = crate::vm::Graph::new();
+    let parsed = crate::parser::parse_module("export {} from 'nowhere'; 1").expect("parses"); // the test is about linking
+    let chunk = crate::compile::compile_module(&parsed, &mut heap).expect("compiles"); // same
+    graph.insert("main", std::rc::Rc::new(chunk));
+    let mut vm = Vm::new(&mut heap);
+    let refused = vm
+        .run_module_graph("main", &graph, &mut heap)
+        .expect("well formed"); // same
+    assert!(
+        matches!(refused, Err(ref error) if error.message().contains("no module was supplied")),
+        "{refused:?}"
+    );
+    // …and one that *is* supplied is evaluated, in order, like any other dependency.
+    assert_eq!(
+        run_graph(
+            &[
+                ("side", "globalThis.ran = 'yes';"),
+                ("main", "export {} from 'side'; globalThis.ran"),
+            ],
+            "main"
+        ),
+        "yes"
+    );
+}

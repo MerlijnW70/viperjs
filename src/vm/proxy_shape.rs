@@ -565,6 +565,36 @@ impl Vm {
         descriptor: &PropertyDescriptor,
         heap: &mut Heap,
     ) -> Completion<DefineOutcome> {
+        // §10.4.6.6 — a namespace accepts a define only when it changes nothing: the descriptor
+        // has to match the export exactly, attributes and all. Everything else is refused, which is
+        // what makes `Object.defineProperty(ns, "a", {value: 1})` fail even for the value it holds
+        // — the descriptor it would have to match is `configurable: false`, and a bare `value` is
+        // read as configurable.
+        if heap.is_namespace(object) {
+            let Some(export) = heap.namespace_export(object, key) else {
+                // Not an export, and a namespace has no other data property to redefine. Its
+                // `@@toStringTag` is non-configurable, so this refuses that too.
+                return Ok(DefineOutcome::Refused);
+            };
+            let crate::heap::Export::Value(value) = export else {
+                return Err(crate::value::Abrupt::reference_error(
+                    "a module binding was read before its module gave it a value",
+                ));
+            };
+            let unchanged = descriptor.getter.is_none()
+                && descriptor.setter.is_none()
+                && descriptor.configurable != Some(true)
+                && descriptor.enumerable != Some(false)
+                && descriptor.writable != Some(false)
+                && descriptor
+                    .value
+                    .is_none_or(|asked| asked.same_value(&value, heap));
+            return Ok(match unchanged {
+                true => DefineOutcome::Defined,
+                false => DefineOutcome::Refused,
+            });
+        }
+
         if let Some(answer) = self.proxy_define(object, key, descriptor, heap)? {
             return Ok(answer);
         }

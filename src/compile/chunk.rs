@@ -156,6 +156,13 @@ pub struct Chunk {
     /// decided when the graph is linked, because until then there is no environment to bind it to.
     pub(super) imports: Vec<ImportEntry>,
     /// §16.2.1.3's `ExportEntries` — what other modules may take from this one.
+    /// The modules an `export * from "m"` re-exports everything of — §16.2.1.3's
+    /// `[[StarExportEntries]]`.
+    ///
+    /// Apart from the list below because a star export contributes **no name**: which names
+    /// it brings is a question about the other module, and §16.2.1.6.3 can only ask it once
+    /// the graph exists.
+    pub(super) star_exports: Vec<Box<str>>,
     pub(super) exports: Vec<ExportEntry>,
 }
 
@@ -177,8 +184,31 @@ pub struct ImportEntry {
 pub struct ExportEntry {
     /// The name other modules ask for.
     pub export_name: Box<str>,
-    /// The slot in this module's environment that holds it.
-    pub slot: u32,
+    /// Where the value comes from — this module, or one it names.
+    pub from: ExportSource,
+}
+
+/// Where an exported name's value lives — §16.2.1.3's `[[LocalName]]` against its `[[Module]]`.
+///
+/// The two are genuinely different facts and not one with a hole in it. A *local* export is a slot
+/// this module has, settled when it is compiled. An *indirect* one names a module and a name in it,
+/// and what that resolves to is not knowable until the graph exists — §16.2.1.6.3 `ResolveExport`
+/// is the walk, and it may pass through several modules or find nothing at all.
+#[derive(Debug, Clone)]
+pub enum ExportSource {
+    /// `export var a`, `export { a }` — a slot in this module's own environment.
+    Local(u32),
+    /// `export { a } from "m"`, `export * as n from "m"` — a name in another module.
+    ///
+    /// This module gets **no binding**: §16.2.1.3 says an indirect export is not an import, so
+    /// `export { a } from "m"; a;` is a ReferenceError here even though `a` leaves this module.
+    Indirect {
+        /// The `ModuleSpecifier` the value comes from.
+        specifier: Box<str>,
+        /// The name asked of it, or `None` for `export * as n from "m"` — whose value is that
+        /// module's whole namespace object rather than one of its names.
+        import_name: Option<Box<str>>,
+    },
 }
 
 /// One scope a body opens: how many slots it has, and what the source called them.
@@ -1125,6 +1155,12 @@ impl Chunk {
     /// What others may take from it — §16.2.1.3's `ExportEntries`.
     pub fn exports(&self) -> &[ExportEntry] {
         &self.exports
+    }
+
+    /// The specifiers this module re-exports everything of — §16.2.1.3's `[[StarExportEntries]]`.
+    #[must_use]
+    pub fn star_exports(&self) -> &[Box<str>] {
+        &self.star_exports
     }
 
     /// Add an instruction.

@@ -226,8 +226,22 @@ impl Heap {
             // §10.4.6 — a namespace object reads a module's slots and nothing on this walk points
             // at that module's chain, exactly as an import binding reaches sideways. Freeing it
             // would leave a namespace whose every property reads a slot that is gone.
-            if let Some(environment) = self.namespace_environment(id) {
+            if let Some((environment, bindings)) = self.namespace_roots(id) {
                 self.mark_environment(environment, marked);
+                // Each name separately, because a re-exported one is a slot of a module this
+                // namespace's own module may never have named — §16.2.1.6.3's walk can pass through
+                // several — and `export * as n` holds a *value*, another namespace object, which
+                // nothing else on this walk points at either.
+                for binding in bindings {
+                    match binding {
+                        crate::heap::NamespaceBinding::Slot(environment, _) => {
+                            self.mark_environment(environment, marked);
+                        }
+                        crate::heap::NamespaceBinding::Value(value) => {
+                            self.mark_value(value, marked);
+                        }
+                    }
+                }
             }
             // An arrow's captured `this` is reachable *through the arrow*, and nothing else may
             // be holding it: `function F() { return () => this; }` leaves the constructed object

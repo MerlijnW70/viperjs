@@ -17829,7 +17829,6 @@ language/global-code/script-decl-var.js :: it threw TypeError: what was called i
 language/global-code/script-decl-var.js (strict) :: it threw TypeError: what was called is not a function
 language/identifier-resolution/assign-to-global-undefined.js (strict) :: expected a ReferenceError at runtime time, and nothing was thrown
 language/import/import-attributes/json-extensibility-array.js :: it did not parse: "./json-value-array_FIXTURE.json" does not export "default"
-language/import/import-attributes/json-invalid.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: "./json-invalid_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-value-array.js :: it did not parse: "./json-value-array_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-value-boolean.js :: it did not parse: "./json-value-boolean_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-value-null.js :: it did not parse: "./json-value-null_FIXTURE.json" does not export "default"
@@ -17973,16 +17972,20 @@ language/literals/string/legacy-non-octal-escape-sequence-7-strict-explicit-prag
 language/literals/string/legacy-non-octal-escape-sequence-8-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/literals/string/legacy-non-octal-escape-sequence-9-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/literals/string/legacy-octal-escape-sequence-prologue-strict.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from-and-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
+language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/eval-export-dflt-expr-err-eval.js :: expected a Test262Error and it threw an object with no name
+language/module-code/eval-rqstd-order.js :: it threw an object with no name: Expected SameValue(«"undefined23468597"», «"123456789"») to be true
 language/module-code/eval-self-abrupt.js :: expected a Test262Error and it threw an object with no name
+language/module-code/export-expname-from-as-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
+language/module-code/export-expname-from-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it was a SyntaxError before anything ran: "\0entry" does not export "�"
+language/module-code/export-expname-import-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it was a SyntaxError before anything ran: "./export-expname_FIXTURE.js" does not export "�"
 language/module-code/export-expname-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/module-code/import-attributes/allow-nlt-before-with.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: "./ensure-linking-error_FIXTURE.js" does not export "nonExistent"
+language/module-code/import-attributes/early-dup-attribute-key-export.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/import-attributes/early-dup-attribute-key-import-nobinding.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/import-attributes/early-dup-attribute-key-import-withbinding.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/module-code/instn-named-err-not-found-as.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: "./instn-named-err-not-found-empty_FIXTURE.js" does not export "x"
-language/module-code/instn-named-err-not-found-dflt.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: "./instn-named-err-not-found-empty_FIXTURE.js" does not export "default"
-language/module-code/instn-named-err-not-found.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: "./instn-named-err-not-found-empty_FIXTURE.js" does not export "x"
 language/module-code/instn-resolve-empty-import.js :: expected a SyntaxError at resolution time, and it threw the string Test262: This statement should not be evaluated. while running
+language/module-code/namespace/internals/define-own-property.js :: it threw an object with no name: Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
 language/module-code/namespace/internals/super-access-to-tdz-binding.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
 language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name

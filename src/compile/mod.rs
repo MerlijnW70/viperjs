@@ -48,7 +48,8 @@ mod pattern;
 mod statement;
 
 pub use self::chunk::{
-    Chunk, ExportEntry, ImportEntry, Instruction, Scope, ShortCircuit, SpreadCall, Template,
+    Chunk, ExportEntry, ExportSource, ImportEntry, Instruction, Scope, ShortCircuit, SpreadCall,
+    Template,
 };
 
 use self::chunk::Unpatched;
@@ -366,11 +367,55 @@ fn record_exports(
             };
             vec![(local, "default".into())]
         }
-        ExportKind::All { .. } | ExportKind::NamedFrom { .. } => {
-            return Err(unsupported(
-                "an `export` that reaches into another module",
-                declaration.span,
-            ));
+        // §16.2.1.3 — an *indirect* export names another module and binds nothing here. The
+        // resolution is §16.2.1.6.3's and happens at link time, because what a specifier answers is
+        // the host's business and a chain of them may pass through several modules.
+        ExportKind::NamedFrom {
+            specifiers,
+            specifier,
+            ..
+        } => {
+            let from: Box<str> = String::from_utf16_lossy(specifier).into();
+            // §16.2.1.4's `[[RequestedModules]]` — the module is a dependency whether or not any
+            // name crosses. `export {} from "m"` names nothing and still requires `m`, so a
+            // specifier nothing answers is a resolution error rather than a line with no effect.
+            // The same shape `import "m";` makes: an edge that binds nothing.
+            compiler.chunk.imports.push(chunk::ImportEntry {
+                specifier: from.clone(),
+                import_name: None,
+                slot: None,
+            });
+            for entry in specifiers {
+                compiler.chunk.exports.push(chunk::ExportEntry {
+                    export_name: export_name(&entry.exported),
+                    from: chunk::ExportSource::Indirect {
+                        specifier: from.clone(),
+                        import_name: Some(export_name(&entry.local)),
+                    },
+                });
+            }
+            return Ok(());
+        }
+        // `export * as n from "m"` exports one name whose value is the *whole* of `m` — §16.2.1.10's
+        // namespace object rather than any name in it. `export * from "m"` exports no name of its
+        // own at all: which names it brings is a question about `m` that only the graph can answer.
+        ExportKind::All {
+            exported,
+            specifier,
+            ..
+        } => {
+            let from: Box<str> = String::from_utf16_lossy(specifier).into();
+            match exported {
+                Some(name) => compiler.chunk.exports.push(chunk::ExportEntry {
+                    export_name: export_name(name),
+                    from: chunk::ExportSource::Indirect {
+                        specifier: from,
+                        import_name: None,
+                    },
+                }),
+                None => compiler.chunk.star_exports.push(from),
+            }
+            return Ok(());
         }
     };
     for (local, exported) in specifiers {
@@ -382,9 +427,31 @@ fn record_exports(
                 declaration.span,
             ));
         };
+        // §16.2.1.4 step 12 — an `export { a }` whose `a` is an **imported** name is not a local
+        // export at all: it becomes an indirect one naming the module the import came from. That is
+        // what makes `import {x} from "m"; export {x}` and `export {x} from "m"` resolve to the
+        // *same* binding, so a module reached by both is unambiguous rather than a conflict.
+        //
+        // Found by slot rather than by name, because the import entry records the name the other
+        // module exports and not the one this one bound it as.
+        let from = match compiler
+            .chunk
+            .imports
+            .iter()
+            .find(|entry| entry.slot == Some(slot))
+        {
+            // A *namespace* import is the exception the same step makes: `import * as n from "m";
+            // export {n}` exports a binding this module holds, whose value is an object, and there
+            // is no name in `m` to point at.
+            Some(entry) if entry.import_name.is_some() => chunk::ExportSource::Indirect {
+                specifier: entry.specifier.clone(),
+                import_name: entry.import_name.clone(),
+            },
+            Some(_) | None => chunk::ExportSource::Local(slot),
+        };
         compiler.chunk.exports.push(chunk::ExportEntry {
             export_name: exported,
-            slot,
+            from,
         });
     }
     Ok(())
@@ -537,14 +604,9 @@ fn module_statements(module: &Module) -> Result<Vec<Stmt>, CompileError> {
                 crate::ast::ExportKind::Named(_)
                 | crate::ast::ExportKind::Default(crate::ast::ExportDefault::Expression(_)) => {}
                 // The two that reach into another module's *list* rather than at a name of its
-                // own. Both need §16.2.1.6.3's `ResolveExport` to walk further than one module,
-                // and a namespace object for `export * as n`.
-                crate::ast::ExportKind::All { .. } | crate::ast::ExportKind::NamedFrom { .. } => {
-                    return Err(unsupported(
-                        "an `export` that reaches into another module",
-                        declaration.span,
-                    ));
-                }
+                // own. Neither declares anything here — §16.2.1.3 is explicit that an indirect
+                // export is not an import — so there is nothing for either hoisting pass to do.
+                crate::ast::ExportKind::All { .. } | crate::ast::ExportKind::NamedFrom { .. } => {}
             },
         }
     }

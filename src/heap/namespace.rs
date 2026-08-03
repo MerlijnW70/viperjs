@@ -35,12 +35,14 @@ use crate::value::Value;
 /// What a namespace object is, beyond being an object — §10.4.6's `[[Module]]` and `[[Exports]]`.
 #[derive(Debug)]
 pub(super) struct Namespace {
-    /// The exporting module's environment, whose slots the names below read.
+    /// The module this is the namespace *of*, as its environment.
     ///
     /// `[[Module]]` is a Module Record in the specification and an environment here, because the
-    /// only thing §10.4.6 ever asks a module for is `GetBindingValue` on its environment.
+    /// only thing §10.4.6 ever asks a module for is `GetBindingValue` on its environment. Kept
+    /// beside the per-name bindings rather than instead of them, because a re-exported name is a
+    /// slot of a *different* module and this one still has to be traced.
     pub(super) environment: EnvironmentId,
-    /// `[[Exports]]` — each exported name and the slot it names, **sorted by code unit**.
+    /// `[[Exports]]` — each exported name and where its value is, **sorted by code unit**.
     ///
     /// Sorted once here rather than at every `[[OwnPropertyKeys]]`, because the list cannot change:
     /// §16.2.1.10 settles a module's exports at link time and nothing afterwards adds one.
@@ -48,7 +50,20 @@ pub(super) struct Namespace {
     /// The names are **interned**, so looking one up is comparing two handles rather than two
     /// strings: a `PropertyKey::String` is already interned, which is what makes that comparison
     /// the same question as comparing the text.
-    pub(super) exports: Box<[(StringId, u32)]>,
+    pub(super) exports: Box<[(StringId, Binding)]>,
+}
+
+/// Where one exported name's value is — §16.2.1.6.3's two kinds of resolution.
+///
+/// A re-exported name lives in a module this one may never have heard of, so a namespace cannot be
+/// one environment and a list of offsets into it: each name carries its own.
+#[derive(Debug, Clone, Copy)]
+pub enum Binding {
+    /// A slot of some module's environment, read live — the ordinary kind.
+    Slot(EnvironmentId, u32),
+    /// A fixed value, which `export * as n from "m"` is: the name's value is `m`'s whole namespace
+    /// object, and there is no binding anywhere that holds it.
+    Value(Value),
 }
 
 /// Whether a binding could be read, and what it held — the shape §10.4.6.8 step 9 needs.
@@ -77,28 +92,8 @@ impl Heap {
     pub(crate) fn new_namespace(
         &mut self,
         environment: EnvironmentId,
-        exports: Vec<(Box<str>, u32)>,
         to_string_tag: Option<super::SymbolId>,
     ) -> ObjectId {
-        let mut exports: Vec<(StringId, u32)> = exports
-            .into_iter()
-            .map(|(name, slot)| {
-                let units: Vec<u16> = name.encode_utf16().collect();
-                (self.intern(&units), slot)
-            })
-            .collect();
-        // §10.4.6.10 — by code unit, and read out of the heap rather than compared as `str`: the
-        // two orders differ above the BMP, where UTF-8 sorts a code point after every surrogate
-        // pair and UTF-16 sorts the pair by its lead unit. Exported names are identifiers or string
-        // literals, so both really do occur.
-        exports.sort_by(|left, right| {
-            self.string(left.0)
-                .unwrap_or(&[])
-                .cmp(self.string(right.0).unwrap_or(&[]))
-        });
-        // §16.2.1.10 step 4 — a name two `export *`s both reach is listed once. Interned, so this
-        // is comparing handles.
-        exports.dedup_by(|left, right| left.0 == right.0);
         let object = self.new_object(None);
         // §10.4.6.12 step 8 — the one own property that is not an export, and the only reason this
         // needs the realm's symbol table at all. Defined *before* the object is sealed, because
@@ -130,10 +125,44 @@ impl Heap {
             object,
             Namespace {
                 environment,
-                exports: exports.into_boxed_slice(),
+                exports: Box::new([]),
             },
         );
         object
+    }
+
+    /// Give a namespace object its export list — the second half of `GetModuleNamespace`.
+    ///
+    /// Apart from making the object because §16.2.1.6.3's resolution can come back around to the
+    /// module it started from: `export * as a from "b"` in one module and the same pointing back is
+    /// a legal graph, and the walk terminates only because the object already exists to be found.
+    /// So the object is made, memoised, and only then filled.
+    ///
+    /// Calling this twice replaces the list. Nothing does — the linker fills each namespace once —
+    /// and the alternative is a second way to fail that says nothing a caller could act on.
+    pub(crate) fn fill_namespace(&mut self, object: ObjectId, exports: Vec<(Box<str>, Binding)>) {
+        let mut exports: Vec<(StringId, Binding)> = exports
+            .into_iter()
+            .map(|(name, binding)| {
+                let units: Vec<u16> = name.encode_utf16().collect();
+                (self.intern(&units), binding)
+            })
+            .collect();
+        // §10.4.6.10 — by code unit, and read out of the heap rather than compared as `str`: the
+        // two orders differ above the BMP, where UTF-8 sorts a code point after every surrogate
+        // pair and UTF-16 sorts the pair by its lead unit. Exported names are identifiers or string
+        // literals, so both really do occur.
+        exports.sort_by(|left, right| {
+            self.string(left.0)
+                .unwrap_or(&[])
+                .cmp(self.string(right.0).unwrap_or(&[]))
+        });
+        // §16.2.1.10 step 4 — a name two `export *`s both reach is listed once. Interned, so this
+        // is comparing handles.
+        exports.dedup_by(|left, right| left.0 == right.0);
+        if let Some(found) = self.namespaces.get_mut(&object) {
+            found.exports = exports.into_boxed_slice();
+        }
     }
 
     /// The environment a namespace object reads, if this object is one.
@@ -141,8 +170,15 @@ impl Heap {
     /// For the collector, which has to keep the exporting module's environment alive: a namespace
     /// reaches **sideways** into a chain nothing else here points at, exactly as an import binding
     /// does, and a walk that followed only parents would free the slots it reads.
-    pub(super) fn namespace_environment(&self, object: ObjectId) -> Option<EnvironmentId> {
-        self.namespaces.get(&object).map(|found| found.environment)
+    pub(super) fn namespace_roots(
+        &self,
+        object: ObjectId,
+    ) -> Option<(EnvironmentId, Vec<Binding>)> {
+        let found = self.namespaces.get(&object)?;
+        Some((
+            found.environment,
+            found.exports.iter().map(|(_, binding)| *binding).collect(),
+        ))
     }
 
     /// Whether this object is §10.4.6's exotic kind at all.
@@ -164,18 +200,23 @@ impl Heap {
         // §10.4.6.8 step 2 — a Symbol is not an export and goes to the ordinary object, which is
         // where `@@toStringTag` is.
         let name = key.as_string()?;
-        let slot = found
+        let binding = found
             .exports
             .iter()
             .find(|(export, _)| *export == name)
-            .map(|(_, slot)| *slot)?;
-        Some(match self.variable(found.environment, slot) {
-            Some(Some(value)) => Export::Value(value),
-            // A slot the environment does not have cannot happen — the linker built the list from
-            // the same chunk that made the slots — but "cannot happen" is not a thing to encode as
-            // a panic, and a module in a cycle really can be asked before its `let` has run. Both
-            // are the same answer to the program: the binding is not readable yet.
-            Some(None) | None => Export::Uninitialised,
+            .map(|(_, binding)| *binding)?;
+        Some(match binding {
+            // `export * as n from "m"` — the value is another module's namespace object and there
+            // is no binding anywhere that could be in a dead zone.
+            Binding::Value(value) => Export::Value(value),
+            Binding::Slot(environment, slot) => match self.variable(environment, slot) {
+                Some(Some(value)) => Export::Value(value),
+                // A slot the environment does not have cannot happen — the linker built the list
+                // from the same chunk that made the slots — but "cannot happen" is not a thing to
+                // encode as a panic, and a module in a cycle really can be asked before its `let`
+                // has run. Both are the same answer to the program: it is not readable yet.
+                Some(None) | None => Export::Uninitialised,
+            },
         })
     }
 

@@ -89,7 +89,7 @@ mod weak_ref;
 pub use self::arguments::{ArgumentsMap, Incoming};
 pub use self::callable::{Bound, Callable, Native, NativeCall, Resumption};
 pub use self::iteration::{Iterated, Iteration};
-pub use self::namespace::Export;
+pub use self::namespace::{Binding as NamespaceBinding, Export};
 pub use self::symbol::{Symbol, SymbolId};
 
 /// What `[[DefineOwnProperty]]` came to.

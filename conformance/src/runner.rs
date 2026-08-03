@@ -317,8 +317,23 @@ const PROBE: &str = "$__status;";
 /// anything ran", which is the only distinction praxis draws — so both are accepted here and
 /// neither is checked against the other.
 fn judge_early(negative: Option<&Negative>, why: &str) -> Verdict {
+    judge_before_running(negative, why, &["parse", "early"])
+}
+
+/// The same judgement for §16.2.1.5's own errors, which test262 files under a third phase.
+///
+/// `resolution` is what a *graph* failed at rather than what a file did: a specifier nothing
+/// answers, a name nothing exports, a name two star exports disagree about. A host reports all
+/// three as a SyntaxError, and the phase is what tells them from a file that would not parse — so a
+/// test asking for one must not be satisfied by the other.
+fn judge_resolution(negative: Option<&Negative>, why: &str) -> Verdict {
+    judge_before_running(negative, why, &["resolution"])
+}
+
+/// A SyntaxError raised before the program ran, judged against the phases that accept one.
+fn judge_before_running(negative: Option<&Negative>, why: &str, phases: &[&str]) -> Verdict {
     match negative {
-        Some(expected) if matches!(expected.phase.as_str(), "parse" | "early") => {
+        Some(expected) if phases.contains(&expected.phase.as_str()) => {
             match expected.kind.as_str() {
                 "SyntaxError" => Verdict::Passed,
                 other => Verdict::Failed(format!(
@@ -350,8 +365,27 @@ fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Resu
     let Some(chunk) = graph.get(from).cloned() else {
         return Ok(());
     };
-    for entry in chunk.imports() {
-        let specifier = &*entry.specifier;
+    // Every edge, and an `export` makes them too: `export * from "m"` and `export { a } from "m"`
+    // name a module this one never imports, and it still has to be here for §16.2.1.6.3 to walk
+    // into. Missing them, a re-export resolved to nothing and read as "does not export".
+    let reached = chunk
+        .imports()
+        .iter()
+        .map(|entry| &entry.specifier)
+        .chain(
+            chunk
+                .exports()
+                .iter()
+                .filter_map(|export| match &export.from {
+                    praxis::compile::ExportSource::Indirect { specifier, .. } => Some(specifier),
+                    praxis::compile::ExportSource::Local(_) => None,
+                }),
+        )
+        .chain(chunk.star_exports())
+        .cloned()
+        .collect::<Vec<_>>();
+    for entry in reached {
+        let specifier = &*entry;
         if graph.get(specifier).is_some() {
             continue;
         }
@@ -453,9 +487,10 @@ fn evaluate(
         }
         match vm.run_module_graph(ENTRY, &graph, &mut heap) {
             Ok(Ok(outcome)) => Ok(outcome),
-            // §16.2.1.5's own errors — a specifier nothing answers, a name nothing exports. A host
-            // reports both as a SyntaxError, which is the phase test262 calls `resolution`.
-            Ok(Err(error)) => return judge_early(negative, &error.message()),
+            // §16.2.1.5's own errors — a specifier nothing answers, a name nothing exports, a name
+            // two star exports disagree about. A host reports all three as a SyntaxError, and the
+            // phase test262 files them under is `resolution` rather than `parse`.
+            Ok(Err(error)) => return judge_resolution(negative, &error.message()),
             Err(fault) => Err(fault),
         }
     } else {
@@ -1067,15 +1102,27 @@ var r = /(?i:a)/;",
             matches!(&exports[0].verdict, Verdict::Passed),
             "{exports:?}"
         );
-        // What it still declines is the three forms that reach into another module's *list* rather
-        // than at a name of its own — a namespace object, an `export *`, a re-export.
+        // …and one that reaches into another module's *list* rather than at a name of its own,
+        // which makes an edge in the graph exactly as an `import` does and is resolved the same way.
+        std::fs::write(root.join("test").join("a.js"), "export var reached = 3;")
+            .expect("writable"); // the test needs the file
         let star = run(
             &root,
-            "/*---\nflags: [module]\n---*/\nexport * from './a.js';",
+            "/*---\nflags: [module]\n---*/\n\
+             export * from './a.js';\n\
+             import { reached } from './a.js';\n\
+             if (reached !== 3) { throw 1; }",
+        );
+        assert!(matches!(&star[0].verdict, Verdict::Passed), "{star:?}");
+        // A specifier reached *only* through an export is still the host's to resolve, and one it
+        // cannot is a skip rather than a failure of the engine.
+        let missing = run(
+            &root,
+            "/*---\nflags: [module]\n---*/\nexport * from './nowhere.js';",
         );
         assert!(
-            matches!(&star[0].verdict, Verdict::Skipped(why) if why.contains("export")),
-            "{star:?}"
+            matches!(&missing[0].verdict, Verdict::Skipped(why) if why.contains("no module")),
+            "{missing:?}"
         );
         // …and it is one run rather than two: a module is always strict, so there is no second
         // mode to measure.
