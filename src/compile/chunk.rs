@@ -866,6 +866,14 @@ pub enum Instruction {
     StoreName(u32),
     /// §13.5.1.1 — its type, and `"undefined"` rather than a throw when the walk finds nothing.
     TypeofName(u32),
+    /// §13.5.1.2 — delete it, when where it lives is only known at run time.
+    ///
+    /// The same walk as [`Instruction::LoadName`], and the answer depends on what the walk lands on
+    /// rather than on the name: a declarative binding is **non-deletable** (§9.1.1.1.5) and answers
+    /// false, a `with` object's property is deleted (§9.1.1.2.7), and a name found nowhere is the
+    /// global object's business. Three answers one instruction has to be able to give, which is why
+    /// the compiler cannot settle this one inside a `with` the way it settles it outside.
+    DeleteName(u32),
     /// Read it *for a call*, pushing §9.1.1.2.10's `WithBaseObject` under it as the receiver.
     ///
     /// The one place a call written as a bare name has a `this`: `with (o) { m() }` calls `o.m`
@@ -1251,6 +1259,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::LoadName(_)
         | Instruction::StoreName(_)
         | Instruction::TypeofName(_)
+        | Instruction::DeleteName(_)
         | Instruction::LoadNameForCall(_)
         | Instruction::Constant(_)
         | Instruction::RegExpLiteral

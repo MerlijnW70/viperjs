@@ -214,21 +214,52 @@ fn the_body_is_an_ordinary_statement_and_every_way_out_of_it_leaves_the_scope() 
 }
 
 #[test]
-fn a_with_is_a_syntax_error_in_strict_code_and_a_delete_inside_one_is_refused() {
+fn a_with_is_a_syntax_error_in_strict_code_and_a_delete_inside_one_asks_where_the_name_lives() {
     // §11.2.1 — the parser refuses it, so this is not a run-time question at all.
     assert_eq!(
         run("try { eval('\"use strict\"; with ({}) {}'); 'ran' } catch (e) { e.constructor.name }"),
         "SyntaxError"
     );
-    // `delete a` inside a `with` has a third answer praxis does not have an instruction for — the
-    // property of the object — and neither of the other two is right, so it is refused by name
-    // rather than answered wrongly.
+    // §13.5.1.2 — `delete a` inside a `with` has three possible answers and which applies is only
+    // known when it runs, so the walk is emitted rather than a constant. A property of the object
+    // goes, and the answer is true.
+    assert_eq!(
+        run("var o = { a: 1 }; with (o) { var gone = delete a; } gone + ':' + ('a' in o)"),
+        "true:false"
+    );
+    // …a **declarative** binding does not, however the walk reached it — §9.1.1.1.5 makes every one
+    // of them non-deletable, and this is the answer the compiler gives outside a `with` too.
+    //
+    // A `var` inside a *function* and a `let` at the top level, because a top-level `var` is not a
+    // declarative binding at all: §16.1.7 makes it a property of the global object, which is the
+    // third answer below and not this one.
+    assert_eq!(
+        run("function f() { var inner = 1; with ({}) { return delete inner; } } f()"),
+        "false"
+    );
+    assert_eq!(
+        run("let top = 1; with ({}) { var kept = delete top; } kept + ':' + top"),
+        "false:1"
+    );
+    // …and a name that is nowhere is the global object's business, where §10.1.10.1 step 2 makes a
+    // property that is not there true. A configurable global goes; one a `var` made does not.
+    assert_eq!(
+        run("with ({}) { var absent = delete nothingAtAll; } absent"),
+        "true"
+    );
     assert_eq!(
         run(
-            "try { eval('var o = {a: 1}; with (o) { delete a; }'); 'ran' } \
-             catch (e) { e.constructor.name }"
+            "globalThis.loose = 1; with ({}) { var went = delete loose; } went + ':' + ('loose' in globalThis)"
         ),
-        "SyntaxError"
+        "true:false"
+    );
+    // A property the object does **not** have is not found there, so the walk carries on past it —
+    // which is what makes `delete toString` inside a `with` answer about the global and leave
+    // `Object.prototype.toString` exactly where it was.
+    assert_eq!(
+        run("var o = {}; with (o) { var answer = delete toString; } \
+             answer + ':' + (typeof Object.prototype.toString)"),
+        "true:function"
     );
     // A `delete` of anything else inside one is untouched.
     assert_eq!(

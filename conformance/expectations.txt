@@ -18733,12 +18733,6 @@ language/statements/while/cptn-iter.js (strict) :: it threw an object with no na
 language/statements/while/cptn-no-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/while/cptn-no-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/while/tco-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/with/S12.10_A5_T1.js :: it threw SyntaxError: a delete of a bare name inside `with` is not implemented yet
-language/statements/with/S12.10_A5_T2.js :: it threw SyntaxError: a delete of a bare name inside `with` is not implemented yet
-language/statements/with/S12.10_A5_T3.js :: it threw SyntaxError: a delete of a bare name inside `with` is not implemented yet
-language/statements/with/S12.10_A5_T4.js :: it threw SyntaxError: a delete of a bare name inside `with` is not implemented yet
-language/statements/with/S12.10_A5_T5.js :: it threw SyntaxError: a delete of a bare name inside `with` is not implemented yet
-language/statements/with/S12.10_A5_T6.js :: it threw SyntaxError: a delete of a bare name inside `with` is not implemented yet
 language/statements/with/cptn-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«6», «undefined») to be true
 language/statements/with/cptn-nrml.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/with/get-binding-value-call-with-proxy-env.js :: it threw an object with no name: Actual [has:Object, get:Symbol(Symbol.unscopables), get:Object] and expected [has:Object, get:Symbol(Symbol.unscopables), has:Object, get:Object] should have the same contents.

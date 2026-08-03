@@ -949,6 +949,43 @@ impl Vm {
                         None => continue,
                     }
                 }
+                // §13.5.1.2 — the same walk a read of this name makes, and one of three answers
+                // depending on where it lands. Emitted only inside a `with`: everywhere else the
+                // compiler already knows which of the three applies.
+                Instruction::DeleteName(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    let name = self.name_text(running, index, heap)?;
+                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
+                        Some(found) => found,
+                        None => continue,
+                    };
+                    let answer = match found {
+                        // §9.1.1.1.5 — a declarative binding is not deletable, whatever it is: a
+                        // `var`, a parameter, a `let`, a function's own slot. The one exception the
+                        // specification has is §19.2.1.1's direct eval, whose `var`s *are*, and
+                        // praxis does not make those deletable either — which is a gap, not this
+                        // instruction's business, and it is the same answer it gave before a `with`
+                        // could be written around it.
+                        crate::vm::dynamic::Resolved::Slot { .. } => false,
+                        // §9.1.1.2.7 `DeleteBinding` — `[[Delete]]` of the `with` object, which may
+                        // run a proxy's trap and so may throw. Own-only, like every `[[Delete]]`:
+                        // `with (o) { delete toString }` answers true and leaves
+                        // `Object.prototype.toString` where it is, because `o` never had it.
+                        crate::vm::dynamic::Resolved::Property(object) => {
+                            let gone = self.delete_property_key(Value::Object(object), key, heap);
+                            match self.settle(gone, heap, root, current, at)? {
+                                Some(value) => value.to_boolean(heap),
+                                None => continue,
+                            }
+                        }
+                        // §13.5.1.2 step 3 — nowhere in the chain, so the global object answers, and
+                        // §10.1.10.1 step 2 makes a property that is not there **true**.
+                        crate::vm::dynamic::Resolved::Global => {
+                            heap.delete_own_property(self.realm.global(), key)
+                        }
+                    };
+                    self.stack.push(Value::Boolean(answer));
+                }
                 Instruction::TypeofName(index) => {
                     let key = self.global_name(running, index, heap)?;
                     let name = self.name_text(running, index, heap)?;

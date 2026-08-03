@@ -157,18 +157,18 @@ impl Vm {
                 // before it finds a binding: `export { a } from "m"` and `export * from "m"` both
                 // send it further.
                 match self.resolve_export(from, name, &mut link, heap) {
-                    Resolved::Slot(there, at) => {
+                    ExportResolution::Slot(there, at) => {
                         heap.bind_import(here, slot, there, at);
                     }
                     // `export * as n from "m"` — the name resolves to a whole namespace and not to
                     // any binding, so the importer gets a value like a namespace import does.
-                    Resolved::Namespace(namespace) => {
+                    ExportResolution::Namespace(namespace) => {
                         heap.set_variable(here, slot, crate::value::Value::Object(namespace));
                     }
                     // §16.2.1.5.2 steps 1.b.i and 1.b.ii — both a name nothing exports and one two
                     // star exports disagree about are SyntaxErrors the host reports, and neither is
                     // something the program could catch.
-                    Resolved::Missing | Resolved::Ambiguous => {
+                    ExportResolution::Missing | ExportResolution::Ambiguous => {
                         return Ok(Err(LinkError::NoSuchExport {
                             specifier: entry.specifier.to_string(),
                             name: name.to_string(),
@@ -187,7 +187,7 @@ impl Vm {
                 }
                 if matches!(
                     self.resolve_export(chunk, &export.export_name, &mut link, heap),
-                    Resolved::Missing | Resolved::Ambiguous
+                    ExportResolution::Missing | ExportResolution::Ambiguous
                 ) {
                     return Ok(Err(LinkError::NoSuchExport {
                         specifier: entry.to_string(),
@@ -229,7 +229,11 @@ struct Link<'a> {
 }
 
 /// What §16.2.1.6.3 `ResolveExport` answers.
-enum Resolved {
+///
+/// Named for the question rather than for the answer, because `dynamic::Resolved` is a different
+/// resolution entirely — §9.4.2's, of a *name* against the running scopes — and the two appear a
+/// few lines apart in the interpreter.
+enum ExportResolution {
     /// A binding: which environment, and which slot in it.
     Slot(EnvironmentId, u32),
     /// A whole module, which is what `export * as n from "m"` resolves to.
@@ -276,14 +280,14 @@ impl Vm {
         let mut exports = Vec::new();
         for name in exported_names(chunk, link.graph) {
             match self.resolve_export(chunk, &name, link, heap) {
-                Resolved::Slot(environment, slot) => {
+                ExportResolution::Slot(environment, slot) => {
                     exports.push((name, crate::heap::NamespaceBinding::Slot(environment, slot)));
                 }
-                Resolved::Namespace(other) => exports.push((
+                ExportResolution::Namespace(other) => exports.push((
                     name,
                     crate::heap::NamespaceBinding::Value(crate::value::Value::Object(other)),
                 )),
-                Resolved::Missing | Resolved::Ambiguous => {}
+                ExportResolution::Missing | ExportResolution::Ambiguous => {}
             }
         }
         heap.fill_namespace(object, exports);
@@ -301,7 +305,7 @@ impl Vm {
         name: &str,
         link: &mut Link<'_>,
         heap: &mut Heap,
-    ) -> Resolved {
+    ) -> ExportResolution {
         let mut seen: Vec<(usize, String)> = Vec::new();
         self.resolve_seen(chunk, name, &mut seen, link, heap)
     }
@@ -314,14 +318,14 @@ impl Vm {
         seen: &mut Vec<(usize, String)>,
         link: &mut Link<'_>,
         heap: &mut Heap,
-    ) -> Resolved {
+    ) -> ExportResolution {
         // §16.2.1.6.3 step 1 — asked this of this module already, so the graph is circular here and
         // the answer is that this path finds nothing. Another path may still find something.
         if seen
             .iter()
             .any(|(module, asked)| *module == identity(chunk) && asked == name)
         {
-            return Resolved::Missing;
+            return ExportResolution::Missing;
         }
         seen.push((identity(chunk), name.to_string()));
         for export in chunk.exports() {
@@ -332,8 +336,8 @@ impl Vm {
                 // Step 2 — a local export, which is the end of the walk.
                 crate::compile::ExportSource::Local(slot) => {
                     return match link.environments.get(&identity(chunk)) {
-                        Some(&environment) => Resolved::Slot(environment, *slot),
-                        None => Resolved::Missing,
+                        Some(&environment) => ExportResolution::Slot(environment, *slot),
+                        None => ExportResolution::Missing,
                     };
                 }
                 crate::compile::ExportSource::Indirect {
@@ -341,11 +345,11 @@ impl Vm {
                     import_name,
                 } => {
                     let Some(from) = link.graph.get(specifier).cloned() else {
-                        return Resolved::Missing;
+                        return ExportResolution::Missing;
                     };
                     return match import_name {
                         // Step 3.a.ii — `export * as n from "m"` resolves to the *module*.
-                        None => Resolved::Namespace(self.namespace_of(&from, link, heap)),
+                        None => ExportResolution::Namespace(self.namespace_of(&from, link, heap)),
                         // Step 3.a.iii — ask the other module, which may send it further still.
                         Some(asked) => self.resolve_seen(&from, asked, seen, link, heap),
                     };
@@ -356,31 +360,32 @@ impl Vm {
         // `export * from "m"` safe to write over a module that has one: the name a default would
         // collide with is the one name a star does not carry.
         if name == "default" {
-            return Resolved::Missing;
+            return ExportResolution::Missing;
         }
         // Step 6 — every star export, and two that disagree make the name ambiguous rather than
         // picking one. Two that agree — a diamond, where both paths reach the same binding — are
         // not ambiguous, which is why the comparison is of the resolution and not of the module
         // that answered.
-        let mut found: Option<Resolved> = None;
+        let mut found: Option<ExportResolution> = None;
         for specifier in chunk.star_exports() {
             let Some(from) = link.graph.get(specifier).cloned() else {
                 continue;
             };
             let answer = self.resolve_seen(&from, name, seen, link, heap);
             match (&found, &answer) {
-                (_, Resolved::Missing) => {}
-                (_, Resolved::Ambiguous) | (Some(Resolved::Ambiguous), _) => {
-                    return Resolved::Ambiguous;
+                (_, ExportResolution::Missing) => {}
+                (_, ExportResolution::Ambiguous) | (Some(ExportResolution::Ambiguous), _) => {
+                    return ExportResolution::Ambiguous;
                 }
                 (None, _) => found = Some(answer),
-                (Some(Resolved::Slot(one, at)), Resolved::Slot(two, other))
+                (Some(ExportResolution::Slot(one, at)), ExportResolution::Slot(two, other))
                     if one == two && at == other => {}
-                (Some(Resolved::Namespace(one)), Resolved::Namespace(two)) if one == two => {}
-                (Some(_), _) => return Resolved::Ambiguous,
+                (Some(ExportResolution::Namespace(one)), ExportResolution::Namespace(two))
+                    if one == two => {}
+                (Some(_), _) => return ExportResolution::Ambiguous,
             }
         }
-        found.unwrap_or(Resolved::Missing)
+        found.unwrap_or(ExportResolution::Missing)
     }
 }
 

@@ -919,13 +919,15 @@ impl Compiler<'_> {
             //
             // A name it cannot place is a property of the global object, which may or may not be
             // configurable and may not be there at all. That one needs the object, at run time.
-            // …and inside a `with` it may be a property of the object, which is a third answer
-            // this does not have an instruction for. Refused rather than answered with either of
-            // the other two: `delete a` there is neither always `false` nor always the global's.
-            ExprKind::Identifier(_) if self.names_are_dynamic() => Err(unsupported(
-                "a delete of a bare name inside `with`",
-                argument.span,
-            )),
+            // …and inside a `with` it may be a property of the object, which is a third answer and
+            // is the one this cannot decide: which of the three applies depends on what the object
+            // holds at the moment of the delete. So the walk is emitted instead, exactly as a read
+            // of the same name would be.
+            ExprKind::Identifier(name) if self.names_are_dynamic() => {
+                let index = self.name(name)?;
+                self.chunk.emit(Instruction::DeleteName(index));
+                Ok(())
+            }
             ExprKind::Identifier(name) => match self.binding(name) {
                 Some(_) => self.constant(Value::Boolean(false)),
                 None => {
