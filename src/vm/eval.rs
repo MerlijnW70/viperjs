@@ -24,6 +24,7 @@ use super::Vm;
 use crate::compile::{EvalVars, compile_direct_eval};
 use crate::heap::{Binding, EnvironmentId, Heap};
 use crate::value::{Completion, Value};
+use std::collections::HashSet;
 use std::rc::Rc;
 
 impl Vm {
@@ -49,8 +50,13 @@ impl Vm {
         // §11.2.1's early errors and settles `is_strict` for every function written inside the
         // text before the tree comes back. Set on the finished tree instead, a strict caller's
         // `eval("(function () { return this; })()")` still substituted the global object.
-        let script = match crate::parser::parse_eval(&text, strict_caller, self.eval_context(heap))
-        {
+        let private = self.private_names_in_scope(heap);
+        let script = match crate::parser::parse_eval(
+            &text,
+            strict_caller,
+            self.eval_context(heap),
+            &private,
+        ) {
             Ok(script) => script,
             Err(error) => {
                 return Err(crate::builtins::eval::syntax_error(
@@ -177,6 +183,35 @@ impl Vm {
     /// The walk terminates because a parent is always an environment that already existed when its
     /// child was made — `Heap::new_environment` takes the parent as an argument — so a chain
     /// strictly decreases and cannot close on itself.
+    /// §15.7.7's private names in scope where the call was made — the one rule the parser cannot
+    /// answer for evaluated text.
+    ///
+    /// §15.7.1 makes a `#a` with no enclosing class a Syntax Error, and the parser enforces it by
+    /// keeping every reference it reads and refusing whatever no class body claimed. Evaluated
+    /// text has no class body of its own and §19.2.1.1 nonetheless runs it *inside* the caller's,
+    /// so `class C { #m = 44; get() { return eval("this.#m") } }` is legal and the parse cannot
+    /// see why.
+    ///
+    /// Nothing new is stored to answer it. A private name is a slot like any other — see
+    /// `compile::class::private_name_slot` — and DR-0018 already made every running scope name its
+    /// slots, so the classes this call is inside are written down in the environment chain the
+    /// compiler is about to be handed. This reads the same chain for a different question.
+    ///
+    /// The `#` is punctuation rather than part of the name here, matching what the parser records.
+    fn private_names_in_scope(&self, heap: &Heap) -> HashSet<Box<str>> {
+        let mut found = HashSet::new();
+        let mut at: Option<EnvironmentId> = Some(self.environment);
+        while let Some(environment) = at {
+            for binding in heap.environment_names(environment).unwrap_or(&[]) {
+                if let Some(name) = binding.name.strip_prefix("%private #") {
+                    found.insert(Box::from(name));
+                }
+            }
+            at = heap.environment_at(environment, 1);
+        }
+        found
+    }
+
     fn running_chain(&self, heap: &Heap) -> Vec<Vec<Binding>> {
         let mut chain = Vec::new();
         let mut at: Option<EnvironmentId> = Some(self.environment);

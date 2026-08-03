@@ -65,11 +65,13 @@ pub fn parse_eval(
     source: &str,
     strict_caller: bool,
     context: super::body::EvalContext,
+    private: &std::collections::HashSet<Box<str>>,
 ) -> Result<Script, ParseError> {
     let script = parse_script_seeded(
         source,
         strict_caller,
         super::body::BodyContext::eval(context),
+        private,
     )?;
     super::scope::check_labels(&script.body)?;
     Ok(script)
@@ -77,7 +79,12 @@ pub fn parse_eval(
 
 /// [`parse_script`] up to but not including §16.1.1's label rules.
 fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
-    parse_script_seeded(source, false, super::body::BodyContext::SCRIPT)
+    parse_script_seeded(
+        source,
+        false,
+        super::body::BodyContext::SCRIPT,
+        &std::collections::HashSet::new(),
+    )
 }
 
 /// The same, starting out strict — and with the `super` and `new.target` rules — when something
@@ -87,6 +94,7 @@ fn parse_script_seeded(
     source: &str,
     strict: bool,
     body_context: super::body::BodyContext,
+    private: &std::collections::HashSet<Box<str>>,
 ) -> Result<Script, ParseError> {
     let mut parser = Parser::new(source)?;
     parser.strict = strict;
@@ -96,7 +104,16 @@ fn parse_script_seeded(
     let (body, declares_strict) = parser.parse_body_with_prologue(TokenKind::Eof)?;
     parser.expect_eof()?;
     // §15.7.7: every `#a` had to be declared by *some* enclosing class, and each class body
-    // took its own off the list as it closed. Whatever is left was declared nowhere.
+    // took its own off the list as it closed. Whatever is left was declared nowhere — *here*.
+    //
+    // `private` is what §19.2.1.1 adds to that: evaluated text has no enclosing class of its own
+    // and is nonetheless inside the caller's, so a class the caller is running in declares names
+    // this parse never saw. They are not a relaxation of the rule — a `#a` that no enclosing class
+    // declares is still refused, and a script's set is empty — they are the enclosing classes the
+    // text really has. See [`crate::vm::Vm::private_names_in_scope`] for where they come from.
+    parser
+        .private_references
+        .retain(|(name, _)| !private.contains(name));
     if let Some((_, span)) = parser.private_references.first() {
         return Err(ParseError {
             kind: ParseErrorKind::UndeclaredPrivateName,

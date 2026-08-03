@@ -652,3 +652,104 @@ fn a_compound_assignment_and_an_update_work_through_a_private_name() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_direct_eval_sees_the_private_names_of_the_classes_it_is_written_inside() {
+    // §19.2.1.1 runs the text inside the caller's scopes, and §15.7's private names are part of
+    // that — so `eval("this.#m")` in a method of the class declaring `#m` is legal, and the parse
+    // of the text cannot see why. §15.7.1's refusal is enforced by keeping every `#a` a parse read
+    // and rejecting whatever no class body claimed; the names in scope come from the environments.
+    assert_eq!(
+        run("class C { #m = 44; get() { return eval('this.#m') } } new C().get()"),
+        "44"
+    );
+    // A field initialiser is inside the class too, and runs before any method could.
+    assert_eq!(
+        run("class C { #m = 44; n = eval('this.#m') } new C().n"),
+        "44"
+    );
+    // A private *method* and a private accessor are the same kind of binding, so both travel.
+    assert_eq!(
+        run("class C { #m() { return 7 } get() { return eval('this.#m()') } } new C().get()"),
+        "7"
+    );
+    assert_eq!(
+        run("class C { get #m() { return 8 } get() { return eval('this.#m') } } new C().get()"),
+        "8"
+    );
+    assert_eq!(
+        run("class C { static #m = 9; static get() { return eval('C.#m') } } C.get()"),
+        "9"
+    );
+    // §15.7's `#a in b` is a reference too, and it is the one shape that asks about a name
+    // without reading it.
+    assert_eq!(
+        run(
+            "class C { #m = 1; static has(o) { return eval('#m in o') } } \
+             C.has(new C()) + ',' + C.has({})"
+        ),
+        "true,false"
+    );
+    // An eval inside an eval is still inside the class, because the environment it runs in is a
+    // child of the one that named the slot.
+    assert_eq!(
+        run("class C { #m = 1; go() { return eval(\"eval('this.#m')\") } } new C().go()"),
+        "1"
+    );
+    // A class nested inside a method of another class sees both, private names being lexical.
+    assert_eq!(
+        run("class Outer { #o = 5; make() { var self = this; \
+               class Inner { go() { return eval('self.#o') } } return new Inner() } } \
+             new Outer().make().go()"),
+        "5"
+    );
+}
+
+#[test]
+fn the_rule_is_not_relaxed_by_travelling_and_the_brand_check_still_runs() {
+    // §15.7.1 is enforced exactly as before wherever the name is not really in scope. A script has
+    // no enclosing class at all, so its set is empty and every `#a` is the Syntax Error it was.
+    assert_eq!(
+        run("try { eval('this.#nope'); 'no error' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+    // …and a class in scope does not excuse a name *it* does not declare, which is what makes this
+    // a set of the names really there rather than a flag saying "inside some class".
+    assert_eq!(
+        run("class C { #m = 1; go() { return eval('this.#nope') } } \
+             try { new C().go(); 'no error' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+    // A sibling class's name is not in scope either.
+    assert_eq!(
+        run(
+            "class A { #a = 1 } class B { #b = 2; go() { return eval('this.#a') } } \
+             try { new B().go(); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "SyntaxError"
+    );
+    // Once the text parses, §15.7's brand check is what decides whether the *object* has the
+    // field — and it is a TypeError, not a Syntax Error, which is the line between the two rules.
+    assert_eq!(
+        run(
+            "class C { #m = 44; get() { return eval('this.#m') } } class D {} \
+             try { C.prototype.get.call(new D()); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // An **indirect** eval is a Script of its own and is inside nothing, so the names do not
+    // travel to it — which is the difference §19.2.1.1 draws between the two modes.
+    assert_eq!(
+        run("class C { #m = 1; go() { return (0, eval)('this.#m') } } \
+             try { new C().go(); 'no error' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+    // …and so is `new Function`, for the same reason.
+    assert_eq!(
+        run(
+            "class C { #m = 1; go() { return new Function('return this.#m') } } \
+             try { new C().go(); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "SyntaxError"
+    );
+}
