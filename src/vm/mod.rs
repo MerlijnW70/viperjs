@@ -355,6 +355,91 @@ impl Vm {
         self.run_prepared(chunk, environment, Value::Undefined, heap)
     }
 
+    /// §16.2.1.5.3 — run an **asynchronous** module's body, and answer the promise it settles.
+    ///
+    /// A body that may `await` has to be able to park, and parking pops a *frame* and records the
+    /// chunk it was running — so unlike every other module body this one is entered as a callee
+    /// rather than as the root: an empty chunk stands in for "the code that started this", which is
+    /// Rust, and the module's own chunk becomes the running one. That is the same shape
+    /// [`Vm::nested_body`] uses for a call made from Rust, and for the same reason.
+    ///
+    /// The environment is the one the link step made and bound imports into, which is why this
+    /// cannot be an ordinary call: `enter` would give the body a fresh scope, and every import
+    /// would then be a slot of a scope nothing had bound.
+    fn run_async_module(
+        &mut self,
+        chunk: &Rc<Chunk>,
+        environment: crate::heap::EnvironmentId,
+        heap: &mut Heap,
+    ) -> Result<Result<Value, Value>, Fault> {
+        // Nothing of the machine is cleared, and that is the difference from every other way of
+        // starting a body: an asynchronous module is evaluated from a **job** as often as from a
+        // host, and a job runs inside an execution that owns the stack. Clearing it took the
+        // operands of whatever was running and left the promise behind where they had been, which
+        // the outer chunk then reported as an unbalanced stack — a `Fault`, from ordinary source.
+        let floor = std::mem::replace(
+            &mut self.floor,
+            Floor {
+                handlers: self.handlers.len(),
+                frames: self.frames.len(),
+            },
+        );
+        let base = self.stack.len();
+        let handlers_base = self.handlers.len();
+        let outer_environment = self.environment;
+        let outer_this = self.this_value;
+        let outer_target = self.new_target;
+        self.environment = environment;
+        self.this_value = Value::Undefined;
+        self.new_target = Value::Undefined;
+        // §27.7.5.1's capability, made without going through the constructor: this promise is the
+        // module's own and no script can have replaced what makes it.
+        let Some(context) = self.begin_async(heap) else {
+            return Err(Fault::NotAnObject);
+        };
+        let Some(capability) = self.capability_of(context, heap) else {
+            return Err(Fault::NotAnObject);
+        };
+        let promise = capability.promise;
+        let root = Chunk::from_parts(Vec::new(), Vec::new());
+        let mut current: Option<Rc<Chunk>> = Some(Rc::clone(chunk));
+        let mut at = 0_usize;
+        self.frames.push(Frame {
+            // Nothing to come back to: the loop stops when this frame is popped, because the
+            // chunk it returns into has no instructions.
+            code: None,
+            at: 0,
+            this_value: outer_this,
+            new_target: outer_target,
+            environment: outer_environment,
+            stack_base: base,
+            handlers_base,
+            constructed: None,
+            // No function object — a module body is not one, and nothing here asks for the callee.
+            function: None,
+            // What `Await` parks into and what `Return` settles, which is the whole point.
+            generator: Some(context),
+        });
+        let ran = self.execute(&root, heap, &mut current, &mut at);
+        // Whatever happened. `Return` and `Await` both restore what the frame recorded, but a
+        // `Fault` returns without unwinding anything — and this call has an outer execution to hand
+        // back to either way.
+        self.stack.truncate(base);
+        self.handlers.truncate(handlers_base);
+        self.floor = floor;
+        self.environment = outer_environment;
+        self.this_value = outer_this;
+        self.new_target = outer_target;
+        ran?;
+        // A throw the wrapper did not catch cannot happen — §27.7.5.2's handler is the outermost
+        // thing in the body — but a chunk is only as good as the compiler that made it, and a
+        // rejection is the honest answer for one that escaped rather than a lost error.
+        if let Some(thrown) = self.escaped.take() {
+            return Ok(Err(thrown));
+        }
+        Ok(Ok(promise))
+    }
+
     /// The intrinsics this machine belongs to — §9.3's realm.
     ///
     /// `Copy`, so this hands one out rather than lending it: a built-in that needs

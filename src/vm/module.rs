@@ -200,7 +200,13 @@ impl Vm {
             // which a cycle does, and which a dynamic `import()` of an ancestor does — is not
             // started a second time.
             record.evaluated = true;
-            outcome = self.run_module_in(chunk, environment, heap)?;
+            // §16.2.1.5.3 — a module whose body contains a top-level `await` is **asynchronous**: it
+            // answers a promise rather than a value, and everything that imports it waits for that
+            // promise before its own body runs. The waiting is what the job queue is for.
+            outcome = match chunk.is_async() {
+                true => self.evaluate_async_module(chunk, environment, heap)?,
+                false => self.run_module_in(chunk, environment, heap)?,
+            };
             // §16.2.1.6 step 12 — a module that throws stops the evaluation, and the throw is the
             // answer. Nothing after it runs, including the entry.
             if let Outcome::Thrown(thrown) = outcome {
@@ -211,6 +217,74 @@ impl Vm {
             }
         }
         Ok(Ok(outcome))
+    }
+
+    /// §16.2.1.5.3 — evaluate an asynchronous module, and do not return until it has settled.
+    ///
+    /// The specification threads `[[PendingAsyncDependencies]]` through the graph so that each
+    /// module resumes when the ones it imports have finished. praxis evaluates a graph inside one
+    /// call, so the same order is reached by draining the queue here: the next module's body cannot
+    /// start until this one's promise has an answer, which is exactly what waiting means.
+    ///
+    /// What that does **not** reproduce is the interleaving between two asynchronous modules that
+    /// do not import one another — §16.2.1.5.3's counter orders those, and here the first is run to
+    /// completion before the second begins.
+    fn evaluate_async_module(
+        &mut self,
+        chunk: &Rc<Chunk>,
+        environment: EnvironmentId,
+        heap: &mut Heap,
+    ) -> Result<Outcome, Fault> {
+        let promise = match self.run_async_module(chunk, environment, heap)? {
+            Ok(promise) => promise,
+            // A throw that escaped the wrapper. There is no promise to reject, so it is the
+            // module's failure directly.
+            Err(thrown) => return Ok(Outcome::Thrown(thrown)),
+        };
+        let Value::Object(promise) = promise else {
+            return Err(Fault::NotAnObject);
+        };
+        // The body has stopped at its first `await`, and what resumes it is a job. Draining until
+        // the promise answers is the whole of the wait — and it terminates for the reason any
+        // `await` does: a promise nothing will ever settle leaves the queue empty, and the loop
+        // ends with the module unsettled rather than spinning.
+        loop {
+            let state = heap
+                .promise(promise)
+                .map_or(crate::heap::PromiseState::Rejected, |found| found.state);
+            match state {
+                crate::heap::PromiseState::Pending if !self.jobs.is_empty() => {
+                    self.drain_jobs(heap);
+                }
+                // §16.2.1.5.3's `AsyncModuleExecutionRejected` — the module failed, and every
+                // importer sees the same value. `link_and_evaluate` records it on the record.
+                crate::heap::PromiseState::Rejected => {
+                    let thrown = heap
+                        .promise(promise)
+                        .map_or(Value::Undefined, |found| found.result);
+                    return Ok(Outcome::Thrown(thrown));
+                }
+                // Fulfilled, or pending with nothing left that could settle it. A module that never
+                // settles has still *run*, and what it exported is what it managed to export —
+                // which is what a host sees when a top-level `await` never resolves.
+                //
+                // §14.2.2's completion value is read here rather than carried through the promise,
+                // which is fulfilled with `undefined` because §16.2.1.5.3 gives a host a promise and
+                // not a value. The register holds the body's because the drain ends the moment that
+                // promise answers, and what answers it is the body's own last instruction.
+                _ => {
+                    let answer = self.completion;
+                    // §9.5 — what is left of the queue runs before the answer is handed back, which
+                    // is what `run` does after a script's last statement and what `run_prepared`
+                    // does after a synchronous module's. An asynchronous one reaches neither, so a
+                    // `then` registered by the body was still waiting when the host was told the
+                    // module had finished.
+                    self.drain_jobs(heap);
+                    self.escaped = None;
+                    return Ok(Outcome::Value(answer));
+                }
+            }
+        }
     }
 
     /// §16.2.1.5.2 `InitializeEnvironment` — bind every import, now that every environment exists.

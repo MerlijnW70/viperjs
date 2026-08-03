@@ -147,7 +147,7 @@ impl Vm {
     }
 
     /// The promise and its two halves, off an `async` execution's context object.
-    fn capability_of(&self, context: ObjectId, heap: &Heap) -> Option<Capability> {
+    pub(super) fn capability_of(&self, context: ObjectId, heap: &Heap) -> Option<Capability> {
         match heap.object(context)?.role()? {
             Role::Await(capability) => Some(*capability),
             _ => None,

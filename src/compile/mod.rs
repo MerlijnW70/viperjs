@@ -156,8 +156,35 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
 /// link step, and bindings that point into another module's scope — and that is the rest of M7;
 /// a body that declares nothing across a module boundary needs none of it and runs today.
 pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, CompileError> {
+    let (chunk, saw_await) = compile_module_body(module, heap, false)?;
+    // §16.2.1.5.3 — the body contained an `await` at its top level, so the module is asynchronous
+    // and its body needs an execution to park into. Compiled again rather than patched, because
+    // what an async body needs is not only an epilogue: the handler that turns an escaping throw
+    // into a rejection is installed *before* the first instruction, and by the time the first
+    // `await` was met there were already instructions in front of it.
+    //
+    // Only a module that really uses one pays for the second walk, and there is no third: the
+    // second pass allows `await`, so it cannot discover anything the first did not.
+    match saw_await {
+        true => compile_module_body(module, heap, true).map(|(chunk, _)| chunk),
+        false => Ok(chunk),
+    }
+}
+
+/// One pass of [`compile_module`], with `asynchronous` deciding whether the body may park.
+///
+/// Answers the chunk and whether an `await` was met that this pass had no execution for — which is
+/// always `false` when `asynchronous`, since then there was one.
+fn compile_module_body(
+    module: &Module,
+    heap: &mut Heap,
+    asynchronous: bool,
+) -> Result<(Chunk, bool), CompileError> {
     let mut compiler = Compiler::new(heap);
     compiler.chunk.strict = true;
+    // §16.2.1.5.3 — an asynchronous module's body is entered like an `async` function's and answers
+    // a promise, so it carries the same brand and the same wrapper.
+    compiler.chunk.is_async = asynchronous;
     // Script code for the two questions that flag decides — §14.2.2's completion value, and
     // `return` at the top level being a Syntax Error — and *not* for where a `var` goes.
     compiler.global_vars = false;
@@ -179,6 +206,11 @@ pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, Compile
         compiler.declare(name.name);
     }
     compiler.declare_lexical_names(&statements)?;
+    // §27.7.5.2 — the same wrapper an `async` function body gets, and for the same reason: a throw
+    // that nothing inside catches does not travel to whoever evaluated the module, it **rejects the
+    // module's promise**. Installed before the first instruction of the body, which is why knowing
+    // that this module is asynchronous cannot wait until the `await` is met.
+    let rejecting = asynchronous.then(|| compiler.chunk.emit_jump(Instruction::PushHandler));
     // §16.2.3.7 — `export default` of anything but a `HoistableDeclaration` is a **lexical**
     // declaration of `*default*`, so the name is created here and left uninitialised. A module can
     // reach it: its own namespace object exports `default`, and reading that before the statement
@@ -263,7 +295,19 @@ pub fn compile_module(module: &Module, heap: &mut Heap) -> Result<Chunk, Compile
         };
         record_exports(&mut compiler, declaration)?;
     }
-    Ok(compiler.finish())
+    // §16.2.1.5.3 — reaching the end of an asynchronous module's body *fulfils* its promise, which
+    // is what `Return` does for an `async` function and is why the body ends with one. A module that
+    // is not asynchronous simply runs off the end of its chunk, as a script does.
+    if let Some(rejecting) = rejecting {
+        compiler.constant(Value::Undefined)?;
+        compiler.chunk.emit(Instruction::Return);
+        // The handler's target, reached only by a throw. `Return` above has already taken the
+        // handler down, so the ordinary way out never arrives here.
+        compiler.chunk.patch(rejecting)?;
+        compiler.chunk.emit(Instruction::AsyncReject);
+    }
+    let saw_await = compiler.saw_top_level_await;
+    Ok((compiler.finish(), saw_await))
 }
 
 /// §16.2.1.3 — one `import`'s entries, as slots the link step will bind to another module's.
@@ -887,6 +931,12 @@ struct Compiler<'a> {
     /// so the table shrinks. The frame still has to be big enough for the moment it was widest,
     /// which is what a run-time slot index is an index into.
     high_water: usize,
+    /// Whether an `await` was met where the body has no execution to park — §16.2.1.5.3.
+    ///
+    /// Only a module's top level can produce one: the parser makes `await` an identifier wherever
+    /// the production is not available, so `ExprKind::Await` cannot appear in a script or in a
+    /// non-async function at all. See [`compile_module`], which reads this and compiles again.
+    saw_top_level_await: bool,
     /// Where each function declaration that was hoisted was written.
     ///
     /// [`Compiler::hoist_functions`] runs over the *top level* of a body and nothing else, so a
@@ -1018,6 +1068,7 @@ impl<'a> Compiler<'a> {
             uses_arguments: false,
             scope_marks: Vec::new(),
             continues: Vec::new(),
+            saw_top_level_await: false,
             hoisted: Vec::new(),
             labels: Vec::new(),
             unwinds: Vec::new(),

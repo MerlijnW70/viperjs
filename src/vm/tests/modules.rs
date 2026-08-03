@@ -67,25 +67,157 @@ fn a_modules_this_is_undefined() {
 }
 
 #[test]
-fn a_top_level_await_is_refused_rather_than_compiled_into_a_chunk_that_cannot_run() {
-    // §16.2.1.5.3 — a module may `await` at its top level, and a module that does is *asynchronous*:
-    // its evaluation answers a promise and everything importing it waits. praxis has none of that,
-    // and `Instruction::Await` parks the running execution — so at a module's top level it parked
-    // with nothing to park into and the interpreter answered `Fault::YieldOutsideGenerator`. That
-    // is a chunk that does not make sense, which is a bug rather than a missing feature, and 169
-    // conformance files reached it.
-    let mut heap = Heap::new();
-    let module = crate::parser::parse_module("await 1;").expect("a module may say this"); // the test is about the refusal
-    let error = crate::compile::compile_module(&module, &mut heap).expect_err("not built yet"); // same
+fn a_module_may_await_at_its_top_level_and_everything_importing_it_waits() {
+    // §16.2.1.5.3 — a module whose body contains a top-level `await` is asynchronous: its
+    // evaluation answers a promise, and the modules that import it do not start until it settles.
+    // The value the `await` produced is there to be exported like any other.
     assert_eq!(
-        error.kind,
-        crate::compile::ErrorKind::Unsupported("a top-level `await`")
+        run_graph(
+            &[
+                ("dep", "export var answer = await Promise.resolve(41) + 1;"),
+                ("main", "import { answer } from 'dep'; answer"),
+            ],
+            "main"
+        ),
+        "42"
     );
-    // …and it is the *top level* that is refused, not `await`. One inside an `async` function in
-    // the same module has an execution to park and compiles.
-    let module = crate::parser::parse_module("async function f() { await 1; } f();")
-        .expect("a module may say this"); // same
-    assert!(crate::compile::compile_module(&module, &mut heap).is_ok());
+    // …and the *order* is what waiting means: `dep`'s body finishes before `main`'s begins, even
+    // though finishing takes a turn of the job queue.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "dep",
+                    "globalThis.log = 'dep-start;'; \
+                     await Promise.resolve(); \
+                     globalThis.log += 'dep-end;'; \
+                     export var ready = true;"
+                ),
+                (
+                    "main",
+                    "import { ready } from 'dep'; globalThis.log += 'main;'; globalThis.log"
+                ),
+            ],
+            "main"
+        ),
+        "dep-start;dep-end;main;"
+    );
+    // Several awaits in a row, and one on a value that is not a promise — §27.7.5.3 wraps it, so it
+    // still costs a turn.
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "var seen = ''; \
+                 seen += await 'a'; \
+                 seen += await Promise.resolve('b'); \
+                 seen += await 'c'; \
+                 seen"
+            )],
+            "self"
+        ),
+        "abc"
+    );
+}
+
+#[test]
+fn what_an_asynchronous_module_left_queued_runs_before_the_host_is_answered() {
+    // §9.5 — the jobs run when no execution is running, which for a script is after its last
+    // statement and for a synchronous module is after its body. An asynchronous one reaches neither
+    // of those, so without a drain of its own a `then` the body registered was still waiting when
+    // the host was told the module had finished.
+    assert_eq!(
+        run_graph(
+            &[(
+                "m",
+                "globalThis.out = 'queued'; \
+                 Promise.resolve().then(function () { globalThis.out = 'ran'; }); \
+                 await Promise.resolve(); \
+                 globalThis.out"
+            )],
+            "m"
+        ),
+        // The body's own value is what the module evaluates to — read before the drain, since a job
+        // is not the module — and the queue is empty by the time the answer is handed back.
+        "ran"
+    );
+    // A computed key is an ordinary expression of the enclosing code, so an `await` in one is a
+    // *top-level* await and makes the module asynchronous like any other.
+    assert_eq!(
+        run_graph(&[("m", "var o = { [await 'k']: 5 }; o.k")], "m"),
+        "5"
+    );
+    assert_eq!(
+        run_graph(
+            &[("m", "class C { [await 'm']() { return 6; } } new C().m()")],
+            "m"
+        ),
+        "6"
+    );
+}
+
+#[test]
+fn a_module_that_throws_after_awaiting_rejects_rather_than_escaping() {
+    // §27.7.5.2's wrapper, which an asynchronous module gets for the reason an `async` function
+    // does: a throw nothing inside caught **rejects the module's promise**, and §16.2.1.5.3 makes
+    // that the module's failure. Before the `await` and after it are the same answer, which is what
+    // makes the handler rather than the instruction the thing that decides.
+    for source in [
+        "throw new Error('before'); export var a = 1;",
+        "await Promise.resolve(); throw new Error('after'); export var a = 1;",
+    ] {
+        let mut heap = Heap::new();
+        let mut graph = crate::vm::Graph::new();
+        for (specifier, text) in [("dep", source), ("main", "import { a } from 'dep'; a")] {
+            let parsed = crate::parser::parse_module(text).expect("parses"); // the test is about the throw
+            let chunk = crate::compile::compile_module(&parsed, &mut heap).expect("compiles"); // same
+            graph.insert(specifier, std::rc::Rc::new(chunk));
+        }
+        let mut vm = Vm::new(&mut heap);
+        let outcome = vm
+            .run_module_graph("main", &graph, &mut heap)
+            .expect("well formed") // same
+            .expect("the graph links"); // same
+        assert!(
+            matches!(outcome, crate::vm::Outcome::Thrown(_)),
+            "for {source:?}: {outcome:?}"
+        );
+    }
+    // …and a module that awaits without ever throwing is not a failure, which is what makes the
+    // rows above about the throw.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "await Promise.resolve(); export var a = 7;"),
+                ("main", "import { a } from 'dep'; a"),
+            ],
+            "main"
+        ),
+        "7"
+    );
+}
+
+#[test]
+fn a_top_level_await_is_only_a_module_thing() {
+    // §16.2.1.5.3 belongs to the Module goal. A Script has no `AwaitExpression` at its top level at
+    // all — §13.1 makes `await` an ordinary identifier there — so the same text means something
+    // else rather than being refused.
+    assert_eq!(run("var await = 3; await + 1"), "4");
+    // …and a module compiled without one is **not** asynchronous, so its body still runs straight
+    // through: the second pass is paid only by a module that uses the production.
+    let mut heap = Heap::new();
+    let plain = crate::parser::parse_module("export var a = 1;").expect("parses"); // the test is about the flag
+    let plain = crate::compile::compile_module(&plain, &mut heap).expect("compiles"); // same
+    assert!(!plain.is_async());
+    let waiting = crate::parser::parse_module("export var a = await 1;").expect("parses"); // same
+    let waiting = crate::compile::compile_module(&waiting, &mut heap).expect("compiles"); // same
+    assert!(waiting.is_async());
+    // An `await` inside an `async` function in the module does not make the *module* asynchronous:
+    // that one has its own execution to park into.
+    let inner =
+        crate::parser::parse_module("async function f() { await 1; } f();").expect("parses"); // same
+    let inner = crate::compile::compile_module(&inner, &mut heap).expect("compiles"); // same
+    assert!(!inner.is_async());
 }
 
 /// Compile several modules and link them, answering what the entry evaluated to.

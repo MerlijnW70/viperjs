@@ -16987,6 +16987,10 @@ language/expressions/class/async-method/dflt-params-ref-later.js :: it threw Ref
 language/expressions/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-await-expression.js :: the test's status could not be read
+language/expressions/class/cpn-class-expr-computed-property-name-from-await-expression.js :: the test's status could not be read
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-await-expression.js :: the test's status could not be read
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-await-expression.js :: the test's status could not be read
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-call-expr-identifier-reference-yield.js :: it did not parse: unexpected character
@@ -17423,8 +17427,6 @@ language/expressions/dynamic-import/import-defer/import-defer-transitive-async-m
 language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/promise-prototype-then-not-called.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/sync/main.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/import-fulfilled-member-of-errored-cycle.js :: the test called $DONE with Test262Error: Expected SameValue(«"a top-level `await` is not implemented yet"», «"async error in B"») to be true
-language/expressions/dynamic-import/import-fulfilled-member-of-errored-cycle.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«"a top-level `await` is not implemented yet"», «"async error in B"») to be true
 language/expressions/dynamic-import/imported-self-update.js :: the test's status could not be read
 language/expressions/dynamic-import/namespace/await-ns-define-own-property.js :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
 language/expressions/dynamic-import/namespace/await-ns-define-own-property.js (strict) :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
@@ -17695,6 +17697,7 @@ language/expressions/new/non-ctor-err-realm.js :: it threw TypeError: what was c
 language/expressions/new/non-ctor-err-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
+language/expressions/object/cpn-obj-lit-computed-property-name-from-await-expression.js :: the test's status could not be read
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
@@ -17911,6 +17914,7 @@ language/import/import-defer/errors/resolution-error/import-defer-of-missing-mod
 language/import/import-defer/errors/syntax-error/import-defer-of-syntax-error-fails.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/module-imported-defer-and-eager.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/evaluation-top-level-await/async-cycle-dependency-of-deferred-module/main.js :: it threw TypeError: what was called is not a function
 language/import/import-defer/evaluation-top-level-await/flattening-order/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-top-level-await/import-defer-async-module/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-top-level-await/import-defer-transitive-async-module/main.js :: it did not parse: expected `from`, found `*`
@@ -18048,13 +18052,38 @@ language/module-code/namespace/internals/define-own-property.js :: it threw an o
 language/module-code/namespace/internals/super-access-to-tdz-binding.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/module-code/source-phase-import/import-source.js :: the test called $DONE with Test262Error: ./import-source-binding-name_FIXTURE.js: Promise should be rejected with a non-SyntaxError
 language/module-code/source-phase-import/import-source.js (strict) :: the test called $DONE with Test262Error: ./import-source-binding-name_FIXTURE.js: Promise should be rejected with a non-SyntaxError
-language/module-code/top-level-await/dynamic-import-of-waiting-module.js :: the test never called $DONE
-language/module-code/top-level-await/dynamic-import-of-waiting-module.js (strict) :: the test never called $DONE
+language/module-code/top-level-await/async-module-does-not-block-sibling-modules.js :: it threw an object with no name: Expected SameValue(«true», «false») to be true
+language/module-code/top-level-await/await-awaits-thenable-not-callable.js :: the test's status could not be read
+language/module-code/top-level-await/await-awaits-thenables-that-throw.js :: the test's status could not be read
+language/module-code/top-level-await/await-awaits-thenables.js :: the test's status could not be read
+language/module-code/top-level-await/await-dynamic-import-resolution.js :: the test's status could not be read
+language/module-code/top-level-await/await-expr-func-expression.js :: the test's status could not be read
+language/module-code/top-level-await/await-expr-new-expr-reject.js :: the test's status could not be read
+language/module-code/top-level-await/await-expr-new-expr.js :: the test's status could not be read
+language/module-code/top-level-await/await-expr-regexp.js :: the test's status could not be read
+language/module-code/top-level-await/await-expr-reject-throws.js :: the test's status could not be read
+language/module-code/top-level-await/await-expr-resolution.js :: the test's status could not be read
+language/module-code/top-level-await/await-void-expr.js :: the test's status could not be read
+language/module-code/top-level-await/dynamic-import-of-waiting-module.js :: the test called $DONE with Test262Error: The second import should not resolve before the first one
+language/module-code/top-level-await/dynamic-import-of-waiting-module.js (strict) :: the test called $DONE with Test262Error: The second import should not resolve before the first one
 language/module-code/top-level-await/dynamic-import-rejection.js :: the test's status could not be read
 language/module-code/top-level-await/dynamic-import-resolution.js :: the test's status could not be read
 language/module-code/top-level-await/fulfillment-order.js :: it threw TypeError: what was called is not a function
+language/module-code/top-level-await/if-await-expr.js :: the test's status could not be read
+language/module-code/top-level-await/module-async-import-async-resolution-ticks.js :: the test's status could not be read
+language/module-code/top-level-await/module-graphs-does-not-hang.js :: the test's status could not be read
+language/module-code/top-level-await/module-import-resolution.js :: the test's status could not be read
+language/module-code/top-level-await/module-import-unwrapped.js :: the test's status could not be read
+language/module-code/top-level-await/module-self-import-async-resolution-ticks.js :: the test's status could not be read
+language/module-code/top-level-await/module-sync-import-async-resolution-ticks.js :: the test's status could not be read
+language/module-code/top-level-await/new-await-parens.js :: the test's status could not be read
+language/module-code/top-level-await/pending-async-dep-from-cycle.js :: the test's status could not be read
 language/module-code/top-level-await/rejection-order.js :: it threw TypeError: what was called is not a function
+language/module-code/top-level-await/top-level-ticks-2.js :: the test's status could not be read
+language/module-code/top-level-await/top-level-ticks.js :: the test's status could not be read
 language/module-code/top-level-await/unobservable-global-async-evaluation-count-reset.js :: it threw TypeError: what was called is not a function
+language/module-code/top-level-await/void-await-expr.js :: the test's status could not be read
+language/module-code/top-level-await/while-dynamic-evaluation.js :: the test's status could not be read
 language/module-code/verify-dfs.js :: it threw TypeError: what was called is not a function
 language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
 language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
@@ -18286,6 +18315,10 @@ language/statements/class/async-method/dflt-params-ref-later.js :: it threw Refe
 language/statements/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-await-expression.js :: the test's status could not be read
+language/statements/class/cpn-class-decl-computed-property-name-from-await-expression.js :: the test's status could not be read
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-await-expression.js :: the test's status could not be read
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js :: the test's status could not be read
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/class-element-decorator-call-expr-identifier-reference.js :: it did not parse: unexpected character
