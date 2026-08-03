@@ -117,76 +117,14 @@ annexB/built-ins/String/prototype/split/custom-splitter-emulates-undefined.js ::
 annexB/built-ins/String/prototype/split/custom-splitter-emulates-undefined.js (strict) :: it threw TypeError: Object.defineProperty requires an object
 annexB/built-ins/TypedArrayConstructors/from/iterator-method-emulates-undefined.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 annexB/built-ins/TypedArrayConstructors/from/iterator-method-emulates-undefined.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-annexB/built-ins/escape/argument_bigint.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/argument_bigint.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/argument_types.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/argument_types.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/empty-string.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/empty-string.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/escape-above-astral.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/escape-above-astral.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/escape-above.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/escape-above.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/escape-below.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/escape-below.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/length.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/length.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/name.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/name.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/not-a-constructor.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/not-a-constructor.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-annexB/built-ins/escape/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-annexB/built-ins/escape/to-primitive-err.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/escape/to-primitive-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/escape/to-primitive-observe.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/to-primitive-observe.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/to-string-err-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/escape/to-string-err-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/escape/to-string-err.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-annexB/built-ins/escape/to-string-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-annexB/built-ins/escape/to-string-observe.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/to-string-observe.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/unmodified.js :: it threw ReferenceError: escape is not defined
-annexB/built-ins/escape/unmodified.js (strict) :: it threw ReferenceError: escape is not defined
-annexB/built-ins/unescape/argument_bigint.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/argument_bigint.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/argument_types.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/argument_types.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/empty-string.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/empty-string.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four-ignore-bad-u.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four-ignore-bad-u.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four-ignore-end-str.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four-ignore-end-str.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four-ignore-non-hex.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four-ignore-non-hex.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/four.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/length.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/length.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/name.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/name.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/not-a-constructor.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/not-a-constructor.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-annexB/built-ins/unescape/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-annexB/built-ins/unescape/to-primitive-err.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/unescape/to-primitive-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/unescape/to-primitive-observe.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/to-primitive-observe.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/to-string-err-symbol.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/unescape/to-string-err-symbol.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-annexB/built-ins/unescape/to-string-err.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-annexB/built-ins/unescape/to-string-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
-annexB/built-ins/unescape/to-string-observe.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/to-string-observe.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/two-ignore-end-str.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/two-ignore-end-str.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/two-ignore-non-hex.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/two-ignore-non-hex.js (strict) :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/two.js :: it threw ReferenceError: unescape is not defined
-annexB/built-ins/unescape/two.js (strict) :: it threw ReferenceError: unescape is not defined
+annexB/built-ins/escape/to-primitive-err.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+annexB/built-ins/escape/to-primitive-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+annexB/built-ins/escape/to-primitive-observe.js :: it threw an object with no name: this should be unreachable
+annexB/built-ins/escape/to-primitive-observe.js (strict) :: it threw an object with no name: this should be unreachable
+annexB/built-ins/unescape/to-primitive-err.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
+annexB/built-ins/unescape/to-primitive-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
+annexB/built-ins/unescape/to-primitive-observe.js :: it threw an object with no name: this should be unreachable
+annexB/built-ins/unescape/to-primitive-observe.js (strict) :: it threw an object with no name: this should be unreachable
 annexB/language/comments/multi-line-html-close.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
 annexB/language/comments/multi-line-html-close.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
 annexB/language/comments/single-line-html-close-asi.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
@@ -716,8 +654,8 @@ built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
+built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
@@ -2551,10 +2489,10 @@ built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no 
 built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Map/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -4448,8 +4386,8 @@ built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js (strict) :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-built-ins/Set/set-iterator-close-after-add-failure.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Set/set-iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Error but got a RangeError
+built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Error but got a RangeError
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -14692,10 +14630,10 @@ built-ins/Uint8Array/prototype/toHex/results.js :: it threw TypeError: what was 
 built-ins/Uint8Array/prototype/toHex/results.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakMap/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakMap/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -14753,8 +14691,8 @@ built-ins/WeakRef/prototype-from-newtarget-abrupt.js :: it threw an object with 
 built-ins/WeakRef/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
 built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
-built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/decodeURI/S15.1.3.1_A2.5_T1.js :: it threw RangeError: the heap has grown past what this engine will allocate

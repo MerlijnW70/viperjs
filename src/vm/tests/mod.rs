@@ -68,6 +68,7 @@
 //!   them.
 //! - `string_replace` — §22.1.3's five pattern methods.
 //! - `typed` — §23.2 and §10.4.5's TypedArrays.
+//! - `escape` — §B.2.1, and the two ways it is not `encodeURI`.
 //! - `uri` — §19.2.6, and the three things RFC 3629 refuses to decode.
 //! - `buffers` — §25.1's `ArrayBuffer` and §25.3's `DataView`.
 //! - `bigints` — §6.1.6.2 as a *language* value: the literal, the operators, what refuses to mix.
@@ -104,6 +105,7 @@ mod constructors;
 mod date;
 mod delegating;
 mod destructuring;
+mod escape;
 mod eval;
 mod for_await;
 mod for_in;

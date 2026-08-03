@@ -30,6 +30,7 @@ pub(crate) mod date;
 mod date_format;
 mod date_methods;
 pub mod error;
+mod escape;
 pub mod eval;
 pub mod function;
 mod generator;
@@ -96,6 +97,9 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // §19.2.6's four sit beside §19.2's other five and are installed apart from them only because
     // percent-escaping is a page of its own — nothing about the order matters here.
     uri::install(heap, realm, global);
+    // §B.2.1's two, beside §19.2.6's four because they are the same idea a decade earlier —
+    // and a different one: these escape code units where those escape a UTF-8 encoding's octets.
+    escape::install(heap, realm, global);
     object::install(heap, realm, global);
     annex_b::install(heap, realm);
     error::install(heap, realm, global);
