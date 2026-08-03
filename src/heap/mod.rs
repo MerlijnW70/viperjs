@@ -6,18 +6,22 @@
 //! alternative — briefly, `Rc` cannot be a mark-sweep collector because it never frees a cycle,
 //! and JavaScript makes cycles before user code runs.
 //!
-//! # A handle is never stale, and that is a decision rather than a coincidence
+//! # A stale handle names nothing, and that is a decision rather than a coincidence
 //!
-//! There is a collector — [`Heap::collect`]'s mark and sweep, called by the host — and there is
-//! still no free list and no generation counter on a handle. A swept slot is *not reused*, so a
-//! handle either names what it always named or names a slot that is empty, and there is no third
-//! case where it names something else's object. DR-0010 has the argument and the cost: the
-//! footprint a collection reclaims is Strings, environments and buffers, and never an object's
-//! slot, which is why the collector's *schedule* is the host's problem and not this module's.
+//! A swept slot **is** handed out again — DR-0019, measured in `lab/NOTES.md`'s `hot-shapes`,
+//! where a function call retained 74 bytes nothing could give back and DR-0013's budget was
+//! therefore about 900,000 calls for any program at all. So a handle carries the generation of the
+//! slot it was issued for, the sweep bumps it, and a read that disagrees answers `None` — the same
+//! answer an index past the end has always given, which is what makes the check cost a comparison
+//! and no new failure path.
 //!
-//! Reusing a slot is the next design here and it is a decision record rather than a patch: it
-//! needs generation-tagged handles, and without them a reused slot turns a stale handle into a
-//! wrong answer instead of an empty one.
+//! Reuse without that check would be worse than tombstones: a root the collector missed is
+//! *invisible* today, and with reuse it hands back a different value of the same type in silence.
+//!
+//! Two arenas have converted — environments and BigInts, the second through the shared `arena` module,
+//! which exists so that the remaining three are the same change and not three retellings of it.
+//! Objects, Strings and Symbols are still tombstoned; they cost what the environments did, and
+//! the Strings one has a trap named in DR-0019 that the intern table sets.
 //!
 //! # Why a handle is not a reference
 //!
@@ -28,6 +32,7 @@
 //!
 //! # How this module is laid out
 //!
+//! - `arena` — DR-0019's slot table: the free list, and the generation that makes reuse safe.
 //! - `arguments` — §10.4.4's parameter map, which makes `arguments[0]` and `a` one variable.
 //! - `property` — [`PropertyKey`], and what an object files under one.
 //! - `object` — the ordinary object (§10.1) and its internal methods.
@@ -62,6 +67,7 @@
 //! - `weak_ref` — §26.1 and §26.2, the one reference the collector does not follow.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
+mod arena;
 mod arguments;
 mod array;
 mod buffer;
@@ -259,7 +265,7 @@ pub struct Heap {
     /// and every relation says so by reading them, so sharing a slot would buy nothing an equality
     /// does not already give. A table keyed by digits would also have to hash a magnitude of
     /// arbitrary length on every literal.
-    bigints: Vec<Option<crate::bigint::BigInt>>,
+    bigints: arena::Arena<crate::bigint::BigInt>,
     /// Where a given sequence of code units was interned, if it ever was.
     ///
     /// Only property keys go in here, and [`Heap::intern`] says why they must: two Strings with
@@ -281,19 +287,7 @@ pub struct Heap {
     ///
     /// On the heap rather than on a stack because a closure outlives the call that made it: the
     /// frame is gone and the variables are not. See [`Environment`].
-    environments: Vec<Option<Environment>>,
-    /// Which use each environment slot is on — DR-0019.
-    ///
-    /// Bumped when a sweep puts a slot back, and compared against the generation a handle carries.
-    /// Parallel to `environments` rather than a field on `Environment`, because it has to outlive
-    /// the record: the question a stale handle asks is about a slot whose `Environment` is gone.
-    environment_generations: Vec<u32>,
-    /// Environment slots a sweep has freed, waiting to be handed out again — DR-0019.
-    ///
-    /// The whole reason `environments.len()` stops growing, and with it DR-0013's footprint. A
-    /// slot whose generation would wrap is **not** put back here: it is retired, which is what
-    /// makes "a handle names its own value or nothing" true without an exception.
-    free_environments: Vec<usize>,
+    environments: arena::Arena<Environment>,
     /// §16.2.1.5.2's import bindings — which slots are really another environment's.
     ///
     /// Beside the environments rather than on them: an `import` is the only thing in the language
@@ -332,6 +326,51 @@ pub struct Heap {
     /// none of the other three terms grows by anything like what one costs.
     buffer_bytes: usize,
 }
+
+/// A handle into an [`arena::Arena`] — DR-0019's packed index and generation.
+///
+/// One word, split: the low 32 bits say which slot and the high 32 say which *use* of it. Packed
+/// rather than two fields because a second word per handle is paid by every value in every
+/// program, to detect a mistake in the collector — and neither half is tight, since DR-0013's
+/// budget cannot hold four billion of anything.
+pub(super) trait Handle: Copy {
+    /// A handle for slot `index` on its `generation`th use.
+    fn at(index: usize, generation: u32) -> Self;
+    /// Which slot of its arena this names.
+    fn index(self) -> usize;
+    /// Which use of that slot this names. A read that disagrees answers `None`.
+    fn generation(self) -> u32;
+}
+
+/// How many low bits of a handle are the index.
+const HANDLE_INDEX_BITS: u32 = 32;
+
+/// Implement [`Handle`] for a one-field newtype over `usize`.
+///
+/// A macro because it is the same three lines five times, and because the two halves must be
+/// split against the same constant in every one of them — five hand-written copies is five
+/// chances for one to shift by 31.
+macro_rules! packed_handle {
+    ($name:ty) => {
+        impl Handle for $name {
+            fn at(index: usize, generation: u32) -> Self {
+                Self(index | ((generation as usize) << HANDLE_INDEX_BITS))
+            }
+            fn index(self) -> usize {
+                self.0 & ((1 << HANDLE_INDEX_BITS) - 1)
+            }
+            fn generation(self) -> u32 {
+                (self.0 >> HANDLE_INDEX_BITS) as u32
+            }
+        }
+    };
+}
+
+packed_handle!(StringId);
+packed_handle!(SymbolId);
+packed_handle!(BigIntId);
+packed_handle!(ObjectId);
+packed_handle!(crate::heap::EnvironmentId);
 
 impl Heap {
     /// An empty heap.
@@ -498,14 +537,12 @@ impl Heap {
 
     /// Put a BigInt on the heap and answer the handle that addresses it.
     pub fn new_bigint(&mut self, value: crate::bigint::BigInt) -> BigIntId {
-        let id = BigIntId(self.bigints.len());
-        self.bigints.push(Some(value));
-        id
+        self.bigints.place(value)
     }
 
     /// The BigInt a handle addresses, or `None` for a handle to a swept slot.
     pub fn bigint(&self, id: BigIntId) -> Option<&crate::bigint::BigInt> {
-        self.bigints.get(id.0)?.as_ref()
+        self.bigints.get(id)
     }
 
     /// Put a Symbol on the heap — §20.4.1.1 `SymbolDescriptiveString`'s subject, and §6.1.5's value.

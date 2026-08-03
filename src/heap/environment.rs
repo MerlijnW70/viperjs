@@ -40,35 +40,6 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnvironmentId(pub(super) usize);
 
-impl EnvironmentId {
-    /// How many low bits of the handle are the index — DR-0019's split of the one word.
-    ///
-    /// Thirty-two, and neither half is tight: DR-0013's budget cannot hold four billion
-    /// environments, and four billion reuses of one slot is more collections than a heap this size
-    /// can produce. The point of writing it as a constant is that both halves are then checked
-    /// against the same number rather than against two spellings of it.
-    const INDEX_BITS: u32 = 32;
-
-    /// A handle for slot `index` at `generation`.
-    pub(super) fn at(index: usize, generation: u32) -> Self {
-        Self(index | ((generation as usize) << Self::INDEX_BITS))
-    }
-
-    /// Which slot of the arena this names.
-    pub(super) fn index(self) -> usize {
-        self.0 & ((1 << Self::INDEX_BITS) - 1)
-    }
-
-    /// Which use of that slot this names — DR-0019.
-    ///
-    /// The whole of what distinguishes a live handle from one issued before a sweep put the slot
-    /// back. A read whose generation disagrees answers `None`, which is the answer an index past
-    /// the end has always given, so nothing downstream gains a case.
-    pub(super) fn generation(self) -> u32 {
-        (self.0 >> Self::INDEX_BITS) as u32
-    }
-}
-
 /// What a source called one slot, for the one reader that has to ask by name — DR-0018.
 ///
 /// Nothing in ordinary compiled code consults this. A name was resolved to a depth and an index
@@ -250,46 +221,17 @@ impl Heap {
     /// comes from here, which is what lets the free list be trusted: a construction that pushed
     /// directly would hand out a handle whose generation was whatever the last use left behind.
     fn place(&mut self, record: Environment) -> EnvironmentId {
-        match self.free_environments.pop() {
-            Some(index) => {
-                let generation = self
-                    .environment_generations
-                    .get(index)
-                    .copied()
-                    .unwrap_or(0);
-                self.environments[index] = Some(record);
-                EnvironmentId::at(index, generation)
-            }
-            None => {
-                let index = self.environments.len();
-                self.environments.push(Some(record));
-                self.environment_generations.push(0);
-                EnvironmentId::at(index, 0)
-            }
-        }
+        self.environments.place(record)
     }
 
     /// The record a handle names, or `None` because it names none — DR-0019's invariant.
-    ///
-    /// Three ways to answer `None` and they are one answer: an index past the end, a slot a sweep
-    /// emptied, and a slot that has been handed out again since this handle was issued. The third
-    /// is the one this record exists for, and it is deliberately indistinguishable from the other
-    /// two — a reader that already handled a foreign handle handles a stale one for free.
     fn record(&self, id: EnvironmentId) -> Option<&Environment> {
-        let index = id.index();
-        if self.environment_generations.get(index).copied()? != id.generation() {
-            return None;
-        }
-        self.environments.get(index)?.as_ref()
+        self.environments.get(id)
     }
 
     /// The same, for the two operations that write.
     fn record_mut(&mut self, id: EnvironmentId) -> Option<&mut Environment> {
-        let index = id.index();
-        if self.environment_generations.get(index).copied()? != id.generation() {
-            return None;
-        }
-        self.environments.get_mut(index)?.as_mut()
+        self.environments.get_mut(id)
     }
 
     /// §9.1.1.2 `NewObjectEnvironment` — a scope whose bindings are `object`'s properties.
@@ -384,11 +326,7 @@ impl Heap {
         from: EnvironmentId,
         at: u32,
     ) -> bool {
-        let Some(found) = self
-            .environments
-            .get(environment.0)
-            .and_then(Option::as_ref)
-        else {
+        let Some(found) = self.environments.get(environment) else {
             return false;
         };
         if index as usize >= found.slots.len() {
@@ -459,10 +397,7 @@ impl Heap {
 
     /// How many environments this heap holds.
     pub fn environment_count(&self) -> usize {
-        self.environments
-            .iter()
-            .filter(|slot| slot.is_some())
-            .count()
+        self.environments.live()
     }
 }
 

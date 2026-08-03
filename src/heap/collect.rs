@@ -33,7 +33,8 @@
 //! and picking a moment needs a measurement of what allocation costs — an M8 experiment. What is
 //! here is the operation, and an embedder that calls it.
 
-use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, StringId, Weak};
+use crate::heap::Handle;
+use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, Weak};
 use crate::value::Value;
 
 /// Whether the walk reached this value, for the two questions weakness asks about a key.
@@ -676,35 +677,9 @@ impl Heap {
         // generation is what makes the reuse safe to look at: a handle issued for the *previous*
         // use of this slot now disagrees and reads as `None`, where before this it would have
         // found whatever was put there next.
-        // Three lists walked in lockstep rather than indexed: the marks and the generations are
-        // both built at the arena's length, so a `get` on either would need a default that no
-        // index could reach — mutation coverage duly called one out. `zip` says the same thing
-        // structurally and leaves nothing to be wrong about.
-        let mut reusable = Vec::new();
-        for (index, ((environment, generation), seen)) in self
-            .environments
-            .iter_mut()
-            .zip(self.environment_generations.iter_mut())
-            .zip(&marked.environments)
-            .enumerate()
-        {
-            if *seen || environment.is_none() {
-                continue;
-            }
-            *environment = None;
-            freed.environments += 1;
-            // A slot whose generation would wrap is **retired** rather than freed: put back, it
-            // would one day issue a handle indistinguishable from one that named an older value,
-            // and "a handle names its own value or nothing" would stop being true. Nothing can
-            // reach it — four billion reuses of one slot is more collections than DR-0013's budget
-            // can drive — which is why the wrap is declined here rather than asserted against.
-            if let Some(next) = generation.checked_add(1) {
-                *generation = next;
-                reusable.push(index);
-            }
-        }
-        // Collected first and appended after, because the loop above holds the arena mutably.
-        self.free_environments.append(&mut reusable);
+        // DR-0019 — the arena frees, bumps the generation and remembers the slot. An environment
+        // gives nothing else back: its slots are inside the record and go with it.
+        freed.environments += self.environments.sweep(&marked.environments, |_| {});
         for (string, marked) in self.strings.iter_mut().zip(&marked.strings) {
             if *marked || string.is_none() {
                 continue;
@@ -717,13 +692,9 @@ impl Heap {
             *string = None;
             freed.strings += 1;
         }
-        for (value, marked) in self.bigints.iter_mut().zip(&marked.bigints) {
-            if *marked || value.is_none() {
-                continue;
-            }
-            *value = None;
-            freed.bigints += 1;
-        }
+        // DR-0019 — the arena frees, bumps the generation and remembers the slot. A BigInt gives
+        // nothing else back: its magnitude is inside the value and goes with it.
+        freed.bigints += self.bigints.sweep(&marked.bigints, |_| {});
         for (symbol, marked) in self.symbols.iter_mut().zip(&marked.symbols) {
             if *marked || symbol.is_none() {
                 continue;
@@ -750,8 +721,7 @@ impl Heap {
     /// above its declaration is a binding with nothing behind it to keep alive.
     fn environment_slots(&self, id: EnvironmentId) -> Vec<Value> {
         self.environments
-            .get(id.index())
-            .and_then(Option::as_ref)
+            .get(id)
             .map(|found| found.slots().iter().flatten().copied().collect())
             .unwrap_or_default()
     }
@@ -768,9 +738,8 @@ impl Heap {
     /// An environment's parent, if it has one and exists.
     fn environment_parent(&self, id: EnvironmentId) -> Option<EnvironmentId> {
         self.environments
-            .get(id.index())
-            .and_then(Option::as_ref)
-            .and_then(|found| found.parent())
+            .get(id)
+            .and_then(crate::heap::Environment::parent)
     }
 }
 
@@ -784,36 +753,6 @@ struct Marked {
     strings: Vec<bool>,
     symbols: Vec<bool>,
     bigints: Vec<bool>,
-}
-
-/// The index inside a handle, for the collector's own use.
-pub(super) trait Slot {
-    /// Which slot of its arena this handle names.
-    fn index(&self) -> usize;
-}
-
-impl Slot for crate::heap::BigIntId {
-    fn index(&self) -> usize {
-        self.0
-    }
-}
-
-impl Slot for StringId {
-    fn index(&self) -> usize {
-        self.0
-    }
-}
-
-impl Slot for ObjectId {
-    fn index(&self) -> usize {
-        self.0
-    }
-}
-
-impl Slot for EnvironmentId {
-    fn index(&self) -> usize {
-        self.0
-    }
 }
 
 #[cfg(test)]

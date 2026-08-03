@@ -5,6 +5,7 @@
 //! §10.1.6.3's length comes from.
 
 use super::*;
+use crate::heap::Handle;
 use crate::heap::{PropertyDescriptor, PropertyKind};
 use crate::value::Value;
 
