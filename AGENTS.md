@@ -134,22 +134,23 @@ literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array
 resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eval.rs` and
 `compile_direct_eval`. That is what the environments' name lists are for, and it was worth 973 runs.
 
-**`with` runs too**, and so do **modules**. §16.2 is now whole apart from the two dynamic pieces:
-`import` and `export` in every form, §16.2.1.5.2's live bindings, §10.4.6's namespace objects,
-§16.2.1.6.3's `ResolveExport` across a graph, and `export *` with its ambiguity rule. `src/vm/module.rs`
-is the linker and `src/heap/namespace.rs` the exotic object.
+**`with` runs too, and so do modules — including `import()`.** §16.2 is whole apart from a top-level
+`await`: `import` and `export` in every form, §16.2.1.5.2's live bindings, §10.4.6's namespace objects,
+§16.2.1.6.3's `ResolveExport` across a graph, `export *` with its ambiguity rule, and §13.3.10's
+dynamic `import()`. `src/vm/module.rs` is the linker, `src/heap/namespace.rs` the exotic object and
+`src/vm/loader.rs` the host hook.
 
-Conformance as of this commit is **78.26% of test262** — 72,905 of 93,161 runs. Treat that number as
+Conformance as of this commit is **79.15% of test262** — 73,736 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 1,508 runs are now *stopped* before anything executes:
+Only 608 runs are now *stopped* before anything executes:
 
 | Runs | What stops them |
 | --- | --- |
-| 902 | dynamic `import` |
-| 247 | a top-level `await` |
+| 248 | a top-level `await` |
 | 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 110 | a property of strings |
 | 18 | a destructuring rest parameter |
+| 18 | `$262.agent`, which a one-thread engine has no answer for |
 
 **The skip list is no longer where the work is, and neither are the biggest failure buckets.**
 Sorted by reason the largest look actionable and mostly are not, which is worth doing once and
@@ -181,27 +182,20 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
   implementation choice. **It is also the only remaining path to 80%**: every other item on this
   page together lands at about 79.5%.
 
-**So the largest real subject left is the rest of M7** — dynamic `import` 902, a top-level `await`
-247 and `import.meta` 5.
+**The skip list is nearly empty, and 80% now turns on one decision.** A top-level `await` is 248
+runs and `import.meta` 6; everything else stopped is a proposal or a one-thread engine's limit.
+Adding the two lands near 79.4%, and the 645 Annex B runs below are what is between that and 80%.
 
-### Dynamic `import` is the next slice, and here is what it costs
+### A top-level `await` is the next slice, and the registry it needs is already there
 
-902 runs, the biggest single item on the list, and the design is known:
+248 runs, and §16.2.1.5.3 is most of it. What dynamic `import()` built — a module registry on the
+`Vm`, records that outlive one call, a promise settled from a job — is what an asynchronous module
+also needs, so the remaining work is the clause itself: `[[AsyncEvaluation]]`, the counter that
+orders sibling modules, and the fact that a module's *evaluation* answers a promise rather than a
+value. `Vm::link_and_evaluate` is where it goes; `src/vm/suspend.rs` already parks a body.
 
-- **A host loader.** §16.2.1.7's `HostLoadImportedModule` is currently answered by the caller
-  building a whole `Graph` in advance, which cannot work when the specifier is a run-time string.
-  The engine needs a `trait ModuleLoader { fn load(&mut self, specifier: &str, heap: &mut Heap) }`
-  and the `Vm` needs to hold one.
-- **A module registry that outlives one call.** `run_module_graph` builds its environments and
-  namespaces locally and drops them, which is fine for one graph and wrong the moment a second
-  `import()` must find a module the first evaluated. The registry moves onto the `Vm` — and the
-  collector's root set moves with it, or a module's environment is freed under a namespace object
-  still holding it.
-- **The promise.** §13.3.10 makes a capability, and the load, link and evaluation happen in a
-  **job** — `import()` must not settle synchronously. DR-0016 already says jobs run inside `run`.
-
-A top-level `await` (247) is the same registry work plus §16.2.1.5.3's `[[AsyncEvaluation]]`, so
-the two are worth doing in that order.
+Read `language/module-code/top-level-await/` before starting. Those tests run now and fail, so the
+failure messages are the specification's own reading of what is missing.
 
 ### Two small gaps are diagnosed and not built
 
@@ -226,6 +220,28 @@ touching that area: a generator's parameters are **not** part of its body, so
 Deciding it in `enter` instead put the whole parameter list inside the parked body, where it ran at
 the first `next` — invisible until a parameter can throw or be observed, and then 1,598 tests at
 once, most of them in `dstr` directories that have nothing to do with generators.
+
+**78.20% to 79.15% in two more**, and the second is not a feature. §13.3.10's `import()` is +831 on
+its own — the largest single slice since the generators work — and what it cost was not the clause
+but three things around it:
+
+- **A module's registry outlives the call that made it.** §16.2.1.6's "each body once" is a fact
+  about the execution, so the records moved onto the `Vm`, and the collector's root set with them.
+- **A module body writes §14.2.2's completion register.** That is how `run_module_graph` answers,
+  and a job runs between statements of a program that is still going — so `typeof import("m")`
+  evaluated to whatever `m`'s last statement did until the job put it back.
+- **"Has a record" is not "already placed".** A module gets its record before its dependencies are
+  walked so a cycle can stop; reading that as "already in the order" ran a module before what it
+  imports.
+
+The second slice was the **first ratchet finding that it had been lying**. The mutation-coverage
+configuration names the files it reads one at a time, and five engine files — `module.rs`,
+`loader.rs`, `namespace.rs`, `dynamic.rs`, `eval.rs` — had never been added to it, so a green score
+was being reported over code nothing was mutating. Probed, they scored 71.4%. **Check that list
+whenever you add a file**; the audit is nine lines of Python comparing it against `src/`. A reported
+survivor can also be **wrong** — one of these killed three tests when the mutation was applied by
+hand, its sandbox having been quarantined mid-run. Hand-apply before believing a survivor, which is
+the mirror of the rule this file already gives for believing a green.
 
 **77.45% to 78.20% in four more**, and all four are §16.2. What they cost was not the linking — that
 is two hundred lines — but three things that touch the rest of the engine:
