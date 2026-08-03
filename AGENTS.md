@@ -134,37 +134,47 @@ literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array
 resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eval.rs` and
 `compile_direct_eval`. That is what the environments' name lists are for, and it was worth 973 runs.
 
-**`with` runs too, and so do modules — including `import()`.** §16.2 is whole apart from a top-level
-`await`: `import` and `export` in every form, §16.2.1.5.2's live bindings, §10.4.6's namespace objects,
-§16.2.1.6.3's `ResolveExport` across a graph, `export *` with its ambiguity rule, and §13.3.10's
-dynamic `import()`. `src/vm/module.rs` is the linker, `src/heap/namespace.rs` the exotic object and
-`src/vm/loader.rs` the host hook.
+**`with` runs too, and so do modules — including `import()`.** §16.2 is whole apart from
+`import.meta`: `import` and `export` in every form, §16.2.1.5.2's live bindings, §10.4.6's namespace
+objects, §16.2.1.6.3's `ResolveExport` across a graph, `export *` with its ambiguity rule, §13.3.10's
+dynamic `import()`, and a top-level `await` that what imports the module waits for.
+`src/vm/module.rs` is the linker, `src/heap/namespace.rs` the exotic object and `src/vm/loader.rs`
+the host hook.
 
-Conformance as of this commit is **79.38% of test262** — 73,949 of 93,161 runs. Treat that number as
+**And Annex B's block-level function declarations run.** DR-0008 was reversed and §B.3.2, §B.3.3 and
+§B.3.4 are in, in sloppy code — `src/compile/annex_b.rs` decides which declarations earn the extra
+`var` binding. That was the last thing between the engine and 80%, and the section below is what it
+cost.
+
+Conformance as of this commit is **80.02% of test262** — 74,546 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 362 runs are now *stopped* before anything executes:
+Only 344 runs are now *stopped* before anything executes:
 
 | Runs | What stops them |
 | --- | --- |
 | 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 110 | a property of strings |
-| 18 | a destructuring rest parameter |
 | 18 | `$262.agent`, which a one-thread engine has no answer for |
+| 16 | `super` and `new.target` inside a direct `eval` in an arrow |
+| 6 | `import.meta` |
+| 24 | a module beside the test that does not parse, one proposal at a time |
 
-**The skip list is no longer where the work is, and neither are the biggest failure buckets.**
+**The skip list is empty of anything worth building, and the failure buckets are where the work is.**
 Sorted by reason the largest look actionable and mostly are not, which is worth doing once and
 writing down rather than re-deriving. Bucketed by *path*, what they actually are:
 
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
-| ~960 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync` 128, `Iterator.zip`/`zipKeyed`/`concat` 160, `Promise.allKeyed`/`allSettledKeyed` 92, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64. The real remainder is `class` 45 and `DataView` 52 |
+| ~965 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync` 128, `Iterator.zip`/`zipKeyed`/`concat` 160, `Promise.allKeyed`/`allSettledKeyed` 92, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64. The real remainder is `class` 45 and `DataView` 52 |
 | 894 | the heap budget | 878 are `RegExp/property-escapes`, and the lab has **parked** them — see below |
-| 471 | `a declaration may not stand where only a statement may` | Annex B syntactic — excluded by DR-0008, and see below |
 | 454 | `cannot read a property…` | **Atomics 224** (of which most need `$262.agent`, so ~80 are winnable in a one-thread engine) and **`Error.prototype.stack` 64**, which is a proposal |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two separate proposals, not `import.meta` |
-| 216 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
 | 238 | `Calling as constructor…` | all `Temporal` |
+| 224 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
+| 176 + 142 | `DisposableStack`, `AsyncDisposableStack` | the same proposal's library half |
+| **128** | **a sloppy `var` inside a direct eval in a function** | **the largest refusal praxis still owns — see below** |
+| 118 | `ShadowRealm is not defined` | a proposal |
 
 **Two buckets have been costed and must not be re-costed.**
 
@@ -174,99 +184,73 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
   budget. These need an interpreter several times faster, which is M8. The experiment's two real
   findings — a throwaway heap String per computed property key, and a timed-out run landing in no
   column — are both **fixed**; do not go looking for them again.
-- **Annex B block-level function declarations are 645 runs and are behind DR-0008**, which refuses
-  B.3 deliberately and names the procedure for reversing itself ("the place to change it is here,
-  and B.3 would then arrive behind a host flag"). ~480 of the 645 are the `if (x) function f() {}`
-  shape, which is B.3's *syntactic* half — so this is a charter decision and not an
-  implementation choice. **It is also the only remaining path to 80%**: every other item on this
-  page together lands at about 79.5%.
+- **Annex B's block-level function declarations were 645 runs and are now built.** DR-0008 was
+  reversed and the clause is in; see the section below for what it cost, because three of the four
+  expensive parts were not in the clause.
 
-**The skip list is all but empty, and 80% now turns on one decision.** §16.2 is finished; what is
-left stopped is a proposal (`(?i:…)` 170, a property of strings 110), a one-thread engine's limit
-(`$262.agent` 18), `import.meta` 6, and a destructuring rest parameter 18. Building every one of
-those lands short of 80%. **The 645 Annex B runs below are what is between here and it.**
+### §B.3 is built, and what it actually cost is worth reading before touching that area
 
-### Annex B §B.3 is now DECIDED and NOT BUILT — start here
+DR-0008 was reversed on 2026-08-03 and B.3 landed the same day: **+571 runs, no regressions**, which
+is what took the suite past 80%. §B.3.4's `if (x) function f() {}`, §B.3.2's `L: function f() {}`,
+§B.3.3's extra `var` binding and §B.3.3.5's duplicate-function carve-out are all in —
+`src/compile/annex_b.rs` decides which declarations earn the binding and its module doc is the long
+version. Four things around it cost more than the clause did, and each is a shape that recurs:
 
-DR-0008 was **reversed on 2026-08-03**: B.3 is implemented, conditioned on strictness alone and
-**not** behind a host flag. Read the amendment at the foot of that record for why the flag was
-dropped — strictness is static, and B.1's legacy octal already sets the precedent. 645 runs, and the
-only path to 80%.
+- **§B.3.2 needs a *position* rule as well as strictness.** §14.6.1 and its five siblings make
+  `IsLabelledFunction(Statement)` a Syntax Error wherever a body is a `Statement` rather than a
+  `StatementList`, so `while (x) a: function f() {}` stays refused while `{ a: function f() {} }` is
+  taken. It is `parser::LabelledFunction`, an argument to `parse_statement` rather than a field —
+  a field would have had an initial value no input could reach, which mutation coverage caught.
+- **A `switch` was instantiating no functions at all**, and neither was a labelled declaration in a
+  block. §14.12.4 step 3 hands the whole `CaseBlock` to `BlockDeclarationInstantiation`; praxis
+  opened the environment, made no slot, and left the statement doing nothing because hoisting was
+  supposed to have done it. `switch (x) { case 1: function f() {} }` bound nothing, silently. This
+  is the third time that exact pair of half-truths has produced a wrong answer — see DR-0008's own
+  history and `Compiler::hoisted`.
+- **The global path is not `at_global_scope`.** That question answers two at once — the var scope is
+  the global object, *and* no scope has been opened here — and the second half is false inside the
+  block, which is the only place §B.3.3's copy is ever emitted. A first attempt asked it there and a
+  script's `{ function f() {} }` stored into a slot a script does not have.
+- **A name the variable scope already has needs no guard.** `Compiler::declare` hands back the slot
+  a name has and `CreateGlobalVarBinding` leaves an existing property alone, so the clause's "if
+  instantiatedVarNames does not contain F" is satisfied by the primitives. A guard in front of
+  either was a branch no program could distinguish, and mutation coverage said so.
 
-Three pieces, and the third is the one with the rules in it:
+**One divergence is deliberate and recorded.** §B.3.3.5 lets
+`{ function f() {} function f() {} }` parse, and read as written neither declaration is then
+eligible for the `var` binding — replacing either with `var f` leaves the other lexically declaring
+`f` in the same list, which §14.2.1's second rule refuses and B.3.3.5 does not relax. Every browser
+answers with the second function. No test262 file measures it, so the letter is what is implemented;
+`src/compile/annex_b.rs`'s module doc says which line to change if data ever arrives.
 
-1. **§B.3.4 — `if (x) function f() {}`.** In `parse_if_branches`, when the code is sloppy and the
-   branch begins with `function`, parse the declaration and wrap it in a `StmtKind::Block`. That is
-   the specification's own framing ("evaluated as if it were `if (Expression) { FunctionDeclaration
-   }`"), and wrapping means B.3.3 below applies to it with nothing extra. A **generator** is not a
-   `FunctionDeclaration` and must still be refused, so this needs the one-token lookahead past
-   `function` that `at_async_function` already shows how to do. `async function` is refused before
-   this point and stays refused.
-2. **§B.3.2 — `L: function f() {}`.** Same test in `parse_labelled_statement`, and **not** wrapped:
-   §8.2.12 hands a `LabelledStatement` to `TopLevelVarDeclaredNames`, which `collect_var` already
-   does by passing `direct` through, so a labelled function at a top level is var-scoped already.
-3. **§B.3.3 — the extra `var` binding**, which is the semantics and the work. At each var scope, for
-   every function declaration in a *nested* block, if replacing it with `var F` would raise no early
-   error — no `let`/`const`/`class`/catch-parameter/lexical-`for`-head named F anywhere between the
-   block and the var scope, and F not a parameter name — then create a var binding F initialised to
-   `undefined`, and **at the point the declaration is evaluated** assign the block's binding to it.
+### What is left, in the order the numbers put it
 
-**A first attempt got to 79.62% (+226, zero regressions) and was reverted.** It is worth reading
-before the second, because three of the four things it found are not in the clause:
-
-- **§B.3.2's labelled function needs a *position* rule, not just strictness.** §14.6.1, §14.7.x and
-  §14.11.1 make `IsLabelledFunction(Statement)` a Syntax Error wherever a body is a `Statement`
-  rather than a `StatementList` — so `while (x) a: function f() {}` stays refused while
-  `{ a: function f() {} }` is taken. Without it, 18 `labelled-fn-stmt.js` tests regress. A flag set
-  by the statement-list item parser and consumed by `parse_statement` carries it, with a label
-  re-arming it for its own body so `a: b: function f() {}` inherits.
-- **A generator is not a `FunctionDeclaration`** in either position, so both parse points need the
-  one-token lookahead past `function`.
-- **The name may already be a `var` or a top-level function**, and then B.3.3 step 2 must *not*
-  create a second binding — "if instantiatedVarNames does not contain F". A separate slot makes
-  reads resolve to one binding and the copy-out write to the other, which is what the 32
-  `existing-fn-update` tests see. This is the piece the reverted attempt got wrong.
-- **The global path did not store.** `{ function f() {} } typeof f` answered `undefined` at a
-  *script's* top level while the same program inside a function worked. Diagnose that before
-  anything else: the likely culprits are whether `global_vars` is set before the B.3.3 declaration
-  runs, and whether a block at a script's top level pushes a scope `own_depth` counts.
-
-Two things about (3) that the tests turn on:
-
-- The assignment happens **whether or not** step 2 created the binding: `var f = 1` at the top and
-  `{ function f() {} }` below leaves `f` as the function. `existing-var-update.js` is that row.
-- Writing to the var binding from inside the block cannot go through ordinary name resolution — the
-  block's own binding shadows it. The store needs the var scope's slot directly, which is
-  `Compiler::own_depth` hops out (or `StoreGlobal` at a script's top level, since §16.1.7 makes that
-  a property of the global object).
-
-`test/annexB/language/{eval,function,global}-code/` is the whole of it, and each file's `info:`
-frontmatter quotes the numbered steps. Read `func-skip-early-err.js` first: it is the condition in
-(3) stated as a program.
-
-### What is left after that, in the order the numbers put it
-
-- **`import.meta` — 6 runs.** §16.2.1.9's host hook, and the registry it would hang off is built. It
-  is also the **only compiler refusal left in the engine**: nothing a *script* can say is refused any
-  more, which is why the four tests that assert a refusal by name now compile modules.
-- **§13.15.2's order inside a `with` — 10 runs**, not the 79 an earlier note claimed. An assignment
-  evaluates its target *reference* before the value; inside a `with` praxis evaluates the value
-  first, which shows up as a proxy seeing one `has` where the specification asks for two.
-- **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.**
-
-### Two small gaps are diagnosed and not built
-
-Both are under a hundred runs, and each is written down because the diagnosis cost more than the
-fix will.
-
+- **A sloppy `var` or function declaration inside a direct `eval` in a function — 128 runs**, and
+  now the largest thing praxis refuses by name. §19.2.1.1 adds the binding to the *caller's*
+  variable environment, whose slot count was fixed when that function was compiled, so DR-0018
+  leaves it open. It is a real slice: an environment that can grow, or a compiled-in reservation.
+  §B.3.3's own bindings in such an eval sidestep it — they go in the eval's own scope, because
+  every test that reads them does so from inside the eval — and that is written down in
+  `compile_direct_eval` so the next attempt does not mistake it for the general fix.
+- **`import.meta` — 6 runs.** §16.2.1.9's host hook, and the registry it would hang off is built.
+- **§13.15.2's order inside a `with` — 10 runs.** An assignment evaluates its target *reference*
+  before the value; inside a `with` praxis evaluates the value first, which shows up as a proxy
+  seeing one `has` where the specification asks for two.
 - **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Both are refused
   where §19.2.1.1 allows them, because whether an arrow was written inside a function is a
   *lexical* fact that a running arrow's chunk does not record — and the parser knows it, refusing
   `new.target` in a top-level arrow at compile time. Carrying that answer onto the chunk is the
   whole slice.
-- **§13.15.2's order inside a `with` — 79 runs, all listed.** An assignment evaluates its target
-  *reference* before the value, and inside a `with` praxis evaluates the value first. Observable
-  when the right-hand side changes what the left resolves to.
+- **§9.1.1.4.18's `CreateGlobalFunctionBinding` does not replace a property — 3 runs.** A function
+  declaration over an existing configurable global should redefine it as a writable, enumerable data
+  property; praxis leaves it as it found it, which is `CreateGlobalVarBinding`'s rule and not this
+  one.
+
+**One parameter can be the whole of a clause.** §9.1.1.4.17 is `CreateGlobalVarBinding(N, D)`, and
+its two callers disagree about `D`: §16.1.7 passes `false` for a Script and §19.2.1.1 passes `true`
+for an `eval`. praxis passed `false` for both, so `eval("var x = 1"); delete x` answered `false` —
+22 runs, and found only because the Annex B tests newly reached the descriptor. When a clause takes
+a flag, check every caller passes its own.
 
 **63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's

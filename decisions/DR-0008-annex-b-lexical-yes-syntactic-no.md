@@ -1,6 +1,6 @@
 ---
 id: DR-0008
-title: Annex B is implemented where it changes what a program means, and not where it needs a host flag
+title: Annex B is implemented where strictness alone decides it, and not where it needs a host flag
 status: prose-only
 ---
 
@@ -111,9 +111,24 @@ need a fact about the host that the source does not carry.
 **What follows from this decision:**
 
 - B.3.2's labelled `FunctionDeclaration`, B.3.4's `FunctionDeclaration` as an `IfStatement` clause,
-  and B.3.3's block-level function semantics are implemented, in sloppy code only.
+  and B.3.3's block-level function semantics are implemented, in sloppy code only. **Built the same
+  day, and worth 571 runs** — see `src/compile/annex_b.rs`, whose module doc is the long version of
+  which declarations earn the extra `var` binding and why. B.3.3.5's carve-out for two
+  `FunctionDeclaration`s of one name in a block came with them, that rule being the only thing
+  standing between the other three and a `Block` that would not parse.
 - `test/annexB/` stays in the conformance run, which it already was — the exclusion named in the
   original text had lapsed before this reversal and the entries were being carried in the
   expectations file.
 - The remaining B.3 rules are not implemented by this decision and are not refused by it either.
-  Each is judged against the new line when it is reached.
+  Each is judged against the new line when it is reached. B.3.5's `for (var x = 1 in y)` and
+  B.3.4's `catch (e) { var e; }` are the two left, and both pass the new line — they are
+  conditioned on strictness and on nothing else — so each is an implementation choice now rather
+  than a charter one.
+
+**One thing the new line does not settle, and it is not a charter question.** §B.3.3.5 lets
+`{ function f() {} function f() {} }` parse, and B.3.3 then has to decide whether either declaration
+gets the `var` binding. Read as written neither does: replacing either with `var f` leaves the other
+lexically declaring `f` in the same list, which §14.2.1's second rule refuses and B.3.3.5 does not
+relax. Every browser answers with the second function instead. test262 does not test it, so the
+letter is what praxis implements — this is recorded here only so that a session finding the
+divergence knows it was seen, not decided by default.
