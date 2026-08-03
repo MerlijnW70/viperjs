@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **80.95% of test262** — 75,416 of 93,161 runs. Treat that number as
+Conformance as of this commit is **81.02% of test262** — 75,478 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 344 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -179,10 +179,10 @@ and mostly are not, which is worth doing once and writing down rather than re-de
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
 
-### 79.38% to 80.95% in twelve slices, and what they have in common
+### 79.38% to 81.02% in thirteen slices, and what they have in common
 
-None of them was a feature. Every one was a clause praxis had *nearly* right, and eleven of the
-twelve were found by bucketing the failures rather than by reading a list of what is missing.
+None of them was a feature. Every one was a clause praxis had *nearly* right, and twelve of the
+thirteen were found by bucketing the failures rather than by reading a list of what is missing.
 
 **Three of the twelve are one shape**, and it is the one worth carrying: *a clause names a
 completion, a flag or a step that praxis collapsed into one path serving two callers.* §9.1.1.4.17's
@@ -227,6 +227,9 @@ completion, a flag or a step that praxis collapsed into one path serving two cal
     answers about the same error.
 11. **§27.6.3.8 step 5** (+116) — `yield` in an `async function*` **awaits** what it yields, which
     an ordinary generator does not. One instruction, and the largest slice since the `v` flag.
+12. **§10.4.5.2 step 8's first disjunct** (+60) — a *tracking* view whose **offset** is past the
+    shrunk buffer is out of bounds. The doc claimed one could never hang off the end, which is true
+    of its end and false of its start.
 
 **The shape worth carrying: a bucket spread evenly over an area's whole surface is one common path,
 not many faults.** Slice 3 wore the name of every `Array.prototype` and `TypedArray.prototype`
@@ -274,8 +277,7 @@ doc says which line to change if data ever arrives.
   bindings in such an eval sidestep it — they go in the eval's own scope, because every test reads
   them from inside the eval — and `compile_direct_eval` says so, so the next attempt does not
   mistake it for the general fix.
-- **A coercion can detach or resize the buffer under a TypedArray method — ~58 runs** (see below);
-  and **a class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
+- **A class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
   `ClassSetExpression` is built: `[[a-z]--[aeiou]]`, `[\d&&[0-4]]` and nesting all work, and the
   three operations turned out to be three quantifiers over the operands rather than sets to build.
   What remains is the two operands that match more than one code point — `\q{abc|def}` and
@@ -283,13 +285,14 @@ doc says which line to change if data ever arrives.
   are legal, so calling them a syntax error would pass every test asserting a pattern must be
   rejected. Building them is a matcher change (a class stops being a code-point predicate), not a
   parser one.
-- **A coercion can detach or resize the buffer under a TypedArray method — ~58 runs** across
-  `set` 12, `includes` 10, `join` 8, `copyWithin` 8, `indexOf`/`lastIndexOf` 12, `slice` 4, `sort`
-  2, `at` 2. Every one coerces an argument and then works from a length read *before* it, where the
-  clause says to look again. The rules differ per method and that is the cost: `copyWithin`, `fill`
-  and `slice` **throw**, while `includes`, `indexOf` and `lastIndexOf` set the length to zero and
-  answer `-1`/`false`. Several of these files also use the immutable-`ArrayBuffer` harness, so check
-  what a row is really asking before counting it.
+- **A coercion can detach or resize the buffer under a TypedArray method — what is left of ~58.**
+  Every one coerces an argument and then works from a length read *before* it, where the clause
+  says to look again. **The rules differ per method and that is the whole cost:** `copyWithin`,
+  `fill` and `slice` **throw**, while `includes`, `indexOf` and `lastIndexOf` set the length to
+  zero and answer `-1`/`false`, and `subarray` goes on to build a view that §23.2.5.1 then refuses
+  with a *RangeError*. Several of these files also use the immutable-`ArrayBuffer` harness, so
+  check what a row is really asking before counting it — and re-measure, because §10.4.5.2's
+  offset fix took 60 runs out of this area already.
 - **§13.15.2's order inside a `with` — 49 runs.** An assignment resolves its target *reference*
   before reading the value, and a compound one writes back through the **same** reference. praxis
   resolves the name twice, so a getter that deletes the property between them writes to a different
