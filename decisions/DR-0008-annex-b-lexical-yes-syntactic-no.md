@@ -1,6 +1,6 @@
 ---
 id: DR-0008
-title: Annex B's lexical extensions are implemented and its syntactic ones are not
+title: Annex B is implemented where it changes what a program means, and not where it needs a host flag
 status: prose-only
 ---
 
@@ -16,7 +16,11 @@ That answer is not applied uniformly, and the line is between B.1 and B.3.
 comments. The lexer reads all four and flags the first three for the parser, which refuses them in
 strict code where §12.9.3.1 says to.
 
-**B.3 is not.** It extends the *syntax and semantics*: a `FunctionDeclaration` as the body of an
+**B.3 was not, and now is.** See the reversal at the foot of this record, which is the one this
+document's own procedure asked for. What follows is the argument as it stood, kept because the
+reversal is only readable against it.
+
+**B.3 was refused.** It extends the *syntax and semantics*: a `FunctionDeclaration` as the body of an
 `if` (B.3.2), an initialiser in a `for`-`in` head (B.3.5), a `VariableStatement` naming a catch
 parameter (B.3.4), a labelled `FunctionDeclaration` (§14.13.1's carve-out), and duplicate
 `FunctionDeclaration`s in a block (§14.2.1's). All are refused.
@@ -75,3 +79,41 @@ What follows from this decision:
 - `catch (e) { var e; }` was accepted in the try/catch slice on the narrower argument that
   test262's main tree cannot be asserting the refusal. That argument was sound and is not the
   question this decides; under this policy it is refused, and the slice that flips it says so.
+
+## Reversed on 2026-08-03, by the procedure above
+
+The clause above says the decision is "reversible with data", that "the place to change it is here",
+and that B.3 "would then arrive behind a host flag". Two of those three held. The third did not, and
+saying why is the substance of this amendment.
+
+**The data.** The conformance run reached 79.38% with every other buildable item spent: what remains
+stopped is a proposal, a one-thread engine's limit, or `import.meta`. Annex B's block-level function
+declarations are **645 runs**, ~480 of them the `if (x) function f() {}` shape, and they are the only
+remaining path to 80%. That is the cost this record asked to be shown.
+
+**Why not behind a host flag.** The flag was proposed because "every B.3 rule is conditioned on
+strictness as well as on the host, so implementing one means implementing *two* behaviours for the
+same source and choosing between them at run time." The first half is true and the second does not
+follow. Strictness is a **static** property: the compiler knows it when it reads the directive
+prologue, and praxis already implements two behaviours for one source on exactly those terms — B.1's
+legacy octal is refused in strict code and read in sloppy, `delete x` is an early error in one and an
+answer in the other, and `with` is a Syntax Error in one and a scope in the other. None of those is
+behind a flag and none made the conformance number depend on configuration. B.3 conditioned on
+strictness alone is the same shape, and a flag would make the number depend on how the engine was
+built — which is the thing DR-0006 refused and which this record was trying to avoid.
+
+**What the line becomes.** The old line was: an Annex B rule that changes the meaning of a program
+shape the core grammar already accepts is implemented; one that *adds* a shape is not. The new line
+drops the second half. An Annex B rule is implemented when it is conditioned on strictness and
+nothing else, because that is a question the compiler can already answer; it stays out when it would
+need a fact about the host that the source does not carry.
+
+**What follows from this decision:**
+
+- B.3.2's labelled `FunctionDeclaration`, B.3.4's `FunctionDeclaration` as an `IfStatement` clause,
+  and B.3.3's block-level function semantics are implemented, in sloppy code only.
+- `test/annexB/` stays in the conformance run, which it already was — the exclusion named in the
+  original text had lapsed before this reversal and the entries were being carried in the
+  expectations file.
+- The remaining B.3 rules are not implemented by this decision and are not refused by it either.
+  Each is judged against the new line when it is reached.

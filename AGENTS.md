@@ -186,13 +186,53 @@ left stopped is a proposal (`(?i:…)` 170, a property of strings 110), a one-th
 (`$262.agent` 18), `import.meta` 6, and a destructuring rest parameter 18. Building every one of
 those lands short of 80%. **The 645 Annex B runs below are what is between here and it.**
 
-### What is left, in the order the numbers put it
+### Annex B §B.3 is now DECIDED and NOT BUILT — start here
 
-- **Annex B's block-level function declarations — 645 runs, and a charter decision.** See above:
-  DR-0008 refuses B.3, ~480 of the 645 are its *syntactic* half, and that record names the
-  procedure for reversing itself. Nothing else reaches 80%.
-- **A destructuring rest parameter — 18 runs**, and the last compiler refusal on the skip list.
-- **`import.meta` — 6 runs.** §16.2.1.9's host hook, and the registry it would hang off is built.
+DR-0008 was **reversed on 2026-08-03**: B.3 is implemented, conditioned on strictness alone and
+**not** behind a host flag. Read the amendment at the foot of that record for why the flag was
+dropped — strictness is static, and B.1's legacy octal already sets the precedent. 645 runs, and the
+only path to 80%.
+
+Three pieces, and the third is the one with the rules in it:
+
+1. **§B.3.4 — `if (x) function f() {}`.** In `parse_if_branches`, when the code is sloppy and the
+   branch begins with `function`, parse the declaration and wrap it in a `StmtKind::Block`. That is
+   the specification's own framing ("evaluated as if it were `if (Expression) { FunctionDeclaration
+   }`"), and wrapping means B.3.3 below applies to it with nothing extra. A **generator** is not a
+   `FunctionDeclaration` and must still be refused, so this needs the one-token lookahead past
+   `function` that `at_async_function` already shows how to do. `async function` is refused before
+   this point and stays refused.
+2. **§B.3.2 — `L: function f() {}`.** Same test in `parse_labelled_statement`, and **not** wrapped:
+   §8.2.12 hands a `LabelledStatement` to `TopLevelVarDeclaredNames`, which `collect_var` already
+   does by passing `direct` through, so a labelled function at a top level is var-scoped already.
+3. **§B.3.3 — the extra `var` binding**, which is the semantics and the work. At each var scope, for
+   every function declaration in a *nested* block, if replacing it with `var F` would raise no early
+   error — no `let`/`const`/`class`/catch-parameter/lexical-`for`-head named F anywhere between the
+   block and the var scope, and F not a parameter name — then create a var binding F initialised to
+   `undefined`, and **at the point the declaration is evaluated** assign the block's binding to it.
+
+Two things about (3) that the tests turn on:
+
+- The assignment happens **whether or not** step 2 created the binding: `var f = 1` at the top and
+  `{ function f() {} }` below leaves `f` as the function. `existing-var-update.js` is that row.
+- Writing to the var binding from inside the block cannot go through ordinary name resolution — the
+  block's own binding shadows it. The store needs the var scope's slot directly, which is
+  `Compiler::own_depth` hops out (or `StoreGlobal` at a script's top level, since §16.1.7 makes that
+  a property of the global object).
+
+`test/annexB/language/{eval,function,global}-code/` is the whole of it, and each file's `info:`
+frontmatter quotes the numbered steps. Read `func-skip-early-err.js` first: it is the condition in
+(3) stated as a program.
+
+### What is left after that, in the order the numbers put it
+
+- **`import.meta` — 6 runs.** §16.2.1.9's host hook, and the registry it would hang off is built. It
+  is also the **only compiler refusal left in the engine**: nothing a *script* can say is refused any
+  more, which is why the four tests that assert a refusal by name now compile modules.
+- **§13.15.2's order inside a `with` — 10 runs**, not the 79 an earlier note claimed. An assignment
+  evaluates its target *reference* before the value; inside a `with` praxis evaluates the value
+  first, which shows up as a proxy seeing one `has` where the specification asks for two.
+- **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.**
 
 ### Two small gaps are diagnosed and not built
 
