@@ -127,8 +127,22 @@ impl Vm {
         graph: &Graph,
         heap: &mut Heap,
     ) -> Result<Result<Outcome, LinkError>, Fault> {
+        // A host that supplies the whole program registers each module under the specifier it
+        // chose, and DR-0020's edges stay empty — so every specifier resolves to itself, which is
+        // what such a host meant and is exactly the behaviour that predates that record. The keys
+        // are still recorded, because linking asks a chunk what it is called.
         for (specifier, chunk) in graph.entries() {
+            self.keys.insert(identity(chunk), specifier.to_string());
             self.resolved.insert(specifier, Rc::clone(chunk));
+        }
+        // …and then ask the loader for whatever the graph did not contain — DR-0020, and the piece
+        // that makes the two shapes one surface rather than two. A host that supplied everything
+        // never reaches the loader at all: `load_reachable` skips what is already resolved, so a
+        // complete graph walks to an empty queue and a host without a loader is never asked for
+        // one. A host that supplied only the entry gets the rest pulled, with each specifier
+        // resolved against the module that wrote it.
+        if let Err(why) = self.load_reachable(entry, heap) {
+            return Ok(Err(LinkError::Unresolved(why)));
         }
         self.link_and_evaluate(entry, heap)
     }
@@ -300,7 +314,7 @@ impl Vm {
                     // evaluated. The edge is still in the graph, which is what makes that happen.
                     continue;
                 };
-                let Some(from) = self.resolved.get(&entry.specifier).cloned() else {
+                let Some(from) = self.module_from(chunk, &entry.specifier) else {
                     return Err(LinkError::Unresolved(entry.specifier.to_string()));
                 };
                 let Some(here) = self.environment_of(chunk) else {
@@ -366,8 +380,8 @@ impl Vm {
                 names.push(export.export_name.clone());
             }
             for specifier in module.star_exports() {
-                if let Some(from) = self.resolved.get(specifier) {
-                    pending.push(Rc::clone(from));
+                if let Some(from) = self.module_from(&module, specifier) {
+                    pending.push(from);
                 }
             }
         }
@@ -482,9 +496,24 @@ impl Vm {
     /// depth. A specifier already answered is not asked for again, which is what makes a cycle
     /// terminate and what makes a host's loader safe to write without a cache of its own.
     fn load_reachable(&mut self, specifier: &str, heap: &mut Heap) -> Result<(), String> {
-        let mut pending = vec![specifier.to_string()];
-        while let Some(asked) = pending.pop() {
-            if self.resolved.get(&asked).is_some() {
+        // A specifier and who wrote it, because DR-0020 resolves the first against the second.
+        // `None` is an entry point, which nothing imported.
+        let mut pending = vec![(None::<String>, specifier.to_string())];
+        // Which keys the walk has already descended through. A module already *resolved* is not
+        // one already *walked*: a host may supply the entry and nothing else, and its imports still
+        // have to be asked for. Getting that wrong left the queue empty after one step and read as
+        // an unresolved specifier for the entry's very first import.
+        let mut walked: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        while let Some((referrer, asked)) = pending.pop() {
+            // Asked already? The *edge* answers that, not the text: two modules may write the same
+            // specifier and mean different files, so a specifier alone cannot say it was seen.
+            let known = self.edge(referrer.as_deref(), &asked);
+            if let Some(chunk) = self.resolved.get(&known).cloned() {
+                if walked.insert(known.clone()) {
+                    for next in requested_modules(&chunk) {
+                        pending.push((Some(known.clone()), next));
+                    }
+                }
                 continue;
             }
             // Taken out for the call and put back after it: a loader is handed the heap, and a host
@@ -494,13 +523,49 @@ impl Vm {
                     "no module loader is set, so {asked:?} cannot be resolved"
                 ));
             };
-            let loaded = loader.load(&asked, heap);
+            let loaded = loader.load(referrer.as_deref(), &asked, heap);
             self.loader = Some(loader);
-            let chunk = loaded?;
-            pending.extend(requested_modules(&chunk));
-            self.resolved.insert(&asked, chunk);
+            let (key, chunk) = loaded?;
+            // Recorded before the dependencies are walked, so a cycle stops here rather than
+            // asking the host for the same module for ever.
+            if let Some(from) = referrer {
+                self.edges.insert((from, asked), key.clone());
+            }
+            walked.insert(key.clone());
+            for next in requested_modules(&chunk) {
+                pending.push((Some(key.clone()), next));
+            }
+            self.keys.insert(identity(&chunk), key.clone());
+            self.resolved.insert(&key, chunk);
         }
         Ok(())
+    }
+
+    /// DR-0020 — which module `specifier` names, written inside `referrer`.
+    ///
+    /// A pair the host never spoke about resolves to the specifier itself. That is not a fallback
+    /// bolted on: it is exactly what a host supplying a whole [`Graph`] of unique names meant, and
+    /// it is why every such host goes on linking as it did before this record.
+    fn edge(&self, referrer: Option<&str>, specifier: &str) -> String {
+        referrer
+            .and_then(|from| {
+                self.edges
+                    .get(&(from.to_string(), specifier.to_string()))
+                    .cloned()
+            })
+            .unwrap_or_else(|| specifier.to_string())
+    }
+
+    /// What a chunk is called, for resolving the specifiers *it* wrote.
+    fn key_of(&self, chunk: &Rc<Chunk>) -> Option<&str> {
+        self.keys.get(&identity(chunk)).map(String::as_str)
+    }
+
+    /// The chunk `specifier` names as written inside `chunk`.
+    fn module_from(&self, chunk: &Rc<Chunk>, specifier: &str) -> Option<Rc<Chunk>> {
+        self.resolved
+            .get(&self.edge(self.key_of(chunk), specifier))
+            .cloned()
     }
 
     /// The error a host reports for a module it could not supply — §16.2.1.7.
@@ -534,13 +599,13 @@ impl Vm {
     /// running before what it imports.
     fn visit(
         &mut self,
-        specifier: &str,
+        key: &str,
         seen: &mut Vec<usize>,
         order: &mut Vec<Rc<Chunk>>,
         heap: &mut Heap,
     ) -> Result<(), LinkError> {
-        let Some(chunk) = self.resolved.get(specifier).cloned() else {
-            return Err(LinkError::Unresolved(specifier.to_string()));
+        let Some(chunk) = self.resolved.get(key).cloned() else {
+            return Err(LinkError::Unresolved(key.to_string()));
         };
         // A diamond, a cycle, or a module that imports itself — all three the same answer: this
         // walk has been here, and the module is either placed already or still descending.
@@ -564,8 +629,12 @@ impl Vm {
                 failure: None,
             });
         }
+        // Resolved against **this** chunk before descending — DR-0020. Recursing on the raw
+        // specifier walks whatever else happens to be filed under that text, which for a graph of
+        // unique names is the same module and for a real directory tree is a different one.
         for dependency in requested_modules(&chunk) {
-            self.visit(&dependency, seen, order, heap)?;
+            let key = self.edge(self.key_of(&chunk), &dependency);
+            self.visit(&key, seen, order, heap)?;
         }
         order.push(chunk);
         Ok(())
@@ -693,7 +762,7 @@ impl Vm {
                     specifier,
                     import_name,
                 } => {
-                    let Some(from) = self.resolved.get(specifier).cloned() else {
+                    let Some(from) = self.module_from(chunk, specifier) else {
                         return ExportResolution::Missing;
                     };
                     return match import_name {
@@ -720,7 +789,7 @@ impl Vm {
         // list is a handful of names settled when the module was compiled.
         let stars: Vec<Box<str>> = chunk.star_exports().to_vec();
         for specifier in &stars {
-            let Some(from) = self.resolved.get(specifier).cloned() else {
+            let Some(from) = self.module_from(chunk, specifier) else {
                 continue;
             };
             let answer = self.resolve_seen(&from, name, seen, heap);

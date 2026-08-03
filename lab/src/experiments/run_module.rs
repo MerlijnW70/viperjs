@@ -30,7 +30,6 @@ use praxis::compile::compile_module;
 use praxis::heap::Heap;
 use praxis::parser::parse_module;
 use praxis::vm::{Graph, Outcome, Vm};
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Instant;
@@ -51,17 +50,13 @@ fn normalise(path: &Path) -> PathBuf {
     out
 }
 
-/// Load `entry`, walk what it imports, and run the linked graph.
+/// Load `entry`, and let the engine pull the rest through a loader that resolves relatively.
 ///
-/// **`Vm::run_module` is not this.** It runs one module chunk, and the first version of this
-/// experiment used it and got `undefined` for every imported binding — which read exactly like an
-/// engine bug and was not one. Linking is `Vm::run_module_graph`, which is handed every chunk up
-/// front; the module-loader hook is for §13.3.10's dynamic `import()` and answers nothing at
-/// link time. So the walk below is the host's job and there is no way around doing it.
-///
-/// A specifier is resolved against its *importer's* directory and the graph is keyed by the
-/// resolved path, because `./MathUtils.js` written in two directories is two files. Keying by the
-/// specifier as written is the mistake that puts two records where §16.2.1 has one.
+/// The host supplies **only the entry**. Everything else arrives through [`FromDisk`], which is
+/// handed the referrer — DR-0020 — and so can resolve `./MathUtils.js` against the directory of
+/// the module that wrote it rather than against a guess. Before that record this walked the graph
+/// by hand and keyed it by the specifier as written, which meant two directories saying
+/// `./index.js` collided.
 pub fn run(entry: Option<&str>, _probe: Option<&str>) -> std::process::ExitCode {
     let Some(entry) = entry else {
         eprintln!("usage: cargo run -p praxis-lab --release -- run-module <entry.js>");
@@ -70,73 +65,80 @@ pub fn run(entry: Option<&str>, _probe: Option<&str>) -> std::process::ExitCode 
     let root = normalise(&std::env::current_dir().unwrap_or_default().join(entry));
     let entry_key = key(&root);
     let mut heap = Heap::new();
-    let mut graph = Graph::new();
-    // Keyed by the specifier **as written**, because that is what `run_module_graph` looks up —
-    // there is no host resolution at link time, only for `import()`. So two files that a real
-    // project reaches by the same relative specifier cannot both be in one graph, and this
-    // records the clash rather than letting the second silently replace the first.
-    let mut queue = vec![(entry_key.clone(), root.clone())];
-    let mut seen: HashMap<String, PathBuf> = HashMap::new();
-    let mut clashes: Vec<(String, PathBuf, PathBuf)> = Vec::new();
-    let mut count = 0usize;
-    while let Some((specifier, path)) = queue.pop() {
-        if let Some(already) = seen.get(&specifier) {
-            if already != &path {
-                clashes.push((specifier.clone(), already.clone(), path.clone()));
-            }
-            continue;
-        }
-        seen.insert(specifier.clone(), path.clone());
-        let Ok(source) = std::fs::read_to_string(&path) else {
-            println!("could not read {}", path.display());
+    let Ok(source) = std::fs::read_to_string(&root) else {
+        println!("could not read {}", root.display());
+        return std::process::ExitCode::SUCCESS;
+    };
+    let module = match parse_module(&source) {
+        Ok(module) => module,
+        Err(error) => {
+            println!("{} did not parse: {}", root.display(), error.kind);
             return std::process::ExitCode::SUCCESS;
-        };
-        let module = match parse_module(&source) {
-            Ok(module) => module,
-            Err(error) => {
-                println!("{} did not parse: {}", path.display(), error.kind);
-                return std::process::ExitCode::SUCCESS;
-            }
-        };
-        let chunk = match compile_module(&module, &mut heap) {
-            Ok(chunk) => chunk,
-            Err(error) => {
-                println!("{} did not compile: {}", path.display(), error.message());
-                return std::process::ExitCode::SUCCESS;
-            }
-        };
-        let here = path.parent().unwrap_or(Path::new(".")).to_path_buf();
-        for import in chunk.imports() {
-            queue.push((
-                import.specifier.to_string(),
-                normalise(&here.join(&*import.specifier)),
-            ));
         }
-        graph.insert(&specifier, Rc::new(chunk));
-        count += 1;
-    }
-    println!("{count} modules loaded");
-    for (specifier, first, second) in &clashes {
-        println!(
-            "  specifier clash: {specifier} is both {} and {}",
-            first.display(),
-            second.display()
-        );
-    }
+    };
+    let chunk = match compile_module(&module, &mut heap) {
+        Ok(chunk) => chunk,
+        Err(error) => {
+            println!("{} did not compile: {}", root.display(), error.message());
+            return std::process::ExitCode::SUCCESS;
+        }
+    };
+    let mut graph = Graph::new();
+    graph.insert(&entry_key, Rc::new(chunk));
+    let loaded = Rc::new(std::cell::Cell::new(1usize));
     let mut vm = Vm::new(&mut heap);
+    vm.set_module_loader(Box::new(FromDisk {
+        loaded: Rc::clone(&loaded),
+    }));
     let started = Instant::now();
     let outcome = vm.run_module_graph(&entry_key, &graph, &mut heap);
     let elapsed = started.elapsed();
+    println!("{} modules loaded", loaded.get());
     match outcome {
         Ok(Ok(Outcome::Value(_))) => println!("graph ran in {elapsed:?}"),
         Ok(Ok(Outcome::Thrown(value))) => {
             let text = describe(&mut heap, value);
             println!("graph threw after {elapsed:?}: {text}");
         }
-        Ok(Err(error)) => println!("did not link: {error:?}"),
+        Ok(Err(error)) => println!("did not link: {}", error.message()),
         Err(fault) => println!("fault: {fault:?}"),
     }
     std::process::ExitCode::SUCCESS
+}
+
+/// Resolves each specifier against the **directory of the module that wrote it**, and answers with
+/// the resolved path as the key.
+///
+/// Nine lines, and every one of them impossible before DR-0020: without the referrer there is
+/// nothing to resolve against, and without answering a key the engine would file the module under
+/// the text rather than under what it turned out to be.
+struct FromDisk {
+    /// How many modules were read, for the report.
+    loaded: Rc<std::cell::Cell<usize>>,
+}
+
+impl praxis::vm::ModuleLoader for FromDisk {
+    fn load(
+        &mut self,
+        referrer: Option<&str>,
+        specifier: &str,
+        heap: &mut Heap,
+    ) -> Result<(String, Rc<praxis::compile::Chunk>), String> {
+        // The referrer is a *file*, so what a relative specifier is relative to is its directory.
+        let base = referrer
+            .map(|from| normalise(Path::new(from)))
+            .and_then(|path| path.parent().map(Path::to_path_buf))
+            .unwrap_or_else(|| PathBuf::from("."));
+        let path = normalise(&base.join(specifier));
+        let source = std::fs::read_to_string(&path)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
+        let module = parse_module(&source)
+            .map_err(|error| format!("{} did not parse: {}", path.display(), error.kind))?;
+        let chunk = compile_module(&module, heap)
+            .map_err(|error| format!("{} did not compile: {}", path.display(), error.message()))?;
+        self.loaded.set(self.loaded.get() + 1);
+        Ok((key(&path), Rc::new(chunk)))
+    }
 }
 
 /// The graph's key for a file — its resolved path, which is a module's identity.

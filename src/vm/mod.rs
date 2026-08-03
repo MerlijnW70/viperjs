@@ -222,6 +222,19 @@ pub struct Vm {
     /// lets a dynamic `import()` of a statically-loaded specifier find the module already there
     /// rather than loading a second copy of it.
     resolved: Graph,
+    /// What each specifier *meant* where it was written — DR-0020's `(referrer, specifier) -> key`.
+    ///
+    /// Beside `resolved` rather than replacing it, because the two answer different questions: this
+    /// says which module a piece of text named, and `resolved` says what that module is. A pair
+    /// that is absent resolves to the specifier itself, which is what a host that supplied a whole
+    /// `Graph` of unique names meant and is exactly the behaviour that predates this record.
+    edges: std::collections::BTreeMap<(String, String), String>,
+    /// Which key each chunk was registered under, so a module can be asked what it is called.
+    ///
+    /// Keyed by the chunk's address, which is what `identity` already uses for cycle detection.
+    /// Needed because linking walks *chunks* and a specifier has to be resolved against the one
+    /// that wrote it.
+    keys: std::collections::BTreeMap<usize, String>,
     // No `Debug` on the machine any more: a host's loader is the host's type and cannot be made to
     // have one, so a derive here would demand it of every embedder. What a debug print of the field
     // would say is "there is one", which is not worth that.
@@ -310,6 +323,8 @@ impl Vm {
         Self {
             modules: std::collections::BTreeMap::new(),
             resolved: Graph::new(),
+            edges: std::collections::BTreeMap::new(),
+            keys: std::collections::BTreeMap::new(),
             loader: None,
             realm: Realm::new(heap),
             escaped: None,

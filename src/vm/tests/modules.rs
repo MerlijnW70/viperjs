@@ -1003,9 +1003,10 @@ struct Supplied {
 impl crate::vm::ModuleLoader for Supplied {
     fn load(
         &mut self,
+        _referrer: Option<&str>,
         specifier: &str,
         heap: &mut Heap,
-    ) -> Result<std::rc::Rc<crate::compile::Chunk>, String> {
+    ) -> Result<(String, std::rc::Rc<crate::compile::Chunk>), String> {
         let source = self
             .sources
             .iter()
@@ -1015,7 +1016,9 @@ impl crate::vm::ModuleLoader for Supplied {
         let parsed = crate::parser::parse_module(&source)
             .map_err(|error| format!("{specifier:?} did not parse: {}", error.kind))?;
         let compiled = crate::compile::compile_module(&parsed, heap).map_err(|e| e.message())?;
-        Ok(std::rc::Rc::new(compiled))
+        // A flat table of unique names, so the specifier *is* the key — DR-0020's degenerate case
+        // and the one every host that already knows its whole program is in.
+        Ok((specifier.to_string(), std::rc::Rc::new(compiled)))
     }
 }
 
@@ -1247,5 +1250,166 @@ fn two_star_exports_that_reach_the_same_binding_by_different_names_are_not_ambig
             "main"
         ),
         "true:1"
+    );
+}
+
+/// A loader that resolves a specifier against its referrer, the way a filesystem host must.
+///
+/// The table is keyed by a *path-shaped* key, and a relative specifier is joined onto the
+/// referrer's directory — which is the whole of what DR-0020's referrer parameter buys. Written
+/// out here rather than assumed, because the interesting case is two directories writing the same
+/// specifier and meaning different files.
+struct Relative {
+    /// Key to source, as a host's filesystem would answer.
+    files: Vec<(String, String)>,
+}
+
+impl crate::vm::ModuleLoader for Relative {
+    fn load(
+        &mut self,
+        referrer: Option<&str>,
+        specifier: &str,
+        heap: &mut Heap,
+    ) -> Result<(String, std::rc::Rc<crate::compile::Chunk>), String> {
+        // `a/index.js` importing `./thing.js` is `a/thing.js`. No `..` here: the rows below do not
+        // need it and a resolution algorithm is the host's business, not this test's.
+        let key = match (referrer, specifier.strip_prefix("./")) {
+            (Some(from), Some(rest)) => match from.rsplit_once('/') {
+                Some((directory, _)) => format!("{directory}/{rest}"),
+                None => rest.to_string(),
+            },
+            _ => specifier.to_string(),
+        };
+        let source = self
+            .files
+            .iter()
+            .find(|(name, _)| *name == key)
+            .map(|(_, source)| source.clone())
+            .ok_or_else(|| format!("nothing is at {key:?}"))?;
+        let parsed = crate::parser::parse_module(&source)
+            .map_err(|error| format!("{key:?} did not parse: {}", error.kind))?;
+        let compiled = crate::compile::compile_module(&parsed, heap).map_err(|e| e.message())?;
+        Ok((key, std::rc::Rc::new(compiled)))
+    }
+}
+
+#[test]
+fn two_directories_may_write_the_same_specifier_and_mean_different_modules() {
+    // DR-0020. `./thing.js` in `a/index.js` and in `b/index.js` are two files, and before the
+    // referrer reached the loader there was nowhere to say so: the second overwrote the first and
+    // both imports read the same module. Not an error — a wrong value, which is the shape this
+    // engine treats as worst.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    vm.set_module_loader(Box::new(Relative {
+        files: [
+            ("a/thing.js", "export const who = 'a';"),
+            ("b/thing.js", "export const who = 'b';"),
+            (
+                "a/index.js",
+                "import { who } from './thing.js'; export const from = who;",
+            ),
+            (
+                "b/index.js",
+                "import { who } from './thing.js'; export const from = who;",
+            ),
+            (
+                "main.js",
+                "import { from as a } from './a/index.js'; \
+                 import { from as b } from './b/index.js'; a + b",
+            ),
+        ]
+        .into_iter()
+        .map(|(name, source)| (name.to_string(), source.to_string()))
+        .collect(),
+    }));
+    // Nothing is supplied up front: the entry itself comes through the loader, which is the shape
+    // a host that discovers its program is in.
+    let outcome = vm
+        .run_module_graph("main.js", &crate::vm::Graph::new(), &mut heap)
+        .expect("the chunks are well formed") // a VM test needs an outcome
+        .expect("the graph links"); // same
+    assert_eq!(describe(outcome, &mut heap), "ab");
+}
+
+#[test]
+fn a_module_reached_by_two_names_is_still_evaluated_once() {
+    // §16.2.1.6's "each body once" is a fact about the **key** and never about the text — which is
+    // the invariant DR-0020 states and the one the old flat map could not promise. `a/index.js`
+    // and `./index.js` written from `a/` resolve to one key, so the body runs once however many
+    // spellings reach it.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    vm.set_module_loader(Box::new(Relative {
+        files: [
+            (
+                "a/shared.js",
+                "globalThis.runs = (globalThis.runs || 0) + 1; export const n = 1;",
+            ),
+            (
+                "a/one.js",
+                "import { n } from './shared.js'; export const one = n;",
+            ),
+            (
+                "a/two.js",
+                "import { n } from './shared.js'; export const two = n;",
+            ),
+            (
+                "main.js",
+                "import { one } from './a/one.js'; import { two } from './a/two.js'; \
+                 one + two + globalThis.runs",
+            ),
+        ]
+        .into_iter()
+        .map(|(name, source)| (name.to_string(), source.to_string()))
+        .collect(),
+    }));
+    let outcome = vm
+        .run_module_graph("main.js", &crate::vm::Graph::new(), &mut heap)
+        .expect("the chunks are well formed") // a VM test needs an outcome
+        .expect("the graph links"); // same
+    // 1 + 1 + one evaluation of the shared module.
+    assert_eq!(describe(outcome, &mut heap), "3");
+}
+
+#[test]
+fn a_supplied_module_still_has_its_own_imports_fetched() {
+    // The two shapes DR-0020 says coexist, in one program: the host hands over the entry and the
+    // loader answers for everything under it. A module already *resolved* is not one already
+    // *walked* — and getting that wrong is not a slow path but a broken one, because the queue
+    // empties after the first step and the entry's very first import reads as unresolved.
+    let mut heap = Heap::new();
+    let parsed = crate::parser::parse_module("import { n } from './dep.js'; n + 1")
+        .expect("the source parses"); // a VM test needs a chunk
+    let chunk = crate::compile::compile_module(&parsed, &mut heap).expect("it compiles"); // same
+    let mut graph = crate::vm::Graph::new();
+    graph.insert("a/main.js", std::rc::Rc::new(chunk));
+    let mut vm = Vm::new(&mut heap);
+    vm.set_module_loader(Box::new(Relative {
+        files: vec![("a/dep.js".to_string(), "export const n = 41;".to_string())],
+    }));
+    let outcome = vm
+        .run_module_graph("a/main.js", &graph, &mut heap)
+        .expect("the chunks are well formed") // a VM test needs an outcome
+        .expect("the graph links"); // same
+    // …and the loader resolved `./dep.js` against `a/main.js`, so it found `a/dep.js` and not a
+    // `dep.js` at the root, which is the referrer doing its work.
+    assert_eq!(describe(outcome, &mut heap), "42");
+}
+
+#[test]
+fn a_host_that_supplies_everything_is_never_asked_for_a_loader() {
+    // The other half of the same sentence: `load_reachable` skips what is already resolved, so a
+    // complete graph walks to an empty queue and never reaches the `no module loader is set`
+    // refusal. Without this row that refusal would fire for every host that predates DR-0020.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export const n = 20;"),
+                ("main", "import { n } from 'dep'; n + 22"),
+            ],
+            "main"
+        ),
+        "42"
     );
 }

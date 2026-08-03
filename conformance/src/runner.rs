@@ -369,9 +369,10 @@ struct Beside {
 impl praxis::vm::ModuleLoader for Beside {
     fn load(
         &mut self,
+        _referrer: Option<&str>,
         specifier: &str,
         heap: &mut Heap,
-    ) -> Result<Rc<praxis::compile::Chunk>, String> {
+    ) -> Result<(String, Rc<praxis::compile::Chunk>), String> {
         let path = self
             .directory
             .join(specifier.replace('/', std::path::MAIN_SEPARATOR_STR));
@@ -380,7 +381,10 @@ impl praxis::vm::ModuleLoader for Beside {
         let parsed = parse_module(&source)
             .map_err(|error| format!("an imported module did not parse: {}", error.kind))?;
         let compiled = compile_module(&parsed, heap).map_err(|error| error.message())?;
-        Ok(Rc::new(compiled))
+        // test262's module specifiers are all relative to the one directory the test sits in, so
+        // the specifier *is* the key here and the referrer answers nothing this needs — DR-0020's
+        // degenerate case, spelled out rather than left to look like an oversight.
+        Ok((specifier.to_string(), Rc::new(compiled)))
     }
 }
 

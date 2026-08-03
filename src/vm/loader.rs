@@ -36,7 +36,18 @@ use std::rc::Rc;
 /// consistently, since a specifier that answered differently later would put two records where the
 /// specification has one.
 pub trait ModuleLoader {
-    /// Resolve, read and compile the module `specifier` names.
+    /// Resolve, read and compile the module `specifier` names, **as written in `referrer`**.
+    ///
+    /// `referrer` is the key of the module doing the importing, or `None` for an entry point and
+    /// for an `import()` written at the top level of a Script. It is the parameter §16.2.1.7's
+    /// `HostLoadImportedModule(referrer, specifier, …)` puts first, and without it a relative
+    /// specifier cannot be resolved at all: `./index.js` means a different file in every
+    /// directory that writes it.
+    ///
+    /// The `String` answered with is the module's **resolved identity** — an absolute path, a URL,
+    /// a package name, whatever this host uses to tell two modules apart. The engine never parses
+    /// it and only ever compares them, so a host wanting the old behaviour answers with the
+    /// specifier unchanged. DR-0020 has the argument.
     ///
     /// # Errors
     ///
@@ -44,7 +55,12 @@ pub trait ModuleLoader {
     /// source that is not a Module. The error is a sentence for a person: it reaches a script only
     /// as the message of the error a rejected `import()` carries, so "no such file" is worth more
     /// than a code.
-    fn load(&mut self, specifier: &str, heap: &mut Heap) -> Result<Rc<Chunk>, String>;
+    fn load(
+        &mut self,
+        referrer: Option<&str>,
+        specifier: &str,
+        heap: &mut Heap,
+    ) -> Result<(String, Rc<Chunk>), String>;
 }
 
 /// What the engine remembers about one module — as much of §16.2.1's Cyclic Module Record as it has.

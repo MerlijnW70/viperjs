@@ -79,6 +79,13 @@ reduced to a two-file repro that looked exactly like a broken linker. It was the
 point: linking is `run_module_graph` and it is handed every chunk up front. **The engine's own
 `run_graph` test helper says so in four lines and reading it first would have saved the hour.**
 
+**Fixed the same day — DR-0020.** The loader is handed the referrer and answers with a key, and
+the experiment now supplies only the entry and lets the engine pull the rest: three.js's math
+graph comes to **17 modules** rather than the 12 the hand-walked version found, because
+`../utils.js` and `../constants.js` resolve as their own modules instead of colliding. The
+computations are unchanged. A two-directory clash — `a/index.js` and `b/index.js` both importing
+`./thing.js` — now answers `a says a, b says b`, which was not expressible before.
+
 **Cost:** two hours. `Vm::to_string` being `pub(crate)` is worth knowing too — a thrown Error
 cannot be printed from outside the crate, and `examples/evaluate.rs` settles for `[object]`. The
 runner reads `name` and `message` off the object instead, which is the whole diagnosis and needs
