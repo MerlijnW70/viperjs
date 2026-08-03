@@ -75,6 +75,38 @@ impl Walk {
         Ok(Self { iterator, next })
     }
 
+    /// §7.4.2 `GetIterator(obj, sync)` — ask the object for its iterator, then read that one's
+    /// `next`.
+    ///
+    /// The difference from [`Walk::direct`] is which object is walked. This one asks
+    /// `[@@iterator]` and walks *what it answers*, so a `Map`, a `Set`, a string and a generator
+    /// are all acceptable and none of them is its own iterator. `direct` walks the object it was
+    /// handed and never asks — which is right for §27.1.4's helpers and wrong for everything that
+    /// takes an "iterable".
+    ///
+    /// Reading a `length` and the indices under it is neither, and is the shape to watch for: it
+    /// accepts an Array and answers `{}` for a `Map`, which is a wrong value rather than a
+    /// refusal. `Object.fromEntries` did exactly that until this existed.
+    pub(super) fn over(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<Self> {
+        let method = match vm.realm().well_known(super::well_known_at("iterator")) {
+            Some(symbol) => {
+                vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(symbol), heap)?
+            }
+            None => Value::Undefined,
+        };
+        // §7.4.2 step 3 — `GetMethod`, so absent means **not iterable** rather than "walk the
+        // object itself". That is what separates this from §27.1.4.7's `flatMap`, whose step 2.b
+        // deliberately falls back to the object, and the two would otherwise look alike.
+        //
+        // One test and not two: `GetMethod` separates `undefined`/`null` from a non-callable, and
+        // §7.4.2 then throws for both — so asking about nullishness first is a branch whose two
+        // sides reach the same throw with the same words. Mutation coverage said so.
+        if !heap.is_callable(method) {
+            return Err(Abrupt::type_error("this value is not iterable"));
+        }
+        Self::from_method(vm, heap, value, method)
+    }
+
     /// §7.4.4 `GetIteratorFromMethod` — call the method, and keep what it answered.
     pub(super) fn from_method(
         vm: &mut Vm,

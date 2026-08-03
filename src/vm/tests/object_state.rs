@@ -306,3 +306,114 @@ fn values_and_entries_leave_a_symbol_keyed_property_out() {
         "0,false"
     );
 }
+
+#[test]
+fn from_entries_walks_an_iterable_rather_than_reading_a_length() {
+    // §20.1.2.7 step 4 is §7.1.5.1's `AddEntriesFromIterable`, which uses the **iterator**
+    // protocol. Reading a `length` and the indices under it looks like a narrower input and is
+    // not: it accepts an Array and answers `{}` for a `Map`, which is a wrong value rather than a
+    // refusal — and a `Map` is the thing this function is most often pointed at.
+    assert_eq!(
+        run("JSON.stringify(Object.fromEntries(new Map([['a', 1], ['b', 2]])))"),
+        "{\"a\":1,\"b\":2}"
+    );
+    assert_eq!(
+        run("JSON.stringify(Object.fromEntries(new Set([['s', 3]])))"),
+        "{\"s\":3}"
+    );
+    assert_eq!(
+        run("JSON.stringify(Object.fromEntries(function* () { yield ['x', 9]; }()))"),
+        "{\"x\":9}"
+    );
+    // …and an Array still works, because an Array is iterable. That is the row that says the
+    // change is a correction rather than a swap.
+    assert_eq!(
+        run("JSON.stringify(Object.fromEntries([['a', 1]]))"),
+        "{\"a\":1}"
+    );
+    // A plain array-like is **not** iterable and is now refused, which is the one input that got
+    // narrower. §7.4.2 step 3 is `GetMethod`, so an absent `[@@iterator]` means "not iterable"
+    // rather than "walk the object itself".
+    // By **message**: without §7.4.2's check the walk goes on to call whatever `[@@iterator]`
+    // held, and that throws a TypeError of its own — so the name is the same either way.
+    assert_eq!(
+        run(
+            "try { Object.fromEntries({length: 1, 0: ['a', 1]}); 'no throw' } \
+             catch (e) { e.message }"
+        ),
+        "this value is not iterable"
+    );
+    // …and a non-callable `[@@iterator]` is the *same* refusal rather than a different one:
+    // `GetMethod` separates the two cases and §7.4.2 step 3 throws for both, so one test covers
+    // them and asking about nullishness first would be a branch nothing could distinguish.
+    assert_eq!(
+        run("try { Object.fromEntries({[Symbol.iterator]: 1}); 'x' } catch (e) { e.message }"),
+        "this value is not iterable"
+    );
+    // Step 1's `RequireObjectCoercible` and not `ToObject`: a String is coercible *and* iterable,
+    // so it reaches the walk and is refused one character at a time — each is a primitive rather
+    // than a pair, which is a different refusal from `undefined`'s.
+    assert_eq!(run("JSON.stringify(Object.fromEntries(''))"), "{}");
+    assert_eq!(
+        run("try { Object.fromEntries('ab'); 'no throw' } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // Step 1 again, by message: without it the `[@@iterator]` read is what fails, and it fails
+    // with a TypeError about reading a property — the same name for a different reason.
+    for absent in ["undefined", "null"] {
+        assert_eq!(
+            run(&format!(
+                "try {{ Object.fromEntries({absent}); 'no throw' }} catch (e) {{ e.message }}"
+            )),
+            "undefined and null cannot be converted to an object"
+        );
+    }
+}
+
+#[test]
+fn from_entries_closes_the_iterator_it_abandons() {
+    // §7.1.5.1 steps 3.c to 3.f — every way one entry can go wrong is an `IfAbruptCloseIterator`,
+    // because the walk asked the iterator to start and is now leaving before it is done.
+    let watched = "var closed = 0; \
+                   function source(entries) { \
+                     var at = 0; \
+                     return {[Symbol.iterator]() { return { \
+                       next() { return at < entries.length \
+                         ? {value: entries[at++], done: false} : {value: undefined, done: true} }, \
+                       return() { closed = 1; return {}; } }; }}; \
+                   } ";
+    // An entry that is not an object — step 3.c.
+    assert_eq!(
+        run(&format!(
+            "{watched} try {{ Object.fromEntries(source([1])) }} catch (e) {{}} closed"
+        )),
+        "1"
+    );
+    // A `0` or a `1` whose getter throws — steps 3.d and 3.e.
+    for index in ["0", "1"] {
+        assert_eq!(
+            run(&format!(
+                "{watched} var bad = {{get {index}() {{ throw new RangeError('x') }}}}; \
+                 try {{ Object.fromEntries(source([bad])) }} catch (e) {{}} closed"
+            )),
+            "1"
+        );
+    }
+    // …and a walk that finishes normally does **not** call `return`, because there is nothing to
+    // abandon. Without this row the three above would pass for an implementation that closed
+    // unconditionally.
+    assert_eq!(
+        run(&format!(
+            "{watched} Object.fromEntries(source([['a', 1]])); closed"
+        )),
+        "0"
+    );
+    // The key is converted **after** the value is read, which a throwing `1` makes observable.
+    assert_eq!(
+        run("var asked = 0; \
+             var entry = {0: {toString() { asked = 1; return 'k' }}, \
+                          get 1() { throw new RangeError('x') }}; \
+             try { Object.fromEntries([entry]) } catch (e) {} asked"),
+        "0"
+    );
+}

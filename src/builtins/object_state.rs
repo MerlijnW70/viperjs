@@ -16,8 +16,8 @@
 //! property that could disagree, and §7.3.15 asks about the properties that are there rather than
 //! about a promise that was made.
 
+use super::define_method;
 use super::object::{coerced, keys_of};
-use super::{define_method, key};
 use crate::heap::{Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKind};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
@@ -309,41 +309,71 @@ fn entries(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
     listed(vm, heap, call, Half::Entries)
 }
 
-/// §20.1.2.7 `Object.fromEntries(iterable)`.
+/// §20.1.2.7 `Object.fromEntries(iterable)`, over §7.1.5.1's `AddEntriesFromIterable`.
 ///
-/// Array-likes only for now: the iterator protocol is M6, and until it exists this reads a `length`
-/// and the indices under it. That covers what `Object.entries` produces and what a hand-written
-/// array of pairs is, which is nearly everything this is used for — and it is a *narrower* input
-/// than the specification's, not a different answer for the same input.
+/// Takes an **iterable** and not an array-like, which is not a widening but a correction: reading
+/// a `length` and the indices under it accepts an Array and answers `{}` for a `Map` — the very
+/// thing this is most often pointed at. A doc comment here used to call the old reading "a
+/// *narrower* input than the specification's, not a different answer for the same input", and
+/// `new Map([["a", 1]])` is a counter-example to the second half.
+///
+/// The iterator is **closed** whenever a step of the loop goes wrong — a non-object entry, a `0`
+/// or `1` whose getter throws — because the walk is abandoning something it asked to start. That
+/// is §7.1.5.1 steps 3.c to 3.f, and it is the whole reason the entries are read through a helper
+/// rather than in a plain `for`.
 fn from_entries(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let source = coerced(vm, heap, call.argument(0))?;
-    let built = heap.new_object(Some(vm.realm().object_prototype()));
-    let length_key = key(heap, "length");
-    let length = vm.get_property_key(Value::Object(source), length_key, heap)?;
-    let count = super::array_methods::to_length(vm.to_number(length, heap)?);
-    for at in 0..count {
-        let index = super::array_methods::index_key(heap, at);
-        let pair = vm.get_property_key(Value::Object(source), index, heap)?;
-        let Value::Object(_) = pair else {
-            return Err(Abrupt::type_error("each entry must be an object"));
-        };
-        let (first, second) = (
-            super::array_methods::index_key(heap, 0),
-            super::array_methods::index_key(heap, 1),
-        );
-        let name = vm.get_property_key(pair, first, heap)?;
-        let value = vm.get_property_key(pair, second, heap)?;
-        let name = vm.to_property_key(name, heap)?;
-        let descriptor = PropertyDescriptor {
-            value: Some(value),
-            writable: Some(true),
-            enumerable: Some(true),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        };
-        let _ = heap.define_own_property(built, name, &descriptor);
+    // Step 1's `RequireObjectCoercible`, which is *not* `ToObject`: a String is coercible and is
+    // iterable, and the walk below is what refuses it — one entry at a time, because each of its
+    // characters is a primitive rather than a pair.
+    let source = call.argument(0);
+    if matches!(source, Value::Undefined | Value::Null) {
+        return Err(Abrupt::type_error(
+            "undefined and null cannot be converted to an object",
+        ));
     }
-    Ok(Value::Object(built))
+    let built = heap.new_object(Some(vm.realm().object_prototype()));
+    let walk = super::iterator::Walk::over(vm, heap, source)?;
+    loop {
+        let Some(entry) = walk.step(vm, heap)? else {
+            return Ok(Value::Object(built));
+        };
+        let outcome = entry_into(vm, heap, built, entry);
+        if outcome.is_err() {
+            walk.close(vm, heap);
+            return outcome.map(|()| Value::Object(built));
+        }
+    }
+}
+
+/// One `[key, value]` pair of §7.1.5.1, defined on `built` — steps 3.c to 3.f.
+///
+/// Its own function so that every way it can fail leaves by one path, which is what the caller's
+/// single `IteratorClose` is written against. Inlined, the three abrupt completions would each
+/// need their own close and the third would be the one that got forgotten.
+fn entry_into(vm: &mut Vm, heap: &mut Heap, built: ObjectId, entry: Value) -> Completion<()> {
+    let Value::Object(_) = entry else {
+        return Err(Abrupt::type_error("each entry must be an object"));
+    };
+    let (first, second) = (
+        super::array_methods::index_key(heap, 0),
+        super::array_methods::index_key(heap, 1),
+    );
+    let name = vm.get_property_key(entry, first, heap)?;
+    let value = vm.get_property_key(entry, second, heap)?;
+    // The key is converted **after** the value is read, which is observable: an entry whose `1`
+    // getter throws never asks the key for its `toString`.
+    let name = vm.to_property_key(name, heap)?;
+    let descriptor = PropertyDescriptor {
+        value: Some(value),
+        writable: Some(true),
+        enumerable: Some(true),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    // `CreateDataPropertyOrThrow` on an ordinary object made a moment ago, which nothing can
+    // refuse: it is extensible and holds no property that is not configurable.
+    let _ = heap.define_own_property(built, name, &descriptor);
+    Ok(())
 }
 
 /// §20.1.2.9 `Object.getOwnPropertyDescriptors` — every own key's descriptor, on one object.

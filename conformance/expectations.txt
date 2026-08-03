@@ -2596,28 +2596,6 @@ built-ins/Object/defineProperty/typedarray-backed-by-resizable-buffer.js :: it t
 built-ins/Object/defineProperty/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/evaluation-order.js :: it threw an object with no name: Actual [] and expected [get Symbol.iterator, next 0, access property "0" of first entry, access property "1" of first entry, toString of first key, next 1, access property "0" of second entry, access property "1" of second entry, toString of second key, next 2] should have the same contents. Object.fromEntries evaluation order
-built-ins/Object/fromEntries/evaluation-order.js (strict) :: it threw an object with no name: Actual [] and expected [get Symbol.iterator, next 0, access property "0" of first entry, access property "1" of first entry, toString of first key, next 1, access property "0" of second entry, access property "1" of second entry, toString of second key, next 2] should have the same contents. Object.fromEntries evaluation order
-built-ins/Object/fromEntries/iterator-closed-for-null-entry.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-null-entry.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-string-entry.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-string-entry.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-key-accessor.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-key-accessor.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-key-tostring.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-key-tostring.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-value-accessor.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-closed-for-throwing-entry-value-accessor.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-next-returning-non-object.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-next-returning-non-object.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-throwing-done-accessor.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-throwing-done-accessor.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-uncallable-next.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/iterator-not-closed-for-uncallable-next.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/uses-keys-not-iterator.js :: it threw an object with no name: Expected SameValue(«undefined», «"first value"») to be true
-built-ins/Object/fromEntries/uses-keys-not-iterator.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"first value"») to be true
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-38.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-38.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-39.js :: it threw TypeError: cannot convert an object to a primitive value
