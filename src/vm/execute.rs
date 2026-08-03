@@ -1251,13 +1251,17 @@ impl Vm {
             new_target: self.new_target,
             home,
         });
-        // §27.3.3 — a generator function's `[[Prototype]]` is
-        // %GeneratorFunction.prototype% rather than %Function.prototype%, which is
-        // where `Object.getPrototypeOf(function* () {})` lands and the only way a
-        // script can reach that object at all.
-        let inherits = match body.is_generator() {
-            true => self.realm.generator_function_prototype(),
-            false => self.realm.function_prototype(),
+        // §27.3.3, §27.4.3, §27.7.3 — a function's `[[Prototype]]` is chosen by **both** of the
+        // words in front of it, and each of the four has an object of its own that
+        // `Object.getPrototypeOf` is the only route to. Asking only whether it is a generator sent
+        // an `async function*` to %GeneratorFunction.prototype% and an `async function` to
+        // %Function.prototype%, which is two of the four wrong — and invisible until something
+        // asked `typeof` or a `@@toStringTag` of one.
+        let inherits = match (body.is_async(), body.is_generator()) {
+            (false, false) => self.realm.function_prototype(),
+            (false, true) => self.realm.generator_function_prototype(),
+            (true, false) => self.realm.async_function_prototype(),
+            (true, true) => self.realm.async_generator_function_prototype(),
         };
         let object = heap.new_function(inherits, body.clone(), self.environment, lexical);
         // §20.2.4.1 — `length` is what the function says it needs, which stops at the

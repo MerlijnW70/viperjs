@@ -146,6 +146,11 @@ pub struct Realm {
     async_generator_prototype: ObjectId,
     /// %AsyncGeneratorFunction.prototype% — §27.4.3, what an async generator *function* does.
     async_generator_function_prototype: ObjectId,
+    /// %AsyncFunction.prototype% — §27.7.3, the `[[Prototype]]` of every `async function`.
+    ///
+    /// Not reachable by name any more than the two above: §27.7 makes `AsyncFunction` itself
+    /// unreachable, so `Object.getPrototypeOf(async function () {})` is the only route to it.
+    async_function_prototype: ObjectId,
     /// %GeneratorPrototype% — §27.5.1, what every generator *object* inherits from.
     ///
     /// Its `[[Prototype]]` is %IteratorPrototype%, which is what makes a generator iterable: the
@@ -290,6 +295,10 @@ impl Realm {
         // one.
         let async_generator_prototype = heap.new_object(Some(async_iterator_prototype));
         let async_generator_function_prototype = heap.new_object(Some(function_prototype));
+        // §27.7.3 — and the plain async function's, which is the fourth of the four and was the
+        // one praxis did not have. An ordinary object whose `[[Prototype]]` is %Function.prototype%,
+        // exactly as the three above are: an `async function` is still a function.
+        let async_function_prototype = heap.new_object(Some(function_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
         // rather than in a builtin module because it is not reachable by name from any script:
         // its only appearances are as an accessor pair the specification puts in place.
@@ -387,6 +396,7 @@ impl Realm {
             generator_prototype,
             bigint_prototype,
             generator_function_prototype,
+            async_function_prototype,
             async_generator_prototype,
             async_generator_function_prototype,
             regexp_string_iterator_prototype,
@@ -655,6 +665,12 @@ impl Realm {
     /// Record the constructor `builtins::promise::install` made.
     pub(crate) fn set_promise_constructor(&mut self, constructor: ObjectId) {
         self.promise_constructor = constructor;
+    }
+
+    /// %AsyncFunction.prototype% — §27.7.3, the `[[Prototype]]` of every `async function`.
+    #[must_use]
+    pub fn async_function_prototype(&self) -> ObjectId {
+        self.async_function_prototype
     }
 
     /// %IteratorPrototype% — what every iterator in the realm inherits from.

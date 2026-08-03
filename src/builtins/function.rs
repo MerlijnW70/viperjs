@@ -214,6 +214,56 @@ pub fn bind(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 /// The newlines are the specification's and are load-bearing too: a body ending in a `//` comment
 /// would otherwise swallow the closing brace.
 fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    dynamic_function(vm, heap, call, Kind::Ordinary)
+}
+
+/// §27.7.1.1 `AsyncFunction(...)` — the same operation, one word further along in the source.
+///
+/// §27.7 does not put `AsyncFunction` on the global object, so the only way a program reaches this
+/// is `Object.getPrototypeOf(async function () {}).constructor` — which is exactly how test262's
+/// `getWellKnownIntrinsicObject` finds it, and why the object has to exist even though nothing can
+/// name it.
+fn async_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    dynamic_function(vm, heap, call, Kind::Async)
+}
+
+/// Which of §20.2.1.1's four `CreateDynamicFunction` kinds is being built.
+///
+/// Two of the four so far. The parameters and the body are assembled identically and the source
+/// differs by a word, which is what the clause says: one operation with a `kind` argument.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    /// §20.2.1.1 — `Function`.
+    Ordinary,
+    /// §27.7.1.1 — `AsyncFunction`.
+    Async,
+}
+
+impl Kind {
+    /// What goes in front of `anonymous` in the assembled source.
+    fn prefix(self) -> &'static str {
+        match self {
+            Self::Ordinary => "function",
+            Self::Async => "async function",
+        }
+    }
+
+    /// The `[[Prototype]]` the built function gets when there is no `new.target` to take one from.
+    fn prototype(self, realm: &crate::realm::Realm) -> crate::heap::ObjectId {
+        match self {
+            Self::Ordinary => realm.function_prototype(),
+            Self::Async => realm.async_function_prototype(),
+        }
+    }
+}
+
+/// §20.2.1.1 `CreateDynamicFunction`, for whichever kind asked.
+fn dynamic_function(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    kind: Kind,
+) -> Completion<Value> {
     // Steps 5 to 11 — the last argument is the body and everything before it is a parameter, so
     // `Function()` is a function of no arguments with an empty body rather than an error.
     let (parameters, body) = match call.arguments.split_last() {
@@ -231,7 +281,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         true => String::new(),
         false => text_of(vm, heap, body)?,
     };
-    let source = format!("function anonymous({written}\n) {{\n{body}\n}}");
+    let source = format!("{} anonymous({written}\n) {{\n{body}\n}}", kind.prefix());
 
     // Step 20's assertion, as a real check. A refusal here is a **SyntaxError**, which is what the
     // clause says and is also the one a program tests for.
@@ -263,7 +313,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 
     // §20.2.1.1.1 step 28 — the prototype comes from `new.target` when there was one, which is what
     // makes a subclass of `Function` produce instances of itself.
-    let prototype = super::prototype_from(heap, call, vm.realm().function_prototype());
+    let prototype = super::prototype_from(heap, call, kind.prototype(&vm.realm()));
     // Step 30 — the global environment, and an empty one of its own so that the body's own slots
     // have somewhere to live. Its parent is `None`: there is nothing outside a dynamic function.
     let environment = heap.new_environment(None, 0);
@@ -272,7 +322,12 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     // `"anonymous"` whatever the source says, and it is a constructor like any ordinary function.
     let length = u32::try_from(parameters.len()).unwrap_or(u32::MAX);
     super::define_function_metadata(heap, object, "anonymous", length);
-    vm.realm().make_constructor(heap, object);
+    // §27.7.4 — an async function is **not** a constructor, so only the ordinary kind gets the
+    // `prototype` property and the `[[Construct]]` that go with one. `new (async function () {})`
+    // is a TypeError, and a dynamic one must be no different.
+    if kind == Kind::Ordinary {
+        vm.realm().make_constructor(heap, object);
+    }
     Ok(Value::Object(object))
 }
 
@@ -294,6 +349,16 @@ fn text_of(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<String> {
 /// Build `Function`, and `Function.prototype`'s methods, into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.function_prototype();
+    // §20.2.3 — `Function.prototype` **is itself a built-in function object**, not an ordinary one:
+    // `typeof Function.prototype` is `"function"`, calling it answers `undefined` whatever it is
+    // given, and it has no `[[Construct]]`. The realm makes it before any native exists, so the
+    // `[[Call]]` is attached here rather than at construction — which is what `make_callable` is
+    // for, and the second thing in the engine to need it.
+    //
+    // Not a curiosity. §7.3.22 step 1 answers `false` for a receiver that is not callable, so
+    // `[] instanceof Function.prototype` reached that `false` and answered instead of running
+    // step 4, which is where reading a `prototype` of `""` is the TypeError test262 asks for.
+    heap.make_callable(prototype, returns_undefined, false);
     define_method(heap, realm, prototype, "toString", 0, to_string);
     define_method(heap, realm, prototype, "apply", 2, apply);
     define_method(heap, realm, prototype, "call", 1, call);
@@ -308,7 +373,73 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, prototype, "constructor", Value::Object(function));
     define_value(heap, global, "Function", Value::Object(function));
 
+    // §20.2.3.6 — the method `instanceof` looks up on every use, and the **only** one on
+    // `Function.prototype` that is neither writable nor configurable. §17's usual attributes would
+    // let a program replace it and change what the operator means for every function in the realm
+    // at once; they would also make `Vm::is_default_has_instance` a guess rather than a fact.
+    let has_instance = heap.new_native_function(prototype, has_instance);
+    crate::builtins::define_function_metadata(heap, has_instance, "[Symbol.hasInstance]", 1);
+    if let Some(symbol) = realm.well_known(crate::builtins::well_known_at("hasInstance")) {
+        let _ = heap.define_own_property(
+            prototype,
+            crate::heap::PropertyKey::from_symbol(symbol),
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Object(has_instance)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(false),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+    }
+
+    // §27.7.2 — `%AsyncFunction%`, which §27.7 deliberately does not put on the global object:
+    // the only route to it is `Object.getPrototypeOf(async function () {}).constructor`, and it
+    // has to exist for that route to lead anywhere. Its own `[[Prototype]]` is `%Function%`,
+    // which is what makes `AsyncFunction instanceof Function` true.
+    let async_prototype = realm.async_function_prototype();
+    let async_function = heap.new_native_constructor(function, async_construct);
+    crate::builtins::define_function_metadata(heap, async_function, "AsyncFunction", 1);
+    crate::builtins::define_fixed(
+        heap,
+        async_function,
+        "prototype",
+        Value::Object(async_prototype),
+    );
+    // §27.7.3.1 — writable false, enumerable false, **configurable true**, which is the shape
+    // every `constructor` on a prototype has and is not the shape `prototype` itself has.
+    let name = crate::builtins::key(heap, "constructor");
+    let _ = heap.define_own_property(
+        async_prototype,
+        name,
+        &crate::heap::PropertyDescriptor {
+            value: Some(Value::Object(async_function)),
+            writable: Some(false),
+            enumerable: Some(false),
+            configurable: Some(true),
+            ..crate::heap::PropertyDescriptor::EMPTY
+        },
+    );
+
     restrict(heap, realm, prototype);
+}
+
+/// §20.2.3 — what calling `Function.prototype` itself does.
+///
+/// "Accepts any arguments and returns undefined." There is nothing else to it, and the reason it
+/// exists at all is compatibility: `Function.prototype` was a function in every edition, and code
+/// that reaches for `typeof` on it or hands it somewhere callable predates any of the alternatives.
+fn returns_undefined(_: &mut Vm, _: &mut Heap, _: &NativeCall<'_>) -> Completion<Value> {
+    Ok(Value::Undefined)
+}
+
+/// §20.2.3.6 `Function.prototype [ %Symbol.hasInstance% ] ( V )`.
+///
+/// Two steps and no checks of its own: the receiver is whatever `instanceof` was written against,
+/// and §7.3.22 answers `false` for one that is not callable rather than refusing it. So
+/// `Function.prototype[Symbol.hasInstance].call(1, {})` is `false` and not a TypeError.
+fn has_instance(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    vm.ordinary_has_instance(call.this_value, call.argument(0), heap)
 }
 
 /// §10.2.4 `AddRestrictedFunctionProperties` — the two names a function may not answer for.

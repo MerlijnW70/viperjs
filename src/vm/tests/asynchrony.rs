@@ -542,3 +542,132 @@ fn an_async_generator_awaits_the_value_it_yields_and_an_ordinary_one_does_not() 
         "1"
     );
 }
+
+#[test]
+fn a_functions_prototype_is_chosen_by_both_of_the_words_in_front_of_it() {
+    // §27.3.3, §27.4.3 and §27.7.3 — each of the four kinds has an object of its own, and
+    // `Object.getPrototypeOf` is the only route to any of the three that are not
+    // `%Function.prototype%`. praxis asked only whether a function was a generator, which sent an
+    // `async function*` to %GeneratorFunction.prototype% and an `async function` to
+    // %Function.prototype% — two of the four wrong, and invisible until something asked.
+    assert_eq!(
+        run("var plain = Object.getPrototypeOf(function () {}); \
+             var gen = Object.getPrototypeOf(function* () {}); \
+             var async_ = Object.getPrototypeOf(async function () {}); \
+             var both = Object.getPrototypeOf(async function* () {}); \
+             [plain === Function.prototype, gen === plain, async_ === plain, both === plain, \
+              gen === async_, gen === both, async_ === both].join(',')"),
+        "true,false,false,false,false,false,false"
+    );
+    // Each carries its own `@@toStringTag`, which is what a program sees them through.
+    assert_eq!(
+        run(
+            "[function () {}, function* () {}, async function () {}, async function* () {}] \
+             .map(function (f) { return Object.prototype.toString.call(f) }).join(',')"
+        ),
+        "[object Function],[object GeneratorFunction],[object AsyncFunction],[object AsyncGeneratorFunction]"
+    );
+    // An **arrow** takes the same one its non-arrow spelling does — §15.9.4 passes
+    // `%AsyncFunction.prototype%` explicitly, so an async arrow is not a special case.
+    assert_eq!(
+        run(
+            "Object.getPrototypeOf(async () => {}) === Object.getPrototypeOf(async function () {})"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("Object.getPrototypeOf(() => {}) === Function.prototype"),
+        "true"
+    );
+    // §27.7.3 — the prototype itself is an ordinary object: not callable, and with none of the
+    // properties a function has of its own.
+    assert_eq!(
+        run("typeof Object.getPrototypeOf(async function () {})"),
+        "object"
+    );
+    assert_eq!(
+        run("var p = Object.getPrototypeOf(async function () {}); \
+             try { p(); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("var p = Object.getPrototypeOf(async function () {}); \
+             [p.hasOwnProperty('length'), p.hasOwnProperty('name')].join(',')"),
+        "false,false"
+    );
+}
+
+#[test]
+fn async_function_is_a_constructor_that_nothing_can_name() {
+    // §27.7 deliberately keeps `%AsyncFunction%` off the global object, so the only route to it is
+    // through the prototype every async function already has — which is exactly how test262's
+    // `getWellKnownIntrinsicObject` finds it, and why it has to exist for that route to lead
+    // anywhere.
+    assert_eq!(run("typeof globalThis.AsyncFunction"), "undefined");
+    assert_eq!(
+        run(
+            "var AF = Object.getPrototypeOf(async function () {}).constructor; \
+             [AF.name, AF.length, AF.prototype === Object.getPrototypeOf(async function () {})] \
+             .join(',')"
+        ),
+        "AsyncFunction,1,true"
+    );
+    // §27.7.2 — its own `[[Prototype]]` is `%Function%`, the constructor and not the prototype.
+    assert_eq!(
+        run(
+            "var AF = Object.getPrototypeOf(async function () {}).constructor; \
+             (Object.getPrototypeOf(AF) === Function) + ',' + (AF instanceof Function)"
+        ),
+        "true,true"
+    );
+    // §27.7.3.1's attributes on the `constructor` — writable false, enumerable false, and
+    // **configurable true**, which is the shape every `constructor` on a prototype has and is not
+    // the shape `prototype` itself has. §27.7.2 gives that one all three false.
+    assert_eq!(
+        run("var p = Object.getPrototypeOf(async function () {}); \
+             var d = Object.getOwnPropertyDescriptor(p, 'constructor'); \
+             [d.writable, d.enumerable, d.configurable].join(',')"),
+        "false,false,true"
+    );
+    assert_eq!(
+        run(
+            "var AF = Object.getPrototypeOf(async function () {}).constructor; \
+             var d = Object.getOwnPropertyDescriptor(AF, 'prototype'); \
+             [d.writable, d.enumerable, d.configurable].join(',')"
+        ),
+        "false,false,false"
+    );
+    // §20.2.1.1 with one word more: it builds an async function from source text.
+    assert_eq!(
+        run(
+            "var AF = Object.getPrototypeOf(async function () {}).constructor; \
+             var f = new AF('a', 'return a * 2'); typeof f + ',' + typeof f(21).then"
+        ),
+        "function,function"
+    );
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; \
+             var AF = Object.getPrototypeOf(async function () {}).constructor; \
+             new AF('a', 'return a * 2')(21).then(function (v) { out = String(v) });",
+            "out"
+        ),
+        "42"
+    );
+    // §27.7.4 — an async function is **not** a constructor, and one built from source is no
+    // different: it gets no `prototype` property and no `[[Construct]]`.
+    assert_eq!(
+        run(
+            "var AF = Object.getPrototypeOf(async function () {}).constructor; \
+             var f = new AF('return 1'); \
+             f.hasOwnProperty('prototype') + ',' \
+             + (function () { try { new f(); return 'constructed' } \
+                              catch (e) { return e.constructor.name } })()"
+        ),
+        "false,TypeError"
+    );
+    assert_eq!(
+        run("try { new (async function () {})(); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}

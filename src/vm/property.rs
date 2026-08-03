@@ -535,34 +535,38 @@ impl Vm {
         };
         stored(heap.define_property_outcome(landing, key, &descriptor))
     }
-    /// §13.10.2's `InstanceofOperator`, by way of §7.3.22's `OrdinaryHasInstance`.
+    /// §13.10.2's `InstanceofOperator` — the operator, which is mostly a lookup.
     ///
-    /// # What it asks, and what it does not
+    /// Step 2 asks the right operand for `%Symbol.hasInstance%` and, finding one, **calls it and
+    /// believes it**. That is how a class says what `instanceof` means for it, and it is not a rare
+    /// path: §20.2.3.6 puts the default method on `Function.prototype`, so every ordinary function
+    /// goes through it too and the walk below is reached by way of a call rather than directly.
     ///
-    /// It walks `value`'s prototype chain looking for the *object* `target.prototype` holds. So it
-    /// is a question about the chain and never about which constructor was called: reassign
-    /// `C.prototype` and every object made before the reassignment stops being an instance of `C`,
-    /// which is not a bug and is why `instanceof` is unreliable across frames.
+    /// The doc here used to say the step would be added "when Symbols arrive". They arrived; the
+    /// step had not, so `1 instanceof {[Symbol.hasInstance]: f}` threw instead of asking `f`.
     ///
-    /// Three TypeErrors, and they are different sentences because they are different mistakes: a
-    /// right operand that is not an object at all (§13.10.2 step 3), one that is an object but not
-    /// callable (step 5), and a callable one whose `prototype` is not an object (§7.3.22 step 5) —
-    /// the last being what `Object.create(null) instanceof f` after `f.prototype = 1` reaches.
-    ///
-    /// §13.10.2 step 4 looks for `@@hasInstance` first, which is how `Symbol.hasInstance` lets a
-    /// class say what `instanceof` means for it. There are no Symbols yet, so every object takes
-    /// the ordinary path; when they arrive this gains a step in front rather than changing.
+    /// Two TypeErrors of its own, and they are different sentences because they are different
+    /// mistakes: a right operand that is not an object at all (step 1), and one that is an object,
+    /// has no `@@hasInstance`, and is not callable (step 4).
     pub(crate) fn instance_of(
         &mut self,
         value: Value,
         target: Value,
         heap: &mut Heap,
     ) -> Completion<Value> {
+        // Step 1.
         let Value::Object(constructor) = target else {
             return Err(Abrupt::type_error(
                 "the right operand of instanceof must be an object",
             ));
         };
+        // Steps 2 and 3.
+        if let Some(handler) = self.has_instance_handler(target, heap)? {
+            let answered = self.call_value(handler, target, &[value], heap)?;
+            return Ok(Value::Boolean(answered.to_boolean(heap)));
+        }
+        // Step 4 — reached by an object with no `@@hasInstance` anywhere on its chain, which for a
+        // function means one whose prototype chain does not reach `Function.prototype`.
         if !heap
             .object(constructor)
             .is_some_and(|object| object.call().is_some())
@@ -571,19 +575,90 @@ impl Vm {
                 "the right operand of instanceof is not callable",
             ));
         }
-        // §7.3.22 step 3 — a primitive is an instance of nothing, and that is an *answer* rather
-        // than an error. `1 instanceof Object` is `false`, not a mistake.
+        // Step 5.
+        self.ordinary_has_instance(target, value, heap)
+    }
+
+    /// §7.3.22 `OrdinaryHasInstance` — the walk `instanceof` means when nothing overrides it.
+    ///
+    /// # What it asks, and what it does not
+    ///
+    /// It walks `value`'s prototype chain looking for the *object* `target.prototype` holds. So it
+    /// is a question about the chain and never about which constructor was called: reassign
+    /// `C.prototype` and every object made before the reassignment stops being an instance of `C`,
+    /// which is not a bug and is why `instanceof` is unreliable across frames.
+    ///
+    /// # A bound function answers for its target, and why that is a loop
+    ///
+    /// Step 2 hands a bound function's `[[BoundTargetFunction]]` back to §13.10.2 — so the
+    /// target's own `@@hasInstance` decides, and `x instanceof f.bind()` is `x instanceof f`.
+    /// Written as the specification writes it that is mutual recursion, and a chain of ten
+    /// thousand `bind` calls is ten thousand Rust frames, which DR-0002 does not allow input to
+    /// ask for. So the chain is unwound in a loop instead, and the one thing the loop has to keep
+    /// is the reason the recursion existed: at each target, a `@@hasInstance` that is **not** the
+    /// default is called and believed. The default is this function, so unwinding past it is the
+    /// same answer without the regress.
+    ///
+    /// Bounded for the reason `Vm::enter_bound` is bounded: no `bind` can make a cycle, since it
+    /// binds a function that already exists, but a hand-built heap can.
+    pub(crate) fn ordinary_has_instance(
+        &mut self,
+        target: Value,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        let mut target = target;
+        // A `for` over a constant rather than a counter and a comparison, which is the shape
+        // `Vm::enter_bound` already uses for the same guard: the bound is not a rule about
+        // programs — DR-0013's heap gives out at a few thousand bound functions long before this
+        // — it is the answer for a hand-built heap pointing a bound function at itself. Written as
+        // a comparison it is a branch nothing can take, and mutation coverage duly survived it.
+        let constructor = 'unwind: {
+            for _ in 0..super::call::MAX_CALL_DEPTH {
+                // Step 1 — a non-callable answers **false** rather than throwing, because §13.10.2
+                // step 4 has already thrown for the one route that could reach it with one. This is
+                // reachable as `Function.prototype[Symbol.hasInstance].call(1, x)`.
+                let Value::Object(object) = target else {
+                    return Ok(Value::Boolean(false));
+                };
+                let Some(callable) = heap
+                    .object(object)
+                    .and_then(crate::heap::Object::call)
+                    .cloned()
+                else {
+                    return Ok(Value::Boolean(false));
+                };
+                let crate::heap::Callable::Bound(bound) = callable else {
+                    break 'unwind object;
+                };
+                let next = Value::Object(bound.target);
+                match self.has_instance_handler(next, heap)? {
+                    Some(handler) if !self.is_default_has_instance(handler, heap) => {
+                        let answered = self.call_value(handler, next, &[value], heap)?;
+                        return Ok(Value::Boolean(answered.to_boolean(heap)));
+                    }
+                    _ => target = next,
+                }
+            }
+            return Err(Abrupt::type_error(
+                "this bound function's chain of targets does not end",
+            ));
+        };
+        // Step 3 — a primitive is an instance of nothing, and that is an *answer* rather than an
+        // error. `1 instanceof Object` is `false`, not a mistake.
         let Value::Object(mut walk) = value else {
             return Ok(Value::Boolean(false));
         };
         let name = self.well_known("prototype", heap);
-        let prototype = self.get_property(target, name, heap)?;
+        // Step 4 reads it as a *property*, so a getter runs and may throw.
+        let prototype = self.get_property(Value::Object(constructor), name, heap)?;
+        // Step 5 — what `Object.create(null) instanceof f` reaches after `f.prototype = 1`.
         let Value::Object(prototype) = prototype else {
             return Err(Abrupt::type_error(
                 "the prototype of the right operand of instanceof is not an object",
             ));
         };
-        // Iterative, because a prototype chain is as long as a program makes it and DR-0002 does
+        // Step 6, iteratively: a prototype chain is as long as a program makes it and DR-0002 does
         // not let input decide how much Rust stack is used.
         loop {
             let Some(next) = self.prototype_through(walk, heap)? else {
@@ -594,6 +669,54 @@ impl Vm {
             }
             walk = next;
         }
+    }
+
+    /// §7.3.11 `GetMethod(target, %Symbol.hasInstance%)`.
+    ///
+    /// `undefined` and null both mean absent; anything else that is not callable is a TypeError
+    /// rather than a silent fall through to the ordinary walk, which would make a misspelled
+    /// override look as though it had worked.
+    fn has_instance_handler(
+        &mut self,
+        target: Value,
+        heap: &mut Heap,
+    ) -> Completion<Option<Value>> {
+        let Some(symbol) = self
+            .realm
+            .well_known(crate::builtins::well_known_at("hasInstance"))
+        else {
+            return Ok(None);
+        };
+        let found = self.get_property_key(target, PropertyKey::from_symbol(symbol), heap)?;
+        if matches!(found, Value::Undefined | Value::Null) {
+            return Ok(None);
+        }
+        if !heap.is_callable(found) {
+            return Err(Abrupt::type_error("Symbol.hasInstance is not a function"));
+        }
+        Ok(Some(found))
+    }
+
+    /// Whether this handler is §20.2.3.6's, the one `Function.prototype` carries.
+    ///
+    /// Read off `Function.prototype` rather than remembered in the realm, and that is exact rather
+    /// than convenient: §20.2.3.6 makes the property **neither writable nor configurable**, so no
+    /// program can put anything else there and the value found is the intrinsic by construction.
+    fn is_default_has_instance(&mut self, handler: Value, heap: &mut Heap) -> bool {
+        // One chain rather than an early return for the missing Symbol: a realm always has the
+        // well-known ones, so a `false` of its own would be a branch no input could take.
+        self.realm
+            .well_known(crate::builtins::well_known_at("hasInstance"))
+            .map(PropertyKey::from_symbol)
+            .and_then(|key| {
+                heap.object(self.realm.function_prototype())
+                    .and_then(|object| object.get_own_property(key))
+            })
+            .and_then(|property| match property.kind {
+                crate::heap::PropertyKind::Data { value, .. } => Some(value),
+                crate::heap::PropertyKind::Accessor { .. } => None,
+            })
+            .is_some_and(|default| matches!((default, handler), (Value::Object(a), Value::Object(b)) if a == b))
     }
 
     /// A String value for a name the engine itself knows, for asking an object about it.

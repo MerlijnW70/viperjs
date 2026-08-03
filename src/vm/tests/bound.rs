@@ -294,3 +294,244 @@ fn a_dynamic_function_is_assembled_before_it_is_parsed() {
         "SyntaxError"
     );
 }
+
+#[test]
+fn instanceof_asks_the_right_operand_what_it_means() {
+    // §13.10.2 step 2 — the operator looks up `%Symbol.hasInstance%` on its right operand and,
+    // finding one, **calls it and believes it**. praxis went straight to the prototype walk, so an
+    // object saying what `instanceof` means for it was ignored or refused.
+    assert_eq!(
+        run(
+            "var o = {}; o[Symbol.hasInstance] = function (v) { return v === 1 }; \
+             (1 instanceof o) + ',' + (2 instanceof o)"
+        ),
+        "true,false"
+    );
+    assert_eq!(
+        run(
+            "class C { static [Symbol.hasInstance](v) { return v === 7 } } \
+             (7 instanceof C) + ',' + (8 instanceof C)"
+        ),
+        "true,false"
+    );
+    // Step 3 is `ToBoolean` of what it answered, so anything truthy counts and the operator still
+    // evaluates to a Boolean.
+    assert_eq!(
+        run(
+            "var o = {[Symbol.hasInstance]: function () { return 'yes' }}; \
+             (1 instanceof o) + ',' + typeof (1 instanceof o)"
+        ),
+        "true,boolean"
+    );
+    assert_eq!(
+        run("var o = {[Symbol.hasInstance]: function () { return 0 }}; 1 instanceof o"),
+        "false"
+    );
+    // It is called with the *right* operand as receiver and the left as the argument, which is the
+    // opposite way round from how the operator reads.
+    assert_eq!(
+        run(
+            "var seen; var o = {[Symbol.hasInstance]: function (v) { seen = (this === o) + ',' + v; \
+             return true }}; 5 instanceof o; seen"
+        ),
+        "true,5"
+    );
+    // §7.3.11 — a `@@hasInstance` that is there and is not callable is a TypeError rather than a
+    // silent fall through to the ordinary walk, which would make a misspelled override look as
+    // though it had worked.
+    // **The message is the assertion**: calling a `1` would be a TypeError too, so only the
+    // sentence tells the guard from its absence.
+    assert_eq!(
+        run("var o = {}; o[Symbol.hasInstance] = 1; \
+             try { 1 instanceof o; 'no error' } \
+             catch (e) { e.constructor.name + ': ' + e.message }"),
+        "TypeError: Symbol.hasInstance is not a function"
+    );
+    // …and a getter for it runs, so it can throw.
+    assert_eq!(
+        run(
+            "var o = {get [Symbol.hasInstance]() { throw new EvalError('g') }}; \
+             try { 1 instanceof o; 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "EvalError"
+    );
+    // The two TypeErrors the operator raises itself: a right operand that is not an object at all
+    // (step 1), and one that is an object with no `@@hasInstance` anywhere and is not callable
+    // (step 4).
+    assert_eq!(
+        run("try { 1 instanceof 2; 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { 1 instanceof {}; 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and the ordinary walk is unchanged, reached now by way of §20.2.3.6's method rather than
+    // directly.
+    assert_eq!(run("({}) instanceof Object"), "true");
+    assert_eq!(run("(function () {}) instanceof Function"), "true");
+    assert_eq!(run("1 instanceof Object"), "false");
+    assert_eq!(
+        run(
+            "function F() {} var x = new F(); var was = x instanceof F; F.prototype = {}; \
+             was + ',' + (x instanceof F)"
+        ),
+        "true,false"
+    );
+    assert_eq!(
+        run("function F() {} F.prototype = 1; \
+             try { ({}) instanceof F; 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}
+
+#[test]
+fn the_default_has_instance_is_a_method_that_cannot_be_replaced() {
+    // §20.2.3.6 — and it is the **only** method on `Function.prototype` that is neither writable
+    // nor configurable. That is what makes it the intrinsic by construction rather than by
+    // remembering: no program can put anything else there.
+    assert_eq!(
+        run("typeof Function.prototype[Symbol.hasInstance]"),
+        "function"
+    );
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Function.prototype, Symbol.hasInstance); \
+             [d.writable, d.enumerable, d.configurable].join(',')"
+        ),
+        "false,false,false"
+    );
+    assert_eq!(
+        run("Function.prototype[Symbol.hasInstance].name + ',' \
+             + Function.prototype[Symbol.hasInstance].length"),
+        "[Symbol.hasInstance],1"
+    );
+    // §7.3.22 step 1 answers **false** for a receiver that is not callable, rather than refusing
+    // it — the refusal belongs to §13.10.2 step 4 and this method is not reached that way.
+    assert_eq!(
+        run("Function.prototype[Symbol.hasInstance].call(1, {})"),
+        "false"
+    );
+    assert_eq!(
+        run("Function.prototype[Symbol.hasInstance].call({}, {})"),
+        "false"
+    );
+    // It answers for its receiver, so calling it directly is the operator without the lookup.
+    assert_eq!(
+        run("function F() {} Function.prototype[Symbol.hasInstance].call(F, new F())"),
+        "true"
+    );
+}
+
+#[test]
+fn a_bound_function_answers_instanceof_for_what_it_was_bound_to() {
+    // §7.3.22 step 2 — a bound function hands the question to its `[[BoundTargetFunction]]`, so
+    // `x instanceof f.bind()` is `x instanceof f`. praxis reached step 4 instead and threw,
+    // because a bound function has no `prototype` of its own.
+    assert_eq!(
+        run("function F() {} var b = F.bind(null); \
+             (new F() instanceof b) + ',' + (new F() instanceof F)"),
+        "true,true"
+    );
+    assert_eq!(
+        run("function F() {} var bb = F.bind(null).bind(null).bind(null); new F() instanceof bb"),
+        "true"
+    );
+    assert_eq!(
+        run("function F() {} function G() {} (new G() instanceof F.bind(null))"),
+        "false"
+    );
+    // A chain long enough to have overflowed the stack had this been written the way the clause
+    // writes it — mutual recursion between §7.3.22 and §13.10.2, one Rust frame per `bind`.
+    assert_eq!(
+        run("function F() {} var deep = F; \
+             for (var i = 0; i < 3000; i++) { deep = deep.bind(null) } \
+             new F() instanceof deep"),
+        "true"
+    );
+    // …and the reason the loop cannot just unwind blindly: a target with a `@@hasInstance` of its
+    // own decides, because step 2 hands it back to §13.10.2 rather than to the walk. The bound
+    // function does not inherit it — §20.2.3.2 gives a bound function its target's *prototype*,
+    // which is `Function.prototype` — so it is reached only by unwinding to the target and asking
+    // again, which is the whole of what the loop has to keep from the recursion it replaced.
+    assert_eq!(
+        run("function F() {} \
+             Object.defineProperty(F, Symbol.hasInstance, \
+               {value: function (v) { return v === 'yes' }}); \
+             ('yes' instanceof F.bind(null)) + ',' + ('no' instanceof F.bind(null))"),
+        "true,false"
+    );
+}
+
+#[test]
+fn function_prototype_is_itself_a_function_that_answers_undefined() {
+    // §20.2.3 — `Function.prototype` **is** a built-in function object, not an ordinary one. It
+    // reads as a curiosity until §7.3.22 step 1 asks whether a receiver is callable and answers
+    // `false` for one that is not: `[] instanceof Function.prototype` then answers instead of
+    // reaching step 4, where reading a `prototype` that is not an object is the TypeError.
+    assert_eq!(run("typeof Function.prototype"), "function");
+    assert_eq!(run("String(Function.prototype())"), "undefined");
+    assert_eq!(run("String(Function.prototype(1, 2, 3))"), "undefined");
+    // It has no `[[Construct]]` and no `prototype` property of its own.
+    assert_eq!(
+        run("try { new Function.prototype(); 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("Function.prototype.hasOwnProperty('prototype')"),
+        "false"
+    );
+    // The row that made this necessary: callable, so the walk is reached, so the `prototype` it
+    // was given is read and refused.
+    assert_eq!(
+        run(
+            "Function.prototype.prototype = '';              try { [] instanceof Function.prototype; 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_function_cannot_be_given_a_has_instance_by_assignment() {
+    // A consequence of §20.2.3.6's attributes that catches people, and caught this test: the
+    // inherited `@@hasInstance` is **not writable**, so §10.1.9.2 refuses an assignment through
+    // it. Every function inherits it, so `F[Symbol.hasInstance] = fn` silently does nothing in
+    // sloppy code and is a TypeError in strict — and `instanceof` goes on using the default.
+    assert_eq!(
+        run(
+            "function F() {} F[Symbol.hasInstance] = function () { return true }; \
+             ('x' instanceof F) + ',' + F.hasOwnProperty(Symbol.hasInstance)"
+        ),
+        "false,false"
+    );
+    assert_eq!(
+        run("'use strict'; function F() {} \
+             try { F[Symbol.hasInstance] = 1; 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // `Object.defineProperty` is how it is done, and it works — the refusal is §10.1.9.2's rule
+    // about assignment, not a rule about the key.
+    assert_eq!(
+        run("function F() {} \
+             Object.defineProperty(F, Symbol.hasInstance, \
+               {value: function (v) { return v === 1 }}); \
+             (1 instanceof F) + ',' + (2 instanceof F)"),
+        "true,false"
+    );
+    // …and a class's `static [Symbol.hasInstance]` *defines* rather than assigns, which is why
+    // that spelling works where the assignment does not.
+    assert_eq!(
+        run(
+            "class C { static [Symbol.hasInstance](v) { return v === 1 } } \
+             (1 instanceof C) + ',' + (2 instanceof C)"
+        ),
+        "true,false"
+    );
+    // An object that is not a function inherits from `Object.prototype`, which has no
+    // `@@hasInstance` — so assignment works there, and this is the row that says the refusal above
+    // is about what was inherited rather than about the operation.
+    assert_eq!(
+        run("var o = {}; o[Symbol.hasInstance] = function (v) { return v === 1 }; 1 instanceof o"),
+        "true"
+    );
+}

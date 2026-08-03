@@ -1016,18 +1016,8 @@ built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js 
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js (strict) :: the test called $DONE with Test262Error: iterator closed properly Expected SameValue(«0», «1») to be true
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js (strict) :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
-built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw SyntaxError: the source of a dynamic function does not parse
-built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
-built-ins/AsyncFunction/AsyncFunction-is-subclass.js :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
-built-ins/AsyncFunction/AsyncFunction-is-subclass.js (strict) :: it threw an object with no name: Prototype of constructor is Function Expected SameValue(«[object Object]», «function Function() { [native code] }») to be true
-built-ins/AsyncFunction/AsyncFunction-name.js :: it threw an object with no name: name descriptor value should be AsyncFunction; name value should be AsyncFunction
-built-ins/AsyncFunction/AsyncFunction-name.js (strict) :: it threw an object with no name: name descriptor value should be AsyncFunction; name value should be AsyncFunction
-built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js :: it threw an object with no name: toStringTag value Expected SameValue(«undefined», «"AsyncFunction"») to be true
-built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js (strict) :: it threw an object with no name: toStringTag value Expected SameValue(«undefined», «"AsyncFunction"») to be true
-built-ins/AsyncFunction/instance-construct-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/AsyncFunction/instance-construct-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw an object with no name: length with 2 arguments in one, call Expected SameValue(«1», «2») to be true
+built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw an object with no name: length with 2 arguments in one, call Expected SameValue(«1», «2») to be true
 built-ins/AsyncFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/AsyncFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/instance-await-expr-in-param.js :: it threw SyntaxError: the source of a dynamic function does not parse
@@ -1054,16 +1044,8 @@ built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw 
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/AsyncGeneratorFunction/prototype/Symbol.toStringTag.js :: it threw an object with no name: Symbol(Symbol.toStringTag) descriptor value should be AsyncGeneratorFunction; Symbol(Symbol.toStringTag) value should be AsyncGeneratorFunction
-built-ins/AsyncGeneratorFunction/prototype/Symbol.toStringTag.js (strict) :: it threw an object with no name: Symbol(Symbol.toStringTag) descriptor value should be AsyncGeneratorFunction; Symbol(Symbol.toStringTag) value should be AsyncGeneratorFunction
 built-ins/AsyncGeneratorFunction/prototype/constructor.js :: it threw an object with no name: constructor descriptor should not be writable
 built-ins/AsyncGeneratorFunction/prototype/constructor.js (strict) :: it threw an object with no name: constructor descriptor should not be writable
-built-ins/AsyncGeneratorFunction/prototype/prototype.js :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object AsyncGenerator]») to be true
-built-ins/AsyncGeneratorFunction/prototype/prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object AsyncGenerator]») to be true
-built-ins/AsyncGeneratorPrototype/next/this-val-not-async-generator.js :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/next/this-val-not-async-generator.js (strict) :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/next/this-val-not-object.js :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/next/this-val-not-object.js (strict) :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js (strict) :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
@@ -1074,16 +1056,8 @@ built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-tr
 built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-try-catch.js (strict) :: the test called $DONE with TypeError: cannot read a property of something that is not an object
 built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-promise.js :: the test called $DONE with Test262Error: AsyncGeneratorResolve(generator, resultValue, true) Expected SameValue(«[object Promise]», «"unwrapped-value"») to be true
 built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-promise.js (strict) :: the test called $DONE with Test262Error: AsyncGeneratorResolve(generator, resultValue, true) Expected SameValue(«[object Promise]», «"unwrapped-value"») to be true
-built-ins/AsyncGeneratorPrototype/return/this-val-not-async-generator.js :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/return/this-val-not-async-generator.js (strict) :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/return/this-val-not-object.js :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/return/this-val-not-object.js (strict) :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/throw/return-rejected-promise.js :: it threw an object with no name: Promise rejected.
 built-ins/AsyncGeneratorPrototype/throw/return-rejected-promise.js (strict) :: it threw an object with no name: Promise rejected.
-built-ins/AsyncGeneratorPrototype/throw/this-val-not-async-generator.js :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/throw/this-val-not-async-generator.js (strict) :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/throw/this-val-not-object.js :: it threw TypeError: what was resumed is not a generator
-built-ins/AsyncGeneratorPrototype/throw/this-val-not-object.js (strict) :: it threw TypeError: what was resumed is not a generator
 built-ins/AsyncGeneratorPrototype/throw/throw-suspendedStart-promise.js :: it threw an object with no name
 built-ins/AsyncGeneratorPrototype/throw/throw-suspendedStart-promise.js (strict) :: it threw an object with no name
 built-ins/AsyncGeneratorPrototype/throw/throw-suspendedStart.js :: it threw Error: boop
@@ -2113,36 +2087,6 @@ built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw TypeError: wha
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.3.1_A1.js :: it threw an object with no name: #2.1: the Function.prototype property has the attributes ReadOnly: TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.3.1_A1.js (strict) :: it threw an object with no name: #2.1: the Function.prototype property has the attributes ReadOnly: TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.4_A1.js :: it threw an object with no name: Object.prototype.toString.call(Function.prototype) must return "[object Function]" Expected SameValue(«"[object Object]"», «"[object Function]"») to be true
-built-ins/Function/prototype/S15.3.4_A1.js (strict) :: it threw an object with no name: Object.prototype.toString.call(Function.prototype) must return "[object Function]" Expected SameValue(«"[object Object]"», «"[object Function]"») to be true
-built-ins/Function/prototype/S15.3.4_A2_T1.js :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.4_A2_T1.js (strict) :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.4_A2_T2.js :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.4_A2_T2.js (strict) :: it threw an object with no name: #1.1: The Function prototype object is itself a Function object that, when invoked, accepts any arguments and returns undefined: TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.4_A2_T3.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/S15.3.4_A2_T3.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Function/prototype/Symbol.hasInstance/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Function/prototype/Symbol.hasInstance/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Function/prototype/Symbol.hasInstance/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Function/prototype/Symbol.hasInstance/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Function/prototype/Symbol.hasInstance/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Function/prototype/Symbol.hasInstance/this-val-bound-target.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/this-val-bound-target.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Function/prototype/Symbol.hasInstance/value-negative.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/value-negative.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/value-positive.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/Symbol.hasInstance/value-positive.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js :: it threw TypeError: cannot set a property of something that is not an object
@@ -2179,8 +2123,8 @@ built-ins/Function/prototype/property-order.js :: it threw an object with no nam
 built-ins/Function/prototype/property-order.js (strict) :: it threw an object with no name: The `length` property comes before the `name` property on built-in functions
 built-ins/Function/prototype/toString/GeneratorFunction.js :: it threw SyntaxError: the source of a dynamic function does not parse
 built-ins/Function/prototype/toString/GeneratorFunction.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
-built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%AsyncIteratorPrototype%.constructor)
-built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%AsyncIteratorPrototype%.constructor)
+built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
+built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js (strict) :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/method-computed-property-name.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "undefined" ([ { a(){} }.a ](){ })
@@ -2613,10 +2557,10 @@ built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no 
 built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Map/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -2982,10 +2926,6 @@ built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js 
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/toString/proxy-function-async.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
-built-ins/Object/prototype/toString/proxy-function-async.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
-built-ins/Object/prototype/toString/proxy-function.js :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
-built-ins/Object/prototype/toString/proxy-function.js (strict) :: it threw an object with no name: async function proxy Expected SameValue(«"[object Function]"», «"[object AsyncFunction]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js :: it threw an object with no name: generator function proxy without Symbol.toStringTag Expected SameValue(«"[object GeneratorFunction]"», «"[object Function]"») to be true
 built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js (strict) :: it threw an object with no name: generator function proxy without Symbol.toStringTag Expected SameValue(«"[object GeneratorFunction]"», «"[object Function]"») to be true
 built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.prototype.valueOf requires an object
@@ -4522,8 +4462,8 @@ built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js (strict) :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-built-ins/Set/set-iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Error but got a RangeError
-built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Error but got a RangeError
+built-ins/Set/set-iterator-close-after-add-failure.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -14766,10 +14706,10 @@ built-ins/Uint8Array/prototype/toHex/results.js :: it threw TypeError: what was 
 built-ins/Uint8Array/prototype/toHex/results.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakMap/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/WeakMap/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -14827,8 +14767,8 @@ built-ins/WeakRef/prototype-from-newtarget-abrupt.js :: it threw an object with 
 built-ins/WeakRef/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
 built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
-built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
+built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/decodeURI/S15.1.3.1_A1.10_T1.js :: it threw an object with no name: #1: If B = 110xxxxx (n = 2) and (string.charAt(k + 4) and  string.charAt(k + 5)) do not represent hexadecimal digits, throw URIError
@@ -16106,20 +16046,6 @@ language/expressions/greater-than/bigint-and-boolean.js :: it threw an object wi
 language/expressions/greater-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
 language/expressions/greater-than/bigint-and-symbol.js :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/greater-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/instanceof/primitive-prototype-with-primitive.js :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/primitive-prototype-with-primitive.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/prototype-getter-with-object-throws.js :: it threw an object with no name: Expected a DummyError but got a TypeError
-language/expressions/instanceof/prototype-getter-with-object-throws.js (strict) :: it threw an object with no name: Expected a DummyError but got a TypeError
-language/expressions/instanceof/prototype-getter-with-object.js :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/prototype-getter-with-object.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/prototype-getter-with-primitive.js :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/prototype-getter-with-primitive.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/symbol-hasinstance-get-err.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/instanceof/symbol-hasinstance-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-language/expressions/instanceof/symbol-hasinstance-invocation.js :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/symbol-hasinstance-invocation.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/symbol-hasinstance-to-boolean.js :: it threw TypeError: the right operand of instanceof is not callable
-language/expressions/instanceof/symbol-hasinstance-to-boolean.js (strict) :: it threw TypeError: the right operand of instanceof is not callable
 language/expressions/left-shift/bigint-non-primitive.js :: it threw an object with no name
 language/expressions/left-shift/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/left-shift/bigint-toprimitive.js :: it threw an object with no name
@@ -16260,8 +16186,8 @@ language/expressions/prefix-increment/bigint.js :: it threw TypeError: a BigInt 
 language/expressions/prefix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/property-accessors/S11.2.1_A4_T3.js :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
-language/expressions/property-accessors/S11.2.1_A4_T3.js (strict) :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
+language/expressions/property-accessors/S11.2.1_A4_T3.js :: it threw an object with no name: #5: typeof Function.prototype.length === "number". Actual: undefined
+language/expressions/property-accessors/S11.2.1_A4_T3.js (strict) :: it threw an object with no name: #5: typeof Function.prototype.length === "number". Actual: undefined
 language/expressions/right-shift/bigint-non-primitive.js :: it threw an object with no name
 language/expressions/right-shift/bigint-non-primitive.js (strict) :: it threw an object with no name
 language/expressions/right-shift/bigint-toprimitive.js :: it threw an object with no name
