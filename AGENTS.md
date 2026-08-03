@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **80.78% of test262** — 75,252 of 93,161 runs. Treat that number as
+Conformance as of this commit is **80.95% of test262** — 75,416 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 344 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -179,10 +179,15 @@ and mostly are not, which is worth doing once and writing down rather than re-de
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
 
-### 79.38% to 80.78% in nine slices, and what they have in common
+### 79.38% to 80.95% in twelve slices, and what they have in common
 
-None of them was a feature. Every one was a clause praxis had *nearly* right, and seven of the eight
-were found by bucketing the failures rather than by reading a list of what is missing.
+None of them was a feature. Every one was a clause praxis had *nearly* right, and eleven of the
+twelve were found by bucketing the failures rather than by reading a list of what is missing.
+
+**Three of the twelve are one shape**, and it is the one worth carrying: *a clause names a
+completion, a flag or a step that praxis collapsed into one path serving two callers.* §9.1.1.4.17's
+`D`, §7.4.9's completion and §27.6.3.8's `Await` are all that — and each of the three cost between
+22 and 116 runs while being one condition or one instruction.
 
 1. **Annex B §B.3** (+571) — DR-0008's reversal, built. See the section below; it is the only one
    of the eight that was on anybody's list.
@@ -212,6 +217,16 @@ were found by bucketing the failures rather than by reading a list of what is mi
 8. **§22.2.1's `ClassSetExpression`** (+78 passing, +78 honestly refused) — a `v` pattern's class
    is a set expression, and its three operations are three quantifiers over the operands rather
    than sets to compute.
+9. **§15.7.1 inside a direct `eval`** (+24) — `eval("this.#m")` in a method of the class declaring
+   `#m` was refused. Nothing new is stored to allow it: a private name is a slot and DR-0018
+   already made every running scope name its slots, so the classes the call is inside are written
+   down in the chain the compiler is handed a moment later.
+10. **§7.4.9 with a normal completion** (+28) — an Iterator Helper's `return` **reports** what
+    closing its source found, where every other close here is abandoning a walk that already went
+    wrong and the clause discards the close's own trouble. One clause, two callers, opposite
+    answers about the same error.
+11. **§27.6.3.8 step 5** (+116) — `yield` in an `async function*` **awaits** what it yields, which
+    an ordinary generator does not. One instruction, and the largest slice since the `v` flag.
 
 **The shape worth carrying: a bucket spread evenly over an area's whole surface is one common path,
 not many faults.** Slice 3 wore the name of every `Array.prototype` and `TypedArray.prototype`
@@ -259,7 +274,8 @@ doc says which line to change if data ever arrives.
   bindings in such an eval sidestep it — they go in the eval's own scope, because every test reads
   them from inside the eval — and `compile_direct_eval` says so, so the next attempt does not
   mistake it for the general fix.
-- **A class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
+- **A coercion can detach or resize the buffer under a TypedArray method — ~58 runs** (see below);
+  and **a class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
   `ClassSetExpression` is built: `[[a-z]--[aeiou]]`, `[\d&&[0-4]]` and nesting all work, and the
   three operations turned out to be three quantifiers over the operands rather than sets to build.
   What remains is the two operands that match more than one code point — `\q{abc|def}` and
