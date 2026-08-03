@@ -139,8 +139,8 @@ pub fn run(argument: Option<&str>) -> std::process::ExitCode {
     }
     println!("{ITERATIONS} iterations per shape, --release\n");
     println!(
-        "{:<24} {:>10} {:>16} {:>10} {:>9}  {}",
-        "shape", "time", "per pass", "leak/pass", "after gc", "what it is for"
+        "{:<24} {:>10} {:>16} {:>10} {:>9}  what it is for",
+        "shape", "time", "per pass", "leak/pass", "after gc"
     );
     println!("{}", "-".repeat(96));
     let mut floor: Option<Duration> = None;

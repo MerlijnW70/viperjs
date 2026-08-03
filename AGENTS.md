@@ -493,9 +493,16 @@ and for a function body and come apart for a direct `eval`, which is Script code
 that is the first thing to distinguish two meanings of one field, splitting it is the change — not a
 special case at the call site that happens to know which meaning it wants.
 
-The local loop is `cargo fmt --all --check`, `cargo clippy --all-targets -- -D warnings` **and**
-`RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not cover
-the third: a public item's doc linking to a private one is an error in CI and nowhere else.
+The local loop is `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`
+**and** `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not
+cover the third: a public item's doc linking to a private one is an error in CI and nowhere else.
+
+**`--workspace` on the clippy line is load-bearing, and this file said otherwise until it cost a red
+build.** Without it clippy checks the engine alone, so nothing in `lab/` or `conformance/` is linted
+locally while CI lints all three — and a `println!` in a lab experiment took the public build red
+after passing every check here. `cargo test` has the same split: CI runs `--workspace`, and
+`cargo test --lib` is the engine's tests only. Run the workspace form before publishing, not the
+short one.
 
 Read [`GOAL.md`](GOAL.md) first — it is binding and it outranks this file — then `src/span.rs` to
 calibrate on the bar. `cargo run --release --example parse -- --commonjs <dir>` over a real
