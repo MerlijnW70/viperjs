@@ -279,35 +279,7 @@ impl Vm {
                     continue;
                 }
                 Instruction::StoreVariable(depth, index) => {
-                    // Peeked, not popped: assignment is an expression, and `a = (b = 1)` needs
-                    // the inner one to leave its value behind.
-                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
-                    let target = heap
-                        .environment_at(self.environment, depth)
-                        .ok_or(Fault::MissingLocal)?;
-                    // §9.1.1.1.5 `SetMutableBinding` step 2 — assigning to a binding that is not
-                    // initialised yet is a ReferenceError, not a way to initialise it. `let x = x`
-                    // reads the dead zone; `x = 1; let x;` writes to it, and both are errors.
-                    // Only `Initialise` above may fill an empty slot.
-                    if heap
-                        .variable(target, index)
-                        .ok_or(Fault::MissingLocal)?
-                        .is_none()
-                    {
-                        self.raise(
-                            Abrupt::reference_error(
-                                "a `let` or `const` was assigned to before its declaration ran",
-                            ),
-                            heap,
-                            root,
-                            current,
-                            at,
-                        )?;
-                        continue;
-                    }
-                    if !heap.set_variable(target, index, value) {
-                        return Err(Fault::MissingLocal);
-                    }
+                    self.store_variable(depth, index, heap, root, current, at)?;
                 }
                 Instruction::LoadGlobal(index) => {
                     let key = self.global_name(running, index, heap)?;
@@ -411,204 +383,23 @@ impl Vm {
                     self.completion = self.pop()?;
                 }
                 Instruction::MakeFunction(index) => {
-                    let Some(body) = running.function(index) else {
+                    let Some(body) = running.function(index).cloned() else {
                         return Err(Fault::MissingFunction);
                     };
-                    // The environment the function is *written* in, not the one it will run
-                    // in. That is the whole of a closure: `counter()` returns a function that
-                    // still holds the environment `counter`'s call made, after the call is gone.
-                    //
-                    // An arrow captures the `this` in force here for exactly the same reason and
-                    // at exactly the same moment (§10.2.3 step 6). Reading it at *call* time
-                    // instead would be dynamic `this` wearing a lexical name: the two agree only
-                    // while the arrow is called from inside the call that made it.
-                    // §15.3 — an arrow reaches outward for `super` on exactly the terms it reaches
-                    // outward for `this` and `new.target`: it has no `[[HomeObject]]` of its own, so
-                    // §9.1.1.3's walk arrives at the method it was written in. All three are captured
-                    // here rather than walked at use time, which is the same argument for each — by
-                    // the time the arrow runs, the frame it was written in may be long gone.
-                    let home = self
-                        .frames
-                        .last()
-                        .and_then(|frame| frame.function)
-                        .and_then(|function| heap.object(function))
-                        .and_then(crate::heap::Object::home_object);
-                    let lexical = body.is_arrow().then_some(crate::heap::Lexical {
-                        this_value: self.this_value,
-                        new_target: self.new_target,
-                        home,
-                    });
-                    // §27.3.3 — a generator function's `[[Prototype]]` is
-                    // %GeneratorFunction.prototype% rather than %Function.prototype%, which is
-                    // where `Object.getPrototypeOf(function* () {})` lands and the only way a
-                    // script can reach that object at all.
-                    let inherits = match body.is_generator() {
-                        true => self.realm.generator_function_prototype(),
-                        false => self.realm.function_prototype(),
-                    };
-                    let object =
-                        heap.new_function(inherits, body.clone(), self.environment, lexical);
-                    // §20.2.4.1 — `length` is what the function says it needs, which stops at the
-                    // first default and never counts a rest parameter. Not writable and not
-                    // enumerable, and *configurable*, which is what lets a decorator replace it.
-                    let key = crate::heap::PropertyKey::from_units(
-                        heap,
-                        &"length".encode_utf16().collect::<Vec<_>>(),
-                    );
-                    heap.define_own_property(
-                        object,
-                        key,
-                        &crate::heap::PropertyDescriptor {
-                            value: Some(Value::Number(body.length() as f64)),
-                            writable: Some(false),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                    );
-                    // §10.2.9 `SetFunctionName` — not writable, not enumerable, and *configurable*,
-                    // which is the set §10.3.3 gives `length` beside it. An unnamed function gets the
-                    // empty string rather than no property at all: `(function () {}).name` is `""`, and
-                    // `'name' in f` is true for every function.
-                    let named = match body.name() {
-                        Some(text) => Value::String(text),
-                        None => Value::String(heap.intern(&[])),
-                    };
-                    let key = property_name(heap, "name");
-                    heap.define_own_property(
-                        object,
-                        key,
-                        &PropertyDescriptor {
-                            value: Some(named),
-                            writable: Some(false),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..PropertyDescriptor::EMPTY
-                        },
-                    );
-                    // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
-                    // object, and that object gets a `constructor` back. The pair is what makes
-                    // `new f() instanceof f` true, and it is made eagerly because a function may
-                    // be constructed with at any time — including before anything reads it.
-                    //
-                    // An arrow gets neither. §15.3 gives it no `[[Construct]]`, so a `prototype`
-                    // would be an object nothing could ever inherit from.
-                    // …and a **method** gets neither, for the same reason it has no `[[Construct]]`:
-                    // §15.4.5 makes one that is not a constructor, so a `prototype` would be an object
-                    // nothing could ever inherit from. `Object.getOwnPropertyNames(o.m)` is exactly
-                    // `length` and `name`, which test262 checks by name.
-                    // …and a **generator** gets neither, for a third reason: §15.5.3 gives it no
-                    // `[[Construct]]` either. What it gets instead is a `prototype` whose object
-                    // inherits from %GeneratorPrototype% and which points back at nothing — every
-                    // generator this function makes inherits from it, and §15.5.4 gives it no
-                    // `constructor`, so `g().constructor` finds %GeneratorFunction.prototype% up
-                    // the chain rather than `g` itself.
-                    // …and an **async** function gets neither either, and not even a `prototype`:
-                    // §15.8.4 gives an async function object exactly `length` and `name`, because
-                    // what it answers with is a promise and nothing ever inherits from it.
-                    if body.is_generator() {
-                        self.realm
-                            .make_generator_function(heap, object, body.is_async());
-                    } else if !body.is_arrow() && !body.is_method() && !body.is_async() {
-                        self.realm.make_constructor(heap, object);
-                    }
+                    let object = self.make_function(&body, heap);
                     self.stack.push(Value::Object(object));
                 }
                 Instruction::MakeClass {
                     body: index,
                     derived,
                 } => {
-                    let Some(body) = running.function(index) else {
+                    let Some(body) = running.function(index).cloned() else {
                         return Err(Fault::MissingFunction);
                     };
-                    // §15.7.14 steps 9 to 11 — the heritage read three ways. `extends null` is a
-                    // class whose instances inherit from nothing, and whose constructor still
-                    // inherits from `Function.prototype`; anything that is not a constructor is a
-                    // TypeError, and `extends {}` is caught by that rather than by the step below.
-                    let inheritance = match derived {
-                        false => Inheritance {
-                            prototype: Some(self.realm.object_prototype()),
-                            constructor: self.realm.function_prototype(),
-                        },
-                        true => match self.inheritance(heap) {
-                            Ok(found) => found,
-                            Err(error) => {
-                                self.raise(error, heap, root, current, at)?;
-                                continue;
-                            }
-                        },
+                    let Some(object) = self.make_class(&body, derived, heap, root, current, at)?
+                    else {
+                        continue;
                     };
-                    let object = heap.new_function(
-                        inheritance.constructor,
-                        body.clone(),
-                        self.environment,
-                        None,
-                    );
-                    let key = property_name(heap, "length");
-                    heap.define_own_property(
-                        object,
-                        key,
-                        &crate::heap::PropertyDescriptor {
-                            value: Some(Value::Number(body.length() as f64)),
-                            writable: Some(false),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                    );
-                    // §10.2.9 `SetFunctionName` — not writable, not enumerable, and *configurable*,
-                    // which is the set §10.3.3 gives `length` beside it. An unnamed function gets the
-                    // empty string rather than no property at all: `(function () {}).name` is `""`, and
-                    // `'name' in f` is true for every function.
-                    let named = match body.name() {
-                        Some(text) => Value::String(text),
-                        None => Value::String(heap.intern(&[])),
-                    };
-                    let key = property_name(heap, "name");
-                    heap.define_own_property(
-                        object,
-                        key,
-                        &PropertyDescriptor {
-                            value: Some(named),
-                            writable: Some(false),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..PropertyDescriptor::EMPTY
-                        },
-                    );
-                    // §15.7.14 steps 12 to 14 — the prototype, and the pair of references that make
-                    // `new C() instanceof C` true. `prototype` is **not writable** here, which is the
-                    // difference from §10.2.5's `MakeConstructor` for an ordinary function: a class
-                    // may not be pointed at a different prototype after the fact.
-                    let prototype = heap.new_object(inheritance.prototype);
-                    // §15.7.14 step 17 `MakeMethod(F, proto)` — the constructor is a method of the
-                    // prototype, which is what lets `super.x` be written in it. Set here rather than
-                    // by an instruction because both objects are only in one place at this moment.
-                    heap.set_home_object(object, prototype);
-                    let key = property_name(heap, "constructor");
-                    heap.define_own_property(
-                        prototype,
-                        key,
-                        &crate::heap::PropertyDescriptor {
-                            value: Some(Value::Object(object)),
-                            writable: Some(true),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                    );
-                    let key = property_name(heap, "prototype");
-                    heap.define_own_property(
-                        object,
-                        key,
-                        &crate::heap::PropertyDescriptor {
-                            value: Some(Value::Object(prototype)),
-                            writable: Some(false),
-                            enumerable: Some(false),
-                            configurable: Some(false),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                    );
                     self.stack.push(Value::Object(object));
                 }
                 Instruction::ClassPrototype => {
@@ -631,42 +422,7 @@ impl Vm {
                     self.stack.push(value);
                 }
                 Instruction::DefineClassMethod(kind) => {
-                    let value = self.pop()?;
-                    let key = self.pop()?;
-                    let Value::Object(target) = self.pop()? else {
-                        return Err(Fault::NotAnObject);
-                    };
-                    let key = match self.property_key(key, heap) {
-                        Ok(key) => key,
-                        Err(error) => {
-                            self.raise(error, heap, root, current, at)?;
-                            continue;
-                        }
-                    };
-                    // §15.7.14 — writable and configurable, and *not* enumerable. The last of those
-                    // is the whole runtime difference from an object literal's method.
-                    let descriptor = match kind {
-                        crate::ast::MethodKind::Get => crate::heap::PropertyDescriptor {
-                            getter: Some(value),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                        crate::ast::MethodKind::Set => crate::heap::PropertyDescriptor {
-                            setter: Some(value),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                        crate::ast::MethodKind::Normal => crate::heap::PropertyDescriptor {
-                            value: Some(value),
-                            writable: Some(true),
-                            enumerable: Some(false),
-                            configurable: Some(true),
-                            ..crate::heap::PropertyDescriptor::EMPTY
-                        },
-                    };
-                    let _ = heap.define_own_property(target, key, &descriptor);
+                    self.define_class_method(kind, heap, root, current, at)?;
                 }
                 Instruction::Call(count) | Instruction::CallMethod(count) => {
                     let method = matches!(instruction, Instruction::CallMethod(_));
@@ -715,156 +471,16 @@ impl Vm {
                     }
                 }
                 Instruction::CallSpread(how) => {
-                    // The arguments arrived as one array, because §13.3.8's spread has no count until
-                    // it has been iterated. Expanding it here rather than teaching `enter` about
-                    // arrays keeps one calling convention: by the time the frame is built the stack
-                    // looks exactly as it does for a call whose count was known all along.
-                    let Value::Object(list) = self.pop()? else {
-                        return Err(Fault::NotAnObject);
-                    };
-                    let name = property_name(heap, "length");
-                    let length = match self.get_property_key(Value::Object(list), name, heap) {
-                        Ok(value) => value,
-                        Err(error) => {
-                            self.raise(error, heap, root, current, at)?;
-                            continue;
-                        }
-                    };
-                    // The array is one this compiler built a moment ago, so its length is an integer
-                    // and its elements are plain data. Read through the ordinary path anyway: a
-                    // second way of reading an array is a second way to be wrong about one.
-                    let count = match length {
-                        // A float cast saturates in Rust, so an absurd length clamps rather than
-                        // wrapping — and the length here was written by this compiler anyway.
-                        Value::Number(number) if number >= 0.0 && number.is_finite() => {
-                            number as u32
-                        }
-                        _ => 0,
-                    };
-                    for index in 0..count {
-                        let key = property_name(heap, &index.to_string());
-                        let value = match self.get_property_key(Value::Object(list), key, heap) {
-                            Ok(value) => value,
-                            Err(error) => {
-                                self.raise(error, heap, root, current, at)?;
-                                continue;
-                            }
-                        };
-                        self.stack.push(value);
-                    }
-                    let how = match how {
-                        SpreadCall::Plain => Entry::Plain,
-                        SpreadCall::Method => Entry::Method,
-                        SpreadCall::Construct => Entry::Construct,
-                        // §13.3.7 — the one call whose callee is not on the stack, because the source
-                        // never named it. Pushed under the arguments now, which is where every other
-                        // call had put it before its arguments were evaluated.
-                        SpreadCall::Super => {
-                            let parent = match self.super_constructor(heap) {
-                                Ok(parent) => parent,
-                                Err(error) => {
-                                    self.raise(error, heap, root, current, at)?;
-                                    continue;
-                                }
-                            };
-                            let callee_at = self
-                                .stack
-                                .len()
-                                .checked_sub(count as usize)
-                                .ok_or(Fault::StackUnderflow)?;
-                            self.stack.insert(callee_at, parent);
-                            Entry::Super
-                        }
-                    };
-                    self.enter(how, count, heap, root, current, at)?;
+                    self.call_spread(how, heap, root, current, at)?;
                 }
                 Instruction::Construct(count) => {
                     self.enter(Entry::Construct, count, heap, root, current, at)?;
                 }
                 Instruction::Return => {
-                    let value = self.pop()?;
-                    let Some(frame) = self.frames.pop() else {
-                        return Err(Fault::ReturnWithNoCall);
-                    };
-                    // Everything the callee left behind goes with it: its operands, its locals,
-                    // and any handler it installed and did not take down.
-                    self.stack.truncate(frame.stack_base);
-                    self.handlers.truncate(frame.handlers_base);
-                    // §10.2.2 step 13 — a construction answers with the object it made, unless
-                    // the body returned an object of its own. A primitive `return` is *ignored*,
-                    // which is why `function F() { return 1; }` still constructs an `F`.
-                    let answer = match (frame.constructed, value) {
-                        (Some(_), Value::Object(_)) | (None, _) => value,
-                        (Some(made), _) => made,
-                    };
-                    // §27.5.3.2 step 5 — a generator's body does not answer with what it returned:
-                    // the resumption that entered it answers with `{ value, done: true }`. Nothing
-                    // is marked finished, because nothing needs to be — the execution was taken out
-                    // of the generator to be run and is not going back, and *that* is what being
-                    // completed means.
-                    // Which of the three a return from this frame is: an ordinary one, a
-                    // generator's — wrapped as `{ value, done: true }` — or an `async` function's,
-                    // which *resolves* its promise and answers with the promise.
-                    let answer = match Self::suspendable_of(&frame, heap) {
-                        Some((_, Suspendable::Generator)) => {
-                            Some(self.iterator_result(heap, answer, true))
-                        }
-                        Some((context, Suspendable::Async)) => {
-                            Some(self.settle_async(context, ReactionKind::Fulfil, answer, heap))
-                        }
-                        // §27.6.3.2 and then §27.6.3.6 — the request being served is answered with
-                        // `{ value, done: true }`, and every request behind it with the same, the
-                        // body being gone. **Nothing is pushed**: the promise this resumption
-                        // answers with went onto the stack when the request was enqueued, which is
-                        // the one way an async generator's body differs from every other.
-                        Some((generator, Suspendable::AsyncGenerator)) => {
-                            self.answer_step(generator, answer, true, heap);
-                            self.drain(generator, heap);
-                            None
-                        }
-                        None => Some(answer),
-                    };
-                    if let Some(answer) = answer {
-                        self.stack.push(answer);
-                    }
-                    self.environment = frame.environment;
-                    self.this_value = frame.this_value;
-                    self.new_target = frame.new_target;
-                    *current = frame.code;
-                    *at = frame.at;
+                    self.return_from_call(heap, current, at)?;
                 }
                 Instruction::Yield => {
-                    let value = self.pop()?;
-                    // §27.5.3.7 suspends *the generator's own execution context*, so which
-                    // generator this is belongs to the frame rather than to the instruction: there
-                    // is no other one a `yield` could mean, and the compiler emits none outside a
-                    // generator body.
-                    let Some(generator) = self.frames.last().and_then(|frame| frame.generator)
-                    else {
-                        return Err(Fault::YieldOutsideGenerator);
-                    };
-                    // §27.6.3.8 — an async generator's `yield` *settles a promise* instead of
-                    // answering a resumption, and then serves whatever was asked while it was
-                    // busy. Told apart by the brand on the object the frame names, which is the
-                    // only thing that distinguishes the two bodies at this instruction.
-                    if heap
-                        .object(generator)
-                        .is_some_and(crate::heap::Object::is_async_generator)
-                    {
-                        let parked = self.park(current, at)?;
-                        heap.park_into(generator, parked);
-                        self.answer_step(generator, value, false, heap);
-                        self.serve_queued(generator, heap, root, current, at)?;
-                        continue;
-                    }
-                    // Wrapped before the park, so that a park that is refused leaves nothing built.
-                    let result = self.iterator_result(heap, value, false);
-                    let parked = self.park(current, at)?;
-                    // The generator exists — the frame named it — so this cannot answer `false`.
-                    heap.park_into(generator, parked);
-                    // Where a `Return` would have left the returned value: the resumption that
-                    // entered this body is being answered, and it answers with an iterator result.
-                    self.stack.push(result);
+                    self.yield_from_generator(heap, root, current, at)?;
                 }
                 Instruction::PushScope(index) => {
                     // §8.3.2's `NewDeclarativeEnvironment` — a child of what is running, which is
@@ -969,38 +585,7 @@ impl Vm {
                 // depending on where it lands. Emitted only inside a `with`: everywhere else the
                 // compiler already knows which of the three applies.
                 Instruction::DeleteName(index) => {
-                    let key = self.global_name(running, index, heap)?;
-                    let name = self.name_text(running, index, heap)?;
-                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
-                        Some(found) => found,
-                        None => continue,
-                    };
-                    let answer = match found {
-                        // §9.1.1.1.5 — a declarative binding is not deletable, whatever it is: a
-                        // `var`, a parameter, a `let`, a function's own slot. The one exception the
-                        // specification has is §19.2.1.1's direct eval, whose `var`s *are*, and
-                        // praxis does not make those deletable either — which is a gap, not this
-                        // instruction's business, and it is the same answer it gave before a `with`
-                        // could be written around it.
-                        crate::vm::dynamic::Resolved::Slot { .. } => false,
-                        // §9.1.1.2.7 `DeleteBinding` — `[[Delete]]` of the `with` object, which may
-                        // run a proxy's trap and so may throw. Own-only, like every `[[Delete]]`:
-                        // `with (o) { delete toString }` answers true and leaves
-                        // `Object.prototype.toString` where it is, because `o` never had it.
-                        crate::vm::dynamic::Resolved::Property(object) => {
-                            let gone = self.delete_property_key(Value::Object(object), key, heap);
-                            match self.settle(gone, heap, root, current, at)? {
-                                Some(value) => value.to_boolean(heap),
-                                None => continue,
-                            }
-                        }
-                        // §13.5.1.2 step 3 — nowhere in the chain, so the global object answers, and
-                        // §10.1.10.1 step 2 makes a property that is not there **true**.
-                        crate::vm::dynamic::Resolved::Global => {
-                            heap.delete_own_property(self.realm.global(), key)
-                        }
-                    };
-                    self.stack.push(Value::Boolean(answer));
+                    self.delete_name(index, heap, root, current, at)?;
                 }
                 Instruction::TypeofName(index) => {
                     let key = self.global_name(running, index, heap)?;
@@ -1104,39 +689,7 @@ impl Vm {
                     self.await_value(context, value, heap, root, current, at)?;
                 }
                 Instruction::AsyncReject => {
-                    let thrown = self.pop()?;
-                    let Some(frame) = self.frames.pop() else {
-                        return Err(Fault::ReturnWithNoCall);
-                    };
-                    self.stack.truncate(frame.stack_base);
-                    self.handlers.truncate(frame.handlers_base);
-                    // §27.7.5.2 step 3.b — the promise is rejected with what was thrown, and the
-                    // *promise* is what the call answers with. A `Frame` with no context is a chunk
-                    // that does not make sense: only an `async` body has this instruction in it.
-                    let answer = match Self::suspendable_of(&frame, heap) {
-                        // §27.6.3.2 with a throw completion, then the drain: the request in service
-                        // is *rejected* with what escaped, and the queue behind it answers as a
-                        // completed generator does. Nothing is pushed, for the reason `Return` gives.
-                        Some((generator, Suspendable::AsyncGenerator)) => {
-                            self.reject_step(generator, thrown, heap);
-                            self.drain(generator, heap);
-                            None
-                        }
-                        _ => frame
-                            .generator
-                            .map(|context| {
-                                self.settle_async(context, ReactionKind::Reject, thrown, heap)
-                            })
-                            .or(Some(Value::Undefined)),
-                    };
-                    if let Some(answer) = answer {
-                        self.stack.push(answer);
-                    }
-                    self.environment = frame.environment;
-                    self.this_value = frame.this_value;
-                    self.new_target = frame.new_target;
-                    *current = frame.code;
-                    *at = frame.at;
+                    self.reject_from_async(heap, current, at)?;
                 }
                 Instruction::GetAsyncIterator => {
                     let iterable = self.pop()?;
@@ -1438,44 +991,7 @@ impl Vm {
                     }
                 }
                 Instruction::CompleteDerivedReturn(index) => {
-                    let value = self.pop()?;
-                    match value {
-                        // §10.2.2 step 13a — an object return wins, exactly as in a base constructor.
-                        Value::Object(_) => self.stack.push(value),
-                        // …step 13b — `undefined` is answered with the bound `this`, and the binding
-                        // being unbound is how a constructor that never called `super()` becomes a
-                        // ReferenceError rather than answering with nothing.
-                        Value::Undefined => match heap.variable(self.environment, index) {
-                            None => return Err(Fault::MissingLocal),
-                            Some(Some(bound)) => self.stack.push(bound),
-                            Some(None) => {
-                                self.raise(
-                                    Abrupt::reference_error(
-                                        "a derived constructor returned before calling `super`",
-                                    ),
-                                    heap,
-                                    root,
-                                    current,
-                                    at,
-                                )?;
-                                continue;
-                            }
-                        },
-                        // …step 13c — and every other primitive is a TypeError, where a base
-                        // constructor would have ignored it and answered with the object it made.
-                        _ => {
-                            self.raise(
-                                Abrupt::type_error(
-                                    "a derived constructor returned something that is not an object",
-                                ),
-                                heap,
-                                root,
-                                current,
-                                at,
-                            )?;
-                            continue;
-                        }
-                    }
+                    self.complete_derived_return(index, heap, root, current, at)?;
                 }
                 Instruction::Duplicate => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
@@ -1532,40 +1048,8 @@ impl Vm {
                     let _ = heap.define_own_property(base, key, &descriptor);
                 }
                 Instruction::DefineGetter | Instruction::DefineSetter => {
-                    let function = self.pop()?;
-                    let key = self.pop()?;
-                    let base = *self.stack.last().ok_or(Fault::StackUnderflow)?;
-                    let Value::Object(base) = base else {
-                        return Err(Fault::NotAnObject);
-                    };
-                    let key = match self.property_key(key, heap) {
-                        Ok(key) => key,
-                        Err(error) => {
-                            self.raise(error, heap, root, current, at)?;
-                            continue;
-                        }
-                    };
-                    // Only the half that was written. §10.1.6.3 leaves an absent field alone, so
-                    // a getter defined after a setter joins it rather than replacing it — which
-                    // is what makes `{get a() {}, set a(v) {}}` one property with both.
-                    let half = match instruction {
-                        Instruction::DefineGetter => PropertyDescriptor {
-                            getter: Some(function),
-                            ..PropertyDescriptor::EMPTY
-                        },
-                        _ => PropertyDescriptor {
-                            setter: Some(function),
-                            ..PropertyDescriptor::EMPTY
-                        },
-                    };
-                    // §15.4.5 gives an accessor made this way `[[Enumerable]]` and
-                    // `[[Configurable]]`, the same two an ordinary literal property gets.
-                    let descriptor = PropertyDescriptor {
-                        enumerable: Some(true),
-                        configurable: Some(true),
-                        ..half
-                    };
-                    let _ = heap.define_own_property(base, key, &descriptor);
+                    let getter = matches!(instruction, Instruction::DefineGetter);
+                    self.define_accessor(getter, heap, root, current, at)?;
                 }
                 Instruction::GetProperty => {
                     let key = self.pop()?;
@@ -1683,6 +1167,706 @@ pub(super) struct TemplateSite {
 }
 
 impl Vm {
+    /// §10.2.3 `OrdinaryFunctionCreate` and §10.2.5 `MakeConstructor` — the object a `function`
+    /// expression or declaration evaluates to.
+    ///
+    /// Everything here is settled *now*, where the function is written, and not where it is called:
+    /// the environment it closes over, the `this` an arrow captures, and the `prototype` object a
+    /// constructor will hand to its instances. A closure is the first of those and nothing more.
+    fn make_function(&mut self, body: &Rc<Chunk>, heap: &mut Heap) -> crate::heap::ObjectId {
+        // The environment the function is *written* in, not the one it will run
+        // in. That is the whole of a closure: `counter()` returns a function that
+        // still holds the environment `counter`'s call made, after the call is gone.
+        //
+        // An arrow captures the `this` in force here for exactly the same reason and
+        // at exactly the same moment (§10.2.3 step 6). Reading it at *call* time
+        // instead would be dynamic `this` wearing a lexical name: the two agree only
+        // while the arrow is called from inside the call that made it.
+        // §15.3 — an arrow reaches outward for `super` on exactly the terms it reaches
+        // outward for `this` and `new.target`: it has no `[[HomeObject]]` of its own, so
+        // §9.1.1.3's walk arrives at the method it was written in. All three are captured
+        // here rather than walked at use time, which is the same argument for each — by
+        // the time the arrow runs, the frame it was written in may be long gone.
+        let home = self
+            .frames
+            .last()
+            .and_then(|frame| frame.function)
+            .and_then(|function| heap.object(function))
+            .and_then(crate::heap::Object::home_object);
+        let lexical = body.is_arrow().then_some(crate::heap::Lexical {
+            this_value: self.this_value,
+            new_target: self.new_target,
+            home,
+        });
+        // §27.3.3 — a generator function's `[[Prototype]]` is
+        // %GeneratorFunction.prototype% rather than %Function.prototype%, which is
+        // where `Object.getPrototypeOf(function* () {})` lands and the only way a
+        // script can reach that object at all.
+        let inherits = match body.is_generator() {
+            true => self.realm.generator_function_prototype(),
+            false => self.realm.function_prototype(),
+        };
+        let object = heap.new_function(inherits, body.clone(), self.environment, lexical);
+        // §20.2.4.1 — `length` is what the function says it needs, which stops at the
+        // first default and never counts a rest parameter. Not writable and not
+        // enumerable, and *configurable*, which is what lets a decorator replace it.
+        let key = crate::heap::PropertyKey::from_units(
+            heap,
+            &"length".encode_utf16().collect::<Vec<_>>(),
+        );
+        heap.define_own_property(
+            object,
+            key,
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Number(body.length() as f64)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+        // §10.2.9 `SetFunctionName` — not writable, not enumerable, and *configurable*,
+        // which is the set §10.3.3 gives `length` beside it. An unnamed function gets the
+        // empty string rather than no property at all: `(function () {}).name` is `""`, and
+        // `'name' in f` is true for every function.
+        let named = match body.name() {
+            Some(text) => Value::String(text),
+            None => Value::String(heap.intern(&[])),
+        };
+        let key = property_name(heap, "name");
+        heap.define_own_property(
+            object,
+            key,
+            &PropertyDescriptor {
+                value: Some(named),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+        // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
+        // object, and that object gets a `constructor` back. The pair is what makes
+        // `new f() instanceof f` true, and it is made eagerly because a function may
+        // be constructed with at any time — including before anything reads it.
+        //
+        // An arrow gets neither. §15.3 gives it no `[[Construct]]`, so a `prototype`
+        // would be an object nothing could ever inherit from.
+        // …and a **method** gets neither, for the same reason it has no `[[Construct]]`:
+        // §15.4.5 makes one that is not a constructor, so a `prototype` would be an object
+        // nothing could ever inherit from. `Object.getOwnPropertyNames(o.m)` is exactly
+        // `length` and `name`, which test262 checks by name.
+        // …and a **generator** gets neither, for a third reason: §15.5.3 gives it no
+        // `[[Construct]]` either. What it gets instead is a `prototype` whose object
+        // inherits from %GeneratorPrototype% and which points back at nothing — every
+        // generator this function makes inherits from it, and §15.5.4 gives it no
+        // `constructor`, so `g().constructor` finds %GeneratorFunction.prototype% up
+        // the chain rather than `g` itself.
+        // …and an **async** function gets neither either, and not even a `prototype`:
+        // §15.8.4 gives an async function object exactly `length` and `name`, because
+        // what it answers with is a promise and nothing ever inherits from it.
+        if body.is_generator() {
+            self.realm
+                .make_generator_function(heap, object, body.is_async());
+        } else if !body.is_arrow() && !body.is_method() && !body.is_async() {
+            self.realm.make_constructor(heap, object);
+        }
+        object
+    }
+
+    /// §15.7.14 `ClassDefinitionEvaluation`, as far as the constructor object — the heritage, the
+    /// function, and the pair of references that make `new C() instanceof C` true.
+    ///
+    /// `None` when reading the heritage threw and a handler has taken it: the caller goes round the
+    /// loop rather than pushing anything, which is the shape [`Vm::settle`] already answers with.
+    ///
+    /// What the class body puts *on* those two objects is a run of further instructions and not
+    /// this — a method is compiled and defined one at a time, so that a computed key runs where it
+    /// was written.
+    fn make_class(
+        &mut self,
+        body: &Rc<Chunk>,
+        derived: bool,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<Option<crate::heap::ObjectId>, Fault> {
+        // §15.7.14 steps 9 to 11 — the heritage read three ways. `extends null` is a
+        // class whose instances inherit from nothing, and whose constructor still
+        // inherits from `Function.prototype`; anything that is not a constructor is a
+        // TypeError, and `extends {}` is caught by that rather than by the step below.
+        let inheritance = match derived {
+            false => Inheritance {
+                prototype: Some(self.realm.object_prototype()),
+                constructor: self.realm.function_prototype(),
+            },
+            true => match self.inheritance(heap) {
+                Ok(found) => found,
+                Err(error) => {
+                    self.raise(error, heap, root, current, at)?;
+                    return Ok(None);
+                }
+            },
+        };
+        let object = heap.new_function(
+            inheritance.constructor,
+            body.clone(),
+            self.environment,
+            None,
+        );
+        let key = property_name(heap, "length");
+        heap.define_own_property(
+            object,
+            key,
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Number(body.length() as f64)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+        // §10.2.9 `SetFunctionName` — not writable, not enumerable, and *configurable*,
+        // which is the set §10.3.3 gives `length` beside it. An unnamed function gets the
+        // empty string rather than no property at all: `(function () {}).name` is `""`, and
+        // `'name' in f` is true for every function.
+        let named = match body.name() {
+            Some(text) => Value::String(text),
+            None => Value::String(heap.intern(&[])),
+        };
+        let key = property_name(heap, "name");
+        heap.define_own_property(
+            object,
+            key,
+            &PropertyDescriptor {
+                value: Some(named),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+        // §15.7.14 steps 12 to 14 — the prototype, and the pair of references that make
+        // `new C() instanceof C` true. `prototype` is **not writable** here, which is the
+        // difference from §10.2.5's `MakeConstructor` for an ordinary function: a class
+        // may not be pointed at a different prototype after the fact.
+        let prototype = heap.new_object(inheritance.prototype);
+        // §15.7.14 step 17 `MakeMethod(F, proto)` — the constructor is a method of the
+        // prototype, which is what lets `super.x` be written in it. Set here rather than
+        // by an instruction because both objects are only in one place at this moment.
+        heap.set_home_object(object, prototype);
+        let key = property_name(heap, "constructor");
+        heap.define_own_property(
+            prototype,
+            key,
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Object(object)),
+                writable: Some(true),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+        let key = property_name(heap, "prototype");
+        heap.define_own_property(
+            object,
+            key,
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Object(prototype)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(false),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+        Ok(Some(object))
+    }
+
+    /// §13.3.8 — a call whose argument count is not known until the spread has been iterated.
+    ///
+    /// The arguments arrive as one array and are expanded onto the stack here rather than by
+    /// teaching `enter` about arrays, which keeps one calling convention: by the time the frame is
+    /// built the stack looks exactly as it does for a call whose count was known all along.
+    fn call_spread(
+        &mut self,
+        how: SpreadCall,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        // The arguments arrived as one array, because §13.3.8's spread has no count until
+        // it has been iterated. Expanding it here rather than teaching `enter` about
+        // arrays keeps one calling convention: by the time the frame is built the stack
+        // looks exactly as it does for a call whose count was known all along.
+        let Value::Object(list) = self.pop()? else {
+            return Err(Fault::NotAnObject);
+        };
+        let name = property_name(heap, "length");
+        let length = match self.get_property_key(Value::Object(list), name, heap) {
+            Ok(value) => value,
+            Err(error) => {
+                self.raise(error, heap, root, current, at)?;
+                return Ok(());
+            }
+        };
+        // The array is one this compiler built a moment ago — `NewArray` and a counter it bumped
+        // once per argument written — so its `length` is a finite non-negative integer and no
+        // script has been anywhere near it. Read through the ordinary path anyway: a second way of
+        // reading an array is a second way to be wrong about one.
+        //
+        // A cast saturates in Rust, so a length that could not occur clamps rather than wrapping. A
+        // guard naming those cases was here and is not any more: it decided between answers no
+        // input can ask for, and a branch nothing can take is one no test can hold.
+        let count = match length {
+            Value::Number(number) => number as u32,
+            _ => 0,
+        };
+        for index in 0..count {
+            let key = property_name(heap, &index.to_string());
+            let value = match self.get_property_key(Value::Object(list), key, heap) {
+                Ok(value) => value,
+                Err(error) => {
+                    self.raise(error, heap, root, current, at)?;
+                    continue;
+                }
+            };
+            self.stack.push(value);
+        }
+        let how = match how {
+            SpreadCall::Plain => Entry::Plain,
+            SpreadCall::Method => Entry::Method,
+            SpreadCall::Construct => Entry::Construct,
+            // §13.3.7 — the one call whose callee is not on the stack, because the source
+            // never named it. Pushed under the arguments now, which is where every other
+            // call had put it before its arguments were evaluated.
+            SpreadCall::Super => {
+                let parent = match self.super_constructor(heap) {
+                    Ok(parent) => parent,
+                    Err(error) => {
+                        self.raise(error, heap, root, current, at)?;
+                        return Ok(());
+                    }
+                };
+                let callee_at = self
+                    .stack
+                    .len()
+                    .checked_sub(count as usize)
+                    .ok_or(Fault::StackUnderflow)?;
+                self.stack.insert(callee_at, parent);
+                Entry::Super
+            }
+        };
+        self.enter(how, count, heap, root, current, at)
+    }
+
+    /// §10.2.2 step 13 and §27.5.3.2 — leaving a call, and the three different things that means.
+    ///
+    /// An ordinary return answers with the value; a construction prefers the object it made unless
+    /// the body returned one of its own; and a suspendable body answers the *resumption* that
+    /// entered it rather than the caller — which for an async generator pushes nothing at all,
+    /// because the promise went onto the stack when the request was enqueued.
+    fn return_from_call(
+        &mut self,
+        heap: &mut Heap,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        let Some(frame) = self.frames.pop() else {
+            return Err(Fault::ReturnWithNoCall);
+        };
+        // Everything the callee left behind goes with it: its operands, its locals,
+        // and any handler it installed and did not take down.
+        self.stack.truncate(frame.stack_base);
+        self.handlers.truncate(frame.handlers_base);
+        // §10.2.2 step 13 — a construction answers with the object it made, unless
+        // the body returned an object of its own. A primitive `return` is *ignored*,
+        // which is why `function F() { return 1; }` still constructs an `F`.
+        let answer = match (frame.constructed, value) {
+            (Some(_), Value::Object(_)) | (None, _) => value,
+            (Some(made), _) => made,
+        };
+        // §27.5.3.2 step 5 — a generator's body does not answer with what it returned:
+        // the resumption that entered it answers with `{ value, done: true }`. Nothing
+        // is marked finished, because nothing needs to be — the execution was taken out
+        // of the generator to be run and is not going back, and *that* is what being
+        // completed means.
+        // Which of the three a return from this frame is: an ordinary one, a
+        // generator's — wrapped as `{ value, done: true }` — or an `async` function's,
+        // which *resolves* its promise and answers with the promise.
+        let answer = match Self::suspendable_of(&frame, heap) {
+            Some((_, Suspendable::Generator)) => Some(self.iterator_result(heap, answer, true)),
+            Some((context, Suspendable::Async)) => {
+                Some(self.settle_async(context, ReactionKind::Fulfil, answer, heap))
+            }
+            // §27.6.3.2 and then §27.6.3.6 — the request being served is answered with
+            // `{ value, done: true }`, and every request behind it with the same, the
+            // body being gone. **Nothing is pushed**: the promise this resumption
+            // answers with went onto the stack when the request was enqueued, which is
+            // the one way an async generator's body differs from every other.
+            Some((generator, Suspendable::AsyncGenerator)) => {
+                self.answer_step(generator, answer, true, heap);
+                self.drain(generator, heap);
+                None
+            }
+            None => Some(answer),
+        };
+        if let Some(answer) = answer {
+            self.stack.push(answer);
+        }
+        self.environment = frame.environment;
+        self.this_value = frame.this_value;
+        self.new_target = frame.new_target;
+        *current = frame.code;
+        *at = frame.at;
+        Ok(())
+    }
+
+    /// §10.2.2 step 13 for a **derived** constructor, where all three of its cases differ.
+    ///
+    /// An object return still wins; `undefined` is answered with the bound `this` — and DR-0015's
+    /// binding being unbound is how a constructor that never called `super()` becomes a
+    /// ReferenceError rather than answering with nothing; and every other primitive is a TypeError
+    /// where a base constructor would have ignored it.
+    fn complete_derived_return(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        match value {
+            // §10.2.2 step 13a — an object return wins, exactly as in a base constructor.
+            Value::Object(_) => self.stack.push(value),
+            // …step 13b — `undefined` is answered with the bound `this`, and the binding
+            // being unbound is how a constructor that never called `super()` becomes a
+            // ReferenceError rather than answering with nothing.
+            Value::Undefined => match heap.variable(self.environment, index) {
+                None => return Err(Fault::MissingLocal),
+                Some(Some(bound)) => self.stack.push(bound),
+                Some(None) => {
+                    self.raise(
+                        Abrupt::reference_error(
+                            "a derived constructor returned before calling `super`",
+                        ),
+                        heap,
+                        root,
+                        current,
+                        at,
+                    )?;
+                    return Ok(());
+                }
+            },
+            // …step 13c — and every other primitive is a TypeError, where a base
+            // constructor would have ignored it and answered with the object it made.
+            _ => {
+                self.raise(
+                    Abrupt::type_error(
+                        "a derived constructor returned something that is not an object",
+                    ),
+                    heap,
+                    root,
+                    current,
+                    at,
+                )?;
+                return Ok(());
+            }
+        }
+        Ok(())
+    }
+
+    /// §15.7.14 — put one method on a class or on its prototype.
+    ///
+    /// Writable and configurable, and *not* enumerable. That last one is the whole run-time
+    /// difference between a class method and the same syntax in an object literal.
+    fn define_class_method(
+        &mut self,
+        kind: crate::ast::MethodKind,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        let key = self.pop()?;
+        let Value::Object(target) = self.pop()? else {
+            return Err(Fault::NotAnObject);
+        };
+        let key = match self.property_key(key, heap) {
+            Ok(key) => key,
+            Err(error) => {
+                self.raise(error, heap, root, current, at)?;
+                return Ok(());
+            }
+        };
+        // §15.7.14 — writable and configurable, and *not* enumerable. The last of those
+        // is the whole runtime difference from an object literal's method.
+        let descriptor = match kind {
+            crate::ast::MethodKind::Get => crate::heap::PropertyDescriptor {
+                getter: Some(value),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+            crate::ast::MethodKind::Set => crate::heap::PropertyDescriptor {
+                setter: Some(value),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+            crate::ast::MethodKind::Normal => crate::heap::PropertyDescriptor {
+                value: Some(value),
+                writable: Some(true),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        };
+        let _ = heap.define_own_property(target, key, &descriptor);
+        Ok(())
+    }
+
+    /// §27.5.3.7 and §27.6.3.8 — park this generator's execution and answer whoever resumed it.
+    ///
+    /// Which generator is a fact about the *frame* rather than about the instruction: there is no
+    /// other one a `yield` could mean, and the compiler emits none outside a generator body. An
+    /// **async** generator settles a promise instead of answering a resumption, and then serves
+    /// whatever was asked of it while it was busy — told apart by the brand on the object the frame
+    /// names, which is the only thing that distinguishes the two bodies here.
+    fn yield_from_generator(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        // §27.5.3.7 suspends *the generator's own execution context*, so which
+        // generator this is belongs to the frame rather than to the instruction: there
+        // is no other one a `yield` could mean, and the compiler emits none outside a
+        // generator body.
+        let Some(generator) = self.frames.last().and_then(|frame| frame.generator) else {
+            return Err(Fault::YieldOutsideGenerator);
+        };
+        // §27.6.3.8 — an async generator's `yield` *settles a promise* instead of
+        // answering a resumption, and then serves whatever was asked while it was
+        // busy. Told apart by the brand on the object the frame names, which is the
+        // only thing that distinguishes the two bodies at this instruction.
+        if heap
+            .object(generator)
+            .is_some_and(crate::heap::Object::is_async_generator)
+        {
+            let parked = self.park(current, at)?;
+            heap.park_into(generator, parked);
+            self.answer_step(generator, value, false, heap);
+            self.serve_queued(generator, heap, root, current, at)?;
+            return Ok(());
+        }
+        // Wrapped before the park, so that a park that is refused leaves nothing built.
+        let result = self.iterator_result(heap, value, false);
+        let parked = self.park(current, at)?;
+        // The generator exists — the frame named it — so this cannot answer `false`.
+        heap.park_into(generator, parked);
+        // Where a `Return` would have left the returned value: the resumption that
+        // entered this body is being answered, and it answers with an iterator result.
+        self.stack.push(result);
+        Ok(())
+    }
+
+    /// §15.4.5 — put one half of an accessor on the object under construction.
+    ///
+    /// Only the half that was written: §10.1.6.3 leaves an absent field alone, so a getter defined
+    /// after a setter joins it rather than replacing it — which is what makes `{get a() {}, set
+    /// a(v) {}}` one property with both halves.
+    fn define_accessor(
+        &mut self,
+        getter: bool,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let function = self.pop()?;
+        let key = self.pop()?;
+        let base = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+        let Value::Object(base) = base else {
+            return Err(Fault::NotAnObject);
+        };
+        let key = match self.property_key(key, heap) {
+            Ok(key) => key,
+            Err(error) => {
+                self.raise(error, heap, root, current, at)?;
+                return Ok(());
+            }
+        };
+        // Only the half that was written. §10.1.6.3 leaves an absent field alone, so
+        // a getter defined after a setter joins it rather than replacing it — which
+        // is what makes `{get a() {}, set a(v) {}}` one property with both.
+        let half = match getter {
+            true => PropertyDescriptor {
+                getter: Some(function),
+                ..PropertyDescriptor::EMPTY
+            },
+            false => PropertyDescriptor {
+                setter: Some(function),
+                ..PropertyDescriptor::EMPTY
+            },
+        };
+        // §15.4.5 gives an accessor made this way `[[Enumerable]]` and
+        // `[[Configurable]]`, the same two an ordinary literal property gets.
+        let descriptor = PropertyDescriptor {
+            enumerable: Some(true),
+            configurable: Some(true),
+            ..half
+        };
+        let _ = heap.define_own_property(base, key, &descriptor);
+        Ok(())
+    }
+
+    /// §27.7.5.2 step 3.b — a throw that escaped an `async` body **rejects its promise**.
+    ///
+    /// The promise is what the call answers with, so the frame is left exactly as `Return` leaves
+    /// one. An async *generator* rejects the request in service instead and pushes nothing, for the
+    /// reason [`Vm::return_from_call`] gives.
+    fn reject_from_async(
+        &mut self,
+        heap: &mut Heap,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let thrown = self.pop()?;
+        let Some(frame) = self.frames.pop() else {
+            return Err(Fault::ReturnWithNoCall);
+        };
+        self.stack.truncate(frame.stack_base);
+        self.handlers.truncate(frame.handlers_base);
+        // §27.7.5.2 step 3.b — the promise is rejected with what was thrown, and the
+        // *promise* is what the call answers with. A `Frame` with no context is a chunk
+        // that does not make sense: only an `async` body has this instruction in it.
+        let answer = match Self::suspendable_of(&frame, heap) {
+            // §27.6.3.2 with a throw completion, then the drain: the request in service
+            // is *rejected* with what escaped, and the queue behind it answers as a
+            // completed generator does. Nothing is pushed, for the reason `Return` gives.
+            Some((generator, Suspendable::AsyncGenerator)) => {
+                self.reject_step(generator, thrown, heap);
+                self.drain(generator, heap);
+                None
+            }
+            _ => frame
+                .generator
+                .map(|context| self.settle_async(context, ReactionKind::Reject, thrown, heap))
+                .or(Some(Value::Undefined)),
+        };
+        if let Some(answer) = answer {
+            self.stack.push(answer);
+        }
+        self.environment = frame.environment;
+        self.this_value = frame.this_value;
+        self.new_target = frame.new_target;
+        *current = frame.code;
+        *at = frame.at;
+        Ok(())
+    }
+
+    /// §9.1.1.1.5 `SetMutableBinding` — assign to a slot the compiler placed.
+    ///
+    /// Step 2's dead zone is the whole of what is left for run time: assigning to a binding that is
+    /// not initialised yet is a ReferenceError and not a way to initialise it. `let x = x` reads the
+    /// dead zone and `x = 1; let x;` writes to it; both are errors, and only `Initialise` may fill
+    /// an empty slot.
+    fn store_variable(
+        &mut self,
+        depth: u32,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        // Peeked, not popped: assignment is an expression, and `a = (b = 1)` needs
+        // the inner one to leave its value behind.
+        let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+        let target = heap
+            .environment_at(self.environment, depth)
+            .ok_or(Fault::MissingLocal)?;
+        // §9.1.1.1.5 `SetMutableBinding` step 2 — assigning to a binding that is not
+        // initialised yet is a ReferenceError, not a way to initialise it. `let x = x`
+        // reads the dead zone; `x = 1; let x;` writes to it, and both are errors.
+        // Only `Initialise` above may fill an empty slot.
+        if heap
+            .variable(target, index)
+            .ok_or(Fault::MissingLocal)?
+            .is_none()
+        {
+            self.raise(
+                Abrupt::reference_error(
+                    "a `let` or `const` was assigned to before its declaration ran",
+                ),
+                heap,
+                root,
+                current,
+                at,
+            )?;
+            return Ok(());
+        }
+        if !heap.set_variable(target, index, value) {
+            return Err(Fault::MissingLocal);
+        }
+        Ok(())
+    }
+
+    /// §13.5.1.2 — delete a bare name, when where it lives is only known at run time.
+    ///
+    /// The same walk a read of the name makes, and one of three answers depending on where it
+    /// lands. Emitted only inside a `with`: everywhere else the compiler already knows which of the
+    /// three applies and emits that answer as a constant.
+    fn delete_name(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        let key = self.global_name(running, index, heap)?;
+        let name = self.name_text(running, index, heap)?;
+        let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
+            Some(found) => found,
+            None => return Ok(()),
+        };
+        let answer = match found {
+            // §9.1.1.1.5 — a declarative binding is not deletable, whatever it is: a
+            // `var`, a parameter, a `let`, a function's own slot. The one exception the
+            // specification has is §19.2.1.1's direct eval, whose `var`s *are*, and
+            // praxis does not make those deletable either — which is a gap, not this
+            // instruction's business, and it is the same answer it gave before a `with`
+            // could be written around it.
+            crate::vm::dynamic::Resolved::Slot { .. } => false,
+            // §9.1.1.2.7 `DeleteBinding` — `[[Delete]]` of the `with` object, which may
+            // run a proxy's trap and so may throw. Own-only, like every `[[Delete]]`:
+            // `with (o) { delete toString }` answers true and leaves
+            // `Object.prototype.toString` where it is, because `o` never had it.
+            crate::vm::dynamic::Resolved::Property(object) => {
+                let gone = self.delete_property_key(Value::Object(object), key, heap);
+                match self.settle(gone, heap, root, current, at)? {
+                    Some(value) => value.to_boolean(heap),
+                    None => return Ok(()),
+                }
+            }
+            // §13.5.1.2 step 3 — nowhere in the chain, so the global object answers, and
+            // §10.1.10.1 step 2 makes a property that is not there **true**.
+            crate::vm::dynamic::Resolved::Global => {
+                heap.delete_own_property(self.realm.global(), key)
+            }
+        };
+        self.stack.push(Value::Boolean(answer));
+        Ok(())
+    }
     /// §13.2.8.3 `GetTemplateObject` — the frozen pair of Arrays a tag is handed.
     ///
     /// Frozen and with a frozen `raw` beside it, which is what makes the object safe to hand out and

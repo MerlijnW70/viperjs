@@ -765,3 +765,42 @@ fn a_class_body_is_a_scope_holding_an_immutable_binding_of_its_own_name() {
     );
     assert_eq!(run("class C { ['k'] = 7; } new C().k"), "7");
 }
+
+#[test]
+fn what_a_class_defines_carries_the_attributes_the_clause_gives_it() {
+    // §15.7.14 — a class's own `length`, which is what its constructor says it needs. Not writable
+    // and not enumerable, and *configurable*, which is the set §10.3.3 gives every function's.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(class C { constructor(a, b) {} }, 'length'); \
+             [d.value, d.writable, d.enumerable, d.configurable].join(',')"
+        ),
+        "2,false,false,true"
+    );
+    // …and its methods: writable and configurable, and **not enumerable**. That last one is the
+    // whole run-time difference between a class method and the same syntax in an object literal,
+    // which is why the two are asserted against each other.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(class C { m() {} }.prototype, 'm'); \
+             var o = Object.getOwnPropertyDescriptor({ m() {} }, 'm'); \
+             [d.writable, d.enumerable, d.configurable].join(',') + '|' + o.enumerable"
+        ),
+        "true,false,true|true"
+    );
+    // An accessor half is defined by its own instruction and carries the same two attributes, so
+    // each kind is a row: a getter, a setter, and the pair written together.
+    assert_eq!(
+        run(
+            "var g = Object.getOwnPropertyDescriptor(class C { get a() { return 1; } }.prototype, 'a'); \
+             var s = Object.getOwnPropertyDescriptor(class C { set a(v) {} }.prototype, 'a'); \
+             var b = Object.getOwnPropertyDescriptor( \
+               class C { get a() { return 1; } set a(v) {} }.prototype, 'a'); \
+             [g.enumerable, g.configurable, typeof g.get, typeof g.set].join(',') + '|' + \
+             [s.enumerable, s.configurable, typeof s.get, typeof s.set].join(',') + '|' + \
+             [typeof b.get, typeof b.set].join(',')"
+        ),
+        // §10.1.6.3 leaves an absent field alone, so the pair is one property with both halves.
+        "false,true,function,undefined|false,true,undefined,function|function,function"
+    );
+}
