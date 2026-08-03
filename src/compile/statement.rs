@@ -58,6 +58,17 @@ impl Compiler<'_> {
     /// stack. That invariant is what [`crate::vm::Fault::UnbalancedStack`] checks at the end.
     pub(super) fn statement(&mut self, statement: &Stmt) -> Result<(), CompileError> {
         let span = statement.span;
+        // §14.2.2 — every statement below whose clause begins "Let V be undefined" *produces* a
+        // value even when nothing inside it does, so a preceding statement's value must not show
+        // through: `eval("1; if (true) ;")` is `undefined` and not 1. Emitted before the statement
+        // rather than after it, because anything inside that does produce a value overwrites this
+        // one — which is exactly what `UpdateEmpty` says, from the other side.
+        //
+        // The three that are genuinely **empty** are not on the list and must not be: §14.2.2 gives
+        // a `Block` with nothing in it, §14.4.1 an `EmptyStatement` and §14.3.2.1 a
+        // `VariableStatement` the value EMPTY, so `eval("1; ;")` *is* 1. Getting that backwards
+        // would be the same bug in the other direction and no test would look different.
+        self.begin_completion(statement);
         match &statement.kind {
             // §14.4 and §14.16 — neither does anything, and neither is value-producing, so the
             // completion value of `1; ;` is 1 rather than `undefined`.
@@ -212,6 +223,47 @@ impl Compiler<'_> {
             }
         }
     }
+    /// §14.2.2 — start this statement's completion value at `undefined`, if its clause says to.
+    ///
+    /// Eight statement forms begin their evaluation with a `V` of `undefined` — `if` (§14.6.2's
+    /// `UpdateEmpty(stmtCompletion, undefined)`), `switch` (§14.12.4's `CaseBlockEvaluation`), the
+    /// four iteration statements (§14.7.2.2, §14.7.3.2, §14.7.4.7 and §14.7.5.6), `try` (§14.15.3),
+    /// and a labelled statement, which is whichever of those it labels. So each of them replaces
+    /// whatever value came before it whether or not anything inside produces one.
+    ///
+    /// Everything else is either value-producing on its own — an expression statement, which sets
+    /// the value where it is evaluated — or **empty**, which is a third thing and not the same as
+    /// `undefined`: `eval("1; ;")` and `eval("1; { }")` and `eval("1; var x;")` are all 1.
+    ///
+    /// Nothing at all outside Script code, where §14.2.2's value is not kept — see the expression
+    /// statement above for the same test and the same reason.
+    fn begin_completion(&mut self, statement: &Stmt) {
+        if !self.is_script || !Self::starts_a_completion(&statement.kind) {
+            return;
+        }
+        // Through the register rather than the stack: a statement is stack-neutral, and this runs
+        // before one that may leave the stack as it found it in several different ways.
+        self.chunk.emit(Instruction::CompletionUndefined);
+    }
+
+    /// Whether §14.2.2 makes this statement's own value start at `undefined` rather than empty.
+    fn starts_a_completion(kind: &StmtKind) -> bool {
+        match kind {
+            StmtKind::If(_)
+            | StmtKind::Switch(_)
+            | StmtKind::While(_)
+            | StmtKind::DoWhile(_)
+            | StmtKind::For(_)
+            | StmtKind::ForInOf(_)
+            | StmtKind::Try(_)
+            | StmtKind::With(_) => true,
+            // §14.13.4 hands a label's value straight through, so a labelled `if` starts one and a
+            // labelled `var` does not — asked of what is under the label rather than of the label.
+            StmtKind::Labelled(statement) => Self::starts_a_completion(&statement.body.kind),
+            _ => false,
+        }
+    }
+
     /// §14.2 — a block, which is a scope of its own because §14.3.1 puts `let` and `const` in one.
     ///
     /// The bindings are created here, all of them, before any statement runs — that is

@@ -1002,6 +1002,13 @@ pub enum Instruction {
     /// rather than the stack, because a statement in the middle of a block has to be able to
     /// replace it without anything below being disturbed.
     SetCompletion,
+    /// Set §14.2.2's completion value to `undefined`, taking nothing from the stack.
+    ///
+    /// What eight statement forms begin with — see `Compiler::begin_completion`. Its own
+    /// instruction rather than a constant and a [`Instruction::SetCompletion`], because a statement
+    /// is stack-neutral and this runs where pushing a value would have to be balanced by whatever
+    /// the statement does next, on every path out of it.
+    CompletionUndefined,
 }
 
 /// When a [`Instruction::JumpKeeping`] jumps — one per short-circuiting operator (§13.13, §13.14).
@@ -1340,6 +1347,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CheckGlobalFunction(_)
         | Instruction::DeleteGlobal(_)
         | Instruction::SetCompletion
+        | Instruction::CompletionUndefined
         | Instruction::Throw
         | Instruction::PopHandler
         | Instruction::MakeFunction(_)

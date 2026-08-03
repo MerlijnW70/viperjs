@@ -16902,10 +16902,6 @@ language/statements/class/subclass/default-constructor-spread-override.js (stric
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/subclass/superclass-bound-function.js :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/class/subclass/superclass-bound-function.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-language/statements/do-while/cptn-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/do-while/cptn-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/do-while/cptn-normal.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/do-while/cptn-normal.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/do-while/tco-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-rtrn-close-null.js :: the test called $DONE with Promise incorrectly fulfilled.
@@ -16917,22 +16913,6 @@ language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-list-t
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
 language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
-language/statements/for-in/cptn-decl-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-skip-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-skip-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-zero-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-decl-zero-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-skip-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-skip-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-zero-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-in/cptn-expr-zero-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/for-in/head-const-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/head-const-bound-names-fordecl-tdz.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/head-let-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -16949,18 +16929,6 @@ language/statements/for-of/arguments-mapped.js :: it threw TypeError: what was c
 language/statements/for-of/arguments-unmapped-aliasing.js :: it threw TypeError: what was called is not a function
 language/statements/for-of/arguments-unmapped-mutation.js :: it threw TypeError: what was called is not a function
 language/statements/for-of/arguments-unmapped.js :: it threw TypeError: what was called is not a function
-language/statements/for-of/cptn-decl-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-decl-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-decl-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-decl-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-decl-no-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-decl-no-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-expr-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-expr-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-expr-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-expr-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-expr-no-itr.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for-of/cptn-expr-no-itr.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js :: it threw an object with no name
 language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw an object with no name
 language/statements/for-of/dstr/array-elem-iter-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -17046,18 +17014,6 @@ language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-mid-iter
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-to-zero-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-to-zero-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/statements/for/cptn-decl-expr-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-decl-expr-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-decl-expr-no-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-decl-expr-no-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-expr-expr-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-expr-expr-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-expr-expr-no-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/cptn-expr-expr-no-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/for/head-init-expr-check-empty-inc-empty-completion.js :: it threw an object with no name: #1: __evaluated === 4. Actual:  __evaluated ===4 Expected SameValue(«4», «undefined») to be true
-language/statements/for/head-init-expr-check-empty-inc-empty-completion.js (strict) :: it threw an object with no name: #1: __evaluated === 4. Actual:  __evaluated ===4 Expected SameValue(«4», «undefined») to be true
-language/statements/for/head-init-var-check-empty-inc-empty-completion.js :: it threw an object with no name: #1: __evaluated === 4. Actual:  __evaluated ===4 Expected SameValue(«4», «undefined») to be true
-language/statements/for/head-init-var-check-empty-inc-empty-completion.js (strict) :: it threw an object with no name: #1: __evaluated === 4. Actual:  __evaluated ===4 Expected SameValue(«4», «undefined») to be true
 language/statements/for/tco-const-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-let-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-lhs-body.js (strict) :: it threw RangeError: too much recursion
@@ -17073,74 +17029,22 @@ language/statements/generators/scope-param-elem-var-close.js :: it threw SyntaxE
 language/statements/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/statements/if/cptn-else-false-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-false-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-false-nrml.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-false-nrml.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-true-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-true-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-true-nrml.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-else-true-nrml.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-no-else-false.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-no-else-false.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-no-else-true-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«6», «undefined») to be true
-language/statements/if/cptn-no-else-true-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«6», «undefined») to be true
-language/statements/if/cptn-no-else-true-nrml.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/if/cptn-no-else-true-nrml.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/if/tco-else-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/if/tco-if-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/labeled/tco.js (strict) :: it threw RangeError: too much recursion
 language/statements/let/syntax/let-newline-yield-in-generator-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/return/tco.js (strict) :: it threw RangeError: too much recursion
-language/statements/switch/cptn-a-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-a-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-b-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-b-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-b-final.js :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-b-final.js (strict) :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-b-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-b-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-b-final.js :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-b-final.js (strict) :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-final.js :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-dflt-final.js (strict) :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-no-dflt-match-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-no-dflt-match-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-no-dflt-match-final.js :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-no-dflt-match-final.js (strict) :: it threw an object with no name: empty StatementList (lone case) Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-no-dflt-no-match.js :: it threw an object with no name: empty StatementList Expected SameValue(«1», «undefined») to be true
-language/statements/switch/cptn-no-dflt-no-match.js (strict) :: it threw an object with no name: empty StatementList Expected SameValue(«1», «undefined») to be true
 language/statements/switch/tco-case-body-dflt.js (strict) :: it threw RangeError: too much recursion
 language/statements/switch/tco-case-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/switch/tco-dftl-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/try/completion-values.js :: it threw an object with no name: Expected SameValue(«39», «undefined») to be true
 language/statements/try/completion-values.js (strict) :: it threw an object with no name: Expected SameValue(«39», «undefined») to be true
-language/statements/try/cptn-catch-empty-break.js :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-empty-break.js (strict) :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-empty-continue.js :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-empty-continue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-finally-empty-break.js :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-finally-empty-break.js (strict) :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-finally-empty-continue.js :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch-finally-empty-continue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-catch.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-catch.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-finally-empty-break.js :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-finally-empty-break.js (strict) :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-finally-empty-continue.js :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-finally-empty-continue.js (strict) :: it threw an object with no name: Expected SameValue(«"bad completion"», «undefined») to be true
-language/statements/try/cptn-finally-from-catch.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-finally-from-catch.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-finally-skip-catch.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-finally-skip-catch.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-finally-wo-catch.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-finally-wo-catch.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-try.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/try/cptn-try.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
+language/statements/try/cptn-finally-from-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
+language/statements/try/cptn-finally-from-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
+language/statements/try/cptn-finally-skip-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
+language/statements/try/cptn-finally-skip-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
+language/statements/try/cptn-finally-wo-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
+language/statements/try/cptn-finally-wo-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
 language/statements/try/tco-catch-finally.js (strict) :: it threw RangeError: too much recursion
 language/statements/try/tco-catch.js (strict) :: it threw RangeError: too much recursion
 language/statements/try/tco-finally.js (strict) :: it threw RangeError: too much recursion
@@ -17239,15 +17143,7 @@ language/statements/using/using-allows-undefined-initializer.js :: it did not pa
 language/statements/using/using-allows-undefined-initializer.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/variable/12.2.1-11.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/variable/binding-resolution.js :: it threw an object with no name: Expected SameValue(«undefined», «true») to be true
-language/statements/while/cptn-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/while/cptn-abrupt-empty.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/while/cptn-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/while/cptn-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/while/cptn-no-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
-language/statements/while/cptn-no-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/while/tco-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/with/cptn-abrupt-empty.js :: it threw an object with no name: Expected SameValue(«6», «undefined») to be true
-language/statements/with/cptn-nrml.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/with/get-binding-value-call-with-proxy-env.js :: it threw an object with no name: Actual [has:Object, get:Symbol(Symbol.unscopables), get:Object] and expected [has:Object, get:Symbol(Symbol.unscopables), has:Object, get:Object] should have the same contents.
 language/statements/with/get-binding-value-idref-with-proxy-env.js :: it threw an object with no name: Actual [has:Object, get:Symbol(Symbol.unscopables), get:Object] and expected [has:Object, get:Symbol(Symbol.unscopables), has:Object, get:Object] should have the same contents.
 language/statements/with/get-mutable-binding-binding-deleted-in-get-unscopables-strict-mode.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all

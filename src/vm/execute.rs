@@ -382,6 +382,9 @@ impl Vm {
                 Instruction::SetCompletion => {
                     self.completion = self.pop()?;
                 }
+                Instruction::CompletionUndefined => {
+                    self.completion = Value::Undefined;
+                }
                 Instruction::MakeFunction(index) => {
                     let Some(body) = running.function(index).cloned() else {
                         return Err(Fault::MissingFunction);

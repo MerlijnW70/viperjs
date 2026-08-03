@@ -121,16 +121,28 @@ fn break_leaves_the_loop_and_continue_goes_round_again() {
 }
 
 #[test]
-fn a_loop_that_never_runs_leaves_the_stack_and_the_completion_value_alone() {
+fn a_loop_that_never_runs_leaves_the_stack_alone_and_its_value_undefined() {
     // The stack-neutrality every statement promises, checked where it is easiest to break: a
     // loop whose body pushes and pops, taken zero times and many times.
-    assert_eq!(run("7; while (0) { 1; 2; 3; }"), "7");
-    // …and a body that *does* run replaces the completion value, once per iteration.
+    //
+    // **The value is `undefined` and not the 7 before it.** §14.7.3.2's `WhileLoopEvaluation`
+    // begins "Let V be undefined" and returns V when the test first fails, so a loop taken zero
+    // times still *produces* a value — it is not empty, and the statement before it does not show
+    // through. This row asserted 7 until §14.2.2's family landed, which is the shape AGENTS.md
+    // warns about: a test can pin the engine's behaviour rather than the clause's.
+    assert_eq!(run("7; while (0) { 1; 2; 3; }"), "undefined");
+    assert_eq!(run("7; while (false) { }"), "undefined");
+    // …and a body that *does* run replaces it, once per iteration.
     assert_eq!(
         run("7; var i = 0; while (i < 3) { i = i + 1; i * 10; }"),
         "30"
     );
     assert_eq!(run("7; for (var i = 0; i < 2; i = i + 1) i;"), "1");
+    // The three that really are EMPTY, which is a different thing from `undefined` and is why the
+    // list of statements that begin a completion had to be exact rather than "most of them".
+    assert_eq!(run("7; { }"), "7");
+    assert_eq!(run("7; ;"), "7");
+    assert_eq!(run("7; var later;"), "7");
 }
 
 #[test]
@@ -1038,4 +1050,86 @@ fn a_catch_parameter_is_a_binding_of_the_catch_and_of_nothing_around_it() {
     // it — both are the parameter question asked at its two edges.
     assert_eq!(run("try { null.x } catch { 'no param' }"), "no param");
     assert_eq!(run("try { throw { a: 5 } } catch ({ a }) { a }"), "5");
+}
+
+#[test]
+fn eight_statement_forms_produce_undefined_where_three_produce_nothing_at_all() {
+    // §14.2.2's `UpdateEmpty`, asked of a script's own completion value — which is what `run`
+    // answers with, so no `eval` is needed to see it.
+    //
+    // The whole of what it turns on: a statement's value is EMPTY, or
+    // it is a value. `undefined` is a *value* — so a statement producing one replaces whatever
+    // came before it, and a statement producing EMPTY lets it show through. Eight forms begin
+    // their evaluation with "Let V be undefined" and are therefore never empty.
+    for (source, answer) in [
+        // §14.6.2 — `UpdateEmpty(stmtCompletion, undefined)`, both with a branch and without one.
+        ("1; if (true) ;", "undefined"),
+        ("1; if (false) ;", "undefined"),
+        ("1; if (false) 9; else ;", "undefined"),
+        ("1; if (true) 9;", "9"),
+        // §14.12.4's `CaseBlockEvaluation`.
+        ("1; switch ('a') { case 'a': break; default: }", "undefined"),
+        ("2; switch ('a') { case 'a': { 3; break; } default: }", "3"),
+        ("1; switch ('z') { case 'a': 9; }", "undefined"),
+        // The four iteration statements — §14.7.2.2, §14.7.3.2, §14.7.4.7 and §14.7.5.6.
+        ("1; while (false) { }", "undefined"),
+        ("2; while (false) { 3; }", "undefined"),
+        ("1; do ; while (false)", "undefined"),
+        ("1; for (;false;) ;", "undefined"),
+        ("1; for (var k in {}) ;", "undefined"),
+        ("1; for (var v of []) ;", "undefined"),
+        ("1; for (var v of [7]) ;", "undefined"),
+        ("1; for (var v of [7]) v;", "7"),
+        // §14.15.3 — `try`, with each of its three shapes.
+        ("1; try { } finally { }", "undefined"),
+        ("1; try { } catch (e) { }", "undefined"),
+        ("1; try { throw 0 } catch (e) { }", "undefined"),
+        ("1; try { 9 } finally { }", "9"),
+        // §14.11.2 — a `with`, which is its body's value.
+        ("1; with ({}) ;", "undefined"),
+        ("1; with ({}) 9;", "9"),
+        // …and the three that are genuinely **EMPTY**, which is the half that would look identical
+        // if the list above were "every statement". §14.2.2 gives an empty `Block` EMPTY, §14.4.1
+        // an `EmptyStatement`, and §14.3.2.1 a `VariableStatement`.
+        ("1; { }", "1"),
+        ("1; ;", "1"),
+        ("1; var x;", "1"),
+        ("1; var x = 5;", "1"),
+        ("1; debugger;", "1"),
+        ("1; { var y; }", "1"),
+        ("1; function f() { }", "1"),
+        // A block is empty only when nothing in it produces a value.
+        ("1; { 9; }", "9"),
+    ] {
+        assert_eq!(run(source), answer, "{source}");
+    }
+}
+
+#[test]
+fn a_label_passes_its_bodys_completion_through_rather_than_having_one() {
+    // §14.13.4 evaluates the `LabelledItem` and hands its value on, so whether a label starts a
+    // completion is a question about what is *under* it. A labelled `if` is never empty and a
+    // labelled `var` always is — the row that says the test is on the body and not on the label.
+    assert_eq!(run("1; L: if (true) ;"), "undefined");
+    assert_eq!(run("1; L: var y;"), "1");
+    assert_eq!(run("1; L: ;"), "1");
+    assert_eq!(run("1; L: { }"), "1");
+    assert_eq!(run("1; L: M: while (false) ;"), "undefined");
+    assert_eq!(run("1; L: { 9; }"), "9");
+    // §14.12.4 again, through a `break` that leaves the loop it names: the value is what the loop
+    // had reached, and `undefined` when it had reached nothing.
+    assert_eq!(
+        run("4; do { switch ('a') { case 'a': continue; default: } } while (false)"),
+        "undefined"
+    );
+    assert_eq!(
+        run("5; do { switch ('a') { case 'a': { 6; continue; } default: } } while (false)"),
+        "6"
+    );
+    // None of this exists inside a function, where §14.2.2's value is nobody's business but
+    // `return`'s — so the same statements cost nothing there and answer nothing.
+    assert_eq!(
+        run("function f() { 1; if (true) ; } String(f())"),
+        "undefined"
+    );
 }
