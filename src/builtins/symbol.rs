@@ -102,6 +102,25 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
             },
         );
     }
+    // §20.4.3.5 — `Symbol.prototype[@@toPrimitive]` answers the Symbol itself, which is how a
+    // Symbol survives a coercion that would otherwise reach `toString` and throw. It is why
+    // `Object(sym) == sym` is true: the wrapper is asked for a primitive and gives back the very
+    // Symbol it wraps, where §20.4.3.3's `toString` would have refused.
+    if let Some(symbol) = realm.well_known(super::well_known_at("toPrimitive")) {
+        let method = heap.new_native_function(realm.function_prototype(), to_primitive);
+        define_function_metadata(heap, method, "[Symbol.toPrimitive]", 1);
+        let _ = heap.define_own_property(
+            prototype,
+            crate::heap::PropertyKey::from_symbol(symbol),
+            &PropertyDescriptor {
+                value: Some(Value::Object(method)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+    }
     // §20.4.3.2 `description` is an accessor and not a value: it has to read the receiver, and a
     // data property could only hold one Symbol's answer.
     let getter = heap.new_native_function(realm.function_prototype(), description);
@@ -201,6 +220,16 @@ pub(super) fn descriptive(heap: &mut Heap, symbol: crate::heap::SymbolId) -> Str
 
 /// §20.4.3.4 `Symbol.prototype.valueOf`.
 fn value_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    Ok(Value::Symbol(this_symbol(heap, call.this_value)?))
+}
+
+/// §20.4.3.5 `Symbol.prototype[@@toPrimitive](hint)`.
+///
+/// Answers the Symbol, whatever the hint says — the one `@@toPrimitive` in the language that
+/// ignores its argument, because a Symbol has no other primitive to become. That is not a shortcut
+/// past §7.1.1: it is what makes `sym + ""` a TypeError from the **addition** rather than from
+/// `toString`, and what lets a wrapper object compare equal to the Symbol it wraps.
+fn to_primitive(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     Ok(Value::Symbol(this_symbol(heap, call.this_value)?))
 }
 

@@ -23,7 +23,7 @@
 use super::{define_fixed, define_function_metadata, define_method, define_value};
 use crate::heap::{Heap, NativeCall, ObjectId};
 use crate::realm::Realm;
-use crate::value::{Completion, Hint, Value};
+use crate::value::{Abrupt, Completion, Hint, Value};
 use crate::vm::Vm;
 
 /// Milliseconds in a second — §21.4.1.2.
@@ -294,7 +294,64 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_method(heap, realm, date, "parse", 1, parse);
     define_method(heap, realm, date, "UTC", 7, utc);
 
+    // §21.4.4.45 — the one built-in `@@toPrimitive` that changes an answer rather than reporting
+    // one, and the whole reason `date + 1` concatenates where `date - 1` subtracts. Not writable
+    // and *configurable*, which is §21.4.4.45's own line and not §17's usual attributes.
+    if let Some(symbol) = realm.well_known(super::well_known_at("toPrimitive")) {
+        let method = heap.new_native_function(realm.function_prototype(), to_primitive);
+        define_function_metadata(heap, method, "[Symbol.toPrimitive]", 1);
+        let _ = heap.define_own_property(
+            prototype,
+            crate::heap::PropertyKey::from_symbol(symbol),
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Object(method)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+    }
     super::date_methods::install(heap, realm, prototype);
+}
+
+/// §21.4.4.45 `Date.prototype[@@toPrimitive](hint)`.
+///
+/// Reads `"default"` as `"string"`, which is the entire clause and the only place in the language
+/// where the absence of a preference means anything. It is why `date + 1` is text and `date * 1`
+/// is a number: `+` asks with no preference and lands here on `toString`, and every other
+/// arithmetic operator asks for a number and lands on `valueOf`.
+///
+/// The three named hints are the only ones accepted. Anything else — including no argument at all
+/// — is a **TypeError** rather than a fallback, so `Date.prototype[Symbol.toPrimitive].call(d)`
+/// throws; the method is written to be reached by §7.1.1 and says so by refusing everything else.
+fn to_primitive(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 2 — the receiver must be an Object, and *any* object: this reads no `[[DateValue]]` of
+    // its own and is inherited by anything a script points at it.
+    let Value::Object(_) = call.this_value else {
+        return Err(Abrupt::type_error(
+            "Date.prototype[Symbol.toPrimitive] requires an object",
+        ));
+    };
+    let hint = match call.argument(0) {
+        Value::String(id) => heap.string(id).unwrap_or(&[]).to_vec(),
+        _ => Vec::new(),
+    };
+    let spelled = String::from_utf16_lossy(&hint);
+    // Steps 3 and 4 — `"default"` joins `"string"`, and the two are not merely similar: the clause
+    // lists them in one step precisely so that no reader can implement them apart.
+    let hint = match spelled.as_str() {
+        "default" | "string" => Hint::String,
+        "number" => Hint::Number,
+        _ => {
+            return Err(Abrupt::type_error(
+                "the hint given to Date.prototype[Symbol.toPrimitive] is not one of the three",
+            ));
+        }
+    };
+    // Step 5 — `OrdinaryToPrimitive`, which is §7.1.1.1 *without* step 1's lookup. Going back
+    // through `ToPrimitive` would find this method again and recur until the stack ran out.
+    vm.ordinary_to_primitive(call.this_value, hint, heap)
 }
 
 /// §21.4.2.1 `Date(...)` and `new Date(...)`.

@@ -117,14 +117,6 @@ annexB/built-ins/String/prototype/split/custom-splitter-emulates-undefined.js ::
 annexB/built-ins/String/prototype/split/custom-splitter-emulates-undefined.js (strict) :: it threw TypeError: Object.defineProperty requires an object
 annexB/built-ins/TypedArrayConstructors/from/iterator-method-emulates-undefined.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 annexB/built-ins/TypedArrayConstructors/from/iterator-method-emulates-undefined.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-annexB/built-ins/escape/to-primitive-err.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-annexB/built-ins/escape/to-primitive-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-annexB/built-ins/escape/to-primitive-observe.js :: it threw an object with no name: this should be unreachable
-annexB/built-ins/escape/to-primitive-observe.js (strict) :: it threw an object with no name: this should be unreachable
-annexB/built-ins/unescape/to-primitive-err.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-annexB/built-ins/unescape/to-primitive-err.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-annexB/built-ins/unescape/to-primitive-observe.js :: it threw an object with no name: this should be unreachable
-annexB/built-ins/unescape/to-primitive-observe.js (strict) :: it threw an object with no name: this should be unreachable
 annexB/language/comments/multi-line-html-close.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
 annexB/language/comments/multi-line-html-close.js (strict) :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
 annexB/language/comments/single-line-html-close-asi.js :: expected a Test262Error at runtime time, and it was a SyntaxError before anything ran: expected an expression, found `>`
@@ -608,8 +600,6 @@ built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js (strict) :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with no name: result !== true
@@ -1440,32 +1430,6 @@ built-ins/Atomics/waitAsync/was-woken-before-timeout.js :: it threw TypeError: c
 built-ins/Atomics/waitAsync/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/xor/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/BigInt/asIntN/bigint-tobigint-errors.js :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
-built-ins/BigInt/asIntN/bigint-tobigint-errors.js (strict) :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
-built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js :: it threw an object with no name
-built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js (strict) :: it threw an object with no name
-built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js :: it threw SyntaxError: this string is not a BigInt
-built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js (strict) :: it threw SyntaxError: this string is not a BigInt
-built-ins/BigInt/asIntN/bits-toindex-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/asIntN/bits-toindex-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/asIntN/bits-toindex-toprimitive.js :: it threw an object with no name
-built-ins/BigInt/asIntN/bits-toindex-toprimitive.js (strict) :: it threw an object with no name
-built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «-1n») to be true
-built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «-1n») to be true
-built-ins/BigInt/asUintN/bigint-tobigint-errors.js :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
-built-ins/BigInt/asUintN/bigint-tobigint-errors.js (strict) :: it threw an object with no name: ToBigInt: @@toPrimitive => undefined => TypeError Expected a TypeError but got a SyntaxError
-built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js :: it threw an object with no name
-built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js (strict) :: it threw an object with no name
-built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js :: it threw SyntaxError: this string is not a BigInt
-built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js (strict) :: it threw SyntaxError: this string is not a BigInt
-built-ins/BigInt/asUintN/bits-toindex-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/asUintN/bits-toindex-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/BigInt/asUintN/bits-toindex-toprimitive.js :: it threw an object with no name
-built-ins/BigInt/asUintN/bits-toindex-toprimitive.js (strict) :: it threw an object with no name
-built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «1n») to be true
-built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«0n», «1n») to be true
-built-ins/BigInt/constructor-coercion.js :: it threw SyntaxError: this string is not a BigInt
-built-ins/BigInt/constructor-coercion.js (strict) :: it threw SyntaxError: this string is not a BigInt
 built-ins/BigInt/is-a-constructor.js :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
 built-ins/BigInt/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
 built-ins/BigInt/prototype/toString/a-z.js :: it threw TypeError: a BigInt cannot be converted to a number
@@ -1492,18 +1456,6 @@ built-ins/DataView/proto-from-ctor-realm-sab.js :: it threw TypeError: what was 
 built-ins/DataView/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js :: it threw an object with no name
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-toprimitive.js (strict) :: it threw an object with no name
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
-built-ins/DataView/prototype/getBigInt64/toindex-byteoffset-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-errors.js :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-errors.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-toprimitive.js :: it threw an object with no name
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-toprimitive.js (strict) :: it threw an object with no name
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
-built-ins/DataView/prototype/getBigUint64/toindex-byteoffset-wrapped-values.js (strict) :: it threw an object with no name: ToIndex: @@toPrimitive => true => 1 Expected SameValue(«2810815725239828481n», «145806786723578239n») to be true
 built-ins/DataView/prototype/getFloat16/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/getFloat16/detached-buffer-after-toindex-byteoffset.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/getFloat16/index-is-out-of-range.js :: it threw an object with no name: getIndex == Infinity Expected a RangeError but got a TypeError
@@ -1598,34 +1550,6 @@ built-ins/Date/proto-from-ctor-realm-two.js :: it threw TypeError: what was call
 built-ins/Date/proto-from-ctor-realm-two.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Date/proto-from-ctor-realm-zero.js :: it threw TypeError: what was called is not a function
 built-ins/Date/proto-from-ctor-realm-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-invalid.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-invalid.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-non-callable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-non-callable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-valid.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-valid.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-invalid.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Date/prototype/Symbol.toPrimitive/hint-invalid.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-invalid.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-invalid.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-non-callable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-non-callable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-valid.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-valid.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-invalid.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-invalid.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-non-callable.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-non-callable.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-valid.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-valid.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Date/prototype/Symbol.toPrimitive/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Date/prototype/Symbol.toPrimitive/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Date/prototype/Symbol.toPrimitive/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Date/prototype/Symbol.toPrimitive/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Date/prototype/Symbol.toPrimitive/prop-desc.js :: it threw an object with no name: Symbol(Symbol.toPrimitive) should be an own property
-built-ins/Date/prototype/Symbol.toPrimitive/prop-desc.js (strict) :: it threw an object with no name: Symbol(Symbol.toPrimitive) should be an own property
-built-ins/Date/prototype/Symbol.toPrimitive/this-val-non-obj.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Date/prototype/Symbol.toPrimitive/this-val-non-obj.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Date/prototype/setHours/arg-hour-to-number.js :: it threw an object with no name: undefined Expected SameValue(«1467338400000», «NaN») to be true
 built-ins/Date/prototype/setHours/arg-hour-to-number.js (strict) :: it threw an object with no name: undefined Expected SameValue(«1467338400000», «NaN») to be true
 built-ins/Date/prototype/setHours/arg-min-to-number.js :: it threw an object with no name: undefined Expected SameValue(«1467331320000», «NaN») to be true
@@ -1640,8 +1564,6 @@ built-ins/Date/prototype/setMinutes/arg-min-to-number.js :: it threw an object w
 built-ins/Date/prototype/setMinutes/arg-min-to-number.js (strict) :: it threw an object with no name: undefined Expected SameValue(«1467331320000», «NaN») to be true
 built-ins/Date/prototype/setSeconds/arg-sec-to-number.js :: it threw an object with no name: undefined Expected SameValue(«1467331202000», «NaN») to be true
 built-ins/Date/prototype/setSeconds/arg-sec-to-number.js (strict) :: it threw an object with no name: undefined Expected SameValue(«1467331202000», «NaN») to be true
-built-ins/Date/prototype/toJSON/to-primitive-symbol.js :: it threw an object with no name: should not be called
-built-ins/Date/prototype/toJSON/to-primitive-symbol.js (strict) :: it threw an object with no name: should not be called
 built-ins/Date/prototype/toTemporalInstant/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Date/prototype/toTemporalInstant/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Date/prototype/toTemporalInstant/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -1658,28 +1580,10 @@ built-ins/Date/prototype/toTemporalInstant/this-value-non-object.js :: it threw 
 built-ins/Date/prototype/toTemporalInstant/this-value-non-object.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Date/prototype/toTemporalInstant/this-value-valid-date.js :: it threw TypeError: what was called is not a function
 built-ins/Date/prototype/toTemporalInstant/this-value-valid-date.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Date/value-get-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-get-symbol-to-prim-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-symbol-to-prim-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-symbol-to-prim-invocation.js :: it threw an object with no name: method invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Date/value-symbol-to-prim-invocation.js (strict) :: it threw an object with no name: method invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Date/value-symbol-to-prim-return-obj.js :: it threw an object with no name: ordinary object Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Date/value-symbol-to-prim-return-obj.js (strict) :: it threw an object with no name: ordinary object Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Date/value-symbol-to-prim-return-prim.js :: it threw an object with no name: Expected SameValue(«NaN», «1234») to be true
-built-ins/Date/value-symbol-to-prim-return-prim.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «1234») to be true
-built-ins/Date/value-to-primitive-call-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-to-primitive-call-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-to-primitive-call.js :: it threw an object with no name: function invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Date/value-to-primitive-call.js (strict) :: it threw an object with no name: function invoked exactly once Expected SameValue(«0», «1») to be true
-built-ins/Date/value-to-primitive-get-meth-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-to-primitive-get-meth-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Date/value-to-primitive-result-faulty.js :: it threw an object with no name: ordinary object Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Date/value-to-primitive-result-faulty.js (strict) :: it threw an object with no name: ordinary object Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Date/value-to-primitive-result-non-string-prim.js :: it threw an object with no name: number Expected SameValue(«NaN», «8») to be true
-built-ins/Date/value-to-primitive-result-non-string-prim.js (strict) :: it threw an object with no name: number Expected SameValue(«NaN», «8») to be true
-built-ins/Date/value-to-primitive-result-string.js :: it threw an object with no name: Expected SameValue(«NaN», «1465152000000») to be true
-built-ins/Date/value-to-primitive-result-string.js (strict) :: it threw an object with no name: Expected SameValue(«NaN», «1465152000000») to be true
+built-ins/Date/value-symbol-to-prim-invocation.js :: it threw an object with no name: method invoked with the string "default" as the first argument Expected SameValue(«"number"», «"default"») to be true
+built-ins/Date/value-symbol-to-prim-invocation.js (strict) :: it threw an object with no name: method invoked with the string "default" as the first argument Expected SameValue(«"number"», «"default"») to be true
+built-ins/Date/value-to-primitive-call.js :: it threw an object with no name: argument value Expected SameValue(«"number"», «"default"») to be true
+built-ins/Date/value-to-primitive-call.js (strict) :: it threw an object with no name: argument value Expected SameValue(«"number"», «"default"») to be true
 built-ins/DisposableStack/constructor.js :: it threw an object with no name: typeof DisposableStack is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DisposableStack/constructor.js (strict) :: it threw an object with no name: typeof DisposableStack is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/DisposableStack/instance-extensible.js :: it threw ReferenceError: DisposableStack is not defined
@@ -2493,8 +2397,8 @@ built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw an object 
 built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Map/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Map/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js :: it threw TypeError: what was called is not a function
@@ -2712,8 +2616,6 @@ built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js :: it thre
 built-ins/Object/fromEntries/iterator-not-closed-for-throwing-next.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
 built-ins/Object/fromEntries/iterator-not-closed-for-uncallable-next.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/fromEntries/iterator-not-closed-for-uncallable-next.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/fromEntries/to-property-key.js :: it threw an object with no name: Expected SameValue(«undefined», «"value"») to be true
-built-ins/Object/fromEntries/to-property-key.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"value"») to be true
 built-ins/Object/fromEntries/uses-keys-not-iterator.js :: it threw an object with no name: Expected SameValue(«undefined», «"first value"») to be true
 built-ins/Object/fromEntries/uses-keys-not-iterator.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"first value"») to be true
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-2-38.js :: it threw TypeError: cannot convert an object to a primitive value
@@ -4248,8 +4150,6 @@ built-ins/RegExp/proto-from-ctor-realm.js :: it threw TypeError: what was called
 built-ins/RegExp/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js :: it threw an object with no name: Expected a CustomError but got a Test262Error
-built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js (strict) :: it threw an object with no name: Expected a CustomError but got a Test262Error
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js :: it threw an object with no name: Expected SameValue(«3», «4») to be true
@@ -4276,16 +4176,12 @@ built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js :: it threw an obj
 built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js (strict) :: it threw an object with no name: Expected SameValue(«4294967295», «9007199254740992») to be true
 built-ins/RegExp/prototype/Symbol.replace/coerce-unicode.js :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
 built-ins/RegExp/prototype/Symbol.replace/coerce-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
-built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js :: it threw an object with no name: Expected a CustomError but got a Test262Error
-built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js (strict) :: it threw an object with no name: Expected a CustomError but got a Test262Error
 built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js :: it threw an object with no name: Expected SameValue(«"a"», «null») to be true
 built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js (strict) :: it threw an object with no name: Expected SameValue(«"a"», «null») to be true
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups.js :: it threw an object with no name: Expected SameValue(«"a[$<length>]"», «"a[3]"») to be true
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups.js (strict) :: it threw an object with no name: Expected SameValue(«"a[$<length>]"», «"a[3]"») to be true
-built-ins/RegExp/prototype/Symbol.replace/result-coerce-index-undefined.js :: it threw an object with no name: Expected SameValue(«undefined», «"number"») to be true
-built-ins/RegExp/prototype/Symbol.replace/result-coerce-index-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"number"») to be true
 built-ins/RegExp/prototype/Symbol.replace/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
 built-ins/RegExp/prototype/Symbol.replace/u-advance-after-empty.js (strict) :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
 built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
@@ -4548,22 +4444,6 @@ built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.
 built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/String/prototype/includes/searchstring-is-regexp-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/includes/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/position-tointeger-bigint.js :: it threw an object with no name: ToInteger: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/position-tointeger-bigint.js (strict) :: it threw an object with no name: ToInteger: @@toPrimitive => BigInt => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/position-tointeger-errors.js :: it threw an object with no name: ToInteger: @@toPrimitive => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/position-tointeger-errors.js (strict) :: it threw an object with no name: ToInteger: @@toPrimitive => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js :: it threw an object with no name
-built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js (strict) :: it threw an object with no name
-built-ins/String/prototype/indexOf/position-tointeger-wrapped-values.js :: it threw an object with no name: ToInteger: @@toPrimitive => true => 1 Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/indexOf/position-tointeger-wrapped-values.js (strict) :: it threw an object with no name: ToInteger: @@toPrimitive => true => 1 Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/indexOf/searchstring-tostring-bigint.js :: it threw an object with no name: ToString: @@toPrimitive => BigInt to String Expected SameValue(«-1», «2») to be true
-built-ins/String/prototype/indexOf/searchstring-tostring-bigint.js (strict) :: it threw an object with no name: ToString: @@toPrimitive => BigInt to String Expected SameValue(«-1», «2») to be true
-built-ins/String/prototype/indexOf/searchstring-tostring-errors.js :: it threw an object with no name: ToString: unbox object with internal slot => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/searchstring-tostring-errors.js (strict) :: it threw an object with no name: ToString: unbox object with internal slot => Symbol => TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js :: it threw an object with no name
-built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js (strict) :: it threw an object with no name
-built-ins/String/prototype/indexOf/searchstring-tostring-wrapped-values.js :: it threw an object with no name: ToPrimitive: @@toPrimitive Expected SameValue(«-1», «2») to be true
-built-ins/String/prototype/indexOf/searchstring-tostring-wrapped-values.js (strict) :: it threw an object with no name: ToPrimitive: @@toPrimitive Expected SameValue(«-1», «2») to be true
 built-ins/String/prototype/isWellFormed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/String/prototype/isWellFormed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/String/prototype/isWellFormed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -4592,8 +4472,6 @@ built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an 
 built-ins/String/prototype/match/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js (strict) :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
-built-ins/String/prototype/matchAll/toString-this-val.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/matchAll/toString-this-val.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/String/prototype/normalize/form-is-not-valid-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/String/prototype/normalize/form-is-not-valid-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/String/prototype/normalize/length.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -4618,10 +4496,6 @@ built-ins/String/prototype/repeat/repeat-string-n-times.js :: it threw RangeErro
 built-ins/String/prototype/repeat/repeat-string-n-times.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js (strict) :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
-built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js :: it threw the string poison
-built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js (strict) :: it threw the string poison
-built-ins/String/prototype/replaceAll/this-tostring.js :: it threw the string poison
-built-ins/String/prototype/replaceAll/this-tostring.js (strict) :: it threw the string poison
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
@@ -4630,8 +4504,6 @@ built-ins/String/prototype/search/this-value-not-obj-coercible.js :: it threw an
 built-ins/String/prototype/search/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/instance-is-math.js :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/instance-is-math.js (strict) :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
-built-ins/String/prototype/split/limit-touint32-error.js :: it threw an object with no name: ToUint32 should be called on the limit before ToString on the separator. Expected a ExpectedError to be thrown but no exception was thrown at all
-built-ins/String/prototype/split/limit-touint32-error.js (strict) :: it threw an object with no name: ToUint32 should be called on the limit before ToString on the separator. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-regexp.js :: it did not parse: a named backreference names no group
 built-ins/String/prototype/split/separator-regexp.js (strict) :: it did not parse: a named backreference names no group
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
@@ -4666,30 +4538,6 @@ built-ins/String/prototype/toWellFormed/to-string-primitive.js :: it threw TypeE
 built-ins/String/prototype/toWellFormed/to-string-primitive.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/toWellFormed/to-string.js :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/toWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-call-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-call-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-meth-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-meth-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-meth-priority.js :: it threw an object with no name: thisVal[Symbol.toPrimitive] expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-meth-priority.js (strict) :: it threw an object with no name: thisVal[Symbol.toPrimitive] expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-returns-object-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimEnd/this-value-object-toprimitive-returns-object-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimEnd/this-value-object-tostring-meth-priority.js :: it threw an object with no name: thisVal.toString expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimEnd/this-value-object-tostring-meth-priority.js (strict) :: it threw an object with no name: thisVal.toString expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimEnd/this-value-object-valueof-meth-priority.js :: it threw an object with no name: thisVal[Symbol.toPrimitive should have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimEnd/this-value-object-valueof-meth-priority.js (strict) :: it threw an object with no name: thisVal[Symbol.toPrimitive should have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-call-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-call-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-meth-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-meth-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-meth-priority.js :: it threw an object with no name: thisVal[Symbol.toPrimitive] expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-meth-priority.js (strict) :: it threw an object with no name: thisVal[Symbol.toPrimitive] expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-returns-object-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimStart/this-value-object-toprimitive-returns-object-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/trimStart/this-value-object-tostring-meth-priority.js :: it threw an object with no name: thisVal.toString expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimStart/this-value-object-tostring-meth-priority.js (strict) :: it threw an object with no name: thisVal.toString expected to have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimStart/this-value-object-valueof-meth-priority.js :: it threw an object with no name: thisVal[Symbol.toPrimitive should have been accessed. Expected SameValue(«0», «1») to be true
-built-ins/String/prototype/trimStart/this-value-object-valueof-meth-priority.js (strict) :: it threw an object with no name: thisVal[Symbol.toPrimitive should have been accessed. Expected SameValue(«0», «1») to be true
 built-ins/String/prototype/valueOf/non-generic-realm.js :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/valueOf/non-generic-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/SuppressedError/is-a-constructor.js :: it threw ReferenceError: SuppressedError is not defined
@@ -4767,20 +4615,6 @@ built-ins/Symbol/match/cross-realm.js :: it threw TypeError: what was called is 
 built-ins/Symbol/match/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/matchAll/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/matchAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/prototype/Symbol.toPrimitive/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Symbol/prototype/Symbol.toPrimitive/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Symbol/prototype/Symbol.toPrimitive/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Symbol/prototype/Symbol.toPrimitive/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Symbol/prototype/Symbol.toPrimitive/prop-desc.js :: it threw an object with no name: Symbol(Symbol.toPrimitive) should be an own property
-built-ins/Symbol/prototype/Symbol.toPrimitive/prop-desc.js (strict) :: it threw an object with no name: Symbol(Symbol.toPrimitive) should be an own property
-built-ins/Symbol/prototype/Symbol.toPrimitive/redefined-symbol-wrapper-ordinary-toprimitive.js :: it threw TypeError: this property cannot be redefined
-built-ins/Symbol/prototype/Symbol.toPrimitive/redefined-symbol-wrapper-ordinary-toprimitive.js (strict) :: it threw TypeError: this property cannot be redefined
-built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-non-obj.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-non-obj.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-obj-symbol-wrapper.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-obj-symbol-wrapper.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-symbol.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-symbol.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/prototype/description/is-not-own-property.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Symbol/prototype/description/is-not-own-property.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Symbol/prototype/toString/toString-default-attributes-non-strict.js :: it threw TypeError: cannot set a property of something that is not an object
@@ -14344,10 +14178,6 @@ built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-throws.js :: i
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/object-arg/throws-setting-obj-to-primitive-typeerror.js :: it threw an object with no name: toPrimitive was called once Expected SameValue(«0», «1») to be true (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/object-arg/throws-setting-obj-to-primitive-typeerror.js (strict) :: it threw an object with no name: toPrimitive was called once Expected SameValue(«0», «1») to be true (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/object-arg/throws-setting-obj-to-primitive.js :: it threw an object with no name: abrupt completion from sample @@toPrimitive Expected a Test262Error but got a TypeError (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/object-arg/throws-setting-obj-to-primitive.js (strict) :: it threw an object with no name: abrupt completion from sample @@toPrimitive Expected a Test262Error but got a TypeError (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
@@ -14390,10 +14220,6 @@ built-ins/TypedArrayConstructors/ctors/object-arg/iterator-throws.js :: it threw
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/object-arg/throws-setting-obj-to-primitive-typeerror.js :: it threw an object with no name: abrupt completion from sample @@toPrimitive Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/object-arg/throws-setting-obj-to-primitive-typeerror.js (strict) :: it threw an object with no name: abrupt completion from sample @@toPrimitive Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/object-arg/throws-setting-obj-to-primitive.js :: it threw an object with no name: abrupt completion from sample @@toPrimitive Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/object-arg/throws-setting-obj-to-primitive.js (strict) :: it threw an object with no name: abrupt completion from sample @@toPrimitive Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/typedarray-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -14634,8 +14460,8 @@ built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw an obj
 built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
+built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/WeakMap/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js :: it threw TypeError: what was called is not a function
@@ -14701,30 +14527,6 @@ built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js :: it threw RangeError: the he
 built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/global/10.2.1.1.3-4-16-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/global/10.2.1.1.3-4-18-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-call-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-call-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-get-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-get-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-not-callable-throws.js :: it threw an object with no name: number Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-not-callable-throws.js (strict) :: it threw an object with no name: number Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-result-is-object-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-result-is-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-result-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-result-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isFinite/toprimitive-valid-result.js :: it threw an object with no name: use returned value - number Expected SameValue(«false», «true») to be true
-built-ins/isFinite/toprimitive-valid-result.js (strict) :: it threw an object with no name: use returned value - number Expected SameValue(«false», «true») to be true
-built-ins/isNaN/toprimitive-call-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-call-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-get-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-get-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-not-callable-throws.js :: it threw an object with no name: number Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-not-callable-throws.js (strict) :: it threw an object with no name: number Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-result-is-object-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-result-is-object-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-result-is-symbol-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-result-is-symbol-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/isNaN/toprimitive-valid-result.js :: it threw an object with no name: toPrimitive is called - non-NaN number Expected SameValue(«NaN», «1») to be true
-built-ins/isNaN/toprimitive-valid-result.js (strict) :: it threw an object with no name: toPrimitive is called - non-NaN number Expected SameValue(«NaN», «1») to be true
 harness/assert-throws-same-realm.js :: it threw TypeError: what was called is not a function
 harness/assert-throws-same-realm.js (strict) :: it threw TypeError: what was called is not a function
 harness/asyncHelpers-throwsAsync-same-realm.js :: the test called $DONE with TypeError: what was called is not a function
@@ -14847,24 +14649,6 @@ language/eval-code/indirect/var-env-global-lex-non-strict.js :: it threw an obje
 language/eval-code/indirect/var-env-global-lex-non-strict.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «undefined») to be false
 language/eval-code/indirect/var-env-var-strict.js :: it threw an object with no name: Strict indirect eval leaked a top level declaration
 language/eval-code/indirect/var-env-var-strict.js (strict) :: it threw an object with no name: Strict indirect eval leaked a top level declaration
-language/expressions/addition/S11.6.1_A2.2_T2.js :: it threw an object with no name: #1: var date = new Date(0); date + date === date.toString() + date.toString(). Actual: 0
-language/expressions/addition/S11.6.1_A2.2_T2.js (strict) :: it threw an object with no name: #1: var date = new Date(0); date + date === date.toString() + date.toString(). Actual: 0
-language/expressions/addition/bigint-errors.js :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return Symbol("1");}}) + 0n throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/addition/bigint-errors.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return Symbol("1");}}) + 0n throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/addition/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/addition/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/addition/bigint-wrapped-values.js :: it threw an object with no name: The result of (({[Symbol.toPrimitive]: function() {return 2n;}}) + 1n) is 3n Expected SameValue(«"[object Object]1"», «3n») to be true
-language/expressions/addition/bigint-wrapped-values.js (strict) :: it threw an object with no name: The result of (({[Symbol.toPrimitive]: function() {return 2n;}}) + 1n) is 3n Expected SameValue(«"[object Object]1"», «3n») to be true
-language/expressions/addition/coerce-symbol-to-prim-err.js :: it threw an object with no name: error thrown by left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/addition/coerce-symbol-to-prim-err.js (strict) :: it threw an object with no name: error thrown by left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/addition/coerce-symbol-to-prim-invocation.js :: it threw an object with no name: methods invoked in correct sequence Expected SameValue(«""», «"leftright"») to be true
-language/expressions/addition/coerce-symbol-to-prim-invocation.js (strict) :: it threw an object with no name: methods invoked in correct sequence Expected SameValue(«""», «"leftright"») to be true
-language/expressions/addition/coerce-symbol-to-prim-return-obj.js :: it threw an object with no name: ordinary object value, right-hand side Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/addition/coerce-symbol-to-prim-return-obj.js (strict) :: it threw an object with no name: ordinary object value, right-hand side Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/addition/coerce-symbol-to-prim-return-prim.js :: it threw an object with no name: Expected SameValue(«"1[object Object]"», «87») to be true
-language/expressions/addition/coerce-symbol-to-prim-return-prim.js (strict) :: it threw an object with no name: Expected SameValue(«"1[object Object]"», «87») to be true
-language/expressions/addition/get-symbol-to-prim-err.js :: it threw an object with no name: error from property access of left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/addition/get-symbol-to-prim-err.js (strict) :: it threw an object with no name: error from property access of left-hand side Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/arrow-function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/arrow-function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -15006,30 +14790,10 @@ language/expressions/async-generator/yield-star-sync-return.js :: the test calle
 language/expressions/async-generator/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/async-generator/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/async-generator/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/bitwise-and/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/bitwise-and/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-and/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/bitwise-and/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-and/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/bitwise-and/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/bitwise-and/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-and/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-not/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/bitwise-not/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-or/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/bitwise-or/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-or/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/bitwise-or/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-or/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/bitwise-or/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/bitwise-or/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-or/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-xor/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/bitwise-xor/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-xor/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/bitwise-xor/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/bitwise-xor/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/bitwise-xor/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/bitwise-xor/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-xor/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/call/eval-realm-indirect.js :: it threw TypeError: what was called is not a function
@@ -15128,10 +14892,6 @@ language/expressions/class/elements/async-gen-private-method/yield-star-sync-ret
 language/expressions/class/elements/async-gen-private-method/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/elements/async-gen-private-method/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/elements/async-gen-private-method/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/class/elements/computed-name-toprimitive-symbol.js :: it threw an object with no name
-language/expressions/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
-language/expressions/class/elements/computed-name-toprimitive.js :: it threw an object with no name
-language/expressions/class/elements/computed-name-toprimitive.js (strict) :: it threw an object with no name
 language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
@@ -15239,10 +14999,6 @@ language/expressions/conditional/tco-cond.js (strict) :: it threw RangeError: to
 language/expressions/conditional/tco-pos.js (strict) :: it threw RangeError: too much recursion
 language/expressions/delete/non-reference-return-true.js :: it threw TypeError: cannot delete a property of something that is not an object
 language/expressions/delete/non-reference-return-true.js (strict) :: it threw TypeError: cannot delete a property of something that is not an object
-language/expressions/division/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/division/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/division/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/division/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/division/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/division/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/does-not-equals/bigint-and-object.js :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
@@ -15594,22 +15350,6 @@ language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/equals/bigint-and-object.js :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
 language/expressions/equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
-language/expressions/equals/coerce-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/equals/coerce-symbol-to-prim-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/equals/coerce-symbol-to-prim-invocation.js :: it threw an object with no name: method invoked exactly once Expected SameValue(«0», «1») to be true
-language/expressions/equals/coerce-symbol-to-prim-invocation.js (strict) :: it threw an object with no name: method invoked exactly once Expected SameValue(«0», «1») to be true
-language/expressions/equals/coerce-symbol-to-prim-return-obj.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/equals/coerce-symbol-to-prim-return-obj.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/equals/coerce-symbol-to-prim-return-prim.js :: it threw an object with no name: number primitive (equal) Expected SameValue(«false», «true») to be true
-language/expressions/equals/coerce-symbol-to-prim-return-prim.js (strict) :: it threw an object with no name: number primitive (equal) Expected SameValue(«false», «true») to be true
-language/expressions/equals/get-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/equals/get-symbol-to-prim-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/equals/to-prim-hint.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/equals/to-prim-hint.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-language/expressions/exponentiation/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/exponentiation/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/exponentiation/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/exponentiation/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/exponentiation/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/exponentiation/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -15628,12 +15368,6 @@ language/expressions/greater-than/bigint-and-boolean.js :: it threw an object wi
 language/expressions/greater-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
 language/expressions/greater-than/bigint-and-symbol.js :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/greater-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/left-shift/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/left-shift/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/left-shift/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/left-shift/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/left-shift/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/left-shift/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/left-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/left-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/less-than/bigint-and-boolean.js :: it threw an object with no name: The result of (0n < true) is true Expected SameValue(«false», «true») to be true
@@ -15662,16 +15396,8 @@ language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluat
 language/expressions/logical-or/tco-right.js (strict) :: it threw RangeError: too much recursion
 language/expressions/member-expression/computed-reference-null-or-undefined.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/member-expression/computed-reference-null-or-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/modulus/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/modulus/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/modulus/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/modulus/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/modulus/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/modulus/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/multiplication/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/multiplication/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/multiplication/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/multiplication/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/new/non-ctor-err-realm.js :: it threw TypeError: what was called is not a function
@@ -15768,18 +15494,8 @@ language/expressions/prefix-increment/bigint.js :: it threw TypeError: a BigInt 
 language/expressions/prefix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/right-shift/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/right-shift/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/right-shift/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/right-shift/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/right-shift/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/right-shift/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/subtraction/bigint-toprimitive.js :: it threw an object with no name
-language/expressions/subtraction/bigint-toprimitive.js (strict) :: it threw an object with no name
-language/expressions/subtraction/bigint-wrapped-values.js :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
-language/expressions/subtraction/bigint-wrapped-values.js (strict) :: it threw TypeError: a BigInt and a Number cannot be mixed in arithmetic
 language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/super/prop-dot-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
@@ -15795,12 +15511,6 @@ language/expressions/tagged-template/cache-realm.js (strict) :: it threw TypeErr
 language/expressions/tagged-template/tco-call.js (strict) :: it threw ReferenceError: f is not defined
 language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tco-pos.js (strict) :: it threw RangeError: too much recursion
-language/expressions/unary-minus/bigint-non-primitive.js :: it threw an object with no name
-language/expressions/unary-minus/bigint-non-primitive.js (strict) :: it threw an object with no name
-language/expressions/unsigned-right-shift/bigint-non-primitive.js :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 0b101n;}, valueOf: err, toString: err}) >>> 1n throws TypeError Expected a TypeError but got a Test262Error
-language/expressions/unsigned-right-shift/bigint-non-primitive.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 0b101n;}, valueOf: err, toString: err}) >>> 1n throws TypeError Expected a TypeError but got a Test262Error
-language/expressions/unsigned-right-shift/bigint-toprimitive.js :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 2n;}, valueOf: err, toString: err}) >>> 0n throws TypeError Expected a TypeError but got a Test262Error
-language/expressions/unsigned-right-shift/bigint-toprimitive.js (strict) :: it threw an object with no name: ({[Symbol.toPrimitive]: function() {return 2n;}, valueOf: err, toString: err}) >>> 0n throws TypeError Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
@@ -16308,10 +16018,6 @@ language/statements/class/elements/async-gen-private-method/yield-star-sync-thro
 language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
 language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
 language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/computed-name-toprimitive-symbol.js :: it threw an object with no name
-language/statements/class/elements/computed-name-toprimitive-symbol.js (strict) :: it threw an object with no name
-language/statements/class/elements/computed-name-toprimitive.js :: it threw an object with no name
-language/statements/class/elements/computed-name-toprimitive.js (strict) :: it threw an object with no name
 language/statements/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true

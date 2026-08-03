@@ -268,3 +268,178 @@ fn an_error_prints_itself_now_that_something_can_be_called() {
         "ReferenceError: nowhere is not defined"
     );
 }
+
+#[test]
+fn an_exotic_to_primitive_is_asked_before_either_ordinary_method() {
+    // §7.1.1 step 1.a — `@@toPrimitive` comes **first**, so neither `valueOf` nor `toString` is
+    // reached at all when there is one. That is what makes it an override rather than a preference.
+    assert_eq!(
+        run("String({toString(){return 'no'}, valueOf(){return 'no'}, \
+             [Symbol.toPrimitive](){return 'yes'}})"),
+        "yes"
+    );
+    assert_eq!(
+        run("'' + {toString(){throw new Error('reached')}, [Symbol.toPrimitive](){return 'ok'}}"),
+        "ok"
+    );
+    // Step 1.b.vi — an Object is not an answer, and unlike §7.1.1.1's walk there is **nothing else
+    // to try**: the object said how it wished to convert and did not. A fallback to `valueOf`
+    // would be a second chance the clause does not give, and this row is the difference.
+    // Asserted by **message**: without the guard the object is handed back as the primitive and
+    // whatever reads it next throws a TypeError of its own, so `e.name` cannot tell the clause
+    // being implemented from the clause being skipped.
+    assert_eq!(
+        run(
+            "try { ({valueOf(){return 1}, [Symbol.toPrimitive](){return {}}}) + ''; 'no throw' } \
+             catch (e) { e.message }"
+        ),
+        "Symbol.toPrimitive did not answer with a primitive value"
+    );
+    // `GetMethod`, so `undefined` and `null` both mean "there is none" and the ordinary walk runs,
+    // while anything else that is not callable is a TypeError rather than something to walk past.
+    assert_eq!(
+        run("'' + {[Symbol.toPrimitive]: undefined, toString(){return 'ord'}}"),
+        "ord"
+    );
+    assert_eq!(
+        run("'' + {[Symbol.toPrimitive]: null, toString(){return 'ord'}}"),
+        "ord"
+    );
+    // By **message**: calling a 1 throws a TypeError of its own, so the name is the same whether
+    // `GetMethod`'s callable check is there or not, and only the message tells them apart.
+    assert_eq!(
+        run("try { ({[Symbol.toPrimitive]: 1}) + ''; 'no throw' } catch (e) { e.message }"),
+        "Symbol.toPrimitive is not a function"
+    );
+}
+
+#[test]
+fn the_hint_has_three_values_and_the_third_is_only_visible_to_such_a_method() {
+    // §7.1.1 steps 1.b.i to 1.b.iii — the preference reaches the method as a String, and this is
+    // the only place in the language the three are named rather than implied.
+    let echo = "var o = {[Symbol.toPrimitive](hint){return hint}};";
+    // `+` and `==` ask with **no** preference — §13.15.3 step 1.a and §7.2.15 step 10.
+    assert_eq!(run(&format!("{echo} o + ''")), "default");
+    assert_eq!(run(&format!("{echo} '' + o")), "default");
+    assert_eq!(run(&format!("{echo} o == 'default'")), "true");
+    // Everything that wants a number asks for one, which is `ToNumeric` reaching §7.1.1.
+    assert_eq!(run(&format!("{echo} o - 0")), "NaN");
+    assert_eq!(run(&format!("{echo} String(o * 1)")), "NaN");
+    assert_eq!(
+        run("var o = {[Symbol.toPrimitive](h){return h === 'number' ? 7 : 0}}; +o"),
+        "7"
+    );
+    // …and everything that wants text asks for a string.
+    assert_eq!(run(&format!("{echo} String(o)")), "string");
+    assert_eq!(run(&format!("{echo} `${{o}}`")), "string");
+    assert_eq!(run(&format!("{echo} ({{}})[o] = 1, String(o)")), "string");
+    // The row that makes `Default` a third value rather than a spelling of `Number`: an object
+    // with no such method cannot tell them apart, because §7.1.1 step 1.c makes an absent
+    // preference number before `OrdinaryToPrimitive` is reached.
+    assert_eq!(
+        run("var o = {valueOf(){return 1}, toString(){return 'two'}}; (o + '') + ',' + (o - 0)"),
+        "1,1"
+    );
+}
+
+#[test]
+fn a_date_reads_the_absent_preference_as_a_string_and_nothing_else_does() {
+    // §21.4.4.45, and the whole reason the third hint has to exist. `+` asks with no preference
+    // and a Date answers with its text; every other arithmetic operator asks for a number and the
+    // same Date answers with its time value.
+    assert_eq!(run("typeof (new Date(0) + 1)"), "string");
+    assert_eq!(run("typeof (new Date(0) - 0)"), "number");
+    assert_eq!(run("typeof (new Date(0) * 1)"), "number");
+    assert_eq!(run("new Date(0) + '' === String(new Date(0))"), "true");
+    assert_eq!(run("new Date(0) - 0"), "0");
+    // …and it is a method a script can reach, move and refuse. Three named hints and no fallback.
+    assert_eq!(run("typeof Date.prototype[Symbol.toPrimitive]"), "function");
+    assert_eq!(run("Date.prototype[Symbol.toPrimitive].length"), "1");
+    assert_eq!(
+        run("Date.prototype[Symbol.toPrimitive].call(new Date(0), 'number')"),
+        "0"
+    );
+    assert_eq!(
+        run(
+            "try { Date.prototype[Symbol.toPrimitive].call(new Date(0), 'nope'); 'no throw' } \
+             catch (e) { e.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "try { Date.prototype[Symbol.toPrimitive].call(new Date(0)); 'no throw' } \
+             catch (e) { e.name }"
+        ),
+        "TypeError"
+    );
+    // Step 2 wants an Object and any object: it reads no `[[DateValue]]` of its own, so it works
+    // on whatever a script points it at — which is what makes it inheritable rather than branded.
+    assert_eq!(
+        run("Date.prototype[Symbol.toPrimitive].call({toString(){return 'x'}}, 'default')"),
+        "x"
+    );
+    assert_eq!(
+        run(
+            "try { Date.prototype[Symbol.toPrimitive].call(1, 'default'); 'no throw' } \
+             catch (e) { e.name }"
+        ),
+        "TypeError"
+    );
+    // §21.4.4.45 writes its own attributes rather than taking §17's: not writable, not enumerable
+    // and **configurable** — so a script may delete it and get the ordinary walk back, which is
+    // the only row that shows the method is what decides the answer.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Date.prototype, Symbol.toPrimitive); \
+             '' + d.writable + d.enumerable + d.configurable"
+        ),
+        "falsefalsetrue"
+    );
+    assert_eq!(
+        run("delete Date.prototype[Symbol.toPrimitive]; typeof (new Date(0) + 1)"),
+        "number"
+    );
+}
+
+#[test]
+fn a_symbol_wrapper_answers_with_the_symbol_it_wraps() {
+    // §20.4.3.5 — the one `@@toPrimitive` that ignores its hint, because a Symbol has no other
+    // primitive to become. It is what lets a wrapper compare equal to what it wraps, where
+    // §20.4.3.3's `toString` would have refused the coercion outright.
+    assert_eq!(run("var s = Symbol('q'); Object(s) == s"), "true");
+    assert_eq!(
+        run("typeof Symbol.prototype[Symbol.toPrimitive]"),
+        "function"
+    );
+    assert_eq!(
+        run("var s = Symbol('q'); typeof Symbol.prototype[Symbol.toPrimitive].call(s)"),
+        "symbol"
+    );
+    // …and the refusal still happens, one step later: the addition gets a Symbol and will not add
+    // it, rather than `toString` refusing to produce text.
+    assert_eq!(
+        run("try { Object(Symbol()) + ''; 'no throw' } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // §20.4.3.5's attributes, which are §21.4.4.45's: not writable, not enumerable, configurable.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Symbol.prototype, Symbol.toPrimitive); \
+             '' + d.writable + d.enumerable + d.configurable"
+        ),
+        "falsefalsetrue"
+    );
+    // What the method actually decides, and it is **not** the equality above: §20.4.3.4's
+    // `valueOf` already answers with the Symbol, so the number path agrees either way. The String
+    // path is where they part — without this method a string hint reaches §20.4.3.3's `toString`,
+    // which describes the Symbol instead of refusing, and a wrapper silently becomes text.
+    assert_eq!(
+        run("try { String(Object(Symbol('q'))); 'no throw' } catch (e) { e.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("delete Symbol.prototype[Symbol.toPrimitive]; String(Object(Symbol('q')))"),
+        "Symbol(q)"
+    );
+}

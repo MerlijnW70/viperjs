@@ -75,11 +75,47 @@ impl Vm {
     /// what asking means: two methods in an order the hint decides, and the first to answer with a
     /// primitive wins.
     ///
-    /// §7.1.1 step 2 looks for `@@toPrimitive` first, which is how a `Date` says it prefers a
-    /// string and how a class overrides the whole thing. There are no Symbols yet, so every object
-    /// takes the ordinary path; when they arrive this gains a step in front rather than changing.
+    /// §7.1.1 step 1.a looks for `@@toPrimitive` **first**, and it is the only step that can
+    /// answer with something neither `valueOf` nor `toString` would: the method is handed the hint
+    /// as a string and decides for itself. §21.4.4.45's is why `date + 1` concatenates where
+    /// `date - 1` subtracts, and a class's own is how the whole ordinary walk is overridden.
     #[allow(clippy::wrong_self_convention)] // a conversion runs code, so it needs the machine
     pub(crate) fn to_primitive(
+        &mut self,
+        value: Value,
+        hint: Hint,
+        heap: &mut Heap,
+    ) -> Completion<Value> {
+        if !matches!(value, Value::Object(_)) {
+            return Ok(value);
+        }
+        if let Some(exotic) = self.exotic_to_primitive(value, heap)? {
+            // Steps 1.b.i to 1.b.iii — the hint reaches the method as a **string**, which is the
+            // only place in the language the three preferences are named rather than implied.
+            let named = crate::builtins::text(heap, hint.spelling());
+            let answer = self.call_value(exotic, value, &[named], heap)?;
+            // Step 1.b.vi — an Object is **not** an answer here, and unlike §7.1.1.1's walk there
+            // is nothing else to try: the object said how it wished to be converted and did not
+            // convert. A fallback to `valueOf` would be a second chance the clause does not give.
+            if matches!(answer, Value::Object(_)) {
+                return Err(Abrupt::type_error(
+                    "Symbol.toPrimitive did not answer with a primitive value",
+                ));
+            }
+            return Ok(answer);
+        }
+        self.ordinary_to_primitive(value, hint, heap)
+    }
+
+    /// §7.1.1.1 `OrdinaryToPrimitive(O, hint)` — the two-method walk, without step 1's lookup.
+    ///
+    /// Apart from [`Vm::to_primitive`] because §21.4.4.45 needs exactly this and not the whole of
+    /// §7.1.1: `Date.prototype[@@toPrimitive]` finishes by running the ordinary walk, and going
+    /// back through the outer operation would find *itself* through the lookup and recur until the
+    /// call stack ran out. The clause names the two operations separately for that reason, and
+    /// they are two functions here for the same one.
+    #[allow(clippy::wrong_self_convention)] // a conversion runs code, so it needs the machine
+    pub(crate) fn ordinary_to_primitive(
         &mut self,
         value: Value,
         hint: Hint,
@@ -88,11 +124,15 @@ impl Vm {
         let Value::Object(object) = value else {
             return Ok(value);
         };
-        // §7.1.1.1 — `valueOf` first for a Number hint, `toString` first for a String one. The
-        // order is the whole of what the hint does: it is why `({}) + ""` is `"[object Object]"`
-        // and why a Date in the same position is its own text.
+        // `valueOf` first for a Number hint, `toString` first for a String one. The order is the
+        // whole of what the hint does: it is why `({}) + ""` is `"[object Object]"` and why a Date
+        // in the same position is its own text.
+        //
+        // §7.1.1 step 1.c — an absent preference becomes **number** before this is reached, which
+        // is what makes `Hint::Default` indistinguishable from `Hint::Number` for every object
+        // that has no `@@toPrimitive`. That is most of them, and it is why this is one arm.
         let order: [&str; 2] = match hint {
-            Hint::Number => ["valueOf", "toString"],
+            Hint::Number | Hint::Default => ["valueOf", "toString"],
             Hint::String => ["toString", "valueOf"],
         };
         for name in order {
@@ -265,6 +305,29 @@ impl Vm {
     ///
     /// §7.1.1.1 step 3.b.i asks `IsCallable` and *skips* what is not, rather than throwing — so an
     /// object whose `valueOf` is a number still converts through `toString`.
+    /// §7.1.1 step 1.a — `GetMethod(input, @@toPrimitive)`.
+    ///
+    /// `GetMethod` and not `Get`: `undefined` and `null` both mean "there is none" and everything
+    /// else that is not callable is a **TypeError** rather than something to walk past. So
+    /// `Date.prototype[Symbol.toPrimitive] = 1` breaks every coercion of every Date, which is what
+    /// the clause says and is worth being able to see happen.
+    fn exotic_to_primitive(&mut self, value: Value, heap: &mut Heap) -> Completion<Option<Value>> {
+        let Some(symbol) = self
+            .realm
+            .well_known(crate::builtins::well_known_at("toPrimitive"))
+        else {
+            return Ok(None);
+        };
+        let found = self.get_property_key(value, PropertyKey::from_symbol(symbol), heap)?;
+        if matches!(found, Value::Undefined | Value::Null) {
+            return Ok(None);
+        }
+        if !heap.is_callable(found) {
+            return Err(Abrupt::type_error("Symbol.toPrimitive is not a function"));
+        }
+        Ok(Some(found))
+    }
+
     fn method(
         &mut self,
         object: ObjectId,
@@ -560,12 +623,22 @@ impl Vm {
                                 | Value::Symbol(_)
                         )
                 };
+                // §7.2.15 steps 10 and 11 — `ToPrimitive(y)` with **no** preferred type, because
+                // either kind of primitive is something a loose comparison can go on to use.
                 match (convert(left, right), convert(right, left)) {
-                    (true, _) => (self.to_primitive(left, Hint::Number, heap)?, right),
-                    (_, true) => (left, self.to_primitive(right, Hint::Number, heap)?),
+                    (true, _) => (self.to_primitive(left, Hint::Default, heap)?, right),
+                    (_, true) => (left, self.to_primitive(right, Hint::Default, heap)?),
                     _ => (left, right),
                 }
             }
+            // §13.15.3 step 1.a — `+` is the one arithmetic operator that asks for a primitive
+            // without saying which, because a String is an answer it can use: it decides between
+            // concatenation and addition *after* seeing what it got. Every other operator here
+            // goes through `ToNumeric`, which is §7.1.1 with the number preference.
+            Op::Add => (
+                self.to_primitive(left, Hint::Default, heap)?,
+                self.to_primitive(right, Hint::Default, heap)?,
+            ),
             _ => (
                 self.to_primitive(left, Hint::Number, heap)?,
                 self.to_primitive(right, Hint::Number, heap)?,

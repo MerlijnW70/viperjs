@@ -407,6 +407,35 @@ pub enum Hint {
     Number,
     /// Prefer a String — what `ToString` and `ToPropertyKey` ask for.
     String,
+    /// **No preference** — §7.1.1's absent `preferredType`, which is not the same as `Number`.
+    ///
+    /// `+` and `==` are the two operators that ask for a primitive without saying which, because
+    /// either kind is an answer they can use. §7.1.1.1 then behaves exactly as for `Number` —
+    /// step 1.c sets the missing preference to number before `OrdinaryToPrimitive` is reached — so
+    /// for an object that has only `valueOf` and `toString` the two are indistinguishable.
+    ///
+    /// What distinguishes them is the *only* thing that can: an `@@toPrimitive` method, which is
+    /// handed the hint as a string and may do what it likes with it. §21.4.4.45's is why
+    /// `date + 1` concatenates and `date - 1` subtracts — it reads `"default"` as `"string"` — and
+    /// collapsing this into `Number` at the call site makes that unwritable rather than merely
+    /// unwritten.
+    Default,
+}
+
+impl Hint {
+    /// What §7.1.1 step 1.b hands an `@@toPrimitive` method, as the String it is.
+    ///
+    /// The one place the three preferences are *named*. Everywhere else a hint decides an order
+    /// and is never seen, which is why `Default` and `Number` are the same thing to every object
+    /// without such a method and different things to every object with one.
+    #[must_use]
+    pub const fn spelling(self) -> &'static str {
+        match self {
+            Self::Number => "number",
+            Self::String => "string",
+            Self::Default => "default",
+        }
+    }
 }
 
 /// Which of §20.5.5's error types an abrupt completion names.
