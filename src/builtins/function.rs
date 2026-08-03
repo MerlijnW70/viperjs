@@ -359,6 +359,15 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `[] instanceof Function.prototype` reached that `false` and answered instead of running
     // step 4, which is where reading a `prototype` of `""` is the TypeError test262 asks for.
     heap.make_callable(prototype, returns_undefined, false);
+    // …and being a function object, it has §10.3.3's two own properties like any other: a `length`
+    // of +0 and a `name` of the **empty string**. Both are what §20.2.3 writes down rather than a
+    // consequence of anything, which is why they are stated here and not derived.
+    //
+    // What they are for is the lookup that lands here after a delete. `length` and `name` are
+    // configurable on every built-in, so `delete decodeURI.length` succeeds — and what
+    // `decodeURI.length` then answers is whatever the prototype chain has, which is this. Without
+    // them it answered `undefined`, and the difference is only ever visible one step up the chain.
+    crate::builtins::define_function_metadata(heap, prototype, "", 0);
     define_method(heap, realm, prototype, "toString", 0, to_string);
     define_method(heap, realm, prototype, "apply", 2, apply);
     define_method(heap, realm, prototype, "call", 1, call);

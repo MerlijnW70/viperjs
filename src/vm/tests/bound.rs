@@ -481,6 +481,26 @@ fn function_prototype_is_itself_a_function_that_answers_undefined() {
         run("Function.prototype.hasOwnProperty('prototype')"),
         "false"
     );
+    // …and being one, it carries §10.3.3's two own properties like any other function: a `length`
+    // of +0 and a `name` of the **empty** string, both stated by §20.2.3 rather than derived.
+    assert_eq!(
+        run("Function.prototype.hasOwnProperty('length') + ':' + Function.prototype.length"),
+        "true:0"
+    );
+    assert_eq!(
+        run("Function.prototype.hasOwnProperty('name') + ':[' + Function.prototype.name + ']'"),
+        "true:[]"
+    );
+    // What having them is *for*, and the only thing that can tell them from their absence: both
+    // are configurable on every built-in, so a `delete` succeeds and the read that follows walks
+    // one step up the chain and lands here. Without them it answered `undefined` — which no
+    // property of `Function.prototype` itself can distinguish.
+    assert_eq!(run("delete parseInt.length; String(parseInt.length)"), "0");
+    assert_eq!(run("delete parseInt.name; '[' + parseInt.name + ']'"), "[]");
+    assert_eq!(
+        run("delete Function.prototype.length; String(Function.prototype.length)"),
+        "undefined"
+    );
     // The row that made this necessary: callable, so the walk is reached, so the `prototype` it
     // was given is read and refused.
     assert_eq!(
