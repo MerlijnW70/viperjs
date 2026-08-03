@@ -1415,7 +1415,11 @@ impl Compiler<'_> {
             match self.at_global_scope() {
                 true => {
                     let index = self.name(&name.name)?;
-                    self.chunk.emit(Instruction::DeclareGlobal(index));
+                    let deletable = self.deletable;
+                    self.chunk.emit(Instruction::DeclareGlobal {
+                        name: index,
+                        deletable,
+                    });
                     self.make_function(
                         function,
                         // §10.2.9 — a declaration is named by its own binding.

@@ -108,14 +108,21 @@ impl Vm {
 
     /// §9.1.1.4.17 `CreateGlobalVarBinding`, for a Script.
     ///
-    /// Writable and enumerable like an ordinary property, and **not configurable** — which is
-    /// what makes `var x` at the top level undeletable where `globalThis.x = 1` is not. A name
-    /// that is already there keeps its value: `var x` after `x = 1` does not put `undefined`
-    /// back, and that is what hoisting means for a global.
+    /// Writable and enumerable like an ordinary property, and configurable exactly when the
+    /// clause's `D` says. §16.1.7 passes `false` for a Script — which is what makes `var x` at the
+    /// top level undeletable where `globalThis.x = 1` is not — and §19.2.1.1 passes `true` for an
+    /// `eval`, so that a string evaluated once cannot fix a name on the global object for good. A
+    /// name that is already there keeps its value *and its attributes*: `var x` after `x = 1` does
+    /// not put `undefined` back, and that is what hoisting means for a global.
     ///
     /// Asks nothing about whether it *may*: [`Vm::can_declare_global_var`] has already been asked,
     /// for every name in the script, before this ran for any of them.
-    pub(super) fn declare_global(&self, key: PropertyKey, heap: &mut Heap) {
+    pub(super) fn declare_global(
+        &self,
+        key: PropertyKey,
+        deletable: crate::compile::Deletable,
+        heap: &mut Heap,
+    ) {
         let global = self.realm.global();
         if heap
             .object(global)
@@ -127,7 +134,7 @@ impl Vm {
             value: Some(Value::Undefined),
             writable: Some(true),
             enumerable: Some(true),
-            configurable: Some(false),
+            configurable: Some(deletable == crate::compile::Deletable::Yes),
             ..PropertyDescriptor::EMPTY
         };
         // The global object is extensible and this property is not there, so nothing can refuse

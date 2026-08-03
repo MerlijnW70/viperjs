@@ -542,3 +542,69 @@ fn a_direct_eval_at_the_top_of_a_nested_script_is_not_inside_the_function_that_s
         "undefined"
     );
 }
+
+#[test]
+fn an_evals_global_bindings_may_be_deleted_and_a_scripts_may_not() {
+    // §9.1.1.4.17 `CreateGlobalVarBinding(N, D)` has one parameter and its two callers disagree
+    // about it: §16.1.7 step 18 passes `false` for a Script and §19.2.1.1 step 8 passes `true` for
+    // an `eval`. So the same three characters make a permanent property in one place and a
+    // removable one in the other, and `delete` is where a program sees it.
+    assert_eq!(
+        run("eval('var x = 1'); Object.getOwnPropertyDescriptor(globalThis, 'x').configurable"),
+        "true"
+    );
+    assert_eq!(
+        run("var y = 1; Object.getOwnPropertyDescriptor(globalThis, 'y').configurable"),
+        "false"
+    );
+    // …and the other two attributes are the same on both sides, which is what says this is one
+    // parameter of one operation rather than two ways of making a property.
+    assert_eq!(
+        run(
+            "eval('var x = 1'); var d = Object.getOwnPropertyDescriptor(globalThis, 'x'); \
+             [d.writable, d.enumerable].join(',')"
+        ),
+        "true,true"
+    );
+    // The deletion itself, which is the point of the attribute.
+    assert_eq!(run("eval('var x = 1'); delete x; typeof x"), "undefined");
+    assert_eq!(run("eval('var x = 1'); delete x"), "true");
+    assert_eq!(run("var y = 1; delete y; typeof y"), "number");
+    assert_eq!(run("var y = 1; delete y"), "false");
+    // §19.2.1.1 does not ask which kind of call it was, so an indirect `eval` answers alike. Both
+    // halves are asserted because they reach the compiler by different entry points.
+    assert_eq!(
+        run(
+            "(0, eval)('var x = 1'); Object.getOwnPropertyDescriptor(globalThis, 'x').configurable"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("(0, eval)('var x = 1'); delete x; typeof x"),
+        "undefined"
+    );
+    // A function declaration goes through the same operation here, and so does §B.3.3's binding
+    // for a block-level one — an `eval` may not fix either on the global object for good.
+    assert_eq!(
+        run(
+            "eval('function f() {}'); Object.getOwnPropertyDescriptor(globalThis, 'f').configurable"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("eval('{ function f() {} }'); \
+             Object.getOwnPropertyDescriptor(globalThis, 'f').configurable"),
+        "true"
+    );
+    assert_eq!(
+        run("{ function g() {} } Object.getOwnPropertyDescriptor(globalThis, 'g').configurable"),
+        "false"
+    );
+    // A name the global object already has keeps the attributes it had, whichever side declares
+    // it — `CreateGlobalVarBinding` leaves an existing property alone, so `D` never reaches it.
+    assert_eq!(
+        run("var y = 1; eval('var y = 2'); \
+             Object.getOwnPropertyDescriptor(globalThis, 'y').configurable + ',' + y"),
+        "false,2"
+    );
+}

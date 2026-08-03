@@ -50,8 +50,8 @@ mod pattern;
 mod statement;
 
 pub use self::chunk::{
-    Chunk, ExportEntry, ExportSource, ImportEntry, Instruction, Scope, ShortCircuit, SpreadCall,
-    Template,
+    Chunk, Deletable, ExportEntry, ExportSource, ImportEntry, Instruction, Scope, ShortCircuit,
+    SpreadCall, Template,
 };
 
 use self::chunk::Unpatched;
@@ -121,10 +121,50 @@ pub fn compile_expression(expression: &Expr, heap: &mut Heap) -> Result<Chunk, C
 /// Every `var` in the script is given a slot before anything runs and starts as `undefined`, which
 /// is what hoisting *is*: `x` is readable before its declaration and holds nothing.
 pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, CompileError> {
+    compile_script_bindings(script, heap, Deletable::No)
+}
+
+/// The same, for the Script an **indirect** `eval` evaluates — §19.2.1.1.
+///
+/// One difference from [`compile_script`] and it is not the scope chain: an indirect `eval` has the
+/// global one, exactly as a Script does, which is why the two share everything below. What differs
+/// is §9.1.1.4.17's `D`. §19.2.1.1 step 8 creates the global bindings **deletable**, so
+/// `eval("var x = 1"); delete x` is `true` and leaves nothing behind, where the same two statements
+/// written directly in a script cannot delete anything.
+///
+/// ```
+/// use praxis::compile::{Deletable, Instruction, compile_eval, compile_script};
+/// use praxis::heap::Heap;
+/// use praxis::parser::parse_script;
+///
+/// let mut heap = Heap::default();
+/// let script = parse_script("var x = 1;").expect("this parses");
+/// let deletable = |chunk: &praxis::compile::Chunk| {
+///     chunk.code().iter().find_map(|instruction| match instruction {
+///         Instruction::DeclareGlobal { deletable, .. } => Some(*deletable),
+///         _ => None,
+///     })
+/// };
+/// let evaluated = compile_eval(&script, &mut heap).expect("this compiles");
+/// let plain = compile_script(&script, &mut heap).expect("this compiles too");
+/// assert_eq!(deletable(&evaluated), Some(Deletable::Yes));
+/// assert_eq!(deletable(&plain), Some(Deletable::No), "a script's `var` is permanent");
+/// ```
+pub fn compile_eval(script: &Script, heap: &mut Heap) -> Result<Chunk, CompileError> {
+    compile_script_bindings(script, heap, Deletable::Yes)
+}
+
+/// What both of those do, with `deletable` the one thing they disagree about.
+fn compile_script_bindings(
+    script: &Script,
+    heap: &mut Heap,
+    deletable: Deletable,
+) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(heap);
     // §11.2.1 — a Script is strict only if its own Directive Prologue says so, and everything nested
     // inherits that. A Module always is, which is M7's to record.
     compiler.chunk.strict = script.is_strict;
+    compiler.deletable = deletable;
     // §16.1.7 step 8's `GlobalDeclarationInstantiation`. A script's `var`s belong to the *global
     // object*, not to a scope of its own — which is why `var x = 1` at the top level makes
     // `globalThis.x` and a `let` never will. See `Compiler::instantiate_globals` for the three
@@ -727,6 +767,10 @@ pub fn compile_direct_eval(
     // §19.2.1.1 step 14 — a strict eval's `var`s are its own, so the eval is not "the script" for
     // the purpose that flag decides: `Bind::Var` puts them in slots rather than on the global.
     compiler.global_vars = vars == EvalVars::Global;
+    // §19.2.1.1 step 8 — an `eval`'s global bindings are **deletable**, where §16.1.7 makes a
+    // Script's permanent. That is the same clause for a direct and an indirect call, so
+    // [`compile_eval`] sets it too.
+    compiler.deletable = Deletable::Yes;
     match vars {
         // §19.2.1.1's `EvalDeclarationInstantiation` against a global variable environment, which
         // asks §16.1.7's questions in §16.1.7's order — the same three passes, from the same
@@ -925,6 +969,14 @@ struct Compiler<'a> {
     /// something neither of them can see: the caller's variable environment, and whether the
     /// evaluated code is strict. See [`EvalVars`].
     global_vars: bool,
+    /// §9.1.1.4.17's `D` for every global binding this compilation creates.
+    ///
+    /// A second fact about the same variable scope [`Compiler::global_vars`] names, and not the
+    /// same one: *where* a `var` goes is decided by §16.1.7's split, and *whether it can be
+    /// deleted again* is decided by which operation asked. A Script's are permanent and an
+    /// `eval`'s are not, direct and indirect alike — §19.2.1.1 passes `true` without asking which
+    /// kind of call it was.
+    deletable: Deletable,
     /// How many `with` scopes are open at the point being compiled — §14.11.
     ///
     /// Not a depth to add to anything: a `with` opens a real compiler level like a block does, so
@@ -1135,6 +1187,7 @@ impl<'a> Compiler<'a> {
             derived_fields: None,
             is_script: true,
             global_vars: true,
+            deletable: Deletable::No,
             seeded_scopes: 0,
             with_depth: 0,
         }
@@ -1204,7 +1257,11 @@ impl<'a> Compiler<'a> {
         }
         for name in var_declared_names(body) {
             let index = self.name(name.name)?;
-            self.chunk.emit(Instruction::DeclareGlobal(index));
+            let deletable = self.deletable;
+            self.chunk.emit(Instruction::DeclareGlobal {
+                name: index,
+                deletable,
+            });
         }
         Ok(())
     }
@@ -1271,7 +1328,11 @@ impl<'a> Compiler<'a> {
                 // is, so a name the global already has keeps its attributes and its value.
                 true => {
                     let index = self.name(function.name)?;
-                    self.chunk.emit(Instruction::DeclareGlobal(index));
+                    let deletable = self.deletable;
+                    self.chunk.emit(Instruction::DeclareGlobal {
+                        name: index,
+                        deletable,
+                    });
                     BlockFunctionTarget::Global(index)
                 }
                 // A slot, which a frame starts holding `undefined` — so step 2's

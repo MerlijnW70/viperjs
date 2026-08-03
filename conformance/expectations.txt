@@ -404,24 +404,8 @@ annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-fn-update.j
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-var-no-init.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-var-update.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-no-skip-param.js :: it threw an object with no name: binding is not initialized to `undefined` Expected SameValue(«undefined», «123») to be true
-annexB/language/eval-code/direct/global-block-decl-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-switch-case-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/direct/global-switch-dflt-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
 annexB/language/eval-code/direct/script-decl-lex-no-collision.js :: it threw TypeError: what was called is not a function
 annexB/language/eval-code/direct/script-decl-lex-no-collision.js (strict) :: it threw TypeError: what was called is not a function
-annexB/language/eval-code/indirect/global-block-decl-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-switch-case-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
-annexB/language/eval-code/indirect/global-switch-dflt-eval-global-init.js :: it threw an object with no name: f descriptor should be configurable
 annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/assignment/dstr/object-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -16108,14 +16092,12 @@ language/eval-code/direct/global-env-rec-eval.js :: it threw SyntaxError: a slop
 language/eval-code/direct/global-env-rec-with.js :: it threw an object with no name: direct eval
 language/eval-code/direct/strictness-override.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/eval-code/direct/strictness-override.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/eval-code/direct/var-env-func-init-global-new.js :: it threw an object with no name: f descriptor should be configurable
 language/eval-code/direct/var-env-func-init-global-update-configurable.js :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
 language/eval-code/direct/var-env-func-init-local-new-delete.js :: it threw SyntaxError: a sloppy function declaration inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-func-init-local-new.js :: it threw SyntaxError: a sloppy function declaration inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-func-init-local-update.js :: it threw SyntaxError: a sloppy function declaration inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-func-non-strict.js :: it threw SyntaxError: a sloppy function declaration inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-global-lex-non-strict.js :: expected a SyntaxError at runtime time, and nothing was thrown
-language/eval-code/direct/var-env-var-init-global-new.js :: it threw an object with no name: x descriptor should be configurable
 language/eval-code/direct/var-env-var-init-local-exstng.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-var-init-local-new-delete.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-var-init-local-new.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -16127,16 +16109,12 @@ language/eval-code/indirect/lex-env-heritage.js (strict) :: it threw ReferenceEr
 language/eval-code/indirect/realm.js :: it threw TypeError: what was called is not a function
 language/eval-code/indirect/realm.js (strict) :: it threw TypeError: what was called is not a function
 language/eval-code/indirect/this-value-func.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object Object]») to be true
-language/eval-code/indirect/var-env-func-init-global-new.js :: it threw an object with no name: f descriptor should be configurable
-language/eval-code/indirect/var-env-func-init-global-new.js (strict) :: it threw an object with no name: f descriptor should be configurable
 language/eval-code/indirect/var-env-func-init-global-update-configurable.js :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
 language/eval-code/indirect/var-env-func-init-global-update-configurable.js (strict) :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
 language/eval-code/indirect/var-env-func-strict.js :: it threw an object with no name: Expected SameValue(«"function"», «"undefined"») to be true
 language/eval-code/indirect/var-env-func-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"function"», «"undefined"») to be true
 language/eval-code/indirect/var-env-global-lex-non-strict.js :: it threw an object with no name: Expected SameValue(«undefined», «undefined») to be false
 language/eval-code/indirect/var-env-global-lex-non-strict.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «undefined») to be false
-language/eval-code/indirect/var-env-var-init-global-new.js :: it threw an object with no name: x descriptor should be configurable
-language/eval-code/indirect/var-env-var-init-global-new.js (strict) :: it threw an object with no name: x descriptor should be configurable
 language/eval-code/indirect/var-env-var-strict.js :: it threw an object with no name: Strict indirect eval leaked a top level declaration
 language/eval-code/indirect/var-env-var-strict.js (strict) :: it threw an object with no name: Strict indirect eval leaked a top level declaration
 language/expressions/addition/S11.6.1_A2.2_T2.js :: it threw an object with no name: #1: var date = new Date(0); date + date === date.toString() + date.toString(). Actual: 0

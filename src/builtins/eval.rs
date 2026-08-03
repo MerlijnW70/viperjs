@@ -55,7 +55,9 @@ fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
         Ok(script) => script,
         Err(error) => return Err(syntax_error(vm, heap, &error.kind.to_string())),
     };
-    let chunk = match crate::compile::compile_script(&script, heap) {
+    // §19.2.1.1 rather than §16.1.7 — the scope chain is the same and the bindings' `D` is not:
+    // an `eval`'s globals are deletable, direct and indirect alike.
+    let chunk = match crate::compile::compile_eval(&script, heap) {
         Ok(chunk) => chunk,
         Err(error) => return Err(syntax_error(vm, heap, &error.message())),
     };

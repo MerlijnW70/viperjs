@@ -324,9 +324,9 @@ impl Vm {
                     let id = heap.new_string(answer.encode_utf16().collect());
                     self.stack.push(Value::String(id));
                 }
-                Instruction::DeclareGlobal(index) => {
-                    let key = self.global_name(running, index, heap)?;
-                    self.declare_global(key, heap);
+                Instruction::DeclareGlobal { name, deletable } => {
+                    let key = self.global_name(running, name, heap)?;
+                    self.declare_global(key, deletable, heap);
                 }
                 Instruction::CheckGlobalVar(index) | Instruction::CheckGlobalFunction(index) => {
                     let key = self.global_name(running, index, heap)?;

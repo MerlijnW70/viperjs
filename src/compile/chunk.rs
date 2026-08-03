@@ -257,6 +257,24 @@ impl Chunk {
     }
 }
 
+/// Whether a binding created on the global object may be deleted again — §9.1.1.4.17's `D`.
+///
+/// One parameter, and the two callers of that operation disagree about it. §16.1.7 step 18 passes
+/// `false` for a Script, which is what makes `var x` at the top level permanent and
+/// `globalThis.x = 1` not; §19.2.1.1 step 8 passes `true` for an `eval`, because code that ran once
+/// should not be able to fix a name on the global object for the life of the realm.
+///
+/// A named pair rather than a `bool` on the instruction: the two spellings read the same at a call
+/// site, and getting it backwards makes `delete` answer the opposite of what it should — which no
+/// program crashes on and every property-descriptor test sees.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Deletable {
+    /// §16.1.7 — a Script's, which stands for the life of the realm.
+    No,
+    /// §19.2.1.1 — an `eval`'s, which `delete` may take away again.
+    Yes,
+}
+
 /// One instruction.
 ///
 /// Deliberately few. An operator is one instruction carrying which operator it is, rather than one
@@ -419,11 +437,16 @@ pub enum Instruction {
     TypeofGlobal(u32),
     /// Give the global object this name as a `var` binding, if it has not got one.
     ///
-    /// §9.1.1.4.17 `CreateGlobalVarBinding`: writable and enumerable like an ordinary property,
-    /// and **not** configurable — a script's `var` cannot be deleted, which is exactly what makes
-    /// `var x` different from `globalThis.x = 1`. An existing property is left alone: `var x`
+    /// §9.1.1.4.17 `CreateGlobalVarBinding(N, D)`: writable and enumerable like an ordinary
+    /// property, and configurable exactly when `D` says — see [`Deletable`], which is the whole of
+    /// what a Script and an `eval` disagree about here. An existing property is left alone: `var x`
     /// after `x` already holds something does not put `undefined` back, and that is hoisting.
-    DeclareGlobal(u32),
+    DeclareGlobal {
+        /// The constant index of the name.
+        name: u32,
+        /// The clause's `D`.
+        deletable: Deletable,
+    },
     /// Refuse now if this name could not become a global `var` — §9.1.1.4.15 `CanDeclareGlobalVar`.
     ///
     /// §16.1.7 asks about **every** declaration before it creates **any**, which is the whole
@@ -1289,7 +1312,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::LoadGlobal(_)
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)
-        | Instruction::DeclareGlobal(_)
+        | Instruction::DeclareGlobal { .. }
         | Instruction::CheckGlobalVar(_)
         | Instruction::CheckGlobalFunction(_)
         | Instruction::DeleteGlobal(_)
