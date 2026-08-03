@@ -101,17 +101,21 @@ impl Vm {
         if !self.has_property_key(Value::Object(object), key, heap)? {
             return Ok(false);
         }
-        let Some(symbol) = self
+        // Step 5 — `Get(bindingObject, @@unscopables)`. A realm always has the well-known symbols,
+        // so the `None` is not a case a program can produce; it is folded into "nothing blocks
+        // anything" rather than given a `return` of its own, because a branch no input can take is
+        // a branch no test can hold.
+        let unscopables = match self
             .realm
             .well_known(crate::builtins::well_known_at("unscopables"))
-        else {
-            return Ok(true);
+        {
+            Some(symbol) => self.get_property_key(
+                Value::Object(object),
+                PropertyKey::from_symbol(symbol),
+                heap,
+            )?,
+            None => Value::Undefined,
         };
-        let unscopables = self.get_property_key(
-            Value::Object(object),
-            PropertyKey::from_symbol(symbol),
-            heap,
-        )?;
         // Step 6 — only an *object* is consulted. A `@@unscopables` of `true` blocks nothing,
         // which is the difference between "there is a list" and "the list says yes".
         let Value::Object(list) = unscopables else {

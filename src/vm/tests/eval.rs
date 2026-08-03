@@ -520,3 +520,25 @@ fn a_direct_eval_may_say_what_the_execution_around_it_may_say() {
         "SyntaxError"
     );
 }
+
+#[test]
+fn a_direct_eval_at_the_top_of_a_nested_script_is_not_inside_the_function_that_started_it() {
+    // §19.2.1.1 — an *indirect* eval evaluates Script code in the global environment, so a direct
+    // eval written at the top of it is not in a function however deep the call that reached it. The
+    // enclosing function's frame is below the nested execution's floor, and that is exactly what
+    // the floor is for: reading it as "the running frame" would let `new.target` through where
+    // §13.3.12 makes it a Syntax Error.
+    assert_eq!(
+        run("function outer() { \
+               return (0, eval)(\"try { eval('new.target'); 'allowed' } \
+                                 catch (e) { e.constructor.name }\"); \
+             } outer()"),
+        "SyntaxError"
+    );
+    // …and the same eval written directly in `outer` *is* in a function, which is what makes the
+    // row above about the floor rather than about `new.target` being refused everywhere.
+    assert_eq!(
+        run("function outer() { return typeof eval('new.target'); } outer()"),
+        "undefined"
+    );
+}

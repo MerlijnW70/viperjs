@@ -691,6 +691,12 @@ impl Vm {
             if let Some(answer) = self.proxy_has(walk, key, heap)? {
                 return Ok(answer);
             }
+            // §10.4.6.7 — an export is present whether or not its module has reached the line
+            // that gives it a value, so this asks the export list rather than for a descriptor:
+            // asking for one in the dead zone throws, and `"x" in ns` does not.
+            if heap.namespace_has(walk, key) {
+                return Ok(true);
+            }
             if heap.own_property(walk, key).is_some() {
                 return Ok(true);
             }

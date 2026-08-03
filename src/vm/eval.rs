@@ -133,11 +133,17 @@ impl Vm {
                 .and_then(|frame| frame.function)
                 .and_then(|function| heap.object(function))
                 .and_then(crate::heap::Object::call)
-                .is_some_and(|callable| match callable {
-                    crate::heap::Callable::Bytecode(body) => body.derived_this().is_some(),
-                    // A built-in, a bound function or a resumption is not a constructor whose
-                    // `super()` could reach anything.
-                    _ => false,
+                // A `matches!` with a guard rather than a `match` with a catch-all: a frame is
+                // pushed only for a compiled body — a native returns before one exists, and a bound
+                // function's frame belongs to its target — so an arm for the other kinds is one no
+                // input can reach, and an unreachable arm is a decision no test can hold. What is
+                // left is the question that does decide something: whether that body is a derived
+                // constructor.
+                .is_some_and(|callable| {
+                    matches!(
+                        callable,
+                        crate::heap::Callable::Bytecode(body) if body.derived_this().is_some()
+                    )
                 }),
         }
     }

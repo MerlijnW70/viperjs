@@ -225,15 +225,12 @@ impl Heap {
     /// The attributes are §10.4.6.5 step 5's, and `writable: true` beside a `[[Set]]` that always
     /// refuses is not a contradiction — see this module's header.
     ///
-    /// A binding in its dead zone is reported **present, holding `undefined`**, where §10.4.6.5
-    /// step 4 would throw — because this is the descriptor path and a descriptor is not a
-    /// completion. Present and not absent, so that the three questions about a name agree: it is
-    /// listed by `[[OwnPropertyKeys]]`, `in` answers true for it, and a descriptor exists. What it
-    /// costs is exactly one wrong answer, and a narrow one: inside a cycle, before the exporting
-    /// module's `let` has run, `Object.getOwnPropertyDescriptor(ns, "x").value` is `undefined`
-    /// instead of a ReferenceError. A *read* of the same name — `ns.x`, which is what a program
-    /// writes and what the tests exercise — goes through [`Heap::namespace_export`] in the
-    /// interpreter, which can throw and does.
+    /// A binding in its dead zone answers `None`, because every path that wants a *descriptor*
+    /// throws before it gets here — §10.4.6.5 step 4 builds one out of `[[Get]]`, and the
+    /// interpreter raises the ReferenceError that clause implies. What must not fall through with
+    /// it is `[[HasProperty]]`: §10.4.6.7 answers **true** for an export whether or not its module
+    /// has reached the line that gives it a value, and that question is [`Heap::namespace_has`]
+    /// rather than a descriptor with attributes nothing can read.
     pub(super) fn namespace_property(
         &self,
         object: ObjectId,
@@ -248,15 +245,18 @@ impl Heap {
                 enumerable: true,
                 configurable: false,
             }),
-            Export::Uninitialised => Some(Property {
-                kind: PropertyKind::Data {
-                    value: Value::Undefined,
-                    writable: true,
-                },
-                enumerable: true,
-                configurable: false,
-            }),
+            Export::Uninitialised => None,
         }
+    }
+
+    /// §10.4.6.7 `[[HasProperty]]` — whether this name is one of the module's exports.
+    ///
+    /// Apart from the descriptor above because it is a different question with a different answer:
+    /// a name whose module has not yet reached the line that initialises it **is** an export, and
+    /// `"x" in ns` says so. Asking for its descriptor throws instead, which is why the two cannot
+    /// share a path.
+    pub(crate) fn namespace_has(&self, object: ObjectId, key: PropertyKey) -> bool {
+        self.namespace_export(object, key).is_some()
     }
 
     /// §10.4.6.10 `[[OwnPropertyKeys]]` — the sorted export names, then what the object itself has.

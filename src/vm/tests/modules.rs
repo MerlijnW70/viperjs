@@ -425,6 +425,23 @@ fn a_namespaces_names_are_sorted_and_a_symbol_is_not_one_of_them() {
         // which alphabetical order would not do and code-unit order does.
         "Banana,apple,default,zebra|[object Module]|truefalse"
     );
+    // §10.4.6.12 step 8 — `@@toStringTag` is the one own property that is not an export, and its
+    // three attributes are all false. `configurable: false` is what makes it unlike every other
+    // `@@toStringTag` in the language: a namespace's cannot be deleted or redefined.
+    assert_eq!(
+        run_graph(
+            &[
+                ("dep", "export var a = 1;"),
+                (
+                    "main",
+                    "import * as ns from 'dep';                      var d = Object.getOwnPropertyDescriptor(ns, Symbol.toStringTag);                      [d.value, d.writable, d.enumerable, d.configurable].join(',') + '|' +                      Object.keys(ns).join(',')"
+                ),
+            ],
+            "main"
+        ),
+        // …and not enumerable, so it is not one of the keys.
+        "Module,false,false,false|a"
+    );
     // §10.4.6.5 — an export is a **data** property, not an accessor, and `writable: true` beside a
     // `[[Set]]` that always refuses.
     assert_eq!(
@@ -521,6 +538,19 @@ fn reading_a_namespaces_export_before_its_module_ran_is_a_reference_error() {
             "self"
         ),
         "keys:ReferenceError descriptor:ReferenceError has:ReferenceError"
+    );
+    // §10.4.6.7 — `in` answers **true** for an export whose module has not yet reached the line
+    // that gives it a value. Presence and readiness are different questions, and only the second
+    // throws: a descriptor for the same name is a ReferenceError two rows above.
+    assert_eq!(
+        run_graph(
+            &[(
+                "self",
+                "import * as me from 'self';                  var out = ('late' in me) + ':' + ('nope' in me);                  export let late = 1;                  out"
+            )],
+            "self"
+        ),
+        "true:false"
     );
     // …and a name the module does not export at all is `undefined` rather than an error, which is
     // the difference between a binding that is not ready and one that does not exist.
@@ -1022,5 +1052,68 @@ fn a_dynamic_import_rejects_rather_than_throwing() {
     assert!(
         describe(outcome, &mut heap).contains("no module loader"),
         "a machine with no loader rejects and says so"
+    );
+}
+
+#[test]
+fn resolving_an_export_remembers_the_name_it_asked_as_well_as_the_module() {
+    // §16.2.1.6.3 step 1's `resolveSet` holds **pairs**. A module already asked for *this* name is
+    // a cycle and answers nothing; the same module asked for a *different* name is an ordinary step
+    // and must carry on. Remembering only the module stops a re-export a module makes of its own
+    // export, which is what this is.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "self",
+                    "var v = 5; export { v as inner }; export { inner as outer } from 'self';"
+                ),
+                ("main", "import { outer } from 'self'; outer"),
+            ],
+            "main"
+        ),
+        "5"
+    );
+}
+
+#[test]
+fn two_star_exports_that_reach_the_same_binding_by_different_names_are_not_ambiguous() {
+    // §16.2.1.6.3 step 6.c.ii — ambiguity is about the *resolution*, not about the path: two stars
+    // that land on one binding agree, however differently they got there. Both paths have to reach
+    // the last module asking for a different name, or the `resolveSet` above stops the second and
+    // there is nothing to compare.
+    assert_eq!(
+        run_graph(
+            &[
+                ("base", "var v = 5; export { v as thing, v as shared };"),
+                ("left", "export { thing as shared } from 'base';"),
+                ("right", "export * from 'base';"),
+                ("middle", "export * from 'left'; export * from 'right';"),
+                ("main", "import { shared } from 'middle'; shared"),
+            ],
+            "main"
+        ),
+        "5"
+    );
+    // The same for a resolution that is a whole **module** rather than a binding: §16.2.1.10
+    // memoises one namespace per module, so two paths to it are the same object and agree.
+    assert_eq!(
+        run_graph(
+            &[
+                ("base", "export var a = 1;"),
+                ("holder_a", "export * as inner from 'base';"),
+                ("holder_b", "export * as other from 'base';"),
+                ("left", "export { inner as shared } from 'holder_a';"),
+                ("right", "export { other as shared } from 'holder_b';"),
+                ("middle", "export * from 'left'; export * from 'right';"),
+                (
+                    "main",
+                    "import { shared } from 'middle'; import * as direct from 'base'; \
+                     (shared === direct) + ':' + shared.a"
+                ),
+            ],
+            "main"
+        ),
+        "true:1"
     );
 }

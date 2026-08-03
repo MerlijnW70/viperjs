@@ -267,3 +267,56 @@ fn a_with_is_a_syntax_error_in_strict_code_and_a_delete_inside_one_asks_where_th
         "true"
     );
 }
+
+#[test]
+fn a_write_to_a_name_inside_a_with_reaches_exactly_one_place() {
+    // §9.1.1.2.4 and §9.1.1.1.5 — the walk finds one of three things and writes to that one. What
+    // makes these rows worth having is the *second* half of each: nothing else is written, and in
+    // particular nothing falls through to the global object when the name was found.
+    //
+    // A property of the `with` object.
+    assert_eq!(
+        run("var o = { a: 1 }; with (o) { a = 2; } o.a + ':' + (typeof globalThis.a)"),
+        "2:undefined"
+    );
+    // A declarative binding, which a `with` that does not have the name walks straight past.
+    assert_eq!(
+        run("function f() { var v = 1; with ({}) { v = 2; } \
+             return v + ':' + (typeof globalThis.v); } f()"),
+        "2:undefined"
+    );
+    // …and a name nothing has is the global object's, which is what makes an undeclared assignment
+    // inside a `with` behave as it does outside one.
+    assert_eq!(run("with ({}) { fresh = 3; } globalThis.fresh"), "3");
+}
+
+#[test]
+fn a_write_a_binding_refuses_inside_a_with_is_refused_the_same_way_it_would_be_outside() {
+    // §9.1.1.1.5 step 5 — an immutable binding refuses the write, and step 5.b decides whether the
+    // refusal is audible. A `with` body is sloppy code by construction (§11.2.1 refuses one in
+    // strict code), so §15.2.5's function name is the case where the refusal is **silent**.
+    assert_eq!(
+        run("var out = 'no throw'; \
+             var kept = (function f() { with ({}) { f = 1; } return typeof f; })(); \
+             out + ':' + kept + ':' + (typeof globalThis.f)"),
+        // Silent, still a function, and — the part a `return Ok(false)` would break — **not** written
+        // to the global object instead.
+        "no throw:function:undefined"
+    );
+    // A `const` refuses audibly wherever it is written, which is the other side of step 5.b.
+    assert_eq!(
+        run("const c = 1; var caught = 'none'; \
+             with ({}) { try { c = 2; } catch (e) { caught = e.constructor.name; } } \
+             caught + ':' + c"),
+        "TypeError:1"
+    );
+    // …and a binding still in its dead zone is a ReferenceError rather than a write, which is a
+    // different refusal from either: the binding is mutable and simply not ready.
+    assert_eq!(
+        run("var caught = 'none'; \
+             { with ({}) { try { z = 1; } catch (e) { caught = e.constructor.name; } } \
+               let z = 0; } \
+             caught"),
+        "ReferenceError"
+    );
+}
