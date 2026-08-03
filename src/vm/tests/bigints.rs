@@ -365,3 +365,73 @@ fn a_data_view_reads_and_writes_sixty_four_bits_as_a_bigint() {
         "RangeError"
     );
 }
+
+#[test]
+fn number_of_a_bigint_converts_where_every_other_operation_refuses() {
+    // §21.1.1.1 step 1.a is `ToNumeric`, not `ToNumber`, and step 1.b then converts what it
+    // answered with. That one word is the only place in the language a BigInt becomes a Number
+    // without the program saying so a second time.
+    assert_eq!(run("Number(1n)"), "1");
+    assert_eq!(run("Number(-1n)"), "-1");
+    assert_eq!(run("Number(0n)"), "0");
+    assert_eq!(run("1 / Number(0n)"), "Infinity", "`+0`, not `-0`");
+    assert_eq!(run("Number(123456789n)"), "123456789");
+    // …and `new Number` is the same function, so a wrapper holds the converted Number.
+    assert_eq!(run("new Number(1n).valueOf()"), "1");
+    assert_eq!(run("typeof new Number(1n).valueOf()"), "number");
+    // §7.1.4 still refuses one everywhere else, which is what makes the line above a step of its
+    // own rather than a conversion the language performs. Every one of these is a TypeError.
+    for source in [
+        "+1n",
+        "1n * 1",
+        "1n - 1",
+        "Math.abs(1n)",
+        "Math.max(1n)",
+        "new Date(1n)",
+        "'a'.repeat(1n)",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "try {{ {source}; 'no error' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError",
+            "{source}"
+        );
+    }
+    // §21.1.1.1 step 1's `ToPrimitive` runs first, so an object that answers with a BigInt is
+    // converted exactly as the primitive is — and one whose `valueOf` throws throws.
+    assert_eq!(run("Number({valueOf: function () { return 7n }})"), "7");
+    assert_eq!(
+        run("Number(Object(3n))"),
+        "3",
+        "a BigInt wrapper is unwrapped by ToPrimitive and then converted"
+    );
+    assert_eq!(
+        run(
+            "try { Number({valueOf: function () { throw new RangeError('x') }}) } \
+             catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    // The rounding, from the language rather than from the type: the nearest Number, ties to even.
+    // A BigInt exists to keep precision a Number cannot, so this is the conversion working.
+    assert_eq!(run("Number(2n ** 53n)"), "9007199254740992");
+    assert_eq!(run("Number(2n ** 53n + 1n)"), "9007199254740992");
+    assert_eq!(run("Number(2n ** 53n + 3n)"), "9007199254740996");
+    assert_eq!(run("Number(2n ** 1024n)"), "Infinity");
+    assert_eq!(run("Number(-(2n ** 1024n))"), "-Infinity");
+    assert_eq!(
+        run("Number(BigInt(Number.MAX_SAFE_INTEGER))"),
+        "9007199254740991"
+    );
+    // A round trip is exact for every integer a Number names, which is the pair of conversions
+    // agreeing rather than either of them being checked against itself.
+    assert_eq!(run("Number(BigInt(2 ** 60)) === 2 ** 60"), "true");
+    assert_eq!(
+        run("Number(BigInt(Number.MAX_VALUE)) === Number.MAX_VALUE"),
+        "true"
+    );
+    // `Number()` with nothing at all is still `+0` and not `ToNumber(undefined)`.
+    assert_eq!(run("Number()"), "0");
+    assert_eq!(run("Number(undefined)"), "NaN");
+}

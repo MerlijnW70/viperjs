@@ -143,6 +143,38 @@ impl Vm {
         crate::builtins::bigint::this_bigint(converted, heap)
     }
 
+    /// §7.1.6 `ToNumeric` — the value's own numeric type, whichever of the two it turns out to be.
+    ///
+    /// Not [`Vm::to_numeric`], which is §10.4.5.16's: that one is told which type to produce by the
+    /// TypedArray being written into, and refuses a value of the other. This one **asks the value**,
+    /// and so is the operation an arithmetic operator starts with — `a * b` runs it on both sides
+    /// and then refuses a pair that is one of each, which is not a refusal either conversion made.
+    ///
+    /// The one caller today is §21.1.1.1's `Number(x)`, which is the only place in the language a
+    /// BigInt crosses to a Number without a second word from the program.
+    #[allow(clippy::wrong_self_convention)] // a conversion runs code, so it needs the machine
+    pub(crate) fn to_numeric_value(
+        &mut self,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<crate::heap::Numeric> {
+        // Step 1 — the **Number** hint, so an object's `valueOf` is tried before its `toString`.
+        let primitive = self.to_primitive(value, Hint::Number, heap)?;
+        // Step 2 — a BigInt is already numeric and is answered with unchanged. A *wrapper* holding
+        // one is not: `ToPrimitive` above has already unwrapped it, so what arrives here is the
+        // primitive or something that was never a BigInt at all.
+        if let Value::BigInt(id) = primitive {
+            let Some(big) = heap.bigint(id) else {
+                // A `BigIntId` naming nothing is a heap that has lost a value, not a program that
+                // did anything — and `Fault` is the signal for that, so this is the honest error.
+                return Err(Abrupt::type_error("a BigInt that the heap does not hold"));
+            };
+            return Ok(crate::heap::Numeric::BigInt(big.clone()));
+        }
+        // Step 3.
+        Ok(crate::heap::Numeric::Number(primitive.to_number(heap)?))
+    }
+
     /// §10.4.5.16 step 1 — the conversion a write to a TypedArray of this content type performs.
     ///
     /// The one place the two numeric types are chosen between by the *destination* rather than by

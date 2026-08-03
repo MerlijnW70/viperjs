@@ -421,6 +421,131 @@ impl BigInt {
         Some(shifted.with_sign(negative))
     }
 
+    /// The Number nearest this value — `𝔽(ℝ(x))`, which §21.1.1.1 is the only caller of.
+    ///
+    /// **Not** a conversion the language performs on its own. §7.1.4 `ToNumber` refuses a BigInt
+    /// outright, which is what keeps `1n + 1` a TypeError; the one operation that crosses is
+    /// `Number(x)`, and it says so in a step of its own rather than by calling `ToNumber`. So this
+    /// is deliberately not `impl From<BigInt> for f64` — a conversion that is available implicitly
+    /// is one that will be reached implicitly.
+    ///
+    /// Rounded **to nearest, ties to even**, which is what `𝔽` means for a mathematical value that
+    /// is not exactly a double. `Number(2n ** 53n + 1n)` is 9007199254740992, one less than the
+    /// integer asked for, and that is right: the answer is the nearest Number, and there is none in
+    /// between. A value past the largest finite double is `Infinity`.
+    ///
+    /// Written from the bits rather than by accumulating limbs into an `f64`. Accumulating rounds
+    /// at every step, so a value needing more than 53 bits would be rounded twice and land a unit
+    /// out — the same double-rounding argument [`BigInt::from_f64`] makes in the other direction.
+    pub fn to_f64(&self) -> f64 {
+        let bits = self.bit_length();
+        // A double keeps 53 significant bits. Anything shorter is exact and needs no rounding at
+        // all — and cannot be built by the path below, whose shift would be negative.
+        //
+        // Zero comes through here rather than by a test of its own: it has no bits, so it is
+        // shorter, and §6.1.6.2 gives it no negative form for the sign below to find. A branch for
+        // it was written first and answered `0.0` exactly as this does, which made it a line no
+        // input could distinguish.
+        if bits <= 53 {
+            // Through `bits_above` rather than [`BigInt::low_u64`], which applies the sign as a
+            // two's complement — `-1n` would come back as 2^64 - 1 and convert to 1.8e19.
+            let magnitude = self.bits_above(0) as f64;
+            return match self.negative {
+                true => -magnitude,
+                false => magnitude,
+            };
+        }
+        let discarded = bits - 53;
+        // The top 53 bits, and the two facts §5.2's rounding needs about everything below them:
+        // whether the next bit down is set, and whether anything below *that* is.
+        let mut mantissa = self.bits_above(discarded);
+        let halfway = self.bit(discarded - 1);
+        let below = self.any_bit_below(discarded - 1);
+        let mut exponent = i64::from(discarded);
+        // Ties to even: round up when past halfway, and exactly at halfway only when rounding up
+        // makes the last bit zero. Dropping the `below` term would round `2n ** 53n + 1n` up, and
+        // dropping the parity term would round `2n ** 53n + 2n` up — the two are separate cases and
+        // each has a test.
+        if halfway && (below || mantissa & 1 == 1) {
+            mantissa += 1;
+            // Carrying out of 53 bits — the rounded value is a power of two one place wider. Only
+            // the exponent moves: the mantissa is now exactly 2^53, whose low fifty-two bits are
+            // zero, and those are the only ones the format below stores. Halving it as well was
+            // written first and is a line no input can distinguish, because 2^53 and 2^52 have the
+            // same stored fraction and the exponent is what tells them apart.
+            if mantissa == 1 << 53 {
+                exponent += 1;
+            }
+        }
+        // The mantissa's leading bit is implicit in the format, so what is stored is the low 52 and
+        // the unbiased exponent is 52 more than the shift.
+        let biased = exponent + 52 + 1023;
+        if biased >= 0x7FF {
+            // Past the largest finite double, which is what §5.2's `𝔽` answers with here.
+            return match self.negative {
+                true => f64::NEG_INFINITY,
+                false => f64::INFINITY,
+            };
+        }
+        let sign = u64::from(self.negative) << 63;
+        // `biased` is in 1..0x7FF and `mantissa` has exactly 53 bits, so neither field can overflow
+        // its own — which is what makes this an assembly of a double rather than an arithmetic on
+        // one, and why no rounding happens here.
+        let assembled = sign | ((biased as u64) << 52) | (mantissa & 0x000F_FFFF_FFFF_FFFF);
+        f64::from_bits(assembled)
+    }
+
+    /// How many bits the magnitude needs — zero for zero.
+    fn bit_length(&self) -> u32 {
+        match self.magnitude.last() {
+            None => 0,
+            // The limbs below the top one are full, and the top one contributes what it uses.
+            Some(top) => {
+                let below = u32::try_from(self.magnitude.len() - 1).unwrap_or(u32::MAX);
+                below.saturating_mul(32) + (32 - top.leading_zeros())
+            }
+        }
+    }
+
+    /// Whether the bit at `at` is set, counting from the least significant.
+    fn bit(&self, at: u32) -> bool {
+        let limb = (at / 32) as usize;
+        self.magnitude
+            .get(limb)
+            .is_some_and(|limb| limb >> (at % 32) & 1 == 1)
+    }
+
+    /// Whether any bit strictly below `at` is set — §5.2's sticky bit.
+    fn any_bit_below(&self, at: u32) -> bool {
+        let whole = (at / 32) as usize;
+        if self.magnitude.iter().take(whole).any(|limb| *limb != 0) {
+            return true;
+        }
+        // The partial limb, masked to the bits below `at`. A shift of 32 is undefined, which is
+        // why the remainder rather than `at` itself decides the mask.
+        let used = at % 32;
+        self.magnitude
+            .get(whole)
+            .is_some_and(|limb| limb & ((1u32 << used) - 1) != 0)
+    }
+
+    /// The value of the bits from `at` upwards, which the caller has bounded to 53 of them.
+    fn bits_above(&self, at: u32) -> u64 {
+        let limb = (at / 32) as usize;
+        let offset = at % 32;
+        // Three limbs, because 53 bits starting anywhere inside a limb can reach into a third —
+        // and therefore a `u128`, since three limbs are ninety-six bits and a `u64` would drop the
+        // most significant of them, which is the one the answer is mostly made of.
+        let mut value: u128 = 0;
+        for index in (limb..limb + 3).rev() {
+            value = (value << 32) | u128::from(self.magnitude.get(index).copied().unwrap_or(0));
+        }
+        // The low limb of `value` is the one holding bit `at`, so the offset finishes it. Masking
+        // to 53 bits needs the caller's guarantee that `at` is `bit_length - 53`; anything above is
+        // zero anyway, and the mask says which bits this promised to answer with.
+        u64::try_from((value >> offset) & ((1 << 53) - 1)).unwrap_or(u64::MAX) // masked to 53 bits
+    }
+
     /// §12.9.3's `BigIntLiteral`, and §7.1.14's `StringToBigInt` — digits in a radix, read.
     ///
     /// The digits are already known to be digits: the lexer read them and §7.1.14's caller has

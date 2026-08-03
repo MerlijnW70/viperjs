@@ -148,8 +148,19 @@ fn make_boolean(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 fn make_number(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // §21.1.1.1 step 1 — with no argument at all the answer is `+0`, which is not the same as
     // `ToNumber(undefined)` and is why `Number()` is `0` where `Number(undefined)` is `NaN`.
+    //
+    // And step 1.a is **`ToNumeric`**, not `ToNumber`. That one word is the only place in the
+    // language where a BigInt becomes a Number without the program saying so a second time: §7.1.4
+    // refuses one outright, which is what keeps `1n + 1` and `Math.abs(1n)` TypeErrors, and step
+    // 1.b then converts what `ToNumeric` handed back. So `Number(1n)` is 1 and `+1n` is a
+    // TypeError, from operations that look interchangeable and are not.
     let value = match call.arguments.first() {
-        Some(argument) => Value::Number(argument.to_number(heap)?),
+        Some(argument) => Value::Number(match vm.to_numeric_value(*argument, heap)? {
+            crate::heap::Numeric::Number(number) => number,
+            // Step 1.b's `𝔽(ℝ(prim))` — the *nearest* Number, so a BigInt past 2^53 loses the
+            // precision a BigInt exists to keep. That is the conversion, not a failure of it.
+            crate::heap::Numeric::BigInt(big) => big.to_f64(),
+        }),
         None => Value::Number(0.0),
     };
     Ok(wrap_or_convert(

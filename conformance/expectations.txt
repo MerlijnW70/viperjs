@@ -755,8 +755,6 @@ built-ins/Array/prototype/Symbol.unscopables/prop-desc.js :: it threw an object 
 built-ins/Array/prototype/Symbol.unscopables/prop-desc.js (strict) :: it threw an object with no name: Symbol(Symbol.unscopables) should be an own property
 built-ins/Array/prototype/Symbol.unscopables/value.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/prototype/Symbol.unscopables/value.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/at/typed-array-resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/at/typed-array-resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js :: it threw an object with no name: [].concat(objWithPoisonedLengthToString) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js (strict) :: it threw an object with no name: [].concat(objWithPoisonedLengthToString) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-value-of-throws.js :: it threw an object with no name: [].concat(objWithPoisonedLengthValueOf) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -820,22 +818,10 @@ built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js :: it threw 
 built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js (strict) :: it threw an object with no name: The value of result.length is expected to be 1 Expected SameValue(«2», «1») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/is-concat-spreadable-val-truthy.js (strict) :: it threw an object with no name: The value of result.length is expected to be 0 Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/copyWithin/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/copyWithin/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/entries/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/entries/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/entries/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/entries/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/entries/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/entries/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-10.js (strict) :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/every/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/every/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/every/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/every/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/every/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/every/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/coerced-indexes.js (strict) :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/resizable-buffer.js :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [1, 1, 1, 1] should have the same contents.
@@ -848,44 +834,12 @@ built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/filter/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/filter/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/find/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/find/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/find/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/find/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLast/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLast/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/array-like-objects-poisoned-length.js (strict) :: it threw an object with no name: custom Symbol.toPrimitive error Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with no name: result !== true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js (strict) :: it threw an object with no name: result !== true
-built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/forEach/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/forEach/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/forEach/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
@@ -902,66 +856,26 @@ built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw 
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/map/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/map/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/map/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/map/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/map/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/map/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/throws-if-integer-limit-exceeded.js :: it threw an object with no name: Length is 2**53 - 1 Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/push/throws-if-integer-limit-exceeded.js (strict) :: it threw an object with no name: Length is 2**53 - 1 Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/reduce/15.4.4.21-1-10.js :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduce/15.4.4.21-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
-built-ins/Array/prototype/reduce/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduce/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduce/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduce/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduce/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduce/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
-built-ins/Array/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduceRight/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reduceRight/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [   // Initial get length operation.   "Get:length",    // Lower and upper index are both present.   "Has:0",   "Get:0",   "Has:9007199254740990",   "Get:9007199254740990",   "Set:0",   "GetOwnPropertyDescriptor:0",   "DefineProperty:0",   "Set:9007199254740990",   "GetOwnPropertyDescriptor:9007199254740990",   "DefineProperty:9007199254740990",    // Lower and upper index are both absent.   "Has:1",   "Has:9007199254740989",    // Lower index is present, upper index is absent.   "Has:2",   "Get:2",   "Has:9007199254740988",   "Delete:2",   "Set:9007199254740988",   "GetOwnPropertyDescriptor:9007199254740988",   "DefineProperty:9007199254740988",    // Lower index is absent, upper index is present.   "Has:3",   "Has:9007199254740987",   "Get:9007199254740987",   "Set:3",   "GetOwnPropertyDescriptor:3",   "DefineProperty:3",   "Delete:9007199254740987",    // Stop exception.   "Has:4",   "Get:4", ]
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, Set:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [   // Initial get length operation.   "Get:length",    // Lower and upper index are both present.   "Has:0",   "Get:0",   "Has:9007199254740990",   "Get:9007199254740990",   "Set:0",   "GetOwnPropertyDescriptor:0",   "DefineProperty:0",   "Set:9007199254740990",   "GetOwnPropertyDescriptor:9007199254740990",   "DefineProperty:9007199254740990",    // Lower and upper index are both absent.   "Has:1",   "Has:9007199254740989",    // Lower index is present, upper index is absent.   "Has:2",   "Get:2",   "Has:9007199254740988",   "Delete:2",   "Set:9007199254740988",   "GetOwnPropertyDescriptor:9007199254740988",   "DefineProperty:9007199254740988",    // Lower index is absent, upper index is present.   "Has:3",   "Has:9007199254740987",   "Get:9007199254740987",   "Set:3",   "GetOwnPropertyDescriptor:3",   "DefineProperty:3",   "Delete:9007199254740987",    // Stop exception.   "Has:4",   "Get:4", ]
-built-ins/Array/prototype/reverse/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/reverse/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/slice/coerced-start-end-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/slice/coerced-start-end-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/slice/coerced-start-end-shrink.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/slice/coerced-start-end-shrink.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/slice/create-species.js :: it threw an object with no name: Expected SameValue(«0», «3») to be true
 built-ins/Array/prototype/slice/create-species.js (strict) :: it threw an object with no name: Expected SameValue(«0», «3») to be true
-built-ins/Array/prototype/slice/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/slice/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/some/15.4.4.17-1-10.js :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
 built-ins/Array/prototype/some/15.4.4.17-1-10.js (strict) :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
-built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/some/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/some/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/comparefn-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/comparefn-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/comparefn-resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/comparefn-resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/comparefn-shrink.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/comparefn-shrink.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/resizable-buffer-default-comparator.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/sort/resizable-buffer-default-comparator.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
@@ -970,8 +884,6 @@ built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.j
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set] should have the same contents.
-built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Array/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/Array/prototype/values/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -2428,8 +2340,6 @@ built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw TypeE
 built-ins/Function/prototype/apply/S15.3.4.3_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Function/prototype/apply/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/this-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw TypeError: what was called is not a function
@@ -3046,16 +2956,6 @@ built-ins/NativeErrors/cause_property_native_error.js :: it threw an object with
 built-ins/NativeErrors/cause_property_native_error.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Number/15.7.4-1.js :: it threw an object with no name: s Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
 built-ins/Number/15.7.4-1.js (strict) :: it threw an object with no name: s Expected SameValue(«"[object Object]"», «"[object Number]"») to be true
-built-ins/Number/S15.7.1.1_A1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/S15.7.1.1_A1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/S8.12.8_A3.js :: it threw an object with no name: #1.2: var __obj = {toNumber: function() {return "1"}, valueOf: function() {return new Object();}}; Number(__obj) === 1. Actual: TypeError: cannot convert an object to a primitive value
-built-ins/Number/S8.12.8_A3.js (strict) :: it threw an object with no name: #1.2: var __obj = {toNumber: function() {return "1"}, valueOf: function() {return new Object();}}; Number(__obj) === 1. Actual: TypeError: cannot convert an object to a primitive value
-built-ins/Number/S9.1_A1_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/S9.1_A1_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/S9.3_A5_T1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/S9.3_A5_T1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Number/bigint-conversion.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/Number/bigint-conversion.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/Number/parseFloat.js :: it threw an object with no name: Expected SameValue(«undefined», «function parseFloat() { [native code] }») to be true
 built-ins/Number/parseFloat.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «function parseFloat() { [native code] }») to be true
 built-ins/Number/parseFloat/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
@@ -3164,8 +3064,6 @@ built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T01.js :: it threw TypeError: Nu
 built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T01.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js :: it threw TypeError: Number.prototype.valueOf requires a number
 built-ins/Number/prototype/valueOf/S15.7.4.4_A1_T02.js (strict) :: it threw TypeError: Number.prototype.valueOf requires a number
-built-ins/Number/return-abrupt-tonumber-value.js :: it threw an object with no name: NewTarget is undefined, {}.valueOf Expected a Test262Error but got a TypeError
-built-ins/Number/return-abrupt-tonumber-value.js (strict) :: it threw an object with no name: NewTarget is undefined, {}.valueOf Expected a Test262Error but got a TypeError
 built-ins/Object/create/properties-arg-to-object-bigint.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object-bigint.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/create/properties-arg-to-object.js :: it threw TypeError: a property-descriptor list must be an object
@@ -5579,8 +5477,6 @@ built-ins/Symbol/prototype/Symbol.toPrimitive/prop-desc.js :: it threw an object
 built-ins/Symbol/prototype/Symbol.toPrimitive/prop-desc.js (strict) :: it threw an object with no name: Symbol(Symbol.toPrimitive) should be an own property
 built-ins/Symbol/prototype/Symbol.toPrimitive/redefined-symbol-wrapper-ordinary-toprimitive.js :: it threw TypeError: this property cannot be redefined
 built-ins/Symbol/prototype/Symbol.toPrimitive/redefined-symbol-wrapper-ordinary-toprimitive.js (strict) :: it threw TypeError: this property cannot be redefined
-built-ins/Symbol/prototype/Symbol.toPrimitive/removed-symbol-wrapper-ordinary-toprimitive.js :: it threw an object with no name: Expected SameValue(«10», «11») to be true
-built-ins/Symbol/prototype/Symbol.toPrimitive/removed-symbol-wrapper-ordinary-toprimitive.js (strict) :: it threw an object with no name: Expected SameValue(«10», «11») to be true
 built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-non-obj.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-non-obj.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Symbol/prototype/Symbol.toPrimitive/this-val-obj-symbol-wrapper.js :: it threw TypeError: what was called is not a function
@@ -14824,8 +14720,6 @@ built-ins/TypedArray/from/iter-next-error.js :: it threw an object with no name:
 built-ins/TypedArray/from/iter-next-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/from/iter-next-value-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/from/iter-next-value-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/TypedArray/out-of-bounds-get-and-set.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/out-of-bounds-get-and-set.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/at/coerced-index-resize.js :: it threw an object with no name: Expected SameValue(«0», «undefined») to be true
 built-ins/TypedArray/prototype/at/coerced-index-resize.js (strict) :: it threw an object with no name: Expected SameValue(«0», «undefined») to be true
 built-ins/TypedArray/prototype/at/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14842,8 +14736,6 @@ built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js :: it threw a
 built-ins/TypedArray/prototype/byteOffset/resized-out-of-bounds.js (strict) :: it threw an object with no name: Expected SameValue(«8», «0») to be true
 built-ins/TypedArray/prototype/copyWithin/coerced-target-start-end-shrink.js :: it threw an object with no name: Uint8Array evil target. Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/copyWithin/coerced-target-start-end-shrink.js (strict) :: it threw an object with no name: Uint8Array evil target. Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/copyWithin/coerced-target-start-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/copyWithin/coerced-target-start-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached-prototype.js :: it threw an object with no name: should throw TypeError as array is detached Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached-prototype.js (strict) :: it threw an object with no name: should throw TypeError as array is detached Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached.js :: it threw an object with no name: should throw TypeError as array is detached Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -14854,10 +14746,6 @@ built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js :: it threw an obj
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/copyWithin/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/copyWithin/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/TypedArray/prototype/entries/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/entries/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/entries/resizable-buffer-shrink-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/entries/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/entries/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/entries/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/every/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
@@ -14866,8 +14754,6 @@ built-ins/TypedArray/prototype/every/BigInt/values-are-not-cached.js :: it threw
 built-ins/TypedArray/prototype/every/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/every/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/every/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/every/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/every/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/every/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/every/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/every/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14890,8 +14776,6 @@ built-ins/TypedArray/prototype/filter/BigInt/values-are-not-cached.js :: it thre
 built-ins/TypedArray/prototype/filter/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/filter/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/filter/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/filter/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/filter/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14910,8 +14794,6 @@ built-ins/TypedArray/prototype/find/callbackfn-resize.js :: it threw an object w
 built-ins/TypedArray/prototype/find/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/find/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«undefined», «7») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/find/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«undefined», «7») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/find/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/find/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/find/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/find/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/find/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14922,8 +14804,6 @@ built-ins/TypedArray/prototype/findIndex/callbackfn-resize.js :: it threw an obj
 built-ins/TypedArray/prototype/findIndex/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findIndex/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«-1», «2») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findIndex/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«-1», «2») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/findIndex/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/findIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findIndex/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14934,8 +14814,6 @@ built-ins/TypedArray/prototype/findLast/callbackfn-resize.js :: it threw an obje
 built-ins/TypedArray/prototype/findLast/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, undefined, 0] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLast/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«undefined», «7») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLast/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«undefined», «7») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/findLast/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/findLast/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/findLast/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findLast/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findLast/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14946,8 +14824,6 @@ built-ins/TypedArray/prototype/findLastIndex/callbackfn-resize.js :: it threw an
 built-ins/TypedArray/prototype/findLastIndex/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, undefined, 0] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLastIndex/predicate-call-changes-value.js :: it threw an object with no name: value found Expected SameValue(«-1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/findLastIndex/predicate-call-changes-value.js (strict) :: it threw an object with no name: value found Expected SameValue(«-1», «0») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/findLastIndex/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14958,8 +14834,6 @@ built-ins/TypedArray/prototype/forEach/BigInt/values-are-not-cached.js :: it thr
 built-ins/TypedArray/prototype/forEach/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/forEach/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/forEach/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/forEach/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/forEach/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/forEach/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/forEach/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/forEach/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15048,8 +14922,6 @@ built-ins/TypedArray/prototype/map/BigInt/values-are-not-cached.js :: it threw a
 built-ins/TypedArray/prototype/map/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/map/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/map/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/map/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/map/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15062,24 +14934,18 @@ built-ins/TypedArray/prototype/map/speciesctor-get-ctor-abrupt.js :: it threw an
 built-ins/TypedArray/prototype/map/speciesctor-get-ctor-abrupt.js (strict) :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-shrink.js :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [undefined, undefined, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-shrink.js (strict) :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [undefined, undefined, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/map/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/reduce/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/reduce/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/reduce/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, undefined] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/reduce/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, undefined] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/reduce/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/reduce/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/reduceRight/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [6, 4, 2, 0] and expected [6, 4, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/reduceRight/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15122,10 +14988,6 @@ built-ins/TypedArray/prototype/set/array-arg-value-conversion-resizes-array-buff
 built-ins/TypedArray/prototype/set/array-arg-value-conversion-resizes-array-buffer.js (strict) :: it threw an object with no name: Actual [1, 2, 3, -1] and expected [1, 2, 0, 0] should have the same contents.
 built-ins/TypedArray/prototype/set/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/set/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/set/target-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/set/target-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/set/target-grow-source-length-getter.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/set/target-grow-source-length-getter.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/set/target-shrink-mid-iteration.js :: it threw an object with no name: Actual [1, 1, 1] and expected [1, 2, 4] should have the same contents.
 built-ins/TypedArray/prototype/set/target-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [1, 1, 1] and expected [1, 2, 4] should have the same contents.
 built-ins/TypedArray/prototype/set/target-shrink-source-length-getter.js :: it threw an object with no name: Actual [1, 2, 4] and expected [0, 2, 4] should have the same contents.
@@ -15146,10 +15008,6 @@ built-ins/TypedArray/prototype/slice/BigInt/speciesctor-destination-resizable.js
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/coerced-start-end-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/slice/coerced-start-end-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/slice/coerced-start-end-shrink.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/slice/coerced-start-end-shrink.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/slice/detached-buffer-speciesctor-get-species-custom-ctor-throws.js :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/detached-buffer-speciesctor-get-species-custom-ctor-throws.js (strict) :: it threw an object with no name: `sample.slice()` throws TypeError Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15160,8 +15018,6 @@ built-ins/TypedArray/prototype/slice/speciesctor-destination-resizable.js :: it 
 built-ins/TypedArray/prototype/slice/speciesctor-destination-resizable.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-get-species-custom-ctor-length-throws-resizable-arraybuffer.js (strict) :: it threw RangeError: this buffer is not a multiple of the element size (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/slice/speciesctor-resize.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/slice/speciesctor-resize.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/slice/speciesctor-return-same-buffer-with-offset.js :: it threw an object with no name: Actual [20, 30, 40, 60] and expected [20, 20, 20, 60] should have the same contents.  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-return-same-buffer-with-offset.js (strict) :: it threw an object with no name: Actual [20, 30, 40, 60] and expected [20, 20, 20, 60] should have the same contents.  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/some/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
@@ -15170,16 +15026,12 @@ built-ins/TypedArray/prototype/some/BigInt/values-are-not-cached.js :: it threw 
 built-ins/TypedArray/prototype/some/BigInt/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43n», «42n») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/some/callbackfn-resize.js :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/some/callbackfn-resize.js (strict) :: it threw an object with no name: Actual [0, 0, 0] and expected [0, 0, undefined] should have the same contents. elements (shrink) (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/some/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/some/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/some/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/some/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Actual [0, 2, 4, 6] and expected [0, 2, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/some/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/some/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/some/values-are-not-cached.js :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/some/values-are-not-cached.js (strict) :: it threw an object with no name: method does not cache values before callbackfn calls Expected SameValue(«43», «42») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/sort/comparefn-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/sort/comparefn-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/sort/comparefn-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/sort/comparefn-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js :: it threw an object with no name: Actual [7, 8] and expected [10, 9] should have the same contents.
@@ -15192,12 +15044,6 @@ built-ins/TypedArray/prototype/sort/sort-tonumber.js :: it threw TypeError: this
 built-ins/TypedArray/prototype/sort/sort-tonumber.js (strict) :: it threw TypeError: this ArrayBuffer has been detached (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/sorted-values-nan.js :: it threw an object with no name: #2 [4] Expected SameValue(«NaN», «Infinity») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/sorted-values-nan.js (strict) :: it threw an object with no name: #2 [4] Expected SameValue(«NaN», «Infinity») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/subarray/coerced-begin-end-grow.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/subarray/coerced-begin-end-grow.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/subarray/coerced-begin-end-shrink.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/subarray/coerced-begin-end-shrink.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/subarray/resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/subarray/resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
@@ -15208,8 +15054,6 @@ built-ins/TypedArray/prototype/toString.js :: it threw an object with no name: E
 built-ins/TypedArray/prototype/toString.js (strict) :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/values/make-out-of-bounds-after-exhausted.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 built-ins/TypedArray/prototype/values/make-out-of-bounds-after-exhausted.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-built-ins/TypedArray/prototype/values/resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/TypedArray/prototype/values/resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/TypedArray/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/TypedArray/prototype/values/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/TypedArray/prototype/values/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -16799,8 +16643,6 @@ language/expressions/dynamic-import/catch/top-level-import-catch-import-source-s
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/custom-primitive.js :: the test called $DONE with TypeError: cannot convert an object to a primitive value
-language/expressions/dynamic-import/custom-primitive.js (strict) :: the test called $DONE with TypeError: cannot convert an object to a primitive value
 language/expressions/dynamic-import/eval-export-dflt-cls-anon.js :: the test's status could not be read
 language/expressions/dynamic-import/eval-export-dflt-cls-name-meth.js :: the test's status could not be read
 language/expressions/dynamic-import/eval-export-dflt-cls-named.js :: the test's status could not be read
@@ -18046,16 +17888,10 @@ language/statements/for-of/scope-head-lex-close.js :: it threw an object with no
 language/statements/for-of/scope-head-lex-close.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/scope-head-lex-open.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/scope-head-lex-open.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/typedarray-backed-by-resizable-buffer-grow-before-end.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/statements/for-of/typedarray-backed-by-resizable-buffer-grow-before-end.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-language/statements/for-of/typedarray-backed-by-resizable-buffer-grow-mid-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/statements/for-of/typedarray-backed-by-resizable-buffer-grow-mid-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-to-zero-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-to-zero-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/statements/for-of/typedarray-backed-by-resizable-buffer.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/statements/for-of/typedarray-backed-by-resizable-buffer.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/statements/for/cptn-decl-expr-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/for/cptn-decl-expr-iter.js (strict) :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true
 language/statements/for/cptn-decl-expr-no-iter.js :: it threw an object with no name: Expected SameValue(«1», «undefined») to be true

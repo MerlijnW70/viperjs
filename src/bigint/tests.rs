@@ -693,3 +693,126 @@ fn sixty_four_bits_go_out_and_come_back_the_way_the_sign_says() {
         );
     }
 }
+
+#[test]
+fn the_nearest_number_is_found_by_rounding_the_bits_and_never_by_accumulating_limbs() {
+    // `𝔽(ℝ(x))`, which §21.1.1.1 is the only caller of. Exact while the value fits in a double's
+    // fifty-three significant bits…
+    for value in [0i64, 1, -1, 2, -2, 255, -255, 1 << 52, -(1 << 52)] {
+        let big = match value < 0 {
+            true => BigInt::from_u64(value.unsigned_abs()).negate(),
+            false => BigInt::from_u64(value as u64),
+        };
+        assert_eq!(big.to_f64(), value as f64, "{value}");
+    }
+    // …and zero is `+0` rather than `-0`, §6.1.6.2 having only the one.
+    assert!(BigInt::zero().to_f64().is_sign_positive());
+    // Past fifty-three bits it rounds to nearest, ties to even — the three consecutive integers
+    // above 2^53 are the whole of that rule, and each of them fails a different way when it is
+    // written wrong. `+1` is a tie broken downwards, `+2` is exact, `+3` is a tie broken upwards.
+    let two_53 = BigInt::from_u64(1 << 53);
+    let one = BigInt::from_u64(1);
+    let plus = |n: u64| two_53.add(&BigInt::from_u64(n)).expect("small enough");
+    assert_eq!(two_53.to_f64(), 9_007_199_254_740_992.0);
+    assert_eq!(
+        plus(1).to_f64(),
+        9_007_199_254_740_992.0,
+        "ties to even, down"
+    );
+    assert_eq!(plus(2).to_f64(), 9_007_199_254_740_994.0, "exact");
+    assert_eq!(
+        plus(3).to_f64(),
+        9_007_199_254_740_996.0,
+        "ties to even, up"
+    );
+    assert_eq!(plus(4).to_f64(), 9_007_199_254_740_996.0, "exact");
+    assert_eq!(plus(5).to_f64(), 9_007_199_254_740_996.0, "below halfway");
+    // The sign is carried through the rounding rather than applied to a magnitude that was rounded
+    // as though positive — which is the same answer here, and is not for a `low_u64` that
+    // two's-complements.
+    assert_eq!(plus(1).negate().to_f64(), -9_007_199_254_740_992.0);
+    assert_eq!(BigInt::from_u64(1).negate().to_f64(), -1.0);
+    // Rounding up out of fifty-three bits carries into the exponent: 2^53 - 1 is exact, and one
+    // more than the largest odd value below a power of two is that power.
+    let almost = two_53.subtract(&one).expect("no borrow past zero");
+    assert_eq!(almost.to_f64(), 9_007_199_254_740_991.0);
+    // A value with fifty-four significant bits whose low bits force a carry all the way up.
+    let carry = BigInt::from_u64((1 << 54) - 1);
+    assert_eq!(carry.to_f64(), 18_014_398_509_481_984.0, "2^54, carried");
+    // Past the largest finite double there is no nearest Number, and §5.2 answers with an infinity
+    // — with the sign, which is the one place the two infinities are told apart here.
+    let two = BigInt::from_u64(2);
+    let huge = two
+        .exponentiate(&BigInt::from_u64(1024))
+        .expect("in budget");
+    assert_eq!(huge.to_f64(), f64::INFINITY);
+    assert_eq!(huge.negate().to_f64(), f64::NEG_INFINITY);
+    // …and just below it is finite, which is what says the boundary is in the right place rather
+    // than merely somewhere.
+    let large = two
+        .exponentiate(&BigInt::from_u64(1023))
+        .expect("in budget");
+    assert!(large.to_f64().is_finite());
+    assert_eq!(large.to_f64(), 2f64.powi(1023));
+    // The largest finite double itself, which is 2^1024 - 2^971 and rounds to itself.
+    let largest = huge
+        .subtract(&two.exponentiate(&BigInt::from_u64(971)).expect("in budget"))
+        .expect("no borrow");
+    assert_eq!(largest.to_f64(), f64::MAX);
+    // A round trip through the other direction, which is exact for every integer a double names.
+    for value in [1.0f64, -1.0, 1e15, -1e15, 2f64.powi(60), f64::MAX] {
+        let there = BigInt::from_f64(value).expect("an integer");
+        assert_eq!(there.to_f64(), value, "{value}");
+    }
+    // Bits spanning three limbs, which is what the `u128` accumulator is for: a `u64` would drop
+    // the most significant limb and answer with a tiny number instead of a huge one.
+    let wide = two.exponentiate(&BigInt::from_u64(100)).expect("in budget");
+    assert_eq!(wide.to_f64(), 2f64.powi(100));
+    let offset = wide.add(&BigInt::from_u64(1)).expect("in budget");
+    assert_eq!(
+        offset.to_f64(),
+        2f64.powi(100),
+        "the one is below the precision"
+    );
+}
+
+#[test]
+fn rounding_reads_the_halfway_bit_and_everything_under_it_from_the_right_limbs() {
+    // The rows above all round inside one limb. These are the same rule asked where the fifty-three
+    // bits kept, the halfway bit and the sticky bits fall in *different* limbs — which is where a
+    // shift by the wrong amount, or a limb index off by a factor of thirty-two, stops being
+    // invisible. Every value here is 2^100 plus something, so `bit_length` is 101 and the halfway
+    // bit is bit 47: limb one, bit fifteen.
+    let two = BigInt::from_u64(2);
+    let pow2 = |n: u64| {
+        two.exponentiate(&BigInt::from_u64(n))
+            .expect("well inside the limb ceiling")
+    };
+    let sum = |parts: &[u64]| {
+        parts.iter().fold(BigInt::zero(), |total, bit| {
+            total.add(&pow2(*bit)).expect("in budget")
+        })
+    };
+    // Exactly halfway with an even mantissa: ties to even keeps it, so the 2^47 is dropped.
+    assert_eq!(sum(&[100, 47]).to_f64(), 2f64.powi(100));
+    // Exactly halfway with an **odd** mantissa: ties to even rounds up, and the step at this
+    // magnitude is 2^48 — so the answer is 2^100 + 2^49, not 2^100 + 2^48.
+    assert_eq!(sum(&[100, 48, 47]).to_f64(), 2f64.powi(100) + 2f64.powi(49));
+    // Below halfway with an odd mantissa: nothing moves.
+    assert_eq!(sum(&[100, 48]).to_f64(), 2f64.powi(100) + 2f64.powi(48));
+    // Past halfway by one bit in a *lower limb*, with an even mantissa — the sticky bit is the
+    // whole of what makes this differ from the first row, and it is thirty-seven bits below the
+    // one that decides the tie.
+    assert_eq!(sum(&[100, 47, 10]).to_f64(), 2f64.powi(100) + 2f64.powi(48));
+    // …and a sticky bit *above* the halfway bit is not a sticky bit at all: it is part of the
+    // mantissa, and reading it as one would round this up.
+    assert_eq!(sum(&[100, 60, 47]).to_f64(), 2f64.powi(100) + 2f64.powi(60));
+    // The overflow boundary with a fraction, which is the one case `>=` and `>` disagree about:
+    // an exponent field of 0x7FF with a non-zero fraction is a NaN, not an infinity.
+    let over = sum(&[1024, 1000]).to_f64();
+    assert!(over.is_infinite(), "an infinity, not a NaN: {over}");
+    assert!(over.is_sign_positive());
+    assert!(sum(&[1024, 1000]).negate().to_f64().is_sign_negative());
+    // …and the largest bit length that is still finite, so the boundary is pinned from both sides.
+    assert!(sum(&[1023, 1000]).to_f64().is_finite());
+}
