@@ -134,17 +134,22 @@ literal, the arithmetic, the object, and now `BigInt64Array` and `BigUint64Array
 resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eval.rs` and
 `compile_direct_eval`. That is what the environments' name lists are for, and it was worth 973 runs.
 
-Conformance as of this commit is **77.53% of test262** — 72,226 of 93,161 runs. Treat that number
-as perishable and re-measure rather than quoting it; the point of the figure is the work list under
-it. Only 2,300 runs are now *stopped* before anything executes, and they are nearly all M7:
+**`with` runs too**, and so do **modules**. §16.2 is now whole apart from the two dynamic pieces:
+`import` and `export` in every form, §16.2.1.5.2's live bindings, §10.4.6's namespace objects,
+§16.2.1.6.3's `ResolveExport` across a graph, and `export *` with its ambiguity rule. `src/vm/module.rs`
+is the linker and `src/heap/namespace.rs` the exotic object.
+
+Conformance as of this commit is **78.20% of test262** — 72,848 of 93,161 runs. Treat that number as
+perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
+Only 1,559 runs are now *stopped* before anything executes:
 
 | Runs | What stops them |
 | --- | --- |
-| 849 | dynamic `import` |
-| 830 | modules |
-| 289 | `with` |
+| 902 | dynamic `import` |
+| 247 | a top-level `await` |
 | 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 110 | a property of strings |
+| 51 | a `delete` of a bare name inside `with` |
 
 **The skip list is no longer where the work is, and neither are the biggest failure buckets.**
 Sorted by reason the largest look actionable and mostly are not, which is worth doing once and
@@ -153,39 +158,68 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
-| 1,270 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync` 128, `Iterator.zip`/`zipKeyed`/`concat` 160, `Promise.allKeyed`/`allSettledKeyed` 92, `Map`/`WeakMap`'s `getOrInsert` 64, `Uint8Array` base64 32. The real remainder is `class` 77 and `DataView` 52 |
-| 894 | the heap budget | blocked on DR-0010 slot reuse, and the tests are time-bound |
-| 471 | `a declaration may not stand where only a statement may` | Annex B syntactic — excluded by DR-0008 |
+| ~960 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync` 128, `Iterator.zip`/`zipKeyed`/`concat` 160, `Promise.allKeyed`/`allSettledKeyed` 92, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64. The real remainder is `class` 45 and `DataView` 52 |
+| 894 | the heap budget | 878 are `RegExp/property-escapes`, and the lab has **parked** them — see below |
+| 471 | `a declaration may not stand where only a statement may` | Annex B syntactic — excluded by DR-0008, and see below |
 | 454 | `cannot read a property…` | **Atomics 224** (of which most need `$262.agent`, so ~80 are winnable in a one-thread engine) and **`Error.prototype.stack` 64**, which is a proposal |
-| 288 | `expected 'meta', found an identifier` | `import.meta`, which arrives with modules |
+| 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two separate proposals, not `import.meta` |
 | 216 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
 | 238 | `Calling as constructor…` | all `Temporal` |
 
-**So the largest real subject left is M7** — modules 830, dynamic `import` 849 and `import.meta`
-288 are ~1,970 runs and one piece of work. Everything else above is a proposal, a decided
-exclusion, or blocked on a decision record.
+**Two buckets have been costed and must not be re-costed.**
 
-### Three slices are diagnosed and not built, so start from the design and not the bucket
+- **`RegExp/property-escapes` (878) is dead as a GC target**, and the recorded claim that it was
+  blocked on DR-0010 slot reuse is **wrong**. `lab/NOTES.md`'s `gc-pressure` measured it: even with
+  a zero-cost collector and simulated slot reuse, `ASCII.js` takes 21.8 s against a 10 s per-test
+  budget. These need an interpreter several times faster, which is M8. The experiment's two real
+  findings — a throwaway heap String per computed property key, and a timed-out run landing in no
+  column — are both **fixed**; do not go looking for them again.
+- **Annex B block-level function declarations are 645 runs and are behind DR-0008**, which refuses
+  B.3 deliberately and names the procedure for reversing itself ("the place to change it is here,
+  and B.3 would then arrive behind a host flag"). ~480 of the 645 are the `if (x) function f() {}`
+  shape, which is B.3's *syntactic* half — so this is a charter decision and not an
+  implementation choice. **It is also the only remaining path to 80%**: every other item on this
+  page together lands at about 79.5%.
 
-- **`with` — §14.11, 289 runs, the largest core item left.** DR-0018 ends by saying this needs
-  what that record establishes, and it now has it: a name can be resolved against a *running*
-  scope. What is still missing is the other half — an **object** environment record, whose
-  bindings are a target's properties, plus §14.11.2's `@@unscopables`. Every name in a `with`
-  body becomes a run-time lookup, so the compiler has to stop resolving to slots inside one.
-- **A parameter's dead zone — §10.2.11 step 21, 48 runs.** `function f(a = a) {}` and
-  `function f(a = b, b) {}` must both be a ReferenceError *when the default runs*, and praxis
-  runs them. With no duplicate names the clause creates each parameter binding **uninitialised**
-  and `IteratorBindingInitialization` fills it as the parameter is bound; praxis has the *call*
-  fill slots 0..n before the body starts, so every name is initialised before any default is
-  evaluated. The fix is to separate the two: for a non-simple list the call's slots become
-  hidden incoming values, the names become lexical bindings uninitialised ahead of the first
-  default, and each is initialised in turn. It touches the calling convention's slot layout,
-  which is why it is written down here rather than started at the end of a session.
-- **`new.target` and `super(…)` inside a direct `eval` in an arrow.** Both are refused where
-  §19.2.1.1 allows them, because whether an arrow was written inside a function is a *lexical*
-  fact that a running arrow's chunk does not record — and the parser knows it, refusing
+**So the largest real subject left is the rest of M7** — dynamic `import` 902, a top-level `await`
+247 and `import.meta` 5.
+
+### Dynamic `import` is the next slice, and here is what it costs
+
+902 runs, the biggest single item on the list, and the design is known:
+
+- **A host loader.** §16.2.1.7's `HostLoadImportedModule` is currently answered by the caller
+  building a whole `Graph` in advance, which cannot work when the specifier is a run-time string.
+  The engine needs a `trait ModuleLoader { fn load(&mut self, specifier: &str, heap: &mut Heap) }`
+  and the `Vm` needs to hold one.
+- **A module registry that outlives one call.** `run_module_graph` builds its environments and
+  namespaces locally and drops them, which is fine for one graph and wrong the moment a second
+  `import()` must find a module the first evaluated. The registry moves onto the `Vm` — and the
+  collector's root set moves with it, or a module's environment is freed under a namespace object
+  still holding it.
+- **The promise.** §13.3.10 makes a capability, and the load, link and evaluation happen in a
+  **job** — `import()` must not settle synchronously. DR-0016 already says jobs run inside `run`.
+
+A top-level `await` (247) is the same registry work plus §16.2.1.5.3's `[[AsyncEvaluation]]`, so
+the two are worth doing in that order.
+
+### Three small gaps are diagnosed and not built
+
+Each is under a hundred runs, and each is written down because the diagnosis cost more than the fix
+will.
+
+- **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Both are refused
+  where §19.2.1.1 allows them, because whether an arrow was written inside a function is a
+  *lexical* fact that a running arrow's chunk does not record — and the parser knows it, refusing
   `new.target` in a top-level arrow at compile time. Carrying that answer onto the chunk is the
   whole slice.
+- **`delete x` where `x` is a bare name inside a `with` — 51 runs.** §13.5.1.2 has to ask the
+  *object* environment record whether it has the binding, and delete the property if it does.
+  Everything else about `with` resolves names at run time already; this is the one operation on a
+  name that is neither a read nor a write.
+- **§13.15.2's order inside a `with` — 79 runs, all listed.** An assignment evaluates its target
+  *reference* before the value, and inside a `with` praxis evaluates the value first. Observable
+  when the right-hand side changes what the left resolves to.
 
 **63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
@@ -196,6 +230,21 @@ touching that area: a generator's parameters are **not** part of its body, so
 Deciding it in `enter` instead put the whole parameter list inside the parked body, where it ran at
 the first `next` — invisible until a parameter can throw or be observed, and then 1,598 tests at
 once, most of them in `dstr` directories that have nothing to do with generators.
+
+**77.45% to 78.20% in four more**, and all four are §16.2. What they cost was not the linking — that
+is two hundred lines — but three things that touch the rest of the engine:
+
+- **An import is another environment's slot**, so `Heap::variable` and `set_variable` follow an
+  alias. The table lives *beside* the environments rather than on them: a field on `Environment` is
+  paid by every scope in every program, and a `Vec` there cost `TypedArray/prototype/sort/stability.js`
+  its heap outright. §10.4.6's namespaces are beside the objects for the same reason.
+- **`import * as n` bound `undefined` in silence** before this. The compiler recorded the entry, the
+  linker had nothing to do with it, and a module doc-comment said it was refused. Nothing was
+  refused; a wrong value was produced. Grep for what a doc claims is refused before believing it.
+- **A namespace's dead zone reaches further than a read.** §10.4.6.5 builds the descriptor out of
+  `[[Get]]`, so `Object.keys(ns)` throws inside a cycle — asking whether a name is enumerable
+  cannot be answered without its value. That put a ReferenceError into `[[GetOwnProperty]]`, which
+  had never been a completion.
 
 **75.26% to 77.45% in seven more**, and the shape of them is worth knowing before picking the
 next: two were one architectural piece (a name list on every running scope, then direct `eval`
