@@ -211,6 +211,26 @@ Three pieces, and the third is the one with the rules in it:
    block and the var scope, and F not a parameter name — then create a var binding F initialised to
    `undefined`, and **at the point the declaration is evaluated** assign the block's binding to it.
 
+**A first attempt got to 79.62% (+226, zero regressions) and was reverted.** It is worth reading
+before the second, because three of the four things it found are not in the clause:
+
+- **§B.3.2's labelled function needs a *position* rule, not just strictness.** §14.6.1, §14.7.x and
+  §14.11.1 make `IsLabelledFunction(Statement)` a Syntax Error wherever a body is a `Statement`
+  rather than a `StatementList` — so `while (x) a: function f() {}` stays refused while
+  `{ a: function f() {} }` is taken. Without it, 18 `labelled-fn-stmt.js` tests regress. A flag set
+  by the statement-list item parser and consumed by `parse_statement` carries it, with a label
+  re-arming it for its own body so `a: b: function f() {}` inherits.
+- **A generator is not a `FunctionDeclaration`** in either position, so both parse points need the
+  one-token lookahead past `function`.
+- **The name may already be a `var` or a top-level function**, and then B.3.3 step 2 must *not*
+  create a second binding — "if instantiatedVarNames does not contain F". A separate slot makes
+  reads resolve to one binding and the copy-out write to the other, which is what the 32
+  `existing-fn-update` tests see. This is the piece the reverted attempt got wrong.
+- **The global path did not store.** `{ function f() {} } typeof f` answered `undefined` at a
+  *script's* top level while the same program inside a function worked. Diagnose that before
+  anything else: the likely culprits are whether `global_vars` is set before the B.3.3 declaration
+  runs, and whether a block at a script's top level pushes a scope `own_depth` counts.
+
 Two things about (3) that the tests turn on:
 
 - The assignment happens **whether or not** step 2 created the binding: `var f = 1` at the top and
