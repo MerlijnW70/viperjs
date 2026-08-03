@@ -118,3 +118,85 @@ fn a_strict_function_keeps_the_receiver_it_was_given() {
         "undefined"
     );
 }
+
+#[test]
+fn strict_code_may_not_create_a_global_by_assigning_to_an_undeclared_name() {
+    // §6.2.5.6 `PutValue` step 6 — a reference that resolves to nothing is created on the global
+    // object in **sloppy** code and is a ReferenceError in strict. This is the rule people reach
+    // for strict mode to get, and praxis silently created the global instead.
+    assert_eq!(
+        run(
+            "'use strict'; var e = 'none'; try { neverDeclared = 1 } catch (x) { e = x.constructor.name } e"
+        ),
+        "ReferenceError"
+    );
+    // The strictness is the *code's* that made the reference, so a strict function inside a sloppy
+    // script throws and the script around it does not.
+    assert_eq!(
+        run("(function () { 'use strict'; var e = 'none'; \
+               try { alsoNeverDeclared = 1 } catch (x) { e = x.constructor.name } return e })()"),
+        "ReferenceError"
+    );
+    assert_eq!(run("sloppyIsFine = 5; sloppyIsFine"), "5");
+    assert_eq!(
+        run("(function () { sloppyToo = 6; return globalThis.sloppyToo })()"),
+        "6"
+    );
+    // Nothing that *is* declared is affected, by any of the three ways a global comes to exist.
+    assert_eq!(
+        run("'use strict'; var declared = 1; declared = 2; declared"),
+        "2"
+    );
+    assert_eq!(run("'use strict'; function f() {} f = 2; f"), "2");
+    assert_eq!(
+        run(
+            "globalThis.assigned = 1; (function () { 'use strict'; assigned = 2; return assigned })()"
+        ),
+        "2"
+    );
+    // §9.1.1.4.1's `HasBinding` on the global object record is **`HasProperty`**, so it walks the
+    // prototype chain: `toString` resolves at the top level through `Object.prototype`, and
+    // assigning to it is not assigning to nothing. An own-property test would throw here.
+    assert_eq!(
+        run("(function () { 'use strict'; toString = 1; return typeof toString })()"),
+        "number"
+    );
+    // A `let` or a `const` at the top level is the global *declarative* record rather than the
+    // object, so it never reaches this instruction at all — and a `const` still refuses for its
+    // own reason, which is a different error.
+    assert_eq!(run("'use strict'; let a = 1; a = 2; a"), "2");
+    assert_eq!(
+        run(
+            "'use strict'; const b = 1; var e = 'none'; try { b = 2 } catch (x) { e = x.constructor.name } e"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn a_getter_that_deletes_itself_leaves_a_reference_with_no_binding() {
+    // §9.1.1.4.5 `SetMutableBinding` step 2 — the property was there when the reference was made
+    // and is gone by the time it is written, so strict code gets a ReferenceError. That is the
+    // same answer step 6 gives above, which is why one check serves both: what matters is whether
+    // the binding is there *now*.
+    assert_eq!(
+        run(
+            "Object.defineProperty(globalThis, 'gx', {configurable: true, \
+               get: function () { delete globalThis.gx; return 2 }}); \
+             var e = 'none'; \
+             (function () { 'use strict'; try { gx ^= 3 } catch (x) { e = x.constructor.name } })(); \
+             e + ',' + ('gx' in globalThis)"
+        ),
+        "ReferenceError,false"
+    );
+    // …and the same program in sloppy code puts the property back, which is what makes the row
+    // above about strictness rather than about the getter.
+    assert_eq!(
+        run(
+            "Object.defineProperty(globalThis, 'gy', {configurable: true, \
+               get: function () { delete globalThis.gy; return 2 }}); \
+             gy ^= 3; globalThis.gy + ',' + ('gy' in globalThis)"
+        ),
+        "1,true"
+    );
+}

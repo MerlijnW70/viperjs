@@ -15243,17 +15243,6 @@ language/computed-property-names/class/static/method-prototype.js (strict) :: it
 language/computed-property-names/class/static/setter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/computed-property-names/class/static/setter-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/destructuring/binding/keyed-destructuring-property-reference-target-evaluation-order-with-bindings.js :: it threw an object with no name: Actual [binding::source, binding::sourceKey, sourceKey, get source, binding::defaultValue, binding::varTarget] and expected [binding::source, binding::sourceKey, sourceKey, binding::varTarget, get source, binding::defaultValue] should have the same contents.
-language/directive-prologue/func-decl-inside-func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/func-decl-no-semi-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/func-expr-inside-func-decl-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/func-expr-no-semi-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/func-expr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/get-accsr-inside-func-expr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/get-accsr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/set-accsr-inside-func-expr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/set-accsr-not-first-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/directive-prologue/set-accsr-runtime.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/arrow-fn-body-cntns-arguments-lex-bind-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -15312,8 +15301,6 @@ language/eval-code/direct/async-meth-no-pre-existing-arguments-bindings-are-pres
 language/eval-code/direct/async-meth-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/global-env-rec-eval.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/global-env-rec-with.js :: it threw an object with no name: direct eval
-language/eval-code/direct/strictness-override.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/eval-code/direct/strictness-override.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/eval-code/direct/var-env-func-init-global-update-configurable.js :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
 language/eval-code/direct/var-env-func-init-local-new-delete.js :: it threw SyntaxError: a sloppy function declaration inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-func-init-local-new.js :: it threw SyntaxError: a sloppy function declaration inside a direct eval in a function is not implemented yet
@@ -15324,7 +15311,6 @@ language/eval-code/direct/var-env-var-init-local-exstng.js :: it threw SyntaxErr
 language/eval-code/direct/var-env-var-init-local-new-delete.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-var-init-local-new.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/var-env-var-non-strict.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/var-env-var-strict-caller-2.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/eval-code/indirect/global-env-rec-eval.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/indirect/lex-env-heritage.js :: it threw ReferenceError: x is not defined
 language/eval-code/indirect/lex-env-heritage.js (strict) :: it threw ReferenceError: x is not defined
@@ -15361,7 +15347,6 @@ language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw Sy
 language/expressions/arrow-function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/arrow-function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/arrow-function/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/arrow-function/strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-array-3.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-4.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-5.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -15372,7 +15357,6 @@ language/expressions/assignment/S11.13.1_A5_T3.js :: it threw an object with no 
 language/expressions/assignment/S11.13.1_A6_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/assignment/S11.13.1_A6_T2.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/assignment/S11.13.1_A6_T3.js :: it threw an object with no name: #1: scope.x === 2. Actual: 1
-language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/destructuring/default-expr-throws-iterator-return-get-throws.js :: it threw an object with no name: Thrown value was not an object!
 language/expressions/assignment/destructuring/default-expr-throws-iterator-return-get-throws.js (strict) :: it threw an object with no name: Thrown value was not an object!
@@ -15399,7 +15383,6 @@ language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js :: it th
 language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -15444,9 +15427,6 @@ language/expressions/assignment/dstr/array-rest-iter-thrw-close.js :: it threw a
 language/expressions/assignment/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/expressions/assignment/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-rest-lref-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/assignment/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/assignment/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/fn-name-lhs-cover.js :: it threw an object with no name: name descriptor value should be ; name value should be
 language/expressions/assignment/fn-name-lhs-cover.js (strict) :: it threw an object with no name: name descriptor value should be ; name value should be
 language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -15537,7 +15517,6 @@ language/expressions/call/eval-spread-empty-trailing.js :: it threw an object wi
 language/expressions/call/eval-spread-empty-trailing.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread.js :: it threw an object with no name: Expected SameValue(«"local"», «1») to be true
 language/expressions/call/eval-spread.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «1») to be true
-language/expressions/call/eval-strictness-inherit-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/call/tco-call-args.js (strict) :: it threw RangeError: too much recursion
 language/expressions/call/tco-member-args.js (strict) :: it threw RangeError: too much recursion
 language/expressions/call/tco-non-eval-function-dynamic.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -15723,27 +15702,16 @@ language/expressions/compound-assignment/S11.13.2_A6.6_T1.js :: it threw SyntaxE
 language/expressions/compound-assignment/S11.13.2_A6.7_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/compound-assignment/S11.13.2_A6.8_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/compound-assignment/S11.13.2_A6.9_T1.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--10.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--11.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--12.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--13.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--14.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--15.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--16.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--17.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--18.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--19.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--2.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--20.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--21.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--3.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--4.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--5.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--6.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--7.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--8.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--9.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/conditional/tco-cond.js (strict) :: it threw RangeError: too much recursion
 language/expressions/conditional/tco-pos.js (strict) :: it threw RangeError: too much recursion
@@ -16265,7 +16233,6 @@ language/expressions/postfix-decrement/arguments.js (strict) :: expected a Synta
 language/expressions/postfix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-decrement/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/postfix-increment/11.3.1-2-1gs.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-increment/S11.3.1_A5_T1.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
@@ -16275,7 +16242,6 @@ language/expressions/postfix-increment/arguments.js (strict) :: expected a Synta
 language/expressions/postfix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/prefix-decrement/11.4.5-2-2gs.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-decrement/S11.4.5_A5_T1.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
@@ -16285,7 +16251,6 @@ language/expressions/prefix-decrement/arguments.js (strict) :: expected a Syntax
 language/expressions/prefix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-decrement/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/prefix-increment/S11.4.4_A5_T1.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
 language/expressions/prefix-increment/S11.4.4_A5_T2.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
@@ -16294,7 +16259,6 @@ language/expressions/prefix-increment/arguments.js (strict) :: expected a Syntax
 language/expressions/prefix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue--1.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/property-accessors/S11.2.1_A4_T3.js :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
 language/expressions/property-accessors/S11.2.1_A4_T3.js (strict) :: it threw an object with no name: #1: typeof Function.prototype === "function". Actual: object
@@ -16793,8 +16757,6 @@ language/statements/class/decorator/syntax/valid/decorator-member-expr-identifie
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
-language/statements/class/definition/constructor-strict-by-default.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/class/definition/constructor-strict-by-default.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/class/definition/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/statements/class/definition/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/statements/class/definition/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
@@ -16903,12 +16865,10 @@ language/statements/class/subclass/private-class-field-on-nonextensible-return-o
 language/statements/class/subclass/superclass-bound-function.js :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/class/subclass/superclass-bound-function.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/do-while/tco-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-rtrn-close-null.js :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-rtrn-close-null.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-thrw-close-skip.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-thrw-close-skip.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-put-unresolvable-strict.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-list-thrw-close-skip.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
@@ -16941,7 +16901,6 @@ language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js :: it threw a
 language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -16986,9 +16945,6 @@ language/statements/for-of/dstr/array-rest-iter-thrw-close.js :: it threw an obj
 language/statements/for-of/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-lref-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-rest-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/obj-id-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/obj-prop-put-unresolvable-strict.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-await-using-fresh-binding-per-iteration.js :: it did not parse: expected `;`, found an identifier
@@ -17152,8 +17108,6 @@ language/statements/with/set-mutable-binding-binding-deleted-with-typed-array-in
 language/statements/with/set-mutable-binding-idref-compound-assign-with-proxy-env.js :: it threw an object with no name: Actual [has:p, get:Symbol(Symbol.unscopables), get:p, has:p, get:Symbol(Symbol.unscopables), set:p] and expected [has:p, get:Symbol(Symbol.unscopables), has:p, get:p, has:p, set:p, getOwnPropertyDescriptor:p, defineProperty:p] should have the same contents.
 language/statements/with/set-mutable-binding-idref-with-proxy-env.js :: it threw an object with no name: Actual [has:p, get:Symbol(Symbol.unscopables), set:p] and expected [has:p, get:Symbol(Symbol.unscopables), has:p, set:p, getOwnPropertyDescriptor:p, defineProperty:p] should have the same contents.
 language/statements/with/unscopables-inc-dec.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
-language/types/reference/8.7.2-1-s.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/types/reference/8.7.2-3-a-1gs.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/types/reference/get-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function
 language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/types/reference/put-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function

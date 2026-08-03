@@ -297,15 +297,34 @@ impl Vm {
                     }
                 }
                 Instruction::StoreGlobal(index) => {
+                    // Read before the borrow of `running` has to end, exactly as `SetProperty`
+                    // reads it: raising wants the code pointer mutably.
+                    let strict = running.is_strict();
                     // Peeked, not popped, for the same reason `StoreVariable` peeks.
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
                     let key = self.global_name(running, index, heap)?;
-                    let global = Value::Object(self.realm.global());
-                    // §6.2.5.6 `PutValue`: a name that resolves to nothing is created on the
-                    // global object. That is the *sloppy* answer — strict code throws a
-                    // ReferenceError instead — and this engine does not yet carry a strictness
-                    // through to here, so it gives the one that is right for a Script's default.
-                    let stored = self.set_property_key(global, key, value, heap);
+                    let global = self.realm.global();
+                    // §6.2.5.6 `PutValue` step 6 — a name that resolves to nothing is created on
+                    // the global object in **sloppy** code and is a ReferenceError in strict.
+                    //
+                    // `HasProperty` and not an own lookup, because §9.1.1.4.1's `HasBinding` on the
+                    // global object record is `HasProperty`: `toString` resolves at the top level
+                    // through `Object.prototype`, so assigning to it is not assigning to nothing.
+                    //
+                    // This also answers §9.1.1.4.5 step 2 without a second rule. A compound
+                    // assignment whose getter *deletes* the property between the read and the write
+                    // is a reference whose binding has gone, and the clause makes that the same
+                    // ReferenceError — which is what asking now rather than at resolve time gives.
+                    if strict && !heap.has_property(global, key) {
+                        let thrown = self.realm.error(
+                            heap,
+                            NativeError::Reference,
+                            "this name is not declared and strict code may not create it",
+                        );
+                        self.unwind(thrown, root, current, at)?;
+                        continue;
+                    }
+                    let stored = self.set_property_key(Value::Object(global), key, value, heap);
                     // No `continue`: this is the end of the arm either way, so a handled throw
                     // and an ordinary store leave the loop in the same place.
                     self.settle(stored, heap, root, current, at)?;
