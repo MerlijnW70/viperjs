@@ -33,6 +33,7 @@
 //! - `global` — §9.1.1.4's Global Environment Record, where a name falls when it falls out of
 //!   every scope.
 //! - `jobs` — §9.5's queue, and what it means for a job to run "later" (DR-0016).
+//! - `loader` — §16.2.1.7's `HostLoadImportedModule`, which is the host's and not the language's.
 //! - `module` — §16.2.1's records: linking a graph of modules, and evaluating it in order.
 //! - `proxy` — §10.5's four internal methods a property access goes through.
 //! - `proxy_call` — §10.5.12 and §10.5.13, the two a proxy has only *sometimes*.
@@ -57,6 +58,7 @@ mod execute;
 mod generator;
 mod global;
 mod jobs;
+mod loader;
 mod module;
 mod property;
 mod proxy;
@@ -64,6 +66,7 @@ mod proxy_call;
 mod proxy_shape;
 mod suspend;
 
+pub use self::loader::ModuleLoader;
 pub use self::module::{Graph, LinkError};
 
 use self::call::Frame;
@@ -178,7 +181,6 @@ pub(super) struct Handler {
 ///
 /// Holds the operand stack and nothing else so far. Call frames, the environment and the job
 /// queue join it as the things that need them arrive.
-#[derive(Debug)]
 pub struct Vm {
     stack: Vec<Value>,
     /// The intrinsics a thrown error is built from.
@@ -207,6 +209,29 @@ pub struct Vm {
     environment: EnvironmentId,
     /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
     completion: Value,
+    /// Every module this execution has linked, by chunk identity — §16.2.1's records.
+    ///
+    /// On the machine rather than in a local of the link, because §16.2.1.6's "each body once" is a
+    /// fact about the whole execution and not about one call: a dynamic `import()` arriving later
+    /// has to find what an earlier one evaluated, and find the *same* namespace object for it.
+    modules: std::collections::BTreeMap<usize, loader::ModuleRecord>,
+    /// Every specifier that has been answered, and the module it answered with.
+    ///
+    /// The memo in front of [`ModuleLoader`], so a host is never asked twice for one specifier. A
+    /// `Graph` the caller handed to [`Vm::run_module_graph`] is merged into this, which is what
+    /// lets a dynamic `import()` of a statically-loaded specifier find the module already there
+    /// rather than loading a second copy of it.
+    resolved: Graph,
+    // No `Debug` on the machine any more: a host's loader is the host's type and cannot be made to
+    // have one, so a derive here would demand it of every embedder. What a debug print of the field
+    // would say is "there is one", which is not worth that.
+    /// How the host answers a specifier at run time — §16.2.1.7, and `None` until one is given.
+    ///
+    /// A `Box<dyn>` and not a type parameter, because the machine is one type across every
+    /// embedding and a parameter here would spread to `Heap`, to every builtin and to the public
+    /// API. The call happens once per module ever loaded, so the indirection costs nothing that a
+    /// parameter would buy back.
+    loader: Option<Box<dyn ModuleLoader>>,
     /// §9.5's jobs, waiting for the stack to empty — see [`jobs`].
     ///
     /// On the VM rather than on the realm because a job is *work in progress*, not an intrinsic:
@@ -283,6 +308,9 @@ impl Vm {
     /// throws needs a prototype to be an instance of.
     pub fn new(heap: &mut Heap) -> Self {
         Self {
+            modules: std::collections::BTreeMap::new(),
+            resolved: Graph::new(),
+            loader: None,
             realm: Realm::new(heap),
             escaped: None,
             jobs: std::collections::VecDeque::new(),
@@ -653,6 +681,15 @@ impl Vm {
         // with: a promise reaction names its handler, its capability and the value it settled.
         for job in &self.jobs {
             job.names(&mut values);
+        }
+        // §16.2.1's records. A module that has been linked is reachable for the rest of the
+        // execution whether or not anything is currently running it — a later `import()` of the same
+        // specifier must find the same namespace and must not run the body again. Freeing an
+        // environment here would leave a namespace object reading slots that are gone.
+        for record in self.modules.values() {
+            environments.push(record.environment);
+            values.extend(record.namespace.map(Value::Object));
+            values.extend(record.failure);
         }
         crate::heap::Roots {
             values,

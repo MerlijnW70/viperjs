@@ -866,6 +866,13 @@ pub enum Instruction {
     StoreName(u32),
     /// §13.5.1.1 — its type, and `"undefined"` rather than a throw when the walk finds nothing.
     TypeofName(u32),
+    /// §13.3.10 `ImportCall` — `import(x)`, which answers a promise and loads in a job.
+    ///
+    /// Takes the specifier off the stack and leaves the promise there. Everything else happens
+    /// later and elsewhere: `ToString` of the specifier is the last thing that can throw
+    /// *synchronously*, and §13.3.10 step 6 makes even that a rejection rather than a throw — so
+    /// this instruction cannot fail, which is what lets `import()` be a value like any other.
+    DynamicImport,
     /// §13.5.1.2 — delete it, when where it lives is only known at run time.
     ///
     /// The same walk as [`Instruction::LoadName`], and the answer depends on what the walk lands on
@@ -1260,6 +1267,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::StoreName(_)
         | Instruction::TypeofName(_)
         | Instruction::DeleteName(_)
+        | Instruction::DynamicImport
         | Instruction::LoadNameForCall(_)
         | Instruction::Constant(_)
         | Instruction::RegExpLiteral

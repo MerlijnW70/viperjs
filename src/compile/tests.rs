@@ -47,9 +47,15 @@ fn an_operator_is_emitted_after_both_of_its_operands() {
 fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // The parser accepted every one of these. Refusing with a span is the difference between
     // "praxis cannot do this yet" and a wrong answer nobody notices.
+    // A destructuring rest parameter, because this row needs something the compiler still refuses
+    // and the example has to be replaced each time one of them lands — `import('x')` was here until
+    // §13.3.10 arrived, and before that a `class`, a generator, and an `await`.
     let cases = [
-        ("import('x')", "a dynamic import"),
-        ("1 ? import('x') : 3", "a dynamic import"),
+        ("(function (...[a]) {})", "a destructuring rest parameter"),
+        (
+            "1 ? (function (...{a}) {}) : 3",
+            "a destructuring rest parameter",
+        ),
     ];
     for (source, what) in cases {
         let error = compile(source).expect_err("not implemented yet"); // the test is about the error
@@ -300,9 +306,14 @@ fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
 fn a_refusal_deep_inside_an_expression_carries_the_inner_span() {
     // The refusal comes from where the trouble is, not from the top: an engine that reported
     // the whole line would be useless on a long one.
-    let error = compile("1 + 2 * (3 - import('x'))").expect_err("not implemented yet"); // same
-    assert_eq!(error.kind, ErrorKind::Unsupported("a dynamic import"));
-    assert_eq!(error.span, Span::new(13, 24));
+    let error = compile("1 + 2 * (3 - (function (...[a]) {})())").expect_err("not implemented yet"); // same
+    assert_eq!(
+        error.kind,
+        ErrorKind::Unsupported("a destructuring rest parameter")
+    );
+    // The function expression, not the whole line: 0..37 is what an engine that reported the
+    // statement would say.
+    assert_eq!(error.span, Span::new(13, 35));
 }
 
 /// The body of the first function written in `source`.

@@ -141,8 +141,8 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
     let cases = [
         ("function f(...[a]) {}", "a destructuring rest parameter"),
         (
-            "async function* g() { yield import('x'); }",
-            "a dynamic import",
+            "async function* g() { yield (function (...[a]) {}); }",
+            "a destructuring rest parameter",
         ),
     ];
     for (source, what) in cases {

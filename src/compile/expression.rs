@@ -481,7 +481,19 @@ impl Compiler<'_> {
                 Ok(())
             }
             ExprKind::ImportMeta => Err(unsupported("import.meta", span)),
-            ExprKind::ImportCall { .. } => Err(unsupported("a dynamic import", span)),
+            // §13.3.10 — the specifier is an expression, which is the whole point of the form. The
+            // second argument is §13.3.10's `options`, and praxis has no import attribute it acts
+            // on: it is evaluated for its effects and dropped, because a getter written there must
+            // still run.
+            ExprKind::ImportCall { specifier, options } => {
+                self.expression(specifier)?;
+                if let Some(options) = options {
+                    self.expression(options)?;
+                    self.chunk.emit(Instruction::Pop);
+                }
+                self.chunk.emit(Instruction::DynamicImport);
+                Ok(())
+            }
             // §13.3.9 — the wrapper is where the short circuit lands, and the only thing it compiles
             // to is that landing site. Everything else is the ordinary chain underneath it.
             ExprKind::OptionalChain(inner) => {

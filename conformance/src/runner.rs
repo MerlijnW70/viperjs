@@ -356,6 +356,34 @@ fn judge_before_running(negative: Option<&Negative>, why: &str, phases: &[&str])
 /// evaluation agree about where to start.
 const ENTRY: &str = "\u{0}entry";
 
+/// §16.2.1.7 `HostLoadImportedModule` for test262 — a specifier is a path beside the test.
+///
+/// `INTERPRETING.md` says so in as many words, and it is the whole of what this host does: no bare
+/// specifiers, no package resolution, no cache of its own. The engine memoises, so this is asked at
+/// most once per specifier per test.
+struct Beside {
+    /// The directory the test file is in.
+    directory: PathBuf,
+}
+
+impl praxis::vm::ModuleLoader for Beside {
+    fn load(
+        &mut self,
+        specifier: &str,
+        heap: &mut Heap,
+    ) -> Result<Rc<praxis::compile::Chunk>, String> {
+        let path = self
+            .directory
+            .join(specifier.replace('/', std::path::MAIN_SEPARATOR_STR));
+        let source = std::fs::read_to_string(&path)
+            .map_err(|_| format!("no module beside the test at {specifier:?}"))?;
+        let parsed = parse_module(&source)
+            .map_err(|error| format!("an imported module did not parse: {}", error.kind))?;
+        let compiled = compile_module(&parsed, heap).map_err(|error| error.message())?;
+        Ok(Rc::new(compiled))
+    }
+}
+
 /// Read, parse and compile everything `specifier` reaches, into `graph`.
 ///
 /// §16.2.1.7's `HostLoadImportedModule`, and it is depth-first because a module's own imports are
@@ -463,6 +491,13 @@ fn evaluate(
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
+    // §16.2.1.7 at *run* time, which is the half a pre-built graph cannot answer: a dynamic
+    // `import()`'s specifier is whatever an expression evaluated to, so the directory has to stay
+    // reachable while the test runs. Given to every test and not only to a module one — §13.3.10 is
+    // an expression, and a Script may write it.
+    vm.set_module_loader(Box::new(Beside {
+        directory: beside.to_path_buf(),
+    }));
     // §16.2.1.7 `HostLoadImportedModule` is the host's, and this host is a directory: a specifier
     // is a path beside the test. Everything it reaches is read, parsed and compiled here, and the
     // engine is handed a graph it can link — see `praxis::vm::Graph`.

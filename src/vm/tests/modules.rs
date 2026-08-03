@@ -621,6 +621,38 @@ fn a_star_export_carries_every_name_but_default() {
         ),
         "7"
     );
+    // A namespace over a cycle of star exports terminates too, and that is a *second* walk:
+    // §16.2.1.6.2 gathers the names and §16.2.1.6.3 resolves each, and each has its own reason to
+    // stop. Without the first one's, building this object never returns.
+    assert_eq!(
+        run_graph(
+            &[
+                ("left", "export * from 'right'; export var here = 1;"),
+                ("right", "export * from 'left'; export var there = 2;"),
+                (
+                    "main",
+                    "import * as ns from 'left'; Object.keys(ns).join(',')"
+                ),
+            ],
+            "main"
+        ),
+        "here,there"
+    );
+    // …and `default` is still the one name a star does not carry, through a cycle as anywhere else.
+    assert_eq!(
+        run_graph(
+            &[
+                ("deep", "export var a = 1; export default 9;"),
+                ("middle", "export * from 'deep';"),
+                (
+                    "main",
+                    "import * as ns from 'middle'; Object.keys(ns).join(',') + ':' +                      (typeof ns.default)"
+                ),
+            ],
+            "main"
+        ),
+        "a:undefined"
+    );
     // A cycle of star exports terminates — §16.2.1.6.2 step 1 and §16.2.1.6.3 step 1 — rather than
     // walking for ever, and the name is still found by the path that has it.
     assert_eq!(
@@ -664,6 +696,31 @@ fn a_name_two_star_exports_disagree_about_is_refused_only_when_it_is_asked_for()
         .expect("well formed"); // same
     assert!(
         matches!(refused, Err(ref error) if error.message().contains("does not export")),
+        "{refused:?}"
+    );
+    // §16.2.1.6.4 step 3 — an indirect export is resolved at link time whether or not anything
+    // imports it. `middle` below re-exports a name `deep` does not have, and nothing asks for it:
+    // the module that wrote the line is still refused.
+    let mut heap = Heap::new();
+    let mut graph = crate::vm::Graph::new();
+    for (specifier, source) in [
+        ("deep", "export var real = 1;"),
+        (
+            "middle",
+            "export { nope } from 'deep'; export var fine = 2;",
+        ),
+        ("main", "import { fine } from 'middle'; fine"),
+    ] {
+        let parsed = crate::parser::parse_module(source).expect("parses"); // the test is about linking
+        let chunk = crate::compile::compile_module(&parsed, &mut heap).expect("compiles"); // same
+        graph.insert(specifier, std::rc::Rc::new(chunk));
+    }
+    let mut vm = Vm::new(&mut heap);
+    let refused = vm
+        .run_module_graph("main", &graph, &mut heap)
+        .expect("well formed"); // same
+    assert!(
+        matches!(refused, Err(ref error) if error.message().contains("nope")),
         "{refused:?}"
     );
     // A diamond is **not** ambiguous: both paths reach the same binding, so the answer agrees with
@@ -773,5 +830,197 @@ fn a_re_export_requires_its_module_even_when_no_name_crosses() {
             "main"
         ),
         "yes"
+    );
+}
+
+/// A loader that answers from a table the test wrote — §16.2.1.7 done by hand.
+struct Supplied {
+    sources: Vec<(String, String)>,
+}
+
+impl crate::vm::ModuleLoader for Supplied {
+    fn load(
+        &mut self,
+        specifier: &str,
+        heap: &mut Heap,
+    ) -> Result<std::rc::Rc<crate::compile::Chunk>, String> {
+        let source = self
+            .sources
+            .iter()
+            .find(|(name, _)| name == specifier)
+            .map(|(_, source)| source.clone())
+            .ok_or_else(|| format!("nothing is at {specifier:?}"))?;
+        let parsed = crate::parser::parse_module(&source)
+            .map_err(|error| format!("{specifier:?} did not parse: {}", error.kind))?;
+        let compiled = crate::compile::compile_module(&parsed, heap).map_err(|e| e.message())?;
+        Ok(std::rc::Rc::new(compiled))
+    }
+}
+
+/// Run `source` as a script, with `modules` reachable by a dynamic `import()`.
+fn run_importing(modules: &[(&str, &str)], source: &str) -> String {
+    let mut heap = Heap::new();
+    let script = crate::parser::parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = crate::compile::compile_script(&script, &mut heap).expect("it compiles"); // same
+    let mut vm = Vm::new(&mut heap);
+    vm.set_module_loader(Box::new(Supplied {
+        sources: modules
+            .iter()
+            .map(|(name, source)| ((*name).to_string(), (*source).to_string()))
+            .collect(),
+    }));
+    let outcome = vm.run(&chunk, &mut heap).expect("the chunk makes sense"); // same
+    describe(outcome, &mut heap)
+}
+
+/// The same, answering `globalThis.out` once every job has run.
+///
+/// What a settled promise did is only visible after the queue drains, and DR-0016 drains it inside
+/// `run` — so a second `run` of a one-line script is how a test reads the result without the
+/// engine growing an API for it.
+fn after_jobs(modules: &[(&str, &str)], source: &str) -> String {
+    let mut heap = Heap::new();
+    let script = crate::parser::parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = crate::compile::compile_script(&script, &mut heap).expect("it compiles"); // same
+    let read = crate::parser::parse_script("String(globalThis.out)").expect("parses"); // same
+    let reader = crate::compile::compile_script(&read, &mut heap).expect("compiles"); // same
+    let mut vm = Vm::new(&mut heap);
+    vm.set_module_loader(Box::new(Supplied {
+        sources: modules
+            .iter()
+            .map(|(name, source)| ((*name).to_string(), (*source).to_string()))
+            .collect(),
+    }));
+    vm.run(&chunk, &mut heap).expect("the chunk makes sense"); // same
+    let outcome = vm.run(&reader, &mut heap).expect("the chunk makes sense"); // same
+    describe(outcome, &mut heap)
+}
+
+#[test]
+fn a_dynamic_import_answers_a_promise_and_never_settles_before_the_statement_ends() {
+    // §13.3.10 — the value is a promise, and nothing it does may be observable before the
+    // statement containing it has finished. A module loaded where the `import()` is written would
+    // run another module's body in the middle of this expression.
+    assert_eq!(
+        run_importing(
+            &[("dep", "globalThis.ran = 'yes'; export var a = 1;")],
+            "import('dep'); typeof globalThis.ran"
+        ),
+        "undefined"
+    );
+    // …and once the queue has drained it has settled, with the module's **namespace** — §16.2.1.11
+    // step 5 — rather than with whatever the body evaluated to.
+    assert_eq!(
+        after_jobs(
+            &[(
+                "dep",
+                "export var a = 1; export default 2; 'the body value';"
+            )],
+            "import('dep').then(function (ns) { \
+               globalThis.out = ns.a + ':' + ns.default + ':' + Object.keys(ns).join(); \
+             });"
+        ),
+        "1:2:a,default"
+    );
+}
+
+#[test]
+fn a_dynamically_imported_module_is_the_same_one_a_static_import_reached() {
+    // §16.2.1.6's "each body once" is a fact about the whole execution and not about one call, so
+    // a module an earlier import evaluated is not evaluated again — and §16.2.1.10 answers with the
+    // same namespace object for it.
+    assert_eq!(
+        after_jobs(
+            &[
+                (
+                    "counter",
+                    "globalThis.runs = (globalThis.runs || 0) + 1; export var n = 1;"
+                ),
+                ("mid", "import { n } from 'counter'; export var m = n;"),
+            ],
+            "import('mid') \
+               .then(function () { return import('counter'); }) \
+               .then(function (first) { \
+                 return import('counter').then(function (again) { \
+                   globalThis.out = globalThis.runs + ':' + (first === again); \
+                 }); \
+               });"
+        ),
+        "1:true"
+    );
+    // A module that **threw** throws the same value at every later importer rather than being run
+    // again — §16.2.1.6 step 9's `[[EvaluationError]]`.
+    assert_eq!(
+        after_jobs(
+            &[(
+                "bad",
+                "globalThis.tries = (globalThis.tries || 0) + 1; throw new Error('once');"
+            )],
+            "import('bad').catch(function (first) { \
+               return import('bad').catch(function (again) { \
+                 globalThis.out = globalThis.tries + ':' + (first === again) + ':' + first.message; \
+               }); \
+             });"
+        ),
+        "1:true:once"
+    );
+}
+
+#[test]
+fn a_dynamic_import_rejects_rather_than_throwing() {
+    // §13.3.10 step 6 and §16.2.1.7 — a specifier nothing answers, a module that will not compile
+    // and a body that throws are all **rejections**. None may throw out of the `import()`, because
+    // the expression has already answered with a promise.
+    let modules: &[(&str, &str)] = &[
+        ("broken", "var 1 = 2;"),
+        ("throws", "throw new Error('from the body');"),
+    ];
+    for (specifier, expected) in [
+        ("nowhere", "nothing is at"),
+        ("broken", "did not parse"),
+        ("throws", "from the body"),
+    ] {
+        let answer = after_jobs(
+            modules,
+            &format!(
+                "globalThis.out = 'never settled'; \
+                 import('{specifier}').then( \
+                   function () {{ globalThis.out = 'fulfilled'; }}, \
+                   function (e) {{ globalThis.out = String(e.message); }});"
+            ),
+        );
+        assert!(answer.contains(expected), "for {specifier:?}: {answer}");
+    }
+    // A `toString` on the specifier that throws rejects too — §13.3.10 step 6 — rather than
+    // throwing where the `import()` was written.
+    assert_eq!(
+        after_jobs(
+            &[],
+            "globalThis.out = 'never settled'; \
+             var threw = 'no'; \
+             try { \
+               import({ toString: function () { throw new Error('from toString'); } }) \
+                 .catch(function (e) { globalThis.out = threw + ':' + e.message; }); \
+             } catch (e) { threw = 'yes'; }"
+        ),
+        "no:from toString"
+    );
+    // With no loader at all, an `import()` rejects rather than throwing — which is what a host that
+    // cannot load a module is supposed to do, and is the behaviour an embedder gets for free.
+    let mut heap = Heap::new();
+    let script = crate::parser::parse_script(
+        "globalThis.out = 'never settled'; \
+         import('anything').catch(function (e) { globalThis.out = String(e.message); });",
+    )
+    .expect("parses"); // the test is about the missing loader
+    let chunk = crate::compile::compile_script(&script, &mut heap).expect("compiles"); // same
+    let read = crate::parser::parse_script("String(globalThis.out)").expect("parses"); // same
+    let reader = crate::compile::compile_script(&read, &mut heap).expect("compiles"); // same
+    let mut vm = Vm::new(&mut heap);
+    vm.run(&chunk, &mut heap).expect("makes sense"); // same
+    let outcome = vm.run(&reader, &mut heap).expect("makes sense"); // same
+    assert!(
+        describe(outcome, &mut heap).contains("no module loader"),
+        "a machine with no loader rejects and says so"
     );
 }

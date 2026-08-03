@@ -17242,6 +17242,7 @@ language/expressions/division/order-of-evaluation.js :: it threw an object with 
 language/expressions/division/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/does-not-equals/bigint-and-object.js :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
 language/expressions/does-not-equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
+language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17250,6 +17251,7 @@ language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-sourc
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17258,6 +17260,7 @@ language/expressions/dynamic-import/catch/nested-async-arrow-function-await-impo
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17266,6 +17269,7 @@ language/expressions/dynamic-import/catch/nested-async-arrow-function-return-awa
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17274,6 +17278,7 @@ language/expressions/dynamic-import/catch/nested-async-function-await-import-sou
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17282,6 +17287,7 @@ language/expressions/dynamic-import/catch/nested-async-function-import-source-sp
 language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-function-return-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17290,6 +17296,7 @@ language/expressions/dynamic-import/catch/nested-async-function-return-await-imp
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17298,6 +17305,7 @@ language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-s
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-async-gen-return-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17306,6 +17314,7 @@ language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-s
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17314,6 +17323,7 @@ language/expressions/dynamic-import/catch/nested-block-import-catch-import-sourc
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-block-labeled-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17322,6 +17332,7 @@ language/expressions/dynamic-import/catch/nested-block-labeled-import-source-spe
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-do-while-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17330,6 +17341,7 @@ language/expressions/dynamic-import/catch/nested-do-while-import-source-specifie
 language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-else-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17338,6 +17350,7 @@ language/expressions/dynamic-import/catch/nested-else-import-catch-import-source
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-function-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17346,6 +17359,7 @@ language/expressions/dynamic-import/catch/nested-function-import-catch-import-so
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-if-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17354,6 +17368,7 @@ language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-s
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/nested-while-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17362,6 +17377,7 @@ language/expressions/dynamic-import/catch/nested-while-import-catch-import-sourc
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/catch/top-level-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -17370,11 +17386,53 @@ language/expressions/dynamic-import/catch/top-level-import-catch-import-source-s
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/custom-primitive.js :: the test called $DONE with TypeError: cannot convert an object to a primitive value
+language/expressions/dynamic-import/custom-primitive.js (strict) :: the test called $DONE with TypeError: cannot convert an object to a primitive value
+language/expressions/dynamic-import/eval-export-dflt-cls-anon.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-cls-name-meth.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-cls-named.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-cls-anon.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-cls-name-meth.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-cls-named.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-fn-anon.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-fn-named.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-gen-anon.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-gen-named.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-export-dflt-expr-in.js :: the test's status could not be read
+language/expressions/dynamic-import/eval-self-once-module.js :: the test's status could not be read
+language/expressions/dynamic-import/for-await-resolution-and-error-agen-yield.js :: the test called $DONE with Test262Error: a Expected SameValue(«undefined», «42») to be true
+language/expressions/dynamic-import/for-await-resolution-and-error-agen-yield.js (strict) :: the test called $DONE with Test262Error: a Expected SameValue(«undefined», «42») to be true
+language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js :: the test called $DONE with Test262Error: Expected an error, but observed no error
+language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js (strict) :: the test called $DONE with Test262Error: Expected an error, but observed no error
+language/expressions/dynamic-import/import-attributes/2nd-param-non-object.js :: the test called $DONE with Test262Error: Promise for boolean was not rejected.
+language/expressions/dynamic-import/import-attributes/2nd-param-non-object.js (strict) :: the test called $DONE with Test262Error: Promise for boolean was not rejected.
+language/expressions/dynamic-import/import-attributes/2nd-param-with-enumeration-abrupt.js :: the test called $DONE with Test262Error: Expected promise to be rejected, but promise was fulfilled.
+language/expressions/dynamic-import/import-attributes/2nd-param-with-enumeration-abrupt.js (strict) :: the test called $DONE with Test262Error: Expected promise to be rejected, but promise was fulfilled.
+language/expressions/dynamic-import/import-attributes/2nd-param-with-enumeration-enumerable.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/expressions/dynamic-import/import-attributes/2nd-param-with-enumeration-enumerable.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+language/expressions/dynamic-import/import-attributes/2nd-param-with-non-object.js :: the test called $DONE with Test262Error: Promise for boolean was not rejected.
+language/expressions/dynamic-import/import-attributes/2nd-param-with-non-object.js (strict) :: the test called $DONE with Test262Error: Promise for boolean was not rejected.
+language/expressions/dynamic-import/import-attributes/2nd-param-with-type-text.js :: the test called $DONE with Test262Error: Expected SameValue(«"undefined"», «"string"») to be true
+language/expressions/dynamic-import/import-attributes/2nd-param-with-type-text.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«"undefined"», «"string"») to be true
+language/expressions/dynamic-import/import-attributes/2nd-param-with-value-abrupt.js :: the test called $DONE with Test262Error: Expected promise to be rejected, but it was fulfilled
+language/expressions/dynamic-import/import-attributes/2nd-param-with-value-abrupt.js (strict) :: the test called $DONE with Test262Error: Expected promise to be rejected, but it was fulfilled
+language/expressions/dynamic-import/import-attributes/2nd-param-with-value-non-string.js :: the test called $DONE with Test262Error: Promise for null was not rejected.
+language/expressions/dynamic-import/import-attributes/2nd-param-with-value-non-string.js (strict) :: the test called $DONE with Test262Error: Promise for null was not rejected.
 language/expressions/dynamic-import/import-defer/import-defer-async-module/main.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/main.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/promise-prototype-then-not-called.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/sync/main.js :: it did not parse: expected `meta`, found an identifier
+language/expressions/dynamic-import/import-fulfilled-member-of-errored-cycle.js :: the test called $DONE with Test262Error: Expected SameValue(«"a top-level `await` is not implemented yet"», «"async error in B"») to be true
+language/expressions/dynamic-import/import-fulfilled-member-of-errored-cycle.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«"a top-level `await` is not implemented yet"», «"async error in B"») to be true
+language/expressions/dynamic-import/imported-self-update.js :: the test's status could not be read
+language/expressions/dynamic-import/namespace/await-ns-define-own-property.js :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
+language/expressions/dynamic-import/namespace/await-ns-define-own-property.js (strict) :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
+language/expressions/dynamic-import/namespace/await-ns-get-nested-namespace-dflt-indirect.js :: the test's status could not be read
+language/expressions/dynamic-import/namespace/promise-then-ns-define-own-property.js :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
+language/expressions/dynamic-import/namespace/promise-then-ns-define-own-property.js (strict) :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
+language/expressions/dynamic-import/namespace/promise-then-ns-get-nested-namespace-dflt-indirect.js :: the test's status could not be read
+language/expressions/dynamic-import/reuse-namespace-object-from-import.js :: the test's status could not be read
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
@@ -17535,8 +17593,6 @@ language/expressions/dynamic-import/syntax/valid/top-level-import-source-empty-s
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/usage-from-eval.js :: it threw SyntaxError: a dynamic import is not implemented yet
-language/expressions/dynamic-import/usage-from-eval.js (strict) :: it threw SyntaxError: a dynamic import is not implemented yet
 language/expressions/equals/bigint-and-object.js :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
 language/expressions/equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
 language/expressions/equals/coerce-symbol-to-prim-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -17829,6 +17885,7 @@ language/global-code/script-decl-var.js :: it threw TypeError: what was called i
 language/global-code/script-decl-var.js (strict) :: it threw TypeError: what was called is not a function
 language/identifier-resolution/assign-to-global-undefined.js (strict) :: expected a ReferenceError at runtime time, and nothing was thrown
 language/import/import-attributes/json-extensibility-array.js :: it did not parse: "./json-value-array_FIXTURE.json" does not export "default"
+language/import/import-attributes/json-idempotency.js :: it did not parse: "./json-idempotency_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-value-array.js :: it did not parse: "./json-value-array_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-value-boolean.js :: it did not parse: "./json-value-boolean_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-value-null.js :: it did not parse: "./json-value-null_FIXTURE.json" does not export "default"
@@ -17847,8 +17904,10 @@ language/import/import-defer/deferred-namespace-object/to-string-tag.js :: it di
 language/import/import-defer/errors/get-self-while-defer-evaluating/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/errors/get-self-while-evaluating-async/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/errors/get-self-while-evaluating.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js :: it threw an object with no name: asyncTest called without async flag
 language/import/import-defer/errors/module-throws/third-party-evaluation-after-defer-import.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/errors/module-throws/trigger-evaluation.js :: it did not parse: expected `from`, found `*`
+language/import/import-defer/errors/resolution-error/import-defer-of-missing-module-fails.js :: it threw an object with no name: asyncTest called without async flag
 language/import/import-defer/errors/syntax-error/import-defer-of-syntax-error-fails.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/module-imported-defer-and-eager.js :: it did not parse: expected `from`, found `*`
@@ -17987,6 +18046,16 @@ language/module-code/import-attributes/early-dup-attribute-key-import-withbindin
 language/module-code/instn-resolve-empty-import.js :: expected a SyntaxError at resolution time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/namespace/internals/define-own-property.js :: it threw an object with no name: Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
 language/module-code/namespace/internals/super-access-to-tdz-binding.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
+language/module-code/source-phase-import/import-source.js :: the test called $DONE with Test262Error: ./import-source-binding-name_FIXTURE.js: Promise should be rejected with a non-SyntaxError
+language/module-code/source-phase-import/import-source.js (strict) :: the test called $DONE with Test262Error: ./import-source-binding-name_FIXTURE.js: Promise should be rejected with a non-SyntaxError
+language/module-code/top-level-await/dynamic-import-of-waiting-module.js :: the test never called $DONE
+language/module-code/top-level-await/dynamic-import-of-waiting-module.js (strict) :: the test never called $DONE
+language/module-code/top-level-await/dynamic-import-rejection.js :: the test's status could not be read
+language/module-code/top-level-await/dynamic-import-resolution.js :: the test's status could not be read
+language/module-code/top-level-await/fulfillment-order.js :: it threw TypeError: what was called is not a function
+language/module-code/top-level-await/rejection-order.js :: it threw TypeError: what was called is not a function
+language/module-code/top-level-await/unobservable-global-async-evaluation-count-reset.js :: it threw TypeError: what was called is not a function
+language/module-code/verify-dfs.js :: it threw TypeError: what was called is not a function
 language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
 language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
 language/statements/async-function/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran

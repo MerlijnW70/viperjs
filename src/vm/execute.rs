@@ -949,6 +949,22 @@ impl Vm {
                         None => continue,
                     }
                 }
+                // §13.3.10 `ImportCall` — answers a promise and does everything else in a job.
+                Instruction::DynamicImport => {
+                    let specifier = self.pop()?;
+                    let promise = match self.begin_dynamic_import(specifier, heap) {
+                        Ok(promise) => promise,
+                        // Step 2's `NewPromiseCapability` is the one part that can fail outright,
+                        // and only if the realm's `%Promise%` has been replaced with something that
+                        // is not a constructor. There is no promise to reject with, so it throws.
+                        Err(error) => {
+                            let thrown = self.thrown_value(error, heap);
+                            self.unwind(thrown, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    self.stack.push(promise);
+                }
                 // §13.5.1.2 — the same walk a read of this name makes, and one of three answers
                 // depending on where it lands. Emitted only inside a `with`: everywhere else the
                 // compiler already knows which of the three applies.

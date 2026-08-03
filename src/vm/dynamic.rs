@@ -281,5 +281,9 @@ impl Vm {
 fn slot_of(heap: &Heap, environment: EnvironmentId, name: &str) -> Option<(u32, Mutability)> {
     let names = heap.environment_names(environment)?;
     let at = names.iter().position(|binding| &*binding.name == name)?;
-    Some((u32::try_from(at).ok()?, names[at].mutability))
+    // A scope with more than four billion names is not a program, and `Chunk::locals` is a `u32`
+    // besides — so the position always fits. `ok()?` rather than a cast: a wrong slot index is a
+    // wrong *variable*, and answering "not here" sends the walk outwards, which is the safe way to
+    // be wrong about a name.
+    Some((u32::try_from(at).ok()?, names[at].mutability)) // a narrowing that cannot lose, and answers None if it ever did
 }

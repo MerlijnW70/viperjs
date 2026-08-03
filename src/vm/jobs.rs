@@ -19,7 +19,7 @@
 //! rejects the promise `then` answered with, which is the reaction's own doing and happens before
 //! the job returns — so the only completions dropped here are ones no promise was waiting for.
 
-use crate::heap::{Capability, Heap, ObjectId, Reaction, ReactionKind};
+use crate::heap::{Capability, Heap, ObjectId, Reaction, ReactionKind, StringId};
 use crate::value::{Completion, Value};
 use crate::vm::Vm;
 
@@ -32,6 +32,22 @@ pub(crate) enum Job {
         reaction: Reaction,
         /// `[[PromiseResult]]` at the moment it settled.
         argument: Value,
+    },
+    /// §13.3.10 step 7 — load, link and evaluate a module, then settle the `import()` promise.
+    ///
+    /// A job rather than work done where the `import()` was written, and that is not an
+    /// optimisation: §13.3.10 answers a promise, so nothing it does may be observable before the
+    /// statement containing it has finished. A module loaded synchronously would run another
+    /// module's body in the middle of an expression.
+    Import {
+        /// The specifier, after `ToString` — §13.3.10 step 5, which happened before this was queued
+        /// because a `toString` that throws rejects rather than deferring.
+        ///
+        /// A heap String rather than a `String`, so that a queued job stays `Copy` like every other
+        /// and so that the text is traced by the same walk that traces everything else a job holds.
+        specifier: StringId,
+        /// What to settle with the namespace, or with why the load failed.
+        capability: Capability,
     },
     /// §27.2.2.2 `NewPromiseResolveThenableJob` — hand our resolving functions to a thenable.
     ///
@@ -57,6 +73,13 @@ impl Job {
     /// beside the variants so that a third kind of job cannot be added without its own line here.
     pub(crate) fn names(&self, into: &mut Vec<Value>) {
         match self {
+            Job::Import {
+                specifier,
+                capability,
+            } => {
+                into.push(Value::String(*specifier));
+                into.extend([capability.promise, capability.resolve, capability.reject]);
+            }
             Job::Reaction { reaction, argument } => {
                 into.push(*argument);
                 into.extend(reaction.handler);
@@ -97,6 +120,10 @@ impl Vm {
     fn run_job(&mut self, job: Job, heap: &mut Heap) -> Completion<Value> {
         match job {
             Job::Reaction { reaction, argument } => self.reaction_job(reaction, argument, heap),
+            Job::Import {
+                specifier,
+                capability,
+            } => self.import_job(specifier, capability, heap),
             Job::ResolveThenable {
                 promise,
                 thenable,
