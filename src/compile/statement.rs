@@ -148,17 +148,14 @@ impl Compiler<'_> {
             // §14.13 — a label, which is a name a `break` or a `continue` can aim at.
             StmtKind::Labelled(statement) => self.labelled_statement(statement),
             StmtKind::With(statement) => self.with_statement(statement),
-            // Already made by [`Compiler::hoist_functions`] before the body ran, so a declaration
-            // at a body's top level has nothing left to do — and produces no completion value,
-            // which is §14.2.2: `function f() {}` alone evaluates to `undefined`.
+            // §15.2.6 — the function was already made by [`Compiler::hoist_functions`] before the
+            // list it stands in ran, at a body's top level and at a block's alike, so the ordinary
+            // answer here is to do nothing. And to produce no completion value either, which is
+            // §14.2.2: `function f() {}` alone evaluates to `undefined`.
             //
-            // One inside a *block* was not hoisted, so doing nothing here would leave the name
-            // unbound and say nothing about it. §14.1 block-scopes it and Annex B.3.3 hoists it
-            // in sloppy code; both need block scoping, so it is refused until that exists.
-            // Already made by [`Compiler::hoist_functions`] before the body ran — at a body's top
-            // level and, since §14.1 arrived, at a block's too. So there is nothing left to do,
-            // and no completion value either: `function f() {}` alone evaluates to `undefined`.
-            StmtKind::Function(_) => Ok(()),
+            // §B.3.3 step 3 replaces that answer for the declarations it applies to, which is what
+            // the call below is for.
+            StmtKind::Function(function) => self.copy_block_function(function, span),
             // §15.7.11 — a declaration evaluates the class and initialises the binding its name
             // already has: the name is hoisted and left uninitialised, so a reference before this
             // point is the temporal dead zone rather than `undefined`.
@@ -261,6 +258,11 @@ impl Compiler<'_> {
             // **initialised** when the block is entered, where a `let` is created and left in the
             // dead zone. Without it here the block gets no environment and the name would be a
             // slot in the function, shared by every entry.
+            //
+            // Through a label, for the reason [`Compiler::hoist_functions`] looks through one: the
+            // two have to agree about what this list declares, and a block that hoisted a name
+            // into an environment it never opened would put it in the enclosing one.
+            StmtKind::Labelled(_) => super::annex_b::declared_function(statement).is_some(),
             StmtKind::Function(_) => true,
             _ => false,
         })
@@ -962,6 +964,19 @@ impl Compiler<'_> {
         for case in statement.cases.iter() {
             self.declare_lexical_names(&case.body)?;
         }
+        // §14.12.4 step 3 hands the whole `CaseBlock` to `BlockDeclarationInstantiation`, which
+        // §14.2.3 step 3.a.ii **initialises** every function declaration in it — so
+        // `switch (x) { case 1: function f() {} }` binds `f` for the whole block, and a case above
+        // the declaration can call it. Left out until now, and the cost was not a refusal but a
+        // wrong answer: the environment was opened, no slot was ever made for the name, and the
+        // statement itself did nothing because hoisting was supposed to have.
+        //
+        // A second loop rather than a line in the one above, because §14.2.3 does both passes over
+        // the whole list: `switch (x) { case 1: let a; case 2: function f() { return a; } }` needs
+        // every `let` in the dead zone before any function is made.
+        for case in statement.cases.iter() {
+            self.hoist_functions(&case.body)?;
+        }
         // A `break` inside a switch leaves the switch, so it is a breakable statement like a
         // loop — but not a *continuable* one. Both stacks are pushed all the same, with `None` for
         // the second: an exit's depth is one number indexing both, so a switch that pushed only one
@@ -1287,15 +1302,58 @@ impl Compiler<'_> {
         }
         self.chunk.patch(past_the_catch)
     }
-    /// Make the function objects a body's declarations describe, before any of it runs.
+    /// §B.3.3 step 3 — the block's binding, written into the variable scope's.
     ///
-    /// §10.2.11's `FunctionDeclarationInstantiation`, in the part that separates a function
-    /// declaration from every other kind. A `var` is *declared* early and assigned where it is
-    /// written; a function is **initialised** early, which is why `f()` above `function f() {}`
-    /// works and `g()` above `var g = function () {}` does not.
+    /// > When the FunctionDeclaration f is evaluated, perform the following steps in place of the
+    /// > FunctionDeclaration Evaluation algorithm: … Let fobj be `benv.GetBindingValue(F, false)`.
+    /// > Perform `fenv.SetMutableBinding(F, fobj, false)`.
     ///
-    /// Only the top level of the body. A function declared inside a block is Annex B's business
-    /// and is refused, because its rules are a compatibility settlement rather than a semantics.
+    /// `benv` is the running **Lexical**Environment and `fenv` the **Variable**Environment, and
+    /// those are two different scopes with the same name in them — which is the whole of why the
+    /// read resolves the name and the write does not. Resolving `F` for the write would find the
+    /// block's own binding, the innermost one, and store the value back where it already was.
+    ///
+    /// A declaration the extension does not reach — every one at a variable scope's own top level,
+    /// and every one a `let` or a parameter shadowed — is not in the list and does nothing here.
+    fn copy_block_function(
+        &mut self,
+        function: &crate::ast::Function,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let Some(&(_, target)) = self
+            .block_functions
+            .iter()
+            .find(|(declared, _)| *declared == span)
+        else {
+            return Ok(());
+        };
+        let Some(name) = &function.name else {
+            // A declaration in this list has a name — `block_functions` took it from one. An
+            // anonymous one is `export default function () {}`, which is a module's and so is
+            // never here at all, module code being strict.
+            return Err(unsupported("an anonymous block-level function", span));
+        };
+        let Some(binding) = self.binding(&name.name) else {
+            // `hoist_functions` gave the block a slot for this name before its first statement, so
+            // this is a compiler that has lost its own binding rather than anything a source did.
+            return Err(unsupported("a block-level function with no binding", span));
+        };
+        self.load(binding);
+        match target {
+            super::BlockFunctionTarget::Global(index) => {
+                self.chunk.emit(Instruction::StoreGlobal(index));
+            }
+            // Out to the variable scope, however many blocks, `with`s and loop passes are in
+            // between — every one of them is an environment, and `own_depth` counts exactly those.
+            super::BlockFunctionTarget::Slot(slot) => {
+                let depth = self.own_depth();
+                self.chunk.emit(Instruction::StoreVariable(depth, slot));
+            }
+        }
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
+    }
+
     /// §14.11 — `with (o) stmt`, the one scope whose names are an object's properties.
     ///
     /// §11.2.1 makes this a Syntax Error in strict code and the parser has already refused it
@@ -1319,22 +1377,36 @@ impl Compiler<'_> {
         compiled
     }
 
+    /// Make the function objects a list's declarations describe, before any of it runs.
+    ///
+    /// §10.2.11's `FunctionDeclarationInstantiation` and §14.2.3's `BlockDeclarationInstantiation`,
+    /// in the part that separates a function declaration from every other kind. A `var` is
+    /// *declared* early and assigned where it is written; a function is **initialised** early,
+    /// which is why `f()` above `function f() {}` works and `g()` above `var g = function () {}`
+    /// does not.
+    ///
+    /// Only the direct items of `body`, which is what both operations say: a declaration inside a
+    /// nested block belongs to that block, and is made when it is entered. Where the binding goes
+    /// is the caller's scope — a slot at a body's top level and in a block, a property of the
+    /// global object at the top level of a script.
     pub(super) fn hoist_functions(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
         for statement in body {
-            let StmtKind::Function(function) = &statement.kind else {
+            // Through any labels, because §B.3.2 lets one stand between the list and its
+            // declaration and §8.2.6 declares the name here all the same — see
+            // [`super::annex_b::declared_function`]. Without it `{ L: function f() {} }` parsed,
+            // hoisted nothing, and left the block's own binding unmade.
+            let Some((function, span)) = super::annex_b::declared_function(statement) else {
                 continue;
             };
             let Some(name) = &function.name else {
                 // A declaration without a name is `export default function () {}`, which is a
                 // module thing and has no name to hoist under.
-                return Err(unsupported(
-                    "an anonymous function declaration",
-                    statement.span,
-                ));
+                return Err(unsupported("an anonymous function declaration", span));
             };
-            // Remembered so the statement itself knows it was hoisted. One inside a block never
-            // reaches here, and doing nothing for it would leave the name unbound in silence.
-            self.hoisted.push(statement.span);
+            // Remembered so the statement itself knows it was hoisted. Recorded under the
+            // declaration's own span rather than the statement's, which differ when a label stands
+            // in front of it.
+            self.hoisted.push(span);
             // §9.1.1.4.16 `CreateGlobalFunctionBinding` at the top level of a script, and an
             // ordinary slot everywhere else. The declaration comes first so the property exists
             // with a script's attributes — writable, enumerable, not configurable — and the store
@@ -1351,7 +1423,7 @@ impl Compiler<'_> {
                             Some(written) => super::function::Naming::of(&written.name),
                             None => super::function::Naming::default(),
                         },
-                        statement.span,
+                        span,
                     )?;
                     self.chunk.emit(Instruction::StoreGlobal(index));
                 }
@@ -1364,7 +1436,7 @@ impl Compiler<'_> {
                             Some(written) => super::function::Naming::of(&written.name),
                             None => super::function::Naming::default(),
                         },
-                        statement.span,
+                        span,
                     )?;
                     self.chunk.emit(Instruction::StoreVariable(0, slot));
                 }

@@ -883,6 +883,7 @@ fn compile_body(
             for name in var_declared_names(statements) {
                 compiler.declare(name.name);
             }
+            compiler.declare_block_functions_of(statements, parameters)?;
             // §10.2.11 step 34 — a function body's `let` and `const` are created with the call
             // and left uninitialised, exactly as a block's are.
             compiler.declare_lexical_names(statements)?;
@@ -947,6 +948,7 @@ fn compile_body(
             for name in var_declared_names(statements) {
                 compiler.declare(name.name);
             }
+            compiler.declare_block_functions_of(statements, parameters)?;
             compiler.declare_lexical_names(statements)?;
             compiler.hoist_functions(statements)?;
             compiler.statements(statements)?;

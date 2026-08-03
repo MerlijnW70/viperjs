@@ -146,12 +146,12 @@ fn a_function_declaration_in_a_block_belongs_to_that_block() {
         ),
         "false"
     );
-    // And **not** Annex B.3.3's extra `var` in the enclosing function — DR-0008 leaves Annex B
-    // out, so the name does not escape. Sloppy code in the wild relies on the opposite, which is
-    // exactly why this is asserted rather than left to be discovered.
+    // …and in strict code the name does not escape the block at all, §B.3.3 being conditioned on
+    // sloppiness. This is the whole of what DR-0008's reversal turns on, so it is asserted from
+    // both sides: the same program without the directive is `annex_b::tests`.
     assert_eq!(
         run(
-            "var e = 'none'; { function g() {} } try { g; } catch (x) { e = x.constructor.name } e"
+            "'use strict'; var e = 'none'; { function g() {} } try { g; } catch (x) { e = x.constructor.name } e"
         ),
         "ReferenceError"
     );

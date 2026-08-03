@@ -30,8 +30,8 @@ mod names;
 
 pub use self::labels::{LabelProblem, LabelProblemKind, first_label_problem};
 pub use self::names::{
-    bound_names, lexically_declared_names, top_level_lexically_declared_names,
-    top_level_var_declared_names, var_declared_names,
+    bound_names, function_declared_names, lexically_declared_names,
+    top_level_lexically_declared_names, top_level_var_declared_names, var_declared_names,
 };
 
 use crate::span::Span;

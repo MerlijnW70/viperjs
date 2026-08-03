@@ -62,7 +62,9 @@ impl Parser<'_> {
     /// carried by every level of nesting that passes through, which is what the nesting cap is
     /// counted in.
     fn parse_try_parts(&mut self) -> Result<(TryStatement, crate::span::Span), ParseError> {
-        let (block, mut end) = self.parse_block_body(super::scope::Level::Block)?;
+        let (block, mut end) = self.parse_block_body(super::scope::Level::Block {
+            strict: self.strict,
+        })?;
         let handler = if self.current.kind == TokenKind::Keyword(ReservedWord::Catch) {
             let clause = self.parse_catch()?;
             end = clause.span;
@@ -72,7 +74,9 @@ impl Parser<'_> {
         };
         let finalizer = if self.current.kind == TokenKind::Keyword(ReservedWord::Finally) {
             self.advance(Goal::RegExp)?;
-            let (body, span) = self.parse_block_body(super::scope::Level::Block)?;
+            let (body, span) = self.parse_block_body(super::scope::Level::Block {
+                strict: self.strict,
+            })?;
             end = span;
             Some(body)
         } else {
@@ -111,7 +115,9 @@ impl Parser<'_> {
         } else {
             None
         };
-        let (body, block_span) = self.parse_block_body(super::scope::Level::Block)?;
+        let (body, block_span) = self.parse_block_body(super::scope::Level::Block {
+            strict: self.strict,
+        })?;
         if let Some(parameter) = &parameter {
             let names = bound_names(&parameter.binding);
             // §14.15.1, rule 1: the BoundNames of a CatchParameter may not repeat. Unreachable

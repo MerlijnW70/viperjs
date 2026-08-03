@@ -10,6 +10,7 @@
 //!
 //! Where a compiler's parts live.
 //!
+//! - `annex_b` — §B.3.3, which of a body's block-level function declarations also get a `var`.
 //! - `binding` — §8.6.2's binding patterns, and the declarations that hold one.
 //! - `chunk` — the code an embedder holds, and the instruction set.
 //! - `class` — §15.7's `ClassDefinitionEvaluation`.
@@ -37,6 +38,7 @@
 
 use crate::ast::{Expr, Module, Script, Stmt};
 use crate::value::Value;
+mod annex_b;
 mod binding;
 mod chunk;
 mod class;
@@ -128,6 +130,12 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
     // `globalThis.x` and a `let` never will. See `Compiler::instantiate_globals` for the three
     // passes and why their order is observable.
     compiler.instantiate_globals(&script.body)?;
+    // §B.3.3.2's `CreateGlobalVarBinding` for each block-level function declaration that earns one,
+    // alongside the `var`s and before anything runs — which is what makes `f` a property of the
+    // global object holding `undefined` at the top of a script whose `{ function f() {} }` is below.
+    if !script.is_strict {
+        compiler.declare_block_functions(&script.body, &std::collections::HashSet::new())?;
+    }
     // §16.1.7 `GlobalDeclarationInstantiation` step 17 — a script's `let` and `const` go in the
     // global *declarative* record rather than onto the global object, which is why these get slots
     // like any other lexical binding while the `var`s above became properties.
@@ -759,6 +767,17 @@ pub fn compile_direct_eval(
             }
         }
     }
+    // §B.3.3.3's half of the clause, and for [`EvalVars::Caller`] as well as for the other two —
+    // which is not the same answer the `var` above gets, and the difference is what the binding is
+    // *for*. A `var` in a caller-scoped eval is refused because the name has to outlive the eval
+    // and the caller's frame has no room for it. B.3.3's binding does not have to outlive anything
+    // this engine can observe: every one of test262's `func-*-eval-func-*` files reads the name
+    // from inside the eval, where a slot of the eval's own answers correctly. What is left wrong is
+    // the caller reading it *afterwards*, and that was already wrong — the name was bound nowhere
+    // at all — so the eval's own scope is strictly closer than nothing and refuses no program.
+    if !script.is_strict {
+        compiler.declare_block_functions(&script.body, &std::collections::HashSet::new())?;
+    }
     compiler.declare_lexical_names(&script.body)?;
     compiler.hoist_functions(&script.body)?;
     compiler.statements(&script.body)?;
@@ -946,6 +965,16 @@ struct Compiler<'a> {
     /// rather than a missing feature. §14.1 block-scopes such a declaration and Annex B.3.3
     /// hoists it in sloppy code; both need block scoping, so until then it is refused.
     hoisted: Vec<Span>,
+    /// Where §B.3.3's extra `var` binding lives, for each declaration that earned one.
+    ///
+    /// Keyed by the declaration's span rather than by its name, because the extension belongs to
+    /// one *declaration* and not to a name: `{ function f() {} { function f() {} } }` has an
+    /// eligible outer and an ineligible inner, and both are called `f`. Two spans never coincide
+    /// in one source, so this is an identity and not a heuristic.
+    ///
+    /// The target is decided once, at the variable scope, and read again where the copy is emitted
+    /// — see [`BlockFunctionTarget::Global`] for the defect that comes of asking a second time.
+    block_functions: Vec<(Span, BlockFunctionTarget)>,
     /// The labels in scope, and how many loops were open when each was met.
     ///
     /// A `break name` joins the break list of the loop that number identifies, which is what
@@ -976,6 +1005,31 @@ struct Compiler<'a> {
     /// *inner* when both sat at the same depth — which is precisely the question a `continue` out
     /// of a `try` inside a `for`-`of` asks. Position on this stack answers it for free.
     unwinds: Vec<Unwind>,
+}
+
+/// Where §B.3.3 puts the copy of a block-level function declaration.
+///
+/// The variable scope of the code being compiled, in the two forms it comes in — and the choice is
+/// made once, at that scope, rather than asked again where the copy is emitted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BlockFunctionTarget {
+    /// §9.1.1.4.17 `CreateGlobalVarBinding` — the variable scope is the global object, so the
+    /// binding is a property of it and the copy is a [`Instruction::StoreGlobal`]. Held as the
+    /// constant index of the name, which is what that instruction takes.
+    ///
+    /// This is where a first attempt at B.3.3 went wrong, and it is worth naming. The natural
+    /// thing to ask at the point of the copy is [`Compiler::at_global_scope`] — and that answers
+    /// two questions at once, "the var scope is the global object" **and** "no scope has been
+    /// opened here". The second half is false inside the block, which is the only place this copy
+    /// is ever emitted, so a script's `{ function f() {} }` stored into a slot the script does not
+    /// have and `typeof f` answered `"undefined"` while the same program inside a function worked.
+    /// Deciding at the variable scope and carrying the answer is what makes the question single.
+    Global(u32),
+    /// A slot in the variable scope's own environment, reached by [`Compiler::own_depth`] hops.
+    ///
+    /// Not by resolving the name, which would find the block's own binding — that is the one being
+    /// copied *from*, and a store through it would write the value back where it already was.
+    Slot(u32),
 }
 
 /// One thing an abrupt exit has to do on its way past the statement that installed it.
@@ -1070,6 +1124,7 @@ impl<'a> Compiler<'a> {
             continues: Vec::new(),
             saw_top_level_await: false,
             hoisted: Vec::new(),
+            block_functions: Vec::new(),
             labels: Vec::new(),
             unwinds: Vec::new(),
             chains: Vec::new(),
@@ -1150,6 +1205,80 @@ impl<'a> Compiler<'a> {
         for name in var_declared_names(body) {
             let index = self.name(name.name)?;
             self.chunk.emit(Instruction::DeclareGlobal(index));
+        }
+        Ok(())
+    }
+
+    /// [`Compiler::declare_block_functions`] for a function body, whose parameters are its
+    /// `parameterNames` and whose strictness is its chunk's.
+    ///
+    /// The two callers below it hoist a body the same way and would each have had to remember the
+    /// strictness test; forgetting it in one would make `"use strict"` in a body silently take
+    /// Annex B's extension, which is the one thing DR-0008's amendment turns entirely on.
+    pub(super) fn declare_block_functions_of(
+        &mut self,
+        body: &[Stmt],
+        parameters: &crate::ast::FormalParameters,
+    ) -> Result<(), CompileError> {
+        if self.chunk.strict {
+            return Ok(());
+        }
+        // §B.3.3's `parameterNames`, which is `BoundNames of formals` — every name in the list,
+        // including the ones a pattern binds and the rest parameter's.
+        let names: std::collections::HashSet<&str> = parameters
+            .items
+            .iter()
+            .map(|item| &item.target)
+            .chain(parameters.rest.as_deref())
+            .flat_map(crate::static_semantics::bound_names)
+            .map(|declared| declared.name)
+            .collect();
+        self.declare_block_functions(body, &names)
+    }
+
+    /// §B.3.3's `var` bindings, for every block-level function declaration that earns one.
+    ///
+    /// Two steps of the clause, and the second is why this is one function rather than a list of
+    /// names handed back:
+    ///
+    /// - **Step 2** creates the binding, initialised to `undefined`, *unless* the variable scope
+    ///   already has one of that name — "if instantiatedVarNames does not contain F". Creating a
+    ///   second binding for a name that has one is the mistake that makes reads resolve to one and
+    ///   the copy below write to the other, which is what the `existing-fn-update` tests see.
+    ///
+    ///   No list of names is kept to answer that, because both primitives answer it already:
+    ///   [`Compiler::declare`] hands back the slot a name already has rather than making another,
+    ///   and §9.1.1.4.17's `CreateGlobalVarBinding` leaves a property that is there alone. A guard
+    ///   in front of either is a branch no program can distinguish, and mutation coverage said so
+    ///   by surviving its removal.
+    /// - **Step 3** replaces what the declaration *evaluates to*, and that happens wherever it was
+    ///   written. So where the binding is has to be remembered until the compiler gets there, which
+    ///   is what [`Compiler::block_functions`] is.
+    ///
+    /// `parameters` is the clause's `parameterNames`, which is empty for a script and for an eval.
+    ///
+    /// Called at a variable scope and nowhere else. A module never calls it: §11.2.2 makes module
+    /// code strict, and every B.3 rule is conditioned on sloppiness.
+    fn declare_block_functions(
+        &mut self,
+        body: &[Stmt],
+        parameters: &std::collections::HashSet<&str>,
+    ) -> Result<(), CompileError> {
+        for function in annex_b::block_functions(body, parameters) {
+            let target = match self.global_vars {
+                // §16.1.7 makes a script's `var` a property of the global object, and B.3.3.2 asks
+                // for `CreateGlobalVarBinding` — which leaves an existing property exactly as it
+                // is, so a name the global already has keeps its attributes and its value.
+                true => {
+                    let index = self.name(function.name)?;
+                    self.chunk.emit(Instruction::DeclareGlobal(index));
+                    BlockFunctionTarget::Global(index)
+                }
+                // A slot, which a frame starts holding `undefined` — so step 2's
+                // `InitializeBinding(F, undefined)` is the declaration and nothing more.
+                false => BlockFunctionTarget::Slot(self.declare(function.name)),
+            };
+            self.block_functions.push((function.span, target));
         }
         Ok(())
     }

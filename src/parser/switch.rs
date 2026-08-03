@@ -77,7 +77,7 @@ impl Parser<'_> {
         }
         let close = self.eat(TokenKind::RBrace, Goal::RegExp, "`}`")?;
         // §14.12.1, over the clauses stitched together — see `super::scope`.
-        super::scope::check_case_block_declared_names(&cases)?;
+        super::scope::check_case_block_declared_names(&cases, self.strict)?;
         Ok((cases.into_boxed_slice(), close.span))
     }
 

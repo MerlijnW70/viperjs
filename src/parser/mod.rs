@@ -405,6 +405,26 @@ struct Parser<'a> {
     pub(super) open_covers: u32,
 }
 
+/// Whether a `LabelledStatement` beginning here may label a `FunctionDeclaration` — §B.3.2.
+///
+/// Annex B's labelled function is conditioned on more than strictness, and this is the more.
+/// §14.6.1, §14.7.2.1, §14.7.3.1, §14.7.4.1, §14.7.5.1 and §14.11.1 each state "It is a Syntax
+/// Error if `IsLabelledFunction(Statement)` is true" of a position whose body is a `Statement`
+/// rather than a `StatementList` — so `{ a: function f() {} }` is B.3.2's to take and
+/// `while (x) a: function f() {}` stays refused, sloppy though both are.
+///
+/// An argument to [`Parser::parse_statement`] rather than a field on the parser, so that each body
+/// position states the rule where the specification states it. A field would have had an initial
+/// value that no input could reach — every entry point goes through a statement list first — which
+/// is a value that cannot be got wrong and cannot be shown right either.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum LabelledFunction {
+    /// A `StatementListItem` position, which is the only one §B.3.2 reaches.
+    Allowed,
+    /// A body position, where §14.6.1 and its five siblings refuse one.
+    Refused,
+}
+
 impl<'a> Parser<'a> {
     /// A parser positioned on the first token of `source`.
     ///

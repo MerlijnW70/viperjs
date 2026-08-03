@@ -9,9 +9,11 @@
 //!
 //! `LabelledItem : Statement | FunctionDeclaration`. A `Statement`, so `a: var b;` is fine and
 //! `a: let b;` is not — the same asymmetry every body position has, for the same reason. The
-//! `FunctionDeclaration` alternative is §14.13.1's, and it is a Syntax Error unless the code is
-//! non-strict and the host supports Labelled Function Declarations; there are no functions to
-//! label yet, and when there are that rule needs strict mode to state.
+//! `FunctionDeclaration` alternative is §14.13.1's, and it is a Syntax Error "unless that source
+//! text is non-strict code and the host is a web browser or otherwise supports Labelled Function
+//! Declarations". DR-0008's amendment keeps the first half of that condition and drops the second,
+//! so it is taken in sloppy code — and only where §14.6.1 and its five siblings allow, which is a
+//! rule about *position* and is [`super::LabelledFunction`].
 //!
 //! # Whether the label means anything is not decided here
 //!
@@ -41,7 +43,15 @@ impl Parser<'_> {
     }
 
     /// `LabelledStatement : LabelIdentifier : LabelledItem` (§14.13).
-    pub(super) fn parse_labelled_statement(&mut self) -> Result<Stmt, ParseError> {
+    ///
+    /// `function_allowed` is whether this label stands where §B.3.2's `LabelledItem :
+    /// FunctionDeclaration` is reachable — see [`super::LabelledFunction`]. It is not the same
+    /// question as strictness and cannot be folded into it: `while (x) a: function f() {}` is
+    /// sloppy and still refused, because §14.7.3.1 asks about the *position* rather than the mode.
+    pub(super) fn parse_labelled_statement(
+        &mut self,
+        function_allowed: super::LabelledFunction,
+    ) -> Result<Stmt, ParseError> {
         let token = self.advance(Goal::Div)?;
         let name =
             identifier_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
@@ -49,9 +59,21 @@ impl Parser<'_> {
         self.check_strict_name(&name, token.span, false)?;
         self.eat(TokenKind::Colon, Goal::RegExp, "`:`")?;
         self.enter()?;
-        // `LabelledItem : Statement`, so a declaration may not be labelled — `a: let b;` has no
-        // derivation, for the reason `if (x) let b;` does not.
-        let body = self.parse_statement();
+        // §14.13's other alternative, which §B.3.2 makes reachable: `LabelledItem :
+        // FunctionDeclaration`. Unlike §B.3.4's `if` clause the declaration is **not** wrapped in a
+        // block, and that is §8.2.12 — `TopLevelVarDeclaredNames` is handed a `LabelledStatement`
+        // rather than the ordinary operation, so a labelled function at a body's top level is
+        // var-scoped exactly as an unlabelled one is, and only one inside a block is B.3.3's.
+        let allowed = function_allowed == super::LabelledFunction::Allowed;
+        let body = if allowed && self.at_annex_b_function()? {
+            self.parse_function_declaration(false)
+        } else {
+            // `LabelledItem : Statement`, so a declaration may not be labelled — `a: let b;` has no
+            // derivation, for the reason `if (x) let b;` does not. The permission is passed down
+            // rather than dropped: `a: b: function f() {}` is a label on a label, and §14.13 gives
+            // the inner one whatever position the outer one stood in.
+            self.parse_statement(function_allowed)
+        };
         self.leave();
         let body = body?;
         Ok(Stmt {
@@ -170,12 +192,12 @@ mod tests {
         assert_eq!(statements("a: { let b; }"), ["(label a {(let b)})"]);
         // `LabelledItem : FunctionDeclaration` is the other alternative, and §14.13.1 makes it a
         // Syntax Error "unless that source text is non-strict code and the host is a web browser
-        // or otherwise supports Labelled Function Declarations". It is refused here, and the
-        // reason is the one Annex B.3.5 was refused for: the exemption turns on strictness, which
-        // this parser cannot yet tell. Accepting unconditionally would be wrong in strict code on
-        // every host; refusing is wrong only for sloppy code on a host that implements it. V8
-        // accepts it, so this is a divergence — and one that goes away with strict mode.
-        assert!(parse_script("a: function f() {}").is_err());
+        // or otherwise supports Labelled Function Declarations". DR-0008's amendment drops the
+        // second half of that condition and keeps the first, so this is taken in sloppy code —
+        // and only where §14.6.1's `IsLabelledFunction` rule allows, which is
+        // [`super::function::tests::annex_b_takes_a_function_where_a_statement_stands_and_only_where_it_says`].
+        assert_eq!(statements("a: function f() {}"), ["(label a (fn f [] {}))"]);
+        assert!(parse_script("'use strict'; a: function f() {}").is_err());
     }
 
     #[test]

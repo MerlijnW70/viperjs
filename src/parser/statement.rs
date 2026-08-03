@@ -166,7 +166,10 @@ impl Parser<'_> {
         if self.at_lexical_let()? {
             return self.parse_declaration(DeclarationKind::Let);
         }
-        self.parse_statement()
+        // §B.3.2's labelled `FunctionDeclaration` is legal *here* and in no other position that
+        // takes a statement — see [`super::LabelledFunction`]. This is the only caller that says
+        // so, which is what makes every body position's answer "no" without each having to know.
+        self.parse_statement(super::LabelledFunction::Allowed)
     }
 
     /// `Statement` (§14.1), for the forms the parser reaches today.
@@ -177,7 +180,10 @@ impl Parser<'_> {
     /// an expression is ever considered is that restriction, spelled as control flow. The
     /// others arrive with the constructs they are ambiguous with; until then they are not
     /// expressions either, so nothing is silently misread.
-    pub(super) fn parse_statement(&mut self) -> Result<Stmt, ParseError> {
+    pub(super) fn parse_statement(
+        &mut self,
+        labelled_function: super::LabelledFunction,
+    ) -> Result<Stmt, ParseError> {
         // `async function` is the third word on §14.5's list, and the only one that needs a
         // lookahead rather than a token test — `async` is not reserved. Ahead of the match for
         // that reason, and not inside it: a match guard may not borrow the parser again. A bare
@@ -242,7 +248,7 @@ impl Parser<'_> {
                 kind: ParseErrorKind::DeclarationInStatementPosition,
                 span: self.current.span,
             }),
-            _ if self.at_labelled_statement()? => self.parse_labelled_statement(),
+            _ if self.at_labelled_statement()? => self.parse_labelled_statement(labelled_function),
             _ => self.parse_expression_statement(),
         }
     }
@@ -276,7 +282,9 @@ impl Parser<'_> {
 
     /// `Block` where a `Statement` is wanted (§14.2).
     fn parse_block(&mut self) -> Result<Stmt, ParseError> {
-        let (body, span) = self.parse_block_body(super::scope::Level::Block)?;
+        let (body, span) = self.parse_block_body(super::scope::Level::Block {
+            strict: self.strict,
+        })?;
         Ok(Stmt {
             kind: StmtKind::Block(body),
             span,

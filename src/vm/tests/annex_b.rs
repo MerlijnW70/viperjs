@@ -1,4 +1,10 @@
-//! §B.2.2's four accessor methods, and the two ways they are not `Object.defineProperty`.
+//! §B.2.2's four accessor methods, and §B.3.3's extra `var` a block-level function declaration
+//! makes.
+//!
+//! Two clauses of one annex, and they have nothing to do with each other beyond that. They are
+//! together because DR-0008 is about where the line through Annex B falls, and both are on the near
+//! side of it: §B.2.2 is a set of methods that changes no grammar, and §B.3.3 is conditioned on
+//! strictness alone. See [`crate::compile`]'s `annex_b` for the rules the second one turns on.
 
 use super::*;
 
@@ -177,4 +183,339 @@ fn looking_one_up_walks_the_chain_and_stops_at_the_first_property_of_any_kind() 
         run("Object.getOwnPropertyDescriptor(Object.prototype, '__defineGetter__').enumerable"),
         "false"
     );
+}
+
+#[test]
+fn a_block_level_function_also_gets_a_var_binding_in_sloppy_code() {
+    // §B.3.3.1 step 3 — the block's binding is copied into the variable scope's when the
+    // declaration is *evaluated*, which is what makes the name escape a block it belongs to.
+    assert_eq!(
+        run("function f() { { function g() { return 'inner' } } return g() } f()"),
+        "inner"
+    );
+    // §B.3.3.2, the same for a script — where the variable scope is the global object rather than
+    // a slot, so the copy is a property write. Asserted separately because the two are two
+    // different instructions, and getting the second from the first is what a first attempt did
+    // wrong: it asked whether the compiler was at the global *scope*, which inside a block is
+    // false, and stored into a slot a script does not have.
+    assert_eq!(run("{ function g() { return 'script' } } g()"), "script");
+    assert_eq!(run("{ function g() {} } typeof g"), "function");
+    // §16.1.7 makes it a property with a `var`'s attributes, which is what says the binding was
+    // created by `CreateGlobalVarBinding` rather than by an ordinary assignment — one of those
+    // would have made it configurable.
+    assert_eq!(
+        run("{ function g() {} } \
+             var d = Object.getOwnPropertyDescriptor(globalThis, 'g'); \
+             [d.writable, d.enumerable, d.configurable].join(',')"),
+        "true,true,false"
+    );
+    // Step 2 — the binding exists, holding `undefined`, before the block runs. Both halves are
+    // asserted: `undefined` rather than absent, and mutable rather than a dead zone.
+    assert_eq!(
+        run("function f() { var a = g; g = 1; { function g() {} } return a + ',' + typeof g } f()"),
+        "undefined,function"
+    );
+    assert_eq!(
+        run("function f() { var a = typeof g; { function g() {} } return a + ',' + typeof g } f()"),
+        "undefined,function"
+    );
+    // …and the copy happens where the declaration stands rather than when the block is entered,
+    // which is the difference between step 3 and hoisting. `h` reads the variable scope's binding
+    // from outside the block, so what it sees is what has been copied so far.
+    assert_eq!(
+        run("function f() { var seen; { seen = h(); function g() {} } \
+             function h() { return typeof g } return seen + ',' + typeof g } f()"),
+        "undefined,function"
+    );
+    // §11.2.2 — strict code gets none of it, which is the only condition DR-0008's amendment left.
+    assert_eq!(
+        run("'use strict'; function f() { { function g() {} } return typeof g } f()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("function f() { 'use strict'; { function g() {} } return typeof g } f()"),
+        "undefined"
+    );
+    // A `GeneratorDeclaration` is not a `FunctionDeclaration`, so §B.3.3 does not name it.
+    assert_eq!(
+        run("function f() { { function* g() {} } return typeof g } f()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("function f() { { async function g() {} } return typeof g } f()"),
+        "undefined"
+    );
+}
+
+#[test]
+fn the_extension_is_skipped_wherever_a_var_of_that_name_would_not_have_parsed() {
+    // §B.3.3.1 step 1.a.ii, which is a hypothetical about a program nobody wrote: the extension
+    // applies only where writing `var g` in the declaration's place would have been legal. Every
+    // one of these has a lexical binding of `g` between the block and the variable scope, so
+    // `var g` would be §14.2.1's second rule and the extension is off.
+    for source in [
+        "function f() { let g = 1; { function g() {} } return g } f()",
+        "function f() { const g = 1; { function g() {} } return g } f()",
+        "function f() { { let g = 1; { function g() {} } return g } } f()",
+        "function f() { for (let g = 1; ; ) { { function g() {} } return g } } f()",
+        "function f() { switch (0) { default: let g = 1; { function g() {} } return g } } f()",
+    ] {
+        assert_eq!(run(source), "1", "{source}");
+    }
+    assert_eq!(
+        run("function f() { try { throw 0 } catch ({g}) { { function g() {} } } return 1 } f()"),
+        "1"
+    );
+    // …and in every one of them the *outer* name was never created, which is the other half of
+    // "skipped": a binding holding `undefined` would be as wrong as one holding the function.
+    assert_eq!(
+        run(
+            "function f() { var seen = typeof g; { let g = 1; { function g() {} } } return seen } f()"
+        ),
+        "undefined"
+    );
+    // A **simple** catch parameter does not skip it, and this is the one place the hypothetical
+    // needs Annex B to answer itself: §14.15.1 refuses a `var` naming a catch parameter, and
+    // B.3.4 puts the `BindingIdentifier` form back. So this pair differs only in the brackets.
+    assert_eq!(
+        run(
+            "function f() { try { throw 0 } catch (g) { { function g() { return 9 } } } \
+             return g() } f()"
+        ),
+        "9"
+    );
+    // The two conditions stated outside the hypothetical, neither of which is an early error: a
+    // parameter name, and `arguments`.
+    assert_eq!(
+        run("function f(g) { { function g() {} } return g } f(1)"),
+        "1"
+    );
+    assert_eq!(
+        run("function f(g = 1) { { function g() {} } return g } f()"),
+        "1"
+    );
+    assert_eq!(
+        run("function f([g]) { { function g() {} } return g } f([1])"),
+        "1"
+    );
+    assert_eq!(
+        run("function f() { { function arguments() {} } return arguments.length } f(1, 2)"),
+        "2"
+    );
+    // Two declarations of one name in **one** block, which §B.3.3.5 lets parse. Replacing either
+    // with `var g` leaves the other lexically declaring `g` in the same list, which is §14.2.1's
+    // second rule — relaxed for duplicates and not for this — so neither is eligible and nothing
+    // escapes. Every browser answers with the second function instead; see the module doc of
+    // `crate::compile`'s `annex_b` for why the letter is what is implemented, and note that no
+    // test262 file measures this.
+    assert_eq!(
+        run(
+            "function f() { { function g() { return 1 } function g() { return 2 } } \
+             return typeof g } f()"
+        ),
+        "undefined"
+    );
+    assert_eq!(
+        run("{ function g() { return 1 } function g() { return 2 } } typeof g"),
+        "undefined"
+    );
+    // One of the two being a `let` is still the Syntax Error it always was, which is what says the
+    // pair above is about §B.3.3.5's carve-out rather than about duplicates in general — that half
+    // never reaches a VM and is
+    // `crate::parser::function::tests::a_function_is_var_scoped_at_a_top_level_and_lexical_anywhere_else`.
+    //
+    // §14.2.1 read against the *block*: the inner declaration of two nested blocks is skipped,
+    // because `var g` there would collide with the outer block's own lexical binding of `g`. So
+    // the name that escapes is the outer one, which is `nested-blocks-with-fun-decl.js`.
+    assert_eq!(
+        run(
+            "function f() { { function g() { return 1 } { function g() { return 2 } } } \
+             return g() } f()"
+        ),
+        "1"
+    );
+}
+
+#[test]
+fn a_name_the_variable_scope_already_has_gets_no_second_binding() {
+    // §B.3.3.1 step 2's note — "a var binding for F is only instantiated here if it is neither a
+    // VarDeclaredName nor the name of another FunctionDeclaration". A second binding is not a
+    // harmless duplicate: reads would resolve to one of the two and the copy would write the
+    // other, which is what the `existing-fn-update` tests see.
+    assert_eq!(
+        run(
+            "function f() { { function g() { return 'inner' } } var seen = g(); \
+             function g() { return 'outer' } return seen } f()"
+        ),
+        "inner"
+    );
+    assert_eq!(
+        run(
+            "function f() { { function g() { return 'inner' } } var seen = g(); var g = 1; \
+             return seen + ',' + g } f()"
+        ),
+        "inner,1"
+    );
+    // …and the binding is not re-initialised to `undefined` either, which a second
+    // `CreateMutableBinding` would have done: the top-level function is still there before the
+    // block runs.
+    assert_eq!(
+        run(
+            "function f() { var seen = g(); { function g() { return 'inner' } } \
+             function g() { return 'outer' } return seen } f()"
+        ),
+        "outer"
+    );
+    // Two sibling blocks declaring one name share the binding, and the last one evaluated wins.
+    assert_eq!(
+        run(
+            "function f() { { function g() { return 1 } } { function g() { return 2 } } \
+             return g() } f()"
+        ),
+        "2"
+    );
+    assert_eq!(
+        run(
+            "function f() { var seen = typeof g; { function g() {} } { function g() {} } \
+             return seen } f()"
+        ),
+        "undefined"
+    );
+}
+
+#[test]
+fn annex_b_reaches_an_if_clause_a_label_and_a_switch_case() {
+    // §B.3.4 — `if ( Expression ) FunctionDeclaration`, "evaluated as if it were
+    // `if ( Expression ) { FunctionDeclaration }`". So the block is real, and everything §B.3.3
+    // says about a block applies to it.
+    assert_eq!(run("if (true) function g() { return 1 } g()"), "1");
+    assert_eq!(run("if (false) function g() {} typeof g"), "undefined");
+    assert_eq!(
+        run("if (false) function g() {} else function h() { return 2 } h()"),
+        "2"
+    );
+    assert_eq!(
+        run("function f() { if (true) function g() { return 3 } return g() } f()"),
+        "3"
+    );
+    // The declaration is the block's, so a name a `let` claims is still skipped.
+    assert_eq!(
+        run("function f() { let g = 1; if (true) function g() {} return g } f()"),
+        "1"
+    );
+    // §B.3.2 — a labelled declaration, which is *not* wrapped: §8.2.12 hands a `LabelledStatement`
+    // to `TopLevelVarDeclaredNames`, so one at a body's top level is var-scoped already and needs
+    // no extension at all.
+    assert_eq!(run("L: function g() { return 4 } g()"), "4");
+    assert_eq!(
+        run("function f() { L: function g() { return 5 } return g() } f()"),
+        "5"
+    );
+    assert_eq!(
+        run("function f() { var seen = typeof g; L: function g() {} return seen } f()"),
+        "function",
+        "var-scoped and hoisted, where a block's would have been `undefined` here"
+    );
+    // …and inside a block it is the block's, which is where §B.3.3 has something to do.
+    assert_eq!(
+        run("function f() { { L: function g() { return 6 } } return g() } f()"),
+        "6"
+    );
+    assert_eq!(
+        run("function f() { var seen = typeof g; { L: function g() {} } return seen } f()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("function f() { { a: b: function g() { return 7 } } return g() } f()"),
+        "7"
+    );
+    // §14.12.4 step 3 hands the whole `CaseBlock` to `BlockDeclarationInstantiation`, so a
+    // declaration in one clause is initialised for all of them — and §B.3.3 names a `CaseClause`
+    // and a `DefaultClause` beside a `Block`.
+    assert_eq!(
+        run("function f() { switch (1) { case 1: return typeof g; case 2: function g() {} } } f()"),
+        "function"
+    );
+    assert_eq!(
+        run("function f() { switch (1) { case 1: function g() { return 8 } } return g() } f()"),
+        "8"
+    );
+    assert_eq!(
+        run("function f() { switch (1) { default: function g() { return 9 } } return g() } f()"),
+        "9"
+    );
+    assert_eq!(
+        run("function f() { let g = 1; switch (1) { case 1: { function g() {} } } return g } f()"),
+        "1"
+    );
+}
+
+#[test]
+fn the_extension_reaches_out_of_however_many_scopes_are_in_the_way() {
+    // The copy is a store into the variable scope, counted in environments — so every block,
+    // every `with` and every loop pass between here and there is one more hop. A depth that is
+    // one out does not fail; it writes a different variable.
+    assert_eq!(
+        run("function f() { { { { function g() { return 1 } } } } return g() } f()"),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "function f() { { let a = 1; { let b = 2; { function g() { return a + b } } } } \
+             return g() } f()"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run("function f() { with ({}) { { function g() { return 2 } } } return g() } f()"),
+        "2"
+    );
+    assert_eq!(
+        run(
+            "function f() { for (let i = 0; i < 2; i++) { { function g() { return i } } } \
+             return g() } f()"
+        ),
+        "1"
+    );
+    assert_eq!(
+        run(
+            "function f() { try { throw 0 } catch (e) { { function g() { return 3 } } } \
+             return g() } f()"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run("function f() { try {} finally { { function g() { return 4 } } } return g() } f()"),
+        "4"
+    );
+    // …and the same from a script, where the store goes to the global object instead.
+    assert_eq!(run("{ { { function g() { return 5 } } } } g()"), "5");
+    assert_eq!(run("with ({}) { { function g() { return 6 } } } g()"), "6");
+}
+
+#[test]
+fn a_direct_eval_gets_the_extension_where_its_variable_scope_can_take_one() {
+    // §B.3.3.3's `EvalDeclarationInstantiation`. A sloppy direct eval at the top level of a script
+    // has the global object for its variable scope, so the binding goes there and outlives the
+    // eval — the same claim `eval("var x = 1")` makes.
+    assert_eq!(run("eval('{ function g() { return 1 } }'); g()"), "1");
+    assert_eq!(run("eval('{ function g() {} } typeof g')"), "function");
+    // A strict eval gets no extension, §B.3.3 being conditioned on sloppiness — asked from inside
+    // the eval as well as from outside it. The two rows are not the same claim: a strict eval's
+    // variable scope is its own and goes away with it, so the outer row would still say
+    // ReferenceError if the binding had been made and discarded. Only the inner one can tell that
+    // no binding was made at all.
+    assert_eq!(
+        run("eval('\\'use strict\\'; { function g() {} } typeof g')"),
+        "undefined"
+    );
+    assert_eq!(
+        run(
+            "var e = 'none'; eval('\\'use strict\\'; { function g() {} }'); \
+             try { g } catch (x) { e = x.constructor.name } e"
+        ),
+        "ReferenceError"
+    );
+    // …and an indirect eval is a Script of its own, which is the global path again.
+    assert_eq!(run("(0, eval)('{ function g() { return 2 } }'); g()"), "2");
 }

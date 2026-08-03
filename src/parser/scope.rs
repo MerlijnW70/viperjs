@@ -29,8 +29,9 @@ use crate::ast::{
 };
 use crate::span::Span;
 use crate::static_semantics::{
-    DeclaredName, LabelProblemKind, bound_names, first_label_problem, lexically_declared_names,
-    top_level_lexically_declared_names, top_level_var_declared_names, var_declared_names,
+    DeclaredName, LabelProblemKind, bound_names, first_label_problem, function_declared_names,
+    lexically_declared_names, top_level_lexically_declared_names, top_level_var_declared_names,
+    var_declared_names,
 };
 use std::collections::{HashMap, HashSet};
 
@@ -42,12 +43,56 @@ use std::collections::{HashMap, HashSet};
 /// the point of computing early errors this way.
 pub(super) fn check_declared_names(body: &[Stmt], level: Level) -> Result<(), ParseError> {
     match level {
-        Level::Block => check(lexically_declared_names(body), var_declared_names(body)),
+        Level::Block { strict } => {
+            let lexical = lexically_declared_names(body);
+            let repeatable =
+                functions_that_may_repeat(&lexical, function_declared_names(body), strict);
+            check(lexical, var_declared_names(body), &repeatable)
+        }
+        // A top level needs no carve-out. §8.2.10 leaves a `HoistableDeclaration` out of
+        // `TopLevelLexicallyDeclaredNames` altogether, so two functions of one name were never a
+        // duplicate there — which is the same fact §B.3.3.5 is restoring for a block.
         Level::Top => check(
             top_level_lexically_declared_names(body),
             top_level_var_declared_names(body),
+            &HashSet::new(),
         ),
     }
+}
+
+/// §B.3.3.5's carve-out, as the set of names it exempts from rule 1.
+///
+/// "It is a Syntax Error if the LexicallyDeclaredNames of StatementList contains any duplicate
+/// entries, **unless the source text matched by this production is not strict mode code and the
+/// duplicate entries are only bound by FunctionDeclarations**." So a name is exempt when every
+/// lexical binding of it here is a function: `{ function a() {} function a() {} }` is ordinary
+/// sloppy code, and `{ let a; function a() {} }` is still the Syntax Error §14.2.1 makes it.
+///
+/// Counted rather than tested for membership, which is what makes the "only" in that sentence
+/// load-bearing — a name with one function binding and one `let` is in both lists and is not exempt.
+fn functions_that_may_repeat<'a>(
+    lexical: &[DeclaredName<'a>],
+    functions: Vec<DeclaredName<'a>>,
+    strict: bool,
+) -> HashSet<&'a str> {
+    // Conditioned on sloppiness and on nothing else — DR-0008's amendment, and the same condition
+    // §B.3.2 and §B.3.4 carry.
+    if strict {
+        return HashSet::new();
+    }
+    let mut lexical_count: HashMap<&str, usize> = HashMap::new();
+    for declared in lexical {
+        *lexical_count.entry(declared.name).or_default() += 1;
+    }
+    let mut function_count: HashMap<&str, usize> = HashMap::new();
+    for declared in functions {
+        *function_count.entry(declared.name).or_default() += 1;
+    }
+    function_count
+        .into_iter()
+        .filter(|(name, count)| lexical_count.get(name) == Some(count))
+        .map(|(name, _)| name)
+        .collect()
 }
 
 /// Which of §8.2's two readings of a `StatementList` applies.
@@ -58,7 +103,16 @@ pub(super) fn check_declared_names(body: &[Stmt], level: Level) -> Result<(), Pa
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Level {
     /// A `Block` (§14.2.1) or a `CaseBlock` (§14.12.1).
-    Block,
+    ///
+    /// `strict` is whether the block is strict code, which §B.3.3.5 is the only rule here to ask
+    /// about. It rides on this variant rather than beside the level because at a top level the
+    /// answer decides nothing — a function is not lexically declared there at all — and a
+    /// parameter that is read in one case and ignored in the other is a parameter a caller can get
+    /// wrong without a test noticing.
+    Block {
+        /// Whether §11.2.2's strict mode is in force for the list being checked.
+        strict: bool,
+    },
     /// A `Script` body (§16.1.1) or a `FunctionStatementList` (§15.2.1).
     Top,
 }
@@ -69,16 +123,33 @@ pub(super) enum Level {
 /// their lists over it as the concatenation across every clause. Doing exactly that is what makes
 /// `case 1: let a; case 2: let a;` a redeclaration, and it is why this is a second caller of the
 /// same rules rather than a second rule.
-pub(super) fn check_case_block_declared_names(cases: &[SwitchCase]) -> Result<(), ParseError> {
-    check(
+pub(super) fn check_case_block_declared_names(
+    cases: &[SwitchCase],
+    strict: bool,
+) -> Result<(), ParseError> {
+    let lexical: Vec<DeclaredName<'_>> = cases
+        .iter()
+        .flat_map(|case| lexically_declared_names(&case.body))
+        .collect();
+    // §B.3.3.5 states the same carve-out over a `CaseBlock`, and over the same concatenation: two
+    // `case` clauses each declaring `function f` are two entries in one list, and both are bound by
+    // functions, so both are exempt. Concatenated first for that reason — asked one clause at a
+    // time, neither would see the other's binding and neither would be exempt.
+    let repeatable = functions_that_may_repeat(
+        &lexical,
         cases
             .iter()
-            .flat_map(|case| lexically_declared_names(&case.body))
+            .flat_map(|case| function_declared_names(&case.body))
             .collect(),
+        strict,
+    );
+    check(
+        lexical,
         cases
             .iter()
             .flat_map(|case| var_declared_names(&case.body))
             .collect(),
+        &repeatable,
     )
 }
 
@@ -110,7 +181,8 @@ pub(super) fn check_module_declared_names(body: &[ModuleItem]) -> Result<(), Par
     // the declaration it collided with. The imports were appended after the statements, so the
     // list has to be put back in the order the file was written.
     lexical.sort_by_key(|declared| declared.span.start);
-    check(lexical, var_declared_names(&statements))
+    // A module is strict code (§11.2.2), so §B.3.3.5 exempts nothing here.
+    check(lexical, var_declared_names(&statements), &HashSet::new())
 }
 
 /// The `BoundNames` of an `ImportDeclaration` (§8.2.1).
@@ -252,16 +324,22 @@ pub(super) fn check_header_against_body(
 }
 
 /// §14.2.1, §16.1.1 and §14.12.1, which state the same two rules about different lists.
-fn check(
-    lexical_names: Vec<DeclaredName<'_>>,
+fn check<'a>(
+    lexical_names: Vec<DeclaredName<'a>>,
     var_names: Vec<DeclaredName<'_>>,
+    repeatable: &HashSet<&'a str>,
 ) -> Result<(), ParseError> {
     let mut lexical: HashMap<&str, Span> = HashMap::new();
     for declared in lexical_names {
         // The list is in source order, so the one that collides is always the later of the
         // two and there is nothing to compare — the caret goes on the redeclaration because
         // that is where it was found, not because a rule picked it.
-        if lexical.insert(declared.name, declared.span).is_some() {
+        //
+        // `repeatable` is §B.3.3.5's exemption and is empty everywhere it does not apply, so rule
+        // 1 is unchanged for strict code, for a top level and for every name a `let` also bound.
+        if lexical.insert(declared.name, declared.span).is_some()
+            && !repeatable.contains(declared.name)
+        {
             return Err(ParseError {
                 kind: ParseErrorKind::DuplicateLexicalBinding,
                 span: declared.span,

@@ -219,7 +219,7 @@ impl Parser<'_> {
     ) -> Result<(StmtKind, Span), ParseError> {
         let test = self.parse_header_clause(TokenKind::Semicolon, "`;`")?;
         let update = self.parse_header_clause(TokenKind::RParen, "`)`")?;
-        let body = self.parse_statement()?;
+        let body = self.parse_statement(super::LabelledFunction::Refused)?;
         if let Some(ForInit::Declaration(declaration)) = &init
             && declaration.kind.is_lexical()
         {

@@ -78,10 +78,96 @@ fn collect_lexical(body: &[Stmt], top_level: bool) -> Vec<DeclaredName<'_>> {
                     });
                 }
             }
+            // §8.2.6 hands `StatementListItem : Statement` on to the statement only when it is a
+            // `LabelledStatement`, and from there to the `LabelledItem` — which §B.3.2 lets be a
+            // `FunctionDeclaration`. So `{ a: function f() {} let f; }` is a redeclaration, for
+            // exactly the reason `{ function f() {} let f; }` is.
+            //
+            // Not at a top level: §8.2.10 gives `TopLevelLexicallyDeclaredNames` of a
+            // `StatementListItem : Statement` an empty list unconditionally, which is what makes a
+            // labelled function at the top of a body var-scoped instead — see
+            // [`top_level_var_declared_names`], which passes `direct` through a label to say so.
+            StmtKind::Labelled(_) if !top_level => {
+                names.extend(labelled_function_name(stmt));
+            }
             _ => {}
         }
     }
     names
+}
+
+/// The names a `FunctionDeclaration` binds at the top level of `body` — §B.3.3.5's carve-out.
+///
+/// The subset of [`lexically_declared_names`] that a *`FunctionDeclaration`* put there, so that a
+/// caller can ask whether a duplicate is "only bound by FunctionDeclarations". A label is followed
+/// for the reason the walk above follows one: §B.3.2 makes `a: function f() {}` a lexical binding
+/// of `f`.
+///
+/// A `GeneratorDeclaration`, an `AsyncFunctionDeclaration` and an `AsyncGeneratorDeclaration` are
+/// **not** among them. Each is a `HoistableDeclaration` and none is a `FunctionDeclaration`, which
+/// is the production the carve-out names — so `{ function f() {} function* f() {} }` is the Syntax
+/// Error §14.2.1 makes it, and test262 has a file for all sixteen pairings.
+///
+/// ```
+/// use praxis::parser::parse_script;
+/// use praxis::static_semantics::function_declared_names;
+///
+/// let script = parse_script("{ function f() {} a: function g() {} function* h() {} let i; }")
+///     .expect("this parses");
+/// let praxis::ast::StmtKind::Block(block) = &script.body[0].kind else { panic!("a block") };
+/// let names: Vec<_> = function_declared_names(block)
+///     .iter()
+///     .map(|declared| declared.name)
+///     .collect();
+/// assert_eq!(names, ["f", "g"], "a generator is not one, and `let i` is not a function at all");
+/// ```
+pub fn function_declared_names(body: &[Stmt]) -> Vec<DeclaredName<'_>> {
+    body.iter()
+        .filter_map(|stmt| {
+            let function = hoistable_declaration(stmt)?;
+            match function.is_generator || function.is_async {
+                true => None,
+                false => declared(function),
+            }
+        })
+        .collect()
+}
+
+/// The name of the declaration a chain of labels ends in, if it ends in one.
+///
+/// Whatever kind it is: §8.2.6 gives a `LabelledStatement` the `BoundNames` of its item, and does
+/// not ask which `HoistableDeclaration` the item is. That §B.3.2 only ever produces the plain kind
+/// is a fact about the parser, and this operation should not be the place that knows it.
+fn labelled_function_name(stmt: &Stmt) -> Option<DeclaredName<'_>> {
+    let StmtKind::Labelled(_) = &stmt.kind else {
+        return None;
+    };
+    declared(hoistable_declaration(stmt)?)
+}
+
+/// The declaration a statement-list item is, looking through any labels §B.3.2 allows.
+///
+/// `a: b: function f() {}` is a `LabelledStatement` whose `LabelledItem` is another, so this is a
+/// loop rather than a look: §14.13's item may be a `LabelledStatement` and each level hands the
+/// question down unchanged.
+fn hoistable_declaration(stmt: &Stmt) -> Option<&crate::ast::Function> {
+    let mut current = stmt;
+    loop {
+        match &current.kind {
+            StmtKind::Labelled(statement) => current = &statement.body,
+            StmtKind::Function(function) => return Some(function),
+            _ => return None,
+        }
+    }
+}
+
+/// A declaration's `BoundNames`, which is its own name — `None` for the anonymous `export default`.
+fn declared(function: &crate::ast::Function) -> Option<DeclaredName<'_>> {
+    let name = function.name.as_ref()?;
+    Some(DeclaredName {
+        name: &name.name,
+        span: name.span,
+    })
 }
 
 /// `VarDeclaredNames` of a `StatementList` (§8.2.8).

@@ -55,13 +55,31 @@ impl Parser<'_> {
     /// The consequent and optional alternate of an `if`, apart so their locals are not carried
     /// by every level of nesting that passes through [`Parser::parse_if`].
     fn parse_if_branches(&mut self) -> Result<(Stmt, Option<Stmt>), ParseError> {
-        let consequent = self.parse_statement()?;
+        let consequent = self.parse_if_clause()?;
         if self.current.kind != TokenKind::Keyword(ReservedWord::Else) {
             return Ok((consequent, None));
         }
         self.advance(Goal::RegExp)?;
-        let alternate = self.parse_statement()?;
+        let alternate = self.parse_if_clause()?;
         Ok((consequent, Some(alternate)))
+    }
+
+    /// One clause of an `if`, which §B.3.4 lets be a `FunctionDeclaration` in sloppy code.
+    ///
+    /// The declaration is wrapped in a `Block` rather than left where it was written, and that is
+    /// the specification's own framing: B.3.4 says such an `IfStatement` "is evaluated as if it were
+    /// `if ( Expression ) { FunctionDeclaration }`". Wrapping means the whole of §14.1's
+    /// block-scoping and the whole of §B.3.3's extra `var` binding apply to it with nothing written
+    /// for the case — one `else` and one `if` clause reach the same code a hand-written block does.
+    fn parse_if_clause(&mut self) -> Result<Stmt, ParseError> {
+        if !self.at_annex_b_function()? {
+            return self.parse_statement(super::LabelledFunction::Refused);
+        }
+        let declaration = self.parse_function_declaration(false)?;
+        Ok(Stmt {
+            span: declaration.span,
+            kind: StmtKind::Block(Box::new([declaration])),
+        })
     }
 
     /// `WhileStatement : while ( Expression ) Statement` (§14.7.3).
@@ -69,7 +87,7 @@ impl Parser<'_> {
         let keyword = self.advance(Goal::RegExp)?;
         let test = self.parse_parenthesized_test()?;
         self.enter()?;
-        let body = self.parse_statement();
+        let body = self.parse_statement(super::LabelledFunction::Refused);
         self.leave();
         let body = body?;
         Ok(Stmt {
@@ -82,7 +100,7 @@ impl Parser<'_> {
     pub(super) fn parse_do_while(&mut self) -> Result<Stmt, ParseError> {
         let keyword = self.advance(Goal::RegExp)?;
         self.enter()?;
-        let body = self.parse_statement();
+        let body = self.parse_statement(super::LabelledFunction::Refused);
         self.leave();
         let body = body?;
         self.eat(
@@ -198,7 +216,7 @@ impl Parser<'_> {
         }
         let object = self.parse_parenthesized_test()?;
         self.enter()?;
-        let body = self.parse_statement();
+        let body = self.parse_statement(super::LabelledFunction::Refused);
         self.leave();
         let body = body?;
         Ok(Stmt {

@@ -54,6 +54,32 @@ impl Parser<'_> {
         })
     }
 
+    /// Whether a `FunctionDeclaration` stands here that Annex B lets into a `Statement` position.
+    ///
+    /// Two positions ask: §B.3.4's `if (x) function f() {}` and §B.3.2's `L: function f() {}`. Both
+    /// name the production `FunctionDeclaration`, and the whole of what this decides is whether the
+    /// text at the cursor is one.
+    ///
+    /// Strictness first, because DR-0008's amendment makes it the only condition Annex B is allowed
+    /// to have here — a fact the compiler can already read off the directive prologue.
+    ///
+    /// Then a token past `function`, because a `GeneratorDeclaration` is **not** a
+    /// `FunctionDeclaration` and Annex B does not extend to one: `if (x) function* g() {}` has no
+    /// derivation with or without B.3. `async function` needs no test at all — `async` is an
+    /// ordinary identifier to the lexer, so the cursor is not on `function` and this answers no,
+    /// which leaves [`Parser::parse_statement`] to refuse it exactly as it did before.
+    pub(super) fn at_annex_b_function(&mut self) -> Result<bool, ParseError> {
+        if self.strict
+            || self.current.kind != TokenKind::Keyword(crate::lexer::ReservedWord::Function)
+        {
+            return Ok(false);
+        }
+        // `Goal::Div` rather than `Goal::RegExp`: nothing legal follows `function` with a `/`, and
+        // under the other goal an unterminated regular expression would come back as a lexical
+        // error from a token this only wants to *look* at.
+        Ok(self.peek(Goal::Div)?.kind != TokenKind::Star)
+    }
+
     /// §16.2.3's `[+Default]` `HoistableDeclaration`, with the cursor on `function` or the
     /// `async` before it.
     ///
@@ -744,10 +770,31 @@ mod tests {
             script_error("{ let f; function f() {} }").kind,
             ParseErrorKind::DuplicateLexicalBinding
         );
+        // …except when both are functions, which is §B.3.3.5's carve-out and is conditioned on
+        // sloppiness alone. `annexB/language/function-code/function-redeclaration-block.js` is
+        // this program, and its strict sibling is the line below.
+        assert!(parse_script("{ function f() {} function f() {} }").is_ok());
+        assert!(
+            parse_script("switch (x) { case 1: function f() {} case 2: function f() {} }").is_ok()
+        );
         assert_eq!(
-            script_error("{ function f() {} function f() {} }").kind,
-            ParseErrorKind::DuplicateLexicalBinding,
-            "refused; §14.2.1's web-compat carve-out for this needs strict mode to state"
+            script_error("'use strict'; { function f() {} function f() {} }").kind,
+            ParseErrorKind::DuplicateLexicalBinding
+        );
+        // "only bound by FunctionDeclarations" is the whole of the exemption: one function and one
+        // `let` of a name is still two lexical bindings of it, and still refused.
+        assert_eq!(
+            script_error("{ function f() {} function f() {} let f; }").kind,
+            ParseErrorKind::DuplicateLexicalBinding
+        );
+        assert_eq!(
+            script_error("{ class f {} function f() {} }").kind,
+            ParseErrorKind::DuplicateLexicalBinding
+        );
+        // …and a name that repeats beside one that does not is still caught.
+        assert_eq!(
+            script_error("{ function f() {} function f() {} let g; const g = 1; }").kind,
+            ParseErrorKind::DuplicateLexicalBinding
         );
         // …and a function in a nested block is not var-declared at the level above it, which is
         // what "directly" means in §8.2.12.
@@ -756,26 +803,103 @@ mod tests {
     }
 
     #[test]
-    fn the_three_shapes_a_web_host_would_take_are_refused_together() {
-        // Annex B.3.2 lets a `FunctionDeclaration` be the body of an `if` in non-strict code, and
-        // §14.13.1 lets one be labelled. Both exemptions turn on strictness, which this parser
-        // cannot yet tell — so both are refused, for the reason Annex B.3.5 was: accepting would
-        // be wrong in strict code on every host, and refusing is wrong only for sloppy code on a
-        // host that implements them. V8 takes all three; these are the divergences, and they go
-        // away together with strict mode.
-        for source in ["if (x) function f() {}", "a: function f() {}"] {
+    fn annex_b_takes_a_function_where_a_statement_stands_and_only_where_it_says() {
+        // §B.3.4 lets a `FunctionDeclaration` be a clause of an `if`, and §B.3.2 lets one be
+        // labelled. DR-0008's amendment conditions both on strictness and on nothing else.
+        assert_eq!(
+            statements("if (x) function f() {}"),
+            ["(if x {(fn f [] {})})"]
+        );
+        assert_eq!(
+            statements("if (x) function f() {} else function g() {}"),
+            ["(if x {(fn f [] {})} {(fn g [] {})})"],
+            "§B.3.4 evaluates it as if the clause were a block, so that is what the tree holds"
+        );
+        assert_eq!(
+            statements("if (x) ; else function g() {}"),
+            ["(if x <empty> {(fn g [] {})})"]
+        );
+        assert_eq!(
+            statements("a: function f() {}"),
+            ["(label a (fn f [] {}))"],
+            "§B.3.2 does *not* wrap: §8.2.12 hands a label's item to TopLevelVarDeclaredNames"
+        );
+        assert_eq!(
+            statements("a: b: function f() {}"),
+            ["(label a (label b (fn f [] {})))"],
+            "§14.13's item may be another LabelledStatement, and the permission is inherited"
+        );
+        // Strict code takes neither, which is the whole condition.
+        for source in [
+            "'use strict'; if (x) function f() {}",
+            "'use strict'; a: function f() {}",
+            "function h() { 'use strict'; if (x) function f() {} }",
+        ] {
             assert_eq!(
                 script_error(source).kind,
                 ParseErrorKind::DeclarationInStatementPosition,
                 "{source:?}"
             );
         }
-        // …and this one has no exemption anywhere, an `IterationStatement` body being a
-        // `Statement` in every dialect.
-        assert_eq!(
-            script_error("while (x) function f() {}").kind,
-            ParseErrorKind::DeclarationInStatementPosition
-        );
+        // A `GeneratorDeclaration` is not a `FunctionDeclaration`, so Annex B does not reach one
+        // in either position — which is what the token past `function` is looked at for.
+        for source in [
+            "if (x) function* g() {}",
+            "a: function* g() {}",
+            "if (x) async function g() {}",
+            "a: async function g() {}",
+        ] {
+            assert_eq!(
+                script_error(source).kind,
+                ParseErrorKind::DeclarationInStatementPosition,
+                "{source:?}"
+            );
+        }
+        // An `IterationStatement` body has no exemption anywhere, being a `Statement` in every
+        // dialect — and neither does a `with` body or the branch of an `if` inside one.
+        for source in [
+            "while (x) function f() {}",
+            "for (;;) function f() {}",
+            "do function f() {} while (x)",
+            "with (x) function f() {}",
+        ] {
+            assert_eq!(
+                script_error(source).kind,
+                ParseErrorKind::DeclarationInStatementPosition,
+                "{source:?}"
+            );
+        }
+        // §14.6.1 and its five siblings: `IsLabelledFunction(Statement)` is a Syntax Error
+        // wherever the body is a `Statement` rather than a `StatementList`. So the *position* rule
+        // is a second condition and not a restatement of strictness — every one of these is sloppy
+        // and every one is refused, while the same text inside braces is taken.
+        for source in [
+            "if (x) a: function f() {}",
+            "if (x) ; else a: function f() {}",
+            "if (x) a: b: function f() {}",
+            "while (x) a: function f() {}",
+            "do a: function f() {} while (x)",
+            "for (;;) a: function f() {}",
+            "for (a in b) a: function f() {}",
+            "for (a of b) a: function f() {}",
+            "with (x) a: function f() {}",
+        ] {
+            assert_eq!(
+                script_error(source).kind,
+                ParseErrorKind::DeclarationInStatementPosition,
+                "{source:?}"
+            );
+        }
+        for source in [
+            "{ a: function f() {} }",
+            "if (x) { a: function f() {} }",
+            "while (x) { a: function f() {} }",
+            "switch (x) { case 1: a: function f() {} }",
+            "function h() { a: function f() {} }",
+            "try { a: function f() {} } finally {}",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source:?}");
+        }
     }
 
     #[test]
