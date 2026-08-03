@@ -139,9 +139,9 @@ resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eva
 §16.2.1.6.3's `ResolveExport` across a graph, and `export *` with its ambiguity rule. `src/vm/module.rs`
 is the linker and `src/heap/namespace.rs` the exotic object.
 
-Conformance as of this commit is **78.20% of test262** — 72,848 of 93,161 runs. Treat that number as
+Conformance as of this commit is **78.26% of test262** — 72,905 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 1,559 runs are now *stopped* before anything executes:
+Only 1,508 runs are now *stopped* before anything executes:
 
 | Runs | What stops them |
 | --- | --- |
@@ -149,7 +149,7 @@ Only 1,559 runs are now *stopped* before anything executes:
 | 247 | a top-level `await` |
 | 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 110 | a property of strings |
-| 51 | a `delete` of a bare name inside `with` |
+| 18 | a destructuring rest parameter |
 
 **The skip list is no longer where the work is, and neither are the biggest failure buckets.**
 Sorted by reason the largest look actionable and mostly are not, which is worth doing once and
@@ -203,20 +203,16 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
 A top-level `await` (247) is the same registry work plus §16.2.1.5.3's `[[AsyncEvaluation]]`, so
 the two are worth doing in that order.
 
-### Three small gaps are diagnosed and not built
+### Two small gaps are diagnosed and not built
 
-Each is under a hundred runs, and each is written down because the diagnosis cost more than the fix
-will.
+Both are under a hundred runs, and each is written down because the diagnosis cost more than the
+fix will.
 
 - **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Both are refused
   where §19.2.1.1 allows them, because whether an arrow was written inside a function is a
   *lexical* fact that a running arrow's chunk does not record — and the parser knows it, refusing
   `new.target` in a top-level arrow at compile time. Carrying that answer onto the chunk is the
   whole slice.
-- **`delete x` where `x` is a bare name inside a `with` — 51 runs.** §13.5.1.2 has to ask the
-  *object* environment record whether it has the binding, and delete the property if it does.
-  Everything else about `with` resolves names at run time already; this is the one operation on a
-  name that is neither a read nor a write.
 - **§13.15.2's order inside a `with` — 79 runs, all listed.** An assignment evaluates its target
   *reference* before the value, and inside a `with` praxis evaluates the value first. Observable
   when the right-hand side changes what the left resolves to.
