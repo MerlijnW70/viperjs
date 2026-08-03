@@ -140,13 +140,12 @@ resolves into the scopes its caller is *running* in — see DR-0018, `src/vm/eva
 dynamic `import()`. `src/vm/module.rs` is the linker, `src/heap/namespace.rs` the exotic object and
 `src/vm/loader.rs` the host hook.
 
-Conformance as of this commit is **79.15% of test262** — 73,736 of 93,161 runs. Treat that number as
+Conformance as of this commit is **79.38% of test262** — 73,949 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 608 runs are now *stopped* before anything executes:
+Only 362 runs are now *stopped* before anything executes:
 
 | Runs | What stops them |
 | --- | --- |
-| 248 | a top-level `await` |
 | 170 | `(?i:…)` — the RegExp **modifiers proposal**, and not ES2023; see below |
 | 110 | a property of strings |
 | 18 | a destructuring rest parameter |
@@ -182,20 +181,18 @@ writing down rather than re-deriving. Bucketed by *path*, what they actually are
   implementation choice. **It is also the only remaining path to 80%**: every other item on this
   page together lands at about 79.5%.
 
-**The skip list is nearly empty, and 80% now turns on one decision.** A top-level `await` is 248
-runs and `import.meta` 6; everything else stopped is a proposal or a one-thread engine's limit.
-Adding the two lands near 79.4%, and the 645 Annex B runs below are what is between that and 80%.
+**The skip list is all but empty, and 80% now turns on one decision.** §16.2 is finished; what is
+left stopped is a proposal (`(?i:…)` 170, a property of strings 110), a one-thread engine's limit
+(`$262.agent` 18), `import.meta` 6, and a destructuring rest parameter 18. Building every one of
+those lands short of 80%. **The 645 Annex B runs below are what is between here and it.**
 
-### A top-level `await` is the next slice, and the registry it needs is already there
+### What is left, in the order the numbers put it
 
-248 runs, and §16.2.1.5.3 is most of it. What dynamic `import()` built — a module registry on the
-`Vm`, records that outlive one call, a promise settled from a job — is what an asynchronous module
-also needs, so the remaining work is the clause itself: `[[AsyncEvaluation]]`, the counter that
-orders sibling modules, and the fact that a module's *evaluation* answers a promise rather than a
-value. `Vm::link_and_evaluate` is where it goes; `src/vm/suspend.rs` already parks a body.
-
-Read `language/module-code/top-level-await/` before starting. Those tests run now and fail, so the
-failure messages are the specification's own reading of what is missing.
+- **Annex B's block-level function declarations — 645 runs, and a charter decision.** See above:
+  DR-0008 refuses B.3, ~480 of the 645 are its *syntactic* half, and that record names the
+  procedure for reversing itself. Nothing else reaches 80%.
+- **A destructuring rest parameter — 18 runs**, and the last compiler refusal on the skip list.
+- **`import.meta` — 6 runs.** §16.2.1.9's host hook, and the registry it would hang off is built.
 
 ### Two small gaps are diagnosed and not built
 
