@@ -9,15 +9,19 @@
 //! the translation either way: §6.2.6.5 turning an object into a descriptor, and §6.2.6.4 turning
 //! a descriptor back into an object.
 //!
-//! # What is deliberately absent
+//! # Two things this file used to say it could not do
 //!
-//! `Object(primitive)` should wrap — §7.1.18's `ToObject` makes a Number object out of `1` — and
-//! there are no wrapper objects yet, so it refuses with a message saying so rather than answering
-//! something that is not what the specification says.
+//! Both were true when they were written and neither is now, which is the drift a doc comment is
+//! prone to and nothing checks. Recorded here rather than deleted, because the shape recurs.
 //!
-//! §20.1.3.6's `toString` reads a *builtin tag*, and most of that table is internal slots this
-//! heap does not keep — so `[object Error]` and `[object Date]` are not distinguished. `Array`,
-//! `Function` and the two that are not objects at all are, because those are answerable.
+//! `Object(primitive)` **wraps**: §7.1.18's `ToObject` makes a Number object out of `1`, and
+//! [`construct`] reaches [`crate::vm::Vm::object_for`] for every primitive. The doc said it refused
+//! for want of wrapper objects.
+//!
+//! §20.1.3.6's `toString` answers **every row of its table**. The doc said most of it was internal
+//! slots the heap does not keep and that `[object Error]` and `[object Date]` were not
+//! distinguished; `Object::is_error`, `date_value` and `regexp` are those slots, and step 15's
+//! `@@toStringTag` overrides the lot when it holds a String.
 
 use crate::heap::{
     DefineOutcome, Heap, NativeCall, ObjectId, Property, PropertyDescriptor, PropertyKey,

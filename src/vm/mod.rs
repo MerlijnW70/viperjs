@@ -715,10 +715,16 @@ impl Vm {
 
     /// Free everything this machine can no longer reach, and answer how much that was.
     ///
-    /// The host's to call, and deliberately: the interpreter does not run this on a schedule of its
-    /// own because `Heap::footprint` counts arena slots and DR-0010 does not reuse a swept one, so
-    /// a collection cannot lower what the budget is measured against for objects. Until it can, a
-    /// timer inside the loop costs more than it saves — measured, twice, in `execute`.
+    /// The host's to call, and the interpreter runs none on a schedule of its own. That was
+    /// measured twice in `execute` — every eight mebibytes cost 318 conformance files their time
+    /// budget to buy six passes, and once at the budget cost 79 to buy none.
+    ///
+    /// **The reason those numbers were what they were has since changed, and they have not been
+    /// taken again.** They were explained by DR-0010 never reusing a swept slot, so a collection
+    /// could not lower what `Heap::footprint` measures; DR-0019 does reuse one, so a collection now
+    /// stops the arena growing even though `footprint` is a high-water mark and still never falls.
+    /// Whether a timer pays for itself is therefore an open question with a stale answer — re-run
+    /// it before quoting it, and do not read the absence of a schedule as a finding.
     ///
     /// An embedder knows things the loop does not: when a request finished, when a frame was
     /// drawn, when nothing is holding the values a script just made. `root` is the chunk being run

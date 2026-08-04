@@ -20,7 +20,6 @@ use super::syntax::{
 };
 use crate::unicode_id::{is_id_continue, is_id_start};
 use crate::unicode_property::Property;
-use std::collections::HashSet;
 
 /// §22.2.1 — read `source` under `flags`.
 ///
@@ -54,15 +53,53 @@ pub fn parse(source: &str, flags: Flags) -> Result<Pattern, Error> {
     })
 }
 
-/// The first pass — how many capturing groups there are, and what they are called.
+/// Where a group sits in the pattern's alternations — one entry per enclosing `Disjunction`.
+///
+/// The `u32` pair is *which* disjunction and *which* of its alternatives, and both halves are
+/// needed. Depth alone cannot answer §22.2.1.1's question: in `(?:(?<x>a)|b)(?:c|(?<x>d))` the two
+/// groups are each the second entry of a path and each in a different alternative *of a different
+/// disjunction*, which is not the same as being in different alternatives of one.
+type Path = Vec<(u32, u32)>;
+
+/// §22.2.1.1 `MightBothParticipate` — whether one match could fill in both of these groups.
+///
+/// The clause asks whether any single `Disjunction` has one of them in one `Alternative` and the
+/// other in a different one; if any does, at most one can participate and the pair is legal. Two
+/// paths from the same pattern share a prefix and then part, so this is one walk:
+///
+/// - the same disjunction with **different** alternatives is the clause's answer, `false`;
+/// - **different** disjunctions means the two are inside separate groups that sit side by side, so
+///   one match reaches both — `true`, and the walk stops because nothing deeper is shared;
+/// - running out of path means one group encloses the other's position sequentially, also `true`.
+fn might_both_participate(left: &Path, right: &Path) -> bool {
+    for (here, there) in left.iter().zip(right.iter()) {
+        if here.0 != there.0 {
+            return true;
+        }
+        if here.1 != there.1 {
+            return false;
+        }
+    }
+    true
+}
+
+/// The first pass — how many capturing groups there are, what they are called, and where each sits.
 ///
 /// Counts `(` that are not `(?`, and `(?<` that is not `(?<=` or `(?<!`. Deliberately crude about
 /// everything else: it skips escapes and the insides of classes so that `\(` and `[(]` are not
 /// counted, and leaves every other question to the real parse.
+///
+/// It also follows `(`, `)` and `|` well enough to say which alternative of which disjunction each
+/// name was written in, which §22.2.1.1 needs and nothing else here does. Crude in the same way:
+/// an unbalanced `)` is left to the real parse to complain about, and popping nothing is not an
+/// error *here* because it is one *there*.
 fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
     let mut groups = 0;
     let mut names: Vec<(String, u32)> = Vec::new();
-    let mut seen: HashSet<&str> = HashSet::new();
+    let mut paths: Vec<Path> = Vec::new();
+    // The pattern is itself a `Disjunction`, so there is always a level to be in an alternative of.
+    let mut path: Path = vec![(0, 0)];
+    let mut disjunctions = 0;
     let mut at = 0;
     let mut in_class = false;
     while at < text.len() {
@@ -76,8 +113,36 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
                 in_class = false;
                 at += 1;
             }
+            // Every `(` opens a `Disjunction` — a capturing group, `(?:`, and all four lookarounds
+            // alike — so every one of them is a level. `|` inside it belongs to that level and not
+            // to the one outside, which is the whole reason the alternatives are counted on a stack
+            // rather than as one number.
+            '|' if !in_class => {
+                if let Some(level) = path.last_mut() {
+                    level.1 += 1;
+                }
+                at += 1;
+            }
+            ')' if !in_class => {
+                // An unbalanced `)` is the real parse's to complain about, so the base level is
+                // never popped. Popping it would leave every later name with an empty path, and two
+                // empty paths compare as "both could participate" — so `/)(?<x>a)|(?<x>b)/` would be
+                // refused here for sharing a name, which is not its fault and not what is wrong
+                // with it. This pass is crude on purpose; being crude must not mean answering for
+                // a question it was not asked.
+                if path.len() > 1 {
+                    path.pop();
+                }
+                at += 1;
+            }
             '(' if !in_class => {
                 at += 1;
+                // §22.2.1.1 reads a `GroupSpecifier` as part of `( GroupSpecifier Disjunction )`,
+                // so the name sits in the alternative containing the *whole group* and not inside
+                // the group's own disjunction. Taken before the level is pushed, for that reason.
+                let outer = path.clone();
+                disjunctions += 1;
+                path.push((disjunctions, 0));
                 if text.get(at) != Some(&'?') {
                     groups += 1;
                     continue;
@@ -107,6 +172,7 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
                 }
                 groups += 1;
                 names.push((name, groups));
+                paths.push(outer);
                 // The `>` is left where it is: the loop's own advance steps over it, and a second
                 // one here would be a step no test could see the absence of.
                 at = end;
@@ -114,10 +180,21 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
             _ => at += 1,
         }
     }
-    // §22.2.1.1 — two groups may not share a name. Checked here because the names are all in hand
-    // and the body parse would otherwise have to carry the set through every recursion.
-    for (name, _) in &names {
-        if !seen.insert(name.as_str()) {
+    // §22.2.1.1 — two groups may share a name **only** when no single match could fill in both.
+    // Checked here because the names are all in hand and the body parse would otherwise have to
+    // carry them through every recursion.
+    //
+    // Every name against every *earlier* name of the same spelling, which is each pair once. A set
+    // of names already met sat in front of this and skipped the first occurrence of each — a branch
+    // no pattern could tell from its absence, because a first occurrence has no earlier twin for
+    // the scan below to find and the answer was `false` either way.
+    for (at, (name, _)) in names.iter().enumerate() {
+        let conflicts = names[..at]
+            .iter()
+            .zip(paths.iter())
+            .filter(|((had, _), _)| had == name)
+            .any(|(_, earlier)| might_both_participate(earlier, &paths[at]));
+        if conflicts {
             return Err(Error::at("two groups have the same name"));
         }
     }
@@ -1044,6 +1121,70 @@ mod tests {
         assert_eq!(refused("(?<n>a)(?<n>b)"), "two groups have the same name");
         assert_eq!(refused("(?<>a)"), "a group name is empty");
         assert_eq!(refused("(?<n"), "a group name is not closed");
+    }
+
+    #[test]
+    fn two_groups_may_share_a_name_when_no_match_could_fill_in_both() {
+        // §22.2.1.1's rule is `MightBothParticipate` and not "the name is unused": two groups may
+        // wear one name as long as some `Disjunction` has them in different `Alternative`s, because
+        // then at most one of them can take part in any single match.
+        assert!(parse("(?<x>a)|(?<x>b)", Flags::default()).is_ok());
+        assert!(parse("(?:(?<x>a)|(?<x>b))", Flags::default()).is_ok());
+        assert!(parse("^(?:(?<a>x)|(?<a>y)|z)$", Flags::default()).is_ok());
+        // A group *around* one of them changes nothing: what matters is the alternative each is
+        // written in, however deep it sits.
+        assert!(parse("(?:(?<x>a))|(?<x>b)", Flags::default()).is_ok());
+        assert!(parse("(?:(?:(?<x>a)))|(?:(?<x>b))", Flags::default()).is_ok());
+        // A lookaround is a `Disjunction` too, so its alternatives count the same way.
+        assert!(parse("(?=(?<x>a)|(?<x>b))", Flags::default()).is_ok());
+
+        // Sequential is the plain case: both participate whenever the pattern matches.
+        assert_eq!(
+            refused("(?:(?<x>a))(?:(?<x>b))"),
+            "two groups have the same name"
+        );
+        // **Different alternatives of *different* disjunctions is not the rule**, and this is the
+        // pair a depth-only reading gets wrong: each group is the second alternative it is written
+        // in, and the two disjunctions sit side by side, so `/(?:(?<x>a)|b)(?:c|(?<x>d))/` can fill
+        // in both from `"ad"`.
+        assert_eq!(
+            refused("(?:(?<x>a)|b)(?:c|(?<x>d))"),
+            "two groups have the same name"
+        );
+        assert_eq!(
+            refused("(?:a|(?<x>b))(?:c|(?<x>d))"),
+            "two groups have the same name"
+        );
+        // Nesting one inside the other's own disjunction is sequential in the same sense: the outer
+        // group participates whenever the inner one does.
+        assert_eq!(refused("(?<x>a|(?<x>b))"), "two groups have the same name");
+        // A third name in between must not let a real conflict past — the check is per pair and
+        // not "was the last one different".
+        assert_eq!(
+            refused("(?<x>a)(?<y>b)(?<x>c)"),
+            "two groups have the same name"
+        );
+        // …and a name that is legal against one earlier group must still be checked against the
+        // rest. Here `x` in the third alternative is fine against the first, and the *second* is in
+        // the same alternative as it.
+        assert_eq!(
+            refused("(?<x>a)|(?:(?<x>b)(?<x>c))"),
+            "two groups have the same name"
+        );
+
+        // A pattern that is broken *elsewhere* must be refused for that and not for this. An
+        // unbalanced `)` is the real parse's complaint, and this pass must keep its base level so
+        // the names either side of it still know which alternative they are in — popping past it
+        // leaves both paths empty, which compares as "both could participate" and answers with the
+        // wrong sentence about a pattern whose names are fine.
+        assert_eq!(
+            refused(")(?<x>a)|(?<x>b)"),
+            "a regular expression has an unmatched )"
+        );
+        assert_eq!(
+            refused("(?<x>a))|(?<x>b)"),
+            "a regular expression has an unmatched )"
+        );
     }
 
     #[test]

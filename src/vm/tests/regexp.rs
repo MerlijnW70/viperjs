@@ -594,3 +594,86 @@ fn a_class_that_would_match_strings_is_refused_by_name_and_not_as_bad_syntax() {
         "this character may not be escaped in a Unicode pattern"
     );
 }
+
+#[test]
+fn several_groups_may_wear_one_name_and_the_one_that_matched_answers_for_it() {
+    // §22.2.1.1 lets a name be reused across alternatives, and each group keeps a **capture index
+    // of its own** — the array still has one entry per `(`, in source order, with `undefined` for
+    // the alternative the match did not take.
+    assert_eq!(
+        run("JSON.stringify(/(?<x>a)|(?<x>b)/.exec('bab'))"),
+        "[\"b\",null,\"b\"]"
+    );
+    assert_eq!(
+        run("JSON.stringify(/(?<x>b)|(?<x>a)/.exec('bab'))"),
+        "[\"b\",\"b\",null]"
+    );
+    // §22.2.7.2 step 34's `groups` gets **one** property per distinct name, holding whichever
+    // group took part. Defining it once per group would let the alternative that did not match
+    // overwrite the one that did, and the answer would depend on which came last in the source.
+    assert_eq!(run("/(?<x>a)|(?<x>b)/.exec('bab').groups.x"), "b");
+    assert_eq!(run("/(?<x>b)|(?<x>a)/.exec('bab').groups.x"), "b");
+    assert_eq!(run("String(/(?<x>a)|(?<x>b)/.exec('cb').groups.x)"), "b");
+    // The property is created where the name is **first written**, which is the enumeration order
+    // the clause produces and is observable through `Object.keys`.
+    assert_eq!(
+        run("Object.keys(/(?<b>1)|(?<a>2)|(?<b>3)/.exec('2').groups).join(',')"),
+        "b,a"
+    );
+    // …and a name none of whose groups took part is present and `undefined`, not absent. That is
+    // the difference between "this pattern has no such group" and "it has one and it did not run".
+    assert_eq!(
+        run("var g = /(?<x>a)|(?<x>b)|z/.exec('z').groups; ('x' in g) + '|' + g.x"),
+        "true|undefined"
+    );
+}
+
+#[test]
+fn a_backreference_to_a_shared_name_reads_whichever_group_took_part() {
+    // §22.2.2.9 — the reference is to *every* group of that name, and §22.2.1.1 has already made
+    // sure at most one can have a capture. Reading the first group wearing the name instead would
+    // find the empty capture of the alternative the match did not take, and a backreference to a
+    // group that did not participate matches the **empty string** — so `\k<x>` would succeed
+    // against anything at all.
+    assert_eq!(
+        run("JSON.stringify(/(?:(?<x>a)|(?<x>b))\\k<x>/.exec('aa'))"),
+        "[\"aa\",\"a\",null]"
+    );
+    assert_eq!(
+        run("JSON.stringify(/(?:(?<x>a)|(?<x>b))\\k<x>/.exec('bb'))"),
+        "[\"bb\",null,\"b\"]"
+    );
+    assert_eq!(
+        run("String(/(?:(?<x>a)|(?<x>b))\\k<x>/.exec('abab'))"),
+        "null"
+    );
+    // A repeat re-runs the pair, and the captures the last turn left are what `\k<x>` reads —
+    // which is why this matches and answers with the *second* turn's group.
+    assert_eq!(
+        run("JSON.stringify(/(?:(?:(?<x>a)|(?<x>b))\\k<x>){2}/.exec('aabb'))"),
+        "[\"aabb\",null,\"b\"]"
+    );
+    assert_eq!(
+        run("String(/(?:(?:(?<x>a)|(?<x>b))\\k<x>){2}/.exec('abab'))"),
+        "null"
+    );
+    // An alternative that names nothing leaves every group of that name out, and the reference
+    // then matches the empty string — so `"z"` matches and `"zz"` does not.
+    assert_eq!(
+        run("JSON.stringify(/^(?:(?<a>x)|(?<a>y)|z)\\k<a>$/.exec('z'))"),
+        "[\"z\",null,null]"
+    );
+    assert_eq!(
+        run("String(/^(?:(?<a>x)|(?<a>y)|z)\\k<a>$/.exec('zz'))"),
+        "null"
+    );
+    // A reference written in a *different* alternative from the only group of that name is
+    // reachable and reads nothing, which the clause allows rather than refusing at parse time.
+    assert_eq!(
+        run("JSON.stringify(/(?<a>x)|(?:zy\\k<a>)/.exec('zy'))"),
+        "[\"zy\",null]"
+    );
+    // `$<name>` in a replacement reads the same property, so it follows from `groups` with no
+    // second rule of its own.
+    assert_eq!(run("'b'.replace(/(?<x>a)|(?<x>b)/, '[$<x>]')"), "[b]");
+}

@@ -257,12 +257,29 @@ fn build_result(
         true => Value::Undefined,
         false => {
             let holder = heap.new_object(None);
-            for (name, number) in &pattern.names {
-                let value = match usize::try_from(*number)
+            let capture = |number: &u32| {
+                usize::try_from(*number)
                     .ok()
                     .and_then(|n| n.checked_sub(1))
                     .and_then(|index| found.captures.get(index).copied())
                     .flatten()
+            };
+            for (name, _) in &pattern.names {
+                // §22.2.1.1 lets several groups share a name when no match could fill in more than
+                // one of them, so the object has **one** property per distinct name — at the
+                // position the name is first written, which is the enumeration order §22.2.7.2
+                // step 34 produces and a test measures.
+                //
+                // Nothing here skips the second group of a shared name, and nothing needs to: the
+                // value is looked up **by name** across every group wearing it, so a repeated
+                // define writes the same value to a key that already holds it and keeps the place
+                // it already had. A guard in front of it was a branch no program could tell from
+                // its absence, and mutation coverage said so.
+                let value = match pattern
+                    .names
+                    .iter()
+                    .filter(|(had, _)| had == name)
+                    .find_map(|(_, number)| capture(number))
                 {
                     Some(span) => slice(heap, span),
                     None => Value::Undefined,

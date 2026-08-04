@@ -95,8 +95,6 @@ annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-so
 annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
 annexB/built-ins/RegExp/prototype/Symbol.split/toint32-limit-recompiles-source.js :: it threw an object with no name: Expected SameValue(«"a"», «""») to be true
 annexB/built-ins/RegExp/prototype/Symbol.split/toint32-limit-recompiles-source.js (strict) :: it threw an object with no name: Expected SameValue(«"a"», «""») to be true
-annexB/built-ins/RegExp/prototype/compile/duplicate-named-capturing-groups-syntax.js :: it threw SyntaxError: two groups have the same name
-annexB/built-ins/RegExp/prototype/compile/duplicate-named-capturing-groups-syntax.js (strict) :: it threw SyntaxError: two groups have the same name
 annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/this-cross-realm-instance.js :: it threw TypeError: what was called is not a function
@@ -3028,8 +3026,6 @@ built-ins/RegExp/call_with_regexp_not_same_constructor.js :: it threw an object 
 built-ins/RegExp/call_with_regexp_not_same_constructor.js (strict) :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
 built-ins/RegExp/character-class-escape-non-whitespace.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/character-class-escape-non-whitespace.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/duplicate-named-capturing-groups-syntax.js :: it threw SyntaxError: two groups have the same name
-built-ins/RegExp/duplicate-named-capturing-groups-syntax.js (strict) :: it threw SyntaxError: two groups have the same name
 built-ins/RegExp/escape/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/escape/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/escape/escaped-control-characters.js :: it threw TypeError: what was called is not a function
@@ -3116,26 +3112,8 @@ built-ins/RegExp/match-indices/indices-groups-properties.js :: it threw TypeErro
 built-ins/RegExp/match-indices/indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/match-indices/indices-property.js :: it threw an object with no name: indices should be an own property
 built-ins/RegExp/match-indices/indices-property.js (strict) :: it threw an object with no name: indices should be an own property
-built-ins/RegExp/named-groups/duplicate-names-exec.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-exec.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-group-property-enumeration-order.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-group-property-enumeration-order.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-match-indices.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-match-indices.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-match.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-match.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-matchall.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-matchall.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-replace.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-replace.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-replaceall.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-replaceall.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-search.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-search.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-split.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-split.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-test.js :: it did not parse: two groups have the same name
-built-ins/RegExp/named-groups/duplicate-names-test.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/named-groups/duplicate-names-match-indices.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/RegExp/named-groups/duplicate-names-match-indices.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/named-groups/groups-object-subclass-sans.js :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass-sans.js (strict) :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass.js :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
@@ -4128,10 +4106,8 @@ built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-failure.js :: it th
 built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-failure.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/dotAll/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/dotAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/exec/duplicate-named-groups-properties.js :: it did not parse: two groups have the same name
-built-ins/RegExp/prototype/exec/duplicate-named-groups-properties.js (strict) :: it did not parse: two groups have the same name
-built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js :: it did not parse: two groups have the same name
-built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js (strict) :: it did not parse: two groups have the same name
+built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic exec without v flag
@@ -4354,10 +4330,8 @@ built-ins/String/prototype/isWellFormed/to-string.js :: it threw an object with 
 built-ins/String/prototype/isWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
-built-ins/String/prototype/match/duplicate-named-groups-properties.js :: it did not parse: two groups have the same name
-built-ins/String/prototype/match/duplicate-named-groups-properties.js (strict) :: it did not parse: two groups have the same name
-built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js :: it did not parse: two groups have the same name
-built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js (strict) :: it did not parse: two groups have the same name
+built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all

@@ -223,8 +223,10 @@ impl<'a> Lexer<'a> {
     /// **Precondition:** `source` is at most `u32::MAX` bytes. [`Span`] holds `u32` offsets, so
     /// a larger source would report truncated positions. Nothing panics if it happens — a bad
     /// span slices to `None` and `line_col` clamps — but diagnostics would point at nonsense.
-    /// The check belongs at the embedding boundary where source is accepted (M3's `api.rs`),
-    /// not on the token loop, and it will arrive with a decision record.
+    /// The check belongs at the embedding boundary where source is accepted, not on the token
+    /// loop. **That boundary does not exist yet** — there is no `api.rs`; an embedder reaches
+    /// `parse_script` and `Vm` directly — so nothing performs it today and this is the only place
+    /// that records the precondition.
     pub fn new(source: &'a str) -> Self {
         Self {
             cursor: Cursor::new(source),

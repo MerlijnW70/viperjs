@@ -113,8 +113,10 @@ pub struct Label {
 
 /// `with ( Expression ) Statement` (§14.11).
 ///
-/// A Syntax Error in strict code (§14.11.1), which this parser cannot yet tell apart — so it
-/// parses everywhere for now, and the day strict mode exists that rule has somewhere to live.
+/// **A Syntax Error in strict code (§14.11.1)**, and the parser refuses it there — the node is
+/// reached only from sloppy source. It is still a node rather than a refusal in the grammar because
+/// strictness is a property of the code a statement sits in and not of the statement, so the rule
+/// lives where that is known.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WithStatement {
     /// The object whose properties become bindings for the body.

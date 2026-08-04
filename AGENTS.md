@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.35% of test262** — 76,719 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.38% of test262** — 76,745 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 422 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -178,6 +178,34 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### Duplicate named capture groups, and the check that needs *which* disjunction
+
+§22.2.1.1 lets two groups share a name when `MightBothParticipate` is false — when some
+`Disjunction` has them in different `Alternative`s, so no single match can fill in both.
+`/(?<x>a)|(?<x>b)/` is legal and `/(?<x>a)(?<x>b)/` is not. +26 runs.
+
+**Depth is not enough, and that is the whole design.** Recording each name's nesting depth and
+comparing alternative indices level by level gets `/(?:(?<x>a)|b)(?:c|(?<x>d))/` wrong: both groups
+are the *n*-th alternative at the same depth, of two **different** disjunctions sitting side by
+side, and `"ad"` fills in both. So `survey` carries a path of `(disjunction id, alternative index)`
+and the walk has three outcomes — same disjunction and different alternatives is the clause's
+`false`; a different disjunction means the two are in separate groups side by side, so `true` and
+nothing deeper is shared; running out is `true` as well.
+
+Two consequences beyond the parser, each one line and each with a test that fails without it:
+
+- **`\k<name>` refers to *every* group of that name**, §22.2.2.9, so the lookup is `find_map` over
+  all of them rather than `find` on the first. The first one wearing the name may be in the
+  alternative the match did not take, and a backreference to a group that did not participate
+  matches the **empty string** — so `/(?:(?<x>a)|(?<x>b))\k<x>/` would match `"b"` alone.
+- **`groups` gets one property per *distinct* name**, at the position the name is first written,
+  holding whichever group took part. Defining it once per group lets a later `undefined` overwrite
+  the alternative that matched, and the answer would depend on source order.
+
+**What it exposed is worth naming: six tests moved from `did not parse` to a real gap** — the `d`
+flag's `.indices` array, which praxis does not build at all. That is a next slice with its own
+tests already listed against it.
 
 ### One `?`, and 109 runs: §15.8.4 rejects where the generator clauses throw
 
@@ -410,6 +438,18 @@ doc says which line to change if data ever arrives.
 - **`ArraySetLength` cannot run a `valueOf` — ~30 runs.** `[].length = {valueOf(){return 3}}` throws
   and `[].length = 1n` is a RangeError where §10.4.2.4 propagates `ToUint32`'s TypeError.
   `set_array_length` is on `Heap`, which has no interpreter to re-enter — that is DR-0011's seam.
+- **A computed key does not name its method — 36 runs.** §15.4.5 runs `SetFunctionName(closure,
+  propKey)` with the *evaluated* key, so `({ ["id"]() {} }).id.name` is `"id"` and a Symbol key
+  gives `"[description]"`; praxis answers `""` for both, and the accessors are missing their
+  `get `/`set ` prefix with it. Most of the 36 are `language/expressions/object`, not classes.
+  `src/compile/class.rs`'s `Naming` decides it at compile time, where the key is not yet known — so
+  the slice is naming at run time from the key already on the stack. **Found by grepping doc
+  comments, not by bucketing**: the comment there described the empty string as a choice.
+- **The `d` flag's `.indices` array — 34 runs.** §22.2.7.8 `MakeMatchIndicesIndexPairArray`, and
+  praxis builds none of it: the flag parses and `RegExp.prototype.hasIndices` answers, so a script
+  can ask for `d` and then read `undefined`. The match record already holds every span the array
+  needs — `found.span` and `found.captures` are pairs — so this is the array and its `groups`
+  object and nothing else. Six of the 34 arrived with the duplicate-named-groups slice.
 - **`import.meta` — 6 runs**, §16.2.1.9's host hook, and the registry it would hang off is built.
 - **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Whether an arrow was
   written inside a function is a *lexical* fact a running arrow's chunk does not record, and the

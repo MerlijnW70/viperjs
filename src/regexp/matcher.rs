@@ -263,12 +263,18 @@ impl<'a> Matcher<'a> {
             Node::Group { kind, body } => self.group(kind, body, at, cont),
             Node::Backreference(number) => self.backreference(self.capture_of(*number), at, cont),
             Node::NamedBackreference(name) => {
+                // §22.2.2.9 — a name may belong to several groups, and the reference is to all of
+                // them. §22.2.1.1 has already refused any pair that could both participate, so at
+                // most one has a capture and the first found is *the* one. `find_map` over every
+                // group of that name and not `find` on the name: the first group wearing it may be
+                // in the alternative this match did not take, and reading its empty capture would
+                // make `/(?:(?<x>a)|(?<x>b))\k<x>/` match `"b"` alone.
                 let held = self
                     .pattern
                     .names
                     .iter()
-                    .find(|(had, _)| had == name)
-                    .and_then(|(_, number)| self.capture_of(*number));
+                    .filter(|(had, _)| had == name)
+                    .find_map(|(_, number)| self.capture_of(*number));
                 self.backreference(held, at, cont)
             }
             Node::Repeat {

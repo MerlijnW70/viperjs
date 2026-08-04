@@ -210,9 +210,12 @@ const fn string_fits(left: usize, right: usize) -> bool {
 /// The most memory a heap may hand out before the engine refuses — DR-0013.
 ///
 /// Not a number about machines: it is a number about *scripts*. `while (true) { ({}); }` allocates
-/// forever, and until a collection policy exists (see [`Heap::collect`], which has the operation
-/// and no caller) forever means until the process dies. An abort is the one failure DR-0002 has no
-/// answer for, so the engine stops first and says so.
+/// forever, and forever means until the process dies unless something stops it. An abort is the one
+/// failure DR-0002 has no answer for, so the engine stops first and says so.
+///
+/// [`Heap::collect`] exists and [`crate::vm::Vm::collect`] calls it, but **nothing schedules one**:
+/// that is the embedder's, and for want of a policy rather than for want of a collector. What was
+/// measured, and what has changed under it since, is on `Vm::collect`.
 ///
 /// 64 MiB, and the number is chosen from a measurement rather than from taste. [`Heap::footprint`]
 /// is an *estimate* that leaves out the storage an object's own properties take, and the gap is
@@ -403,9 +406,10 @@ impl Heap {
     /// rather than a precise ceiling: a loop that allocates is stopped, which is the case that
     /// ends in an abort.
     pub fn footprint(&self) -> usize {
-        // Slots rather than live values. A swept slot still costs its place in the arena — DR-0010
-        // trades that for handles that never dangle — so what has been *allocated* is the honest
-        // measure of what the heap has cost, not what is still reachable.
+        // Slots rather than live values, and the two differ by less than they did: DR-0019 hands a
+        // swept slot out again, so a collection stops the arena *growing* even though `len` is a
+        // high-water mark and never falls. What has been allocated is still the honest measure of
+        // what the heap has cost — a freed slot has been paid for and the payment is not refunded.
         self.objects.len() * size_of::<Option<Object>>()
             + self.environments.len() * size_of::<Option<Environment>>()
             + self.strings.len() * size_of::<Option<Box<[u16]>>>()
@@ -520,10 +524,13 @@ impl Heap {
     ///
     /// # What it costs
     ///
-    /// A hash of the contents per key made, and one copy of the units kept in the table. Nothing
-    /// is ever removed: until the collector exists, an interned key lives as long as the heap.
-    /// That is a leak in the same sense that everything else here is one, and the sweep will
-    /// treat this table the way engines do — weakly.
+    /// A hash of the contents per key made, and one copy of the units kept in the table.
+    ///
+    /// The table is **weak**, which it was not when this was written: [`Heap::collect`] is not
+    /// rooted by it and prunes every entry whose String the sweep freed. So a name nothing uses is
+    /// collected, the table forgets it, and a later `intern` of the same text makes a *new* String
+    /// rather than handing back a handle to nothing —
+    /// `collect::tests::the_intern_table_is_not_a_root_and_forgets_a_freed_name` is that walk.
     pub fn intern(&mut self, units: &[u16]) -> StringId {
         if let Some(id) = self.interned.get(units) {
             return *id;

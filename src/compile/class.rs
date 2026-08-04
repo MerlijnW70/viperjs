@@ -750,8 +750,15 @@ fn method_naming(method: &crate::ast::ClassMethod) -> Naming<'_> {
         crate::ast::PropertyKey::Identifier(name) | crate::ast::PropertyKey::Private(name) => {
             Some(&**name)
         }
-        // A computed key's name is whatever the expression came to at run time, and a String or
-        // numeric key would need converting — both are left to §10.2.9's empty string for now.
+        // A computed key's name is whatever the expression came to at run time, so it is not known
+        // here and falls to §10.2.9's empty string.
+        //
+        // **That is a divergence and not a reading.** §15.4.5 runs `SetFunctionName(closure,
+        // propKey)` with the *evaluated* key, so `class A { ["id"]() {} }` should name the method
+        // `"id"` and a Symbol key `"[description]"`; praxis answers `""` for both. 36 runs measure
+        // it, most of them `language/expressions/object` rather than classes, and the accessors
+        // want their `get `/`set ` prefix with it. Fixing it means naming at run time from the key
+        // already on the stack, not finding a better answer here.
         _ => None,
     };
     Naming { name, prefix }

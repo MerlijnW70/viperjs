@@ -14,12 +14,23 @@
 //! the `var`. That is the whole reason the second rule cannot be checked by looking at the list
 //! in front of you.
 //!
-//! # What this does not yet catch
+//! # Why a `Script` no longer shares this with a `Block`
 //!
-//! §14.2.1's carve-out for `FunctionDeclaration`s under Web Legacy Compatibility Semantics, and
-//! the difference between these operations and their `TopLevel` variants (§8.2.10, §8.2.12).
-//! Both turn on a `HoistableDeclaration`, and there are none until functions land — at which
-//! point a `Script` stops being able to share this function with a `Block`.
+//! Both of the things this file once said it could not catch turn on a `HoistableDeclaration`, and
+//! both are here now:
+//!
+//! §8.2.10 and §8.2.12's **`TopLevel` variants** are a different answer rather than a refinement: a
+//! function declaration at a script's top level is a *var* name and not a lexical one, so
+//! `var a; function a() {}` is legal there and `{ var a; function a() {} }` is not.
+//! [`check_declared_names`] takes a [`Level`] and asks the pair that level names.
+//!
+//! §14.2.1's carve-out under **Web Legacy Compatibility Semantics** is §B.3.3.5, and it belongs to
+//! a `Block` alone — a top level needs none, because the clause above already left a
+//! `HoistableDeclaration` out of the lexical list. It exempts one shape from rule 1: two
+//! `FunctionDeclaration`s of a name in the same `StatementList` of **sloppy** code. So
+//! `{ function f() {} function f() {} }` parses, `'use strict';` in front of it does not, and
+//! §B.3.3.5 states the same over a `CaseBlock` — a `switch` with one in two cases parses too. It is
+//! the only rule here that asks whether the code is strict, and a module (§11.2.2) is never exempt.
 
 use super::export::{exported_bindings, exported_names};
 use super::{ParseError, ParseErrorKind};

@@ -24,9 +24,10 @@
 //!
 //! # Species
 //!
-//! §23.1.3.13 step 5 is `ArraySpeciesCreate`, and praxis makes an ordinary Array instead — as it
-//! does in `map`, `filter` and `slice`. That is one unimplemented abstract operation rather than a
-//! decision taken here, and it is what the suite's `Symbol.species` rows are about.
+//! §23.1.3.13 step 5 is `ArraySpeciesCreate` and [`flat`] calls it, so `class C extends Array {}`
+//! flattens into a `C`. This section used to say praxis made an ordinary Array here and in `map`,
+//! `filter` and `slice`, and that the operation was unimplemented; it is `array_species_create` in
+//! `super::array_methods`, and all four go through it.
 
 use super::array_methods::{
     array_species_create, callback, create_index, get_index, has_index, length_of, this_object,

@@ -592,8 +592,8 @@ impl Heap {
 
     /// The object along `object`'s prototype chain that owns `key`, if any.
     ///
-    /// What `[[Get]]` will need once calling exists: the property *and* which object it came
-    /// from, since an accessor's getter is called with that object as its receiver.
+    /// The property *and* which object it came from, because that is what `[[Get]]` needs: an
+    /// accessor's getter is called with the object it was found on as its receiver.
     /// An object's own property, with §10.4.4's map consulted — `[[GetOwnProperty]]`.
     ///
     /// The same answer as the object's own table for everything but a joined argument index,
