@@ -386,6 +386,52 @@ impl Vm {
         self.set_through(base, key, value, base, heap)
     }
 
+    /// §10.4.2.4 `ArraySetLength` steps 3 to 5 — the conversions, run where an interpreter is.
+    ///
+    /// `Heap::set_array_length` cannot do this. `ToUint32` and `ToNumber` both run a script's own
+    /// `valueOf`, and the heap has no machine to re-enter — DR-0011's seam. So the value is settled
+    /// here and the heap is handed a Number, which is what its existing check was always written
+    /// against.
+    ///
+    /// **Both conversions, on the same value.** Steps 3 and 4 each convert `Desc.[[Value]]`, so a
+    /// `valueOf` runs *twice* — which is observable and is what the clause says. Doing it once and
+    /// reusing the answer would be a tidier engine and a different language.
+    ///
+    /// The RangeError is step 5's: a value that survives both conversions and disagrees with itself
+    /// is not a length. A value that survives neither throws whatever the conversion threw, which
+    /// is how `[].length = 1n` becomes §7.1.6's **TypeError** rather than a refusal.
+    ///
+    /// `None` when this is not an array's `length` at all, which is every other write.
+    pub(super) fn settled_array_length(
+        &mut self,
+        object: crate::heap::ObjectId,
+        key: PropertyKey,
+        value: Value,
+        heap: &mut Heap,
+    ) -> Completion<Option<Value>> {
+        if !heap
+            .object(object)
+            .is_some_and(crate::heap::Object::is_array)
+            || key != heap.length_key()
+        {
+            return Ok(None);
+        }
+        // §7.1.6 `ToUint32`, which is `ToNumber` and then the modulo — so it throws for a BigInt
+        // exactly as `ToNumber` does, which is where `[].length = 1n`'s TypeError comes from.
+        let length = self.to_number(value, heap)?;
+        let length = Value::Number(length).to_uint32(heap)?;
+        let number = self.to_number(value, heap)?;
+        // `SameValueZero`, which for two Numbers is equality with `NaN` equal to itself — and a
+        // `NaN` cannot survive `ToUint32` anyway, so what this really refuses is `1.5`, `-1` and
+        // anything past 2^32-1.
+        if f64::from(length) != number {
+            return Err(Abrupt::range_error(
+                "an array length must be an integer index",
+            ));
+        }
+        Ok(Some(Value::Number(f64::from(length))))
+    }
+
     /// The same write, with the receiver named separately — §10.1.9.2's fourth argument.
     ///
     /// Two things read it: a setter is called with it as `this`, and a property that shadows an
@@ -423,6 +469,13 @@ impl Vm {
         //
         // Before the receiver is consulted at all, because §10.4.5.5 step 1 does not consult it:
         // the element belongs to the buffer and no receiver can move it elsewhere.
+        // §10.4.2.4 — an array's `length` is settled before the heap sees it, for the same reason
+        // the TypedArray write below is: the conversion runs a script's `valueOf` and the heap has
+        // no interpreter to run one with.
+        let value = match self.settled_array_length(object, key, value, heap)? {
+            Some(settled) => settled,
+            None => value,
+        };
         if let Some(index) = heap.typed_index(object, key) {
             // §10.4.5.16 step 1 — *which* conversion is chosen by the array's `[[ContentType]]`:
             // §7.1.13 `ToBigInt` for the two 64-bit kinds and §7.1.4 `ToNumber` for the other nine.

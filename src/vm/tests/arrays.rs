@@ -350,3 +350,67 @@ fn the_constructors_elements_are_ordinary_properties_and_its_prototype_is_not() 
         "true"
     );
 }
+
+#[test]
+fn setting_an_arrays_length_converts_what_it_is_given() {
+    // §10.4.2.4 steps 3 to 5. `Heap::set_array_length` cannot do this: `ToUint32` and `ToNumber`
+    // both run a script's own `valueOf`, and the heap has no machine to re-enter — DR-0011's seam.
+    // So the value is settled where an interpreter is, and the heap is handed a Number.
+    assert_eq!(
+        run("var a = []; a.length = { valueOf: function () { return 3 } }; a.length"),
+        "3"
+    );
+    assert_eq!(run("var a = []; a.length = '3'; a.length"), "3");
+    // Whatever the conversion threw is what the assignment throws — a RangeError here would be the
+    // engine answering for a failure that was not about length at all.
+    assert_eq!(
+        run(
+            "var a = []; try { a.length = { valueOf: function () { throw new TypeError('boom') } } }              catch (e) { e.message }"
+        ),
+        "boom"
+    );
+    // §7.1.6 `ToUint32` is `ToNumber` and then the modulo, so a BigInt is its **TypeError** rather
+    // than a length that does not fit.
+    assert_eq!(
+        run("var a = []; try { a.length = 1n; 'no error' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // Step 5's RangeError survives, for a value that converts twice and disagrees with itself.
+    assert_eq!(
+        run("var a = []; try { a.length = 1.5; 'no error' } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+    assert_eq!(
+        run("var a = []; try { a.length = -1; 'no error' } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+    // **Twice**, and that is the clause rather than a slip: steps 3 and 4 each convert
+    // `Desc.[[Value]]`. Converting once and reusing the answer would be a tidier engine and a
+    // different language.
+    assert_eq!(
+        run(
+            "var n = 0; var a = [];              a.length = { valueOf: function () { n = n + 1; return 2 } };              a.length + '|' + n"
+        ),
+        "2|2"
+    );
+    // `Object.defineProperty` is the other way into the same clause and must agree about all of it.
+    assert_eq!(
+        run(
+            "var a = [];              Object.defineProperty(a, 'length', { value: { valueOf: function () { return 3 } } });              a.length"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run(
+            "var a = [];              try { Object.defineProperty(a, 'length', { value: 1n }); 'no error' }              catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // A define with no value at all changes only the attributes, and there is nothing to convert.
+    assert_eq!(
+        run(
+            "var a = [1, 2]; Object.defineProperty(a, 'length', { writable: false });              try { a.push(3) } catch (e) {} a.length"
+        ),
+        "2"
+    );
+}

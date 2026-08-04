@@ -598,6 +598,21 @@ impl Vm {
         if let Some(answer) = self.proxy_define(object, key, descriptor, heap)? {
             return Ok(answer);
         }
+        // §10.4.2.4 — a define of an array's `length` converts its value, and the conversion runs
+        // a script's `valueOf`. Settled here for the same reason the `[[Set]]` path settles it: the
+        // heap has no interpreter, which is DR-0011's seam.
+        //
+        // `Object.defineProperty(a, "length", {value: v})` is the other way in, and it must agree
+        // with `a.length = v` about every one of these — the clause is one operation reached twice.
+        if let Some(value) = descriptor.value
+            && let Some(settled) = self.settled_array_length(object, key, value, heap)?
+        {
+            let descriptor = crate::heap::PropertyDescriptor {
+                value: Some(settled),
+                ..*descriptor
+            };
+            return Ok(heap.define_property_outcome(object, key, &descriptor));
+        }
         Ok(heap.define_property_outcome(object, key, descriptor))
     }
 

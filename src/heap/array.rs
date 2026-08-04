@@ -225,7 +225,7 @@ impl Heap {
     }
 
     /// The interned key `length`, which every array has and every array shares.
-    fn length_key(&mut self) -> PropertyKey {
+    pub(crate) fn length_key(&mut self) -> PropertyKey {
         PropertyKey::from_units(self, &"length".encode_utf16().collect::<Vec<_>>())
     }
 

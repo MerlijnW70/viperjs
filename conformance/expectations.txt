@@ -269,8 +269,6 @@ built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cann
 built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/AggregateError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/S15.4.5.2_A3_T2.js :: it threw RangeError: an array length must be an integer index
-built-ins/Array/S15.4.5.2_A3_T2.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/elements-deleted-after.js :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
@@ -479,14 +477,6 @@ built-ins/Array/fromAsync/thisarg-omitted-sloppy.js :: the test called $DONE wit
 built-ins/Array/fromAsync/thisarg-omitted-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-sloppy.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Array/length/S15.4.5.1_A1.3_T1.js :: it threw RangeError: an array length must be an integer index
-built-ins/Array/length/S15.4.5.1_A1.3_T1.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Array/length/S15.4.5.1_A1.3_T2.js :: it threw RangeError: an array length must be an integer index
-built-ins/Array/length/S15.4.5.1_A1.3_T2.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Array/length/define-own-prop-length-coercion-order-set.js :: it threw an object with no name: `"use strict"; array.length = length` throws a TypeError exception Expected a TypeError but got a RangeError
-built-ins/Array/length/define-own-prop-length-coercion-order-set.js (strict) :: it threw an object with no name: `"use strict"; array.length = length` throws a TypeError exception Expected a TypeError but got a RangeError
-built-ins/Array/length/define-own-prop-length-coercion-order.js :: it threw an object with no name: Object.defineProperty(array, "length", {value: length, writable: true}) throws a TypeError exception Expected a TypeError but got a RangeError
-built-ins/Array/length/define-own-prop-length-coercion-order.js (strict) :: it threw an object with no name: Object.defineProperty(array, "length", {value: length, writable: true}) throws a TypeError exception Expected a TypeError but got a RangeError
 built-ins/Array/length/define-own-prop-length-overflow-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Array/length/define-own-prop-length-overflow-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/of/construct-this-with-the-number-of-arguments.js :: it threw an object with no name: The value of len is expected to be 0 Expected SameValue(«undefined», «0») to be true
@@ -2538,34 +2528,6 @@ built-ins/Object/defineProperties/15.2.3.7-2-5.js :: it threw TypeError: a prope
 built-ins/Object/defineProperties/15.2.3.7-2-5.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/defineProperties/15.2.3.7-2-7.js :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/defineProperties/15.2.3.7-2-7.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-6-a-127.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-127.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-142.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-142.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-143.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-143.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-144.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-144.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-145.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-145.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-146.js :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Object/defineProperties/15.2.3.7-6-a-146.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Object/defineProperties/15.2.3.7-6-a-147.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperties/15.2.3.7-6-a-147.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-131.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-131.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-146.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-146.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-147.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-147.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-148.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-148.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-149.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-149.js (strict) :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-150.js :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Object/defineProperty/15.2.3.6-4-150.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Object/defineProperty/15.2.3.6-4-151.js :: it threw RangeError: an array length must be an integer index
-built-ins/Object/defineProperty/15.2.3.6-4-151.js (strict) :: it threw RangeError: an array length must be an integer index
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/groupBy/callback-arg.js :: it threw TypeError: what was called is not a function

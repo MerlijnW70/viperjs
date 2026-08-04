@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.59% of test262** — 76,942 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.63% of test262** — 76,980 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -501,9 +501,6 @@ doc says which line to change if data ever arrives.
   with a *RangeError*. Several of these files also use the immutable-`ArrayBuffer` harness, so
   check what a row is really asking before counting it — and re-measure, because §10.4.5.2's
   offset fix took 60 runs out of this area already.
-- **`ArraySetLength` cannot run a `valueOf` — ~30 runs.** `[].length = {valueOf(){return 3}}` throws
-  and `[].length = 1n` is a RangeError where §10.4.2.4 propagates `ToUint32`'s TypeError.
-  `set_array_length` is on `Heap`, which has no interpreter to re-enter — that is DR-0011's seam.
 - **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Whether an arrow was
   written inside a function is a *lexical* fact a running arrow's chunk does not record, and the
   parser knows it. Carrying that answer onto the chunk is the whole slice.
