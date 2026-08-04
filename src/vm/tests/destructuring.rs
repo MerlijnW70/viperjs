@@ -738,3 +738,104 @@ fn a_step_that_throws_leaves_the_iterator_spent_and_unclosed() {
         "true,0"
     );
 }
+
+#[test]
+fn a_destructuring_target_is_resolved_before_the_value_is_fetched() {
+    // §13.15.5.5 step 1 — the target's *reference* is evaluated before step 2 steps the iterator.
+    // So a target that throws leaves the iterator untouched: `next` is never called, and
+    // §13.15.5.2 step 5 closes an iterator that was asked for nothing. praxis stepped first, which
+    // is one `next` too many and one `return` too few.
+    assert_eq!(
+        run("var nexts = 0, closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { nexts += 1; return { done: true } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             var thrower = function () { throw 'from target' }; \
+             try { 0, [{}[thrower()]] = able } catch (e) {} \
+             nexts + ',' + closed"),
+        "0,1"
+    );
+    // §13.15.5.6 — three things in a fixed order for an object pattern, and praxis had the last
+    // two the other way round: the property **name**, then the target's reference, then the read.
+    assert_eq!(
+        run("var log = []; \
+             var src = { get a() { log.push('read'); return 1 } }; \
+             var o = {}; \
+             ({ a: o[(function () { log.push('key'); return 't' })()] } = src); \
+             log.join(',') + '|' + o.t"),
+        "key,read|1"
+    );
+    // The base of a member target is evaluated then too, and only once.
+    assert_eq!(
+        run("var log = []; var made = 0; \
+             var src = { get a() { log.push('read'); return 1 } }; \
+             var base = function () { made += 1; log.push('base'); return {} }; \
+             ({ a: base().x } = src); log.join(',') + '|' + made"),
+        "base,read|1"
+    );
+    // …and none of that changes what the assignment *does*, which is the half a reordering can
+    // quietly break.
+    assert_eq!(
+        run("var a = {}, b = {}; [a.x, b.y] = [1, 2]; \
+             var o = {}; [...o.rest] = [3, 4]; \
+             var d = {}; [d.a = 5] = []; \
+             var p = {}, q = {}; ({ m: p.x, ...q.rest } = { m: 6, n: 7 }); \
+             [a.x, b.y, o.rest.join('/'), d.a, p.x, q.rest.n].join(',')"),
+        "1,2,3/4,5,6,7"
+    );
+}
+
+#[test]
+fn a_close_on_the_way_out_of_a_throw_keeps_the_original_error() {
+    // §7.4.9 step 4 — the completion being carried out wins, so everything the close itself can
+    // fail at is discarded: the `return` throwing when called, and the getter step 2 reads it
+    // with. praxis swallowed those only for an **awaited** close, above a comment that already
+    // said "every failure of the close is discarded".
+    assert_eq!(
+        run(
+            "var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { throw 'from return' } } }; \
+             var o = {}; Object.defineProperty(o, 'x', { set: function () { throw 'from target' } }); \
+             var caught = 'none'; try { [o.x] = able } catch (e) { caught = e } caught"
+        ),
+        "from target"
+    );
+    assert_eq!(
+        run(
+            "var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 get return() { throw 'from getter' } } }; \
+             var o = {}; Object.defineProperty(o, 'x', { set: function () { throw 'from target' } }); \
+             var caught = 'none'; try { [o.x] = able } catch (e) { caught = e } caught"
+        ),
+        "from target"
+    );
+    // §15.5.5 step 7.b.iii.4 is the exception, and it is why this is a `Check` and not a rule:
+    // `yield*` closes a source with no `throw` method carrying a **normal** completion, so step 4
+    // does not fire and the close's own error is what the program sees — the TypeError below it
+    // never gets raised.
+    assert_eq!(
+        run(
+            "var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { throw 'from return' } } }; \
+             function* g() { yield* able } \
+             var it = g(); it.next(); \
+             var caught = 'none'; try { it.throw('sent') } catch (e) { caught = e } caught"
+        ),
+        "from return"
+    );
+    // …and with a `return` that answers cleanly, that same path raises §15.5.5's own TypeError.
+    assert_eq!(
+        run(
+            "var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { return {} } } }; \
+             function* g() { yield* able } \
+             var it = g(); it.next(); \
+             var caught = 'none'; try { it.throw('sent') } catch (e) { caught = e.constructor.name } caught"
+        ),
+        "TypeError"
+    );
+}

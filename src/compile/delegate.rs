@@ -263,9 +263,15 @@ impl Compiler<'_> {
         // the throw, on the same terms as any operand left behind by one.
         self.chunk.emit(Instruction::Pop);
         self.chunk.emit(Instruction::Pop);
+        // `Check::Plain` and **not** `Check::Unwind`, which is the whole of the difference §7.4.9
+        // step 4 turns on. §15.5.5 step 7.b.iii.4 closes with a *normal* completion — there is no
+        // throw travelling yet, the TypeError below has not been raised — so step 4 does not fire,
+        // the close's own failure is the answer, and step 6 examines what `return` handed back.
+        // Every other close in the engine is abandoning a walk that already went wrong, and for
+        // those the original completion wins; this one is the exception the clause writes down.
         self.emit_close(
             iterator,
-            super::statement::Check::Unwind,
+            super::statement::Check::Plain,
             super::Closing::Sync,
         )?;
         self.chunk.emit(Instruction::ThrowNoThrowMethod);

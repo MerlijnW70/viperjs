@@ -156,20 +156,38 @@ impl Compiler<'_> {
                     false => Vec::new(),
                 };
                 for (at, property) in pattern.properties.iter().enumerate() {
+                    // §13.15.5.6 — three things in a fixed order, and praxis had the last two the
+                    // other way round. The property **name** is step 1 and a computed one is an
+                    // expression; the target's *reference* is `KeyedDestructuringAssignmentEvaluation`
+                    // step 1.a; and only then does step 2's `GetV` read the source. So
+                    // `({ [f()]: o[g()] } = src)` calls `f`, then `g`, then reads `src`.
+                    //
+                    // The key goes into a slot rather than staying on the stack, because the
+                    // reference pushed between the two would otherwise sit on top of it.
+                    let key = match held.get(at).copied() {
+                        Some(slot) => slot,
+                        None => self.declare_hidden("key"),
+                    };
+                    self.push_key(&property.key, Some(key))?;
+                    self.chunk.emit(Instruction::Pop);
+                    let hoisted = self.hoist_reference(&property.value.target)?;
                     self.chunk.emit(Instruction::Duplicate);
-                    self.push_key(&property.key, held.get(at).copied())?;
+                    self.chunk.emit(Instruction::LoadVariable(0, key));
                     self.chunk.emit(Instruction::GetProperty);
                     self.apply_default(
                         property.value.default.as_deref(),
                         bound_name(&property.value.target),
                     )?;
-                    self.assign_target(&property.value.target, span)?;
+                    self.store_hoisted(hoisted, &property.value.target, span)?;
                 }
                 match &pattern.rest {
                     Some(target) => {
-                        self.emit_rest(&held)?;
+                        // §13.15.5.4's `AssignmentRestProperty` step 1 — the target's reference
+                        // again, and here it is evaluated before §7.3.25 copies anything.
                         let target = AssignmentTarget::Simple((**target).clone());
-                        self.assign_target(&target, span)
+                        let hoisted = self.hoist_reference(&target)?;
+                        self.emit_rest(&held)?;
+                        self.store_hoisted(hoisted, &target, span)
                     }
                     None => {
                         self.chunk.emit(Instruction::Pop);

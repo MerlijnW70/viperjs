@@ -1485,7 +1485,9 @@ impl Reference {
 
     /// How many values this reference occupies on the stack.
     ///
-    /// What a compound assignment and an update need: both read the old value and then write, and
+    /// What a compound assignment, an update and §13.15.5.5 step 1 need: the first two read the old
+    /// value and then write, and the third parks the whole reference in slots while the iterator is
+    /// stepped. In every case the reference is evaluated once and
     /// §13.15.2 evaluates the reference once — so the whole of it has to be copied, and how much that
     /// is depends on which reference it is. Two for `o.x` and for `o.#x`, three for `super.x`, whose
     /// receiver sits under the base.

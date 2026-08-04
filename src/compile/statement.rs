@@ -693,12 +693,18 @@ impl Compiler<'_> {
         if check == Check::Loop {
             self.chunk.emit(Instruction::PopHandler);
         }
-        // §7.4.11 step 4 — on the way out of a *throw* the original completion wins, so every
-        // failure of the close is discarded: the rejection the `Await` below raises, and the method
-        // lookup step 2 can fail at. A handler around the whole close is the only way to say that,
-        // because by then the throw is a value travelling and not a flag to consult.
-        let swallow = (closing == Closing::Awaited && check == Check::Unwind)
-            .then(|| self.chunk.emit_jump(Instruction::PushHandler));
+        // §7.4.9 step 4 and §7.4.11 step 4 — on the way out of a *throw* the original completion
+        // wins, so every failure of the close is discarded: the `return` method throwing when it is
+        // called, the getter step 2 reads it with, and the rejection the `Await` below raises. A
+        // handler around the whole close is the only way to say that, because by then the throw is
+        // a value travelling and not a flag to consult.
+        //
+        // For a **synchronous** close as well as an awaited one, and it was only the awaited one.
+        // The comment here already said "every failure", and the condition said `Awaited`; what
+        // that cost is `[o.x] = iterable` where `o.x`'s setter throws and the iterator's `return`
+        // throws too — the program sees the `return`'s error and §7.4.9 says it sees the setter's.
+        let swallow =
+            (check == Check::Unwind).then(|| self.chunk.emit_jump(Instruction::PushHandler));
 
         self.chunk.emit(Instruction::LoadVariable(0, iterator));
         self.chunk.emit(Instruction::Duplicate);

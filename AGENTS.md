@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.16% of test262** — 77,468 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.21% of test262** — 77,521 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -422,12 +422,30 @@ clause exactly, with no handler around the call and nothing to keep in step: eve
 "a value arrived" leaves it set. Written as a handler it would have been three catch sites that can
 drift apart from the three steps.
 
-**Still open beside it, and worth more: §13.15.5.5 step 1 evaluates the assignment target's
-*reference* before the iterator is stepped.** `0, [{}[thrower()]] = iterable` must call `next`
-**zero** times and close once; praxis steps first, so it calls `next` once and closes not at all.
-Fixing it means splitting the compiler's `destructure` into "push the reference" and "store through
-it", because today the target is emitted after the value is on the stack. That is a bytecode change
-and not a reordering.
+**The next slice was the ordering that hid behind it, and it is +53 more.** §13.15.5.5 step 1
+evaluates an assignment target's *reference* before step 2 steps the iterator, and §13.15.5.6 does
+the same between the property name and the read — so `0, [{}[thrower()]] = iterable` calls `next`
+**zero** times and closes once, and `({ [f()]: o[g()] } = src)` calls `f`, then `g`, then reads
+`src`. praxis fetched the value first in both, above a doc saying evaluating the reference earlier
+"is not an option", which was the clause read backwards.
+
+The compiler change is `hoist_reference` and `store_hoisted`: a property reference is two stack
+entries, or **three** for `super`, so it is parked in slots until the value turns up. `Reference`
+already knew its own width for compound assignment; this is its second caller.
+
+**And behind *that*, §7.4.9 step 4 — with one exception that cost four regressions to find.** On the
+way out of a throw the original completion wins, so every failure of the close is discarded: the
+`return` throwing, and the getter step 2 reads it with. praxis swallowed those only for an
+**awaited** close, under a comment that already said "every failure of the close is discarded".
+Broadening it to every unwinding close turned four `yield*` tests red, and they were right: §15.5.5
+step 7.b.iii.4 closes a source with no `throw` method carrying a **normal** completion, so step 4
+does not fire there, the close's own error is what the program sees, and step 6 examines what
+`return` handed back. That call site is `Check::Plain`, not `Check::Unwind`.
+
+**One clause, two callers, opposite answers about the same error — for the second time in this
+file.** §7.4.9 was already recorded that way for the Iterator Helpers' `return`; this is the same
+distinction reached from the other side, and the tell both times is *which completion the close is
+carrying* rather than what kind of close it looks like.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

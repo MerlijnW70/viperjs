@@ -11,6 +11,7 @@
 //! That half is [`super::binding`]. `src/parser/` splits the same two ways.
 
 use super::binding::{Bind, bound_name};
+use super::expression::Reference;
 use super::function::Keep;
 use super::statement::{Check, well_known};
 use super::{CompileError, Compiler, Instruction, unsupported};
@@ -78,17 +79,25 @@ impl Compiler<'_> {
         [iterator, next, done, current]: [u32; 4],
     ) -> Result<(), CompileError> {
         for element in &pattern.elements {
-            self.emit_step(iterator, next, done)?;
             let Some(element) = element else {
+                // An elision takes a turn of the iterator and writes nowhere, so there is no
+                // reference to evaluate first.
+                self.emit_step(iterator, next, done)?;
                 self.chunk.emit(Instruction::Pop);
                 continue;
             };
+            // §13.15.5.5 step 1 — **before** step 2's `IteratorStepValue`.
+            let hoisted = self.hoist_reference(&element.target)?;
+            self.emit_step(iterator, next, done)?;
             self.apply_default(element.default.as_deref(), bound_name(&element.target))?;
-            self.assign_target(&element.target, span)?;
+            self.store_hoisted(hoisted, &element.target, span)?;
         }
         let Some(rest) = &pattern.rest else {
             return Ok(());
         };
+        // §13.15.5.5's `AssignmentRestElement` step 1 — the same rule, and it comes before the
+        // array is even created.
+        let hoisted = self.hoist_reference(rest)?;
         let collected = self.declare_hidden("rest");
         let at = self.declare_hidden("at");
         self.chunk.emit(Instruction::NewArray(0));
@@ -116,15 +125,83 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Jump(top));
         self.chunk.patch(out)?;
         self.chunk.emit(Instruction::LoadVariable(0, collected));
-        self.assign_target(rest, span)
+        self.store_hoisted(hoisted, rest, span)
+    }
+
+    /// §13.15.5.5 step 1 and §13.15.5.6 step 1 — evaluate a destructuring target's *reference*
+    /// before the value it will be given has been fetched.
+    ///
+    /// `0, [{}[thrower()]] = iterable` must call `next` **zero** times: the target throws while the
+    /// iterator is still untouched, so §13.15.5.2 step 5 closes it and nothing was ever asked of
+    /// it. praxis stepped first, and the doc on [`Compiler::assign_target`] said evaluating the
+    /// reference earlier "is not an option" — it is what the clause requires, and the two orders
+    /// are told apart by any target with an effect in it.
+    ///
+    /// `None` for a nested pattern (step 1 excludes an ObjectLiteral and an ArrayLiteral) and for a
+    /// plain name, whose reference is resolved where it is written and cannot be observed either
+    /// way. Everything else is a property reference, which is between two and three stack entries
+    /// wide, so it is parked in slots until the value turns up.
+    pub(super) fn hoist_reference(
+        &mut self,
+        target: &AssignmentTarget,
+    ) -> Result<Option<(Reference, Vec<u32>)>, CompileError> {
+        let AssignmentTarget::Simple(expr) = target else {
+            return Ok(None);
+        };
+        if !matches!(
+            expr.kind,
+            ExprKind::Member { .. } | ExprKind::ComputedMember { .. }
+        ) {
+            return Ok(None);
+        }
+        let reference = self.property_reference(expr, Keep::Nothing)?;
+        let slots: Vec<u32> = (0..reference.width())
+            .map(|_| self.declare_hidden("reference"))
+            .collect();
+        debug_assert!(!slots.is_empty(), "a property reference is never empty");
+        // Emptied from the top down, so the last slot holds what was pushed last — and filled back
+        // in the same order below, which is the only reason a `super` reference's three entries
+        // come back the way its `SetSuperProperty` wants them.
+        for slot in slots.iter().rev() {
+            self.chunk.emit(Instruction::StoreVariable(0, *slot));
+            self.chunk.emit(Instruction::Pop);
+        }
+        Ok(Some((reference, slots)))
+    }
+
+    /// Write the value on top of the stack through a reference [`Compiler::hoist_reference`] parked.
+    ///
+    /// Falls back to [`Compiler::assign_target`] when nothing was parked, which is every nested
+    /// pattern and every plain name — so steps 5 and 6 stay decided in one place rather than twice.
+    pub(super) fn store_hoisted(
+        &mut self,
+        hoisted: Option<(Reference, Vec<u32>)>,
+        target: &AssignmentTarget,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let Some((reference, slots)) = hoisted else {
+            return self.assign_target(target, span);
+        };
+        let held = self.declare_hidden("assigned");
+        self.chunk.emit(Instruction::StoreVariable(0, held));
+        self.chunk.emit(Instruction::Pop);
+        for slot in &slots {
+            self.chunk.emit(Instruction::LoadVariable(0, *slot));
+        }
+        self.chunk.emit(Instruction::LoadVariable(0, held));
+        self.chunk.emit(reference.set());
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
     }
 
     /// Write the value on top of the stack to one target, consuming it.
     ///
     /// A property target is why the value goes into a slot first: `SetProperty` wants its base and
-    /// its key *under* the value, and the value arrived before either of them could be evaluated.
-    /// Evaluating the reference earlier is not an option — §13.15.5.3 evaluates it here, after the
-    /// element it belongs to has been taken from the iterator.
+    /// its key *under* the value, and by the time this is reached the value is already on the
+    /// stack. That is the shape for a target whose reference has **not** been hoisted — a nested
+    /// pattern or a plain name. §13.15.5.5 step 1 says a property target's reference is evaluated
+    /// *before* the value is fetched, and [`Compiler::hoist_reference`] is what does that; this doc
+    /// used to say evaluating it earlier "is not an option", which was the clause read backwards.
     pub(super) fn assign_target(
         &mut self,
         target: &AssignmentTarget,
