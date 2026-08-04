@@ -320,3 +320,77 @@ fn a_write_a_binding_refuses_inside_a_with_is_refused_the_same_way_it_would_be_o
         "ReferenceError"
     );
 }
+
+#[test]
+fn a_compound_assignment_writes_through_the_reference_it_read() {
+    // §13.15.2 evaluates the target **reference**, reads through it, evaluates the value, and
+    // writes back through the *same* reference. praxis resolved the name twice, which is the same
+    // answer for a slot and a different one inside a `with`: a getter may delete the property
+    // between the two, and the second resolution then finds whatever the name means without it.
+    //
+    // So this wrote to the *outer* `x` and left `scope` without one.
+    assert_eq!(
+        run("var x = 0; \
+             var scope = { get x() { delete this.x; return 2 } }; \
+             with (scope) { x *= 3 } \
+             'outer=' + x + ' scope=' + scope.x"),
+        "outer=0 scope=6"
+    );
+    // The ordinary case is unchanged, which is what makes the above about the reference rather
+    // than about `with` in general.
+    assert_eq!(
+        run("var x = 1; var o = { x: 5 }; with (o) { x += 2 } 'outer=' + x + ' o=' + o.x"),
+        "outer=1 o=7"
+    );
+    // A name the object does not have falls through to the scope outside, and the write goes there.
+    assert_eq!(run("var x = 1; with ({}) { x += 2 } x"), "3");
+    // A deleted property is *recreated* by the write, because the reference still names the object:
+    // `PutValue` on a property reference sets it whether or not it is still there.
+    assert_eq!(
+        run("var a = 'outer'; \
+             var o = { get a() { delete o.a; return 1 } }; \
+             with (o) { a += 1 } \
+             'outer=' + a + ' o=' + o.a"),
+        "outer=outer o=2"
+    );
+}
+
+#[test]
+fn a_resolved_reference_is_abandoned_by_a_throw_and_survives_a_yield() {
+    // The reference is half-built state of exactly the kind an operand is, so it lives on a stack
+    // with the same discipline: a handler records how many were waiting, and a throw truncates to
+    // that mark. Without it the next assignment would write through a reference the abandoned
+    // expression resolved.
+    assert_eq!(
+        run("var o = { x: 1 }; var said = 'none'; \
+             try { with (o) { x += (function () { throw new TypeError('boom') })() } } \
+             catch (e) { said = e.message } \
+             said + '|' + o.x"),
+        "boom|1"
+    );
+    // …and a second assignment afterwards still works, which is what proves nothing was left over.
+    assert_eq!(
+        run("var o = { x: 1 }; \
+             try { with (o) { x += (function () { throw 1 })() } } catch (e) {} \
+             with (o) { x += 5 } o.x"),
+        "6"
+    );
+    // A **suspension** is the other direction: `with (o) { x += yield 1 }` resolves the target,
+    // parks on the `yield`, and has to write through the reference the first half took rather than
+    // one resolved again on the way back. So the reference stack parks with the body.
+    assert_eq!(
+        run(
+            "function* g() { var o = { x: 1 }; with (o) { x += yield 1 } return o.x; } \
+             var it = g(); it.next(); String(it.next(10).value)"
+        ),
+        "11"
+    );
+    // Nested, which is why it is a stack and not a register: the inner assignment resolves and
+    // writes while the outer one is still waiting on its right-hand side.
+    assert_eq!(
+        run("var outer = { a: 1 }; var inner = { b: 10 }; \
+             with (outer) { a += (function () { with (inner) { b += 5 } return inner.b })() } \
+             outer.a + '|' + inner.b"),
+        "16|15"
+    );
+}

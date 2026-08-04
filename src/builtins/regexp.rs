@@ -322,7 +322,7 @@ fn match_indices(
     let array = heap.new_array(realm.array_prototype(), 0);
     // §22.2.7.9 `GetMatchIndexPair` — a two-element Array, and an ordinary one: its prototype is
     // `Array.prototype`, so a script may `map` over it like anything else.
-    let mut pair = |heap: &mut Heap, span: (usize, usize)| {
+    let pair = |heap: &mut Heap, span: (usize, usize)| {
         let made = heap.new_array(realm.array_prototype(), 0);
         for (at, end) in [(0_u32, span.0), (1, span.1)] {
             let slot = heap.index_key(at);

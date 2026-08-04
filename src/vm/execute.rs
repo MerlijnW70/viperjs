@@ -598,6 +598,61 @@ impl Vm {
                         }
                     }
                 }
+                Instruction::ResolveName(index) => {
+                    // §9.4.2 `ResolveBinding`, once. Everything after this reads and writes through
+                    // what it found, which is the whole of what §13.15.2 means by "the same
+                    // reference": a getter that deletes the property between the read and the write
+                    // must not send the write to whatever the name would resolve to now.
+                    let key = self.global_name(running, index, heap)?;
+                    let name = self.name_text(running, index, heap)?;
+                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
+                        Some(found) => found,
+                        None => continue,
+                    };
+                    self.references.push(found);
+                }
+                Instruction::LoadThrough(index) => {
+                    let key = self.global_name(running, index, heap)?;
+                    let found = *self.references.last().ok_or(Fault::MissingReference)?;
+                    match self.read_resolved(found, key, heap) {
+                        Ok(Some(value)) => self.stack.push(value),
+                        // §6.2.5.5 — nothing anywhere is the ReferenceError an ordinary
+                        // unresolvable name gets, said in the same words by the same code.
+                        Ok(None) => {
+                            let message = self.missing_global(key, heap);
+                            let thrown = self.realm.error(heap, NativeError::Reference, &message);
+                            self.unwind(thrown, root, current, at)?;
+                            continue;
+                        }
+                        Err(error) => {
+                            let thrown = self.thrown_value(error, heap);
+                            self.unwind(thrown, root, current, at)?;
+                            continue;
+                        }
+                    }
+                }
+                Instruction::StoreThrough(index) => {
+                    // Peeked, not popped: an assignment is an expression and its value is the
+                    // caller's. The *reference* is popped, because it has now been used.
+                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let key = self.global_name(running, index, heap)?;
+                    let strict = running.is_strict();
+                    let found = self.references.pop().ok_or(Fault::MissingReference)?;
+                    let stored = self.store_dynamic(found, key, value, strict, heap);
+                    match self.settle(stored.map(Value::Boolean), heap, root, current, at)? {
+                        // §6.2.5.6 — nothing in the chain answered, so the global object takes it.
+                        // The same tail `StoreName` has, and the reason both need it: `Resolved` has
+                        // a `Global` case that means "ask the global object", and asking it can
+                        // still come back `false` for a name it does not have either.
+                        Some(Value::Boolean(false)) => {
+                            let global = Value::Object(self.realm.global());
+                            let stored = self.set_property_key(global, key, value, heap);
+                            self.settle(stored, heap, root, current, at)?;
+                        }
+                        Some(_) => {}
+                        None => continue,
+                    }
+                }
                 Instruction::StoreName(index) => {
                     // Peeked, not popped, for the reason every other store peeks: an assignment is
                     // an expression and its value is the caller's.
@@ -1259,6 +1314,7 @@ impl Vm {
                     target,
                     frames: self.frames.len(),
                     depth: self.stack.len(),
+                    references: self.references.len(),
                     environment: self.environment,
                 }),
                 Instruction::PopHandler => {

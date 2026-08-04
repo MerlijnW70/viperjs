@@ -325,6 +325,25 @@ impl Compiler<'_> {
                     // The read is an ordinary one, so `undeclared += 1` is a ReferenceError from
                     // the *read* — §13.15.2 evaluates the target's value before the operator.
                     Some(binary) => {
+                        // §13.15.2 evaluates the target **reference** first, reads through it,
+                        // evaluates the value, and writes back through the *same* reference. When
+                        // names are dynamic that is not the same as resolving twice: a getter on a
+                        // `with` object may delete the property between the two, and the second
+                        // resolution then finds a different binding — so `with (o) { x *= 3 }` wrote
+                        // to whatever `x` meant outside `o`.
+                        //
+                        // A slot needs none of this. The compiler resolved it once already, and
+                        // nothing a right-hand side does can change which slot a depth and an index
+                        // name.
+                        if self.names_are_dynamic() {
+                            let index = self.name(name)?;
+                            self.chunk.emit(Instruction::ResolveName(index));
+                            self.chunk.emit(Instruction::LoadThrough(index));
+                            self.expression(value)?;
+                            self.chunk.emit(Instruction::Binary(binary));
+                            self.chunk.emit(Instruction::StoreThrough(index));
+                            return Ok(());
+                        }
                         self.load_name(name)?;
                         self.expression(value)?;
                         self.chunk.emit(Instruction::Binary(binary));

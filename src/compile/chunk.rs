@@ -848,6 +848,20 @@ pub enum Instruction {
     /// object answers differently on two successive calls, so there is nowhere else to read it
     /// from.
     LoadNewTarget,
+    /// §9.4.2 `ResolveBinding` — resolve a name once and keep the Reference for a later write.
+    ///
+    /// The three that follow are one operation split across the right-hand side that sits between
+    /// them. §13.15.2 evaluates the *target reference* first, reads through it, evaluates the value,
+    /// and writes back through the **same** reference — so a getter that deletes the property
+    /// between the read and the write must not send the write somewhere else.
+    ResolveName(u32),
+    /// Read through the Reference on top of the reference stack, leaving it there.
+    ///
+    /// Carries the name because a `with` object's binding is a *property*, and reading one needs
+    /// the key — the Reference records which object, not which name.
+    LoadThrough(u32),
+    /// Write the top of the operand stack through the Reference, and drop the Reference.
+    StoreThrough(u32),
     /// §13.2.5.5 and §15.7.11 — turn the computed key on top of the stack into a property key.
     ///
     /// Evaluating a `PropertyName` *is* `ToPropertyKey`, and it happens before the value it names is
@@ -1394,6 +1408,9 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
+        | Instruction::LoadThrough(_)
+        | Instruction::ResolveName(_)
+        | Instruction::StoreThrough(_)
         | Instruction::SettleKey
         | Instruction::NameFunction(_)
         | Instruction::ImportMeta

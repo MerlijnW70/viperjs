@@ -124,6 +124,11 @@ pub enum Fault {
     /// parser applies it — so no source reaches this. A hand-written chunk can, which is how it is
     /// tested.
     ImportMetaOutsideModule,
+    /// A `LoadThrough` or `StoreThrough` with no Reference waiting.
+    ///
+    /// The compiler emits the three in one sequence with nothing between them that could unwind
+    /// past a `ResolveName`, so no source reaches this. A hand-written chunk can.
+    MissingReference,
     /// A `DefineField` on something that is not an object.
     ///
     /// Only an object literal emits one, and it emits `NewObject` first, so no chunk the compiler
@@ -179,6 +184,12 @@ pub(super) struct Handler {
     /// this, a caught exception would leave rubbish under everything the handler pushed
     /// afterwards, and the imbalance would surface somewhere else entirely.
     pub(super) depth: usize,
+    /// How many §9.4.2 References were waiting when the handler was installed.
+    ///
+    /// The same discipline as `depth` and for the same reason: a compound assignment resolves its
+    /// target, evaluates a right-hand side that may throw, and only then writes back. The
+    /// resolution is half-built state exactly as an operand is, so a throw has to abandon it.
+    pub(super) references: usize,
     /// Which environment was in force when it was installed — §8.3.2's running LexicalEnvironment.
     ///
     /// A `throw` out of a block leaves that block's environment behind exactly as it leaves its
@@ -317,6 +328,16 @@ pub struct Vm {
     ///
     /// `false` is §27.5.1.2's `next`, which is every other resumption and the common case.
     resume_returns: bool,
+    /// §9.4.2's References that a compound assignment has resolved and not yet written through.
+    ///
+    /// **A stack and not a register.** The right-hand side is evaluated between the read and the
+    /// write, and it may contain another compound assignment — `with (o) { a += f() }` where `f`
+    /// does the same thing inside a `with` of its own. A register would be clobbered by the inner
+    /// one and the outer would write through it.
+    ///
+    /// Truncated wherever the operand stack is: by a handler when a throw is caught, and by a frame
+    /// when a call returns. That is the discipline this needs and the reason it is not a field.
+    references: Vec<dynamic::Resolved>,
     /// How many nested executions are running, which is how much Rust stack they are using.
     ///
     /// The main loop does not recurse: ten thousand nested JavaScript calls cost ten thousand
@@ -377,6 +398,7 @@ impl Vm {
             new_target: Value::Undefined,
             completion: Value::Undefined,
             floor: Floor::default(),
+            references: Vec::new(),
             until_check: 0,
             time_budget: None,
             expires_at: None,
@@ -789,6 +811,9 @@ impl Vm {
         // one the handler itself was installed in, which may be several blocks further in.
         self.environment = handler.environment;
         self.stack.truncate(handler.depth);
+        // Beside the operand stack, because a resolved-and-unwritten reference is half-built state
+        // of exactly the same kind — see `Vm::references`.
+        self.references.truncate(handler.references);
         self.stack.push(thrown);
         *at = jump_to(handler.target, length)?;
         Ok(None)

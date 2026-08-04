@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.49% of test262** — 76,851 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.53% of test262** — 76,884 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 416 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -498,12 +498,6 @@ doc says which line to change if data ever arrives.
   with a *RangeError*. Several of these files also use the immutable-`ArrayBuffer` harness, so
   check what a row is really asking before counting it — and re-measure, because §10.4.5.2's
   offset fix took 60 runs out of this area already.
-- **§13.15.2's order inside a `with` — 49 runs.** An assignment resolves its target *reference*
-  before reading the value, and a compound one writes back through the **same** reference. praxis
-  resolves the name twice, so a getter that deletes the property between them writes to a different
-  binding. `src/vm/dynamic.rs` already has `Resolved`, which is §9.4.2's Reference; what is missing
-  is a way to keep one across two instructions, and the right-hand side can throw between them —
-  so it needs the unwind discipline the operand stack has, not a field.
 - **`ArraySetLength` cannot run a `valueOf` — ~30 runs.** `[].length = {valueOf(){return 3}}` throws
   and `[].length = 1n` is a RangeError where §10.4.2.4 propagates `ToUint32`'s TypeError.
   `set_array_length` is on `Heap`, which has no interpreter to re-enter — that is DR-0011's seam.

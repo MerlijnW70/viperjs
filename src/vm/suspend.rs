@@ -28,6 +28,12 @@ use std::rc::Rc;
 /// revival almost never happens at the depth the suspension did.
 #[derive(Debug)]
 pub(crate) struct Suspended {
+    /// §9.4.2 References this body resolved and has not written through — see `Vm::references`.
+    ///
+    /// `with (o) { a += yield 1 }` is the shape that needs it: the target is resolved, the
+    /// right-hand side parks, and the write has to go through the reference the *first* half
+    /// took rather than one resolved again on the way back.
+    references: Vec<super::dynamic::Resolved>,
     /// The code that was running, and the instruction to carry on at.
     ///
     /// `None` is the shape a [`Frame`] uses for the root chunk, which the caller owns. Nothing the
@@ -162,6 +168,12 @@ impl Vm {
             generator: frame.generator,
             begun: true,
             stack: self.stack.split_off(operands),
+            // Beside the operand stack, and for the same reason a handler's mark travels: a
+            // compound assignment inside a `with` may have resolved its target and be waiting on a
+            // right-hand side that contains the `yield` doing the parking. The frame does not
+            // record a base for these — nothing below a call's floor can be pending across one, so
+            // the whole of what is here belongs to the body being parked.
+            references: std::mem::take(&mut self.references),
             handlers: self
                 .handlers
                 .split_off(installed)
@@ -173,6 +185,7 @@ impl Vm {
                     environment: handler.environment,
                     frames: handler.frames.saturating_sub(floor),
                     depth: handler.depth.saturating_sub(operands),
+                    references: handler.references,
                 })
                 .collect(),
         };
@@ -227,12 +240,14 @@ impl Vm {
         self.stack.truncate(base);
         self.stack.extend_from_slice(&parked.stack);
         self.stack.push(sent);
+        self.references = parked.references;
         for handler in parked.handlers {
             self.handlers.push(Handler {
                 target: handler.target,
                 environment: handler.environment,
                 frames: handler.frames + floor,
                 depth: handler.depth + base,
+                references: handler.references,
             });
         }
         self.this_value = parked.this_value;
