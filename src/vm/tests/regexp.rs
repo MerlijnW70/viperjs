@@ -569,19 +569,99 @@ fn the_two_set_operations_do_not_mix_and_neither_mixes_with_a_union() {
 }
 
 #[test]
-fn a_class_that_would_match_strings_is_refused_by_name_and_not_as_bad_syntax() {
-    // §22.2.1's `ClassStringDisjunction` — `\q{abc|def}`, an operand matching *strings* rather
-    // than code points, and a matcher change rather than a parser one.
-    //
-    // The refusal is **unsupported** and not a syntax error, and the difference is the whole
-    // reason this row exists: `\q{}` is a legal `v` operand, so calling it bad syntax would pass
-    // every test asserting that a pattern must be rejected — a gap wearing a rule's clothes. Same
-    // for `\p{RGI_Emoji}`, which is the other way a class comes to match more than one code point.
+fn a_class_may_match_strings_and_the_operations_apply_to_them_too() {
+    // §22.2.1's `ClassStringDisjunction` — `\q{abc|def}`, the one operand that matches *strings*
+    // rather than code points, so a class stops being a predicate on one character.
     assert_eq!(
-        run("var p = '[' + String.fromCharCode(92) + 'q{abc}]'; \
-             try { new RegExp(p, 'v'); 'no error' } catch (e) { e.message }"),
-        "a class of strings"
+        run(
+            r"[/^[\q{abc|def}]$/v.test('abc'), /^[\q{abc|def}]$/v.test('def'),               /^[\q{abc|def}]$/v.test('abd')].join(',')"
+        ),
+        "true,true,false"
     );
+    // An alternative exactly **one** code point long is an ordinary member of the character set,
+    // not a string. That is not a shortcut: it is what makes `[[0-9]--\q{0|2|4}]` remove three
+    // digits, and what makes `[^\q{a}]` a legal class where `[^\q{ab}]` is not.
+    assert_eq!(
+        run(
+            r"[/^[\q{a|bc}]$/v.test('a'), /^[\q{a|bc}]$/v.test('bc'), /^[\q{a|bc}]$/v.test('b')].join(',')"
+        ),
+        "true,true,false"
+    );
+    assert_eq!(
+        run(
+            r"var re = /^[[0-9]--\q{0|2|4}]+$/v; [re.test('1357'), re.test('0'), re.test('24')].join(',')"
+        ),
+        "true,false,false"
+    );
+    // §22.2.2.7.2 step 1 tries the candidates **longest first** and offers each to the
+    // continuation in turn — a backtracking choice and not a longest-match rule. `ab` is tried,
+    // fails for want of a following `b`, and `a` is tried after it.
+    assert_eq!(
+        run(r"[/^[\q{ab|a}]b$/v.test('ab'), /^[\q{ab|a}]b$/v.test('abb')].join(',')"),
+        "true,true"
+    );
+    // The three operations apply to the *strings* as well, and they are computable where the code
+    // points are not: a string set is finite and written down. An operand with no strings — a
+    // range, a class escape — contributes none, which is why an intersection with one is empty.
+    assert_eq!(
+        run(
+            r"[/^[\q{ab}&&\q{ab|cd}]$/v.test('ab'), /^[\q{ab}&&[a-z]]$/v.test('ab'),               /^[\q{ab|cd}--\q{ab}]$/v.test('cd'), /^[\q{ab|cd}--\q{ab}]$/v.test('ab')].join(',')"
+        ),
+        "true,false,true,false"
+    );
+    // `\q{}` is one **empty** alternative rather than none, and it sorts last: after every longer
+    // candidate and after the ordinary character read.
+    assert_eq!(
+        run(r"[/^[\q{}]$/v.test(''), /^a[\q{}]b$/v.test('ab')].join(',')"),
+        "true,true"
+    );
+    // §22.2.1's `ClassSetCharacter` admits `\b` in here, and it is a **backspace** — the one escape
+    // whose meaning changes at a class boundary, which is why this reader cannot defer to the one
+    // that reads an escape outside a class. The sequence is three code points and not two.
+    assert_eq!(
+        run("var re = /^[\\q{a\\bc}]$/v; \
+             [re.test('a' + String.fromCharCode(8) + 'c'), re.test('ac'), re.test('abc')].join(',')"),
+        "true,false,false"
+    );
+    // …and every *other* escape in there is the ordinary one, which is the half that says `\b` is
+    // a special case rather than the rule: reading them all as a backspace passes the row above
+    // and turns `\u0041` into a backspace followed by five literal characters.
+    assert_eq!(
+        run(
+            "var re = /^[\\q{a\\u0041c}]$/v; [re.test('aAc'), re.test('a' + String.fromCharCode(8) + 'c')].join(',')"
+        ),
+        "true,false"
+    );
+    // The rest of a `v` class's reservation holds in here too: a syntax character has to be
+    // written escaped, so `\q{(}` is refused and `\q{\(}` is a parenthesis. Without the check the
+    // parenthesis would be taken as an ordinary character and the pattern would quietly mean
+    // something the grammar does not allow.
+    assert_eq!(
+        run(
+            r"var why = function (p) { try { new RegExp(p, 'v'); return 'accepted' }                                       catch (e) { return e.constructor.name } };               [why('[\\q{(}]'), why('[\\q{\\(}]')].join(',')"
+        ),
+        "SyntaxError,accepted"
+    );
+    // §22.2.2.9 canonicalizes each character of a sequence, so `i` folds a string as it folds a
+    // literal.
+    assert_eq!(
+        run(r"[/[\q{AB}]/vi.test('ab'), /[\q{ab}]/v.test('AB')].join(',')"),
+        "true,false"
+    );
+    // §22.2.1 — `[^…]` is refused when its contents `MayContainStrings`, and that is a *syntactic*
+    // question: a difference of two identical string operands is refused although it resolves to
+    // nothing, and an intersection with a code-point operand is accepted although its first
+    // operand could. Reading it as "is the resolved set non-empty" gets both backwards.
+    assert_eq!(
+        run(
+            r"var why = function (p) { try { new RegExp(p, 'v'); return 'accepted' }                                        catch (e) { return e.constructor.name } };               [why('[^\\q{ab}]'), why('[^\\q{a}]'), why('[^\\q{}]'),                why('[^[\\q{ab}--\\q{ab}]]'), why('[^[\\q{ab}&&[a]]]')].join(',')"
+        ),
+        "SyntaxError,accepted,SyntaxError,SyntaxError,accepted"
+    );
+    // `\p{RGI_Emoji}` is the other way a class comes to match more than one code point, and it is
+    // still refused **by name** rather than as bad syntax: it is a legal operand, so calling it a
+    // syntax error would pass every test asserting a pattern must be rejected — a gap wearing a
+    // rule's clothes. It needs the Unicode sequence data, which `\q{}` does not.
     assert_eq!(
         run("try { new RegExp('\\\\p{RGI_Emoji}', 'v'); 'no error' } catch (e) { e.message }"),
         "a property of strings"
@@ -589,8 +669,9 @@ fn a_class_that_would_match_strings_is_refused_by_name_and_not_as_bad_syntax() {
     // …and outside a `v` pattern `\q` is an ordinary escape question, which this must not have
     // changed: `u` refuses it as the syntax error it is there.
     assert_eq!(
-        run("var p = '[' + String.fromCharCode(92) + 'q{abc}]'; \
-             try { new RegExp(p, 'u'); 'no error' } catch (e) { e.message }"),
+        run(
+            "var p = '[' + String.fromCharCode(92) + 'q{abc}]';              try { new RegExp(p, 'u'); 'no error' } catch (e) { e.message }"
+        ),
         "this character may not be escaped in a Unicode pattern"
     );
 }

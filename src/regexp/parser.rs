@@ -513,10 +513,20 @@ impl Reader<'_> {
     /// its own, and it gets one nested inside a union of one.
     fn class(&mut self) -> Result<Node, Error> {
         let set = self.class_set()?;
+        // §22.2.1's operations resolved over the string operands, **once**, so the matcher can ask
+        // whether this class consumes sequences without walking the tree at every attempt.
+        //
+        // No `if !set.negated` in front of it. A negated class that could match a string has
+        // already been refused by `class_set`, and the one negated form that survives — `[^\q{a}]`,
+        // whose alternative is a single code point — resolves to nothing here anyway, because a
+        // one-code-point alternative is a member of the character set rather than a sequence. So
+        // the guard would be a branch no input could flip.
+        let strings = resolved_strings(set.operation, &set.items);
         match set.operation {
             ClassOperation::Union => Ok(Node::Class {
                 negated: set.negated,
                 items: set.items,
+                strings,
             }),
             // The negation belongs to the class and the operation to what is inside it, which is
             // the order `[^\d&&[0-4]]` is written in and the order it has to be evaluated in.
@@ -526,6 +536,7 @@ impl Reader<'_> {
                     negated: false,
                     ..set
                 })],
+                strings,
             }),
         }
     }
@@ -552,6 +563,16 @@ impl Reader<'_> {
                         return Err(Error::at("a set operation needs an operand on both sides"));
                     }
                     self.negated_classes -= usize::from(negated);
+                    // §22.2.1 — `[^…]` is a Syntax Error when its contents `MayContainStrings`.
+                    // A *syntactic* question and not "is the resolved set non-empty": the rule is
+                    // per-operation, so a difference of two identical string operands is refused
+                    // although it resolves to nothing, and an intersection with a code-point
+                    // operand is accepted although its first operand could.
+                    if negated && may_contain_strings(operation, &items) {
+                        return Err(Error::at(
+                            "a negated class may not contain anything that matches a string",
+                        ));
+                    }
                     return Ok(ClassSet {
                         negated,
                         operation,
@@ -658,9 +679,61 @@ impl Reader<'_> {
         // `\p{RGI_Emoji}` gets, and for the same reason — a class that can match more than one
         // code point is a matcher change rather than a parser one.
         if self.flags.unicode_sets && matches!(self.text[self.at..], ['\\', 'q', '{', ..]) {
-            return Err(Error::unsupported("a class of strings"));
+            return self.class_strings();
         }
         self.class_atom()
+    }
+
+    /// §22.2.1's `ClassStringDisjunction` — `\q{abc|def}`, read as its alternatives.
+    ///
+    /// Every alternative is a run of `ClassSetCharacter`, which is a code point and never a set:
+    /// `\d` has no derivation in here, and neither does a range. So this reads characters and
+    /// escapes and nothing else, and the two delimiters are the only unescaped punctuation.
+    ///
+    /// `\q{}` is one **empty** alternative rather than none, which matters twice: it is a legal
+    /// operand matching the empty string, and §22.2.1 makes it `MayContainStrings` — so
+    /// `[^\q{}]` is a Syntax Error where `[^\q{a}]` is an ordinary class.
+    fn class_strings(&mut self) -> Result<ClassItem, Error> {
+        // Past the backslash, the `q` and the `{`, all three of which the caller has already seen.
+        self.at += 3;
+        let mut alternatives = Vec::new();
+        let mut current: Vec<u32> = Vec::new();
+        loop {
+            match self.peek() {
+                None => return Err(Error::at("a class of strings is not closed")),
+                Some('}') => {
+                    self.at += 1;
+                    alternatives.push(current);
+                    return Ok(ClassItem::Strings(alternatives));
+                }
+                Some('|') => {
+                    self.at += 1;
+                    alternatives.push(std::mem::take(&mut current));
+                }
+                Some('\\') => {
+                    self.at += 1;
+                    // `\b` is a backspace in here as it is anywhere else inside a class, and it
+                    // is the one escape whose meaning changes at that boundary.
+                    if self.peek() == Some('b') {
+                        self.at += 1;
+                        current.push(0x08);
+                        continue;
+                    }
+                    current.push(self.character_escape()?);
+                }
+                // The same reservation the rest of a `v` class is under: a syntax character has to
+                // be written escaped, so `\q{(}` is refused.
+                Some(next) if is_class_set_syntax(next) => {
+                    return Err(Error::at(
+                        "this character must be escaped inside a class in a v pattern",
+                    ));
+                }
+                Some(next) => {
+                    self.at += 1;
+                    current.push(next as u32);
+                }
+            }
+        }
     }
 
     /// One entry inside `[…]` — a character, or an escape that may stand for a set.
@@ -944,6 +1017,86 @@ fn is_reserved_double(letter: char) -> bool {
             | '`'
             | '~'
     )
+}
+
+/// §22.2.1's `MayContainStrings`, which decides whether a class may be negated.
+///
+/// Syntactic and deliberately coarser than the resolved set: the three operations answer
+/// differently — a union may contain strings if **any** operand may, an intersection only if
+/// **every** one may, and a difference if its **first** one may — and none of them asks what the
+/// operands actually hold. That is why `[^[\q{ab}--\q{ab}]]` is refused although the difference
+/// is empty.
+fn may_contain_strings(operation: ClassOperation, items: &[ClassItem]) -> bool {
+    match operation {
+        ClassOperation::Union => items.iter().any(item_may_contain_strings),
+        ClassOperation::Intersection => items.iter().all(item_may_contain_strings),
+        ClassOperation::Difference => items.first().is_some_and(item_may_contain_strings),
+    }
+}
+
+/// The same question of one operand.
+///
+/// An alternative exactly one code point long is **not** a string — `\q{a}` is an ordinary member
+/// of the character set, so `[^\q{a}]` is a class and `[^\q{ab}]` is not. The empty alternative
+/// is one, which is what makes `[^\q{}]` a Syntax Error.
+fn item_may_contain_strings(item: &ClassItem) -> bool {
+    match item {
+        ClassItem::Strings(alternatives) => alternatives.iter().any(|written| written.len() != 1),
+        ClassItem::Nested(set) => may_contain_strings(set.operation, &set.items),
+        _ => false,
+    }
+}
+
+/// The sequences a class can consume whole, longest first — §22.2.1's operations over its strings.
+///
+/// Only lengths other than one, because a one-code-point alternative is an ordinary member of the
+/// character set and the matcher's predicate already answers for it. Keeping both halves would
+/// make every such alternative match twice over, once as a sequence and once as a character.
+///
+/// The three operations are the three ways a set of *sequences* combines, and they are computable
+/// where the code points are not: a string set is finite and written down, so an intersection can
+/// be taken by hand where intersecting `\d` with `\p{L}` could only be a predicate.
+fn resolved_strings(operation: ClassOperation, items: &[ClassItem]) -> Vec<Vec<u32>> {
+    let mut resolved: Vec<Vec<u32>> = match operation {
+        ClassOperation::Union => items.iter().flat_map(item_strings).collect(),
+        ClassOperation::Intersection => {
+            let mut kept = items.first().map(item_strings).unwrap_or_default();
+            for other in items.iter().skip(1) {
+                let theirs = item_strings(other);
+                kept.retain(|written| theirs.contains(written));
+            }
+            kept
+        }
+        ClassOperation::Difference => {
+            let mut kept = items.first().map(item_strings).unwrap_or_default();
+            for other in items.iter().skip(1) {
+                let theirs = item_strings(other);
+                kept.retain(|written| !theirs.contains(written));
+            }
+            kept
+        }
+    };
+    // §22.2.2.7.2 tries the longest candidate first, so the order is part of what the pattern
+    // *means* rather than an optimisation — and it is settled here so that no attempt pays for it.
+    resolved.sort_by_key(|written| std::cmp::Reverse(written.len()));
+    resolved.dedup();
+    resolved
+}
+
+/// The sequences one operand contributes.
+fn item_strings(item: &ClassItem) -> Vec<Vec<u32>> {
+    match item {
+        ClassItem::Strings(alternatives) => alternatives
+            .iter()
+            .filter(|written| written.len() != 1)
+            .cloned()
+            .collect(),
+        // No `if !set.negated`. A nested `[^…]` whose contents could match a string has already
+        // been refused by `class_set`, so asking a negated one for its strings answers the empty
+        // list either way — and a guard no input can flip is a branch nothing could test.
+        ClassItem::Nested(set) => resolved_strings(set.operation, &set.items),
+        _ => Vec::new(),
+    }
 }
 
 /// §22.2.1's `ClassSetSyntaxCharacter` — what `v` reserves inside a class.
@@ -1290,6 +1443,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Range(97, 99)],
+                strings: Vec::new(),
             }
         );
         assert_eq!(
@@ -1297,6 +1451,7 @@ mod tests {
             Node::Class {
                 negated: true,
                 items: vec![ClassItem::Single(97)],
+                strings: Vec::new(),
             }
         );
         // A `-` at the end is an atom, not an unfinished range.
@@ -1305,6 +1460,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(97), ClassItem::Single(45)],
+                strings: Vec::new(),
             }
         );
         assert_eq!(refused("[z-a]"), "a character class range runs backwards");
@@ -1325,6 +1481,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(0x08)],
+                strings: Vec::new(),
             }
         );
     }
@@ -1340,6 +1497,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Escape(ClassEscape::Word(false))],
+                strings: Vec::new(),
             }
         );
     }
@@ -1452,6 +1610,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Range(97, 97)],
+                strings: Vec::new(),
             }
         );
         assert_eq!(refused("[b-a]"), "a character class range runs backwards");
@@ -1466,6 +1625,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(0x09)],
+                strings: Vec::new(),
             }
         );
         assert_eq!(
@@ -1473,6 +1633,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(0x0A)],
+                strings: Vec::new(),
             }
         );
     }
@@ -1487,6 +1648,7 @@ mod tests {
             Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(45)],
+                strings: Vec::new(),
             }
         );
         assert_eq!(
@@ -1494,6 +1656,7 @@ mod tests {
             Ok(Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(45)],
+                strings: Vec::new(),
             })
         );
         assert_eq!(
@@ -1506,6 +1669,7 @@ mod tests {
             Ok(Node::Class {
                 negated: false,
                 items: vec![ClassItem::Single(45), ClassItem::Single(97)],
+                strings: Vec::new(),
             })
         );
     }

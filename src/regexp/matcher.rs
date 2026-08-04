@@ -149,7 +149,14 @@ fn one_wide(body: &Node) -> Option<OneWide<'_>> {
         Node::Any => Some(OneWide::Any),
         Node::Escape(escape) => Some(OneWide::Escape(*escape)),
         Node::Property(property) => Some(OneWide::Property(*property)),
-        Node::Class { negated, items } => Some(OneWide::Class {
+        // A class that can consume a **sequence** is not one code point wide, whatever else is in
+        // it, so the iterative quantifier must not claim it: `[\q{ab}]+` has to be able to take two
+        // code points a turn and to give them back one candidate at a time.
+        Node::Class {
+            negated,
+            items,
+            strings,
+        } if strings.is_empty() => Some(OneWide::Class {
             negated: *negated,
             items,
         }),
@@ -250,12 +257,43 @@ impl<'a> Matcher<'a> {
                 Some((found, next)) if property.contains(found) => self.cont(next, cont),
                 _ => Outcome::Failed,
             },
-            Node::Class { negated, items } => match self.read(at) {
-                Some((found, next)) if self.in_class(found, items) != *negated => {
-                    self.cont(next, cont)
+            Node::Class {
+                negated,
+                items,
+                strings,
+            } => {
+                // §22.2.2.7.2 step 1 — when the character set has elements longer than one code
+                // point, the candidates are tried **longest first** and each is offered to the
+                // continuation in turn. So it is a backtracking choice and not a longest-match
+                // rule: `/^[\q{ab|a}]b$/v` matches `ab` by taking `a` after `ab` has failed.
+                //
+                // `strings` is sorted at parse time and holds no length-one element, so this list
+                // is exactly the candidates longer than a character; the empty one, if the pattern
+                // wrote `\q{}`, sorts last and is tried after the ordinary read below — which is
+                // where descending length puts a zero-length candidate.
+                let empty = strings.last().is_some_and(Vec::is_empty);
+                let longer = &strings[..strings.len() - usize::from(empty)];
+                for candidate in longer {
+                    if let Some(next) = self.matches_sequence(at, candidate) {
+                        match self.cont(next, cont) {
+                            Outcome::Failed => {}
+                            answered => return answered,
+                        }
+                    }
                 }
-                _ => Outcome::Failed,
-            },
+                match self.read(at) {
+                    Some((found, next)) if self.in_class(found, items) != *negated => {
+                        match self.cont(next, cont) {
+                            // Only worth another try when there is a zero-length candidate under
+                            // it; without one this is the ordinary class and its `Failed` is final.
+                            Outcome::Failed if empty => self.cont(at, cont),
+                            answered => answered,
+                        }
+                    }
+                    _ if empty => self.cont(at, cont),
+                    _ => Outcome::Failed,
+                }
+            }
             Node::Assert(assertion) => match self.asserts(*assertion, at) {
                 true => self.cont(at, cont),
                 false => Outcome::Failed,
@@ -637,6 +675,26 @@ impl<'a> Matcher<'a> {
         Some((u32::from(first), at + 1))
     }
 
+    /// Where `candidate` ends if the subject holds it at `at`, code point by code point.
+    ///
+    /// Compared with `same`, so the `i` flag folds a sequence exactly as it folds a literal — a
+    /// string is a run of characters and §22.2.2.9 canonicalizes each of them.
+    ///
+    /// Forwards only, which is not a simplification: this engine matches a lookbehind by asking
+    /// whether the body matches *ending* at the position, from each earlier start, so there is no
+    /// backwards direction for a sequence to be read in.
+    fn matches_sequence(&self, at: usize, candidate: &[u32]) -> Option<usize> {
+        let mut position = at;
+        for wanted in candidate {
+            let (found, next) = self.read(position)?;
+            if !self.same(found, *wanted) {
+                return None;
+            }
+            position = next;
+        }
+        Some(position)
+    }
+
     /// §22.2.2.9's `Canonicalize`, as the comparison it exists for.
     ///
     /// ASCII case folding only, which is what `i` can mean without the Unicode case tables. Those
@@ -667,6 +725,12 @@ impl<'a> Matcher<'a> {
             // property is neither. `\p{Lu}` therefore does not match `a` in an `i` pattern, which
             // is the one place a set behaves unlike the range spelling out the same code points.
             ClassItem::Property(property) => property.contains(found),
+            // §22.2.1 — an alternative exactly one code point long is an ordinary member of the
+            // character set, which is why `[\q{a|bc}]` matches `a` here and `bc` only as a
+            // sequence. Every other length is invisible to this predicate by construction.
+            ClassItem::Strings(alternatives) => alternatives
+                .iter()
+                .any(|written| written.len() == 1 && self.same(found, written[0])),
             ClassItem::Nested(set) => self.in_set(found, set),
         }
     }

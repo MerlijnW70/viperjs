@@ -146,13 +146,13 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.33% of test262** — 77,628 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.39% of test262** — 77,682 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
+Only 320 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
 property of strings is **not** a proposal — `regexp-v-flag` sits unmarked in test262's
-`features.txt` and shipped in ES2024. What is left of it is 86 runs that need Unicode sequence data
-and 60 that need `\q{…}` in the matcher, and both are buildable. The rest is `$262.agent` 18, `super`
+`features.txt` and shipped in ES2024. `\q{…}` was 54 of those and is now built; what is left of the
+flag is the 86 runs that need Unicode emoji sequence data. The rest is `$262.agent` 18, `super`
 in an arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are
 proposals.
 
@@ -546,6 +546,40 @@ branches, so mutation coverage reported `0/0 viable`, which this file already re
 a slice with no condition in it. What pins it is that each of the three had a probe answering
 `accepted` before and the trap's own throw after.
 
+### A class stopped being a predicate on one code point
+
++54 runs, and every one came out of the *stopped* column rather than the failing one — the
+arithmetic this file asks for held exactly: `not run` fell 374 to 320 and `failed` did not move.
+§22.2.1's `ClassStringDisjunction` — `\q{abc|def}` — was the last buildable piece of the `v` flag,
+and it is the one that breaks the shape the rest of `src/regexp` is built on.
+
+**A class was a predicate `fn(code point) -> bool`, and this makes it something that consumes.** The
+design that keeps the predicate is a split, and the split is forced rather than chosen: an
+alternative exactly **one** code point long is an ordinary member of the character set, and every
+other length is a sequence. So the predicate goes on answering for the first — which is what lets
+`[[0-9]--\q{0|2|4}]` remove three digits without anything enumerating `[0-9]` — and only the other
+lengths are resolved into a list. The code points *cannot* be enumerated (`\d`, `\p{L}`); the
+strings are finite and written down, so their set algebra is computable by hand.
+
+Four things it turns on, each of which a plausible implementation gets wrong:
+
+- **`MayContainStrings` is syntactic, and the resolved set is not.** §22.2.1 refuses `[^…]` by the
+  first, so `[^[\q{ab}--\q{ab}]]` is a Syntax Error although the difference is empty, and
+  `[^[\q{ab}&&[a]]]` is a class although its first operand could. The rule is per-operation — any
+  operand for a union, **every** one for an intersection, the **first** for a difference — and
+  reading it as "is the resolved set non-empty" gets both of those backwards.
+- **§22.2.2.7.2 backtracks.** Candidates are tried longest first and each is offered to the
+  continuation in turn, so `/^[\q{ab|a}]b$/v` matches `ab` by taking `a` *after* `ab` has failed.
+  A longest-match rule answers the same for most patterns and wrongly for that one.
+- **The empty alternative sorts last** — after every longer candidate *and* after the ordinary
+  character read, because descending length puts a zero-length candidate below a one-length one.
+- **A class that consumes a sequence is not one code point wide**, so the iterative quantifier's
+  fast path must refuse it or `[\q{ab}]+` takes one code point a turn.
+
+**And the ratchet caught a guard the parser's own early error had already made unreachable**:
+resolving a nested class's strings skipped a negated one, which cannot hold any because `class_set`
+refuses one that could. Deleting it was the fix, for the fourth time this session.
+
 ### `api.rs` exists — and what an embedder could not do before it
 
 DR-0021. **The conformance number does not move a hundredth of a percent, which is why it had not
@@ -800,14 +834,12 @@ doc says which line to change if data ever arrives.
   bound nowhere, needing a slot in a frame sized at compile time — was never in scope and is still
   open. §B.3.3's own bindings in such an eval sidestep all of it: they go in the eval's own scope,
   because every test reads them from inside the eval, and `compile_direct_eval` says so.
-- **A class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
-  `ClassSetExpression` is built: `[[a-z]--[aeiou]]`, `[\d&&[0-4]]` and nesting all work, and the
-  three operations turned out to be three quantifiers over the operands rather than sets to build.
-  What remains is the two operands that match more than one code point — `\q{abc|def}` and
-  `\p{RGI_Emoji}` — and **both are refused by name rather than as bad syntax**, deliberately: they
-  are legal, so calling them a syntax error would pass every test asserting a pattern must be
-  rejected. Building them is a matcher change (a class stops being a code-point predicate), not a
-  parser one.
+- **What is left of the `v` flag is `\p{RGI_Emoji}` alone — 86 runs, and it is data.** §22.2.1's
+  `ClassSetExpression` is built, and so is `\q{abc|def}` — see below; a class can consume a
+  sequence now. The property of strings is the other operand that matches more than one code point
+  and it needs the UCD's emoji sequence tables, which nothing else in the engine wants. It stays
+  **refused by name rather than as bad syntax**, deliberately: it is a legal operand, so calling it
+  a syntax error would pass every test asserting a pattern must be rejected.
 - **A coercion that *resizes* the buffer under a TypedArray method — what is left of this area.**
   The **detach** half is done: `copyWithin` re-runs `ValidateTypedArray` (§23.2.3.6 step 14.b) and
   the searches read their elements *after* the coercion, so they answer `-1`/`false` rather than

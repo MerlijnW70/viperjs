@@ -176,6 +176,14 @@ pub enum ClassItem {
     Escape(ClassEscape),
     /// `\p{…}` inside a class, which stands for a set for the same reason and so cannot either.
     Property(crate::unicode_property::Property),
+    /// `\q{abc|def}` — §22.2.1's `ClassStringDisjunction`, the one operand that matches **strings**.
+    ///
+    /// Every alternative as written, including the ones a code point long and the empty one. It is
+    /// two things at once and they are kept together because the grammar keeps them together: an
+    /// alternative of exactly one code point is an ordinary member of the class's character set,
+    /// and every other length is a *string* the class can consume whole. So `[\q{a|bc}]` matches
+    /// `a` where a code-point predicate answers, and `bc` where only a sequence can.
+    Strings(Vec<Vec<u32>>),
     /// A nested class, or a set operation over several — §22.2.1's `ClassSetExpression`.
     ///
     /// Only a `v` pattern makes one. A `u` pattern's `[` inside a class is an ordinary bracket and
@@ -253,6 +261,17 @@ pub enum Node {
         negated: bool,
         /// What is in it, in the order written.
         items: Vec<ClassItem>,
+        /// The sequences this class can consume whole, **longest first**.
+        ///
+        /// §22.2.1's set operations resolved over the `\q{…}` operands, and empty for every class
+        /// in a pattern without the `v` flag — which is what keeps this off the hot path: the
+        /// matcher asks `is_empty()` once and reads a code point as it always did.
+        ///
+        /// Only lengths other than one, because a one-code-point alternative is an ordinary member
+        /// of the character set and the predicate already answers for it. Sorted here rather than
+        /// at each attempt because §22.2.2.7.2 tries the longest candidate first and the order is
+        /// therefore part of what the pattern *means*, not an optimisation.
+        strings: Vec<Vec<u32>>,
     },
     /// One of the six single-letter class escapes, outside a class.
     Escape(ClassEscape),
