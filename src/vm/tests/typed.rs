@@ -1653,3 +1653,68 @@ fn a_define_and_a_delete_read_the_length_the_buffer_has_now() {
         "false"
     );
 }
+
+#[test]
+fn a_coercion_that_detaches_the_buffer_is_answered_per_method() {
+    // §23.2.3 converts each argument and then works from a length read *before* it, and what the
+    // clause does about that **differs per method** — which is the whole cost of this area and the
+    // reason it cannot be one shared check.
+    //
+    // `copyWithin` runs `ValidateTypedArray` again (step 14.b) and throws.
+    assert_eq!(
+        run(
+            "var t = new Uint8Array(8);              var e = { valueOf: function () { t.buffer.transfer(); return 0 } };              try { t.copyWithin(0, e, 4); 'no error' } catch (x) { x.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // `fill` and `slice` throw as well, and already did.
+    assert_eq!(
+        run(
+            "var t = new Uint8Array(8);              var e = { valueOf: function () { t.buffer.transfer(); return 0 } };              try { t.fill(1, e); 'no error' } catch (x) { x.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and the searches do **not**. §23.2.3.15 step 11 reads each element live, a detached buffer
+    // answers `undefined` for every index, and `undefined` matches no numeric — so the answer is
+    // `-1`, not an error and not the elements that were there a moment ago.
+    assert_eq!(
+        run(
+            "var t = new Uint8Array(8);              var e = { valueOf: function () { t.buffer.transfer(); return 0 } };              t.indexOf(0, e)"
+        ),
+        "-1"
+    );
+    assert_eq!(
+        run(
+            "var t = new Uint8Array(8);              var e = { valueOf: function () { t.buffer.transfer(); return 0 } };              t.includes(0, e)"
+        ),
+        "false"
+    );
+    assert_eq!(
+        run(
+            "var t = new Uint8Array(8);              var e = { valueOf: function () { t.buffer.transfer(); return 0 } };              t.lastIndexOf(0, e)"
+        ),
+        "-1"
+    );
+    // An ordinary search is unchanged, which is what keeps the above about the detach.
+    assert_eq!(
+        run(
+            "var t = new Uint8Array([1, 2, 3, 2]);              t.indexOf(2) + '|' + t.lastIndexOf(2) + '|' + t.includes(3) + '|' + t.indexOf(9)"
+        ),
+        "1|3|true|-1"
+    );
+    // `includes` finds a NaN where `indexOf` cannot — §23.2.3.14 uses `SameValueZero` and the other
+    // two use strict equality. Reading the elements later must not have lost that.
+    assert_eq!(
+        run("var t = new Float64Array([NaN]); t.includes(NaN) + '|' + t.indexOf(NaN)"),
+        "true|-1"
+    );
+    // The length the negative-index arithmetic uses is still step 3's, taken before the coercion —
+    // and the elements are read after it, so the two may disagree. A read past what is left finds
+    // nothing rather than reaching out of bounds, which DR-0002 makes a refusal and not a panic.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8, { maxByteLength: 16 }); var t = new Uint8Array(b);              var e = { valueOf: function () { b.resize(2); return 0 } };              t.indexOf(0, e)"
+        ),
+        "0"
+    );
+}

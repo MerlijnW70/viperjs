@@ -498,6 +498,12 @@ fn copy_within(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
     let target = relative(vm, heap, call.argument(0), count, 0.0)?;
     let from = relative(vm, heap, call.argument(1), count, 0.0)?;
     let to = relative(vm, heap, call.argument(2), count, count as f64)?;
+    // §23.2.3.6 step 14.b and 14.c — the three coercions above may have detached the buffer or
+    // shrunk it under this call, so `ValidateTypedArray` is run **again** and answers the same
+    // TypeError it would have at the top. `fill` and `slice` throw here too; `indexOf` and its
+    // neighbours do not and answer `-1` instead, and that per-method difference is the whole cost
+    // of this area.
+    let (_, view) = validate(heap, call.this_value)?;
     // Read first, then write — the two runs may overlap, and copying element by element would read
     // through what it had already written.
     let taken: Vec<Numeric> = (from..to)
@@ -704,8 +710,10 @@ enum Search {
 
 /// The body all three share.
 fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> Completion<Value> {
-    let (_, view) = validate(heap, call.this_value)?;
-    let values = numerics(heap, view);
+    let (object, view) = validate(heap, call.this_value)?;
+    // §23.2.3.15 step 3 — `len` is taken *before* anything is coerced, and the negative-index
+    // arithmetic below is against this number even if the buffer shrinks under it.
+    let count = view.count();
     // §7.2.15 step 1 — values of different **types** are unequal without being compared, so
     // anything that is not a numeric at all can match no element: `ta.indexOf("1")` is -1, and so
     // is `bigOnes.indexOf(1)`. Taken as a numeric once rather than asked per element.
@@ -726,7 +734,14 @@ fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> C
         (Some(Numeric::BigInt(number)), Numeric::BigInt(found)) => found == number,
         _ => false,
     };
-    let count = values.len();
+    // Step 11 reads each element **live**, after the coercion rather than before it. A buffer the
+    // coercion detached answers `undefined` for every index, and `undefined` matches no numeric —
+    // so the answer is `-1` or `false` rather than an error, and rather than the elements that were
+    // there a moment ago. Snapshotting before the coercion searched a buffer that no longer exists.
+    let values = match heap.typed_view(object) {
+        Some(live) => numerics(heap, live),
+        None => Vec::new(),
+    };
     let start = |default: f64| -> f64 {
         let given = from.unwrap_or(default);
         if given < 0.0 {
@@ -741,14 +756,22 @@ fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Search) -> C
             // clamp — a change to either was hidden by the `min` of the two.
             let last = (count as f64) - 1.0;
             let end = start(last).min(last);
-            (0..=end.max(-1.0) as isize)
-                .rev()
-                .find(|index| *index >= 0 && matches(&values[*index as usize]))
+            (0..=end.max(-1.0) as isize).rev().find(|index| {
+                // `count` is step 3's `len` and `values` is what is there *now*, so the second may
+                // be shorter — a coercion that shrank the buffer leaves indices this loop still
+                // visits and the elements no longer has. `get` is the whole of what step 11's
+                // "read it and compare" means when the read finds nothing: no match, no error.
+                *index >= 0
+                    && usize::try_from(*index)
+                        .ok()
+                        .and_then(|at| values.get(at))
+                        .is_some_and(matches)
+            })
         }
         _ => {
             let begin = start(0.0).max(0.0) as usize;
             (begin..count)
-                .find(|index| matches(&values[*index]))
+                .find(|index| values.get(*index).is_some_and(matches))
                 .map(|index| index as isize)
         }
     };

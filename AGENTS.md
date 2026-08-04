@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.63% of test262** — 76,980 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.65% of test262** — 77,000 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -493,14 +493,13 @@ doc says which line to change if data ever arrives.
   are legal, so calling them a syntax error would pass every test asserting a pattern must be
   rejected. Building them is a matcher change (a class stops being a code-point predicate), not a
   parser one.
-- **A coercion can detach or resize the buffer under a TypedArray method — what is left of ~58.**
-  Every one coerces an argument and then works from a length read *before* it, where the clause
-  says to look again. **The rules differ per method and that is the whole cost:** `copyWithin`,
-  `fill` and `slice` **throw**, while `includes`, `indexOf` and `lastIndexOf` set the length to
-  zero and answer `-1`/`false`, and `subarray` goes on to build a view that §23.2.5.1 then refuses
-  with a *RangeError*. Several of these files also use the immutable-`ArrayBuffer` harness, so
-  check what a row is really asking before counting it — and re-measure, because §10.4.5.2's
-  offset fix took 60 runs out of this area already.
+- **A coercion that *resizes* the buffer under a TypedArray method — what is left of this area.**
+  The **detach** half is done: `copyWithin` re-runs `ValidateTypedArray` (§23.2.3.6 step 14.b) and
+  the searches read their elements *after* the coercion, so they answer `-1`/`false` rather than
+  what was there a moment ago. What remains is the *shrink* cases, and `subarray`, which goes on to
+  build a view that §23.2.5.1 then refuses with a **RangeError**. Several of these files also use
+  the immutable-`ArrayBuffer` harness — a proposal — so read what a row is asking before counting
+  it.
 - **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Whether an arrow was
   written inside a function is a *lexical* fact a running arrow's chunk does not record, and the
   parser knows it. Carrying that answer onto the chunk is the whole slice.
