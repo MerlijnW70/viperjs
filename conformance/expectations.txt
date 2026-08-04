@@ -3086,42 +3086,12 @@ built-ins/RegExp/lookBehind/greedy-loop.js :: it threw an object with no name: A
 built-ins/RegExp/lookBehind/greedy-loop.js (strict) :: it threw an object with no name: Actual [c, b] and expected [c, bbbbbb] should have the same contents. #1
 built-ins/RegExp/lookBehind/mutual-recursive.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. #1
 built-ins/RegExp/lookBehind/mutual-recursive.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. #1
-built-ins/RegExp/match-indices/indices-array-element.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-array-element.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-array-matched.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-array-matched.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-array-non-unicode-match.js :: it threw ReferenceError: compareEquality is not defined
-built-ins/RegExp/match-indices/indices-array-non-unicode-match.js (strict) :: it threw ReferenceError: compareEquality is not defined
-built-ins/RegExp/match-indices/indices-array-properties.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-array-properties.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-array-unicode-match.js :: it threw ReferenceError: compareEquality is not defined
-built-ins/RegExp/match-indices/indices-array-unicode-match.js (strict) :: it threw ReferenceError: compareEquality is not defined
 built-ins/RegExp/match-indices/indices-array-unicode-property-names.js :: it did not parse: a group name is not an identifier
 built-ins/RegExp/match-indices/indices-array-unicode-property-names.js (strict) :: it did not parse: a group name is not an identifier
-built-ins/RegExp/match-indices/indices-array-unmatched.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-array-unmatched.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-array.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-array.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-groups-object-undefined.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-groups-object-undefined.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-groups-object-unmatched.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-groups-object-unmatched.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-groups-object.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-groups-object.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/match-indices/indices-groups-properties.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/match-indices/indices-property.js :: it threw an object with no name: indices should be an own property
-built-ins/RegExp/match-indices/indices-property.js (strict) :: it threw an object with no name: indices should be an own property
-built-ins/RegExp/named-groups/duplicate-names-match-indices.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/named-groups/duplicate-names-match-indices.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/named-groups/groups-object-subclass-sans.js :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass-sans.js (strict) :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass.js :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
 built-ins/RegExp/named-groups/groups-object-subclass.js (strict) :: it threw an object with no name: Expected SameValue(«"c"», «""») to be true
-built-ins/RegExp/named-groups/groups-object-undefined.js :: it threw an object with no name: groups descriptor should be enumerable
-built-ins/RegExp/named-groups/groups-object-undefined.js (strict) :: it threw an object with no name: groups descriptor should be enumerable
-built-ins/RegExp/named-groups/groups-object.js :: it threw an object with no name: groups descriptor should be enumerable
-built-ins/RegExp/named-groups/groups-object.js (strict) :: it threw an object with no name: groups descriptor should be enumerable
 built-ins/RegExp/named-groups/lookbehind.js :: it threw an object with no name: Actual [f, c] and expected [f, e] should have the same contents.
 built-ins/RegExp/named-groups/lookbehind.js (strict) :: it threw an object with no name: Actual [f, c] and expected [f, e] should have the same contents.
 built-ins/RegExp/named-groups/non-unicode-property-names-valid.js :: it did not parse: a group name is not an identifier
@@ -4106,8 +4076,6 @@ built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-failure.js :: it th
 built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-failure.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/dotAll/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/prototype/dotAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/prototype/exec/duplicate-named-indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic exec without v flag
@@ -4330,8 +4298,6 @@ built-ins/String/prototype/isWellFormed/to-string.js :: it threw an object with 
 built-ins/String/prototype/isWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
-built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/match/duplicate-named-indices-groups-properties.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
@@ -14397,20 +14363,6 @@ harness/assert-throws-same-realm.js :: it threw TypeError: what was called is no
 harness/assert-throws-same-realm.js (strict) :: it threw TypeError: what was called is not a function
 harness/asyncHelpers-throwsAsync-same-realm.js :: the test called $DONE with TypeError: what was called is not a function
 harness/asyncHelpers-throwsAsync-same-realm.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-harness/deepEqual-array.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-array.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-circular.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-circular.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-deep.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-deep.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-mapset.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-mapset.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-object.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-object.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-primitives-bigint.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-primitives-bigint.js (strict) :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-primitives.js :: it threw ReferenceError: compareEquality is not defined
-harness/deepEqual-primitives.js (strict) :: it threw ReferenceError: compareEquality is not defined
 language/arguments-object/10.6-13-a-2.js :: it threw TypeError: this property may not be read or written
 language/arguments-object/10.6-13-a-3.js :: it threw TypeError: this property may not be read or written
 language/arguments-object/mapped/Symbol.iterator.js :: it threw an object with no name: Symbol(Symbol.iterator) should be an own property
@@ -15197,7 +15149,7 @@ language/expressions/super/realm.js :: it threw TypeError: what was called is no
 language/expressions/super/realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/tagged-template/cache-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/tagged-template/cache-realm.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/tagged-template/tco-call.js (strict) :: it threw ReferenceError: f is not defined
+language/expressions/tagged-template/tco-call.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tco-pos.js (strict) :: it threw RangeError: too much recursion
 language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error

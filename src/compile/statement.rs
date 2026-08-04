@@ -1442,6 +1442,18 @@ impl Compiler<'_> {
     /// is the caller's scope — a slot at a body's top level and in a block, a property of the
     /// global object at the top level of a script.
     pub(super) fn hoist_functions(&mut self, body: &[Stmt]) -> Result<(), CompileError> {
+        // **Every binding before any body**, which is two passes and not one. §10.2.11 creates the
+        // bindings for `functionsToInitialize` and only then instantiates the function objects, and
+        // the difference is observable in the ordinary way sibling declarations are written:
+        //
+        //     function a() { return b(); }
+        //     function b() { return 7; }
+        //
+        // Declared as it went, `a`'s body was compiled while `b` had no slot — so `b` resolved
+        // outwards, found nothing, and became a global lookup that fails at run time. Reversing the
+        // two declarations made it work, which is not something the order of two hoisted
+        // declarations is allowed to decide.
+        let mut placed: Vec<(Placement, &crate::ast::Function, Span)> = Vec::new();
         for statement in body {
             // Through any labels, because §B.3.2 lets one stand between the list and its
             // declaration and §8.2.6 declares the name here all the same — see
@@ -1464,7 +1476,7 @@ impl Compiler<'_> {
             // with a script's attributes — writable, enumerable, not configurable — and the store
             // then puts the function in it. Assigning to a name that does not exist yet would
             // create it *configurable*, and `delete f` would then work on a function declaration.
-            match self.at_global_scope() {
+            let placement = match self.at_global_scope() {
                 true => {
                     let index = self.name(&name.name)?;
                     let deletable = self.deletable;
@@ -1472,41 +1484,50 @@ impl Compiler<'_> {
                         name: index,
                         deletable,
                     });
-                    self.make_function(
-                        function,
-                        // §10.2.9 — a declaration is named by its own binding.
-                        match &function.name {
-                            Some(written) => super::function::Naming::of(&written.name),
-                            None => super::function::Naming::default(),
-                        },
-                        span,
-                    )?;
-                    self.chunk.emit(Instruction::StoreGlobal(index));
+                    Placement::Global(index)
                 }
-                false => {
-                    let slot = self.declare(&name.name);
-                    self.make_function(
-                        function,
-                        // §10.2.9 — a declaration is named by its own binding.
-                        match &function.name {
-                            Some(written) => super::function::Naming::of(&written.name),
-                            None => super::function::Naming::default(),
-                        },
-                        span,
-                    )?;
-                    self.chunk.emit(Instruction::StoreVariable(0, slot));
-                }
+                false => Placement::Slot(self.declare(&name.name)),
+            };
+            placed.push((placement, function, span));
+        }
+        for (placement, function, span) in placed {
+            self.make_function(
+                function,
+                // §10.2.9 — a declaration is named by its own binding.
+                match &function.name {
+                    Some(written) => super::function::Naming::of(&written.name),
+                    None => super::function::Naming::default(),
+                },
+                span,
+            )?;
+            match placement {
+                Placement::Global(index) => self.chunk.emit(Instruction::StoreGlobal(index)),
+                Placement::Slot(slot) => self.chunk.emit(Instruction::StoreVariable(0, slot)),
             }
             self.chunk.emit(Instruction::Pop);
         }
         Ok(())
     }
+
     pub(super) fn statements(&mut self, statements: &[Stmt]) -> Result<(), CompileError> {
         for statement in statements {
             self.statement(statement)?;
         }
         Ok(())
     }
+}
+
+/// Where a hoisted function declaration's binding lives — §9.1.1.4.16 or an ordinary slot.
+///
+/// Carried between the two passes of [`Compiler::hoist_functions`] so that the second one, which
+/// compiles the bodies, does not have to ask again. Asking twice would be two answers to a question
+/// whose answer is fixed by where the declaration is written.
+#[derive(Debug, Clone, Copy)]
+enum Placement {
+    /// §9.1.1.4.16 — a property of the global object, named by an index into the chunk's names.
+    Global(u32),
+    /// An ordinary binding in the running scope.
+    Slot(u32),
 }
 
 /// Where a well-known Symbol sits in the realm's table — see `crate::builtins::well_known_at`.

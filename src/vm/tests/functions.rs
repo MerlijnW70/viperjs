@@ -648,3 +648,48 @@ fn a_function_stringifies_in_the_native_code_form_whatever_it_was_written_as() {
     // `Object.prototype.toString`.
     assert_eq!(run("Math.max + ''"), "function max() { [native code] }");
 }
+
+#[test]
+fn a_hoisted_declaration_sees_every_sibling_whichever_order_they_are_written_in() {
+    // §10.2.11 creates the binding for every `functionsToInitialize` and *then* instantiates the
+    // function objects. praxis declared each name immediately before compiling that function's
+    // body, so a body compiled first resolved a later sibling outwards — out of the function, out
+    // to the global object, and into a ReferenceError at run time.
+    //
+    // The tell was that reversing the two declarations made it work, which is not something the
+    // order of two hoisted declarations is allowed to decide.
+    assert_eq!(
+        run(
+            "(function () { function a() { return b(); } function b() { return 7; } return a(); })()"
+        ),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "(function () { function b() { return 7; } function a() { return b(); } return a(); })()"
+        ),
+        "7"
+    );
+    // Mutual recursion is the same fact needing to hold in both directions at once, and cannot be
+    // written in any order that avoids it.
+    assert_eq!(
+        run(
+            "(function () {              function even(n) { return n === 0 ? true : odd(n - 1); }              function odd(n) { return n === 0 ? false : even(n - 1); }              return String(even(4)) + odd(4); })()"
+        ),
+        "truefalse"
+    );
+    // A closure made inside one and called later still finds the sibling, which is what makes this
+    // about the binding rather than about the moment of the call.
+    assert_eq!(
+        run(
+            "(function () { function a() { return function () { return b(); }; }              function b() { return 3; } return a()(); })()"
+        ),
+        "3"
+    );
+    // The same at a script's top level, where the binding is a property of the global object and
+    // the resolution never went through a slot — so this half was already right and must stay so.
+    assert_eq!(
+        run("function a() { return b(); } function b() { return 5; } a()"),
+        "5"
+    );
+}

@@ -677,3 +677,77 @@ fn a_backreference_to_a_shared_name_reads_whichever_group_took_part() {
     // second rule of its own.
     assert_eq!(run("'b'.replace(/(?<x>a)|(?<x>b)/, '[$<x>]')"), "[b]");
 }
+
+#[test]
+fn the_d_flag_says_where_each_capture_began_and_ended() {
+    // §22.2.7.8 `MakeMatchIndicesIndexPairArray` — the same shape as the match array beside it and
+    // built from the same spans, but an element is a two-element `[start, end]` rather than the
+    // text. Nothing here reads the subject at all.
+    assert_eq!(
+        run("JSON.stringify(/b(c)/d.exec('abcd').indices)"),
+        "[[1,3],[2,3]]"
+    );
+    // §22.2.7.9 `GetMatchIndexPair` makes an ordinary Array, so a script may treat a pair like any
+    // other — which is what its prototype being `Array.prototype` means.
+    assert_eq!(
+        run("var i = /b(c)/d.exec('abcd').indices; \
+             (Object.getPrototypeOf(i[0]) === Array.prototype) + '|' + i[0].length"),
+        "true|2"
+    );
+    // A capture that did not take part is `undefined` and **present**: an empty match and an absent
+    // one both have a zero-length span, so only the record can tell them apart.
+    assert_eq!(
+        run("var i = /a(b)?/d.exec('a').indices; String(i[1]) + '|' + (1 in i)"),
+        "undefined|true"
+    );
+    // Without the flag there is no array at all, which is what `hasIndices` is for.
+    assert_eq!(run("String(/a/.exec('a').indices)"), "undefined");
+    assert_eq!(run("/a/d.hasIndices + '|' + /a/.hasIndices"), "true|false");
+}
+
+#[test]
+fn the_indices_array_names_its_groups_the_same_way_the_match_does() {
+    // Step 5 and step 6 — `groups` is on the indices array whether or not the pattern names
+    // anything, and is `undefined` when it names nothing. So `'groups' in indices` is true for every
+    // pattern, which is the promise the match array beside it makes too.
+    assert_eq!(
+        run("JSON.stringify(/(?<x>.)/d.exec('a').indices.groups)"),
+        "{\"x\":[0,1]}"
+    );
+    assert_eq!(run("String(/a/d.exec('a').indices.groups)"), "undefined");
+    assert_eq!(run("'groups' in /a/d.exec('a').indices"), "true");
+    // §22.2.1.1 lets several groups share a name, and the answer is whichever took part — asked the
+    // same way the match array asks it rather than a second time with a second rule.
+    assert_eq!(
+        run("JSON.stringify(/(?<x>a)|(?<x>b)/d.exec('b').indices.groups)"),
+        "{\"x\":[0,1]}"
+    );
+    // A named group that did not participate is `undefined` here as well.
+    assert_eq!(
+        run("String(/(?<x>a)|b/d.exec('b').indices.groups.x)"),
+        "undefined"
+    );
+}
+
+#[test]
+fn a_match_results_extra_properties_are_the_ones_a_script_could_have_written() {
+    // §22.2.7.2 builds these with `CreateDataPropertyOrThrow`, so all three attributes are true —
+    // **including enumerable**, which praxis had as `false` for every one of them. The difference
+    // is not academic: with the installation attributes instead, `Object.keys` of a match answers
+    // only its indices and a `for`-`in` over one finds no `index` at all.
+    assert_eq!(
+        run("Object.keys(/(?<x>a)/d.exec('a')).join(',')"),
+        "0,1,index,input,groups,indices"
+    );
+    assert_eq!(
+        run("Object.keys(/a/.exec('a')).join(',')"),
+        "0,index,input,groups"
+    );
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(/(?<x>.)/d.exec('a').indices, 'groups'); \
+             d.writable + '|' + d.enumerable + '|' + d.configurable"
+        ),
+        "true|true|true"
+    );
+}

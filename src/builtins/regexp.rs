@@ -17,7 +17,7 @@
 //! Only a `g` or `y` pattern reads it or writes it. That is why `/a/.exec` finds the same match
 //! twice and `/a/g.exec` walks: the flag is what makes the property mean anything.
 
-use super::{define_method, define_value, key};
+use super::{create_data_property, define_method, define_value, key};
 use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, RegExp};
 use crate::realm::Realm;
 use crate::regexp::{Flags, Matcher, parse};
@@ -247,9 +247,9 @@ fn build_result(
         let _ = heap.define_own_property(array, slot, &PropertyDescriptor::data(value));
     }
     let index = f64::from(u32::try_from(found.span.0).unwrap_or(u32::MAX));
-    define_value(heap, array, "index", Value::Number(index));
+    create_data_property(heap, array, "index", Value::Number(index));
     let input = Value::String(heap.intern(subject));
-    define_value(heap, array, "input", input);
+    create_data_property(heap, array, "input", input);
     // Step 34 — `groups` is `undefined` when the pattern has no named groups at all, and an object
     // with a **null** prototype when it has. The null prototype is deliberate: a group called
     // `toString` must not read as `Object.prototype`'s.
@@ -291,8 +291,93 @@ fn build_result(
             Value::Object(holder)
         }
     };
-    define_value(heap, array, "groups", groups);
+    create_data_property(heap, array, "groups", groups);
+    // §22.2.7.2 step 34 — the `d` flag adds one more property, and only then. A pattern without it
+    // pays nothing: the array is not built, and `match.indices` is `undefined` rather than absent,
+    // which is what `'indices' in match` being false means for every other pattern.
+    if pattern.flags.indices {
+        let pairs = match_indices(vm, heap, pattern, found);
+        create_data_property(heap, array, "indices", pairs);
+    }
     Ok(Value::Object(array))
+}
+
+/// §22.2.7.8 `MakeMatchIndicesIndexPairArray` — where each capture began and ended.
+///
+/// The same shape as the match array beside it, and built from the same spans: one element per
+/// capture plus the whole match at zero, and a `groups` object when the pattern names any. What
+/// differs is what an element *is* — a two-element Array of `[start, end]` rather than the text —
+/// so nothing here reads the subject at all.
+///
+/// A capture that did not participate is `undefined`, exactly as it is in the match array. That is
+/// the one thing a caller of this cannot work out for itself: an empty match and an absent one both
+/// have a zero-length span, and only the record knows which happened.
+fn match_indices(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    pattern: &crate::regexp::Pattern,
+    found: &crate::regexp::Match,
+) -> Value {
+    let realm = vm.realm();
+    let array = heap.new_array(realm.array_prototype(), 0);
+    // §22.2.7.9 `GetMatchIndexPair` — a two-element Array, and an ordinary one: its prototype is
+    // `Array.prototype`, so a script may `map` over it like anything else.
+    let mut pair = |heap: &mut Heap, span: (usize, usize)| {
+        let made = heap.new_array(realm.array_prototype(), 0);
+        for (at, end) in [(0_u32, span.0), (1, span.1)] {
+            let slot = heap.index_key(at);
+            let value = Value::Number(f64::from(u32::try_from(end).unwrap_or(u32::MAX)));
+            let _ = heap.define_own_property(made, slot, &PropertyDescriptor::data(value));
+        }
+        Value::Object(made)
+    };
+    let whole = pair(heap, found.span);
+    let zero = heap.index_key(0);
+    let _ = heap.define_own_property(array, zero, &PropertyDescriptor::data(whole));
+    let mut placed: Vec<Value> = Vec::with_capacity(found.captures.len());
+    for (at, capture) in found.captures.iter().enumerate() {
+        let value = match capture {
+            Some(span) => pair(heap, *span),
+            None => Value::Undefined,
+        };
+        placed.push(value);
+        let index = u32::try_from(at + 1).unwrap_or(u32::MAX);
+        let slot = heap.index_key(index);
+        let _ = heap.define_own_property(array, slot, &PropertyDescriptor::data(value));
+    }
+    // Step 5 and step 6 — `groups` is on the indices array whether or not the pattern names
+    // anything, and is `undefined` when it names nothing. So `'groups' in match.indices` is true
+    // for every pattern, which is the same promise the match array makes.
+    let groups = match pattern.names.is_empty() {
+        true => Value::Undefined,
+        false => {
+            let holder = heap.new_object(None);
+            for (name, number) in &pattern.names {
+                // §22.2.1.1 lets several groups share a name, so the value is whichever of them
+                // took part — the same rule the match array's `groups` follows, and asked the same
+                // way rather than a second time.
+                let value = pattern
+                    .names
+                    .iter()
+                    .filter(|(had, _)| had == name)
+                    .find_map(|(_, number)| {
+                        usize::try_from(*number)
+                            .ok()
+                            .and_then(|n| n.checked_sub(1))
+                            .and_then(|index| placed.get(index).copied())
+                            .filter(|found| !matches!(found, Value::Undefined))
+                    })
+                    .unwrap_or(Value::Undefined);
+                let _ = number;
+                let units: Vec<u16> = name.encode_utf16().collect();
+                let slot = crate::heap::PropertyKey::from_units(heap, &units);
+                let _ = heap.define_own_property(holder, slot, &PropertyDescriptor::data(value));
+            }
+            Value::Object(holder)
+        }
+    };
+    create_data_property(heap, array, "groups", groups);
+    Value::Object(array)
 }
 
 /// §22.2.6.8 `RegExp.prototype.exec`.

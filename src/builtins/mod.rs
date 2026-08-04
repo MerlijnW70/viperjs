@@ -194,6 +194,28 @@ pub(crate) fn define_value(heap: &mut Heap, object: ObjectId, name: &str, value:
     let _ = heap.define_own_property(object, key, &descriptor);
 }
 
+/// §7.3.5 `CreateDataPropertyOrThrow` — a property a *script* could have written.
+///
+/// All three attributes true, which is what distinguishes it from [`define_value`]'s installation
+/// set. The difference is not decoration: §22.2.7.2 builds a match result with this one, so
+/// `Object.keys(/a/.exec("a"))` lists `index`, `input` and `groups` — and with the other set it
+/// lists none of them, which is a wrong answer nothing else would show.
+///
+/// Named after the clause rather than after the attributes, because every caller reaches it by
+/// citing the clause and the attributes are what the clause means.
+pub(crate) fn create_data_property(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
+    let key = key(heap, name);
+    let descriptor = PropertyDescriptor {
+        value: Some(value),
+        writable: Some(true),
+        enumerable: Some(true),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    // The object was made by the caller a moment ago, so the define cannot be refused.
+    let _ = heap.define_own_property(object, key, &descriptor);
+}
+
 /// Give `object` a method: a built-in function with §10.3.3's `name` and `length`.
 pub(crate) fn define_method(
     heap: &mut Heap,
