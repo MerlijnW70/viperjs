@@ -749,3 +749,28 @@ fn a_parameter_that_throws_rejects_the_promise_rather_than_the_call() {
         "0"
     );
 }
+
+#[test]
+fn wrapping_a_sync_iterator_reads_its_next_once() {
+    // §7.4.3 step 1.b.iii runs `GetIteratorFromMethod`, whose step 4 reads `next` **once** and
+    // makes a record of it; step 1.b.iv hands that record to §27.1.4.1. praxis read it there and
+    // again, so a sync iterator with a `next` *getter* saw two calls for one `yield*` — and the
+    // doc said the read belonged there, "which is what makes this an Iterator Record rather than a
+    // pair of lookups repeated per step". It was the pair of lookups it described.
+    let source = "var reads = 0; var out = ''; \
+        var obj = {}; \
+        obj[Symbol.iterator] = function () { return { \
+            get next() { reads += 1; return function () { return { value: 1, done: true } } } } }; \
+        var g = async function* () { yield* obj; }; \
+        g().next().then(function () { out = 'reads=' + reads; });";
+    assert_eq!(run_settled(source, "out"), "reads=1");
+    // The synchronous `yield*` reads it once too and always did — which is what says this was the
+    // adapter's own step and not something about `yield*`.
+    assert_eq!(
+        run("var reads = 0; var obj = {}; \
+             obj[Symbol.iterator] = function () { return { \
+                 get next() { reads += 1; return function () { return { value: 1, done: true } } } } }; \
+             function* g() { yield* obj; } g().next(); reads"),
+        "1"
+    );
+}

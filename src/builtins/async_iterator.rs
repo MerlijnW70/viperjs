@@ -66,14 +66,18 @@ fn same(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
 
 /// §27.1.4.1 `CreateAsyncFromSyncIterator` — put an adapter in front of a sync iterator.
 ///
-/// The sync `next` is read here and once, which is what makes this an Iterator Record rather than
-/// a pair of lookups repeated per step.
+/// Takes the **Iterator Record**, `next` and all, because that is what the clause takes: §7.4.3
+/// step 1.b.iii has already run `GetIteratorFromMethod`, whose step 4 read `next` once and made a
+/// record of it. Reading it again here is a second call of the program's own getter for a step the
+/// specification does not have — and the doc used to say the read belonged here, "which is what
+/// makes this an Iterator Record rather than a pair of lookups repeated per step". It was the pair
+/// of lookups it described.
 pub(crate) fn from_sync(
     vm: &mut Vm,
     heap: &mut Heap,
     iterator: Value,
+    next: Value,
 ) -> Completion<(Value, Value)> {
-    let next = vm.get_property_key(iterator, key(heap, "next"), heap)?;
     let wrapper = heap.new_object(Some(vm.realm().async_from_sync_iterator_prototype()));
     if let Some(object) = heap.object_mut(wrapper) {
         object.set_role(Role::SyncIterator { iterator, next });
@@ -109,8 +113,8 @@ pub(crate) fn get_async_iterator(
     let Some(sync) = sync else {
         return Err(Abrupt::type_error("this is not async iterable"));
     };
-    let (iterator, _) = from_method(vm, heap, iterable, sync)?;
-    from_sync(vm, heap, iterator)
+    let (iterator, next) = from_method(vm, heap, iterable, sync)?;
+    from_sync(vm, heap, iterator, next)
 }
 
 /// §7.4.2 `GetIteratorFromMethod` — call the method, check the answer, read its `next` once.

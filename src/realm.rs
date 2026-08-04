@@ -66,6 +66,12 @@ pub struct Realm {
     array_buffer_prototype: ObjectId,
     /// %ArrayBuffer% itself, which `slice`'s `SpeciesConstructor` falls back to.
     array_buffer_constructor: ObjectId,
+    /// %Array.prototype.values% — §10.4.4.4 step 16's `@@iterator` for every arguments object.
+    ///
+    /// Held by identity rather than read off `Array.prototype` at each call, because those are
+    /// different questions: the clause names the *intrinsic*, so replacing `Array.prototype.values`
+    /// leaves `[...arguments]` walking the one this realm was built with.
+    array_values: ObjectId,
     /// %eval% — §19.2.1, held because §13.3.6.1 identifies a **direct** eval by object identity.
     ///
     /// Comparing against whatever the global object currently says under `eval` would answer
@@ -383,6 +389,10 @@ impl Realm {
             array_buffer_prototype,
             // Replaced by `builtins::buffer::install`, which is where the constructor is made.
             array_buffer_constructor: array_buffer_prototype,
+            // Discovered below, once `array_methods::install` has made it. A callable placeholder
+            // for the reason `promise_constructor` has one: a realm still being built has no
+            // readers, and an `Option` would put a question at every use.
+            array_values: function_prototype,
             // Replaced below, once `builtins::global::install` has made it.
             eval_function: global,
             data_view_prototype,
@@ -444,6 +454,15 @@ impl Realm {
         // same reason `%ArrayBuffer%` is: the built-ins are handed a finished realm.
         if let Some(found) = crate::builtins::global_object(heap, &realm, "eval") {
             realm.eval_function = found;
+        }
+        // §23.1.3.36 — `%Array.prototype.values%`, which §10.4.4.4 step 16 and §10.4.4.6 step 7
+        // both give an arguments object under `%Symbol.iterator%`. Discovered here for the reason
+        // `%ArrayBuffer%` is, and *taken now* for a second one: a script may replace
+        // `Array.prototype.values`, and `[...arguments]` must go on walking the intrinsic.
+        if let Some(crate::value::Value::Object(found)) =
+            crate::builtins::own_value(heap, realm.array_prototype, "values")
+        {
+            realm.array_values = found;
         }
         for (at, (name, _, _)) in crate::heap::KINDS.into_iter().enumerate() {
             if let Some(found) = crate::builtins::global_object(heap, &realm, name) {
@@ -527,6 +546,12 @@ impl Realm {
     /// %ArrayBuffer.prototype% — §25.1.5.
     pub fn array_buffer_prototype(&self) -> ObjectId {
         self.array_buffer_prototype
+    }
+
+    /// %Array.prototype.values% — what an arguments object's `@@iterator` is.
+    #[must_use]
+    pub fn array_values(&self) -> ObjectId {
+        self.array_values
     }
 
     /// %ArrayBuffer% — the default `slice`'s `SpeciesConstructor` falls back to.

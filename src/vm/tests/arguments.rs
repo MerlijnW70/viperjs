@@ -457,3 +457,44 @@ fn arguments_is_the_running_functions_however_many_scopes_are_between() {
         "3"
     );
 }
+
+#[test]
+fn an_arguments_object_can_be_walked_and_spread() {
+    // §10.4.4.4 step 16 and §10.4.4.6 step 7 — `%Symbol.iterator%` is `%Array.prototype.values%`,
+    // and it was missing entirely. So `[...arguments]` and `for (x of arguments)` both threw
+    // "what was called is not a function": §7.4.4 asking an object with no `@@iterator` for one.
+    // Every other part of the object said array-like; this is the property that makes it walkable.
+    assert_eq!(
+        run("function f() { return [...arguments].join(',') } f(1, 2, 3)"),
+        "1,2,3"
+    );
+    assert_eq!(
+        run("function f() { var out = []; for (var x of arguments) { out.push(x) } return out.join(',') } f('a', 'b')"),
+        "a,b"
+    );
+    // **Mapped and unmapped alike**, which is why the two clauses say the same thing: a strict
+    // function and one with a default parameter both get an unmapped object, and both walk.
+    assert_eq!(
+        run("function f(a) { 'use strict'; return [...arguments].length } \
+             function g(a = 1) { return [...arguments].length } \
+             f(1, 2) + ',' + g(7, 8, 9)"),
+        "2,3"
+    );
+    // It **is** `%Array.prototype.values%`, by identity, and §17's ordinary attributes rather than
+    // the fixed ones `callee` gets.
+    assert_eq!(
+        run("function f() { \
+               var d = Object.getOwnPropertyDescriptor(arguments, Symbol.iterator); \
+               return (arguments[Symbol.iterator] === Array.prototype.values) \
+                 + '|' + d.writable + ',' + d.enumerable + ',' + d.configurable } f()"),
+        "true|true,false,true"
+    );
+    // Held by *identity*, not read off `Array.prototype` when the object is made: the clause names
+    // the intrinsic, so a script that replaces the method leaves the walk alone. Reading it at each
+    // call would pass every test above and this one is the only thing that tells them apart.
+    assert_eq!(
+        run("Array.prototype.values = function () { throw 'replaced' }; \
+             function f() { return [...arguments].join(',') } f(4, 5)"),
+        "4,5"
+    );
+}

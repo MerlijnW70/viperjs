@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.76% of test262** — 77,102 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.93% of test262** — 77,262 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -322,6 +322,35 @@ Two details cost more than the two constructors did:
 **Still missing beside it, and separate:** `Function.prototype.toString` of *any* dynamically built
 function answers `function anonymous() { [native code] }` rather than §20.2.3.5's assembled source.
 That is one bucket for all four kinds and was not part of this slice.
+
+### `arguments` was not iterable, and the bucket that found it was three layers away
+
++160 runs from one missing property. §10.4.4.4 step 16 and §10.4.4.6 step 7 both give an arguments
+object `%Symbol.iterator%` = `%Array.prototype.values%`, and praxis gave it none — so
+`[...arguments]` and `for (x of arguments)` threw `what was called is not a function`, which is
+§7.4.4 asking an object with no `@@iterator` for one. Every other part of the object said array-like.
+
+**How it was found is the reusable part, and it took three steps none of which named it.** The
+bucket said `log.length Expected SameValue(«3», «2»)` across 48 runs of `yield-star-sync-*`. That
+was a *real and different* bug — §7.4.3 step 1.b.iii runs `GetIteratorFromMethod`, whose step 4
+reads `next` once and makes a record, and step 1.b.iv hands the **record** to §27.1.4.1; praxis read
+`next` there and again, so a `next` getter fired twice. Fixing it moved all 48 to
+`what was called is not a function` — 0 newly passing — and only then did reproducing the test's own
+helper by hand show that `[...arguments]` was the thing that threw.
+
+- **"Failing differently" with zero newly passing is a *good* result, not a wash.** It is the
+  ratchet saying the first gap is closed and naming the one behind it. The temptation is to revert.
+- **A hand-written probe of a failing test is worth more than the test's reason string**, and the
+  fastest way to write one is to copy what the test's fixture does — the getters, the spread, the
+  logging — rather than what it asserts. The engine bug was in the *fixture*.
+- Two doc comments told on themselves again. §27.1.4.1's said the sync `next` was read there,
+  "which is what makes this an Iterator Record rather than a pair of lookups repeated per step" —
+  it was the pair of lookups it described.
+
+**`%Array.prototype.values%` is held by identity**, discovered after the built-ins run exactly as
+`%Promise%` and `%ArrayBuffer%` are. The clause names the intrinsic, so replacing
+`Array.prototype.values` leaves `[...arguments]` walking the one the realm was built with — and
+reading it off the prototype at each call would pass every other test.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

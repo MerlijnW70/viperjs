@@ -673,6 +673,7 @@ impl Heap {
             callee,
             thrower,
             mapped,
+            iteration,
         } = call;
         let object = self.new_object(Some(prototype));
         for (at, value) in values.iter().enumerate() {
@@ -711,6 +712,24 @@ impl Heap {
             },
         };
         self.define_own_property(object, key, &callee);
+        // §10.4.4.4 step 16 and §10.4.4.6 step 7 — `%Symbol.iterator%` is `%Array.prototype.values%`
+        // on every arguments object, mapped or not. Writable and configurable and not enumerable,
+        // which is §17's ordinary shape and not the fixed one `callee` gets.
+        //
+        // Missing entirely before this, so `[...arguments]` and `for (x of arguments)` both threw
+        // "what was called is not a function" — §7.4.4 asking an object with no `@@iterator` for
+        // one. An arguments object is array-*like* and every other part of it said so; this is the
+        // property that makes it array-like enough to walk.
+        if let Some((symbol, values)) = iteration {
+            self.define_own_property(
+                object,
+                PropertyKey::from_symbol(symbol),
+                &PropertyDescriptor {
+                    enumerable: Some(false),
+                    ..PropertyDescriptor::data(Value::Object(values))
+                },
+            );
+        }
         // §10.2.11 step 22 — the map is only made for a *simple* parameter list. Anything else
         // gets §10.4.4.4's unmapped object: a parameter that a default filled in is not a slot an
         // index could stand for, and joining them would make `arguments[0] = 1` reach past the

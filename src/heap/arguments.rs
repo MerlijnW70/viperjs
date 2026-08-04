@@ -49,6 +49,13 @@ pub struct Incoming<'a> {
     pub thrower: ObjectId,
     /// Whether §15.1.4 calls the parameter list simple, and so whether to join the map.
     pub mapped: bool,
+    /// `%Symbol.iterator%` and `%Array.prototype.values%` — §10.4.4.4 step 16.
+    ///
+    /// One field for the pair because the property cannot be made without both, and `None` for a
+    /// realm whose well-known Symbols are not there. Given to a **mapped and an unmapped object
+    /// alike**: §10.4.4.6 step 7 says the same thing, which is why `[...arguments]` works in a
+    /// strict function and in one with a default parameter.
+    pub iteration: Option<(crate::heap::SymbolId, ObjectId)>,
 }
 
 /// Which parameter each argument index is the same variable as — §10.4.4's parameter map.
