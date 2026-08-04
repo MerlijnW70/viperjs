@@ -764,6 +764,28 @@ impl Vm {
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
+                Instruction::SettleKey => {
+                    let raw = self.pop()?;
+                    // §7.1.19, and this is the *only* place it runs for this key: the define at the
+                    // end of the property finds a String or a Symbol and converting one of those
+                    // again calls nothing.
+                    let key = match self.to_property_key(raw, heap) {
+                        Ok(key) => key,
+                        Err(error) => {
+                            self.raise(error, heap, root, current, at)?;
+                            continue;
+                        }
+                    };
+                    self.stack.push(heap.key_value(key));
+                }
+                Instruction::NameFunction(prefix) => {
+                    let function = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+                    let key = *self
+                        .stack
+                        .get(self.stack.len().wrapping_sub(2))
+                        .ok_or(Fault::StackUnderflow)?;
+                    name_function(self, function, key, prefix, heap);
+                }
                 Instruction::ImportMeta => {
                     // §13.3.12 step 2 asserts the running code belongs to a Module, and the parser
                     // has already refused `import.meta` under any other goal — so `None` here is a
@@ -2045,6 +2067,75 @@ fn freeze(heap: &mut Heap, object: crate::heap::ObjectId) {
 /// time, which said nothing about what the property was for.
 fn property_name(heap: &mut Heap, name: &str) -> crate::heap::PropertyKey {
     crate::heap::PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>())
+}
+
+/// §10.2.9 `SetFunctionName(F, name, prefix)` — what a computed key calls the function it names.
+///
+/// The compile-time half of this bakes the name into the body, which a literal key allows and a
+/// computed one does not. So this is the same clause reached the other way, and the parts that are
+/// *not* a string copy are the reason it is worth writing out:
+///
+/// - **A Symbol key names the function after its description in brackets** — step 2. `Symbol("t")`
+///   gives `"[t]"`, and a Symbol with no description gives the **empty string** rather than `"[]"`,
+///   because §20.4's `[[Description]]` distinguishes absent from empty and step 2.b says so.
+/// - **The prefix is joined with a space** — step 5 concatenates prefix, U+0020 and the name, so an
+///   accessor is `"get x"`. A getter on a Symbol key is `"get [t]"`, brackets and all.
+/// - **The property is not writable, not enumerable and configurable**, which is §10.3.3's set and
+///   the same one `length` beside it has.
+///
+/// Cannot fail and does not run any code: the key has already been settled by `SettleKey`, so
+/// nothing here calls a `toString`.
+fn name_function(
+    vm: &mut Vm,
+    function: Value,
+    key: Value,
+    prefix: crate::compile::NamePrefix,
+    heap: &mut Heap,
+) {
+    let Value::Object(function) = function else {
+        // The compiler emits this only after a function it has just made, so there is nothing else
+        // this can be — and nothing to say if a hand-written chunk arranges otherwise.
+        return;
+    };
+    let mut name: Vec<u16> = match key {
+        // Step 2 — a Symbol's description in brackets, or nothing at all when it has none.
+        Value::Symbol(id) => match heap.symbol(id).and_then(|symbol| symbol.description()) {
+            Some(text) => {
+                let mut units = vec![u16::from(b'[')];
+                units.extend_from_slice(heap.string(text).unwrap_or(&[]));
+                units.push(u16::from(b']'));
+                units
+            }
+            None => Vec::new(),
+        },
+        Value::String(id) => heap.string(id).unwrap_or(&[]).to_vec(),
+        // `SettleKey` leaves a String or a Symbol and nothing else can arrive here.
+        _ => Vec::new(),
+    };
+    // Step 5, and the space belongs to the clause rather than to the caller.
+    if let Some(word) = match prefix {
+        crate::compile::NamePrefix::Plain => None,
+        crate::compile::NamePrefix::Get => Some("get "),
+        crate::compile::NamePrefix::Set => Some("set "),
+    } {
+        let mut prefixed: Vec<u16> = word.encode_utf16().collect();
+        prefixed.append(&mut name);
+        name = prefixed;
+    }
+    let named = Value::String(heap.intern(&name));
+    let slot = property_name(heap, "name");
+    let _ = vm;
+    heap.define_own_property(
+        function,
+        slot,
+        &PropertyDescriptor {
+            value: Some(named),
+            writable: Some(false),
+            enumerable: Some(false),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        },
+    );
 }
 
 /// The two prototypes a class definition points its halves at — §15.7.14 steps 9 to 11.

@@ -59,3 +59,15 @@ pub struct Symbol {
     /// difference nothing could observe.
     pub(super) registered: Option<StringId>,
 }
+
+impl Symbol {
+    /// §20.4's `[[Description]]`, which is absent for `Symbol()` and empty for `Symbol("")`.
+    ///
+    /// The two are different answers and the type says so: `Symbol().description` is `undefined`
+    /// where `Symbol("").description` is `""`, and §10.2.9 names a function after the first as the
+    /// empty string and after the second as `"[]"`.
+    #[must_use]
+    pub fn description(&self) -> Option<StringId> {
+        self.description
+    }
+}

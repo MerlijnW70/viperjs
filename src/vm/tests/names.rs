@@ -109,11 +109,14 @@ fn a_method_is_named_by_its_key_and_an_accessor_carries_the_word() {
         ),
         "#m"
     );
-    // A *computed* key names nothing: the name would be whatever the expression came to at run time,
-    // and §10.2.9's fallback is the empty string rather than a guess.
+    // A *computed* key names it too, from whatever the expression came to. This row asserted the
+    // **empty string** and read as a rule — "§10.2.9's fallback is the empty string rather than a
+    // guess" — when it was a description of what the compiler did. That is the overfitted test
+    // AGENTS.md warns about: a row that asserts the engine's behaviour rather than the clause's,
+    // which pins the bug in place and reads as authority while doing it.
     assert_eq!(
         run("(function () { var k = 'm'; var o = { [k]: function () {} }; return o.m.name; })()"),
-        ""
+        "m"
     );
 }
 
@@ -421,4 +424,133 @@ fn the_three_logical_assignments_name_what_they_assign_and_the_arithmetic_ones_d
     // to a function the operator actually evaluated.
     assert_eq!(run("var v = 1; v ||= () => {}; v"), "1");
     assert_eq!(run("var n = 0; var v = 1; v ||= (n = 1, () => {}); n"), "0");
+}
+
+#[test]
+fn a_computed_key_names_the_method_it_defines() {
+    // §10.2.9 `SetFunctionName`, reached the way a *computed* key reaches it. A written key is
+    // known while compiling and is baked into the body; this one is only known once the expression
+    // has run, so the name is set from the key sitting on the stack under the function.
+    assert_eq!(run("({ ['id']() {} }).id.name"), "id");
+    assert_eq!(run("({ ['id']: function () {} }).id.name"), "id");
+    assert_eq!(run("({ ['id']: () => {} }).id.name"), "id");
+    assert_eq!(run("({ ['id']: class {} }).id.name"), "id");
+    // §10.2.9 step 5 — an accessor's prefix is part of its name, joined with a space.
+    assert_eq!(
+        run(
+            "var o = { get ['x']() { return 1 } }; Object.getOwnPropertyDescriptor(o, 'x').get.name"
+        ),
+        "get x"
+    );
+    assert_eq!(
+        run("var o = { set ['x'](v) {} }; Object.getOwnPropertyDescriptor(o, 'x').set.name"),
+        "set x"
+    );
+    // A written key still works, which is the half that was already there.
+    assert_eq!(run("({ id() {} }).id.name"), "id");
+    // …and a definition that is **not** anonymous keeps the name it wrote. §8.6.3 names only an
+    // `IsAnonymousFunctionDefinition`, so naming everything would rename this one.
+    assert_eq!(run("({ ['k']: function named() {} }).k.name"), "named");
+    assert_eq!(run("({ ['k']: class Named {} }).k.name"), "Named");
+    // A value that is not a function definition at all is left alone entirely.
+    assert_eq!(run("function f() {} var o = { ['k']: f }; o.k.name"), "f");
+}
+
+#[test]
+fn a_symbol_key_names_a_function_after_its_description_in_brackets() {
+    // §10.2.9 step 2 — a Symbol key is not spelled as a key would be. Its **description** goes in
+    // brackets, and a Symbol with no description gives the *empty string* rather than `"[]"`,
+    // because §20.4's `[[Description]]` distinguishes absent from empty.
+    assert_eq!(run("var s = Symbol('t'); ({ [s]() {} })[s].name"), "[t]");
+    assert_eq!(run("var s = Symbol(); ({ [s]() {} })[s].name"), "");
+    assert_eq!(run("var s = Symbol(''); ({ [s]() {} })[s].name"), "[]");
+    // The prefix and the brackets compose, which is step 5 applied to step 2's answer.
+    assert_eq!(
+        run("var s = Symbol('t'); var o = { get [s]() { return 1 } }; \
+             Object.getOwnPropertyDescriptor(o, s).get.name"),
+        "get [t]"
+    );
+}
+
+#[test]
+fn a_class_element_with_a_computed_key_is_named_the_same_way() {
+    // §15.7.14's `MethodDefinitionEvaluation` reaches the same §10.2.9, so a class agrees with an
+    // object literal about every one of these.
+    assert_eq!(run("class C { ['m']() {} } C.prototype.m.name"), "m");
+    assert_eq!(run("class C { static ['s']() {} } C.s.name"), "s");
+    assert_eq!(
+        run("class C { get ['x']() { return 1 } } \
+             Object.getOwnPropertyDescriptor(C.prototype, 'x').get.name"),
+        "get x"
+    );
+    assert_eq!(
+        run("var s = Symbol('t'); class C { [s]() {} } C.prototype[s].name"),
+        "[t]"
+    );
+    // §15.7.10 step 2.g — a field's initialiser is named after its `ClassElementName` too.
+    assert_eq!(
+        run("class C { ['f'] = function () {} } new C().f.name"),
+        "f"
+    );
+    assert_eq!(run("class C { ['f'] = () => {} } new C().f.name"), "f");
+    assert_eq!(
+        run("class C { ['f'] = function named() {} } new C().f.name"),
+        "named"
+    );
+    // A written key and a private one are unchanged.
+    assert_eq!(run("class C { m() {} } C.prototype.m.name"), "m");
+    assert_eq!(
+        run("class C { #p() {} q() { return this.#p.name } } new C().q()"),
+        "#p"
+    );
+    // The same widening in a class, and the private name is what proves the condition is right:
+    // `method_naming` always answers for one, so it never reaches the run-time path and never loses
+    // its `#`.
+    assert_eq!(run("class C { 's'() {} } C.prototype.s.name"), "s");
+    assert_eq!(run("class C { 1() {} } C.prototype[1].name"), "1");
+    assert_eq!(run("class C { 1 = function () {} } new C()[1].name"), "1");
+    // …and §10.3.3's attributes here too.
+    assert_eq!(
+        run(
+            "class C { ['m']() {} }              var d = Object.getOwnPropertyDescriptor(C.prototype.m, 'name');              d.writable + '|' + d.enumerable + '|' + d.configurable"
+        ),
+        "false|false|true"
+    );
+}
+
+#[test]
+fn a_computed_key_is_converted_once_and_before_the_value_beside_it() {
+    // §13.2.5.5 — evaluating a `PropertyName` *is* `ToPropertyKey`, and the clause does it before
+    // the value. praxis converted at the define instead, which put a key's own `toString` after the
+    // value's expression and ran it again for anything else that looked at the key.
+    assert_eq!(
+        run(
+            "var log = []; var k = { toString: function () { log.push('key'); return 'k' } }; \
+             var o = { [k]: (log.push('value'), 1) }; log.join(',')"
+        ),
+        "key,value"
+    );
+    // Once, not twice — which is what a second conversion at the define would cost.
+    assert_eq!(
+        run(
+            "var n = 0; var k = { toString: function () { n = n + 1; return 'k' } }; \
+             var o = { [k]: 1 }; n"
+        ),
+        "1"
+    );
+    // The same in a class, where the key is evaluated during the element walk.
+    assert_eq!(
+        run(
+            "var n = 0; var k = { toString: function () { n = n + 1; return 'k' } }; \
+             class C { [k]() {} } n"
+        ),
+        "1"
+    );
+    // And a key whose conversion throws stops before the value is evaluated at all.
+    assert_eq!(
+        run("var reached = 'no'; \
+             var k = { toString: function () { throw new TypeError('nope') } }; \
+             try { ({ [k]: (reached = 'yes', 1) }) } catch (e) {} reached"),
+        "no"
+    );
 }

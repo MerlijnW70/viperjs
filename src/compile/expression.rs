@@ -19,6 +19,21 @@ use crate::ast::{
 use crate::span::Span;
 use crate::value::Value;
 
+/// §8.6.3 `IsAnonymousFunctionDefinition` — whether this expression is a function with no name.
+///
+/// The three productions the clause covers, and each has its own reason for the guard: a
+/// `FunctionExpression` and a `ClassExpression` may carry a name and keep it, and an arrow has no
+/// production for one so it is always anonymous. Anything else is not a function definition at all
+/// and is left alone — `{ [k]: someOtherFunction }` does not rename what it was given.
+pub(super) fn is_anonymous_definition(value: &Expr) -> bool {
+    match &value.kind {
+        ExprKind::Function(function) => function.name.is_none(),
+        ExprKind::Class(class) => class.name.is_none(),
+        ExprKind::Arrow(_) => true,
+        _ => false,
+    }
+}
+
 impl Compiler<'_> {
     /// Compile `expression` so that it leaves exactly one value on the stack.
     pub(super) fn expression(&mut self, expression: &Expr) -> Result<(), CompileError> {
@@ -638,7 +653,15 @@ impl Compiler<'_> {
                         .map_err(|_| unsupported("a key that cannot be written down", span))?;
                     self.constant(Value::String(id))?;
                 }
-                AstPropertyKey::Computed(expression) => self.expression(expression)?,
+                // §13.2.5.5 — evaluating a `PropertyName` *is* `ToPropertyKey`, and it happens
+                // before the value beside it. Settled here rather than at the define, so a key
+                // whose `toString` has an effect has it in the order the clause writes and exactly
+                // once — and so that the naming below has a key to read rather than an expression's
+                // answer.
+                AstPropertyKey::Computed(expression) => {
+                    self.expression(expression)?;
+                    self.chunk.emit(Instruction::SettleKey);
+                }
                 // §13.2.5.1 — a numeric `PropertyName` is its *ToString*, and a BigInt's is its
                 // digits without the `n`. So `{ 1n: 'a' }` and `{ '1': 'a' }` name one property.
                 AstPropertyKey::BigInt(literal) => {
@@ -661,6 +684,15 @@ impl Compiler<'_> {
                     AstPropertyKey::Identifier(name) => {
                         self.named_evaluation(name, expression)?;
                     }
+                    // Every other key shape is the same named position and none of them was
+                    // reaching it: a computed key is not known here, and a string, numeric or
+                    // BigInt one is known and was being thrown away. Still only for an *anonymous*
+                    // definition — `{ [k]: function named() {} }` keeps the name it wrote.
+                    _ if is_anonymous_definition(expression) => {
+                        self.expression(expression)?;
+                        self.chunk
+                            .emit(Instruction::NameFunction(super::NamePrefix::Plain));
+                    }
                     _ => self.expression(expression)?,
                 },
                 Element::Name(name, at) => {
@@ -673,29 +705,19 @@ impl Compiler<'_> {
                 // the two shapes differ at all. The object is under the key, two down.
                 Element::Function(function) => {
                     // §10.2.9 — a literal's method is named by its key, and an accessor carries the
-                    // prefix. A computed key is not known at compile time, so it is left unnamed.
-                    let prefix = match accessor {
-                        Some(MethodKind::Get) => Some("get "),
-                        Some(MethodKind::Set) => Some("set "),
-                        _ => None,
-                    };
-                    let named = match key {
-                        AstPropertyKey::Identifier(name) => Some(&**name),
-                        _ => None,
+                    // prefix. A **computed** key is not known here, so the name is set at run time
+                    // from the key sitting under the function; see `Instruction::NameFunction`.
+                    let at_run_time = match accessor {
+                        Some(MethodKind::Get) => super::NamePrefix::Get,
+                        Some(MethodKind::Set) => super::NamePrefix::Set,
+                        _ => super::NamePrefix::Plain,
                     };
                     // §15.4.5 — a literal's method is not a constructor either, which is the one
                     // thing that distinguishes `{ m() {} }` from `{ m: function () {} }` beyond the
                     // name. `new o.m()` is a TypeError for the first and an object for the second.
-                    self.make_method_function(
-                        function,
-                        Naming {
-                            name: named,
-                            prefix,
-                        },
-                        true,
-                        span,
-                    )?;
+                    self.make_method_function(function, Naming::default(), true, span)?;
                     self.chunk.emit(Instruction::MakeMethod(2));
+                    self.chunk.emit(Instruction::NameFunction(at_run_time));
                 }
             }
             match accessor {

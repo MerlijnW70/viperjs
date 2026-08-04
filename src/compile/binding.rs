@@ -398,7 +398,14 @@ impl Compiler<'_> {
                 let id = self.name_of(&text);
                 self.constant(Value::String(id))
             }
-            AstPropertyKey::Computed(expression) => self.expression(expression),
+            // §13.2.5.5 and §15.7.11 — evaluating a `PropertyName` *is* `ToPropertyKey`, and it
+            // happens before whatever is defined under it. Settling here rather than at the define
+            // puts a key's own `toString` in the order the clause writes it and runs it once.
+            AstPropertyKey::Computed(expression) => {
+                self.expression(expression)?;
+                self.chunk.emit(Instruction::SettleKey);
+                Ok(())
+            }
             // §13.2.5.1 — a numeric `PropertyName` is its *ToString*, and a BigInt's is its digits
             // without the `n`. So `{ 1n: 'a' }` and `{ '1': 'a' }` are the same property, which is
             // what makes `({1n: 'a'})[1]` answer `'a'`.

@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.38% of test262** — 76,751 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.44% of test262** — 76,803 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 416 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -507,13 +507,6 @@ doc says which line to change if data ever arrives.
 - **`ArraySetLength` cannot run a `valueOf` — ~30 runs.** `[].length = {valueOf(){return 3}}` throws
   and `[].length = 1n` is a RangeError where §10.4.2.4 propagates `ToUint32`'s TypeError.
   `set_array_length` is on `Heap`, which has no interpreter to re-enter — that is DR-0011's seam.
-- **A computed key does not name its method — 36 runs.** §15.4.5 runs `SetFunctionName(closure,
-  propKey)` with the *evaluated* key, so `({ ["id"]() {} }).id.name` is `"id"` and a Symbol key
-  gives `"[description]"`; praxis answers `""` for both, and the accessors are missing their
-  `get `/`set ` prefix with it. Most of the 36 are `language/expressions/object`, not classes.
-  `src/compile/class.rs`'s `Naming` decides it at compile time, where the key is not yet known — so
-  the slice is naming at run time from the key already on the stack. **Found by grepping doc
-  comments, not by bucketing**: the comment there described the empty string as a choice.
 - **The `d` flag's `.indices` array — 34 runs.** §22.2.7.8 `MakeMatchIndicesIndexPairArray`, and
   praxis builds none of it: the flag parses and `RegExp.prototype.hasIndices` answers, so a script
   can ask for `d` and then read `undefined`. The match record already holds every span the array

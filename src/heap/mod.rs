@@ -578,6 +578,19 @@ impl Heap {
         id
     }
 
+    /// A settled property key, back as the [`crate::value::Value`] it came from.
+    ///
+    /// The inverse of `ToPropertyKey` for something that has already been through it: a key is a
+    /// String or a Symbol and both are values, so nothing is made and nothing can fail. Exists so
+    /// that a key settled early can wait on the operand stack, which holds values and not keys.
+    #[must_use]
+    pub fn key_value(&self, key: PropertyKey) -> crate::value::Value {
+        match key {
+            PropertyKey::String(id) => crate::value::Value::String(id),
+            PropertyKey::Symbol(id) => crate::value::Value::Symbol(id),
+        }
+    }
+
     /// The Symbol `id` refers to, or `None` if this heap has nothing there.
     ///
     /// The same narrow promise [`Heap::string`] makes about a foreign handle, for the same reason.

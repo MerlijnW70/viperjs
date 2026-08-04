@@ -275,6 +275,21 @@ pub enum Deletable {
     Yes,
 }
 
+/// §10.2.9's `prefix` argument — the word an accessor's name begins with.
+///
+/// Three values and not an `Option<&str>`, because an instruction carries data and not text: the
+/// space between the prefix and the name is the clause's (step 5 concatenates prefix, U+0020 and
+/// name) and belongs here rather than at each site that spells one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NamePrefix {
+    /// No prefix — a method, or a function in a named position.
+    Plain,
+    /// §15.4.5's getter.
+    Get,
+    /// §15.4.5's setter.
+    Set,
+}
+
 /// One instruction.
 ///
 /// Deliberately few. An operator is one instruction carrying which operator it is, rather than one
@@ -833,6 +848,20 @@ pub enum Instruction {
     /// object answers differently on two successive calls, so there is nowhere else to read it
     /// from.
     LoadNewTarget,
+    /// §13.2.5.5 and §15.7.11 — turn the computed key on top of the stack into a property key.
+    ///
+    /// Evaluating a `PropertyName` *is* `ToPropertyKey`, and it happens before the value it names is
+    /// evaluated. Leaving it to the define at the end runs the key's own `toString` after the
+    /// value's expression, which is the wrong order and is observable; it also runs it a second time
+    /// once anything else needs to look at the key. Settled here, the define finds a String or a
+    /// Symbol and converting one of those again calls nothing.
+    SettleKey,
+    /// §10.2.9 `SetFunctionName` — name the function on top of the stack after the key beneath it.
+    ///
+    /// Emitted only where §8.6.3 puts a `NamedEvaluation`: a method, an accessor, or an anonymous
+    /// function definition given a **computed** key. A literal key is known while compiling and is
+    /// baked into the body, so this is the run-time half of the same rule and not a second one.
+    NameFunction(NamePrefix),
     /// §13.3.12 `import.meta` — the module's own metadata object, made once and cached.
     ///
     /// Takes no operand: *which* module is a question about the environment the running code is
@@ -1365,6 +1394,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
+        | Instruction::SettleKey
+        | Instruction::NameFunction(_)
         | Instruction::ImportMeta
         | Instruction::TemplateObject(_)
         | Instruction::SuperCall(_)

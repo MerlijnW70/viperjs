@@ -228,16 +228,20 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::ClassPrototype);
             }
             self.property_key(&method.key)?;
-            // §10.2.9 — a method's name is its key's, and an accessor's carries `get ` or `set ` as
-            // part of the name rather than as decoration: `d.get.name` is `"get a"`, which test262
-            // checks. A *computed* key is not known here — the name would be whatever the expression
-            // came to at run time — so it is left unnamed rather than guessed at.
-            self.make_method_function(&method.function, method_naming(method), true, span)?;
+            // §10.2.9's name is set at run time from the key sitting under the function, for
+            // *every* public method rather than only the ones the compiler cannot read. Two ways of
+            // arriving at one name is two things that can disagree, and a guard choosing between
+            // them was a branch no program could distinguish — the key on the stack and the key in
+            // the source are the same key. `method_naming` still answers for a **private** method,
+            // which leaves this walk above and keeps its `#`.
+            self.make_method_function(&method.function, Naming::default(), true, span)?;
             // §15.7.14's `MethodDefinitionEvaluation` calls `MakeMethod` with the object the method
             // is being put on — the prototype for an instance method and the constructor for a
             // static one, which is exactly what is under the key here. That is what makes `super.x`
             // in a static method read the *parent class* rather than its prototype.
             self.chunk.emit(Instruction::MakeMethod(2));
+            self.chunk
+                .emit(Instruction::NameFunction(run_time_prefix(method.kind)));
             self.chunk.emit(Instruction::DefineClassMethod(method.kind));
         }
         // §15.7.14 — a static private element belongs to the constructor and to nothing else, and it
@@ -489,7 +493,17 @@ impl Compiler<'_> {
                 // `class C { x = () => {} }` calls the arrow `x`. A private field's name keeps its `#`.
                 Some(expression) => match field_naming(field) {
                     Some(name) => self.named_evaluation(&name, expression)?,
-                    None => self.expression(expression)?,
+                    // §15.7.10 step 2.g carries the evaluated `ClassElementName` to the initialiser
+                    // as `[[ClassFieldInitializerName]]`, so a computed key names an anonymous
+                    // definition here exactly as a written one does. The key is already on the stack
+                    // — it was loaded a few lines up — which is the shape `NameFunction` reads.
+                    None => {
+                        self.expression(expression)?;
+                        if super::expression::is_anonymous_definition(expression) {
+                            self.chunk
+                                .emit(Instruction::NameFunction(crate::compile::NamePrefix::Plain));
+                        }
+                    }
                 },
                 // §15.7.14 — a field written without one is `undefined`, which is not the same as
                 // the field being absent: `x;` makes an own property and `for...in` finds it.
@@ -729,11 +743,23 @@ fn field_naming(field: &crate::ast::ClassField) -> Option<String> {
     }
 }
 
+/// §10.2.9's prefix for a class element whose key is computed.
+///
+/// Only the three public kinds: a *private* name is never computed — §15.7's `ClassElementName` is a
+/// `PropertyName` **or** a `PrivateIdentifier` and the two are different productions — so the `#`
+/// forms `method_naming` spells cannot arrive here.
+fn run_time_prefix(kind: crate::ast::MethodKind) -> crate::compile::NamePrefix {
+    match kind {
+        crate::ast::MethodKind::Normal => crate::compile::NamePrefix::Plain,
+        crate::ast::MethodKind::Get => crate::compile::NamePrefix::Get,
+        crate::ast::MethodKind::Set => crate::compile::NamePrefix::Set,
+    }
+}
+
 /// §10.2.9's name for a class method, with the accessor prefix that is part of it.
 ///
-/// `None` for a computed key, whose name is whatever the expression came to at run time — naming it
-/// would mean threading the evaluated key back into the body compiler, and a guess would be worse
-/// than the empty string the specification falls back to.
+/// `None` for a **computed** key, whose name is not known while compiling — it is set at run time
+/// from the key on the stack instead, which is what `Instruction::NameFunction` is for.
 fn method_naming(method: &crate::ast::ClassMethod) -> Naming<'_> {
     // §10.2.9 — a private method's `#` is part of its name: `#m` and `get #a`. The AST holds the name
     // without it, the `#` being punctuation of the production, so it comes back here.

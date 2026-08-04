@@ -14677,16 +14677,6 @@ language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it 
 language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
-language/expressions/class/elements/evaluation-error/computed-name-toprimitive-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-toprimitive-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-tostring-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-tostring-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-valueof-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/expressions/class/elements/evaluation-error/computed-name-valueof-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
@@ -15133,22 +15123,6 @@ language/expressions/multiplication/order-of-evaluation.js :: it threw an object
 language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/new/non-ctor-err-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/new/non-ctor-err-realm.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
-language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
-language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
-language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
-language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
-language/expressions/object/fn-name-accessor-set.js (strict) :: it threw an object with no name: name descriptor value should be set ; name value should be set
-language/expressions/object/fn-name-arrow.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-arrow.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-class.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-class.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-cover.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-cover.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-fn.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-fn.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-gen.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/fn-name-gen.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/method-definition/async-gen-yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/object/method-definition/async-gen-yield-star-async-next.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/expressions/object/method-definition/async-gen-yield-star-async-return.js :: the test called $DONE with TypeError: what was called is not a function
@@ -15161,14 +15135,6 @@ language/expressions/object/method-definition/async-gen-yield-star-sync-return.j
 language/expressions/object/method-definition/async-gen-yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/object/method-definition/async-gen-yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/object/method-definition/async-gen-yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/object/method-definition/fn-name-fn.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/method-definition/fn-name-fn.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/method-definition/fn-name-gen.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/method-definition/fn-name-gen.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/expressions/object/method-definition/generator-name-prop-symbol.js :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
-language/expressions/object/method-definition/generator-name-prop-symbol.js (strict) :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
-language/expressions/object/method-definition/name-name-prop-symbol.js :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
-language/expressions/object/method-definition/name-name-prop-symbol.js (strict) :: it threw an object with no name: name descriptor value should be [method]; name value should be [method]
 language/expressions/object/scope-gen-meth-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -15644,14 +15610,6 @@ language/statements/class/decorator/syntax/valid/decorator-member-expr-identifie
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
-language/statements/class/definition/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
-language/statements/class/definition/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
-language/statements/class/definition/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
-language/statements/class/definition/fn-name-accessor-set.js (strict) :: it threw an object with no name: name descriptor value should be set ; name value should be set
-language/statements/class/definition/fn-name-gen-method.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/statements/class/definition/fn-name-gen-method.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/statements/class/definition/fn-name-method.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
-language/statements/class/definition/fn-name-method.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/statements/class/definition/getters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/getters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/definition/setters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15693,16 +15651,6 @@ language/statements/class/elements/direct-eval-err-contains-arguments.js :: it t
 language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
 language/statements/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
-language/statements/class/elements/evaluation-error/computed-name-toprimitive-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-toprimitive-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-tostring-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-tostring-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-valueof-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-language/statements/class/elements/evaluation-error/computed-name-valueof-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all

@@ -50,8 +50,8 @@ mod pattern;
 mod statement;
 
 pub use self::chunk::{
-    Chunk, Deletable, ExportEntry, ExportSource, ImportEntry, Instruction, Scope, ShortCircuit,
-    SpreadCall, Template,
+    Chunk, Deletable, ExportEntry, ExportSource, ImportEntry, Instruction, NamePrefix, Scope,
+    ShortCircuit, SpreadCall, Template,
 };
 
 use self::chunk::Unpatched;
