@@ -24,7 +24,7 @@
 //! takes the interpreter.
 
 use super::define_method;
-use super::object::{defined, own_property, this_object};
+use super::object::{defined, this_object};
 use crate::heap::{Heap, NativeCall, PropertyDescriptor, PropertyKind};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
@@ -70,8 +70,11 @@ fn define(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Co
         ..PropertyDescriptor::EMPTY
     };
     // `DefinePropertyOrThrow`, so a property that cannot be redefined is a TypeError rather than a
-    // silent nothing.
-    defined(heap.define_property_outcome(object, key, &descriptor))?;
+    // silent nothing — and through `Vm::define_through`, which is §10.1.6 *or* §10.5.6: a Proxy's
+    // `defineProperty` trap runs for `p.__defineGetter__('x', f)` exactly as it does for
+    // `Object.defineProperty`. The heap's own define walks past a Proxy, so a trap that threw was
+    // never called and one that refused was never heard.
+    defined(vm.define_through(object, key, &descriptor, heap)?)?;
     Ok(Value::Undefined)
 }
 
@@ -86,14 +89,18 @@ fn look_up(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> C
         // property found part-way up answers `undefined` and stops the walk rather than being
         // stepped over, so the answer is "the accessor you would reach" and not "the nearest
         // accessor anywhere above you".
-        if let Some(property) = own_property(heap, walk, key)? {
+        // Steps 3.a and 3.c are `[[GetOwnProperty]]` and `[[GetPrototypeOf]]`, and both are `?` —
+        // so a Proxy anywhere on the chain has its traps called and its throws reported. Reading
+        // the heap directly walked **past** every one of them: a trap that threw was never called,
+        // and one that answered a descriptor of its own was never asked.
+        if let Some(property) = vm.own_property_through(walk, key, heap)? {
             return Ok(match (property.kind, half) {
                 (PropertyKind::Accessor { getter, .. }, Half::Getter) => getter,
                 (PropertyKind::Accessor { setter, .. }, Half::Setter) => setter,
                 _ => Value::Undefined,
             });
         }
-        let Some(next) = heap.object(walk).and_then(|found| found.prototype()) else {
+        let Some(next) = vm.prototype_through(walk, heap)? else {
             return Ok(Value::Undefined);
         };
         walk = next;

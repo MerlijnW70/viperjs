@@ -2434,26 +2434,6 @@ built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected
 built-ins/Object/keys/proxy-keys.js (strict) :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Object/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/prototype/__defineGetter__/define-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__defineGetter__/define-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__defineSetter__/define-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__defineSetter__/define-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-own-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-own-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-own-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-own-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupGetter__/lookup-proto-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-own-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-own-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-own-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-own-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-get-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-get-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-proto-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__lookupSetter__/lookup-proto-proto-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Object/prototype/__proto__/get-abrupt.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/get-abrupt.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/__proto__/get-fn-name.js :: it threw TypeError: cannot read a property of something that is not an object

@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.31% of test262** — 77,608 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.33% of test262** — 77,628 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -526,6 +526,25 @@ branch at one place, and no state to keep in step with three `?`s.
 That is the *opposite* conclusion from the compiler's version of the same clause two sections up,
 where a flag set before the call is exactly right — because there the steps are emitted as bytecode
 and there is no Rust `?` to place. **Same clause, two engines, two shapes.**
+
+### §B.2.2's four helpers went round the internal methods instead of through them
+
++20 runs, and no new logic at all — three calls, each swapped for the mediated form.
+`__defineGetter__` and `__defineSetter__` define with `DefinePropertyOrThrow`, which is §10.1.6
+**or** §10.5.6; `__lookupGetter__` and `__lookupSetter__` walk with `[[GetOwnProperty]]` and
+`[[GetPrototypeOf]]`, both `?`. praxis read and wrote the heap directly, which walks **past** a
+Proxy — so a trap that threw was never called, one that refused was never heard, and one that
+answered a descriptor of its own was never asked.
+
+**This is DR-0020's shape from the other side.** The eleven internal methods were moved out of the
+heap so a Proxy could mediate them; a built-in that reaches for `Heap::own_property` rather than
+`Vm::own_property_through` quietly opts back out, and nothing in the types says so. Worth grepping
+for when a slice touches a built-in that walks a prototype chain.
+
+**And the ratchet had nothing to say about it — correctly.** The change is three call sites and no
+branches, so mutation coverage reported `0/0 viable`, which this file already records as honest for
+a slice with no condition in it. What pins it is that each of the three had a probe answering
+`accepted` before and the trap's own throw after.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

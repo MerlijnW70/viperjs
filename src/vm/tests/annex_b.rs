@@ -670,3 +670,65 @@ fn each_of_the_thirteen_is_an_ordinary_method_of_string_prototype() {
         "13"
     );
 }
+
+#[test]
+fn annex_bs_accessor_helpers_go_through_the_internal_methods() {
+    // §B.2.2.1 defines with `DefinePropertyOrThrow`, which is §10.1.6 **or** §10.5.6 — so a Proxy's
+    // `defineProperty` trap runs for `p.__defineGetter__('x', f)` exactly as it does for
+    // `Object.defineProperty`. praxis wrote through the heap, which walks past a Proxy: a trap that
+    // threw was never called, and one that refused was never heard.
+    assert_eq!(
+        run(
+            "var p = new Proxy({}, { defineProperty: function () { throw 'from the trap' } }); \
+             var caught = 'none'; \
+             try { p.__defineGetter__('x', function () {}) } catch (e) { caught = e } caught"
+        ),
+        "from the trap"
+    );
+    assert_eq!(
+        run("var seen = 'none'; \
+             var p = new Proxy({}, { defineProperty: function (t, k, d) { \
+                 seen = k + ':' + (typeof d.get) + ',' + d.enumerable + ',' + d.configurable; \
+                 return true } }); \
+             p.__defineSetter__('x', function () {}); \
+             p.__defineGetter__('y', function () {}); seen"),
+        "y:function,true,true"
+    );
+    // §B.2.2.3 steps 3.a and 3.c are `[[GetOwnProperty]]` and `[[GetPrototypeOf]]`, and both are
+    // `?`. Reading the heap directly walked past every trap on the chain.
+    assert_eq!(
+        run(
+            "var p = new Proxy({}, { getOwnPropertyDescriptor: function () { throw 'from gopd' } }); \
+             var caught = 'none'; \
+             try { p.__lookupGetter__('x') } catch (e) { caught = e } caught"
+        ),
+        "from gopd"
+    );
+    assert_eq!(
+        run(
+            "var p = new Proxy({}, { getPrototypeOf: function () { throw 'from proto' } }); \
+             var caught = 'none'; \
+             try { p.__lookupSetter__('x') } catch (e) { caught = e } caught"
+        ),
+        "from proto"
+    );
+    // …and a trap that answers a descriptor of its own is *believed*, which is the half a
+    // heap-only walk could not even reach.
+    assert_eq!(
+        run("var made = function () { return 'from the trap' }; \
+             var p = new Proxy({}, { getOwnPropertyDescriptor: function () { \
+                 return { get: made, configurable: true } } }); \
+             (p.__lookupGetter__('x') === made) + ',' + (p.__lookupSetter__('x') === undefined)"),
+        "true,true"
+    );
+    // The ordinary paths are unchanged: the **first** object with the property answers, whatever
+    // kind it is, so a data property part-way up stops the walk rather than being stepped over.
+    assert_eq!(
+        run("var top = { get x() { return 1 } }; \
+             var middle = Object.create(top); Object.defineProperty(middle, 'x', { value: 2 }); \
+             var bottom = Object.create(middle); \
+             (bottom.__lookupGetter__('x') === undefined) + ',' \
+             + (typeof Object.create(top).__lookupGetter__('x'))"),
+        "true,function"
+    );
+}
