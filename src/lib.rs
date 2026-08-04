@@ -14,6 +14,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+pub mod api;
 pub mod ast;
 pub mod builtins;
 pub use crate::builtins::date::{local_offset, set_local_offset};

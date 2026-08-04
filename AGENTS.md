@@ -45,7 +45,7 @@ heap.rs      objects, properties, prototypes, GC
 compile.rs   AST -> bytecode
 vm.rs        the interpreter loop
 builtins/    Object, Function, Array, String, Number, Math, JSON, Error, ...
-api.rs       the embedding surface
+api.rs       the embedding surface           [DONE — DR-0021, and `examples/embed.rs` is the tour]
 ```
 
 ## Milestones
@@ -227,6 +227,39 @@ is the row that stops the fix being applied to every async body there is.
 parameter list can throw — a pattern against `null`, a default that calls something — each filed
 under a reason of its own. **A clause about where a completion *goes* will never bucket cleanly,
 because the bucket is keyed on what produced it.**
+
+### `api.rs` exists — and what an embedder could not do before it
+
+DR-0021. **The conformance number does not move a hundredth of a percent, which is why it had not
+been built.** A twenty-line program that runs a script and does something with the answer was
+written against the public surface and compiled: four of its six lines did not, and there was no way
+at all to bind a host function. Our own harness was the evidence — `conformance` binds `$262` by
+*writing JavaScript source*, because no API existed to bind a Rust function instead.
+
+`api::Engine` owns the `Heap` and the `Vm` together. That is the decision, not the convenience: they
+are separate objects inside and every operation takes both, so two heaps and one machine compile and
+answer *silently wrong* — a `Value` is an index, and the wrong arena has something else at it.
+`api::Host` is the same surface borrowed for the duration of one native call.
+
+**Three things caught it being wrong, none of them reasoning:**
+
+- **A failing test corrected the decision record.** It claimed DR-0019's generations made a stale
+  handle safe on its own. They stop a *wrong value*; they do not stop `[[Get]]` degrading to
+  `undefined`, which is what an absent property gives too. So `Engine` checks liveness on every
+  value the host passes in and answers `Error::Collected`. Written before it was measured, the
+  record was wrong in the direction that reads as reassuring.
+- **`examples/embed.rs` caught what fourteen unit tests could not.** A bound host function could not
+  convert its own arguments — `Vm::to_string` is crate-private, and every test lived *inside* the
+  crate. The surface let a host register I/O and not implement it. **A test in the crate cannot
+  measure the crate's boundary**; an example outside it can, and that is what examples are for.
+- **Mutation coverage found a real bug, not a missing test.** Two guards in the thrown-value
+  description were indistinguishable because a *missing* property became the string `"undefined"` —
+  non-empty, so it slipped past both. `throw ({})` read as `"undefined: undefined"`.
+
+Deliberately not decided: **stopping a script that will not stop.** No deadline, no fuel, no
+interrupt — `while (true) {}` ends with the process. GOAL.md §2.3's promise about untrusted code is
+half kept: the no-panic invariant stops a crash and nothing stops a hang. That is a change to the
+interpreter loop with a measurement attached, so it is its own record.
 
 ### The harness's own reach is part of the measurement, and it was hiding 68 runs
 
