@@ -150,6 +150,12 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         define_value(heap, global, name, Value::Object(made));
     }
     define_value(heap, global, "Error", Value::Object(error));
+    // §20.5.2.1 — `Error.isError`, which asks about the `[[ErrorData]]` slot and nothing else.
+    // Not `instanceof` and not the `@@toStringTag`: a plain object with `Error.prototype` behind it
+    // answers `false`, and an error from another realm answers `true`. That is the whole point of
+    // it — the two questions a program could ask before this one both give the wrong answer across
+    // a realm boundary, and neither can be fixed by the program.
+    define_method(heap, realm, error, "isError", 1, is_error);
 
     // §20.5.7 — its own constructor, because its arguments are in a different order and its
     // instances carry a property no other error has. Its `[[Prototype]]` is `Error`, exactly as a
@@ -218,4 +224,20 @@ fn constructor(
     // `new TypeError().constructor === TypeError` asks.
     define_value(heap, prototype, "constructor", Value::Object(function));
     function
+}
+
+/// §20.5.2.1 `Error.isError ( arg )`.
+///
+/// Three steps and no coercion: anything that is not an Object is `false`, an Object without
+/// `[[ErrorData]]` is `false`, and everything else is `true`. It never throws and never reads a
+/// property, so a Proxy over an error answers `false` — the slot is on the target and a Proxy has
+/// none of its own.
+fn is_error(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::Object(object) = call.argument(0) else {
+        return Ok(Value::Boolean(false));
+    };
+    Ok(Value::Boolean(
+        heap.object(object)
+            .is_some_and(crate::heap::Object::is_error),
+    ))
 }

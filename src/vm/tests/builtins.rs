@@ -212,3 +212,30 @@ fn kind_value(property: crate::heap::Property) -> Value {
         PropertyKind::Accessor { .. } => Value::Undefined,
     }
 }
+
+#[test]
+fn is_error_asks_about_the_slot_and_nothing_else() {
+    // §20.5.2.1 — the `[[ErrorData]]` slot, which is not `instanceof` and not the `@@toStringTag`.
+    // A plain object with `Error.prototype` behind it answers `false` where `instanceof` says
+    // true, and that is the whole reason the function exists.
+    assert_eq!(
+        run(
+            "[Error.isError(new TypeError('x')), Error.isError(new Error()), \
+             Error.isError(Object.create(Error.prototype)), Error.isError({}), \
+             Error.isError(1), Error.isError(null), Error.isError(undefined)].join(',')"
+        ),
+        "true,true,false,false,false,false,false"
+    );
+    // It never throws and never reads a property, so a Proxy over an error answers `false`: the
+    // slot is on the target and a Proxy has none of its own.
+    assert_eq!(
+        run("var reads = 0; \
+             var p = new Proxy(new Error(), { get: function (t, k) { reads += 1; return t[k] } }); \
+             Error.isError(p) + ',' + reads"),
+        "false,0"
+    );
+    assert_eq!(
+        run("[Error.isError.length, Error.isError.name].join(',')"),
+        "1,isError"
+    );
+}

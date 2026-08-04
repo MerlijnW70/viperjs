@@ -217,3 +217,71 @@ fn comparing_two_strings_is_consistent_even_without_a_locale() {
         "true"
     );
 }
+
+#[test]
+fn a_string_can_say_whether_its_surrogates_are_paired_and_mend_them() {
+    // §22.1.3.9 — a lone surrogate of **either** kind makes a string ill-formed. A walk that only
+    // looked for an unmatched lead would call a run of trailing surrogates well-formed.
+    assert_eq!(
+        run(
+            r"['\u{1F600}'.isWellFormed(), 'ab'.isWellFormed(), '\uD800'.isWellFormed(), '\uDC00'.isWellFormed(), 'a\uD800b'.isWellFormed()].join(',')"
+        ),
+        "true,true,false,false,false"
+    );
+    // §22.1.3.29 — one replacement character per lone *code unit*, so the answer is always the
+    // same length as the receiver. Two leading surrogates in a row become two, because each is
+    // judged where it stands rather than read as a broken pair between them.
+    assert_eq!(
+        run(
+            r"['\uD800'.toWellFormed().charCodeAt(0), '\uD800\uD800'.toWellFormed().length, '\u{1F600}'.toWellFormed().length, 'a\uDC00b'.toWellFormed().charCodeAt(1)].join(',')"
+        ),
+        "65533,2,2,65533"
+    );
+    // A pair survives untouched, which is what separates mending from replacing every surrogate.
+    assert_eq!(
+        run(r"('\u{1F600}'.toWellFormed() === '\u{1F600}') + ',' + 'plain'.toWellFormed()"),
+        "true,plain"
+    );
+    // Both take no arguments and neither coerces the receiver away — §17's ordinary shape.
+    assert_eq!(
+        run(
+            "[String.prototype.isWellFormed.length, String.prototype.toWellFormed.length, \
+             String.prototype.isWellFormed.call(1), String.prototype.toWellFormed.call(true)].join(',')"
+        ),
+        "0,0,true,true"
+    );
+}
+
+#[test]
+fn a_promise_and_its_two_functions_come_out_together() {
+    // §27.2.4.8 — the three properties are `CreateDataProperty`'s, so all three are writable,
+    // enumerable and configurable. That is the shape for an object a built-in *hands over* and
+    // not the shape of a property a built-in *has*: the caller is expected to take it apart.
+    assert_eq!(
+        run("var r = Promise.withResolvers(); \
+             var d = Object.getOwnPropertyDescriptor(r, 'promise'); \
+             [typeof r.promise, typeof r.resolve, typeof r.reject, r.promise instanceof Promise, \
+              d.writable, d.enumerable, d.configurable, Object.keys(r).join('/')].join(',')"),
+        "object,function,function,true,true,true,true,promise/resolve/reject"
+    );
+    // The two functions really do settle the promise they came with.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; var r = Promise.withResolvers(); \
+             r.promise.then(function (v) { out = 'resolved:' + v }, function (e) { out = 'rejected:' + e }); \
+             r.resolve(7);",
+            "out"
+        ),
+        "resolved:7"
+    );
+    // `NewPromiseCapability(this)` and not `NewPromiseCapability(%Promise%)`, which is why the
+    // receiver decides the kind and a `this` that is not a constructor is a TypeError.
+    assert_eq!(
+        run("class Sub extends Promise {} \
+             var made = Promise.withResolvers.call(Sub).promise; \
+             var caught = 'none'; \
+             try { Promise.withResolvers.call(1) } catch (e) { caught = e.constructor.name } \
+             (made instanceof Sub) + ',' + caught + ',' + Promise.withResolvers.length"),
+        "true,TypeError,0"
+    );
+}

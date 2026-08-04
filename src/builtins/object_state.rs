@@ -37,6 +37,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, function: ObjectId) {
         ("seal", 1, seal),
         ("setPrototypeOf", 2, set_prototype_of),
         ("getOwnPropertySymbols", 1, get_own_property_symbols),
+        ("groupBy", 2, group_by),
         ("values", 1, values),
     ] {
         define_method(heap, realm, function, name, length, native);
@@ -403,4 +404,32 @@ fn get_own_property_descriptors(
         let _ = heap.define_own_property(built, key, &descriptor);
     }
     Ok(Value::Object(built))
+}
+
+/// §20.1.2.13 `Object.groupBy ( items, callback )`.
+///
+/// The answer inherits from **null**, which is the point of it: the keys come from the program's
+/// own data, so a group called `"toString"` or `"__proto__"` has to be an ordinary property rather
+/// than something that collides with the prototype chain. `Object.create(null)` is what the clause
+/// says and it is not an optimisation.
+///
+/// The properties are made in the order the keys were first seen — §7.3.35 keeps an ordered list
+/// for exactly this — so `Object.keys` of the answer reports the order the callback discovered.
+fn group_by(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let groups = super::iterator::group_by(
+        vm,
+        heap,
+        call.argument(0),
+        call.argument(1),
+        super::iterator::Keying::Property,
+    )?;
+    let object = heap.new_object(None);
+    for (found, elements) in groups {
+        let array = super::array::from_values(vm, heap, &elements)?;
+        // Already a String or a Symbol — §7.3.35 ran `ToPropertyKey` before grouping, which is
+        // where a throwing `toString` would have closed the iterator. This conversion cannot fail.
+        let name = vm.to_property_key(found, heap)?;
+        heap.define_own_property(object, name, &crate::heap::PropertyDescriptor::data(array));
+    }
+    Ok(Value::Object(object))
 }

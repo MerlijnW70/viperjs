@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.93% of test262** — 77,262 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.09% of test262** — 77,408 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -351,6 +351,42 @@ helper by hand show that `[...arguments]` was the thing that threw.
 `%Promise%` and `%ArrayBuffer%` are. The clause names the intrinsic, so replacing
 `Array.prototype.values` leaves `[...arguments]` walking the one the realm was built with — and
 reading it off the prototype at each call would pass every other test.
+
+### Seven shipped library functions were simply absent, and `typeof` found them in one line
+
++146 runs. `Object.groupBy`, `Map.groupBy`, `RegExp.escape`, `String.prototype.isWellFormed` and
+`toWellFormed`, `Promise.withResolvers` and `Error.isError` — ES2024, ES2025 and ES2026, all Stage 4,
+none of them built. Each is between five and forty lines.
+
+**Finding them cost one probe.** The `what was called is not a function` bucket is 905 runs and this
+file called it "mostly proposals", which is true and was hiding these: a `typeof` over three dozen
+names sorted the missing intrinsics into *shipped* and *proposal* in a single run, where the bucket's
+paths sorted them into nothing. **When a bucket's reason is "there is no such function", ask the
+engine what it has rather than reading the failing paths** — the paths say which tests use it and
+never which edition it landed in.
+
+Four things in the clauses that a plausible implementation gets wrong:
+
+- **`RegExp.escape` refuses a non-String rather than coercing it.** `RegExp.escape(123)` is a
+  TypeError. The whole value of the function is that its answer is safe to concatenate, and a silent
+  `ToString` is how the mistake it exists to prevent gets back in.
+- **Its first-code-point rule is about *position*.** An ASCII letter or a digit is escaped only where
+  it would begin the answer, so `"B*B"` is `\x42\*B` — read as "escape every letter" it gives
+  `\x42\*\x42` and passes nothing.
+- **`Object.groupBy` answers an object with a null prototype**, because the keys are the program's
+  own data: a group called `toString` has to be an ordinary property. And §10.1.11 then reorders it
+  — a key that is an *array index* sorts ascending ahead of everything, so a callback answering
+  numbers loses the discovery order entirely. That is the object's rule and not `groupBy`'s, and it
+  is why `Map.groupBy` sits beside it.
+- **`toWellFormed` replaces one lone code *unit* at a time**, so the answer is always the same
+  length as the receiver: two leading surrogates in a row become two replacement characters.
+
+**And every one of the seven throws a TypeError for a bad argument, which makes the type worthless
+as an assertion.** Two `groupBy` guards survived mutation because the test asked only for
+`TypeError`: with the guard removed the walk throws one anyway, a few steps later. What
+distinguishes them is *what ran first* — a `[Symbol.iterator]` getter that must not fire, and a
+message about `items` rather than about the engine's next move. **The fourth time this session that
+a test passed against the bug it was written to catch.**
 
 ### `api.rs` exists — and what an embedder could not do before it
 

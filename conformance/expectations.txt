@@ -1736,30 +1736,10 @@ built-ins/Error/cause_property.js :: it threw an object with no name: cause shou
 built-ins/Error/cause_property.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Error/constructor.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Error/constructor.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Error/isError/bigints.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/bigints.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/error-subclass.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/error-subclass.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Error/isError/errors-other-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Error/isError/errors-other-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/errors.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/errors.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/fake-errors.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/fake-errors.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/is-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Error/isError/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Error/isError/name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Error/isError/name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/isError/non-error-objects-other-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Error/isError/non-error-objects-other-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/non-error-objects.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/non-error-objects.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/primitives.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/primitives.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/prop-desc.js :: it threw an object with no name: isError should be an own property
-built-ins/Error/isError/prop-desc.js (strict) :: it threw an object with no name: isError should be an own property
-built-ins/Error/isError/symbols.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/symbols.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Error/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Error/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Error/prototype/stack/getter-cross-realm.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -2305,30 +2285,6 @@ built-ins/Map/Symbol.species/symbol-species-name.js :: it threw TypeError: canno
 built-ins/Map/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Map/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Map/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/groupBy/callback-arg.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/callback-arg.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/callback-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Map/groupBy/callback-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Map/groupBy/emptyList.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/emptyList.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/evenOdd.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/evenOdd.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/groupLength.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/groupLength.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/iterator-next-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Map/groupBy/iterator-next-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Map/groupBy/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Map/groupBy/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Map/groupBy/map-instance.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/map-instance.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Map/groupBy/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Map/groupBy/negativeZero.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/negativeZero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/string.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/string.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/toPropertyKey.js :: it threw TypeError: what was called is not a function
-built-ins/Map/groupBy/toPropertyKey.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
@@ -2482,30 +2438,6 @@ built-ins/Object/defineProperties/15.2.3.7-2-7.js :: it threw TypeError: a prope
 built-ins/Object/defineProperties/15.2.3.7-2-7.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/groupBy/callback-arg.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/callback-arg.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/callback-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/groupBy/callback-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/groupBy/emptyList.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/emptyList.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/evenOdd.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/evenOdd.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/groupLength.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/groupLength.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/invalid-property-key.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/groupBy/invalid-property-key.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/groupBy/iterator-next-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/groupBy/iterator-next-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/groupBy/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Object/groupBy/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Object/groupBy/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Object/groupBy/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Object/groupBy/null-prototype.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/null-prototype.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/string.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/string.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/toPropertyKey.js :: it threw TypeError: what was called is not a function
-built-ins/Object/groupBy/toPropertyKey.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/keys/proxy-keys.js (strict) :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -2800,14 +2732,6 @@ built-ins/Promise/try/return-value.js :: the test called $DONE with TypeError: w
 built-ins/Promise/try/return-value.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/try/throws.js :: the test called $DONE with Test262Error: error thrown from callback must become a rejection Expected a Test262Error to be thrown asynchronously but the function threw synchronously
 built-ins/Promise/try/throws.js (strict) :: the test called $DONE with Test262Error: error thrown from callback must become a rejection Expected a Test262Error to be thrown asynchronously but the function threw synchronously
-built-ins/Promise/withResolvers/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/withResolvers/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/withResolvers/promise.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/withResolvers/promise.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/withResolvers/resolvers.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/withResolvers/resolvers.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/withResolvers/result.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/withResolvers/result.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js :: it threw TypeError: what was called is not a function
@@ -2940,44 +2864,6 @@ built-ins/RegExp/character-class-escape-non-whitespace.js :: it threw RangeError
 built-ins/RegExp/character-class-escape-non-whitespace.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/escape/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/escape/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-control-characters.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-control-characters.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-lineterminator.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-lineterminator.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-otherpunctuators.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-otherpunctuators.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-solidus-character-mixed.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-solidus-character-mixed.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-solidus-character-simple.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-solidus-character-simple.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-surrogates.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-surrogates.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-syntax-characters-mixed.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-syntax-characters-mixed.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-syntax-characters-simple.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-syntax-characters-simple.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-utf16encodecodepoint.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-utf16encodecodepoint.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-whitespace.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/escaped-whitespace.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/initial-char-escape.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/initial-char-escape.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/is-function.js :: it threw an object with no name: RegExp.escape is a function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/RegExp/escape/is-function.js (strict) :: it threw an object with no name: RegExp.escape is a function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/RegExp/escape/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/escape/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/escape/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/escape/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/RegExp/escape/non-string-inputs.js :: it threw an object with no name: RegExp.escape is a function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/RegExp/escape/non-string-inputs.js (strict) :: it threw an object with no name: RegExp.escape is a function Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/RegExp/escape/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/RegExp/escape/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/RegExp/escape/not-escaped-underscore.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/not-escaped-underscore.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/not-escaped.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/not-escaped.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/prop-desc.js :: it threw an object with no name: escape should be an own property
-built-ins/RegExp/escape/prop-desc.js (strict) :: it threw an object with no name: escape should be an own property
 built-ins/RegExp/from-regexp-like-flag-override.js :: it threw an object with no name: @@match specified as a primitive boolean Expected SameValue(«"[object Object]"», «"source text"») to be true
 built-ins/RegExp/from-regexp-like-flag-override.js (strict) :: it threw an object with no name: @@match specified as a primitive boolean Expected SameValue(«"[object Object]"», «"source text"») to be true
 built-ins/RegExp/from-regexp-like-get-ctor-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -4190,22 +4076,6 @@ built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.
 built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/String/prototype/includes/searchstring-is-regexp-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/includes/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/isWellFormed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/isWellFormed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/isWellFormed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/isWellFormed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/isWellFormed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/isWellFormed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/isWellFormed/prop-desc.js :: it threw an object with no name: The value of `typeof String.prototype.isWellFormed` is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/prop-desc.js (strict) :: it threw an object with no name: The value of `typeof String.prototype.isWellFormed` is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/return-abrupt-from-this.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/return-abrupt-from-this.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/returns-boolean.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/returns-boolean.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/isWellFormed/to-string-primitive.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/isWellFormed/to-string-primitive.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/isWellFormed/to-string.js :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
-built-ins/String/prototype/isWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
@@ -4264,22 +4134,6 @@ built-ins/String/prototype/toLowerCase/special_casing_conditional.js :: it threw
 built-ins/String/prototype/toLowerCase/special_casing_conditional.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
 built-ins/String/prototype/toString/non-generic-realm.js :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/toString/non-generic-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/toWellFormed/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/toWellFormed/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/toWellFormed/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/toWellFormed/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/toWellFormed/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/toWellFormed/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/toWellFormed/prop-desc.js :: it threw an object with no name: The value of `typeof String.prototype.toWellFormed` is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/prop-desc.js (strict) :: it threw an object with no name: The value of `typeof String.prototype.toWellFormed` is "function" Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/return-abrupt-from-this.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/return-abrupt-from-this.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/returns-well-formed-string.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/returns-well-formed-string.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/toWellFormed/to-string-primitive.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/toWellFormed/to-string-primitive.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/String/prototype/toWellFormed/to-string.js :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
-built-ins/String/prototype/toWellFormed/to-string.js (strict) :: it threw an object with no name: coerces the receiver to a string Expected a Test262Error but got a TypeError
 built-ins/String/prototype/valueOf/non-generic-realm.js :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/valueOf/non-generic-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/SuppressedError/is-a-constructor.js :: it threw ReferenceError: SuppressedError is not defined
@@ -14934,7 +14788,7 @@ language/import/import-defer/errors/module-throws/trigger-evaluation.js :: it di
 language/import/import-defer/errors/syntax-error/import-defer-of-syntax-error-fails.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/module-imported-defer-and-eager.js :: it did not parse: expected `from`, found `*`
-language/import/import-defer/evaluation-top-level-await/async-cycle-dependency-of-deferred-module/main.js :: it threw TypeError: what was called is not a function
+language/import/import-defer/evaluation-top-level-await/async-cycle-dependency-of-deferred-module/main.js :: it threw SyntaxError: an imported module did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-top-level-await/flattening-order/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-top-level-await/import-defer-async-module/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-top-level-await/import-defer-transitive-async-module/main.js :: it did not parse: expected `from`, found `*`
@@ -15057,9 +14911,9 @@ language/module-code/source-phase-import/import-source.js (strict) :: the test c
 language/module-code/top-level-await/async-module-does-not-block-sibling-modules.js :: it threw an object with no name: Expected SameValue(«true», «false») to be true
 language/module-code/top-level-await/dynamic-import-of-waiting-module.js :: the test called $DONE with Test262Error: The second import should not resolve before the first one
 language/module-code/top-level-await/dynamic-import-of-waiting-module.js (strict) :: the test called $DONE with Test262Error: The second import should not resolve before the first one
-language/module-code/top-level-await/fulfillment-order.js :: it threw TypeError: what was called is not a function
-language/module-code/top-level-await/rejection-order.js :: it threw TypeError: what was called is not a function
-language/module-code/top-level-await/unobservable-global-async-evaluation-count-reset.js :: it threw TypeError: what was called is not a function
+language/module-code/top-level-await/fulfillment-order.js :: the test never called $DONE
+language/module-code/top-level-await/rejection-order.js :: the test never called $DONE
+language/module-code/top-level-await/unobservable-global-async-evaluation-count-reset.js :: the test called $DONE with Test262Error: Actual [D, A] and expected [A, D] should have the same contents. A should evaluate before D
 language/module-code/verify-dfs.js :: it threw TypeError: what was called is not a function
 language/statements/async-function/let-newline-await-in-async-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/async-generator/return-undefined-implicit-and-explicit.js :: the test called $DONE with Test262Error: Actual [tick 1, g1 ret, g2 ret, g3 ret, g4 ret, tick 2] and expected [tick 1, g1 ret, g2 ret, tick 2, g3 ret, g4 ret] should have the same contents. Ticks for implicit and explicit return undefined

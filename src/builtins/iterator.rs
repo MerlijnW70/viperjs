@@ -192,6 +192,91 @@ impl Walk {
     }
 }
 
+/// How §7.3.35 `GroupBy` turns what the callback answered into the key it groups under.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Keying {
+    /// `property` — §7.1.19 `ToPropertyKey`, so the key becomes a String or a Symbol. Runs the
+    /// program's own `toString`, and a throw from it closes the iterator.
+    Property,
+    /// `zero` — §24.5.1 `CanonicalizeKeyedCollectionKey`, which is only `-0` becoming `+0`.
+    /// Every other value groups by `SameValue`, so `NaN` groups with `NaN` and two objects never do.
+    Zero,
+}
+
+/// §7.3.35 `GroupBy ( items, callback, keyCoercion )` — the walk both `groupBy` methods are.
+///
+/// An **ordered** list of groups rather than a map, and that is the clause: §20.1.2.13 and
+/// §24.1.2.1 both build their answer by walking `groups` in order, so the properties of the object
+/// and the entries of the `Map` come out in the order their keys were *first* seen. A hash map here
+/// would answer the same values in a different order, which `Object.keys` reports.
+///
+/// Every abrupt completion after the iterator exists closes it — the clause's
+/// `IfAbruptCloseIterator` — because the walk is being abandoned part-way and the iterator is owed
+/// the news. The callback's own throw and the key conversion's are both that.
+pub(super) fn group_by(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    items: Value,
+    callback: Value,
+    keying: Keying,
+) -> Completion<Vec<(Value, Vec<Value>)>> {
+    // Steps 1 and 2, in that order and **before** the iterator is asked for: a nullish `items` is
+    // refused without the callback being examined, and a callback that is not callable is refused
+    // without `[@@iterator]` being read. Reordering either is observable from a getter.
+    if matches!(items, Value::Undefined | Value::Null) {
+        return Err(Abrupt::type_error("groupBy cannot walk undefined or null"));
+    }
+    if !heap.is_callable(callback) {
+        return Err(Abrupt::type_error("groupBy needs a function to group by"));
+    }
+    let walk = Walk::over(vm, heap, items)?;
+    let mut groups: Vec<(Value, Vec<Value>)> = Vec::new();
+    let mut at: u64 = 0;
+    loop {
+        let Some(value) = walk.step(vm, heap)? else {
+            return Ok(groups);
+        };
+        let index = Value::Number(at as f64);
+        let key = match vm.call_value(callback, Value::Undefined, &[value, index], heap) {
+            Ok(key) => key,
+            Err(error) => {
+                walk.close(vm, heap);
+                return Err(error);
+            }
+        };
+        let key = match keying {
+            // §7.1.19, which can run a `toString` and so can throw — step 6.g.ii closes for it.
+            Keying::Property => match vm.to_property_key(key, heap) {
+                Ok(key) => heap.key_value(key),
+                Err(error) => {
+                    walk.close(vm, heap);
+                    return Err(error);
+                }
+            },
+            // §24.5.1 — `-0` and `+0` are one key, and nothing else is touched. No completion,
+            // which is why this arm has no close: the operation cannot fail. `NaN` is deliberately
+            // left alone and still groups with `NaN`, because `SameValue` says it does.
+            Keying::Zero => match key {
+                Value::Number(number) => Value::Number(match number == 0.0 {
+                    true => 0.0,
+                    false => number,
+                }),
+                other => other,
+            },
+        };
+        // `AddValueToKeyedGroup` — an existing group is found by `SameValue`, so `NaN` joins `NaN`
+        // and `0` joins `-0` only because the canonicalisation above already made them one value.
+        match groups
+            .iter_mut()
+            .find(|(seen, _)| seen.same_value(&key, heap))
+        {
+            Some((_, elements)) => elements.push(value),
+            None => groups.push((key, vec![value])),
+        }
+        at += 1;
+    }
+}
+
 /// Build the three iterator prototypes into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm) {
     // §27.1.2.1 — `[@@iterator]` answers the receiver. An iterator is iterable, which is what lets

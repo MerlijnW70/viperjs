@@ -820,3 +820,63 @@ fn refused_pattern(source: &str, flags: &str) -> String {
         "try {{ new RegExp('{escaped}', '{flags}'); 'accepted' }} catch (e) {{ e.message }}"
     ))
 }
+
+#[test]
+fn a_pattern_can_be_escaped_so_that_it_matches_itself() {
+    // §22.2.5.2 — the four kinds of escape, in the order `EncodeForRegExpEscape` decides them. A
+    // tab is Table 64's `\t` and not `\x09`, which is what makes the order load-bearing rather
+    // than tidy.
+    assert_eq!(
+        run(
+            r"[RegExp.escape('.'), RegExp.escape('\\'), RegExp.escape('/'), RegExp.escape('\t'), RegExp.escape(',')].join(' ')"
+        ),
+        r"\. \\ \/ \t \x2c"
+    );
+    // Steps 3 to 5 — whitespace and line terminators, two hex digits while the code point fits in
+    // a byte and four when it does not. Reading the boundary the other way writes ` `, which
+    // matches the same character and is not what the clause says.
+    assert_eq!(
+        run(
+            r"[RegExp.escape(' '), RegExp.escape(' '), RegExp.escape(' '), RegExp.escape('﻿'), RegExp.escape(' ')].join(' ')"
+        ),
+        "\\x20 \\xa0 \\u202f \\ufeff \\u2028"
+    );
+    // Step 4.a is about **position** and not about the character: an ASCII letter or a digit is
+    // escaped only where it would begin the answer, so the second `B` here is written as itself.
+    // A rule read as "escape every letter" gives `\x42\*\x42` and passes no test at all.
+    assert_eq!(
+        run(r"[RegExp.escape('B*B'), RegExp.escape('0'), RegExp.escape('.a1b2')].join(' ')"),
+        r"\x42\*B \x30 \.a1b2"
+    );
+    // A **lone** surrogate is escaped; a pair is one code point and passes through whole. That is
+    // the difference between walking code units and walking code points, and it is the only place
+    // in this function where it shows.
+    assert_eq!(
+        run(
+            r"[RegExp.escape('\uD800'), RegExp.escape('\uDC20'), RegExp.escape('\u{1F600}'), RegExp.escape('퟿')].join(' ')"
+        ),
+        "\\ud800 \\udc20 \u{1F600} \u{D7FF}"
+    );
+    // Nearly all of Unicode is written as itself — this is not an ASCII-safe encoder.
+    assert_eq!(
+        run("RegExp.escape('\u{4F60}\u{597D}!')"),
+        "\u{4F60}\u{597D}\\x21"
+    );
+    // Step 1 refuses a non-String **without coercing it**, which is unusual and is the point: an
+    // answer that is safe to concatenate is worth nothing if the input was silently stringified.
+    assert_eq!(
+        run(
+            "var out = []; [123, {}, [], null, undefined].forEach(function (v) { \
+             try { RegExp.escape(v); out.push('accepted') } catch (e) { out.push(e.constructor.name) } }); \
+             out.join(',')"
+        ),
+        "TypeError,TypeError,TypeError,TypeError,TypeError"
+    );
+    // And what it answers really does match what went in, which no assertion above establishes.
+    assert_eq!(
+        run(
+            "var raw = 'a.b*c[d]'; new RegExp(RegExp.escape(raw)).test(raw) + ',' + new RegExp(RegExp.escape(raw)).test('axbxcxdx')"
+        ),
+        "true,false"
+    );
+}

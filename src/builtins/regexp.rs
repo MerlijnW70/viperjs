@@ -567,6 +567,9 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(constructor));
 
+    // §22.2.5.2 — `RegExp.escape`, the one static besides `@@species`.
+    define_method(heap, realm, constructor, "escape", 1, escape);
+
     define_method(heap, realm, prototype, "exec", 1, exec);
     define_method(heap, realm, prototype, "test", 1, test);
     define_method(heap, realm, prototype, "toString", 0, to_string);
@@ -661,4 +664,107 @@ pub fn from_literal(
     let flags = Value::String(heap.intern(&spelled.encode_utf16().collect::<Vec<_>>()));
     initialize(vm, heap, object, pattern, flags)?;
     Ok(object)
+}
+
+/// The punctuators §22.2.5.2 escapes although no production makes them special.
+///
+/// Not syntax characters — a pattern may hold any of these unescaped and mean them literally. They
+/// are escaped anyway so that the answer can be **pasted into a larger pattern** without changing
+/// what the surrounding syntax reads: a `-` inside a class would start a range, a `,` inside braces
+/// would make a quantifier, and `escape` cannot know where its answer will end up.
+const OTHER_PUNCTUATORS: [char; 16] = [
+    ',', '-', '=', '<', '>', '#', '&', '!', '%', ':', ';', '@', '~', '\'', '`', '"',
+];
+
+/// §22.2.5.2 `RegExp.escape ( S )` — a string that matches itself, wherever it is put.
+///
+/// **A String and nothing else**: step 1 throws for a Number, which is unusual for a built-in and
+/// deliberate. `RegExp.escape(123)` would be a program that meant `String(123)` and did not say so,
+/// and the whole value of this function is that its answer is safe to concatenate — a silent
+/// coercion is how the mistake it exists to prevent gets back in.
+///
+/// The **first** code point is special: an ASCII letter or a decimal digit there is written as a
+/// hex escape, so the answer can never begin with something a preceding backslash would absorb.
+/// `"B*B"` is `\x42\*B` — the first `B` escaped and the second not, because by then the answer is
+/// no longer empty and step 4.a's guard is about position rather than about the character.
+fn escape(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::String(id) = call.argument(0) else {
+        return Err(Abrupt::type_error("RegExp.escape takes a string"));
+    };
+    let units = heap.string(id).unwrap_or(&[]).to_vec();
+    let mut written = String::new();
+    // By **code point**, so a surrogate pair is one character and passes through whole, while a
+    // lone surrogate is a code point of its own and is escaped below. `decode_utf16` reports the
+    // lone ones as errors, and the unit it hands back is exactly what is wanted.
+    for (at, found) in char::decode_utf16(units.iter().copied()).enumerate() {
+        let code = found.map_or_else(|lone| u32::from(lone.unpaired_surrogate()), u32::from);
+        // Step 4.a — only at the very start, and only for an ASCII letter or a decimal digit.
+        if at == 0 && matches!(code, 0x30..=0x39 | 0x41..=0x5A | 0x61..=0x7A) {
+            written.push_str(&format!("\\x{code:02x}"));
+            continue;
+        }
+        written.push_str(&encoded(code));
+    }
+    Ok(Value::String(
+        heap.new_string(written.encode_utf16().collect()),
+    ))
+}
+
+/// §22.2.5.2's `EncodeForRegExpEscape ( c )` — one code point, escaped as far as it has to be.
+///
+/// Four answers in a fixed order, and the order is what makes it exact: a tab is a `ControlEscape`
+/// rather than `\x09`, and a backslash is a syntax character rather than one of the punctuators.
+/// Everything that reaches the end is written as itself, which is nearly all of Unicode —
+/// `RegExp.escape` is not an ASCII-safe encoder, and eleven test262 scripts say so in eleven
+/// scripts.
+fn encoded(code: u32) -> String {
+    // Step 1 — `SyntaxCharacter`, and `/` beside it: not special in a pattern, but the delimiter of
+    // a regular expression *literal*, so an unescaped one would end the literal early.
+    if let Some(found) = char::from_u32(code)
+        && r"^$\.*+?()[]{}|/".contains(found)
+    {
+        return format!("\\{found}");
+    }
+    // Step 2 — Table 64, whose five have a letter each. `\x09` would match the same character and
+    // is not what the clause asks for.
+    if let Some(letter) = match code {
+        0x09 => Some('t'),
+        0x0A => Some('n'),
+        0x0B => Some('v'),
+        0x0C => Some('f'),
+        0x0D => Some('r'),
+        _ => None,
+    } {
+        return format!("\\{letter}");
+    }
+    // Steps 3 to 5 — the punctuators, whitespace and line terminators, and any lone surrogate.
+    // `u16::try_from` is the whitespace question asked honestly: every code point in §12.2's set is
+    // below U+10000, so anything that does not fit a unit is not one of them.
+    let punctuator = char::from_u32(code).is_some_and(|found| OTHER_PUNCTUATORS.contains(&found));
+    let spacing = u16::try_from(code).is_ok_and(super::string_edit::is_trimmable);
+    let lone = (0xD800..=0xDFFF).contains(&code);
+    if punctuator || spacing || lone {
+        // Step 5.b — two hex digits while it fits in a byte, four otherwise, and a code point past
+        // the basic plane is written as **both** of its code units. Nothing reaches that last case
+        // today: every punctuator, every §12.2 space and every surrogate is below U+10000.
+        //
+        // Written as "does it fit in a byte" rather than `code <= 0xFF`, because the two spellings
+        // of that comparison differ only at exactly U+00FF — which is a letter, so it is neither a
+        // punctuator nor a space nor a surrogate and never arrives here at all. A boundary no input
+        // can reach is a test nobody can write, so it is said once instead.
+        if u8::try_from(code).is_ok() {
+            return format!("\\x{code:02x}");
+        }
+        let mut escaped = String::new();
+        for unit in char::from_u32(code).map_or_else(
+            || vec![u16::try_from(code).unwrap_or(u16::MAX)],
+            |found| found.encode_utf16(&mut [0; 2]).to_vec(),
+        ) {
+            escaped.push_str(&format!("\\u{unit:04x}"));
+        }
+        return escaped;
+    }
+    // Step 6 — itself. A lone surrogate never reaches here, so `from_u32` cannot fail; an empty
+    // answer for one would silently shorten the string, which is why it is spelled out.
+    char::from_u32(code).map_or_else(String::new, String::from)
 }

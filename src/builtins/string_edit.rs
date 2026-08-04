@@ -355,7 +355,7 @@ fn edges(units: &[u16], start: bool, end: bool) -> (usize, usize) {
 /// By unit rather than by code point, and that is exact rather than approximate: every code point
 /// in the set is below `U+10000`, so no surrogate can be mistaken for one and no astral character
 /// can be half-trimmed.
-fn is_trimmable(unit: u16) -> bool {
+pub(super) fn is_trimmable(unit: u16) -> bool {
     matches!(
         unit,
         0x09..=0x0D
@@ -376,8 +376,10 @@ fn is_trimmable(unit: u16) -> bool {
 ///
 /// A table rather than a call per method at the install site, so that adding one here is one line
 /// and cannot be written without being installed.
-pub(super) const METHODS: [(&str, u32, crate::heap::Native); 11] = [
+pub(super) const METHODS: [(&str, u32, crate::heap::Native); 13] = [
     ("concat", 1, concat),
+    ("isWellFormed", 0, is_well_formed),
+    ("toWellFormed", 0, to_well_formed),
     ("padEnd", 1, pad_end),
     ("padStart", 1, pad_start),
     ("repeat", 1, repeat),
@@ -397,6 +399,63 @@ pub(super) const METHODS: [(&str, u32, crate::heap::Native); 11] = [
 /// satisfy that, which is why these are aliases of an already-installed property rather than two
 /// more entries above.
 pub(super) const ALIASES: [(&str, &str); 2] = [("trimLeft", "trimStart"), ("trimRight", "trimEnd")];
+
+/// Whether `at` of `units` is a leading surrogate with a trailing one after it — §11.1.4's pair.
+///
+/// The question both methods below are made of, and it is asked of the *code units* rather than of
+/// the characters: a well-formed String is one whose surrogates all come in pairs, which is a
+/// property of the encoding and not of the text.
+fn paired(units: &[u16], at: usize) -> bool {
+    matches!(units.get(at), Some(0xD800..=0xDBFF))
+        && matches!(units.get(at + 1), Some(0xDC00..=0xDFFF))
+}
+
+/// §22.1.3.9 `String.prototype.isWellFormed ( )` — `IsStringWellFormedUnicode`.
+///
+/// True when every surrogate is part of a pair. A **lone** surrogate of either kind makes it false,
+/// which is the whole of it: a trailing surrogate that no leading one precedes is just as lone as a
+/// leading one with nothing after it, and a walk that only looked for unmatched leads would say a
+/// string of trailing surrogates was fine.
+fn is_well_formed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let units = super::string::characters(vm, heap, call)?;
+    let mut at = 0;
+    while at < units.len() {
+        if paired(&units, at) {
+            at += 2;
+            continue;
+        }
+        if (0xD800..=0xDFFF).contains(&units[at]) {
+            return Ok(Value::Boolean(false));
+        }
+        at += 1;
+    }
+    Ok(Value::Boolean(true))
+}
+
+/// §22.1.3.29 `String.prototype.toWellFormed ( )` — every lone surrogate replaced by U+FFFD.
+///
+/// One replacement character per lone *code unit*, so the answer is always the same length as the
+/// receiver. That is not obvious and it is what the clause says: two leading surrogates in a row
+/// become two replacement characters, because each is judged where it stands rather than as a
+/// broken pair between them.
+fn to_well_formed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let units = super::string::characters(vm, heap, call)?;
+    let mut written: Vec<u16> = Vec::with_capacity(units.len());
+    let mut at = 0;
+    while at < units.len() {
+        if paired(&units, at) {
+            written.extend_from_slice(&units[at..at + 2]);
+            at += 2;
+            continue;
+        }
+        written.push(match units[at] {
+            0xD800..=0xDFFF => 0xFFFD,
+            unit => unit,
+        });
+        at += 1;
+    }
+    Ok(Value::String(heap.new_string(written)))
+}
 
 #[cfg(test)]
 mod pieces {

@@ -375,3 +375,112 @@ fn only_the_negative_zero_is_normalised_and_no_other_negative_number_is() {
         "1,again,Infinity"
     );
 }
+
+#[test]
+fn group_by_keeps_the_order_the_keys_were_first_seen() {
+    // §20.1.2.13 — the answer inherits from **null**, which is the point of it: the keys come from
+    // the program's own data, so a group called `toString` has to be an ordinary property rather
+    // than one that collides with the prototype chain.
+    assert_eq!(
+        run(
+            "var r = Object.groupBy([1, 2, 3, 4, 5], function (x) { return x % 2 ? 'odd' : 'even' }); \
+             Object.keys(r).join(',') + '|' + r.odd.join(',') + '|' + r.even.join(',') \
+             + '|' + (Object.getPrototypeOf(r) === null)"
+        ),
+        "odd,even|1,3,5|2,4|true"
+    );
+    assert_eq!(
+        run(
+            "var r = Object.groupBy(['a'], function () { return 'toString' }); \
+             Array.isArray(r.toString) + ',' + r.toString.length"
+        ),
+        "true,1"
+    );
+    // §7.3.35 keeps an **ordered** list rather than a map, and `Object.keys` reports it: a key
+    // first seen later comes later, whatever the values did.
+    assert_eq!(
+        run(
+            "Object.keys(Object.groupBy(['c', 'a', 'c', 'b'], function (x) { return x })).join(',')"
+        ),
+        "c,a,b"
+    );
+    // …except where §10.1.11 has its own opinion. A key that is an **array index** sorts ascending
+    // ahead of every other, so a callback answering numbers loses the discovery order entirely.
+    // That is the object's rule and not `groupBy`'s, and it is why `Map.groupBy` exists: a `Map`
+    // keeps insertion order for every key there is.
+    assert_eq!(
+        run(
+            "Object.keys(Object.groupBy([3, 1, 3, 2], function (x) { return x })).join(',') + '|' \
+             + Array.from(Map.groupBy([3, 1, 3, 2], function (x) { return x }).keys()).join(',')"
+        ),
+        "1,2,3|3,1,2"
+    );
+    // §24.1.2.1 groups by `SameValue` after §24.5.1 folds `-0` into `+0`, so no conversion runs:
+    // an object is a key in its own right, where `Object.groupBy` would have made it `"[object
+    // Object]"` and joined two different objects into one group.
+    assert_eq!(
+        run(
+            "var a = {}, b = {}; var m = Map.groupBy([1, 2], function (x) { return x === 1 ? a : b }); \
+             m.size + ',' + m.get(a).join('') + ',' + m.get(b).join('')"
+        ),
+        "2,1,2"
+    );
+    assert_eq!(
+        run(
+            "var m = Map.groupBy([1, 2], function (x) { return x === 1 ? -0 : 0 }); \
+             m.size + ',' + Object.is(Array.from(m.keys())[0], 0)"
+        ),
+        "1,true"
+    );
+    // The callback gets the index as its second argument, and the walk is §7.4.2's — so a `Set`
+    // and any other iterable work, where reading a `length` would answer with nothing.
+    assert_eq!(
+        run(
+            "var seen = []; Object.groupBy(new Set(['a', 'b']), function (v, i) { seen.push(v + i); return v }); \
+             seen.join(',')"
+        ),
+        "a0,b1"
+    );
+    // Steps 1 and 2 come **before** the iterator is asked for, and in that order. Every way of
+    // getting this wrong still throws a TypeError, so the type is worth nothing as an assertion:
+    // what distinguishes them is *what ran first*.
+    //
+    // Step 2 — a callback that is not callable is refused without `[@@iterator]` being **read**,
+    // so a getter there does not fire. Reaching `GetIterator` first would call the iterator, take
+    // a value from it and only then find the callback wanting.
+    assert_eq!(
+        run("var reads = 0; var it = {}; \
+             Object.defineProperty(it, Symbol.iterator, { get: function () { \
+                 reads += 1; return function () { return { next: function () { return { done: true } } } } } }); \
+             try { Object.groupBy(it, 1) } catch (e) {} \
+             try { Map.groupBy(it, {}) } catch (e) {} reads"),
+        "0"
+    );
+    // Step 1 — and it is about `items`, which is why a nullish one says so rather than reporting
+    // whatever failed further in. Without the step the message is about reading a property of
+    // nothing, which names the engine's own next move instead of the caller's mistake.
+    assert_eq!(
+        run(
+            "function why(f) { try { f() } catch (e) { return e.message } return 'no throw' } \
+             (why(function () { Object.groupBy(null, function () {}) }).indexOf('undefined or null') >= 0) \
+             + ',' + (why(function () { Map.groupBy(undefined, function () {}) }).indexOf('undefined or null') >= 0) \
+             + ',' + (why(function () { Object.groupBy(1, function () {}) }).indexOf('not iterable') >= 0)"
+        ),
+        "true,true,true"
+    );
+    // `IfAbruptCloseIterator` — a callback that throws leaves the walk abandoned, and the iterator
+    // is owed the news. Without the close the `return` never runs and nothing observes it.
+    assert_eq!(
+        run("var closed = 0; var it = {}; \
+             it[Symbol.iterator] = function () { return { \
+                 next: function () { return { value: 1, done: false } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             try { Object.groupBy(it, function () { throw 'boom' }) } catch (e) {} closed"),
+        "1"
+    );
+    // §24.2.2 gives `Set` no such static, because a Set has no value to hold the group in.
+    assert_eq!(
+        run("[Object.groupBy.length, Map.groupBy.length, typeof Set.groupBy].join(',')"),
+        "2,2,undefined"
+    );
+}

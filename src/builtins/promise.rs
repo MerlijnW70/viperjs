@@ -51,6 +51,9 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("allSettled", 1, super::promise_group::all_settled),
         ("any", 1, super::promise_group::any),
         ("race", 1, super::promise_group::race),
+        // §27.2.4.8 — `withResolvers` takes nothing, so its `length` is 0 where every other
+        // static's is 1.
+        ("withResolvers", 0, with_resolvers),
     ] {
         define_method(heap, realm, constructor, name, length, native);
     }
@@ -694,4 +697,32 @@ pub(super) fn species_of(
             "the species of this constructor is not a constructor",
         )),
     }
+}
+
+/// §27.2.4.8 `Promise.withResolvers ( )` — the promise and its two functions, in one object.
+///
+/// The receiver is the constructor, so `Promise.withResolvers.call(Sub)` answers a `Sub` — this is
+/// `NewPromiseCapability(this)` and not `NewPromiseCapability(%Promise%)`, which is why a `this`
+/// that is not a constructor is a TypeError rather than a fallback.
+///
+/// The three properties are made with `CreateDataProperty`, so all three are writable, enumerable
+/// and configurable. That is the ordinary shape for an object a built-in *hands over* and not the
+/// shape of a property a built-in *has* — the caller owns this object and is expected to take it
+/// apart, usually by destructuring it.
+fn with_resolvers(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let Value::Object(constructor) = call.this_value else {
+        return Err(Abrupt::type_error(
+            "a promise capability needs a constructor",
+        ));
+    };
+    let capability = new_promise_capability(vm, heap, constructor)?;
+    let object = heap.new_object(Some(vm.realm().object_prototype()));
+    for (name, value) in [
+        ("promise", capability.promise),
+        ("resolve", capability.resolve),
+        ("reject", capability.reject),
+    ] {
+        super::create_data_property(heap, object, name, value);
+    }
+    Ok(Value::Object(object))
 }

@@ -63,6 +63,11 @@ fn build(
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, global, name, Value::Object(constructor));
     define_value(heap, prototype, "constructor", Value::Object(constructor));
+    // §24.1.2.1 — `Map.groupBy`, and only on `Map`: §24.2.2 gives `Set` no such static, because a
+    // Set has no value to hold the group in.
+    if map {
+        define_method(heap, realm, constructor, "groupBy", 2, group_by);
+    }
 
     // §24.1.3 and §24.2.3, each in the order its clause lists them. `length` is what the clause
     // writes, which for `forEach` is 1 even though it reads two arguments.
@@ -649,4 +654,32 @@ fn next(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         _ => super::array::from_values(vm, heap, &[entry_key, entry_value])?,
     };
     super::iterator::result(vm, heap, answer, false)
+}
+
+/// §24.1.2.1 `Map.groupBy ( items, callback )`.
+///
+/// The keys are grouped by `SameValue` after §24.5.1 folds `-0` into `+0`, which is the difference
+/// from §20.1.2.13: no conversion runs, so an object or a `NaN` is a key in its own right and two
+/// callbacks answering equal-looking objects make two groups.
+///
+/// The `Map` is built directly rather than through `Construct(%Map%)` and `set`: the clause appends
+/// to `[[MapData]]`, so a program that replaced `Map.prototype.set` does not see it called — which
+/// is the opposite of what `new Map(iterable)` does two clauses away, and is deliberate in both.
+fn group_by(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let groups = super::iterator::group_by(
+        vm,
+        heap,
+        call.argument(0),
+        call.argument(1),
+        super::iterator::Keying::Zero,
+    )?;
+    let object = heap.new_object(Some(vm.realm().map_prototype()));
+    if let Some(found) = heap.object_mut(object) {
+        found.set_collection(Collection::new(CollectionKind::Map));
+    }
+    for (found, elements) in groups {
+        let array = super::array::from_values(vm, heap, &elements)?;
+        place(heap, object, found, array);
+    }
+    Ok(Value::Object(object))
 }
