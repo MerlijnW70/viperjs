@@ -1844,3 +1844,52 @@ fn a_define_at_an_element_converts_its_value_and_does_so_last() {
         "true|undefined"
     );
 }
+
+#[test]
+fn a_tracking_view_takes_a_different_branch_from_a_fixed_one() {
+    // §23.2.5.1 step 7 and step 8 are alternatives, not one branch with a flag. A view over a
+    // **resizable** buffer with no explicit length tracks it, and step 7 has no modulo rule — so a
+    // ten-byte resizable buffer is an `Int32Array` of two, where the same ten bytes fixed are a
+    // RangeError. praxis ran step 8's checks over both and refused the first outright.
+    assert_eq!(
+        run(
+            "var rab = new ArrayBuffer(10, { maxByteLength: 20 }); var ta = new Int32Array(rab); \
+             ta.length + ',' + ta.byteLength"
+        ),
+        "2,8"
+    );
+    assert_eq!(
+        run("var caught = 'none'; \
+             try { new Int32Array(new ArrayBuffer(10)) } catch (e) { caught = e.constructor.name } caught"),
+        "RangeError"
+    );
+    // …because a tracking view's length is recomputed from the buffer at every read and rounded
+    // down to whole elements there. A remainder that is not a whole element is simply not
+    // reported, which is why there is nothing for step 7 to refuse at the start.
+    assert_eq!(
+        run(
+            "var rab = new ArrayBuffer(10, { maxByteLength: 20 }); var ta = new Int32Array(rab); \
+             var before = ta.length; rab.resize(16); var grown = ta.length; rab.resize(6); \
+             [before, grown, ta.length].join(',')"
+        ),
+        "2,4,1"
+    );
+    // An **explicit** length pins the window whatever the buffer does, so it takes step 8 even on
+    // a resizable buffer — which is the half that keeps this about `length is undefined` rather
+    // than about resizability.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(10, { maxByteLength: 20 }); \
+             new Int32Array(rab, 0, 2).length"),
+        "2"
+    );
+    // Step 7.a — the one thing that can be wrong about a tracking view is beginning past the end,
+    // and it is `>` rather than `>=`: an offset exactly at the end is a window on the empty
+    // remainder, which has no elements and is not an error.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, { maxByteLength: 20 }); \
+             var caught = 'none'; \
+             try { new Int32Array(rab, 12) } catch (e) { caught = e.constructor.name } \
+             new Int32Array(rab, 8).length + ',' + caught"),
+        "0,RangeError"
+    );
+}

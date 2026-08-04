@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.39% of test262** — 77,682 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.41% of test262** — 77,706 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 320 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -579,6 +579,25 @@ Four things it turns on, each of which a plausible implementation gets wrong:
 **And the ratchet caught a guard the parser's own early error had already made unreachable**:
 resolving a nested class's strings skipped a negated one, which cannot hold any because `class_set`
 refuses one that could. Deleting it was the fix, for the fourth time this session.
+
+### §23.2.5.1's step 7 and step 8 are alternatives, and praxis ran both
+
++24 runs. A view over a **resizable** buffer with no explicit length takes step 7 and tracks it;
+everything else takes step 8. They are different branches, and step 7 has no modulo rule — so a
+ten-byte resizable buffer is an `Int32Array` of two, where the same ten bytes fixed are a
+RangeError. praxis worked the lengths out first and decided `tracking` afterwards, so step 8's
+checks ran over a tracking view and refused it outright.
+
+**Why step 7 needs no modulo rule is the part worth keeping**: a tracking view's length is
+recomputed from the buffer at every read and rounded down to whole elements *there*, so a remainder
+shorter than an element is simply not reported. There is nothing to refuse at the start because the
+answer is never given at the start.
+
+**And the stored length of a tracking view is dead data.** Two operators inside the arithmetic that
+computed it flipped under mutation and nothing noticed — `any_view` recomputes it and
+`view_out_of_bounds` asks `!tracking` before reading it. It stores a zero now: working out the
+right number was a claim no program could check, which is the "dead data" shape this file already
+names, met from a new direction.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

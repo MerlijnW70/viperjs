@@ -267,10 +267,26 @@ fn from_buffer(
     let Some(available) = available else {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     };
+    // §23.2.5.1 step 7 — a view over a *resizable* buffer with no explicit length **tracks** it.
+    // Both halves are needed: an explicit length pins the window however the buffer moves, and a
+    // fixed buffer has nothing to track. This is the only place in §23.2 where `auto` is decided.
+    //
+    // Asked **before** the lengths are worked out, because step 7 and step 8 are different
+    // branches and not a flag on one. Deciding it afterwards ran step 8's checks over a tracking
+    // view, and a ten-byte resizable buffer could then not be an `Int32Array` at all — where the
+    // clause makes it a tracking view of two elements.
+    let tracking = asked.is_none()
+        && heap
+            .object(buffer)
+            .and_then(crate::heap::Object::buffer)
+            .is_some_and(|found| found.max_byte_length().is_some());
     let length = match asked {
-        // Step 8.b — an absent length means "to the end", and the *remainder* must itself be a
-        // whole number of elements: a 5-byte buffer cannot be a `Int32Array` even from offset 0.
-        None => {
+        // Step 8.a.i — an absent length means "to the end", and the *remainder* must itself be a
+        // whole number of elements: a 5-byte buffer cannot be a fixed `Int32Array` even from
+        // offset 0. Step 7 has no such rule, because a tracking view's length is recomputed from
+        // the buffer at every read and rounded down to whole elements there — so a remainder that
+        // is not a whole element is simply not reported, rather than being an error at the start.
+        None if !tracking => {
             if available % width != 0 {
                 return Err(Abrupt::range_error(
                     "this buffer is not a multiple of the element size",
@@ -280,21 +296,31 @@ fn from_buffer(
                 .checked_sub(offset)
                 .ok_or_else(|| Abrupt::range_error("this offset is past the end of the buffer"))?
         }
+        // Step 7.a — the one thing that can be wrong about a tracking view is beginning past the
+        // end. `>` and not `>=`: an offset exactly at the end is a window on the empty remainder,
+        // which is a view with no elements rather than a refusal.
+        None => {
+            if offset > available {
+                return Err(Abrupt::range_error(
+                    "this offset is past the end of the buffer",
+                ));
+            }
+            // **Zero, and nothing is lost.** `Heap::any_view` recomputes a tracking view's length
+            // from the buffer at every read and `view_out_of_bounds` asks `!tracking` before it
+            // looks — so this field is dead for one of these, and working out the right number
+            // here would be arithmetic no program could check. Mutation coverage said exactly
+            // that: two operators flipped inside it and nothing noticed.
+            0
+        }
         Some(count) => count.saturating_mul(width),
     };
-    if offset + length > available {
+    // Step 8.b.ii, and step 7 has no equivalent: a tracking view cannot be longer than its buffer
+    // because it has no length of its own to be too long.
+    if !tracking && offset + length > available {
         return Err(Abrupt::range_error(
             "this TypedArray is longer than its buffer",
         ));
     }
-    // §23.2.5.1 step 8 — a view over a *resizable* buffer with no explicit length tracks it. Both
-    // halves are needed: an explicit length pins the window however the buffer moves, and a fixed
-    // buffer has nothing to track. This is the only place in §23.2 where `auto` is decided.
-    let tracking = asked.is_none()
-        && heap
-            .object(buffer)
-            .and_then(crate::heap::Object::buffer)
-            .is_some_and(|found| found.max_byte_length().is_some());
     let view = View {
         buffer,
         offset,
