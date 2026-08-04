@@ -608,3 +608,50 @@ fn an_evals_global_bindings_may_be_deleted_and_a_scripts_may_not() {
         "false,2"
     );
 }
+
+#[test]
+fn an_arrow_is_transparent_to_new_target_inside_a_direct_eval() {
+    // §15.3 gives an arrow no `[[NewTarget]]` of its own, so `new.target` inside one reads the
+    // function around it — exactly as `this` does. A **direct `eval`** has to decide whether to
+    // *parse* it at all, and could only ask what it was running inside: the function object says
+    // that it is an arrow and not where it was written.
+    //
+    // So the fact travels on the chunk. An arrow written inside a function inherits it; one written
+    // at a script's top level does not.
+    assert_eq!(
+        run("function F() { return (() => eval('new.target'))(); } (new F()).name"),
+        "F"
+    );
+    // Nested arrows are the same answer as many times as it takes.
+    assert_eq!(
+        run("function F() { return (() => (() => eval('new.target'))())(); } (new F()).name"),
+        "F"
+    );
+    // A plain call has a `new.target` of `undefined`, which is a *value* and not a refusal — the
+    // syntax is allowed either way and only the answer differs.
+    assert_eq!(
+        run("function F() { return (() => eval('typeof new.target'))(); } F()"),
+        "undefined"
+    );
+    // The two halves that already worked, which is what makes this about the arrow.
+    assert_eq!(
+        run("function F() { return eval('new.target'); } (new F()).name"),
+        "F"
+    );
+    assert_eq!(
+        run("function F() { return (() => new.target)(); } (new F()).name"),
+        "F"
+    );
+    // And a script's top level still refuses, arrow or not: there is no function being constructed
+    // and nothing for `new.target` to mean.
+    assert_eq!(
+        run("try { (0, eval)('new.target'); 'accepted' } catch (e) { e.constructor.name }"),
+        "SyntaxError"
+    );
+    assert_eq!(
+        run(
+            "try { (0, eval)('(() => new.target)()'); 'accepted' } catch (e) { e.constructor.name }"
+        ),
+        "SyntaxError"
+    );
+}

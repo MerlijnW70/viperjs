@@ -120,6 +120,18 @@ pub struct Chunk {
     /// exactly as `this` does. The function around it has to know, because it is the one that has
     /// to build the object — and it finds out from here when the arrow's body comes back compiled.
     pub(super) outer_arguments: bool,
+    /// Whether `new.target` means something in this body — §13.3.12's `[[NewTarget]]`.
+    ///
+    /// True for a function and for an **arrow written inside one**, which is the whole reason it is
+    /// recorded: §15.3 makes an arrow transparent to `new.target` exactly as it is to `this`, so
+    /// whether one is allowed depends on where the arrow was *written* and not on what it is. That
+    /// is a lexical fact the parser has and a running arrow otherwise does not — the function object
+    /// only says that it is an arrow.
+    ///
+    /// Read by a **direct `eval`**, which has to decide whether to parse `new.target` at all and
+    /// can only ask the code it is running inside. Nothing else consults it: an ordinary body was
+    /// judged by the parser when it was written.
+    pub(super) lexical_new_target: bool,
     /// The template objects' contents, one entry per tagged-template *site* in this chunk.
     ///
     /// Held here rather than built at compile time because the object is a frozen Array and belongs to
@@ -234,6 +246,12 @@ pub struct Template {
 }
 
 impl Chunk {
+    /// Whether `new.target` means anything in this body — §13.3.12, and see the field.
+    #[must_use]
+    pub fn lexical_new_target(&self) -> bool {
+        self.lexical_new_target
+    }
+
     /// Every heap value this chunk names, and every one the chunks inside it name.
     ///
     /// A compiled body holds Strings — its constants, its own name, the cooked and raw halves of

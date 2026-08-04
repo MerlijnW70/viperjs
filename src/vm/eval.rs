@@ -123,13 +123,27 @@ impl Vm {
             .frames
             .last()
             .filter(|_| self.frames.len() > self.floor.frames);
-        let arrow = frame
+        // §15.3 makes an arrow **transparent** to `new.target`, exactly as it is to `this`. So the
+        // question is not "is the running function an arrow" — it is "does the code this eval is
+        // written in have a `[[NewTarget]]` at all", which for an arrow is a fact about where it
+        // was *written*. The function object only says that it is an arrow; its chunk says whether
+        // it was written somewhere that has one. See `Chunk::lexical_new_target`.
+        let new_target_allowed = frame
             .and_then(|frame| frame.function)
             .and_then(|function| heap.object(function))
-            .and_then(crate::heap::Object::lexical)
-            .is_some();
+            .and_then(crate::heap::Object::call)
+            // `matches!` with a guard rather than a `match` with a `_ => false`: a native and a
+            // bound function have no body a `new.target` could have been written in, so that arm
+            // was one no program could reach — which is what `in_derived_constructor` below already
+            // says the same way.
+            .is_some_and(|callable| {
+                matches!(callable, crate::heap::Callable::Bytecode(chunk)
+                    if chunk.lexical_new_target())
+            });
         crate::parser::EvalContext {
-            in_function: frame.is_some() && !arrow,
+            // No `frame.is_some() &&` in front: the walk above starts at the frame, so there is
+            // nothing to allow without one and the extra test could never change the answer.
+            in_function: new_target_allowed,
             in_method: frame
                 .and_then(|frame| frame.function)
                 .and_then(|function| heap.object(function))

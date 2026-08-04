@@ -225,6 +225,7 @@ impl Compiler<'_> {
                 lexical,
                 this_binding,
                 inside_with: self.names_are_dynamic(),
+                lexical_new_target: self.chunk.lexical_new_target,
             },
             span,
         )
@@ -505,6 +506,11 @@ pub(super) struct Nesting<'a> {
     lexical: Lexical,
     /// The enclosing derived constructor's `this`, if this body may reach it — DR-0015.
     this_binding: Option<ThisSlot>,
+    /// Whether `new.target` means anything where this body is written — §13.3.12.
+    ///
+    /// Only an arrow asks: a function answers for itself. Carried so that an arrow written inside a
+    /// function inherits it and one written at a script's top level does not.
+    lexical_new_target: bool,
     /// Whether this body is written inside a `with` — §14.11.
     ///
     /// Inherited rather than recomputed, and it has to be: the body's *own* scopes contain no
@@ -667,6 +673,14 @@ fn compile_body(
     compiler.outer = outer;
     compiler.this_binding = nesting.this_binding;
     compiler.chunk.arrow = lexical == Lexical::Yes;
+    // §13.3.12 — a function has a `[[NewTarget]]` of its own; an **arrow** has none and reads the
+    // one around it, exactly as it reads `this`. So the answer is "this body is a function, or it
+    // is an arrow written inside something that has one", which is a fact about where the arrow was
+    // *written* and is only knowable here. See `Chunk::lexical_new_target`.
+    compiler.chunk.lexical_new_target = match lexical {
+        Lexical::No => true,
+        Lexical::Yes => nesting.lexical_new_target,
+    };
     compiler.chunk.simple_parameters = parameters.is_simple();
 
     // §10.2.11 — the parameters are the first slots, in order, so an argument can be put in place

@@ -500,9 +500,12 @@ doc says which line to change if data ever arrives.
   build a view that §23.2.5.1 then refuses with a **RangeError**. Several of these files also use
   the immutable-`ArrayBuffer` harness — a proposal — so read what a row is asking before counting
   it.
-- **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Whether an arrow was
-  written inside a function is a *lexical* fact a running arrow's chunk does not record, and the
-  parser knows it. Carrying that answer onto the chunk is the whole slice.
+- **`super(…)` inside a direct `eval` — 16 runs**, and the whole of what is left of that entry.
+  `new.target` in an arrow's direct eval was the other half and is **built**: the fact travels on
+  `Chunk::lexical_new_target`, an arrow written inside a function inherits it, and it moved **no
+  test at all** — every one of the 16 is the `super()` half, which is refused by name
+  (`super outside a derived constructor is not implemented yet`) and is a feature rather than a
+  flag. `super.m()` through an arrow already worked.
 
 **63.06% to 75.26% in five slices**, four of them §27.6 and its neighbourhood and the last §23.2's
 missing two kinds: async generators themselves (+4,814), `yield*` inside one — §15.5.5 step 4's
