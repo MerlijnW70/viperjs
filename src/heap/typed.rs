@@ -22,6 +22,19 @@
 use crate::heap::{Heap, Numeric, ObjectId, Property, PropertyKey, PropertyKind, View};
 use crate::value::Value;
 
+/// §10.4.5.5 steps 1.b to 1.e — the attributes a define at an element may not ask for.
+///
+/// An element is a writable, enumerable, configurable data property and can be nothing else, so a
+/// descriptor asking otherwise is refused before step 1.f converts anything. Shared rather than
+/// written twice because the *order* is what it decides: `Vm::define_through` runs the conversion,
+/// which can call a program's `valueOf`, and a descriptor these four steps refuse must not run it.
+pub(crate) fn element_attributes_refused(descriptor: &crate::heap::PropertyDescriptor) -> bool {
+    descriptor.getter.is_some()
+        || descriptor.setter.is_some()
+        || descriptor.writable == Some(false)
+        || descriptor.enumerable == Some(false)
+        || descriptor.configurable == Some(false)
+}
 /// §7.1.21 `CanonicalNumericIndexString`, as an index into a view of `count` elements.
 ///
 /// Three answers, not two, and the middle one is the one that matters:
@@ -184,11 +197,24 @@ impl Heap {
     /// go on asking `view.count()` and get today's answer: the `View` is a `Copy` snapshot handed
     /// out by value, and this is where the snapshot is taken.
     ///
-    /// A tracking view whose buffer has been detached resolves to a length of zero, which is what
-    /// every reader already treats as "nothing there".
+    /// A view whose buffer has been detached resolves to a length of zero, of **either** kind, and
+    /// that is §10.4.5.1 `IsValidIntegerIndex` step 1 rather than a convenience. `view_out_of_bounds`
+    /// deliberately answers `false` for a detached buffer so that the two reasons cannot both fire
+    /// and disagree about which error to give — but a resolved view has no second question to ask,
+    /// because every reader of one treats "no elements" as the whole answer. So detachment has to
+    /// land here as well, and a view that kept its stored length said `delete ta[0]` was refused and
+    /// `Object.defineProperty(ta, "0", …)` accepted, of an array with nothing in it at all.
     #[must_use]
     pub fn any_view(&self, object: ObjectId) -> Option<View> {
         let mut view = self.object(object)?.view()?;
+        let attached = self
+            .object(view.buffer)
+            .and_then(super::Object::buffer)
+            .filter(|buffer| !buffer.detached());
+        let Some(available) = attached.map(super::Buffer::byte_length) else {
+            view.length = 0;
+            return Some(view);
+        };
         if !view.tracking {
             // §10.4.5.1 — an out-of-bounds view has no elements at all, so a read finds nothing
             // rather than reaching bytes that are no longer inside the buffer. The methods that
@@ -198,11 +224,6 @@ impl Heap {
             }
             return Some(view);
         }
-        let available = self
-            .object(view.buffer)
-            .and_then(super::Object::buffer)
-            .filter(|buffer| !buffer.detached())
-            .map_or(0, super::Buffer::byte_length);
         // Rounded down to a whole number of elements, because a buffer resized to a length that is
         // not a multiple of the element width leaves a partial element at the end that §10.4.5 does
         // not make visible. A `DataView` has no element and keeps every byte.

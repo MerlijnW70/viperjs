@@ -685,9 +685,6 @@ pub(crate) fn defined(outcome: DefineOutcome) -> Completion<()> {
             ErrorKind::Range,
             "an array length must be an integer index",
         )),
-        DefineOutcome::WrongContent => Err(Abrupt::type_error(
-            "this TypedArray holds the other numeric type",
-        )),
     }
 }
 

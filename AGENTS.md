@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.65% of test262** — 77,000 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.70% of test262** — 77,044 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -230,6 +230,48 @@ is the row that stops the fix being applied to every async body there is.
 parameter list can throw — a pattern against `null`, a default that calls something — each filed
 under a reason of its own. **A clause about where a completion *goes* will never bucket cleanly,
 because the bucket is keyed on what produced it.**
+
+### §10.4.5's internal methods, and the three comments that stated the bug as a rule
+
++44 runs across `[[Set]]`, `[[DefineOwnProperty]]`, `[[Delete]]` and `[[OwnPropertyKeys]]`, and not
+one of them was a missing feature. Each was a clause praxis had *nearly* right, and **three of the
+four were a doc comment asserting the opposite of the specification** — the shape this file already
+names, in its most expensive form, because a comment that reads like a rule is what stops the next
+reader checking.
+
+- **`[[Set]]` never consulted its Receiver.** §10.4.5.4 step 2.b.i writes the element only when
+  `SameValue(O, Receiver)`; otherwise the write is §10.1.9.2's and lands on the receiver. praxis
+  wrote the buffer regardless, above a comment saying "the element belongs to the buffer and no
+  receiver can move it elsewhere" — which cites §10.4.5.**5**, the *define*, for a rule the
+  `[[Set]]` clause does not have. So `Reflect.set(ta, 0, v, {})` wrote `ta`, gave the plain object
+  nothing, and *converted* `v`, which step 2.b.ii also does not.
+- **A define never converted its value.** §10.4.5.5 step 1.f hands it to §10.4.5.16, so
+  `Object.defineProperty(ta, 0, {value: {valueOf(){ throw }}})` throws and one holding `"7"` stores
+  a seven. praxis stored `NaN` for everything that was neither Number nor BigInt, under a comment
+  reading "a define carries a value that is already a Value, so there is no conversion to run here"
+  — true of the datum, false of the clause.
+- **A detached buffer kept its length.** `view_out_of_bounds` answers `false` for one deliberately,
+  so its callers can raise their own error; `any_view` treated that as the whole question, and a
+  detached view resolved to its stored length. §10.4.5.1 `IsValidIntegerIndex` step 1 says
+  otherwise, and the three methods that ask it were each **exactly wrong**: the define accepted,
+  the delete refused, and `Object.getOwnPropertyNames` named four indices whose descriptors were
+  every one `undefined`.
+
+**Two things about the shape are worth carrying beyond this area.**
+
+- **The two clauses run their conversion and their index test in opposite orders, and that is what
+  distinguishes them.** `[[Set]]` converts first and judges the index after (§10.4.5.16 step 1, so
+  `ta[99] = {valueOf(){ throw }}` throws); the define judges first and converts at step 1.f, so an
+  out-of-range index and a `configurable: false` descriptor both refuse without running anything.
+  Counting `valueOf` calls is the only test that tells them apart — an assertion about the
+  *answer* passes either way.
+- **DR-0011's seam moved a whole clause, and deleting the half-answer was the point.** The heap
+  cannot run §10.4.5.16, so `Vm::define_through` owns steps 1.f and 1.g and the heap keeps 1.a to
+  1.e. `DefineOutcome::WrongContent` went with it: it existed only because the heap could refuse
+  the *types* while unable to convert the *values*, and once the conversion moved, the branch was
+  one no program could reach. §10.4.5.5 step 1.g is also why the answer is not re-derived after the
+  conversion — a `valueOf` that detaches still leaves a define answering `true`, and asking the
+  heap a second time said `false`.
 
 ### `api.rs` exists — and what an embedder could not do before it
 
@@ -496,10 +538,10 @@ doc says which line to change if data ever arrives.
 - **A coercion that *resizes* the buffer under a TypedArray method — what is left of this area.**
   The **detach** half is done: `copyWithin` re-runs `ValidateTypedArray` (§23.2.3.6 step 14.b) and
   the searches read their elements *after* the coercion, so they answer `-1`/`false` rather than
-  what was there a moment ago. What remains is the *shrink* cases, and `subarray`, which goes on to
-  build a view that §23.2.5.1 then refuses with a **RangeError**. Several of these files also use
-  the immutable-`ArrayBuffer` harness — a proposal — so read what a row is asking before counting
-  it.
+  what was there a moment ago. §10.4.5's four internal methods are done too — see below. What
+  remains is the *shrink* cases inside the methods, and `subarray`, which goes on to build a view
+  that §23.2.5.1 then refuses with a **RangeError**. Several of these files also use the
+  immutable-`ArrayBuffer` harness — a proposal — so read what a row is asking before counting it.
 - **`super(…)` inside a direct `eval` — 16 runs**, and the whole of what is left of that entry.
   `new.target` in an arrow's direct eval was the other half and is **built**: the fact travels on
   `Chunk::lexical_new_target`, an arrow written inside a function inherits it, and it moved **no

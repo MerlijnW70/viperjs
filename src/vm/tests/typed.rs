@@ -1718,3 +1718,129 @@ fn a_coercion_that_detaches_the_buffer_is_answered_per_method() {
         "0"
     );
 }
+
+#[test]
+fn a_detached_buffer_leaves_a_view_with_no_indices_at_all() {
+    // §10.4.5.1 `IsValidIntegerIndex` step 1 — detachment makes every index invalid, so the three
+    // internal methods that ask it answer as they do for a short array. `view_out_of_bounds`
+    // deliberately says `false` for a detached buffer so its callers can raise their own error, and
+    // reading *that* as the whole question left a resolved view holding its stored length.
+    //
+    // §10.4.5.5 step 1.a.i — a define at an index the array does not have is refused.
+    assert_eq!(
+        run("var t = new Int8Array(4); t.buffer.transfer(); \
+             Reflect.defineProperty(t, '2', { configurable: true, enumerable: true, writable: true, value: 1 })"),
+        "false"
+    );
+    // §10.4.5.3 step 2.a — and deleting one *succeeds*, because what is not there cannot be in the
+    // way. The two answers are opposite and both come from the same test, which is why a stale
+    // length got each of them exactly wrong.
+    assert_eq!(
+        run("var t = new Int8Array(4); t.buffer.transfer(); \
+             (delete t[0]) + '|' + (delete t[9]) + '|' + (delete t['-0'])"),
+        "true|true|true"
+    );
+    // §10.4.5.6 step 2 — and it names none of them. The list used to be `0,1,2,3` with every one of
+    // their descriptors `undefined`: keys the object did not have.
+    assert_eq!(
+        run("var t = new Int8Array(4); t.buffer.transfer(); \
+             Object.getOwnPropertyNames(t).length + '|' + (Object.getOwnPropertyDescriptor(t, '0') === undefined)"),
+        "0|true"
+    );
+    // An attached array still has all three, which is what keeps this about detachment rather than
+    // about the indices disappearing.
+    assert_eq!(
+        run("var t = new Int8Array(4); \
+             Reflect.defineProperty(t, '2', { configurable: true, enumerable: true, writable: true, value: 1 }) \
+             + '|' + (delete t[0]) + '|' + Object.getOwnPropertyNames(t).join(',')"),
+        "true|false|0,1,2,3"
+    );
+}
+
+#[test]
+fn a_write_through_another_receiver_never_reaches_the_buffer() {
+    // §10.4.5.4 step 2.b.i — the element is written only when `SameValue(O, Receiver)`. praxis took
+    // this path before consulting the receiver at all, on a comment that said "the element belongs
+    // to the buffer and no receiver can move it elsewhere" — which is the *define* clause's rule,
+    // not this one.
+    assert_eq!(
+        run("var t = new Int8Array(4); var r = {}; \
+             Reflect.set(t, '0', 42, r) + '|' + t[0] + '|' + r[0]"),
+        "true|0|42"
+    );
+    // Step 2.b.ii — an index the array does not have goes nowhere and is reported as accepted, and
+    // the value is **not converted**: the receiver never hears about it either.
+    assert_eq!(
+        run("var t = new Int8Array(4); var r = {}; var seen = 0; \
+             var v = { valueOf: function () { seen = 1; return 1 } }; \
+             Reflect.set(t, '9', v, r) + '|' + r.hasOwnProperty('9') + '|' + seen"),
+        "true|false|0"
+    );
+    // §10.1.9.2 steps 3.d and 3.f go through the *receiver's* own internal methods, so a TypedArray
+    // receiver takes the value as an element — converted for its own kind, not the target's.
+    assert_eq!(
+        run("var t = new Int8Array(4); var r = new Int8Array(2); \
+             Reflect.set(t, '0', new Number(2.3), r) + '|' + t[0] + '|' + r[0]"),
+        "true|0|2"
+    );
+    // And a receiver too short for the index refuses the write outright — §10.4.5.5 step 1.a.i
+    // reached through `CreateDataProperty`, which is a `false` rather than a silent discard.
+    assert_eq!(
+        run("var t = new Int8Array(4); var r = new Int8Array(1); \
+             Reflect.set(t, '1', 5, r) + '|' + r.hasOwnProperty('1')"),
+        "false|false"
+    );
+    // An ordinary assignment has the two the same object, which is the path every program takes.
+    assert_eq!(run("var t = new Int8Array(2); t[0] = 5; t[0]"), "5");
+}
+
+#[test]
+fn a_define_at_an_element_converts_its_value_and_does_so_last() {
+    // §10.4.5.5 step 1.f hands the value to §10.4.5.16, which converts it. The heap cannot run a
+    // conversion — DR-0011's seam — and its doc said a define "carries a value that is already a
+    // Value, so there is no conversion to run", so everything that was neither Number nor BigInt
+    // was stored as `NaN`.
+    assert_eq!(
+        run("var t = new Int8Array(4); Object.defineProperty(t, '0', { value: '7' }); t[0]"),
+        "7"
+    );
+    assert_eq!(
+        run(
+            "var t = new Int8Array(4); var seen = 0; var caught = 'not thrown'; \
+             try { Object.defineProperty(t, '0', { value: { valueOf: function () { seen = 1; throw 'boom' } } }) } \
+             catch (e) { caught = e } \
+             seen + '|' + caught"
+        ),
+        "1|boom"
+    );
+    // Steps 1.a to 1.e come **first**, and each of them refuses without converting anything. That
+    // is the opposite order from `[[Set]]`, where §10.4.5.16 runs before the index is judged — so
+    // counting the `valueOf` calls is what tells the two clauses apart.
+    assert_eq!(
+        run("var t = new Int8Array(4); var seen = 0; \
+             var v = { valueOf: function () { seen++; return 1 } }; \
+             Reflect.defineProperty(t, '0', { value: v, configurable: false }) + '|' \
+             + Reflect.defineProperty(t, '9', { value: v }) + '|' + seen"),
+        "false|false|0"
+    );
+    // A descriptor with **no** `[[Value]]` field skips step 1.f altogether and step 1.g answers
+    // `true` having changed nothing. That is the one define that still reaches the heap — the
+    // conversion is what `Vm::define_through` intercepts, and there is none to run — so it is also
+    // the only thing keeping the heap's half of the clause from being a refusal and nothing else.
+    assert_eq!(
+        run("var t = new Int8Array(4); t[0] = 5; \
+             Reflect.defineProperty(t, '0', {}) + '|' + t[0] + '|' \
+             + Reflect.defineProperty(t, '0', { writable: true }) + '|' \
+             + Reflect.defineProperty(t, '9', {})"),
+        "true|5|true|false"
+    );
+    // The same conversion may detach the buffer, and then there is nowhere to write: the define
+    // still answers `true` — §10.4.5.16 step 3 leaves an invalid index alone — and the element is
+    // gone rather than holding what was converted.
+    assert_eq!(
+        run("var t = new Int8Array(4); \
+             var v = { valueOf: function () { t.buffer.transfer(); return 17 } }; \
+             Reflect.defineProperty(t, '0', { value: v }) + '|' + t[0]"),
+        "true|undefined"
+    );
+}

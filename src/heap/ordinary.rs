@@ -21,8 +21,8 @@ use super::object::{Lexical, MAX_PROTOTYPE_CHAIN, ObjectId, PrivateElement, Susp
 use super::string_object;
 use super::typed;
 use super::{
-    ArgumentsMap, Bound, Callable, DefineOutcome, Element, EnvironmentId, Heap, Iteration, Native,
-    Numeric, Object, Property, PropertyDescriptor, PropertyKey, PropertyKind, StringId, SymbolId,
+    ArgumentsMap, Bound, Callable, DefineOutcome, EnvironmentId, Heap, Iteration, Native, Object,
+    Property, PropertyDescriptor, PropertyKey, PropertyKind, StringId, SymbolId,
 };
 use crate::compile::Chunk;
 use crate::value::Value;
@@ -215,9 +215,13 @@ impl Heap {
         // §10.4.5.6 — a TypedArray's indices, which nothing stored, ahead of everything that was.
         // In order and complete: §10.1.11 wants the integer indices first and ascending, and no
         // stored key can sort in among them because a define at an index never stores anything.
-        if let Some(view) = self.object(object).and_then(Object::view)
-            && view.element.is_some()
-        {
+        //
+        // Through [`Heap::typed_view`] and never the stored `View`, for the reason the define and
+        // the delete above it are: step 2 lists an index only while the view is in bounds, so a
+        // detached or shrunk buffer names none at all. Reading the stored number had
+        // `Object.getOwnPropertyNames` answer with four indices whose descriptors were every one
+        // `undefined` — a list of keys the object did not have.
+        if let Some(view) = self.typed_view(object) {
             let count = view.count();
             let mut keys = Vec::new();
             for index in 0..u32::try_from(count).unwrap_or(u32::MAX) {
@@ -479,51 +483,20 @@ impl Heap {
         // becomes observable without a method to throw first: `Object.defineProperty` converts its
         // key by running the program's own `toString`, which is free to resize the buffer between
         // the view being handed over and the index being tested.
+        //
+        // Steps 1.a to 1.e only — the **refusals**, which is all of this clause the heap can decide.
+        // Step 1.f hands the value to §10.4.5.16, whose conversion runs a program's `valueOf`, so
+        // `Vm::define_through` owns the write and never comes back here with one to make. That is
+        // DR-0011's seam, and it is also what makes step 1.g answer `true` for a conversion that
+        // detached the buffer: the outcome was settled at step 1.a, and re-asking here said `false`.
         if let Some(view) = self.typed_view(object)
             && let Some(index) = typed::index_of(self, key, view.count())
         {
-            let Ok(at) = index else {
-                return DefineOutcome::Refused;
-            };
             // An element is a writable, enumerable, configurable data property and can be nothing
             // else, so a descriptor asking for an accessor or for any other attributes is refused.
             // One that asks only for a *value* is the ordinary write.
-            if descriptor.getter.is_some()
-                || descriptor.setter.is_some()
-                || descriptor.writable == Some(false)
-                || descriptor.enumerable == Some(false)
-                || descriptor.configurable == Some(false)
-            {
+            if index.is_err() || typed::element_attributes_refused(descriptor) {
                 return DefineOutcome::Refused;
-            }
-            if let Some(value) = descriptor.value {
-                // §10.4.5.3 step 1.b.v hands the value to §10.4.5.16, whose conversion is chosen by
-                // the array's `[[ContentType]]` — and the two numeric types refuse each other there
-                // unconditionally, whatever the value is. §7.1.4 `ToNumber` throws for *every*
-                // BigInt and §7.1.13 `ToBigInt` for *every* Number, so this is a question about the
-                // two types and not about the two values, and it can be asked without an
-                // interpreter to run a coercion with.
-                //
-                // A **throw** and not a refusal, which a program can tell apart:
-                // `Reflect.defineProperty(new BigInt64Array(1), 0, {value: 1})` raises a TypeError
-                // where the same call at an out-of-range index quietly answers `false`.
-                let holds_big = view.element.is_some_and(Element::holds_big);
-                let crossed = match value {
-                    Value::BigInt(_) => !holds_big,
-                    Value::Number(_) => holds_big,
-                    // Every other type has a conversion to *both*, so neither is refused here.
-                    _ => false,
-                };
-                if crossed {
-                    return DefineOutcome::WrongContent;
-                }
-                // A define carries a value that is already a Value, so there is no conversion to
-                // run here — anything that is neither Number nor BigInt writes as `NaN` would,
-                // which is what `ToNumber` of it would give for the types a define can carry
-                // without a coercion step of its own.
-                let numeric = self.as_numeric(value).unwrap_or(Numeric::Number(f64::NAN));
-                let clamped = self.object(object).is_some_and(Object::is_clamped);
-                self.set_element(view, at, &numeric, clamped);
             }
             return DefineOutcome::Defined;
         }

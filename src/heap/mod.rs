@@ -113,12 +113,6 @@ pub enum DefineOutcome {
     Refused,
     /// §10.4.2.4 step 2 — the value is not a length, which throws rather than being refused.
     BadLength,
-    /// §10.4.5.16 step 1 — a Number where a `BigInt64Array` wants a BigInt, or the reverse.
-    ///
-    /// A TypeError and not a refusal, because it is §7.1.4 and §7.1.13 declining to convert rather
-    /// than §10.1.6.3 declining to redefine — so `Reflect.defineProperty` throws here where an
-    /// out-of-range index on the same array answers `false`.
-    WrongContent,
 }
 
 impl From<bool> for DefineOutcome {
@@ -145,6 +139,7 @@ pub use self::promise::{
 pub use self::proxy::Proxy;
 pub use self::regexp::RegExp;
 pub use self::typed::KINDS;
+pub(crate) use self::typed::element_attributes_refused;
 pub use self::weak_ref::{Cell, Holdable, Registry, Weak};
 
 impl Heap {

@@ -598,6 +598,31 @@ impl Vm {
         if let Some(answer) = self.proxy_define(object, key, descriptor, heap)? {
             return Ok(answer);
         }
+        // §10.4.5.5 step 1.f — a define at an element hands its value to §10.4.5.16, which
+        // **converts** it, so `Object.defineProperty(ta, 0, {value: {valueOf() { throw 0 }}})`
+        // throws and one holding `"7"` stores a seven. The heap's own doc used to say a define
+        // "carries a value that is already a Value, so there is no conversion to run" — true of the
+        // datum and false of the clause, and everything that was neither Number nor BigInt was
+        // stored as `NaN`.
+        //
+        // After steps 1.a to 1.e and not before them: an out-of-range index and a descriptor asking
+        // for the wrong attributes are both refused **without** converting anything, which a
+        // program can see by counting `valueOf` calls. That is the opposite order from `[[Set]]`,
+        // where §10.4.5.16 runs first and the index is judged afterwards.
+        if let Some(value) = descriptor.value
+            && matches!(heap.typed_index(object, key), Some(Ok(_)))
+            && !crate::heap::element_attributes_refused(descriptor)
+        {
+            let numeric = self.to_numeric_of(object, value, heap)?;
+            // §10.4.5.16 step 3 — the conversion just ran a program, which is free to detach or
+            // shrink the buffer, so where to write is asked again. The **answer** is not: step 1.g
+            // returns `true` whatever step 1.f found, because step 1.a decided the index was one
+            // this array had and that was before any of the program ran.
+            if let Some(Ok(at)) = heap.typed_index(object, key) {
+                heap.write_element(object, at, &numeric);
+            }
+            return Ok(DefineOutcome::Defined);
+        }
         // §10.4.2.4 — a define of an array's `length` converts its value, and the conversion runs
         // a script's `valueOf`. Settled here for the same reason the `[[Set]]` path settles it: the
         // heap has no interpreter, which is DR-0011's seam.

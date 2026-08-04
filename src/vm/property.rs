@@ -462,37 +462,56 @@ impl Vm {
         if heap.is_namespace(object) {
             return Ok(Value::Boolean(false));
         }
-        // §10.4.5.5 — a write to a canonical numeric index goes into the buffer, and one that is
+        // Whether this write is going to the object it was looked up on — §10.4.5.4 step 2.b.i's
+        // `SameValue(O, Receiver)` and §10.1.9.2 step 2's "the receiver is the target". For every
+        // assignment the program can write they are the same object; `Reflect.set` and a write
+        // reaching a prototype are where they come apart, and both clauses below turn on it.
+        let to_itself = matches!(receiver, Value::Object(id) if id == object);
+        // §10.4.2.4 — an array's `length` is settled before the heap sees it, for the same reason
+        // the TypedArray write below is: the conversion runs a script's `valueOf` and the heap has
+        // no interpreter to run one with. Only when the write lands here: with another receiver
+        // §10.1.9.2 step 3.f files the value on *that* object, and `ArraySetLength` never runs.
+        let value = match self.settled_array_length(object, key, value, heap)? {
+            Some(settled) if to_itself => settled,
+            _ => value,
+        };
+        // §10.4.5.4 — a write to a canonical numeric index goes into the buffer, and one that is
         // out of range is **discarded**: not an error, in strict mode or sloppy, because a
         // TypedArray's length cannot change and there is nowhere for the value to go. It is the one
         // assignment in the language that fails silently by design.
         //
-        // Before the receiver is consulted at all, because §10.4.5.5 step 1 does not consult it:
-        // the element belongs to the buffer and no receiver can move it elsewhere.
-        // §10.4.2.4 — an array's `length` is settled before the heap sees it, for the same reason
-        // the TypedArray write below is: the conversion runs a script's `valueOf` and the heap has
-        // no interpreter to run one with.
-        let value = match self.settled_array_length(object, key, value, heap)? {
-            Some(settled) => settled,
-            None => value,
-        };
+        // This used to be reached before the receiver was consulted at all, on the reading that
+        // "the element belongs to the buffer and no receiver can move it elsewhere" — written as a
+        // rule, and citing §10.4.5.5, which is the *define*. Step 2.b.i of the `[[Set]]` clause says
+        // `SameValue(O, Receiver)`, so `Reflect.set(ta, 0, v, {})` leaves `ta` alone and gives the
+        // plain object the property. Reading it the other way also converted `v`, which step 2.b.ii
+        // does not.
         if let Some(index) = heap.typed_index(object, key) {
-            // §10.4.5.16 step 1 — *which* conversion is chosen by the array's `[[ContentType]]`:
-            // §7.1.13 `ToBigInt` for the two 64-bit kinds and §7.1.4 `ToNumber` for the other nine.
-            // That is where the two numeric types stop mixing, and it is a throw rather than a
-            // truncation: `new BigInt64Array(1)[0] = 1` is a TypeError.
-            //
-            // Run **before** the index is judged, and for an out-of-range index too, because
-            // §10.4.5.5 step 1.b converts first: `ta[99] = {valueOf(){ throw 0 }}` throws even
-            // though the write itself would have gone nowhere.
-            let numeric = self.to_numeric_of(object, value, heap)?;
-            // The conversion can detach the buffer, so the write is attempted afterwards and
-            // simply finds nothing to write to — which is the same answer as an out-of-range index
-            // and is what §10.4.5.5 step 1.b.i means by "return unused".
-            if let Ok(at) = index {
-                heap.write_element(object, at, &numeric);
+            if to_itself {
+                // §10.4.5.16 step 1 — *which* conversion is chosen by the array's `[[ContentType]]`:
+                // §7.1.13 `ToBigInt` for the two 64-bit kinds and §7.1.4 `ToNumber` for the other
+                // nine. That is where the two numeric types stop mixing, and it is a throw rather
+                // than a truncation: `new BigInt64Array(1)[0] = 1` is a TypeError.
+                //
+                // Run **before** the index is judged, and for an out-of-range index too, because
+                // §10.4.5.16 step 1 converts first: `ta[99] = {valueOf(){ throw 0 }}` throws even
+                // though the write itself would have gone nowhere.
+                let numeric = self.to_numeric_of(object, value, heap)?;
+                // The conversion can detach the buffer, so the write is attempted afterwards and
+                // simply finds nothing to write to — which is the same answer as an out-of-range
+                // index and is what §10.4.5.16 step 3 means by leaving the buffer alone.
+                if let Ok(at) = index {
+                    heap.write_element(object, at, &numeric);
+                }
+                return Ok(Value::Boolean(true));
             }
-            return Ok(Value::Boolean(true));
+            // Step 2.b.ii — an index this array does not have, written through some other receiver,
+            // is reported as accepted and goes **nowhere**: the receiver is never told about it and
+            // the value is not converted. A valid index falls through to the ordinary walk below,
+            // which files it on the receiver like any other shadowable data property.
+            if index.is_err() {
+                return Ok(Value::Boolean(true));
+            }
         }
         // §10.1.9.2 — an *inherited* accessor is called, and an inherited non-writable data
         // property refuses the write. An inherited writable one does not: the value is filed on
@@ -543,9 +562,7 @@ impl Vm {
                 // is going *here* — §10.1.9.2 step 2 looks the property up on the target and then
                 // writes to the **receiver**, and for every ordinary assignment those are the same
                 // object. `Reflect.set` is where they are not.
-                PropertyKind::Data { .. }
-                    if owner == object && matches!(receiver, Value::Object(id) if id == object) =>
-                {
+                PropertyKind::Data { .. } if owner == object && to_itself => {
                     let descriptor = PropertyDescriptor {
                         value: Some(value),
                         ..PropertyDescriptor::EMPTY
@@ -562,6 +579,21 @@ impl Vm {
         let Value::Object(landing) = receiver else {
             return Ok(Value::Boolean(false));
         };
+        // §10.1.9.2 steps 3.d and 3.f both go through the *receiver's own* internal methods, and a
+        // TypedArray receiver answers those from its buffer rather than from a property table. So
+        // `Reflect.set(short, 0, v, longer)` writes an element into `longer`, and against a receiver
+        // too short for the index §10.4.5.5 step 1.a.i refuses the `CreateDataProperty` — which is
+        // the write returning `false`, with the value never converted. Asking `get_own_property`
+        // below would find neither, and the value would land in the table beside the elements where
+        // nothing can ever read it again.
+        if let Some(index) = heap.typed_index(landing, key) {
+            let Ok(at) = index else {
+                return Ok(Value::Boolean(false));
+            };
+            let numeric = self.to_numeric_of(landing, value, heap)?;
+            heap.write_element(landing, at, &numeric);
+            return Ok(Value::Boolean(true));
+        }
         // §10.1.9.2 step 2.c — what the *receiver* already has decides how it is written. An
         // accessor or a non-writable property there refuses the write outright: the value came
         // looking for a home and that one is taken. Anything else keeps its attributes, so a write
