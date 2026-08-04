@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.24% of test262** — 76,610 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.35% of test262** — 76,719 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 422 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -178,6 +178,27 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### One `?`, and 109 runs: §15.8.4 rejects where the generator clauses throw
+
+Three clauses evaluate a body, and they differ in one character. §15.5.4 and §15.6.5 — a generator
+and an async generator — both begin `Perform ? FunctionDeclarationInstantiation(…)`, so a throw from
+a parameter default reaches the **caller**. §15.8.4, a plain `async` function, runs the same
+instantiation as a **Completion** and step 3 hands an abrupt one to the promise's `reject`. So
+`async function f(x = x) {}` answers with a rejected promise where `function f(x = x) {}` throws at
+the call, and `async function* g(x = x) {}` throws too.
+
+praxis put the rejecting handler *below* the parameter prologue on the reading that "a throw from a
+parameter default is the caller's to catch" — which is right for two of the three clauses and was
+written in a comment as though it were a rule. Moving it above the prologue for a non-generator
+`async` function is the whole change; the async generator keeps its handler where it was, and that
+is the row that stops the fix being applied to every async body there is.
+
+**The bucket undercounted it by three to one.** 36 runs wore the dead zone's reason string
+(`a let or const was read before its declaration ran`); the other 73 were every other way a
+parameter list can throw — a pattern against `null`, a default that calls something — each filed
+under a reason of its own. **A clause about where a completion *goes* will never bucket cleanly,
+because the bucket is keyed on what produced it.**
 
 ### The harness's own reach is part of the measurement, and it was hiding 68 runs
 

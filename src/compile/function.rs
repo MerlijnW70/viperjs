@@ -752,6 +752,20 @@ fn compile_body(
         compiler.chunk.derived_this = Some(index);
     }
 
+    // §15.8.4 step 2 — an `async` function's handler goes on **before**
+    // `FunctionDeclarationInstantiation`, because the clause runs that instantiation as a
+    // `Completion` and step 3 *rejects the promise* with whatever it produced. So
+    // `async function f(x = x) {}` answers with a rejected promise where the same parameters on an
+    // ordinary function throw at the call. This used to sit below, on the reading that a parameter
+    // default is the caller's to catch — true of §15.5.4 and §15.6.5, which both begin
+    // `Perform ? FunctionDeclarationInstantiation`, and false of the one clause that does not.
+    //
+    // An async *generator* is therefore not covered here and keeps its handler below the
+    // `GeneratorStart` that parks its body: §15.6.5 has the `?`, so its parameters throw to the
+    // caller exactly as a sync generator's do.
+    let early_rejecting = (nesting.is_async && !nesting.generator)
+        .then(|| compiler.chunk.emit_jump(Instruction::PushHandler));
+
     // §10.2.11 step 21 — every parameter's binding is created **before any of them is bound**, and
     // with no duplicates it is created *uninitialised*. That ordering is the whole of the dead
     // zone: `function f(a = b, b) {}` reads `b` while it is still nothing, and
@@ -873,9 +887,11 @@ fn compile_body(
     // the caller is handed that promise like any other. Written as a handler because that is what
     // the unwinder already does — the alternative is teaching every throw in the engine which
     // frames are `async`.
-    let rejecting = nesting
-        .is_async
-        .then(|| compiler.chunk.emit_jump(Instruction::PushHandler));
+    //
+    // Only for an async *generator* here; a plain `async` function's went on above the parameters,
+    // and installing a second would leave one of them never taken down.
+    let rejecting = early_rejecting
+        .or_else(|| (nesting.is_async).then(|| compiler.chunk.emit_jump(Instruction::PushHandler)));
 
     match body {
         Body::Statements(statements) => {

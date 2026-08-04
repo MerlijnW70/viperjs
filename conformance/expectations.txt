@@ -14467,54 +14467,6 @@ language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-decl
 language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-declare-arguments-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-decl-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-named-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-func-expr-nameless-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-a-following-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-a-following-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-a-preceding-parameter-is-named-arguments-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-a-preceding-parameter-is-named-arguments-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-fn-body-cntns-arguments-func-decl-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-fn-body-cntns-arguments-func-decl-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-fn-body-cntns-arguments-lex-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-fn-body-cntns-arguments-lex-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-fn-body-cntns-arguments-var-bind-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-fn-body-cntns-arguments-var-bind-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-no-pre-existing-arguments-bindings-are-present-declare-arguments-and-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/eval-code/direct/async-meth-no-pre-existing-arguments-bindings-are-present-declare-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/global-env-rec-eval.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/global-env-rec-with.js :: it threw an object with no name: direct eval
 language/eval-code/direct/var-env-func-init-global-update-configurable.js :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
@@ -14633,29 +14585,8 @@ language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-
 language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/dflt-params-abrupt.js :: it threw an object with no name
-language/expressions/async-arrow-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/expressions/async-arrow-function/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-arrow-function/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-arrow-function/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-arrow-function/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/eval-var-scope-syntax-err.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/async-function/named-dflt-params-abrupt.js :: it threw an object with no name
-language/expressions/async-function/named-dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/expressions/async-function/named-dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/named-dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/named-dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/named-dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/named-eval-var-scope-syntax-err.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/async-function/nameless-dflt-params-abrupt.js :: it threw an object with no name
-language/expressions/async-function/nameless-dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/expressions/async-function/nameless-dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/nameless-dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/nameless-dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/nameless-dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/async-function/nameless-eval-var-scope-syntax-err.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/async-generator/eval-body-proto-realm.js :: it threw TypeError: what was called is not a function
 language/expressions/async-generator/eval-body-proto-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/async-generator/named-yield-star-async-next.js :: the test called $DONE with TypeError: what was called is not a function
@@ -14725,18 +14656,6 @@ language/expressions/class/async-gen-method/yield-star-sync-return.js :: the tes
 language/expressions/class/async-gen-method/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/async-gen-method/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/class/async-gen-method/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/class/async-method-static/dflt-params-abrupt.js :: it threw an object with no name
-language/expressions/class/async-method-static/dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/expressions/class/async-method-static/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method-static/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method-static/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method-static/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method/dflt-params-abrupt.js :: it threw an object with no name
-language/expressions/class/async-method/dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/expressions/class/async-method/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-call-expr-identifier-reference-yield.js :: it did not parse: unexpected character
@@ -15268,13 +15187,6 @@ language/expressions/object/method-definition/async-gen-yield-star-sync-return.j
 language/expressions/object/method-definition/async-gen-yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/object/method-definition/async-gen-yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/expressions/object/method-definition/async-gen-yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/expressions/object/method-definition/async-meth-dflt-params-abrupt.js :: it threw an object with no name
-language/expressions/object/method-definition/async-meth-dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/expressions/object/method-definition/async-meth-dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/object/method-definition/async-meth-dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/object/method-definition/async-meth-dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/object/method-definition/async-meth-dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/object/method-definition/async-meth-eval-var-scope-syntax-err.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/method-definition/fn-name-fn.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/method-definition/fn-name-fn.js (strict) :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
 language/expressions/object/method-definition/fn-name-gen.js :: it threw an object with no name: name descriptor value should be [test262]; name value should be [test262]
@@ -15552,15 +15464,6 @@ language/module-code/top-level-await/fulfillment-order.js :: it threw TypeError:
 language/module-code/top-level-await/rejection-order.js :: it threw TypeError: what was called is not a function
 language/module-code/top-level-await/unobservable-global-async-evaluation-count-reset.js :: it threw TypeError: what was called is not a function
 language/module-code/verify-dfs.js :: it threw TypeError: what was called is not a function
-language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
-language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/statements/async-function/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/async-function/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/async-function/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/async-function/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/async-function/eval-var-scope-syntax-err.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/statements/async-function/evaluation-default-that-throws.js :: it threw TypeError: what was called is not a function
-language/statements/async-function/evaluation-default-that-throws.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/async-function/let-newline-await-in-async-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/async-generator/return-undefined-implicit-and-explicit.js :: the test called $DONE with Test262Error: Actual [tick 1, g1 ret, g2 ret, g3 ret, g4 ret, tick 2] and expected [tick 1, g1 ret, g2 ret, tick 2, g3 ret, g4 ret] should have the same contents. Ticks for implicit and explicit return undefined
 language/statements/async-generator/return-undefined-implicit-and-explicit.js (strict) :: the test called $DONE with Test262Error: Actual [tick 1, g1 ret, g2 ret, g3 ret, g4 ret, tick 2] and expected [tick 1, g1 ret, g2 ret, tick 2, g3 ret, g4 ret] should have the same contents. Ticks for implicit and explicit return undefined
@@ -15746,18 +15649,6 @@ language/statements/class/async-gen-method/yield-star-sync-return.js :: the test
 language/statements/class/async-gen-method/yield-star-sync-return.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/statements/class/async-gen-method/yield-star-sync-throw.js :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
 language/statements/class/async-gen-method/yield-star-sync-throw.js (strict) :: the test called $DONE with Test262Error: log.length Expected SameValue(«3», «2») to be true
-language/statements/class/async-method-static/dflt-params-abrupt.js :: it threw an object with no name
-language/statements/class/async-method-static/dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/statements/class/async-method-static/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method-static/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method-static/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method-static/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method/dflt-params-abrupt.js :: it threw an object with no name
-language/statements/class/async-method/dflt-params-abrupt.js (strict) :: it threw an object with no name
-language/statements/class/async-method/dflt-params-ref-later.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/class-element-decorator-call-expr-identifier-reference.js :: it did not parse: unexpected character

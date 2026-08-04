@@ -671,3 +671,81 @@ fn async_function_is_a_constructor_that_nothing_can_name() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_parameter_that_throws_rejects_the_promise_rather_than_the_call() {
+    // §15.8.4 step 2 runs `FunctionDeclarationInstantiation` as a **Completion** and step 3 rejects
+    // the promise with what it produced — where §15.5.4 and §15.6.5, the generator clauses, both
+    // write `Perform ?` and let it throw. One `?` is the whole difference, and it decides whether
+    // `f()` returns or raises.
+    //
+    // §10.2.11 step 21's dead zone is the readiest way to make the instantiation fail: a parameter
+    // is created uninitialised, so a default reading its own name finds nothing there.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; async function f(x = x) { out = 'body ran'; } \
+             f().then(function () { out = 'resolved' }, function (e) { out = 'rejected:' + e.constructor.name });",
+            "out"
+        ),
+        "rejected:ReferenceError"
+    );
+    // …and the call itself does not throw, which is the half a `.then` alone would not show.
+    assert_eq!(
+        run_settled(
+            "var out = 'no throw'; async function f(x = x) {} try { f() } catch (e) { out = 'threw' }",
+            "out"
+        ),
+        "no throw"
+    );
+    // Any throw from the parameters travels the same way, not only the dead zone's — the clause is
+    // about where the completion goes and says nothing about what produced it.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; async function f(a = (function () { throw 'boom' })()) {} \
+             f().then(null, function (e) { out = 'rejected:' + e });",
+            "out"
+        ),
+        "rejected:boom"
+    );
+    // A destructuring parameter fails during the same instantiation and is no different.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; async function f({a}) {} \
+             f(null).then(null, function (e) { out = 'rejected:' + e.constructor.name });",
+            "out"
+        ),
+        "rejected:TypeError"
+    );
+    // An async *generator* keeps the `?`: §15.6.5 performs the instantiation and lets it throw, so
+    // the call raises exactly as a sync generator's does. That is the row that stops this being
+    // applied to every async body there is.
+    assert_eq!(
+        run(
+            "var out = 'no throw'; async function* g(x = x) {} try { g() } catch (e) { out = e.constructor.name } out"
+        ),
+        "ReferenceError"
+    );
+    assert_eq!(
+        run(
+            "var out = 'no throw'; function* g(x = x) {} try { g() } catch (e) { out = e.constructor.name } out"
+        ),
+        "ReferenceError"
+    );
+    // And an ordinary function still throws at the call, which is what makes the async answer a
+    // difference rather than a general softening.
+    assert_eq!(
+        run(
+            "var out = 'no throw'; function f(x = x) {} try { f() } catch (e) { out = e.constructor.name } out"
+        ),
+        "ReferenceError"
+    );
+    // The body must not have run. A rejection that arrived *after* the body would be the same
+    // string with a very different meaning.
+    assert_eq!(
+        run_settled(
+            "var calls = 0; async function f(x = x) { calls = calls + 1; } f().then(null, function () {}); ",
+            "calls"
+        ),
+        "0"
+    );
+}
