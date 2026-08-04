@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.70% of test262** — 77,044 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.71% of test262** — 77,054 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -272,6 +272,27 @@ reader checking.
   one no program could reach. §10.4.5.5 step 1.g is also why the answer is not re-derived after the
   conversion — a `valueOf` that detaches still leaves a define answering `true`, and asking the
   heap a second time said `false`.
+
+### A lookahead is quantifiable, and Annex B says exactly where
+
++10 runs, and the whole of it is that §22.2.1's `Term :: Assertion` carries no `Quantifier` at all.
+Annex B §B.1.2.1 adds one exception, and it is narrower twice over: `QuantifiableAssertion` is
+`(?=…)` and `(?!…)` **only**, and the production is `[~UnicodeMode]`. So `^*` and `*` are refused
+whatever the flags, a lookbehind was never quantifiable, and `/(?=a)*/u` is a SyntaxError where
+`/(?=a)*/` is a pattern. This is the one place left where a flag decides the *grammar* rather than
+the matching.
+
+**The comment above the check had gone stale in the way this file keeps meeting**: it said DR-0008
+refused Annex B's syntactic extensions "in both", which was true when it was written and stopped
+being true when §B.3 landed. The behaviour it described was still right for `^*` — for a different
+reason, which is exactly what makes that class of drift invisible.
+
+**And a probe written through a shell can lie about backslashes.** `eval("/\b+/")` reached the
+engine as `/+/` with `` a *backspace*, so a valid pattern read as praxis wrongly accepting
+`+` — a bug that does not exist, and a unit test three lines away said so. The engine's own test
+helpers take a Rust string and have no such layer; when a hand probe and a unit test disagree about
+an escape, **suspect the probe**. It is the third time an escaping layer has manufactured a finding
+here.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

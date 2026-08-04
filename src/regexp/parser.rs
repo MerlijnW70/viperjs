@@ -274,12 +274,26 @@ impl Reader<'_> {
                 "a quantifier's lower bound is above its upper bound",
             ));
         }
-        // §22.2.1.1 — an assertion has nothing to repeat. `/^*/` is an error in Unicode mode; Annex
-        // B allows it otherwise, and DR-0008 says Annex B's syntactic extensions are not
-        // implemented, so this refuses in both.
-        if matches!(atom, Node::Assert(_))
-            || matches!(&atom, Node::Group { kind, .. } if matches!(kind, GroupKind::Lookbehind(_)))
-        {
+        // §22.2.1 — an assertion has nothing to repeat, and `Term :: Assertion` carries no
+        // `Quantifier` in the main grammar at all. Annex B §B.1.2.1 adds exactly one exception and
+        // it is narrower than "an assertion in sloppy mode": `QuantifiableAssertion` is `(?=…)` and
+        // `(?!…)` only, and the production is `[~UnicodeMode]`. So `^*`, `$*` and `\b*` are refused
+        // whatever the flags, a lookbehind is refused because it was never quantifiable, and a
+        // lookahead is refused **only** under `u` or `v`.
+        //
+        // The doc here used to say DR-0008 refused Annex B's syntactic extensions "in both", which
+        // was true when it was written and outlived its reason: B.3 landed on 2026-08-03 and this
+        // clause is the one place the *Unicode* flag still decides the grammar.
+        let quantifiable = match &atom {
+            Node::Assert(_) => false,
+            Node::Group { kind, .. } => match kind {
+                GroupKind::Lookbehind(_) => false,
+                GroupKind::Lookahead(_) => !self.flags.unicode && !self.flags.unicode_sets,
+                _ => true,
+            },
+            _ => true,
+        };
+        if !quantifiable {
             return Err(Error::at("this has nothing to repeat"));
         }
         Ok(Node::Repeat {
@@ -1086,10 +1100,49 @@ mod tests {
         // …and so is one on an assertion, which has nothing to repeat *of*.
         assert_eq!(refused("^*"), "this has nothing to repeat");
         assert_eq!(refused("\\b+"), "this has nothing to repeat");
-        // A lookahead may be quantified — it is a group, and §22.2.1 allows it outside Unicode
-        // mode. A lookbehind may never be.
+        // A lookahead may be quantified — Annex B §B.1.2.1's `QuantifiableAssertion`, which is that
+        // form and the negated one and nothing else. A lookbehind may never be.
         assert!(parse("(?=a)*", Flags::default()).is_ok());
+        assert!(parse("(?!a)+", Flags::default()).is_ok());
         assert_eq!(refused("(?<=a)*"), "this has nothing to repeat");
+        // …and the production is `[~UnicodeMode]`, so `u` and `v` take the exception away again.
+        // Every quantifier form, because the rule is about the `Term` and not about the repetition:
+        // it is the one place left where a flag decides the *grammar* rather than the matching.
+        for source in ["(?=a)*", "(?!a)*", "(?=a)+", "(?=a)?", "(?=a){2}", "(?=a){2,}"] {
+            for unicode in [
+                Flags {
+                    unicode: true,
+                    ..Flags::default()
+                },
+                Flags {
+                    unicode_sets: true,
+                    ..Flags::default()
+                },
+            ] {
+                assert_eq!(
+                    parse(source, unicode)
+                        .err()
+                        .unwrap_or_else(|| panic!("{source} should be refused under u and v"))
+                        .message,
+                    "this has nothing to repeat",
+                    "{source}"
+                );
+            }
+            // The same pattern without either flag is Annex B's, and is accepted.
+            assert!(parse(source, Flags::default()).is_ok(), "{source}");
+        }
+        // A capturing or non-capturing group is quantifiable under `u` like anything else — the
+        // rule is about assertions, and reading it as "a group" would refuse every `(a)*`.
+        assert!(
+            parse(
+                "(a)*(?:b)+",
+                Flags {
+                    unicode: true,
+                    ..Flags::default()
+                }
+            )
+            .is_ok()
+        );
     }
 
     #[test]
