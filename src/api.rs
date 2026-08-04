@@ -191,6 +191,15 @@ pub enum Error {
     /// The engine reached a state its own types say is impossible. Not something a script can
     /// cause — see DR-0002 — so this is a bug report, not a condition to handle.
     Engine(Fault),
+    /// The run spent the time budget [`Engine::set_time_budget`] set, and was stopped — DR-0022.
+    ///
+    /// Carries nothing, because there is nothing to carry: no value was produced and nothing was
+    /// thrown. A script cannot catch this and no `finally` ran, which is what makes a budget a
+    /// bound on untrusted code rather than a suggestion.
+    ///
+    /// The engine is usable afterwards — the next [`Engine::eval`] starts a fresh run — but what
+    /// the interrupted script had already done to the global object is still done.
+    Interrupted,
     /// The value names something [`Engine::collect`] has already freed.
     ///
     /// DR-0021: a `Value` the host is holding is not a garbage-collection root. Without this case
@@ -243,6 +252,7 @@ impl Engine {
         match self.eval_value(source)? {
             Outcome::Value(value) => Ok(value),
             Outcome::Thrown(value) => Err(Error::Thrown(self.describe(value))),
+            Outcome::Interrupted => Err(Error::Interrupted),
         }
     }
 
@@ -371,6 +381,31 @@ impl Engine {
     #[must_use]
     pub fn global(&self) -> ObjectId {
         self.vm.realm().global()
+    }
+
+    /// Bound how long a single [`Engine::eval`] may take — DR-0022, and `None` to remove the bound.
+    ///
+    /// This is the answer to a script that will not stop. Exceeding the budget is **not a throw**:
+    /// the machine stops reading instructions and the call answers [`Error::Interrupted`]. The
+    /// script cannot catch it, no `finally` runs, and §9.5's job queue is not drained.
+    ///
+    /// ```
+    /// use praxis::api::{Engine, Error};
+    /// use std::time::Duration;
+    ///
+    /// let mut engine = Engine::new();
+    /// engine.set_time_budget(Some(Duration::from_millis(50)));
+    /// assert_eq!(engine.eval("while (true) {}").unwrap_err(), Error::Interrupted);
+    /// // …and the engine still works afterwards.
+    /// let answer = engine.eval("1 + 1").expect("it runs");
+    /// assert_eq!(engine.text(answer).as_deref(), Ok("2"));
+    /// ```
+    ///
+    /// **It does not cover** the regular expression matcher — a pattern that backtracks
+    /// catastrophically still runs to completion — nor a single long-running built-in, nor a host
+    /// function that blocks. DR-0022 says why each is a separate piece of work.
+    pub fn set_time_budget(&mut self, budget: Option<std::time::Duration>) {
+        self.vm.set_time_budget(budget);
     }
 
     /// Free everything the program can no longer reach, and answer how much that was.
@@ -690,6 +725,185 @@ mod tests {
             grew < 200 * std::mem::size_of::<u16>() * 4,
             "200 answers of one word grew the heap by {grew} bytes"
         );
+    }
+
+    /// A budget small enough that a runaway is stopped quickly, and large enough that an ordinary
+    /// script finishes well inside it. Every row below runs one loop that never ends, so the test
+    /// costs about this much wall-clock each time it is reached.
+    const BUDGET: std::time::Duration = std::time::Duration::from_millis(50);
+
+    #[test]
+    fn a_script_that_will_not_stop_is_stopped() {
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        assert_eq!(
+            engine.eval("while (true) {}").unwrap_err(),
+            Error::Interrupted
+        );
+        // The machine is usable again, because DR-0022 clears the flag when a run *begins* rather
+        // than when one ends — the flag has to survive unwinding every nested execution above it.
+        let answer = engine.eval("1 + 1").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("2"));
+        // …and the budget is still in force, so the next runaway is stopped too. Set once, applied
+        // per run: a deadline fixed when the host set it would have passed by now.
+        assert_eq!(engine.eval("for (;;) {}").unwrap_err(), Error::Interrupted);
+    }
+
+    #[test]
+    fn a_stopped_run_cannot_be_caught_and_runs_no_finally() {
+        // The decision the whole record turns on. A budget a script can catch is not a budget:
+        // `catch` would swallow it and the loop would resume, and the check meant to stop a runaway
+        // would fire again for ever.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        engine.eval("var reached = 'no'").expect("it runs");
+        assert_eq!(
+            engine
+                .eval("try { while (true) {} } catch (e) { reached = 'catch' }")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        let answer = engine.eval("reached").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("no"));
+        // A `finally` is the same answer for the same reason: it is code, and the machine reads no
+        // more instructions. A host that needs cleanup has to do it in Rust, and DR-0022 says so.
+        assert_eq!(
+            engine
+                .eval("try { while (true) {} } finally { reached = 'finally' }")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        let answer = engine.eval("reached").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("no"));
+    }
+
+    #[test]
+    fn a_stop_underneath_a_call_stops_the_caller_too() {
+        // Why the flag is read before *every* instruction and not only where the deadline is
+        // checked. When a nested execution stops it simply returns, and the call it was serving is
+        // left with a frame it never popped and a value it never produced — so the caller carries
+        // on as though the call had answered. Without this check the outer loop runs on for another
+        // whole check interval, which is a thousand instructions of a script that was supposed to
+        // have been stopped.
+        //
+        // **It is not enough to wrap the call in `try`/`catch`.** A stopped nested execution does
+        // not throw — that was the first guess and it left this row passing with the check removed,
+        // because the `catch` was never reached in either case. What distinguishes them is an
+        // ordinary statement *after* the call.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        engine.eval("var reached = 'no'").expect("it runs");
+        assert_eq!(
+            engine
+                .eval("[1].map(function () { while (true) {} }); reached = 'after the callback'")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        let answer = engine.eval("reached").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("no"));
+        // The same one level down through a coercion, which enters the loop from the middle of an
+        // instruction rather than from a native — a different way in and the same answer.
+        assert_eq!(
+            engine
+                .eval("({ valueOf: function () { while (true) {} } }) + 1; reached = 'after the coercion'")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        let answer = engine.eval("reached").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("no"));
+    }
+
+    #[test]
+    fn a_stopped_run_drains_no_jobs() {
+        // §9.5's queue is drained at the end of a run, and a job is code like any other — a `then`
+        // handler that loops for ever is the same problem wearing a promise. So an interrupted run
+        // answers without draining.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        engine.eval("var ran = 'no'").expect("it runs");
+        assert_eq!(
+            engine
+                .eval("Promise.resolve().then(function () { ran = 'yes' }); while (true) {}")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        let answer = engine.eval("ran").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("no"));
+    }
+
+    #[test]
+    fn a_loop_inside_a_coercion_or_a_callback_is_stopped_too() {
+        // The reason the flag is read before an instruction rather than checked once per run: a
+        // coercion re-enters the interpreter from the *middle* of an instruction, and a callback
+        // enters it from inside a native. Both are executions of their own and both must stop.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        assert_eq!(
+            engine
+                .eval("({ valueOf: function () { while (true) {} } }) + 1")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        assert_eq!(
+            engine
+                .eval("[1, 2, 3].map(function () { while (true) {} })")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        // A generator resumed from a `for`-`of` is a third way in, and parks and revives an
+        // execution rather than nesting one.
+        assert_eq!(
+            engine
+                .eval("function* g() { while (true) { yield 1 } } for (var x of g()) {}")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+    }
+
+    #[test]
+    fn no_budget_is_the_default_and_removing_one_restores_it() {
+        // Off unless a host asks, which is what leaves the conformance suite, the examples and
+        // every existing caller exactly as they were.
+        let mut engine = Engine::new();
+        let answer = engine
+            .eval("var n = 0; for (var i = 0; i < 200000; i++) { n += i } n")
+            .expect("no budget, so it finishes however long it takes");
+        assert_eq!(engine.text(answer).as_deref(), Ok("19999900000"));
+        // A budget that is generous does not stop ordinary work either — the check is a deadline
+        // and not a step count, so a loop that finishes in time finishes.
+        engine.set_time_budget(Some(std::time::Duration::from_secs(30)));
+        let answer = engine
+            .eval("var n = 0; for (var i = 0; i < 200000; i++) { n += i } n")
+            .expect("well inside thirty seconds");
+        assert_eq!(engine.text(answer).as_deref(), Ok("19999900000"));
+        // …and it can be taken off again.
+        engine.set_time_budget(None);
+        let answer = engine.eval("1 + 1").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("2"));
+    }
+
+    #[test]
+    fn the_budget_does_not_reach_the_regular_expression_matcher() {
+        // DR-0022 says this in its "what this does not stop", and a limitation stated only in prose
+        // is one nobody finds out has changed. §22.2's backtracking is its own loop and does not
+        // read the stop flag, so a hostile pattern runs to completion however small the budget is.
+        //
+        // `/(a+)+b/` against a subject of `a`s that can never match is the classic: every extra `a`
+        // doubles the work. Measured here at 52 ms, 210 ms and 689 ms for widths 18, 20 and 22
+        // against a 10 ms budget — so 22 leaves a margin of about seventy times over, which is what
+        // keeps this from being a test about how fast the machine is.
+        //
+        // **If this fails, the matcher has gained a check and that is good news** — update
+        // DR-0022's list and this row rather than the budget.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(std::time::Duration::from_millis(10)));
+        let answer = engine
+            .eval("/(a+)+b/.test('aaaaaaaaaaaaaaaaaaaaaa')")
+            .expect("the matcher runs to the end, budget or no budget");
+        assert_eq!(engine.text(answer).as_deref(), Ok("false"));
+        // …and the machine was never stopped, so the very next statement runs in the same breath.
+        let answer = engine.eval("1 + 1").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("2"));
     }
 
     #[test]

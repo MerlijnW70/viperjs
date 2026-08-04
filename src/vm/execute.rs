@@ -29,6 +29,19 @@ impl Vm {
         at: &mut usize,
     ) -> Result<(), Fault> {
         loop {
+            // DR-0022 — before an instruction is read, which is what makes one stop reach every
+            // execution there is. A coercion re-enters this loop from the middle of an instruction,
+            // a native calls back into it, a job runs after it; each of them arrives here and
+            // leaves at once. Nothing a script or a host function does can clear the flag, so there
+            // is no `catch`, no `finally` and no handler that resumes.
+            //
+            // The nested case is the one that needs it. A stopped inner execution simply returns,
+            // and the call it was serving is left with a frame it never popped and no value it
+            // produced — so without this the *caller* runs on for another whole check interval,
+            // which is a thousand instructions of a script that was supposed to have stopped.
+            if self.stopped {
+                return Ok(());
+            }
             // DR-0013 — the heap has a budget, and this is where a script that has spent it finds
             // out. Between instructions rather than at each allocation: the allocating functions
             // answer handles rather than completions, and making forty of them fallible for a
@@ -43,10 +56,32 @@ impl Vm {
             // expression before the assignment happens, the counter stays at zero, and every pass
             // through the loop raises the error again. Each of those raises allocates the Error
             // object it is about to throw, so the check meant to stop a runaway becomes one.
-            if self.until_heap_check > 0 {
-                self.until_heap_check -= 1;
+            if self.until_check > 0 {
+                self.until_check -= 1;
             } else {
-                self.until_heap_check = HEAP_CHECK_INTERVAL;
+                self.until_check = HEAP_CHECK_INTERVAL;
+                // DR-0022's budget, asked on the same counter as the heap's. `Instant::now()` is
+                // tens of nanoseconds — nothing once in a thousand instructions, and not nothing on
+                // every one. A run with no budget never asks the clock at all.
+                //
+                // Set and return rather than throw. The counter has already been reset above, so
+                // the trap the heap check documents below — a raise that allocates the error it is
+                // about to throw, every pass, for ever — cannot arise here either; but the reason
+                // this cannot is stronger, which is that the loop does not go round again.
+                // `saturating_duration_since` answers zero when the deadline is not in the
+                // future, which is exactly the question — and answers it with no comparison of its
+                // own. Written as `now >= deadline` the two spellings of that operator differ only
+                // at the nanosecond the clock reads the deadline exactly, which is a case no test
+                // can arrange and mutation coverage is right to report as uncovered. Asking the
+                // question a way that has no second spelling is the honest fix.
+                if self.expires_at.is_some_and(|deadline| {
+                    deadline
+                        .saturating_duration_since(std::time::Instant::now())
+                        .is_zero()
+                }) {
+                    self.stopped = true;
+                    return Ok(());
+                }
                 // §7.1's abstract operations say nothing about memory, and DR-0013's budget is
                 // what praxis answers with instead.
                 //

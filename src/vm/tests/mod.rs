@@ -255,6 +255,10 @@ fn describe(outcome: Outcome, heap: &mut Heap) -> String {
     let (prefix, value) = match outcome {
         Outcome::Value(value) => ("", value),
         Outcome::Thrown(value) => ("thrown ", value),
+        // DR-0022 — no value at all, because the machine stopped before the code produced one. No
+        // row here sets a time budget, so this is unreachable from these tests; spelled rather than
+        // ignored so that a row which starts setting one cannot read as an ordinary answer.
+        Outcome::Interrupted => return "interrupted".to_string(),
     };
     // A thrown *object* has no `toString` to call yet, so writing it down would throw again.
     // Naming it by its type is enough for a test row to say which error it was, and it stops

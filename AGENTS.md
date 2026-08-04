@@ -256,10 +256,46 @@ answer *silently wrong* — a `Value` is an index, and the wrong arena has somet
   description were indistinguishable because a *missing* property became the string `"undefined"` —
   non-empty, so it slipped past both. `throw ({})` read as `"undefined: undefined"`.
 
-Deliberately not decided: **stopping a script that will not stop.** No deadline, no fuel, no
-interrupt — `while (true) {}` ends with the process. GOAL.md §2.3's promise about untrusted code is
-half kept: the no-panic invariant stops a crash and nothing stops a hang. That is a change to the
-interpreter loop with a measurement attached, so it is its own record.
+DR-0021 deliberately did not decide **stopping a script that will not stop**; DR-0022 does, and the
+section below is what that cost.
+
+### A run has a time budget, and it cannot be caught — DR-0022
+
+`Vm::set_time_budget(Option<Duration>)`, off by default, per *run* rather than a fixed instant. The
+decision the rest follows from is that exceeding it is **not a throw**: a budget a script can catch
+is not a budget, because `try { while (true) {} } catch (e) {}` would swallow it and the loop would
+resume. So `Vm::stopped` is set, the loop reads no further instruction, `Outcome::Interrupted` is a
+third case beside `Value` and `Thrown`, and §9.5's jobs are not drained.
+
+**The check rides the counter that was already there.** `execute` counts down to DR-0013's heap
+check every thousand instructions; `Instant::now()` sits in the same branch for the same reason —
+tens of nanoseconds, nothing once per thousand and not nothing per instruction. One counter
+scheduling two checks is *not* the "one field answering two questions" mistake: both ask it the same
+thing, which is whether it is time for housekeeping.
+
+Three things worth carrying:
+
+- **The flag is read before every instruction, and the nested case is why.** A stopped inner
+  execution simply returns; the call it was serving keeps a frame it never popped and produces no
+  value, so `call_value` hands back whatever is on the stack *as though the call had answered*.
+  Without the check the caller runs on for another whole interval. A first test asserted a `catch`
+  would run and passed with the check removed — because a stopped execution does not throw, so the
+  `catch` was never reached either way. **What distinguishes them is an ordinary statement after the
+  call.**
+- **An equivalent mutant is a signal to change the code, not to write a test.** `now >= deadline`
+  and `now > deadline` differ only at the nanosecond the clock reads the deadline exactly, which no
+  test can arrange. It is written `deadline.saturating_duration_since(now).is_zero()` — the same
+  question with no second spelling.
+- **Adding a case to `Outcome` broke six `match`es** — `api`, `module`, the conformance harness, two
+  lab experiments and `examples/evaluate.rs` — and each one is a boundary where somebody has to
+  decide what an interrupt means there. `--workspace` on the clippy line is what caught the last
+  three; without it they would have been red in CI and green here.
+
+**What it does not stop, measured rather than asserted.** §22.2's matcher is its own loop and does
+not read the flag: `/(a+)+b/` against 18, 20 and 22 `a`s took 52 ms, 210 ms and 689 ms against a
+**10 ms** budget. That is a test now rather than a sentence, and if it ever fails the matcher has
+gained a check and DR-0022's list wants updating. Also outside it: a single long-running built-in,
+and a host function that blocks.
 
 ### The harness's own reach is part of the measurement, and it was hiding 68 runs
 

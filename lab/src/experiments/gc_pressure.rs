@@ -66,6 +66,9 @@ pub fn run(argument: Option<&str>) -> std::process::ExitCode {
     let finished = started.elapsed();
 
     let verdict = match outcome {
+        // DR-0022 — no experiment here sets a time budget, so this is unreachable; spelled rather
+        // than ignored so a later one that does cannot read as an ordinary completion.
+        Ok(Outcome::Interrupted) => "stopped: the run spent its time budget".to_string(),
         Ok(Outcome::Value(value)) => match value.to_string(&mut heap) {
             Ok(id) => format!(
                 "completed: {}",

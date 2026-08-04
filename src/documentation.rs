@@ -152,6 +152,40 @@ fn defined(sources: &[(PathBuf, String)]) -> BTreeSet<String> {
     names
 }
 
+/// The comment lines of `text` that are prose, paired with their line numbers.
+///
+/// **A doc comment's fenced block is code, not prose**, and it is code `cargo test --doc` compiles
+/// and runs — so a name inside one is already checked by the only thing that can check it properly.
+/// Reading it as prose reports every standard-library call an example makes as drift, which is a
+/// false alarm about the one kind of documentation that cannot rot silently.
+///
+/// Fences are counted rather than matched, so an unterminated one hides the rest of a file's
+/// comments instead of reporting them as code. That is the safe direction for a checker whose false
+/// entries cost a missed report and never a false alarm.
+fn prose_lines(text: &str) -> Vec<(usize, &str)> {
+    let mut lines = Vec::new();
+    let mut fenced = false;
+    for (number, line) in text.lines().enumerate() {
+        let trimmed = line.trim_start();
+        if !trimmed.starts_with("//") {
+            continue;
+        }
+        // The marker sits after `///`, `//!` or `//`, and may be indented inside the comment.
+        let body = trimmed
+            .trim_start_matches('/')
+            .trim_start_matches('!')
+            .trim_start();
+        if body.starts_with("```") {
+            fenced = !fenced;
+            continue;
+        }
+        if !fenced {
+            lines.push((number, line));
+        }
+    }
+    lines
+}
+
 /// Each type-and-member pair a comment line names, with or without brackets and backticks.
 fn mentions(line: &str) -> Vec<(String, String)> {
     let bytes: Vec<char> = line.chars().collect();
@@ -192,15 +226,57 @@ fn mentions(line: &str) -> Vec<(String, String)> {
 }
 
 #[test]
+fn a_fenced_block_in_a_doc_comment_is_code_and_is_not_read_as_prose() {
+    // The false alarm this exists to stop: an example is compiled and run by `cargo test --doc`,
+    // so the names in it are checked by the compiler. Reading them here reports every call an
+    // example makes into the standard library — or into a caller's own crate — as drift.
+    // Joined rather than written as one literal: a source line that *begins* with `//` is a comment
+    // to the scan above, whatever quotes are around it, so a fixture written the readable way is
+    // read as this file's own documentation and reported as drift. Found by this test failing on
+    // itself, which is the second time the checker has caught its own fixture.
+    let text = [
+        "/// Does a thing.",
+        "///",
+        "/// ```",
+        "/// let d = Nowhere::missing(50);",
+        "/// ```",
+        "///",
+        "/// See Also::gone for the rest.",
+        "fn thing() {}",
+    ]
+    .join("\n");
+    let prose: Vec<&str> = prose_lines(&text)
+        .into_iter()
+        .map(|(_, line)| line)
+        .collect();
+    assert!(
+        prose.iter().any(|line| line.contains("Also::gone")),
+        "prose outside the fence is still read: {prose:?}"
+    );
+    assert!(
+        !prose.iter().any(|line| line.contains("Nowhere::missing")),
+        "the fenced line was read as prose: {prose:?}"
+    );
+    // The fence markers themselves are not prose either, so a bare ``` cannot be mistaken for a
+    // line to inspect.
+    assert!(!prose.iter().any(|line| line.contains("```")));
+    // And the line numbers are the file's, not the filtered list's — a report that pointed at the
+    // wrong line would send someone to a comment that is fine.
+    let numbered = prose_lines(&text);
+    let (number, _) = numbered
+        .iter()
+        .find(|(_, line)| line.contains("Also::gone"))
+        .expect("it is there");
+    assert_eq!(*number, 6);
+}
+
+#[test]
 fn no_comment_names_a_function_or_field_that_does_not_exist() {
     let sources = sources();
     let defined = defined(&sources);
     let mut dangling = Vec::new();
     for (path, text) in &sources {
-        for (number, line) in text.lines().enumerate() {
-            if !line.trim_start().starts_with("//") {
-                continue;
-            }
+        for (number, line) in prose_lines(text) {
             for (owner, member) in mentions(line) {
                 if defined.contains(&member) || is_numeric_operation(&owner, &member) {
                     continue;

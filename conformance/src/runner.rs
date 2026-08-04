@@ -554,6 +554,16 @@ fn evaluate(
     };
     match outcome {
         Err(fault) => Verdict::Failed(format!("the chunk did not make sense: {fault:?}")),
+        // DR-0022's time budget, which this harness does not set — so reaching here means something
+        // else did, and a run that was stopped part-way has not passed whatever it was asked.
+        //
+        // Worth knowing rather than worth doing yet: setting one *would* replace the per-test
+        // process timeout with a stop the engine makes itself, which is the difference between a
+        // file reported as `it did not finish within 10 seconds` and one reported honestly. It
+        // would also move the number, so it is a slice of its own and not a line here.
+        Ok(VmOutcome::Interrupted) => {
+            Verdict::Failed("the run was stopped before it finished".to_string())
+        }
         // Nothing was thrown, which for an ordinary test is the whole answer and for an async one
         // is not an answer at all: what it says about itself is in `$DONE`, which was called — or
         // was not — while the jobs ran.

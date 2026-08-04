@@ -133,9 +133,9 @@ pub enum Fault {
 
 /// What running a chunk came to.
 ///
-/// Two of §6.2.4's completion types, and the two that a *script* can end with. `break` and
-/// `continue` never escape the code that names them, and `return` needs a function to return
-/// from.
+/// Two of §6.2.4's completion types — the two a *script* can end with, since `break` and `continue`
+/// never escape the code that names them and `return` needs a function to return from — and one
+/// case that is not a completion at all, because the machine stopped before the code produced one.
 #[derive(Debug, Clone, Copy)]
 pub enum Outcome {
     /// The script finished; this is its completion value.
@@ -145,6 +145,15 @@ pub enum Outcome {
     /// The value is whatever was thrown, which need not be an Error: `throw 1` is legal and the
     /// specification never asks what it was given.
     Thrown(Value),
+    /// The run spent its time budget and was stopped — DR-0022.
+    ///
+    /// **Not one of §6.2.4's completion types**, and that is the point: no completion of any kind
+    /// left the code, because the machine stopped reading instructions. There is no value, because
+    /// the script did not produce one and whatever it was part-way through is not an answer.
+    ///
+    /// A third case rather than a `Thrown` carrying a distinguished error, because a throw is
+    /// something a script can catch and this must not be. See DR-0022.
+    Interrupted,
 }
 
 /// Where a throw goes, and what the stack should look like when it gets there.
@@ -258,13 +267,36 @@ pub struct Vm {
     jobs: std::collections::VecDeque<Job>,
     /// Where a nested execution stops — see [`Floor`].
     floor: Floor,
-    /// Instructions still to run before the heap budget is looked at again — DR-0013.
+    /// Instructions still to run before the periodic checks are made — DR-0013 and DR-0022.
     ///
-    /// A countdown rather than a modulus on an instruction count: the check is rare and the
+    /// A countdown rather than a modulus on an instruction count: the checks are rare and the
     /// decrement is what every instruction pays, so the cheap operation is the one in the hot
     /// path. It starts at zero so that a script which allocates before its first jump is still
     /// asked about.
-    until_heap_check: usize,
+    ///
+    /// **One counter scheduling two checks**, which is not the "one field answering two questions"
+    /// mistake: both ask the same thing of it — *is it time for housekeeping* — and neither reads
+    /// it for a second meaning. Two counters would be two intervals that could drift apart, and
+    /// the one nobody read would be the one that mattered.
+    until_check: usize,
+    /// How long a single [`Vm::run`] may take, if the host has said — DR-0022.
+    ///
+    /// A duration and not an instant, because the limit belongs to a *run*: an instant fixed once
+    /// would be an engine that stops working at a wall-clock moment rather than one that bounds
+    /// what a script may take. `None` is no budget, which is what every caller gets until a host
+    /// says otherwise.
+    time_budget: Option<std::time::Duration>,
+    /// When the run in progress must stop, derived from `time_budget` when it began.
+    ///
+    /// Read only inside the periodic check, so a run with no budget never asks the clock at all.
+    expires_at: Option<std::time::Instant>,
+    /// Whether the machine has been stopped and must read no further instruction — DR-0022.
+    ///
+    /// Checked before an instruction is read, which is what makes it reach *every* execution: a
+    /// coercion re-entered from the middle of an instruction, a native's callback, a job. Cleared
+    /// when a run begins, so an interrupted machine is usable again and a host does not have to
+    /// build a new one.
+    stopped: bool,
     /// §13.2.8.3's template objects, one per tagged-template site that has been reached.
     ///
     /// Kept on the machine rather than on the chunk because the object belongs to a *realm*: a chunk
@@ -339,7 +371,10 @@ impl Vm {
             new_target: Value::Undefined,
             completion: Value::Undefined,
             floor: Floor::default(),
-            until_heap_check: 0,
+            until_check: 0,
+            time_budget: None,
+            expires_at: None,
+            stopped: false,
             templates: std::collections::HashMap::new(),
             reentries: 0,
             resume_returns: false,
@@ -503,6 +538,15 @@ impl Vm {
         self.handlers.clear();
         self.frames.clear();
         self.escaped = None;
+        // DR-0022 — the budget is per run, so the deadline is taken here rather than when the host
+        // set it. Clearing `stopped` here and not at the end of the previous run is what makes an
+        // interrupted machine usable again: the flag has to survive the unwinding of every nested
+        // execution above, and the only moment it is certainly finished doing that is the next
+        // time a run begins.
+        self.stopped = false;
+        self.expires_at = self
+            .time_budget
+            .map(|budget| std::time::Instant::now() + budget);
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
@@ -526,6 +570,13 @@ impl Vm {
         // this runs: a backward jump is how a loop will be built, and a script that loops forever
         // is a script that loops forever. DR-0002 is about panics, not about halting.
         self.execute(chunk, heap, &mut current, &mut at)?;
+        // DR-0022 — before anything is read out of the machine. A stopped run has no answer: the
+        // completion register holds whatever the last finished statement left, which is not what
+        // the script came to, and §9.5's queue must not be drained because a job is code like any
+        // other and a `then` handler that loops for ever is the same problem wearing a promise.
+        if self.stopped {
+            return Ok(Outcome::Interrupted);
+        }
         // What the *script* did, taken before anything else runs. A throw that nothing caught is
         // waiting in `escaped`, and it has to come out here: a job's own execution takes that slot
         // to carry its own throws, so leaving the script's answer in it lets the first job steal it
@@ -713,6 +764,20 @@ impl Vm {
         Ok(None)
     }
 
+    /// Bound how long a single [`Vm::run`] may take — DR-0022, and `None` to remove the bound.
+    ///
+    /// Exceeding it is **not a throw**: the machine stops reading instructions and `run` answers
+    /// [`Outcome::Interrupted`]. A script cannot catch it, a `finally` does not run, and neither
+    /// does §9.5's job queue. That is what makes it a bound on untrusted code rather than a
+    /// suggestion — see the record for why the heap's budget is catchable and this one is not.
+    ///
+    /// The bound is honoured to within one check interval, which is a thousand instructions.
+    /// **It does not cover** the regular expression matcher, a single long-running built-in, or a
+    /// host function that blocks; DR-0022 says why each is a separate piece of work.
+    pub fn set_time_budget(&mut self, budget: Option<std::time::Duration>) {
+        self.time_budget = budget;
+    }
+
     /// Free everything this machine can no longer reach, and answer how much that was.
     ///
     /// The host's to call, and the interpreter runs none on a schedule of its own. That was
@@ -750,7 +815,7 @@ impl Vm {
     /// [`super::call::Frame`] rather than against a memory of what they hold, and every one of
     /// them appears here or is deliberately absent with a reason.
     ///
-    /// What is deliberately absent: `steps`, `floor`, `until_heap_check` and the `at`/`stack_base`
+    /// What is deliberately absent: `floor`, `until_check` and the `at`/`stack_base`
     /// marks are numbers; `code` is an `Rc<Chunk>` whose *constants* are named through
     /// [`Chunk::names`]; the intern table is not a root at all, which is what lets a name a program
     /// computed and dropped be collected.

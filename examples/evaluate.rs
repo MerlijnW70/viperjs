@@ -47,6 +47,9 @@ fn evaluate(source: &str) -> String {
     // against another engine cannot read `throw 1` and `1` as the same answer.
     let mut vm = Vm::new(&mut heap);
     let (prefix, value) = match vm.run(&chunk, &mut heap) {
+        // DR-0022 — this sweep sets no time budget, so nothing here is stopped. Answered rather
+        // than ignored, because a `!` line is how this tool reports what it could not do.
+        Ok(Outcome::Interrupted) => return "!stopped: the run spent its time budget".to_string(),
         Ok(Outcome::Value(value)) => ("", value),
         Ok(Outcome::Thrown(value)) => ("!thrown: ", value),
         Err(fault) => return format!("!fault: {fault:?}"),

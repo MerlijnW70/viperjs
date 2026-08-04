@@ -100,6 +100,8 @@ pub fn run(entry: Option<&str>, _probe: Option<&str>) -> std::process::ExitCode 
             let text = describe(&mut heap, value);
             println!("graph threw after {elapsed:?}: {text}");
         }
+        // DR-0022, and unreachable here for the same reason: this sets no budget.
+        Ok(Ok(Outcome::Interrupted)) => println!("the run was stopped after {elapsed:?}"),
         Ok(Err(error)) => println!("did not link: {}", error.message()),
         Err(fault) => println!("fault: {fault:?}"),
     }

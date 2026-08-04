@@ -481,6 +481,17 @@ impl Vm {
         match self.link_and_evaluate(specifier, heap)? {
             Ok(Outcome::Thrown(thrown)) => return Ok(Err(thrown)),
             Ok(Outcome::Value(_)) => {}
+            // DR-0022 — the graph was stopped part-way. There is no namespace and nothing was
+            // thrown, so the promise `import()` handed out is rejected with a reason of the host's
+            // making. Nothing runs to observe it *now*, because the loop above has stopped reading
+            // instructions; a later run on the same machine can still find the promise, so the
+            // reason says what happened rather than being `undefined`.
+            Ok(Outcome::Interrupted) => {
+                return Ok(Err(self.host_error(
+                    "the run was stopped before this module finished",
+                    heap,
+                )));
+            }
             Err(error) => return Ok(Err(self.host_error(&error.message(), heap))),
         }
         let Some(chunk) = self.resolved.get(specifier).cloned() else {
