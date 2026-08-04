@@ -402,10 +402,12 @@ fn a_with_binding_is_looked_for_again_when_it_is_written_through() {
     // through it is a program: `with (o) { x += 1 }` where `o`'s `x` getter deletes `x` reads a
     // binding that is gone by the time the write happens, and step 3 tells strict code so.
     assert_eq!(
-        run("var scope = { get x() { delete this.x; return 2 } }; var caught = 'none'; \
+        run(
+            "var scope = { get x() { delete this.x; return 2 } }; var caught = 'none'; \
              with (scope) { (function () { 'use strict'; \
                  try { x += 1 } catch (e) { caught = e.constructor.name } })() } \
-             caught + ',' + ('x' in scope)"),
+             caught + ',' + ('x' in scope)"
+        ),
         "ReferenceError,false"
     );
     // Sloppy code is told nothing and step 4 makes the property again, which is the half that
@@ -418,22 +420,28 @@ fn a_with_binding_is_looked_for_again_when_it_is_written_through() {
     );
     // A binding that is still there is written, which is every `with` a program actually contains.
     assert_eq!(
-        run("var scope = { x: 1 }; with (scope) { (function () { 'use strict'; x = 5 })() } scope.x"),
+        run(
+            "var scope = { x: 1 }; with (scope) { (function () { 'use strict'; x = 5 })() } scope.x"
+        ),
         "5"
     );
     // Step 4's `S` — a write the object refuses is a TypeError in strict code, and silent
     // otherwise, which is §6.2.5.6's rule for every other reference and was not applied here.
     assert_eq!(
-        run("var scope = {}; Object.defineProperty(scope, 'x', { value: 1, writable: false }); \
+        run(
+            "var scope = {}; Object.defineProperty(scope, 'x', { value: 1, writable: false }); \
              var caught = 'none'; \
              with (scope) { (function () { 'use strict'; \
                  try { x = 5 } catch (e) { caught = e.constructor.name } })() } \
-             caught + ',' + scope.x"),
+             caught + ',' + scope.x"
+        ),
         "TypeError,1"
     );
     assert_eq!(
-        run("var scope = {}; Object.defineProperty(scope, 'x', { value: 1, writable: false }); \
-             with (scope) { (function () { x = 5 })() } scope.x"),
+        run(
+            "var scope = {}; Object.defineProperty(scope, 'x', { value: 1, writable: false }); \
+             with (scope) { (function () { x = 5 })() } scope.x"
+        ),
         "1"
     );
 }
