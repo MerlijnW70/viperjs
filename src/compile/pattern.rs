@@ -48,7 +48,21 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::Pop);
 
         let unwind = self.chunk.emit_jump(Instruction::PushHandler);
+        // §7.4.9's entry for this pattern's iterator, on the same terms a `for`-`of` head installs
+        // one. The handler above catches a *throw*; a `return`, a `break` or a `continue` jumping
+        // out of here does not throw and would leave the iterator open — and there is a way to
+        // write one, because a default in the pattern may `yield`, and resuming that suspension
+        // with `it.return()` unwinds straight through. `[ {} = yield ] = iterable` is exactly it.
+        //
+        // Recorded *after* the handler is armed, because `Check::Loop` takes the handler down as
+        // part of closing: the jump has to undo both, in that order.
+        let closes = self.unwinds.len();
+        self.unwinds.push(crate::compile::Unwind {
+            outer: self.breaks.len(),
+            what: crate::compile::Crossing::Iterator(iterator, super::Closing::Sync),
+        });
         let assigned = self.assign_elements(pattern, span, [iterator, next, done, current]);
+        self.unwinds.truncate(closes);
         self.chunk.emit(Instruction::PopHandler);
         assigned?;
 

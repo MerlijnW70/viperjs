@@ -839,3 +839,47 @@ fn a_close_on_the_way_out_of_a_throw_keeps_the_original_error() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_jump_out_of_a_pattern_closes_its_iterator_as_a_throw_does() {
+    // §13.15.5.2 step 5 and §8.6.2 step 4 close on **any** abrupt completion, and praxis armed a
+    // handler — which catches a throw and nothing else. A `return` jumping out of a pattern is not
+    // a throw, and there is a way to write one: a default inside the pattern may `yield`, so
+    // resuming that suspension with `it.return()` unwinds straight through the half-run pattern.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: undefined } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             function* g() { var r; r = [ {} = yield ] = able } \
+             var it = g(); it.next(); it.return(1); closed"),
+        "1"
+    );
+    // The binding form has the same hole and the same fix — `var [a = yield] = able`.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             function* g() { var [a = yield] = able } \
+             var it = g(); it.next(); it.return(1); closed"),
+        "1"
+    );
+    // The entry goes in **after** the handler is armed, because closing takes the handler down as
+    // part of the same jump. Reversed, the jump would pop nothing and leave a handler armed over
+    // code the program has already left — so this asserts an ordinary throw afterwards is caught
+    // where it was written and not by the pattern's.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             function* g() { var [a = yield] = able } \
+             var it = g(); it.next(); it.return(1); \
+             var caught = 'none'; try { throw 'after' } catch (e) { caught = e } \
+             caught + ',' + closed"),
+        "after,1"
+    );
+    // And an ordinary destructuring still works, which is what keeps this about the jump.
+    assert_eq!(run("var a = {}; [a.x] = [7]; var [b] = [8]; a.x + ',' + b"), "7,8");
+}

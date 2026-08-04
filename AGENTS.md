@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.21% of test262** — 77,521 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.27% of test262** — 77,571 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -441,6 +441,21 @@ Broadening it to every unwinding close turned four `yield*` tests red, and they 
 step 7.b.iii.4 closes a source with no `throw` method carrying a **normal** completion, so step 4
 does not fire there, the close's own error is what the program sees, and step 6 examines what
 `return` handed back. That call site is `Check::Plain`, not `Check::Unwind`.
+
+**And a third slice behind that one, +50: a pattern's iterator was closed by a *throw* and by
+nothing else.** §13.15.5.2 step 5 and §8.6.2 step 4 close on **any** abrupt completion; praxis armed
+a handler, which catches a throw. A `return` is not a throw, and there is a way to write one —
+a default inside the pattern may `yield`, so `[ {} = yield ] = iterable` resumed with `it.return()`
+unwinds straight through a half-run pattern. The fix is the `Crossing::Iterator` entry a `for`-`of`
+head already installs, pushed **after** the handler is armed because closing takes the handler down
+as part of the same jump.
+
+**Three slices in a row where the ratchet named the next one.** The `log.length` bucket was a real
+bug about `[[Done]]`; fixing it moved 48 runs to a *different* failure, which was the reference
+order; fixing that moved 36 more, which was §7.4.9 step 4; and behind that were these 50. None of
+the four appears in a list of missing features, and each was invisible until the one in front of it
+was gone. **When a slice reports "0 newly passing, N failing differently", that is the ratchet
+naming the next slice, not a wasted change.**
 
 **One clause, two callers, opposite answers about the same error — for the second time in this
 file.** §7.4.9 was already recorded that way for the Iterator Helpers' `return`; this is the same
