@@ -15010,8 +15010,6 @@ language/expressions/equals/bigint-and-object.js :: it threw an object with no n
 language/expressions/equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
 language/expressions/exponentiation/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/exponentiation/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -15062,8 +15060,6 @@ language/expressions/object/scope-meth-param-elem-var-close.js :: it threw Synta
 language/expressions/object/scope-meth-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-meth-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-meth-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/object/setter-param-arguments-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/object/setter-param-eval-strict-inside.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/optional-chaining/eval-optional-call.js :: it threw an object with no name: fn() returns "global" value from indirect eval Expected SameValue(«"local"», «"global"») to be true
 language/expressions/optional-chaining/eval-optional-call.js (strict) :: it threw an object with no name: fn() returns "global" value from indirect eval Expected SameValue(«"local"», «"global"») to be true
 language/expressions/optional-chaining/optional-call-preserves-this.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -15289,16 +15285,6 @@ language/literals/regexp/u-invalid-range-lookahead.js :: expected a SyntaxError 
 language/literals/regexp/u-invalid-range-lookahead.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/literals/regexp/u-invalid-range-negative-lookahead.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/literals/regexp/u-invalid-range-negative-lookahead.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-1-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-2-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-3-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-4-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-5-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-6-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-7-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-8-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-non-octal-escape-sequence-9-strict-explicit-pragma.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/literals/string/legacy-octal-escape-sequence-prologue-strict.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from-and-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/eval-export-dflt-expr-err-eval.js :: expected a Test262Error and it threw an object with no name
@@ -15725,8 +15711,6 @@ language/statements/for/tco-let-body.js (strict) :: it threw RangeError: too muc
 language/statements/for/tco-lhs-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-var-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/function/S13.2.2_A14.js :: it threw an object with no name: #1: var obj = new FACTORY() does not lead to throwing exception
-language/statements/function/name-arguments-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/function/name-eval-strict-body.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet

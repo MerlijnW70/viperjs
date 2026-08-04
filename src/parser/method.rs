@@ -187,6 +187,14 @@ impl Parser<'_> {
                 span: parameters.span,
             });
         }
+        // §15.2.1 through §15.5.1 — a parameter may not be called `eval` or `arguments` in strict
+        // code, and a method's body says whether it is after the parameters have been read. Asked
+        // only when the *body* declared it: an enclosing `"use strict"` was already in force when
+        // `parse_binding_identifier` read each name, and asking twice would report the same thing
+        // at a second span.
+        if declares_strict && !self.strict {
+            crate::parser::function::check_strict_parameters(parameters)?;
+        }
         for declared in crate::static_semantics::top_level_lexically_declared_names(body) {
             if names.iter().any(|bound| bound.name == declared.name) {
                 return Err(ParseError {

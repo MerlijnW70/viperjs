@@ -322,6 +322,13 @@ struct Parser<'a> {
     /// A list rather than one slot, because refinement has to be able to drop *some* of them:
     /// see [`Parser::discard_refined_covers`] for the rule and for what went wrong when it was
     /// a single record cleared wholesale.
+    /// Where a string literal used one of Annex B's legacy octal escapes, while the code was sloppy.
+    ///
+    /// §12.9.4.1 refuses one in strict code, and a **directive prologue** turns strict on *after*
+    /// the literal has been read: `function f() { ""; "use strict"; }` is a Syntax Error whose two
+    /// halves are two statements apart. The same deferral `unrefined_covers` uses, for the same
+    /// reason — at the moment of reading there is nothing yet to judge it against.
+    legacy_strings: Vec<crate::span::Span>,
     pub(super) unrefined_covers: Vec<CoverRecord>,
     /// Where the innermost sub-expression that survives refinement begins, if one is open.
     ///
@@ -438,6 +445,7 @@ impl<'a> Parser<'a> {
             lexer,
             current,
             depth: 0,
+            legacy_strings: Vec::new(),
             unrefined_covers: Vec::new(),
             protecting_from: None,
             open_covers: 0,

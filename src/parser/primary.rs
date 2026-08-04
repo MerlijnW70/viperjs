@@ -122,6 +122,20 @@ impl Parser<'_> {
                 kind: ParseErrorKind::StrictLegacyOctal,
                 span: token.span,
             }),
+            // Sloppy here and possibly not sloppy by the end of the line. §12.9.4.1 refuses one in
+            // strict code, and a **directive prologue** can turn strict on *after* this literal has
+            // been read: `function f() { "\1"; "use strict"; }` is a Syntax Error and the escape is
+            // two statements before the thing that makes it one. So the span is remembered and
+            // [`Parser::parse_body_with_prologue`] judges it once the prologue has spoken.
+            TokenKind::String {
+                legacy_escape: true,
+            } => {
+                self.legacy_strings.push(token.span);
+                self.advance(Goal::Div)?;
+                let value = string_value(self.source, token.span)
+                    .ok_or_else(|| self.value_missing(token))?;
+                literal(ExprKind::String(value))
+            }
             TokenKind::Number { .. } => {
                 self.advance(Goal::Div)?;
                 let value = numeric_value(self.source, token.span)

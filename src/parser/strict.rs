@@ -87,11 +87,23 @@ impl Parser<'_> {
         let mut body = Vec::new();
         let mut in_prologue = true;
         let mut declares_strict = false;
+        // §12.9.4.1 judges a legacy octal escape against the strictness of the code it is *in*, and
+        // a prologue decides that after the fact. So the first one seen in this prologue is kept
+        // and answered for below — the directive that makes the body strict may be several
+        // statements further on.
+        let mark = self.legacy_strings.len();
+        let mut legacy_in_prologue: Option<crate::span::Span> = None;
         while self.current.kind != terminator && self.current.kind != crate::lexer::TokenKind::Eof {
+            let before = self.legacy_strings.len();
             let stmt = self.parse_statement_list_item()?;
             if in_prologue {
                 match self.directive_text(&stmt) {
                     Some(text) => {
+                        if legacy_in_prologue.is_none()
+                            && let Some(span) = self.legacy_strings.get(before).copied()
+                        {
+                            legacy_in_prologue = Some(span);
+                        }
                         if text == "\"use strict\"" || text == "'use strict'" {
                             self.strict = true;
                             declares_strict = true;
@@ -101,6 +113,18 @@ impl Parser<'_> {
                 }
             }
             body.push(stmt);
+        }
+        // Everything this body recorded has now been answered for, one way or the other: an escape
+        // outside the prologue was judged where it was read, because `self.strict` was already
+        // whatever it is going to be by then.
+        self.legacy_strings.truncate(mark);
+        if let Some(span) = legacy_in_prologue
+            && declares_strict
+        {
+            return Err(ParseError {
+                kind: ParseErrorKind::StrictLegacyOctal,
+                span,
+            });
         }
         Ok((body.into_boxed_slice(), declares_strict))
     }

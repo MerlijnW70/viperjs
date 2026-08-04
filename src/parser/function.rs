@@ -144,6 +144,17 @@ impl Parser<'_> {
             end,
             is_strict,
         } = parts?;
+        // §15.2.1 — a function whose **body** is strict may not be called `eval` or `arguments`,
+        // and the body says so after the name has been read. `parse_function_name` asks the same
+        // question with the *enclosing* strictness, which is the right answer for
+        // `"use strict"; function arguments() {}` and the wrong one for
+        // `function arguments() { "use strict"; }`.
+        if is_strict
+            && !self.strict
+            && let Some(written) = &name
+        {
+            check_strict_name(&written.name, written.span)?;
+        }
         Ok(Function {
             name,
             parameters,
@@ -380,6 +391,21 @@ fn check_parameter_names(parameters: &FormalParameters) -> Result<(), ParseError
     Ok(())
 }
 
+/// §15.2.1 — the names a function may not have in strict code.
+///
+/// `eval` and `arguments`, which are the two §13.1.1 refuses as a `BindingIdentifier` there. Split
+/// out because two callers ask it about different text: the name as it is read, with the enclosing
+/// strictness, and the same name again once the body's own directive has spoken.
+pub(super) fn check_strict_name(name: &str, span: crate::span::Span) -> Result<(), ParseError> {
+    match name {
+        "eval" | "arguments" => Err(ParseError {
+            kind: ParseErrorKind::StrictEvalOrArguments,
+            span,
+        }),
+        _ => Ok(()),
+    }
+}
+
 /// §15.2.1 and §13.1.1, for a strict function's parameters.
 ///
 /// Two rules the parameters could not be judged by when they were read, the body not yet having
@@ -472,6 +498,50 @@ struct FunctionParts {
 mod tests {
     use crate::parser::test_support::*;
     use crate::parser::{ParseErrorKind, parse_script};
+
+    #[test]
+    fn a_bodys_own_use_strict_re_judges_the_text_around_it() {
+        // Three early errors that a directive prologue decides *after* the text they are about has
+        // been read. Each was accepted, and each is refused when the same strictness comes from
+        // outside — so the checks existed and were being asked at the wrong moment.
+        //
+        // §12.9.4.1 — a legacy octal escape is judged against the strictness of the code it is in,
+        // and the escape here is two statements before the thing that makes it strict.
+        assert_eq!(
+            script_error(r#"function invalid() { "\1"; "use strict"; }"#).kind,
+            ParseErrorKind::StrictLegacyOctal
+        );
+        assert_eq!(
+            script_error(r#""\1"; "use strict";"#).kind,
+            ParseErrorKind::StrictLegacyOctal
+        );
+        // §15.2.1 — a function whose *body* is strict may not be called `eval` or `arguments`, and
+        // the name was read before the body said anything.
+        assert_eq!(
+            script_error(r#"function arguments() { "use strict"; }"#).kind,
+            ParseErrorKind::StrictEvalOrArguments
+        );
+        assert_eq!(
+            script_error(r#"var f = function eval() { "use strict"; };"#).kind,
+            ParseErrorKind::StrictEvalOrArguments
+        );
+        // §15.5.1 — the same about a method's parameters, of which a setter is the smallest case.
+        assert_eq!(
+            script_error(r#"var o = { set x(eval) { "use strict"; } };"#).kind,
+            ParseErrorKind::StrictEvalOrArguments
+        );
+
+        // Every sloppy form is still accepted, which is what keeps this about the *prologue* rather
+        // than about strict mode arriving everywhere.
+        assert!(parse_script(r#"function ok() { "\1"; }"#).is_ok());
+        assert!(parse_script(r#"function ok() { "use strict"; } var s = "\1";"#).is_ok());
+        assert!(parse_script("function arguments() {}").is_ok());
+        assert!(parse_script("var o = { set x(eval) {} };").is_ok());
+        // A directive that is not `"use strict"` decides nothing, so an escape beside one stands.
+        assert!(parse_script(r#"function ok() { "\1"; "use asm"; }"#).is_ok());
+        // …and one *after* the prologue has ended is judged where it is read, which it already was.
+        assert!(parse_script(r#"function ok() { var a = 1; "\1"; }"#).is_ok());
+    }
 
     #[test]
     fn a_slash_after_a_declaration_opens_a_regular_expression() {
