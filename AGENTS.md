@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.27% of test262** — 77,571 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.28% of test262** — 77,583 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -461,6 +461,29 @@ naming the next slice, not a wasted change.**
 file.** §7.4.9 was already recorded that way for the Iterator Helpers' `return`; this is the same
 distinction reached from the other side, and the tell both times is *which completion the close is
 carrying* rather than what kind of close it looks like.
+
+### §9.1.1.2.5 is four steps, and a `with` write was doing one of them
+
++12 runs. Writing through a name a `with` resolved is `SetMutableBinding` on an Object Environment
+Record, and it asks `HasProperty` **again** before it writes: everything between resolving the
+reference and using it is a program, so `with (o) { x += 1 }` where `o`'s `x` getter deletes `x`
+reads a binding that is gone by the time the write happens. Step 3 tells strict code so with a
+ReferenceError; sloppy code is told nothing and step 4 makes the property again. Step 4's `S` also
+makes a refused write a TypeError in strict code, which is §6.2.5.6's rule for every other reference
+and was not applied here.
+
+**The doc named its own gap and was out of date.** It said praxis "does not yet carry a store's
+strictness as far as `[[Set]]`" — the strictness is an argument three lines above it. That is the
+fourth comment this session that described a condition which had already passed.
+
+**And it exposed something larger, unbuilt: a direct `eval` inside a `with` cannot see the `with`
+at all.** `with (o) { eval('x') }` throws where it should read `o.x`, and `with (o) { eval('x = 7') }`
+makes a **global** instead of writing `o.x`. DR-0018's chain is a list of *name lists*, and an object
+environment has no names to list — its bindings are the object's properties, discovered as the
+program runs. So the eval's compiler cannot see that level, resolves every free name past it, and
+answers about the wrong scope. Fixing it means marking a level of the chain as "an object
+environment, resolve dynamically" and having the eval compiler emit `ResolveName` for names that
+cross it, exactly as code written inside the `with` already does.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

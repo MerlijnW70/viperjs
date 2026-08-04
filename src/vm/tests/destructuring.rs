@@ -881,5 +881,8 @@ fn a_jump_out_of_a_pattern_closes_its_iterator_as_a_throw_does() {
         "after,1"
     );
     // And an ordinary destructuring still works, which is what keeps this about the jump.
-    assert_eq!(run("var a = {}; [a.x] = [7]; var [b] = [8]; a.x + ',' + b"), "7,8");
+    assert_eq!(
+        run("var a = {}; [a.x] = [7]; var [b] = [8]; a.x + ',' + b"),
+        "7,8"
+    );
 }

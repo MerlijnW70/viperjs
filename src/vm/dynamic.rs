@@ -211,12 +211,33 @@ impl Vm {
                 heap.set_variable(environment, index, value);
                 Ok(true)
             }
-            // §9.1.1.2.4 `SetMutableBinding` is `Set(bindingObject, N, V, S)`, and praxis does not
-            // yet carry a store's strictness as far as `[[Set]]` — the same gap `StoreGlobal` has
-            // and names. So a refused write is silent here as it is there, rather than being
-            // silent in one place and loud in the other.
+            // §9.1.1.2.5 `SetMutableBinding` — and it is four steps, not one.
             Resolved::Property(object) => {
-                self.set_property_key(Value::Object(object), key, value, heap)?;
+                let base = Value::Object(object);
+                // Step 2 — the binding is looked for **again**, because everything between
+                // resolving the reference and writing through it is a program.
+                // `with (o) { x += 1 }` where `o`'s `x` getter deletes `x` is the whole of the
+                // case: the read succeeds, the property goes, and step 3 tells strict code so
+                // rather than quietly making it again.
+                //
+                // `HasProperty` and not §9.1.1.2.1's `HasBinding`: `@@unscopables` decides what a
+                // `with` can *see*, and by here the reference has already been resolved.
+                if strict && !self.has_property_key(base, key, heap)? {
+                    return Err(Abrupt::Raised(
+                        crate::value::ErrorKind::Reference,
+                        "an assignment to a binding that is no longer there",
+                    ));
+                }
+                // Step 4's `S` — a write the object refuses is a TypeError in strict code, which
+                // is the rule §6.2.5.6 applies to every other reference. This doc used to say
+                // praxis "does not yet carry a store's strictness as far as `[[Set]]`"; the
+                // strictness is the argument three lines up.
+                let accepted = self.set_property_key(base, key, value, heap)?;
+                if strict && matches!(accepted, Value::Boolean(false)) {
+                    return Err(Abrupt::type_error(
+                        "an assignment to a property that would not take it",
+                    ));
+                }
                 Ok(true)
             }
             Resolved::Global => Ok(false),
