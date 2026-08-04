@@ -162,9 +162,9 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
-| ~939 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16` |
-| 846 | the heap budget | almost all are `RegExp/property-escapes`, and the lab has **parked** them — see below. The count shuffles between this row and the ten-second budget from run to run; it is one bucket wearing two names |
-| 454 | `cannot read a property…` | **Atomics 316** (most needing `$262.agent`, so ~80 are winnable in a one-thread engine) and `Error.prototype.stack` 64, a proposal |
+| ~821 | `what was called is not a function` | **now mostly proposals**: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`, `Math.sumPrecise`, `JSON.rawJSON`. It was **939** and this file said the same thing about it then, while seven *shipped* functions were hiding in it — see below. **Ask the engine what it has** before believing this row |
+| ~898 | the heap budget | almost all are `RegExp/property-escapes`, and the lab has **parked** them — see below. The count shuffles between this row and the ten-second budget from run to run; it is one bucket wearing two names |
+| ~400 | `cannot read a property…` | **Atomics ~300** (most needing `$262.agent`, so ~80 are winnable in a one-thread engine) and `Error.prototype.stack` 64, a proposal |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |
 | 238 | `Calling as constructor…` | all `Temporal` |
 | 224 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
@@ -785,8 +785,8 @@ doc says which line to change if data ever arrives.
 
 ### What is left, in the order the numbers put it
 
-- **A sloppy `var` or function declaration inside a direct `eval` in a function — 128 runs**, and
-  the largest thing praxis refuses by name. **Attempted 2026-08-04 and reverted: 0 fixed, 18
+- **A sloppy `var` or function declaration inside a direct `eval` in a function — 95 runs** (75 for
+  a `var`, 20 for a function), and the largest thing praxis refuses by name. **Attempted 2026-08-04 and reverted: 0 fixed, 18
   regressed, net −103 runs.** Do not re-derive the design — it was built, it works by hand, and it
   is not the blocker. §19.2.1.1's `varEnv` was recorded on the frame and each var-declared name
   sorted by comparing its resolved depth against it; `function f(){ var x = 1; eval("var x = 2");
@@ -815,6 +815,20 @@ doc says which line to change if data ever arrives.
   remains is the *shrink* cases inside the methods, and `subarray`, which goes on to build a view
   that §23.2.5.1 then refuses with a **RangeError**. Several of these files also use the
   immutable-`ArrayBuffer` harness — a proposal — so read what a row is asking before counting it.
+- **Four things sized and left unbuilt on purpose, so they are not re-costed.**
+  - **`String.prototype.normalize` — 20 runs.** Needs the UCD's canonical decompositions, combining
+    classes, composition exclusions and compatibility mappings. Eleven of its fourteen files test
+    only the error paths, which is the trap: a `normalize` that returned its receiver would pass
+    them and be a silently wrong answer for the other three.
+  - **`Function.prototype.toString` of anything built from source — ~16 runs.** §20.2.3.5 wants the
+    source text and praxis answers `function anonymous() { [native code] }` for every function there
+    is, dynamic or not. It needs a span and the source retained on every `Chunk`.
+  - **`[[IsHTMLDDA]]` — 50 runs.** §B.3.6's three carve-outs (`ToBoolean`, `IsLooselyEqual`,
+    `typeof`) are small; what is not small is that the slot belongs to a *host* object, so the
+    embedding surface has to be able to make one and `conformance` builds its `$262` by writing
+    JavaScript source.
+  - **`Atomics` — ~300 runs**, of which about 80 do not need `$262.agent` and the rest do.
+
 - **`super(…)` inside a direct `eval` — 16 runs**, and the whole of what is left of that entry.
   `new.target` in an arrow's direct eval was the other half and is **built**: the fact travels on
   `Chunk::lexical_new_target`, an arrow written inside a function inherits it, and it moved **no
