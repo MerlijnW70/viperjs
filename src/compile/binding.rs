@@ -311,6 +311,17 @@ impl Compiler<'_> {
     /// The `done` slot latches. §8.6.2 asks a spent iterator nothing further, so `[a, b]` over a
     /// one-element iterable calls `next` twice and not three times — which a `next` that counts
     /// its own calls can see.
+    ///
+    /// **A step that throws latches it too**, which is §7.4.8 steps 2.a, 5.a and 9: `next`
+    /// throwing, a `done` getter throwing and a `value` getter throwing all set `[[Done]]` before
+    /// the completion goes on its way. What that decides is whether the abandoning caller then
+    /// calls `return` — and it must not, because an iterator that failed to produce has not been
+    /// left mid-walk.
+    ///
+    /// Said by setting the flag **before** the call and clearing it only on the path that really
+    /// produced a value. That is exactly the clause with no handler around the call: every way out
+    /// except "a value arrived" leaves it true, so there is no list of throwing steps to keep in
+    /// step with the ones below.
     pub(super) fn emit_step(
         &mut self,
         iterator: u32,
@@ -319,6 +330,9 @@ impl Compiler<'_> {
     ) -> Result<(), CompileError> {
         self.chunk.emit(Instruction::LoadVariable(0, done));
         let spent = self.chunk.emit_jump(Instruction::JumpIfTrue);
+        self.constant(Value::Boolean(true))?;
+        self.chunk.emit(Instruction::StoreVariable(0, done));
+        self.chunk.emit(Instruction::Pop);
         self.chunk.emit(Instruction::LoadVariable(0, iterator));
         self.chunk.emit(Instruction::LoadVariable(0, next));
         self.chunk.emit(Instruction::CallMethod(0));
@@ -329,14 +343,16 @@ impl Compiler<'_> {
         self.chunk.emit(Instruction::GetProperty);
         let going = self.chunk.emit_jump(Instruction::JumpIfFalse);
         self.chunk.emit(Instruction::Pop);
-        self.constant(Value::Boolean(true))?;
-        self.chunk.emit(Instruction::StoreVariable(0, done));
-        self.chunk.emit(Instruction::Pop);
         let ran_out = self.chunk.emit_jump(Instruction::Jump);
         self.chunk.patch(going)?;
         let name = self.name_of("value");
         self.constant(Value::String(name))?;
         self.chunk.emit(Instruction::GetProperty);
+        // Step 10 — a value really did arrive, so the walk is live again. The last write, because
+        // everything above it can still throw and must leave the flag set.
+        self.constant(Value::Boolean(false))?;
+        self.chunk.emit(Instruction::StoreVariable(0, done));
+        self.chunk.emit(Instruction::Pop);
         let got = self.chunk.emit_jump(Instruction::Jump);
         self.chunk.patch(spent)?;
         self.chunk.patch(ran_out)?;

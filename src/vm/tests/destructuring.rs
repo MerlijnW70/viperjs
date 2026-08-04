@@ -676,3 +676,65 @@ fn a_spread_element_iterates_rather_than_reading_indices() {
     // The ordinary path is unchanged — a literal with no spread still knows its own length.
     assert_eq!(run("[1, , 2].length"), "3");
 }
+
+#[test]
+fn a_step_that_throws_leaves_the_iterator_spent_and_unclosed() {
+    // §7.4.8 steps 2.a, 5.a and 9 — `next` throwing, a `done` getter throwing and a `value` getter
+    // throwing all set `[[Done]]` before the completion leaves. What that decides is §8.6.2 step 4
+    // and §13.15.5.2 step 5: the abandoning caller closes the iterator only while it is *not*
+    // done, and an iterator that failed to produce has not been left mid-walk.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { throw 'from next' }, \
+                 return: function () { closed += 1; return {} } } }; \
+             try { var [a] = able } catch (e) {} closed"),
+        "0"
+    );
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { get done() { throw 'from done' } } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             try { var [a] = able } catch (e) {} closed"),
+        "0"
+    );
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, get value() { throw 'from value' } } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             try { var [a] = able } catch (e) {} closed"),
+        "0"
+    );
+    // …and a walk abandoned while the iterator is still going **is** closed, which is the half
+    // that keeps this about `[[Done]]` rather than about closing less often. The throw here is
+    // after a value really arrived, so the flag was cleared and step 4 has something to close.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             var o = {}; Object.defineProperty(o, 'x', { set: function () { throw 'from target' } }); \
+             try { [o.x] = able } catch (e) {} closed"),
+        "1"
+    );
+    // A pattern that finishes first closes too, and that path is not a throw at all.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             var [a] = able; a + ',' + closed"),
+        "1,1"
+    );
+    // And an iterator that ran out on its own is not closed — it was not abandoned.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: true } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             var [a] = able; (a === undefined) + ',' + closed"),
+        "true,0"
+    );
+}

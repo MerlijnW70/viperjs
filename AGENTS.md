@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.12% of test262** — 77,436 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.16% of test262** — 77,468 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -406,6 +406,28 @@ as an assertion.** Two `groupBy` guards survived mutation because the test asked
 distinguishes them is *what ran first* — a `[Symbol.iterator]` getter that must not fire, and a
 message about `items` rather than about the engine's next move. **The fourth time this session that
 a test passed against the bug it was written to catch.**
+
+### A step that throws is a step that finished, and destructuring was closing anyway
+
++32 runs, and it is one flag written in a different place. §7.4.8 `IteratorStepValue` sets
+`[[Done]]` to true in *three* of its steps — 2.a when `next` throws, 5.a when a `done` getter
+throws, 9 when a `value` getter throws — and what that decides is whether the caller abandoning the
+walk then calls `return`. It must not: an iterator that failed to produce has not been left
+mid-walk, and §8.6.2 step 4 and §13.15.5.2 step 5 both close only while `[[Done]]` is false.
+
+**The fix is where the flag is written, not a list of the ways out.** praxis set `done` on the two
+ordinary paths — spent, and a value arrived — and a throw from anywhere in between left it false.
+Setting it **before** the call and clearing it only on the path that really produced a value is the
+clause exactly, with no handler around the call and nothing to keep in step: every way out except
+"a value arrived" leaves it set. Written as a handler it would have been three catch sites that can
+drift apart from the three steps.
+
+**Still open beside it, and worth more: §13.15.5.5 step 1 evaluates the assignment target's
+*reference* before the iterator is stepped.** `0, [{}[thrower()]] = iterable` must call `next`
+**zero** times and close once; praxis steps first, so it calls `next` once and closes not at all.
+Fixing it means splitting the compiler's `destructure` into "push the reference" and "store through
+it", because today the target is emitted after the value is on the stack. That is a bytecode change
+and not a reordering.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

@@ -14117,20 +14117,16 @@ language/expressions/assignment/destructuring/target-assign-throws-iterator-retu
 language/expressions/assignment/destructuring/target-assign-throws-iterator-return-get-throws.js (strict) :: it threw an object with no name: Thrown value was not an object!
 language/expressions/assignment/destructuring/target-assign-throws-iterator-return-is-not-callable.js :: it threw an object with no name: Expected a MyError but got a TypeError
 language/expressions/assignment/destructuring/target-assign-throws-iterator-return-is-not-callable.js (strict) :: it threw an object with no name: Expected a MyError but got a TypeError
-language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js :: it threw an object with no name
-language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js :: it threw TypeError: what was called is not a function
+language/expressions/assignment/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/assignment/dstr/array-elem-iter-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/array-elem-iter-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/array-elem-iter-rtrn-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/expressions/assignment/dstr/array-elem-iter-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14139,8 +14135,6 @@ language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close.js :: 
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-list-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -14151,24 +14145,16 @@ language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close.js :: 
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
-language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/expressions/assignment/dstr/array-elem-trlg-iter-rest-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
-language/expressions/assignment/dstr/array-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-rest-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-rest-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-rest-iter-rtrn-close-err.js :: it threw an object with no name
-language/expressions/assignment/dstr/array-rest-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close-err.js :: it threw TypeError: what was called is not a function
+language/expressions/assignment/dstr/array-rest-iter-rtrn-close-err.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/assignment/dstr/array-rest-iter-rtrn-close-null.js :: it threw TypeError: what was called is not a function
 language/expressions/assignment/dstr/array-rest-iter-rtrn-close-null.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/assignment/dstr/array-rest-iter-rtrn-close.js :: it threw an object with no name
 language/expressions/assignment/dstr/array-rest-iter-rtrn-close.js (strict) :: it threw an object with no name
 language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/expressions/assignment/dstr/array-rest-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
-language/expressions/assignment/dstr/array-rest-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/expressions/assignment/dstr/array-rest-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/expressions/assignment/dstr/array-rest-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/expressions/assignment/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/expressions/assignment/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -15115,10 +15101,6 @@ language/statements/class/subclass/superclass-bound-function.js (strict) :: it t
 language/statements/do-while/tco-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-rtrn-close-null.js :: the test called $DONE with Promise incorrectly fulfilled.
 language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-rtrn-close-null.js (strict) :: the test called $DONE with Promise incorrectly fulfilled.
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-thrw-close-skip.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-thrw-close-skip.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-list-thrw-close-skip.js :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
-language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«1», «0») to be true
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
 language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
 language/statements/for-in/head-const-bound-names-fordecl-tdz.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
@@ -15131,20 +15113,16 @@ language/statements/for-in/scope-head-lex-close.js :: it threw an object with no
 language/statements/for-in/scope-head-lex-close.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/scope-head-lex-open.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-in/scope-head-lex-open.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js :: it threw an object with no name
-language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js :: it threw TypeError: what was called is not a function
+language/statements/for-of/dstr/array-elem-iter-rtrn-close-err.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/for-of/dstr/array-elem-iter-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-iter-rtrn-close-null.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-iter-rtrn-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/statements/for-of/dstr/array-elem-iter-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-trlg-iter-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close-null.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -15153,8 +15131,6 @@ language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close.js :: it th
 language/statements/for-of/dstr/array-elem-trlg-iter-list-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-list-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
@@ -15165,24 +15141,16 @@ language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close.js :: it th
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-rtrn-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
-language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «1») to be true
 language/statements/for-of/dstr/array-elem-trlg-iter-rest-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «1») to be true
-language/statements/for-of/dstr/array-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-rest-elision-iter-abpt.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-rest-elision-iter-abpt.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js :: it threw an object with no name
-language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js (strict) :: it threw an object with no name
+language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js :: it threw TypeError: what was called is not a function
+language/statements/for-of/dstr/array-rest-iter-rtrn-close-err.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/for-of/dstr/array-rest-iter-rtrn-close-null.js :: it threw TypeError: what was called is not a function
 language/statements/for-of/dstr/array-rest-iter-rtrn-close-null.js (strict) :: it threw TypeError: what was called is not a function
 language/statements/for-of/dstr/array-rest-iter-rtrn-close.js :: it threw an object with no name
 language/statements/for-of/dstr/array-rest-iter-rtrn-close.js (strict) :: it threw an object with no name
 language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-iter-thrw-close-err.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
-language/statements/for-of/dstr/array-rest-iter-thrw-close-skip.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-language/statements/for-of/dstr/array-rest-iter-thrw-close-skip.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 language/statements/for-of/dstr/array-rest-iter-thrw-close.js :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-iter-thrw-close.js (strict) :: it threw an object with no name: Expected SameValue(«11», «0») to be true
 language/statements/for-of/dstr/array-rest-lref-err.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
