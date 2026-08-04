@@ -2498,12 +2498,6 @@ built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.p
 built-ins/Object/prototype/valueOf/15.2.4.4-2.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Object/values/order-after-define-property.js :: it threw an object with no name: Actual [a] and expected [a, b] should have the same contents.
 built-ins/Object/values/order-after-define-property.js (strict) :: it threw an object with no name: Actual [a] and expected [a, b] should have the same contents.
-built-ins/Promise/all/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/all/invoke-resolve-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/all/invoke-then-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/all/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/all/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/all/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/allKeyed/arg-is-function.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/arg-is-function.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/arg-not-object-reject-bigint.js :: the test called $DONE with Test262Error: BigInt Expected a TypeError to be thrown asynchronously but the function threw synchronously
@@ -2592,12 +2586,6 @@ built-ins/Promise/allKeyed/result-property-descriptors.js :: the test called $DO
 built-ins/Promise/allKeyed/result-property-descriptors.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/symbol-keys.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/symbol-keys.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/allSettled/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/allSettled/invoke-resolve-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/allSettled/invoke-then-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/allSettled/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/allSettled/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/allSettled/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/allSettledKeyed/arg-is-function.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/arg-is-function.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/arg-not-object-reject-bigint.js :: the test called $DONE with Test262Error: BigInt Expected a TypeError to be thrown asynchronously but the function threw synchronously
@@ -2684,12 +2672,6 @@ built-ins/Promise/allSettledKeyed/result-property-descriptors.js :: the test cal
 built-ins/Promise/allSettledKeyed/result-property-descriptors.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/symbol-keys.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allSettledKeyed/symbol-keys.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/any/invoke-resolve-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/Promise/any/invoke-resolve-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/Promise/any/invoke-then-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/Promise/any/invoke-then-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/Promise/any/invoke-then-get-error-close.js :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
-built-ins/Promise/any/invoke-then-get-error-close.js (strict) :: the test called $DONE with Test262Error: Expected SameValue(«0», «1») to be true
 built-ins/Promise/get-prototype-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Promise/get-prototype-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Promise/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
@@ -2698,12 +2680,6 @@ built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js :
 built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
-built-ins/Promise/race/invoke-resolve-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/race/invoke-resolve-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/race/invoke-then-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/race/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/race/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/race/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Proxy/apply/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js :: it threw TypeError: what was called is not a function

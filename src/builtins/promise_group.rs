@@ -74,10 +74,25 @@ fn combine(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, group: Group) ->
     // different ones. It must be callable, and if it is not, that is the first thing rejected.
     let resolve = read_resolve(vm, heap, constructor);
     let outcome = resolve.and_then(|resolve| {
+        // Step 5's `GetIterator` — lifted out of the walk so that step 8.a has something to close.
+        // A failure here is *before* there is an iterator and closes nothing, which is why the two
+        // are separate statements rather than one.
+        let iterator = super::array::iterator_of(vm, heap, call.argument(0))?;
+        let Some(iterator) = iterator else {
+            return Err(Abrupt::type_error(
+                "a promise combinator needs something iterable",
+            ));
+        };
+        // §7.4.2 step 4 — reading `next` is part of building the **record**, not part of walking
+        // it. So a `next` *getter* that throws is step 5's failure and step 8 is never reached:
+        // there is nothing to close, because there was never an iterator record. Left inside the
+        // walk it would have been a throw with `done` still false, and closed one.
+        let next = super::iterator::next_method(vm, heap, iterator)?;
         walk(
             vm,
             heap,
-            call.argument(0),
+            iterator,
+            next,
             constructor,
             resolve,
             capability,
@@ -110,21 +125,17 @@ fn read_resolve(vm: &mut Vm, heap: &mut Heap, constructor: ObjectId) -> Completi
 }
 
 /// §27.2.4.1.1 and its three siblings — the walk over the iterable.
+#[allow(clippy::too_many_arguments)] // one Iterator Record and one group, spelled out
 fn walk(
     vm: &mut Vm,
     heap: &mut Heap,
-    iterable: Value,
+    iterator: Value,
+    next: Value,
     constructor: ObjectId,
     resolve: Value,
     capability: Capability,
     group: Group,
 ) -> Completion<()> {
-    let iterator = super::array::iterator_of(vm, heap, iterable)?;
-    let Some(iterator) = iterator else {
-        return Err(Abrupt::type_error(
-            "a promise combinator needs something iterable",
-        ));
-    };
     // The counter starts at one and the walk itself holds that one, so the group cannot settle
     // while there are still elements to read — however many of them are already settled.
     let gather = Rc::new(RefCell::new(Gather {
@@ -133,13 +144,15 @@ fn walk(
         capability,
         group,
     }));
-    let next = key(heap, "next");
-    let next = vm.get_property_key(iterator, next, heap)?;
     let done_key = key(heap, "done");
     let value_key = key(heap, "value");
     let then_key = key(heap, "then");
     let mut index = 0_usize;
     loop {
+        // §7.4.8 steps 2.a, 5.a and 9 — a step that throws leaves the record **done**, so nothing
+        // below closes for it. Said by *where the `?` is* rather than by a flag: everything from
+        // here to the value arriving propagates untouched, and everything after it goes through
+        // the close below. A flag would have needed an initial value no input could reach.
         let step = vm.call_value(next, iterator, &[], heap)?;
         let Value::Object(_) = step else {
             return Err(Abrupt::type_error("an iterator must answer an object"));
@@ -148,6 +161,8 @@ fn walk(
             break;
         }
         let element = vm.get_property_key(step, value_key, heap)?;
+        // A value arrived, so the walk is live and §27.2.4.1 step 8.a now has an iterator to
+        // close. `resolve`, the `then` lookup and the `then` call are all inside that.
         // The slot is made now and filled later, so that the answer is in *iteration* order
         // however the promises settle. A list appended to on settlement would hold the right
         // values in the wrong places, and only sometimes.
@@ -157,17 +172,25 @@ fn walk(
         // a slot or the count, and a guard here would be a branch with no behaviour behind it.
         // The one place the difference is real is the settlement below, which `race` must not do.
         gather.borrow_mut().values.push(Value::Undefined);
-        let promise = vm.call_value(resolve, Value::Object(constructor), &[element], heap)?;
-        let (on_fulfilled, on_rejected) = handlers(vm, heap, &gather, index, group);
-        // Incremented *before* subscribing, because an already-settled promise settles this
-        // element during `then` — and a count raised afterwards would already be wrong.
-        gather.borrow_mut().remaining += 1;
-        let then = vm.get_property_key(promise, then_key, heap)?;
-        vm.call_value(then, promise, &[on_fulfilled, on_rejected], heap)?;
+        let subscribed = subscribe(
+            vm,
+            heap,
+            element,
+            index,
+            then_key,
+            &gather,
+            constructor,
+            resolve,
+            group,
+        );
+        if let Err(error) = subscribed {
+            // Step 8.a's `IteratorClose`, and the **swallowing** one: the clause hands §7.4.9 an
+            // abrupt completion and its step 4 keeps that one, so what the `return` method does
+            // next is not the program's answer.
+            super::iterator::Walk::close_unread(vm, heap, iterator);
+            return Err(error);
+        }
         index += 1;
-        // DR-0013 — an iterator that never says it is done would otherwise grow the list until the
-        // process died, and each element allocates. The heap's budget is what notices.
-        super::array_methods::within_budget(heap)?;
     }
     // The walk is over and gives up the one it was holding. Only now can the count reach zero, and
     // for an empty iterable it reaches zero here — which is why `Promise.all([])` resolves with an
@@ -181,6 +204,36 @@ fn walk(
         settle_if_done(vm, heap, &gather)?;
     }
     Ok(())
+}
+
+/// One element: resolve it through the constructor and subscribe this group's handlers to it.
+///
+/// Everything §27.2.4.1.1 does *after* a value has been taken from the iterator, which is exactly
+/// the part step 8.a closes for. Split out so that the closing is one branch at one place rather
+/// than a flag the loop keeps in step with three `?`s.
+#[allow(clippy::too_many_arguments)] // the element, where it goes, and the group it belongs to
+fn subscribe(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    element: Value,
+    index: usize,
+    then_key: crate::heap::PropertyKey,
+    gather: &Rc<RefCell<Gather>>,
+    constructor: ObjectId,
+    resolve: Value,
+    group: Group,
+) -> Completion<()> {
+    let promise = vm.call_value(resolve, Value::Object(constructor), &[element], heap)?;
+    let (on_fulfilled, on_rejected) = handlers(vm, heap, gather, index, group);
+    // Incremented *before* subscribing, because an already-settled promise settles this element
+    // during `then` — and a count raised afterwards would already be wrong.
+    gather.borrow_mut().remaining += 1;
+    let then = vm.get_property_key(promise, then_key, heap)?;
+    vm.call_value(then, promise, &[on_fulfilled, on_rejected], heap)?;
+    // DR-0013 — an iterator that never says it is done would otherwise grow the list until the
+    // process died, and each element allocates. The heap's budget is what notices, and it counts
+    // as abandoning the walk: the iterator is owed the news like any other early exit.
+    super::array_methods::within_budget(heap)
 }
 
 /// The two functions this element is subscribed with.

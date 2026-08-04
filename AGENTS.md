@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.28% of test262** — 77,584 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.31% of test262** — 77,608 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -501,6 +501,31 @@ would have named — so no program tells the difference and three survivors sat 
 is a **structural** test: one on the emitted instructions (`compile::tests`) and one on the heap
 walk itself, asserting the `false` side that only costs speed. `lab/`'s `name-resolution` measured
 what that side is worth: 3.0× to 3.7× on local variable access.
+
+### §27.2.4.1 step 8.a was missing from all four combinators
+
++24 runs, and it is the same clause the destructuring slices met: an abrupt walk closes the
+iterator unless the iterator is where it went wrong. `Promise.all` over an iterable whose
+`C.resolve` throws left it open — and a `resolve` that throws is the *first* thing that happens
+after a value has been taken, so this is not an exotic path.
+
+**Where the boundary sits took two rounds of mutation coverage to settle.** §7.4.2 step 4 reads `next`, and that
+belongs to building the **record**, not to walking it: a `next` *getter* that throws is step 5
+failing, so step 8 is never reached and nothing is closed — where a `next` *call* that throws
+leaves a record that is already done, which also closes nothing, for a different reason. Reading
+`next` inside the walk made the first of those close.
+
+**And the `[[Done]]` flag turned out to be the wrong shape here, which the ratchet said twice.**
+A `let mut done = false` at the call site survived mutation both before and after the boundary was
+moved, because by then nothing between the initialisation and the loop's first write could throw —
+an initial value no input could reach. The fix was to delete the flag: **the placement of the `?`
+says it instead.** Everything from the step to the value arriving propagates untouched; everything
+after a value has arrived goes through one `subscribe` call whose single error branch closes. One
+branch at one place, and no state to keep in step with three `?`s.
+
+That is the *opposite* conclusion from the compiler's version of the same clause two sections up,
+where a flag set before the call is exactly right — because there the steps are emitted as bytecode
+and there is no Rust `?` to place. **Same clause, two engines, two shapes.**
 
 ### `api.rs` exists — and what an embedder could not do before it
 

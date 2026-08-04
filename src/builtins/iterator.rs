@@ -192,6 +192,17 @@ impl Walk {
     }
 }
 
+/// §7.4.2 step 4 — an iterator's `next`, read **once**, which is what makes a record a record.
+///
+/// For a caller that has already got the iterator some other way and needs the other half. Its
+/// failure belongs to `GetIterator` rather than to the walk, and that is what decides whether an
+/// abrupt completion afterwards closes anything: a `next` getter that throws leaves no record to
+/// close, where a `next` *call* that throws leaves one that is already done.
+pub(super) fn next_method(vm: &mut Vm, heap: &mut Heap, iterator: Value) -> Completion<Value> {
+    let name = key(heap, "next");
+    vm.get_property_key(iterator, name, heap)
+}
+
 /// How §7.3.35 `GroupBy` turns what the callback answered into the key it groups under.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Keying {

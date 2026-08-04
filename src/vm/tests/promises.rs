@@ -938,3 +938,86 @@ fn number_holds_the_same_two_parsers_the_global_does() {
         "true,false,true"
     );
 }
+
+#[test]
+fn a_combinator_that_gives_up_part_way_closes_the_iterable() {
+    // §27.2.4.1 step 8.a and its three siblings — an abrupt walk closes the iterator unless the
+    // iterator is where it went wrong. praxis had no such step at all, so `Promise.all` over an
+    // iterable whose `C.resolve` throws left it open; and a `resolve` that throws is the first
+    // thing that happens after a value has been taken.
+    let combinator = |name: &str| {
+        format!(
+            "var closed = 0; \
+             var able = {{}}; able[Symbol.iterator] = function () {{ return {{ \
+                 next: function () {{ return {{ done: false, value: 1 }} }}, \
+                 return: function () {{ closed += 1; return {{}} }} }} }}; \
+             var C = function (x) {{ x(function () {{}}, function () {{}}) }}; \
+             C.prototype = Promise.prototype; \
+             C.resolve = function () {{ throw 'from resolve' }}; \
+             Promise.{name}.call(C, able); closed"
+        )
+    };
+    for name in ["all", "allSettled", "any", "race"] {
+        assert_eq!(run(&combinator(name)), "1", "Promise.{name}");
+    }
+    // The `then` lookup and the `then` call are inside the walk too, so both are places the
+    // iterator is still owed the news.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             var C = function (x) { x(function () {}, function () {}) }; \
+             C.prototype = Promise.prototype; \
+             C.resolve = function () { return { get then() { throw 'from then' } } }; \
+             Promise.all.call(C, able); closed"),
+        "1"
+    );
+    // §7.4.8 — a step that throws leaves the record **done**, so nothing is closed: an iterator
+    // that failed to produce was not abandoned. This is the row that stops the fix from being
+    // "close whenever anything goes wrong".
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { throw 'from next' }, \
+                 return: function () { closed += 1; return {} } } }; \
+             Promise.all(able); closed"),
+        "0"
+    );
+    // §7.4.2 step 4 — reading `next` builds the **record**, so a `next` *getter* that throws is
+    // `GetIterator` failing and step 8 is never reached: there is nothing to close. That is the
+    // one place the initial `[[Done]]` matters, and reading `next` inside the walk instead would
+    // have closed here.
+    assert_eq!(
+        run("var closed = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 get next() { throw 'from the next getter' }, \
+                 return: function () { closed += 1; return {} } } }; \
+             Promise.all(able); closed"),
+        "0"
+    );
+    // And a walk that finishes on its own closes nothing either — an empty iterable and a finite
+    // one both run to `done` and were never abandoned.
+    assert_eq!(
+        run("var closed = 0; var n = 0; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { n += 1; return n <= 2 ? { done: false, value: n } : { done: true } }, \
+                 return: function () { closed += 1; return {} } } }; \
+             Promise.all(able); closed"),
+        "0"
+    );
+    // The combinator still answers a promise rather than throwing, which is what
+    // `IfAbruptRejectPromise` is for and what the close must not disturb.
+    assert_eq!(
+        run_settled(
+            "var out = 'pending'; \
+             var able = {}; able[Symbol.iterator] = function () { return { \
+                 next: function () { return { done: false, value: 1 } }, \
+                 return: function () { return {} } } }; \
+             class Sub extends Promise { static resolve() { throw 'from resolve' } } \
+             Promise.all.call(Sub, able).then(null, function (e) { out = 'rejected:' + e });",
+            "out"
+        ),
+        "rejected:from resolve"
+    );
+}
