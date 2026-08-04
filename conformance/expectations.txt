@@ -3320,8 +3320,8 @@ built-ins/RegExp/property-escapes/generated/Regional_Indicator.js :: it threw Ra
 built-ins/RegExp/property-escapes/generated/Regional_Indicator.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Adlam.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Adlam.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Ahom.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Ahom.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Ahom.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Ahom.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Anatolian_Hieroglyphs.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Anatolian_Hieroglyphs.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Arabic.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3342,8 +3342,8 @@ built-ins/RegExp/property-escapes/generated/Script_-_Bengali.js :: it threw Rang
 built-ins/RegExp/property-escapes/generated/Script_-_Bengali.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Beria_Erfe.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Beria_Erfe.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Bhaiksuki.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Bhaiksuki.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Bhaiksuki.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Bhaiksuki.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Bopomofo.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Bopomofo.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Brahmi.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3354,26 +3354,26 @@ built-ins/RegExp/property-escapes/generated/Script_-_Buginese.js :: it threw Ran
 built-ins/RegExp/property-escapes/generated/Script_-_Buginese.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Buhid.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Buhid.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Canadian_Aboriginal.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Canadian_Aboriginal.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Carian.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Carian.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Canadian_Aboriginal.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Canadian_Aboriginal.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Carian.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Carian.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Caucasian_Albanian.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Caucasian_Albanian.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Chakma.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Chakma.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Chakma.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Chakma.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Cham.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Cham.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Cherokee.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Cherokee.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Cherokee.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Cherokee.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Chorasmian.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Chorasmian.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Common.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Common.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Coptic.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Coptic.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Cuneiform.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Cuneiform.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Coptic.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Coptic.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Cuneiform.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Cuneiform.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Cypriot.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Cypriot.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Cypro_Minoan.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3392,16 +3392,16 @@ built-ins/RegExp/property-escapes/generated/Script_-_Duployan.js :: it threw Ran
 built-ins/RegExp/property-escapes/generated/Script_-_Duployan.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Egyptian_Hieroglyphs.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Egyptian_Hieroglyphs.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Elbasan.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Elbasan.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Elbasan.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Elbasan.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Elymaic.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Elymaic.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Ethiopic.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Ethiopic.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Garay.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Garay.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Georgian.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Georgian.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Georgian.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Georgian.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Glagolitic.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Glagolitic.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Gothic.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3418,12 +3418,12 @@ built-ins/RegExp/property-escapes/generated/Script_-_Gurmukhi.js :: it threw Ran
 built-ins/RegExp/property-escapes/generated/Script_-_Gurmukhi.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Gurung_Khema.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Gurung_Khema.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Han.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Han.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Hangul.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Hangul.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Hanifi_Rohingya.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Hanifi_Rohingya.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Han.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Han.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Hangul.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Hangul.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Hanifi_Rohingya.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Hanifi_Rohingya.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Hanunoo.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Hanunoo.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Hatran.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3444,50 +3444,50 @@ built-ins/RegExp/property-escapes/generated/Script_-_Javanese.js :: it threw Ran
 built-ins/RegExp/property-escapes/generated/Script_-_Javanese.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Kaithi.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Kaithi.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Kannada.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Kannada.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Kannada.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Kannada.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Katakana.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Katakana.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Kawi.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Kawi.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Kayah_Li.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Kayah_Li.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Kawi.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Kawi.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Kayah_Li.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Kayah_Li.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Kharoshthi.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Kharoshthi.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Khitan_Small_Script.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Khitan_Small_Script.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Khmer.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Khmer.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Khitan_Small_Script.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Khitan_Small_Script.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Khmer.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Khmer.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Khojki.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Khojki.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Khudawadi.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Khudawadi.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Kirat_Rai.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Kirat_Rai.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Kirat_Rai.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Kirat_Rai.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Lao.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Lao.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Latin.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Latin.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Lepcha.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Lepcha.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Lepcha.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Lepcha.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Limbu.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Limbu.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Linear_A.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Linear_A.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Linear_B.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Linear_B.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Linear_B.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Linear_B.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Lisu.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Lisu.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Lycian.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Lycian.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Lycian.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Lycian.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Lydian.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Lydian.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Mahajani.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Mahajani.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Makasar.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Makasar.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Malayalam.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Malayalam.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Malayalam.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Malayalam.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Mandaic.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Mandaic.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Manichaean.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -3502,10 +3502,10 @@ built-ins/RegExp/property-escapes/generated/Script_-_Meetei_Mayek.js :: it threw
 built-ins/RegExp/property-escapes/generated/Script_-_Meetei_Mayek.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Mende_Kikakui.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Mende_Kikakui.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Cursive.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Cursive.js (strict) :: an earlier run of the same file did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Hieroglyphs.js :: it did not finish within 10 seconds
-built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Hieroglyphs.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Cursive.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Cursive.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Hieroglyphs.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/RegExp/property-escapes/generated/Script_-_Meroitic_Hieroglyphs.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Miao.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Miao.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/property-escapes/generated/Script_-_Modi.js :: it threw RangeError: the heap has grown past what this engine will allocate
@@ -14413,8 +14413,8 @@ built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with
 built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/decodeURI/S15.1.3.1_A2.5_T1.js :: it did not finish within 10 seconds
-built-ins/decodeURI/S15.1.3.1_A2.5_T1.js (strict) :: an earlier run of the same file did not finish within 10 seconds
+built-ins/decodeURI/S15.1.3.1_A2.5_T1.js :: it threw RangeError: the heap has grown past what this engine will allocate
+built-ins/decodeURI/S15.1.3.1_A2.5_T1.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/global/10.2.1.1.3-4-16-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -14737,10 +14737,6 @@ language/expressions/class/async-method/dflt-params-ref-later.js :: it threw Ref
 language/expressions/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/expressions/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-await-expression.js :: the test's status could not be read
-language/expressions/class/cpn-class-expr-computed-property-name-from-await-expression.js :: the test's status could not be read
-language/expressions/class/cpn-class-expr-fields-computed-property-name-from-await-expression.js :: the test's status could not be read
-language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-await-expression.js :: the test's status could not be read
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-call-expr-identifier-reference-yield.js :: it did not parse: unexpected character
@@ -14895,7 +14891,6 @@ language/expressions/division/order-of-evaluation.js :: it threw an object with 
 language/expressions/division/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/does-not-equals/bigint-and-object.js :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
 language/expressions/does-not-equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
-language/expressions/dynamic-import/catch/nested-arrow-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14904,7 +14899,6 @@ language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-sourc
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14913,7 +14907,6 @@ language/expressions/dynamic-import/catch/nested-async-arrow-function-await-impo
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14922,7 +14915,6 @@ language/expressions/dynamic-import/catch/nested-async-arrow-function-return-awa
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-arrow-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14931,7 +14923,6 @@ language/expressions/dynamic-import/catch/nested-async-function-await-import-sou
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14940,7 +14931,6 @@ language/expressions/dynamic-import/catch/nested-async-function-import-source-sp
 language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-function-return-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14949,7 +14939,6 @@ language/expressions/dynamic-import/catch/nested-async-function-return-await-imp
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-function-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14958,7 +14947,6 @@ language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-s
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-async-gen-return-await-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14967,7 +14955,6 @@ language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-s
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-async-gen-return-await-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14976,7 +14963,6 @@ language/expressions/dynamic-import/catch/nested-block-import-catch-import-sourc
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-block-labeled-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14985,7 +14971,6 @@ language/expressions/dynamic-import/catch/nested-block-labeled-import-source-spe
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-block-labeled-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-do-while-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -14994,7 +14979,6 @@ language/expressions/dynamic-import/catch/nested-do-while-import-source-specifie
 language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-do-while-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-else-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -15003,7 +14987,6 @@ language/expressions/dynamic-import/catch/nested-else-import-catch-import-source
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-else-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-function-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -15012,7 +14995,6 @@ language/expressions/dynamic-import/catch/nested-function-import-catch-import-so
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-function-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-if-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -15021,7 +15003,6 @@ language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-s
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-if-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/nested-while-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -15030,7 +15011,6 @@ language/expressions/dynamic-import/catch/nested-while-import-catch-import-sourc
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/nested-while-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/catch/top-level-import-catch-eval-script-code-target.js :: the test's status could not be read
 language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-defer-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-source-text-module.js :: it did not parse: expected `meta`, found an identifier
@@ -15039,18 +15019,6 @@ language/expressions/dynamic-import/catch/top-level-import-catch-import-source-s
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring-abrupt-rejects.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/catch/top-level-import-catch-import-source-specifier-tostring.js (strict) :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/eval-export-dflt-cls-anon.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-cls-name-meth.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-cls-named.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-cls-anon.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-cls-name-meth.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-cls-named.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-fn-anon.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-fn-named.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-gen-anon.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-gen-named.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-export-dflt-expr-in.js :: the test's status could not be read
-language/expressions/dynamic-import/eval-self-once-module.js :: the test's status could not be read
 language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js :: the test called $DONE with Test262Error: Expected an error, but observed no error
 language/expressions/dynamic-import/import-attributes/2nd-param-get-with-error.js (strict) :: the test called $DONE with Test262Error: Expected an error, but observed no error
 language/expressions/dynamic-import/import-attributes/2nd-param-non-object.js :: the test called $DONE with Test262Error: Promise for boolean was not rejected.
@@ -15072,14 +15040,10 @@ language/expressions/dynamic-import/import-defer/import-defer-transitive-async-m
 language/expressions/dynamic-import/import-defer/import-defer-transitive-async-module/promise-prototype-then-not-called.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/sync-dependency-of-deferred-async-module/main.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/import-defer/sync/main.js :: it did not parse: expected `meta`, found an identifier
-language/expressions/dynamic-import/imported-self-update.js :: the test's status could not be read
 language/expressions/dynamic-import/namespace/await-ns-define-own-property.js :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
 language/expressions/dynamic-import/namespace/await-ns-define-own-property.js (strict) :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
-language/expressions/dynamic-import/namespace/await-ns-get-nested-namespace-dflt-indirect.js :: the test's status could not be read
 language/expressions/dynamic-import/namespace/promise-then-ns-define-own-property.js :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
 language/expressions/dynamic-import/namespace/promise-then-ns-define-own-property.js (strict) :: the test called $DONE with Test262Error: No change requested, Reflect.defineProperty: Symbol(Symbol.toStringTag) Expected SameValue(«false», «true») to be true
-language/expressions/dynamic-import/namespace/promise-then-ns-get-nested-namespace-dflt-indirect.js :: the test's status could not be read
-language/expressions/dynamic-import/reuse-namespace-object-from-import.js :: the test's status could not be read
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-empty-str-is-valid-assign-expr.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/dynamic-import/syntax/valid/nested-arrow-assignment-expression-import-defer-script-code-valid.js :: it did not parse: expected `meta`, found an identifier
@@ -15278,7 +15242,6 @@ language/expressions/new/non-ctor-err-realm.js :: it threw TypeError: what was c
 language/expressions/new/non-ctor-err-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
 language/expressions/object/computed-property-name-topropertykey-before-value-evaluation.js (strict) :: it threw an object with no name: Expected SameValue(«"bad"», «"ok"») to be true
-language/expressions/object/cpn-obj-lit-computed-property-name-from-await-expression.js :: the test's status could not be read
 language/expressions/object/fn-name-accessor-get.js :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-get.js (strict) :: it threw an object with no name: name descriptor value should be get ; name value should be get
 language/expressions/object/fn-name-accessor-set.js :: it threw an object with no name: name descriptor value should be set ; name value should be set
@@ -15438,10 +15401,9 @@ language/import/import-defer/deferred-namespace-object/to-string-tag.js :: it di
 language/import/import-defer/errors/get-self-while-defer-evaluating/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/errors/get-self-while-evaluating-async/main.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/errors/get-self-while-evaluating.js :: it did not parse: expected `from`, found `*`
-language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js :: it threw an object with no name: asyncTest called without async flag
+language/import/import-defer/errors/module-throws/defer-import-after-evaluation.js :: the test called $DONE with SyntaxError: an imported module did not parse: expected `from`, found `*`
 language/import/import-defer/errors/module-throws/third-party-evaluation-after-defer-import.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/errors/module-throws/trigger-evaluation.js :: it did not parse: expected `from`, found `*`
-language/import/import-defer/errors/resolution-error/import-defer-of-missing-module-fails.js :: it threw an object with no name: asyncTest called without async flag
 language/import/import-defer/errors/syntax-error/import-defer-of-syntax-error-fails.js :: expected a SyntaxError at resolution time, and it was a SyntaxError before anything ran: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/import-defer-does-not-evaluate.js :: it did not parse: expected `from`, found `*`
 language/import/import-defer/evaluation-sync/module-imported-defer-and-eager.js :: it did not parse: expected `from`, found `*`
@@ -15584,37 +15546,11 @@ language/module-code/namespace/internals/super-access-to-tdz-binding.js :: it th
 language/module-code/source-phase-import/import-source.js :: the test called $DONE with Test262Error: ./import-source-binding-name_FIXTURE.js: Promise should be rejected with a non-SyntaxError
 language/module-code/source-phase-import/import-source.js (strict) :: the test called $DONE with Test262Error: ./import-source-binding-name_FIXTURE.js: Promise should be rejected with a non-SyntaxError
 language/module-code/top-level-await/async-module-does-not-block-sibling-modules.js :: it threw an object with no name: Expected SameValue(«true», «false») to be true
-language/module-code/top-level-await/await-awaits-thenable-not-callable.js :: the test's status could not be read
-language/module-code/top-level-await/await-awaits-thenables-that-throw.js :: the test's status could not be read
-language/module-code/top-level-await/await-awaits-thenables.js :: the test's status could not be read
-language/module-code/top-level-await/await-dynamic-import-resolution.js :: the test's status could not be read
-language/module-code/top-level-await/await-expr-func-expression.js :: the test's status could not be read
-language/module-code/top-level-await/await-expr-new-expr-reject.js :: the test's status could not be read
-language/module-code/top-level-await/await-expr-new-expr.js :: the test's status could not be read
-language/module-code/top-level-await/await-expr-regexp.js :: the test's status could not be read
-language/module-code/top-level-await/await-expr-reject-throws.js :: the test's status could not be read
-language/module-code/top-level-await/await-expr-resolution.js :: the test's status could not be read
-language/module-code/top-level-await/await-void-expr.js :: the test's status could not be read
 language/module-code/top-level-await/dynamic-import-of-waiting-module.js :: the test called $DONE with Test262Error: The second import should not resolve before the first one
 language/module-code/top-level-await/dynamic-import-of-waiting-module.js (strict) :: the test called $DONE with Test262Error: The second import should not resolve before the first one
-language/module-code/top-level-await/dynamic-import-rejection.js :: the test's status could not be read
-language/module-code/top-level-await/dynamic-import-resolution.js :: the test's status could not be read
 language/module-code/top-level-await/fulfillment-order.js :: it threw TypeError: what was called is not a function
-language/module-code/top-level-await/if-await-expr.js :: the test's status could not be read
-language/module-code/top-level-await/module-async-import-async-resolution-ticks.js :: the test's status could not be read
-language/module-code/top-level-await/module-graphs-does-not-hang.js :: the test's status could not be read
-language/module-code/top-level-await/module-import-resolution.js :: the test's status could not be read
-language/module-code/top-level-await/module-import-unwrapped.js :: the test's status could not be read
-language/module-code/top-level-await/module-self-import-async-resolution-ticks.js :: the test's status could not be read
-language/module-code/top-level-await/module-sync-import-async-resolution-ticks.js :: the test's status could not be read
-language/module-code/top-level-await/new-await-parens.js :: the test's status could not be read
-language/module-code/top-level-await/pending-async-dep-from-cycle.js :: the test's status could not be read
 language/module-code/top-level-await/rejection-order.js :: it threw TypeError: what was called is not a function
-language/module-code/top-level-await/top-level-ticks-2.js :: the test's status could not be read
-language/module-code/top-level-await/top-level-ticks.js :: the test's status could not be read
 language/module-code/top-level-await/unobservable-global-async-evaluation-count-reset.js :: it threw TypeError: what was called is not a function
-language/module-code/top-level-await/void-await-expr.js :: the test's status could not be read
-language/module-code/top-level-await/while-dynamic-evaluation.js :: the test's status could not be read
 language/module-code/verify-dfs.js :: it threw TypeError: what was called is not a function
 language/statements/async-function/dflt-params-abrupt.js :: it threw an object with no name
 language/statements/async-function/dflt-params-abrupt.js (strict) :: it threw an object with no name
@@ -15822,10 +15758,6 @@ language/statements/class/async-method/dflt-params-ref-later.js :: it threw Refe
 language/statements/class/async-method/dflt-params-ref-later.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/async-method/dflt-params-ref-self.js :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
 language/statements/class/async-method/dflt-params-ref-self.js (strict) :: it threw ReferenceError: a `let` or `const` was read before its declaration ran
-language/statements/class/cpn-class-decl-accessors-computed-property-name-from-await-expression.js :: the test's status could not be read
-language/statements/class/cpn-class-decl-computed-property-name-from-await-expression.js :: the test's status could not be read
-language/statements/class/cpn-class-decl-fields-computed-property-name-from-await-expression.js :: the test's status could not be read
-language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js :: the test's status could not be read
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/class-element-decorator-call-expr-identifier-reference.js :: it did not parse: unexpected character

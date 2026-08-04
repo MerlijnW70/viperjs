@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.16% of test262** — 76,542 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.24% of test262** — 76,610 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 422 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
@@ -178,6 +178,25 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### The harness's own reach is part of the measurement, and it was hiding 68 runs
+
+**`conformance` prepends its `$DONE` shim to the source and parses the two together, so for a
+`flags: [module]` test the whole prologue is *inside the module*.** `var $__status` was then a module
+binding, and the probe that reads the result afterwards is a separate Script — which cannot see one.
+Every async module test therefore reported `the test's status could not be read`, a sentence about
+the harness with nothing in it about the engine. Written onto `globalThis` instead — the one
+spelling that means the same thing in a Script and in a module — and 68 runs came back, `$262.global`
+with them (`this` is **undefined** at a module's top level, so that field was wrong there too).
+
+**This is the third time a harness decision has been mistaken for an engine result**, after the
+compile-error-as-a-skip that hid 194 failures and the timeout column that lost runs outright. The
+tell is the same each time: **a reason string that describes the harness rather than the program.**
+`could not be read`, `not run`, `did not finish` — when a bucket's reason is in the harness's voice,
+suspect the harness before costing the feature. It also improves what the *remaining* failures say:
+one entry now names `import.defer` as the proposal it is, where before it said `asyncTest called
+without async flag` — `asyncHelpers.js` checks that `$DONE` is an **own property of the global
+object**, which is why it refused rather than running.
 
 ### 81.26% to 82.16% in seven slices, six of which a comment told on
 

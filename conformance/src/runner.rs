@@ -291,8 +291,10 @@ impl Runner {
 ///
 /// The five that are missing — `createRealm`, `evalScript`, `agent`, `gc`, `IsHTMLDDA` — are absent
 /// rather than stubbed, so a test that needs one fails saying so.
-const HOST: &str =
-    "var $262 = { global: this,      detachArrayBuffer: function (buffer) { buffer.transfer(); } };
+/// `global` is §19.1's `globalThis` and not `this`, for the same reason [`DONE`] is: at the top
+/// level of a Script the two are the same object, and at the top level of a *module* `this` is
+/// **undefined**. One spelling that is right in both beats one that is right in the common case.
+const HOST: &str = "var $262 = { global: globalThis, detachArrayBuffer: function (buffer) { buffer.transfer(); } };
 ";
 
 /// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
@@ -305,7 +307,22 @@ const HOST: &str =
 /// Three states rather than two. "Never" is the one that matters and is the reason the whole thing
 /// exists: a test that *did not finish* must not be a pass, and without a third state it would be
 /// indistinguishable from one that finished cleanly.
-const DONE: &str = "var $__status = 'the test never called $DONE';\n     function $DONE(error) {\n       if ($__status !== 'the test never called $DONE') { return; }\n       $__status = arguments.length === 0 || error === undefined ? 'done'\n         : 'the test called $DONE with ' + String(error);\n     }\n";
+///
+/// **Written onto `globalThis` and not with `var`, because a module test's prologue is part of the
+/// module.** The prologue is prepended to the source and the whole thing is parsed together, so for
+/// a `flags: [module]` test `var $__status` is a *module* binding — which the test can reach and
+/// [`PROBE`] cannot, because that runs afterwards as a separate Script. Every async module test
+/// therefore reported "the test's status could not be read", which named the harness's own reach
+/// and said nothing about the engine. §19.1's `globalThis` is the one spelling that means the same
+/// thing in both, and it still satisfies `asyncHelpers.js`, which requires `$DONE` to be an **own
+/// property of the global object**.
+const DONE: &str = "globalThis.$__status = 'the test never called $DONE';
+     globalThis.$DONE = function (error) {
+       if (globalThis.$__status !== 'the test never called $DONE') { return; }
+       globalThis.$__status = arguments.length === 0 || error === undefined ? 'done'
+         : 'the test called $DONE with ' + String(error);
+     };
+";
 
 /// The second script, which reads the status after §9.5's jobs have run.
 const PROBE: &str = "$__status;";
@@ -758,6 +775,37 @@ mod tests {
         };
         // No directory: these rows are about deciding a verdict, and none of them imports.
         evaluate(&program, &block, asynchronous, Path::new("."), None)
+    }
+
+    #[test]
+    fn an_async_module_says_so_through_the_global_because_its_prologue_is_part_of_the_module() {
+        // The prologue is prepended to the source and the two are parsed *together*, so for a
+        // module test every name it declares is a **module** binding. `PROBE` runs afterwards as a
+        // separate Script and cannot see one, so a `var $__status` made every async module test
+        // report "the test's status could not be read" — a sentence about the harness's reach with
+        // nothing in it about the engine. Writing it onto `globalThis` is what makes the two halves
+        // meet, and this row is the one that says so.
+        assert!(matches!(
+            verdict(
+                "/*---
+flags: [async, module]
+---*/
+$DONE();"
+            ),
+            Verdict::Passed
+        ));
+        // …and the failure report crosses the same way, which a status that merely *existed* would
+        // not prove: reading it from the wrong place would answer "never called" for both.
+        let failed = verdict(
+            "/*---
+flags: [async, module]
+---*/
+$DONE('it went wrong');",
+        );
+        assert!(
+            matches!(&failed, Verdict::Failed(why) if why.contains("it went wrong")),
+            "{failed:?}"
+        );
     }
 
     #[test]
