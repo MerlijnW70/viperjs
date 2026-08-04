@@ -39,6 +39,7 @@ pub fn parse(source: &str, flags: Flags) -> Result<Pattern, Error> {
         groups,
         names: &names,
         next_group: 0,
+        negated_classes: 0,
     };
     let node = reader.disjunction()?;
     if reader.at < reader.text.len() {
@@ -209,6 +210,12 @@ struct Reader<'a> {
     groups: u32,
     names: &'a [(String, u32)],
     next_group: u32,
+    /// How many negated classes enclose the position being read — §22.2.1's `MayContainStrings`.
+    ///
+    /// A count and not a flag because `[^[\q{a}]]` nests, and the inner class is inside a negated
+    /// one whether or not it is negated itself. Read only by [`Reader::property_escape`], which is
+    /// the one place a property that may contain strings can appear.
+    negated_classes: usize,
 }
 
 impl Reader<'_> {
@@ -515,6 +522,10 @@ impl Reader<'_> {
     fn class_set(&mut self) -> Result<ClassSet, Error> {
         self.at += 1;
         let negated = self.eat('^');
+        // Read before the contents, which is what lets the contents be told. §22.2.1 makes it a
+        // Syntax Error for a **negated** class to contain anything that may match a string, and the
+        // one thing that can is a property of strings.
+        self.negated_classes += usize::from(negated);
         let mut items = Vec::new();
         let mut operation = ClassOperation::Union;
         loop {
@@ -526,6 +537,7 @@ impl Reader<'_> {
                     if operation != ClassOperation::Union && items.len() < 2 {
                         return Err(Error::at("a set operation needs an operand on both sides"));
                     }
+                    self.negated_classes -= usize::from(negated);
                     return Ok(ClassSet {
                         negated,
                         operation,
@@ -709,6 +721,30 @@ impl Reader<'_> {
         let spelled: String = self.text[start..self.at].iter().collect();
         self.at += 1;
         if crate::unicode_property::OF_STRINGS.contains(&spelled.as_str()) {
+            // §22.2.1's early errors, and all three are the specification refusing rather than
+            // praxis not having built something — so they are `Error::at`, which is a `BadPattern`
+            // and a real answer about the text, and not `unsupported`, which is a gap and is
+            // skipped. Getting that backwards passes every one of these tests for the wrong reason.
+            //
+            // A property of strings names a set that may contain more than one code point, and each
+            // of the three positions below is one the specification cannot give that a meaning in.
+            if negated {
+                // `\P{RGI_Emoji}` — there is no complement of a set of strings to take.
+                return Some(Err(Error::at(
+                    "a property of strings may not be negated with \\P",
+                )));
+            }
+            if !self.flags.unicode_sets {
+                // Only a `v` pattern has set notation, and only set notation can hold a string.
+                return Some(Err(Error::at("a property of strings needs the v flag")));
+            }
+            if self.negated_classes > 0 {
+                // `[^\p{RGI_Emoji}]` — the same refusal as `\P`, reached the other way.
+                return Some(Err(Error::at(
+                    "a negated class may not contain a property of strings",
+                )));
+            }
+            // What is left is the one form that is legal and unbuilt: matching one.
             return Some(Err(Error::unsupported("a property of strings")));
         }
         let Some(property) = crate::unicode_property::lookup(&spelled) else {
@@ -1599,6 +1635,12 @@ mod tests {
         // A **property of strings** is a thing praxis has not built rather than a name the
         // specification rejects, and the two are refused differently on purpose — see
         // `regexp::Error::unimplemented`.
-        assert_eq!(unicode(r"\p{RGI_Emoji}"), Err("a property of strings"));
+        // §22.2.1 — a property of strings is legal *only* in a `v` pattern, positive and outside a
+        // negated class. The other three positions are the specification refusing, so they are a
+        // real answer about the text rather than a gap praxis has yet to fill.
+        assert_eq!(
+            unicode(r"\p{RGI_Emoji}"),
+            Err("a property of strings needs the v flag")
+        );
     }
 }

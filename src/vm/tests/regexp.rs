@@ -751,3 +751,72 @@ fn a_match_results_extra_properties_are_the_ones_a_script_could_have_written() {
         "true|true|true"
     );
 }
+
+#[test]
+fn a_property_of_strings_is_refused_by_the_specification_in_three_of_its_four_positions() {
+    // §22.2.1's early errors. A property of strings names a set whose members may be longer than
+    // one code point, and three positions cannot be given a meaning: negated with `\P`, outside a
+    // `v` pattern, and inside a negated class. Each is the **specification** refusing, so each is a
+    // real answer about the text.
+    //
+    // The fourth is legal and unbuilt, and stays a gap. Recording a gap as an early error passes
+    // every test asserting the construct must be rejected — which is exactly these three — and
+    // recording an early error as a gap loses them. The split is the whole slice.
+    //
+    // Every row asserts the **message** and not merely the constructor. A first draft asked only
+    // for `SyntaxError`, and three of its four rows passed against a pattern whose backslashes the
+    // test's own escaping had eaten — a malformed pattern is a SyntaxError too.
+    assert_eq!(
+        refused_pattern(r"\p{RGI_Emoji}", "u"),
+        "a property of strings needs the v flag"
+    );
+    assert_eq!(
+        refused_pattern(r"\P{RGI_Emoji}", "v"),
+        "a property of strings may not be negated with \\P"
+    );
+    assert_eq!(
+        refused_pattern(r"[^\p{RGI_Emoji}]", "v"),
+        "a negated class may not contain a property of strings"
+    );
+    // Nesting: the inner class is inside a negated one whether or not it is negated itself, which
+    // is why the reader counts them rather than keeping a flag.
+    assert_eq!(
+        refused_pattern(r"[^[\p{RGI_Emoji}]]", "v"),
+        "a negated class may not contain a property of strings"
+    );
+    // …and a class that is *not* negated leaves the count where it was, so the one legal position
+    // is still reached rather than being refused by a stale flag.
+    // The gap, worded as the gap. `new RegExp` reports the message alone where a *literal* goes
+    // through the compiler and gets `ErrorKind::Unsupported`'s "is not implemented yet" around it —
+    // two spellings of one refusal, and this row is the run-time one.
+    assert_eq!(
+        refused_pattern(r"[[\p{RGI_Emoji}]]", "v"),
+        "a property of strings"
+    );
+    // A negated class that has **closed** no longer encloses anything, so a legal property after
+    // one is still legal. That is the half a count gets wrong by never coming back down, and it
+    // would refuse a pattern the specification allows rather than accepting one it forbids.
+    assert_eq!(
+        refused_pattern(r"[^a]\p{RGI_Emoji}", "v"),
+        "a property of strings"
+    );
+    // An ordinary property is unaffected in every one of those positions, which is what keeps this
+    // about *properties of strings* rather than about property escapes.
+    assert_eq!(
+        run(r"/\p{L}/u.test('a') + '|' + /\P{L}/u.test('1')"),
+        "true|true"
+    );
+    assert_eq!(run(r"/[^\p{L}]/v.test('1')"), "true");
+    assert_eq!(run(r"/[[\p{L}]]/v.test('a')"), "true");
+}
+
+/// What `new RegExp(source, flags)` refused this pattern with.
+///
+/// The message and not the constructor, because every one of these is a `SyntaxError` and so is a
+/// pattern the test itself mangled — see the row above that found exactly that.
+fn refused_pattern(source: &str, flags: &str) -> String {
+    let escaped = source.replace('\\', "\\\\");
+    run(&format!(
+        "try {{ new RegExp('{escaped}', '{flags}'); 'accepted' }} catch (e) {{ e.message }}"
+    ))
+}

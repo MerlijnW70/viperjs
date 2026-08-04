@@ -146,12 +146,15 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.53% of test262** — 76,884 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.57% of test262** — 76,926 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 416 runs are now *stopped* before anything executes, and none of them is worth building:
-`(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
-`$262.agent` 18 is a one-thread engine's limit, and the rest is `import.meta` 6, `super` in an
-arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are proposals.
+Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
+long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
+property of strings is **not** a proposal — `regexp-v-flag` sits unmarked in test262's
+`features.txt` and shipped in ES2024. What is left of it is 86 runs that need Unicode sequence data
+and 60 that need `\q{…}` in the matcher, and both are buildable. The rest is `$262.agent` 18, `super`
+in an arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are
+proposals.
 
 **The failure buckets are the whole work list now.** Sorted by reason the largest look actionable
 and mostly are not, which is worth doing once and writing down rather than re-deriving:
