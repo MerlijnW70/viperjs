@@ -917,17 +917,23 @@ fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Compl
         return Err(Abrupt::type_error("the callback is not a function"));
     }
     let receiver = call.argument(1);
-    // Taken once, because a callback may detach the buffer and §23.2.3.7 carries on with what it
-    // had rather than turning the rest of the walk into `undefined`s.
-    let values = elements(heap, view);
+    // §23.2.3.7 step 3 caches the **length** and step 6.b re-reads each *element* with `Get(O, Pk)`
+    // — the same two decisions `fold` below spells out, and they are not one. So a callback that
+    // shrinks a resizable buffer still gets the number of turns the array had when the walk
+    // started, and the turns past the new end are handed `undefined`.
+    //
+    // A snapshot of the elements was taken here instead, above a comment saying §23.2.3.7 "carries
+    // on with what it had rather than turning the rest of the walk into `undefined`s" — which is
+    // what a snapshot does and not what the clause says. It handed back what used to be there.
+    let count = view.count();
     let backwards = matches!(how, Walk::FindLast | Walk::FindLastIndex);
     let order: Vec<usize> = match backwards {
-        true => (0..values.len()).rev().collect(),
-        false => (0..values.len()).collect(),
+        true => (0..count).rev().collect(),
+        false => (0..count).collect(),
     };
     let mut kept: Vec<Value> = Vec::new();
     for index in order {
-        let element = values[index];
+        let element = element_now(heap, object, index);
         let answer = vm.call_value(
             callback,
             receiver,
@@ -947,7 +953,9 @@ fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Compl
             // value rather than converted here, because §10.4.5.16 asks the **destination** which
             // conversion to run and the destination does not exist yet.
             Walk::Map => kept.push(answer),
-            Walk::Filter if truthy => kept.push(values[index]),
+            // §23.2.3.10 step 6.d keeps `kValue` — the value this turn was *given*, not a second
+            // read, which after a shrink would differ from what the callback saw.
+            Walk::Filter if truthy => kept.push(element),
             _ => {}
         }
         super::array_methods::within_budget(heap)?;

@@ -445,10 +445,20 @@ fn byte_length(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     Ok(Value::Number(answer as f64))
 }
 
-/// §23.2.3.3 — `get byteOffset`, likewise.
+/// §23.2.3.3 — `get byteOffset`, which is **0** for a window that is no longer one.
+///
+/// Step 4 asks `IsTypedArrayOutOfBounds` and answers `+0` for it, which is wider than the detached
+/// case its neighbours above can get away with: `byteLength` and `length` read a length
+/// [`Heap::any_view`] has already zeroed, and an *offset* is never zeroed there because the offset
+/// is what a shrunk view is out of bounds **by**. So this asks the question itself.
+///
+/// Both halves are needed. `view_out_of_bounds` deliberately answers `false` for a detached buffer
+/// — §10.4.5.2 asserts the buffer is attached, and its callers ask detachment separately so the two
+/// reasons cannot disagree about which error to give — where §23.2.3.3 wants one answer for both.
 fn byte_offset(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (_, view) = view_of(heap, call.this_value)?;
-    let answer = if detached(heap, view) { 0 } else { view.offset };
+    let (object, view) = view_of(heap, call.this_value)?;
+    let gone = detached(heap, view) || heap.view_out_of_bounds(object);
+    let answer = if gone { 0 } else { view.offset };
     Ok(Value::Number(answer as f64))
 }
 

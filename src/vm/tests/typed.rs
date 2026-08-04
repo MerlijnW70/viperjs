@@ -1540,12 +1540,22 @@ fn a_tracking_view_is_out_of_bounds_when_its_offset_is_past_the_buffer() {
     // — and the view it would build starts past the buffer, which §23.2.5.1 refuses with a
     // **RangeError**. A different error from a different clause, and test262 asserts it.
     assert_eq!(out_of_bounds("subarray(0)"), "RangeError");
-    // …and `length` and `byteOffset` are *not* among them: §10.4.5.11's getters answer rather than
-    // throwing, so a program can still ask what became of it.
+    // …and `length` and `byteOffset` are *not* among them: their getters answer rather than
+    // throwing, so a program can still ask what became of it. **Both answer zero**, which this row
+    // used to deny: §23.2.3.3 step 4 returns `+0` for an out-of-bounds view rather than the stored
+    // offset, exactly as §23.2.3.2 and §23.2.3.18 do for the two lengths. The old row asserted `4`
+    // — what praxis did, worded as though the clause only promised *an* answer — and the
+    // conformance suite is what caught it.
     assert_eq!(
         run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
              var t = new Uint8Array(rab, 4); rab.resize(2); t.length + ',' + t.byteOffset"),
-        "0,4"
+        "0,0"
+    );
+    // In bounds it is the offset it was given, which is what keeps the row above about being out.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
+             var t = new Uint8Array(rab, 4); t.length + ',' + t.byteOffset"),
+        "4,4"
     );
     // **The boundary is `>` and not `>=`.** An offset landing exactly at the end is a window on the
     // empty remainder: in bounds, and with no elements. Those are different answers, and this is
@@ -1891,5 +1901,91 @@ fn a_tracking_view_takes_a_different_branch_from_a_fixed_one() {
              try { new Int32Array(rab, 12) } catch (e) { caught = e.constructor.name } \
              new Int32Array(rab, 8).length + ',' + caught"),
         "0,RangeError"
+    );
+}
+
+#[test]
+fn a_walk_caches_its_length_and_re_reads_every_element() {
+    // §23.2.3.7 step 3 caches the **length** and step 6.b re-reads each *element* with
+    // `Get(O, Pk)`. Two decisions and not one, which `fold` already spelled out and `walk` did
+    // not: it snapshotted the elements, above a comment saying the clause "carries on with what it
+    // had rather than turning the rest of the walk into `undefined`s" — which is what a snapshot
+    // does and not what the clause says.
+    //
+    // So a callback that shrinks a resizable buffer still gets the number of turns the array had
+    // when the walk began, and the turns past the new end are handed `undefined`.
+    // The callback's answer has to be the one that does **not** short-circuit the method under
+    // test, or the row measures the early exit instead of the walk: `every` runs on while it is
+    // told `true`, and `some`, `find` and `findIndex` run on while they are told `false`.
+    let shrinking = |method: &str, answer: &str| {
+        run(&format!(
+            "var rab = new ArrayBuffer(8, {{maxByteLength: 8}}); \
+             var t = new Int8Array(rab, 0, 4); t[0] = 0; t[1] = 2; t[2] = 4; t[3] = 6; \
+             var seen = []; \
+             t.{method}(function (v, i) {{ seen.push(String(v)); if (i === 1) {{ rab.resize(3) }} return {answer} }}); \
+             seen.join(',')"
+        ))
+    };
+    for (method, answer) in [
+        ("every", "true"),
+        ("forEach", "true"),
+        ("map", "true"),
+        ("filter", "true"),
+        ("some", "false"),
+        ("find", "false"),
+        ("findIndex", "false"),
+    ] {
+        assert_eq!(
+            shrinking(method, answer),
+            "0,2,undefined,undefined",
+            "{method}"
+        );
+    }
+    // A **tracking** view is the case that tells the two decisions apart from each other: the
+    // count is still the one it started with, and the elements the shrunk buffer still holds are
+    // read as themselves. Index 2 survives a resize to three bytes where index 3 does not.
+    assert_eq!(
+        run(
+            "var rab = new ArrayBuffer(8, {maxByteLength: 8}); var t = new Int8Array(rab); \
+             t[0] = 0; t[1] = 2; t[2] = 4; t[3] = 6; var seen = []; \
+             t.forEach(function (v, i) { seen.push(String(v)); if (i === 1) { rab.resize(3) } }); \
+             seen.join(',')"
+        ),
+        "0,2,4,undefined,undefined,undefined,undefined,undefined"
+    );
+    // And an array nothing resizes walks exactly as it did, which is what keeps this about the
+    // resize rather than about the read.
+    assert_eq!(
+        run("var t = new Int8Array([1, 2, 3, 4]); var seen = []; \
+             t.forEach(function (v) { seen.push(v) }); \
+             seen.join(',') + '|' + Array.from(t.map(function (v) { return v * 2 })).join(',') \
+             + '|' + Array.from(t.filter(function (v) { return v > 2 })).join(',')"),
+        "1,2,3,4|2,4,6,8|3,4"
+    );
+}
+
+#[test]
+fn reading_an_element_asks_the_window_and_not_only_the_buffer() {
+    // A view that is out of bounds resolves to a count of zero while its bytes are still there, so
+    // a read that checks only the slice reads what the window no longer covers. The property path
+    // asks `index_of` and gets the count; the direct read never did, and the two disagreed —
+    // `t[2]` answered `undefined` while a walk handed the callback `4`.
+    assert_eq!(
+        run(
+            "var rab = new ArrayBuffer(8, {maxByteLength: 8}); var t = new Int8Array(rab, 0, 4); \
+             t[2] = 4; rab.resize(3); \
+             var seen = 'unset'; \
+             try { t.forEach(function () {}) } catch (e) { seen = e.constructor.name } \
+             seen + ',' + t[2] + ',' + t.length"
+        ),
+        "TypeError,undefined,0"
+    );
+    // Still in bounds, the same read answers as it always did.
+    assert_eq!(
+        run(
+            "var rab = new ArrayBuffer(8, {maxByteLength: 8}); var t = new Int8Array(rab, 0, 4); \
+             t[2] = 4; rab.resize(4); t[2] + ',' + t.length"
+        ),
+        "4,4"
     );
 }

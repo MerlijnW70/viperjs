@@ -256,6 +256,20 @@ impl Heap {
     #[must_use]
     pub fn numeric_at(&self, view: View, at: usize) -> Option<Numeric> {
         let element = view.element?;
+        // Inside the **window**, and not merely inside the buffer. A view that is out of bounds
+        // resolves to a count of zero while its bytes are still there, so checking only the slice
+        // below reads what the window no longer covers: a `new Int8Array(rab, 0, 4)` over a buffer
+        // shrunk to three answered `4` for index 2, where `ta[2]` answered `undefined` — the
+        // property path asks `index_of` and gets the count, and this one never did.
+        //
+        // Written as a range test rather than `at >= view.count()`, which has a boundary no caller
+        // reaches: every path here either validates the view first or asks `index_of` for the
+        // count, so `at` is never *exactly* the count with readable bytes beyond it. `>=` and `>`
+        // would then be two spellings of one question and mutation coverage could not tell them
+        // apart — so the question is asked once.
+        if !(0..view.count()).contains(&at) {
+            return None;
+        }
         let from = view.offset + at * element.width();
         Some(
             element.read(

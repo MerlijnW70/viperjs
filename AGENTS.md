@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.41% of test262** — 77,706 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.51% of test262** — 77,796 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 320 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -599,6 +599,32 @@ computed it flipped under mutation and nothing noticed — `any_view` recomputes
 right number was a claim no program could check, which is the "dead data" shape this file already
 names, met from a new direction.
 
+### The shrink half, and a read that asked the buffer instead of the window
+
++90 runs, which closes the resizable-buffer area. Three faults, and the third is the one to carry.
+
+- **A walk snapshotted its elements.** §23.2.3.7 step 3 caches the **length** and step 6.b re-reads
+  each *element* with `Get(O, Pk)` — two decisions, not one. `fold` already spelled that out in its
+  own doc; `walk` took a snapshot, above a comment saying the clause "carries on with what it had
+  rather than turning the rest of the walk into `undefined`s", which is what a snapshot does and
+  not what the clause says. So a callback that shrinks the buffer still gets the number of turns
+  the array started with, and the turns past the new end are handed `undefined`.
+- **`get byteOffset` answered the stored offset when the view was out of bounds.** §23.2.3.3 step 4
+  returns `+0`, exactly as the two length getters do — and those already did, because
+  `Heap::any_view` zeroes a *length*. An offset is never zeroed there, for the good reason that the
+  offset is what a shrunk view is out of bounds **by**.
+- **`Heap::numeric_at` checked the buffer's bytes and not the view's window.** A view that is out
+  of bounds resolves to a count of zero while its bytes are still there, so a direct read returned
+  what the window no longer covers — `t[2]` answered `undefined` while a walk handed the callback
+  `4`. The property path asks `index_of` and gets the count; this one never did. **Two paths to the
+  same element and only one of them bounded** is a shape worth grepping for.
+
+**An existing unit test asserted the second bug**, and its comment read like a rule: "`length` and
+`byteOffset` are *not* among them: the getters answer rather than throwing" — true, and silent about
+*what* they answer. The conformance suite is what caught it, which is the division of labour this
+file already claims: mutation coverage proves the branches are tested, the suite proves they are
+the right branches.
+
 ### `api.rs` exists — and what an embedder could not do before it
 
 DR-0021. **The conformance number does not move a hundredth of a percent, which is why it had not
@@ -859,13 +885,9 @@ doc says which line to change if data ever arrives.
   and it needs the UCD's emoji sequence tables, which nothing else in the engine wants. It stays
   **refused by name rather than as bad syntax**, deliberately: it is a legal operand, so calling it
   a syntax error would pass every test asserting a pattern must be rejected.
-- **A coercion that *resizes* the buffer under a TypedArray method — what is left of this area.**
-  The **detach** half is done: `copyWithin` re-runs `ValidateTypedArray` (§23.2.3.6 step 14.b) and
-  the searches read their elements *after* the coercion, so they answer `-1`/`false` rather than
-  what was there a moment ago. §10.4.5's four internal methods are done too — see below. What
-  remains is the *shrink* cases inside the methods, and `subarray`, which goes on to build a view
-  that §23.2.5.1 then refuses with a **RangeError**. Several of these files also use the
-  immutable-`ArrayBuffer` harness — a proposal — so read what a row is asking before counting it.
+- **The resizable-buffer area is done** — see the shrink section below. What remains beside it
+  is `subarray` over an out-of-bounds source, which §23.2.5.1 refuses with a RangeError, and the
+  files that use the immutable-`ArrayBuffer` harness, which is a proposal.
 - **Four things sized and left unbuilt on purpose, so they are not re-costed.**
   - **`String.prototype.normalize` — 20 runs.** Needs the UCD's canonical decompositions, combining
     classes, composition exclusions and compatibility mappings. Eleven of its fourteen files test
