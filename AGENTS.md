@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.28% of test262** — 77,583 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.28% of test262** — 77,584 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -476,14 +476,31 @@ and was not applied here.
 strictness as far as `[[Set]]`" — the strictness is an argument three lines above it. That is the
 fourth comment this session that described a condition which had already passed.
 
-**And it exposed something larger, unbuilt: a direct `eval` inside a `with` cannot see the `with`
-at all.** `with (o) { eval('x') }` throws where it should read `o.x`, and `with (o) { eval('x = 7') }`
-makes a **global** instead of writing `o.x`. DR-0018's chain is a list of *name lists*, and an object
-environment has no names to list — its bindings are the object's properties, discovered as the
-program runs. So the eval's compiler cannot see that level, resolves every free name past it, and
-answers about the wrong scope. Fixing it means marking a level of the chain as "an object
-environment, resolve dynamically" and having the eval compiler emit `ResolveName` for names that
-cross it, exactly as code written inside the `with` already does.
+**And it exposed something larger, which is now built: a direct `eval` inside a `with` could not
+see the `with` at all.** `with (o) { eval('x') }` threw where it should read `o.x`, and
+`with (o) { eval('x = 7') }` made a **global**. **+1 run**, and the number is the point — this is a
+silently wrong *scope*, and almost nothing in test262 asks.
+
+It was two independent faults that had to be fixed together, and each hid the other:
+
+- **The call was not a direct eval at all.** §13.3.6.1 asks how the callee was *written*, and a bare
+  `eval` inside a `with` is written the same way as anywhere else — what the `with` adds is
+  §9.1.1.2.10's `WithBaseObject` under it. praxis decided the call's **shape** and its
+  **directness** with one `match`, and `(true, _) => CallMethod` threw the second away. So the text
+  ran as an *indirect* eval, in the global scope. The two questions are independent and the table
+  has four rows now.
+- **And the compiler could not have placed the names anyway.** DR-0018's chain is a list of *name
+  lists*; an object environment has none, so it arrives as an empty level indistinguishable from a
+  temporary's. `Heap::any_binding_object` answers the one question the chain cannot, and the eval
+  compiles with `with_depth` set — every free name a run-time walk, exactly as code written inside
+  the `with` already does.
+
+**A behaviour-preserving flag cannot be killed by mutation coverage, and this is the second one.**
+Forcing `any_binding_object` to `true` is transparent — the walk finds exactly the binding a slot
+would have named — so no program tells the difference and three survivors sat there. What closes it
+is a **structural** test: one on the emitted instructions (`compile::tests`) and one on the heap
+walk itself, asserting the `false` side that only costs speed. `lab/`'s `name-resolution` measured
+what that side is worth: 3.0× to 3.7× on local variable access.
 
 ### `api.rs` exists — and what an embedder could not do before it
 

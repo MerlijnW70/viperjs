@@ -756,8 +756,16 @@ pub fn compile_direct_eval(
     heap: &mut Heap,
     chain: Vec<Vec<crate::heap::Binding>>,
     vars: EvalVars,
+    dynamic: bool,
 ) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(heap);
+    // §14.11 — the call is inside a `with`, so every free name in this text is a run-time question.
+    // The chain above cannot say it: an object environment has no names to list and arrives as an
+    // empty level, indistinguishable from one the engine made for a temporary. One flag rather than
+    // a mark per level, because that is all [`Compiler::names_are_dynamic`] can use — a single
+    // object environment anywhere outside makes every name a lookup, and which level it sits at
+    // changes nothing about the answer.
+    compiler.with_depth = u32::from(dynamic);
     compiler.chunk.strict = script.is_strict;
     compiler.outer = chain
         .into_iter()

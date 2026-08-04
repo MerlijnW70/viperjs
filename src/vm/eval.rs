@@ -69,8 +69,11 @@ impl Vm {
         // Either side made it strict, and the parser has already folded the two together — so this
         // is one answer read back rather than a second `||` that could disagree with the first.
         let chain = self.running_chain(heap);
+        // §14.11 — whether the call is inside a `with`, which decides whether the evaluated
+        // text may place its names at all. See `Heap::any_binding_object`.
+        let dynamic = heap.any_binding_object(self.environment);
         let vars = self.eval_vars(script.is_strict);
-        let chunk = match compile_direct_eval(&script, heap, chain, vars) {
+        let chunk = match compile_direct_eval(&script, heap, chain, vars, dynamic) {
             Ok(chunk) => chunk,
             Err(error) => {
                 return Err(crate::builtins::eval::syntax_error(

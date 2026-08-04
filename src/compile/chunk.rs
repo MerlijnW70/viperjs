@@ -670,6 +670,15 @@ pub enum Instruction {
     /// [`Instruction::Call`], and it behaves as one whenever the callee turns out to be anything
     /// but `%eval%` — which is exactly what makes `var eval = f; eval(x)` an ordinary call.
     CallDirectEval(u32),
+    /// The same call, with §9.1.1.2.10's `WithBaseObject` pushed under the callee.
+    ///
+    /// `with (o) { eval("x") }` is still a **direct** eval — §13.3.6.1 asks how the callee was
+    /// *written*, and a bare `eval` inside a `with` is written the same way as one anywhere else.
+    /// What the `with` adds is a receiver, and praxis decided the call's shape and its directness
+    /// with one `match`: a receiver made it `CallMethod` and the direct-eval question was dropped.
+    /// So the text ran as an **indirect** eval, in the global scope, and read the wrong variables
+    /// without refusing anything.
+    CallDirectEvalMethod(u32),
     /// Take a receiver, a callee and this many arguments, and call the callee *on* the receiver.
     ///
     /// A method call is not a plain call of a property's value. `o.m()` and `var f = o.m; f()`
@@ -1422,6 +1431,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::MakeFunction(_)
         | Instruction::Call(_)
         | Instruction::CallDirectEval(_)
+        | Instruction::CallDirectEvalMethod(_)
         | Instruction::Construct(_)
         | Instruction::CallMethod(_)
         | Instruction::LoadThis

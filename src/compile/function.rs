@@ -343,8 +343,12 @@ impl Compiler<'_> {
         // answer `undefined` where the specification has an object. Whether this body has such a
         // slot at all is a separate question, and one this flag does not decide.
         self.uses_arguments |= direct_eval;
+        // Four cases and not three. A receiver decides the *shape* of the call and the bare name
+        // decides whether it may be a direct eval; the two are independent, and folding them into
+        // `(true, _)` threw the second away for every `eval` written inside a `with`.
         self.chunk.emit(match (method, direct_eval) {
-            (true, _) => Instruction::CallMethod(count),
+            (true, true) => Instruction::CallDirectEvalMethod(count),
+            (true, false) => Instruction::CallMethod(count),
             (false, true) => Instruction::CallDirectEval(count),
             (false, false) => Instruction::Call(count),
         });

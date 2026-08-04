@@ -634,3 +634,79 @@ fn a_name_is_a_slot_the_compiler_chose_and_only_a_with_makes_it_a_walk() {
         "a function written inside a `with` keeps the object in its chain: {inner_names:?}"
     );
 }
+
+#[test]
+fn an_eval_resolves_names_at_run_time_only_when_the_call_was_made_inside_a_with() {
+    // The third structural claim, and it is here for the reason the second one is: forcing
+    // `with_depth` on is **behaviour-preserving**, because DR-0018's name lists make the run-time
+    // walk find exactly the binding a slot would have named. So no program can tell the two apart,
+    // mutation coverage cannot kill the flag, and the only honest assertion is about the
+    // instructions. `lab/`'s `name-resolution` measured what abandoning the slot costs — 3.0× to
+    // 3.7× on local variable access — which is why this is a property and not an accident.
+    //
+    // The flag is also *load-bearing for correctness* in the other direction, which the rows below
+    // do not show and `vm::tests::with` does: an object environment has no names to list, so the
+    // chain hands the eval compiler an empty level and every name past it would resolve to a
+    // global. Both halves have to be true at once — dynamic when there is a `with`, placed when
+    // there is not.
+    let reads = |dynamic: bool| {
+        let mut heap = Heap::new();
+        let script = parse_script("a = a + 1;").expect("the source parses"); // a compiler test needs a tree
+        let outer = vec![vec![crate::heap::Binding {
+            name: "a".into(),
+            mutability: crate::heap::Mutability::Mutable,
+        }]];
+        let chunk = compile_direct_eval(&script, &mut heap, outer, EvalVars::Own, dynamic)
+            .expect("compiles"); // likewise
+        chunk
+            .code()
+            .iter()
+            .filter(|instruction| {
+                matches!(
+                    instruction,
+                    Instruction::LoadVariable(_, _)
+                        | Instruction::LoadGlobal(_)
+                        | Instruction::LoadName(_)
+                        | Instruction::StoreVariable(_, _)
+                        | Instruction::StoreGlobal(_)
+                        | Instruction::StoreName(_)
+                )
+            })
+            .copied()
+            .collect::<Vec<_>>()
+    };
+    let placed = reads(false);
+    assert!(
+        placed.iter().all(|instruction| !matches!(
+            instruction,
+            Instruction::LoadName(_) | Instruction::StoreName(_)
+        )),
+        "an eval outside a `with` places its names: {placed:?}"
+    );
+    assert!(
+        placed
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadVariable(_, _))),
+        "…and finds the caller's binding in the chain it was handed: {placed:?}"
+    );
+    let walked = reads(true);
+    assert!(
+        walked
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadName(_))),
+        "an eval called inside a `with` walks for every name: {walked:?}"
+    );
+    assert!(
+        walked
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::StoreName(_))),
+        "…for writes as well as reads: {walked:?}"
+    );
+    assert!(
+        walked.iter().all(|instruction| !matches!(
+            instruction,
+            Instruction::LoadVariable(_, _) | Instruction::LoadGlobal(_)
+        )),
+        "…and places nothing, because the object may hold any of them: {walked:?}"
+    );
+}

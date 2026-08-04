@@ -486,7 +486,11 @@ impl Vm {
                     let how = if method { Entry::Method } else { Entry::Plain };
                     self.enter(how, count, heap, root, current, at)?;
                 }
-                Instruction::CallDirectEval(count) => {
+                Instruction::CallDirectEval(count) | Instruction::CallDirectEvalMethod(count) => {
+                    // Whether §9.1.1.2.10's `WithBaseObject` is sitting under the callee, which is
+                    // the only thing the two spellings differ in — the *question* they carry is the
+                    // same one.
+                    let based = matches!(instruction, Instruction::CallDirectEvalMethod(_));
                     // §13.3.6.1 — the compiler saw the name `eval`; this is the other half of the
                     // question, which is whether that name holds `%eval%` *now*. The callee sits
                     // under its arguments, having been pushed first.
@@ -503,7 +507,11 @@ impl Vm {
                         // The caller's strictness, from the code that is running rather than from
                         // the function that holds it: §19.2.1.1 step 5 asks about the *call site*.
                         let strict = running.is_strict();
-                        self.stack.truncate(callee_at);
+                        // The receiver goes with it. §19.2.1.1 never reads one — the evaluated
+                        // text keeps the caller's `this` — so a `WithBaseObject` here is an
+                        // operand of a call that is not going to happen.
+                        let base = callee_at - usize::from(based);
+                        self.stack.truncate(base);
                         let answer = self.perform_direct_eval(source, strict, heap);
                         match self.settle(answer, heap, root, current, at)? {
                             Some(value) => self.stack.push(value),
@@ -511,7 +519,10 @@ impl Vm {
                         }
                         continue;
                     }
-                    self.enter(Entry::Plain, count, heap, root, current, at)?;
+                    // Not `%eval%` after all, so it is an ordinary call — of whichever shape the
+                    // stack is already in.
+                    let how = if based { Entry::Method } else { Entry::Plain };
+                    self.enter(how, count, heap, root, current, at)?;
                 }
                 Instruction::SpreadProperties => {
                     let source = self.pop()?;

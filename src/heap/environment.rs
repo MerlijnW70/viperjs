@@ -285,6 +285,32 @@ impl Heap {
         self.record(environment)?.binding_object()
     }
 
+    /// Whether `from` or anything outside it is an **object** environment — §14.11's `with`.
+    ///
+    /// What a direct `eval` has to know before its text is compiled, and the one question about the
+    /// caller's scopes that DR-0018's name lists cannot answer: an object environment has no names
+    /// to list, so it arrives at the compiler as an empty level, indistinguishable from one the
+    /// engine made for a temporary. Without this an `eval` inside a `with` resolved straight past
+    /// it and read the wrong scope.
+    ///
+    /// One `bool` rather than a mark per level, because that is all the compiler can use: §9.1.1.2.1
+    /// answers `HasBinding` by asking the object, so a single object environment anywhere outside
+    /// makes **every** free name a run-time question, and which level it sits at changes nothing.
+    ///
+    /// The walk terminates for the reason every other walk of this chain does: a parent always
+    /// existed before its child, so the chain strictly decreases and cannot close on itself.
+    #[must_use]
+    pub fn any_binding_object(&self, from: EnvironmentId) -> bool {
+        let mut at = Some(from);
+        while let Some(environment) = at {
+            if self.environment_binding_object(environment).is_some() {
+                return true;
+            }
+            at = self.environment_at(environment, 1);
+        }
+        false
+    }
+
     /// What the source called this environment's slots, if it named them.
     ///
     /// The chain is walked outwards from a direct `eval` and each level's answer handed to the
@@ -637,5 +663,36 @@ mod tests {
         assert_eq!(heap.environment_names(past_the_end), None);
         assert_eq!(heap.environment_size(past_the_end), None);
         let _ = stranger;
+    }
+
+    #[test]
+    fn an_object_environment_anywhere_outside_makes_the_whole_chain_dynamic() {
+        // What a direct `eval` asks before its text is compiled, and the one question about the
+        // caller's scopes DR-0018's name lists cannot answer: an object environment has no names,
+        // so it reaches the compiler as an empty level and looks like a temporary's.
+        //
+        // Asserted here rather than through a running program, because forcing the answer to `true`
+        // is **behaviour-preserving** — the run-time walk finds exactly the binding a slot would
+        // have named, so no source can tell, and mutation coverage cannot kill it. Only `false` is
+        // observable, and only as speed: `lab/`'s `name-resolution` measured 3.0× to 3.7× on local
+        // variable access. This is the assertion that keeps the common path free.
+        let mut heap = Heap::new();
+        let plain = heap.new_environment(None, 1);
+        let nested = heap.new_environment(Some(plain), 1);
+        assert!(!heap.any_binding_object(plain));
+        assert!(!heap.any_binding_object(nested));
+
+        let object = heap.new_object(None);
+        let opened = heap.new_object_environment(Some(nested), object);
+        assert!(heap.any_binding_object(opened));
+        // …and every scope opened **inside** it, which is the case that matters: the `eval` is
+        // written in the body, not at the `with` itself.
+        let inside = heap.new_environment(Some(opened), 2);
+        let deeper = heap.new_environment(Some(inside), 0);
+        assert!(heap.any_binding_object(inside));
+        assert!(heap.any_binding_object(deeper));
+        // The walk is outward only. A scope the `with` was opened *from* is untouched by it, which
+        // is what stops a function called out of one from resolving dynamically for ever.
+        assert!(!heap.any_binding_object(nested));
     }
 }

@@ -445,3 +445,74 @@ fn a_with_binding_is_looked_for_again_when_it_is_written_through() {
         "1"
     );
 }
+
+#[test]
+fn an_eval_written_inside_a_with_is_still_a_direct_one() {
+    // §13.3.6.1 asks how the callee was **written**, and a bare `eval` inside a `with` is written
+    // the same way as one anywhere else. What the `with` adds is §9.1.1.2.10's `WithBaseObject`
+    // under the callee — and praxis decided the call's *shape* and its *directness* with one
+    // `match`, so a receiver made it an ordinary method call and the direct-eval question was
+    // thrown away. The text then ran as an **indirect** eval, in the global scope, reading the
+    // wrong variables and refusing nothing.
+    assert_eq!(run("var o = { x: 41 }; with (o) { eval('x') }"), "41");
+    assert_eq!(
+        run("var o = { x: 41 }; with (o) { eval('x = 7') } o.x + ',' + (typeof globalThis.x)"),
+        "7,undefined"
+    );
+    // …and the scopes *outside* the `with` are reached too, which is what says the eval is running
+    // in the caller's chain rather than in one that happens to contain the object.
+    assert_eq!(
+        run(
+            "var w = 7; var o = { x: 41 }; with (o) { { let y = 9; eval('w + \",\" + y + \",\" + x') } }"
+        ),
+        "7,9,41"
+    );
+    // §14.11 — and every one of those names is a *run-time* question, because §9.1.1.2.1 answers
+    // `HasBinding` by asking the object. DR-0018's chain cannot say so: an object environment has
+    // no names to list and arrives as an empty level, indistinguishable from one the engine made
+    // for a temporary. So the interpreter tells the compiler separately.
+    assert_eq!(
+        run("var o = {}; var p = { x: 5 }; with (o) { with (p) { eval('x') } }"),
+        "5"
+    );
+    // A name the object gains **while the `with` is running** is found, which no static answer
+    // could have given: the compiler never saw `x` on `o` at all.
+    assert_eq!(run("var o = {}; with (o) { o.x = 3; eval('x') }"), "3");
+    // …and a function written *outside* the `with` does not see it, however it is called from
+    // inside one. §19.2.1.1 runs the text in the environment the **call** is made from, which for
+    // a body compiled elsewhere is that body's chain and not this one.
+    assert_eq!(
+        run(
+            "var o = { x: 41 }; var f = function () { return eval('typeof x') }; \
+             with (o) { f() }"
+        ),
+        "undefined"
+    );
+}
+
+#[test]
+fn a_with_does_not_make_every_call_written_there_an_eval() {
+    // The receiver still decides the *shape*: a `with` object that has its own `eval` shadows the
+    // intrinsic, so the call is an ordinary method call with that object as `this` — which is the
+    // half a single `CallDirectEval` would have got wrong in the other direction.
+    assert_eq!(
+        run("var o = { eval: function () { return this === o } }; with (o) { eval('ignored') }"),
+        "true"
+    );
+    // And an *indirect* eval written inside a `with` is still indirect — §19.2.1.1 runs it against
+    // the global environment, so the object's binding is invisible to it.
+    assert_eq!(
+        run("var o = { x: 41 }; with (o) { (0, eval)('typeof x') }"),
+        "undefined"
+    );
+    // §9.1.1.2.1's traps run in the clause's order for a name the evaluated text reads, which says
+    // the lookup really went through the object environment rather than around it.
+    assert_eq!(
+        run("var seen = []; \
+             var p = new Proxy({ x: 41 }, { \
+                 has: function (t, k) { seen.push('has:' + String(k)); return k in t }, \
+                 get: function (t, k) { seen.push('get:' + String(k)); return t[k] } }); \
+             with (p) { eval('x') } seen.join(',')"),
+        "has:eval,has:x,get:Symbol(Symbol.unscopables),get:x"
+    );
+}
