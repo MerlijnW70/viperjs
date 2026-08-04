@@ -72,10 +72,11 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
         Value::Object(function_prototype),
     );
     install_async(heap, realm);
-    // §27.7.3 — the plain async function's prototype has a `@@toStringTag` and nothing else this
-    // engine can give it: §27.7.2's `constructor` is `%AsyncFunction%`, which is not reachable by
-    // name and is not built. So `Object.prototype.toString.call(async function () {})` answers
-    // `"[object AsyncFunction]"` and the `constructor` is the one thing still missing.
+    // §27.7.3 — the plain async function's prototype, whose `@@toStringTag` is what makes
+    // `Object.prototype.toString.call(async function () {})` answer `"[object AsyncFunction]"`.
+    // §27.7.2's `constructor` is `%AsyncFunction%` and is written by `function::install`, beside
+    // the two generator constructors and for the same reason: all three inherit from `%Function%`.
+    // This comment used to say it "is not built", which stopped being true and read as a plan.
     tag_with(
         heap,
         realm,

@@ -1108,7 +1108,14 @@ mod tests {
         // …and the production is `[~UnicodeMode]`, so `u` and `v` take the exception away again.
         // Every quantifier form, because the rule is about the `Term` and not about the repetition:
         // it is the one place left where a flag decides the *grammar* rather than the matching.
-        for source in ["(?=a)*", "(?!a)*", "(?=a)+", "(?=a)?", "(?=a){2}", "(?=a){2,}"] {
+        for source in [
+            "(?=a)*",
+            "(?!a)*",
+            "(?=a)+",
+            "(?=a)?",
+            "(?=a){2}",
+            "(?=a){2,}",
+        ] {
             for unicode in [
                 Flags {
                     unicode: true,

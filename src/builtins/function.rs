@@ -227,16 +227,44 @@ fn async_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
     dynamic_function(vm, heap, call, Kind::Async)
 }
 
+/// §27.3.1.1 `GeneratorFunction(...)` — the same operation with `function*` in front.
+///
+/// Reached only through `Object.getPrototypeOf(function* () {}).constructor`, exactly as
+/// `%AsyncFunction%` is: §27.3 keeps `GeneratorFunction` off the global object. Before this it was
+/// not built at all, so that lookup walked past %GeneratorFunction.prototype% to `Function.prototype`
+/// and found plain `%Function%` — which then assembled `function anonymous() { yield 1 }` and
+/// refused it as a SyntaxError. A missing intrinsic answering as its own parent is worse than one
+/// answering `undefined`, because the wrong object is callable and the error is about the wrong
+/// thing.
+fn generator_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    dynamic_function(vm, heap, call, Kind::Generator)
+}
+
+/// §27.4.1.1 `AsyncGeneratorFunction(...)` — `async function*`.
+fn async_generator_construct(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    dynamic_function(vm, heap, call, Kind::AsyncGenerator)
+}
+
 /// Which of §20.2.1.1's four `CreateDynamicFunction` kinds is being built.
 ///
-/// Two of the four so far. The parameters and the body are assembled identically and the source
-/// differs by a word, which is what the clause says: one operation with a `kind` argument.
+/// All four. The parameters and the body are assembled identically and the source differs by a
+/// word, which is what the clause says: one operation with a `kind` argument. What the four do
+/// *not* share is step 27 — the `prototype` property — and that is the one place they are told
+/// apart below.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
     /// §20.2.1.1 — `Function`.
     Ordinary,
     /// §27.7.1.1 — `AsyncFunction`.
     Async,
+    /// §27.3.1.1 — `GeneratorFunction`.
+    Generator,
+    /// §27.4.1.1 — `AsyncGeneratorFunction`.
+    AsyncGenerator,
 }
 
 impl Kind {
@@ -245,6 +273,8 @@ impl Kind {
         match self {
             Self::Ordinary => "function",
             Self::Async => "async function",
+            Self::Generator => "function*",
+            Self::AsyncGenerator => "async function*",
         }
     }
 
@@ -253,6 +283,8 @@ impl Kind {
         match self {
             Self::Ordinary => realm.function_prototype(),
             Self::Async => realm.async_function_prototype(),
+            Self::Generator => realm.generator_function_prototype(),
+            Self::AsyncGenerator => realm.async_generator_function_prototype(),
         }
     }
 }
@@ -322,11 +354,20 @@ fn dynamic_function(
     // `"anonymous"` whatever the source says, and it is a constructor like any ordinary function.
     let length = u32::try_from(parameters.len()).unwrap_or(u32::MAX);
     super::define_function_metadata(heap, object, "anonymous", length);
-    // §27.7.4 — an async function is **not** a constructor, so only the ordinary kind gets the
-    // `prototype` property and the `[[Construct]]` that go with one. `new (async function () {})`
-    // is a TypeError, and a dynamic one must be no different.
-    if kind == Kind::Ordinary {
-        vm.realm().make_constructor(heap, object);
+    // §20.2.1.1.1 step 27 — the `prototype` property, and this is where the four kinds differ.
+    //
+    // Only the ordinary kind is a **constructor**: §27.7.4, §27.3.4 and §27.4.4 all say an async
+    // function, a generator and an async generator have no `[[Construct]]`, so
+    // `new (async function () {})` is a TypeError and a dynamic one must be no different. A plain
+    // `async function` gets nothing at all; the two generator kinds get §15.5.4's `prototype`,
+    // which is not `MakeConstructor`'s — it inherits from %GeneratorPrototype% and has no
+    // `constructor` back-pointer, because a property saying a generator function is a constructor
+    // would be a lie a script can read.
+    match kind {
+        Kind::Ordinary => vm.realm().make_constructor(heap, object),
+        Kind::Async => {}
+        Kind::Generator => vm.realm().make_generator_function(heap, object, false),
+        Kind::AsyncGenerator => vm.realm().make_generator_function(heap, object, true),
     }
     Ok(Value::Object(object))
 }
@@ -429,6 +470,43 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
             ..crate::heap::PropertyDescriptor::EMPTY
         },
     );
+
+    // §27.3.1 and §27.4.1 — `%GeneratorFunction%` and `%AsyncGeneratorFunction%`, kept off the
+    // global object by their clauses exactly as `%AsyncFunction%` is. Built here rather than beside
+    // the generator prototypes because `%Function%` is what they inherit from and it is in scope
+    // here; the prototypes themselves belong to the realm and exist before any of this runs.
+    for (name, target, build) in [
+        (
+            "GeneratorFunction",
+            realm.generator_function_prototype(),
+            generator_construct as crate::heap::Native,
+        ),
+        (
+            "AsyncGeneratorFunction",
+            realm.async_generator_function_prototype(),
+            async_generator_construct as crate::heap::Native,
+        ),
+    ] {
+        let made = heap.new_native_constructor(function, build);
+        crate::builtins::define_function_metadata(heap, made, name, 1);
+        // §27.3.2.1 — `prototype` here is **not configurable**, which is the one attribute that
+        // differs from the `constructor` pointing the other way. Two links between the same pair of
+        // objects with different shapes, and `propertyHelper.js` checks both.
+        crate::builtins::define_fixed(heap, made, "prototype", Value::Object(target));
+        // §27.3.3.1 — writable false, enumerable false, configurable **true**.
+        let key = crate::builtins::key(heap, "constructor");
+        let _ = heap.define_own_property(
+            target,
+            key,
+            &crate::heap::PropertyDescriptor {
+                value: Some(Value::Object(made)),
+                writable: Some(false),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
+    }
 
     restrict(heap, realm, prototype);
 }

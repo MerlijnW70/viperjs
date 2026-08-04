@@ -385,3 +385,75 @@ fn a_return_before_the_first_resumption_completes_it_without_running_anything() 
         "true 9:true"
     );
 }
+
+#[test]
+fn a_generator_function_can_be_built_from_source_text_at_run_time() {
+    // §27.3.1.1 and §27.4.1.1 — the third and fourth of §20.2.1.1's four `CreateDynamicFunction`
+    // kinds. Two of the four were built, and the other two were not built *at all*: neither
+    // `%GeneratorFunction%` nor `%AsyncGeneratorFunction%` existed, so
+    // `Object.getPrototypeOf(function* () {}).constructor` walked past its own prototype to
+    // `Function.prototype.constructor` and answered plain `%Function%` — which then assembled
+    // `function anonymous() { yield 1 }` and refused the program's own source as a SyntaxError.
+    // A missing intrinsic that answers as its parent is worse than one that answers `undefined`:
+    // the wrong object is callable, so the error is about the wrong thing.
+    assert_eq!(
+        run(
+            "var GF = Object.getPrototypeOf(function* () {}).constructor;              var g = GF('a', 'yield a')(5); var first = g.next();              first.value + '|' + first.done + '|' + g.next().done"
+        ),
+        "5|false|true"
+    );
+    // The word in front of `anonymous` is the whole difference between the kinds, and the async
+    // generator is the one that proves it: its instances inherit from %AsyncGeneratorPrototype%,
+    // so `next` answers a promise. Building it as a synchronous generator gives an object that
+    // looks right until something asks.
+    assert_eq!(
+        run(
+            "var AGF = Object.getPrototypeOf(async function* () {}).constructor;              var made = AGF('yield 1');              (Object.getPrototypeOf(made) === Object.getPrototypeOf(async function* () {}))              + '|' + (made() instanceof Object)              + '|' + (made().next() instanceof Promise)"
+        ),
+        "true|true|true"
+    );
+}
+
+#[test]
+fn a_dynamic_generator_gets_a_prototype_and_is_still_not_a_constructor() {
+    // §20.2.1.1.1 step 27 — the one step the four kinds do not share. §15.5.4's `prototype` is not
+    // `MakeConstructor`'s: it inherits from %GeneratorPrototype%, which is where `next` comes from,
+    // and there is **no `constructor` back-pointer**, because a generator function has no
+    // `[[Construct]]` and a property saying otherwise would be a lie a script can read.
+    assert_eq!(
+        run(
+            "var GF = Object.getPrototypeOf(function* () {}).constructor; var made = GF();              var proto = Object.getOwnPropertyDescriptor(made, 'prototype');              (typeof made.prototype) + '|' + proto.writable + ',' + proto.enumerable + ',' + proto.configurable              + '|' + (Object.getPrototypeOf(made.prototype) === Object.getPrototypeOf(made).prototype)              + '|' + made.prototype.hasOwnProperty('constructor')"
+        ),
+        "object|true,false,false|true|false"
+    );
+    // §27.3.4 — and it is not a constructor, which is what separates step 27's `prototype` from
+    // `MakeConstructor`'s despite the two properties reading the same from the outside.
+    assert_eq!(
+        run(
+            "var GF = Object.getPrototypeOf(function* () {}).constructor;              var made = GF(); var caught = 'none';              try { new made() } catch (e) { caught = e.constructor.name } caught"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn the_two_links_between_a_generator_constructor_and_its_prototype_have_different_shapes() {
+    // §27.3.2.1 gives `%GeneratorFunction%.prototype` all three attributes `false`; §27.3.3.1 gives
+    // the `constructor` pointing back `configurable: true`. Two links between the same pair of
+    // objects, and writing both with one helper gets exactly one of them wrong — invisibly, until
+    // something tries to `delete` the wrong one.
+    assert_eq!(
+        run(
+            "var GF = Object.getPrototypeOf(function* () {}).constructor;              var down = Object.getOwnPropertyDescriptor(GF, 'prototype');              var up = Object.getOwnPropertyDescriptor(GF.prototype, 'constructor');              down.writable + ',' + down.enumerable + ',' + down.configurable + '|'              + up.writable + ',' + up.enumerable + ',' + up.configurable"
+        ),
+        "false,false,false|false,false,true"
+    );
+    // §27.3.1's own `[[Prototype]]` is `%Function%`, which is what makes this true — and it is
+    // also why the object had to be built beside `Function` rather than beside the prototypes.
+    assert_eq!(
+        run(
+            "var GF = Object.getPrototypeOf(function* () {}).constructor;              var AGF = Object.getPrototypeOf(async function* () {}).constructor;              GF.name + ',' + GF.length + ',' + (GF instanceof Function) + '|'              + AGF.name + ',' + AGF.length + ',' + (AGF instanceof Function)"
+        ),
+        "GeneratorFunction,1,true|AsyncGeneratorFunction,1,true"
+    );
+}

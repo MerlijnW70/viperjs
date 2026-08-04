@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.71% of test262** — 77,054 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.76% of test262** — 77,102 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -293,6 +293,35 @@ engine as `/+/` with `` a *backspace*, so a valid pattern read as praxis wrong
 helpers take a Rust string and have no such layer; when a hand probe and a unit test disagree about
 an escape, **suspect the probe**. It is the third time an escaping layer has manufactured a finding
 here.
+
+### Two of §20.2.1.1's four kinds were missing, and the lookup answered with the wrong callable
+
++48 runs. `%GeneratorFunction%` and `%AsyncGeneratorFunction%` — §27.3.1 and §27.4.1 — were not
+built at all, so `Object.getPrototypeOf(function* () {}).constructor` walked **past**
+%GeneratorFunction.prototype% to `Function.prototype.constructor` and answered plain `%Function%`.
+That then assembled `function anonymous() { yield 1 }` and refused it, and the failure bucket said
+`the source of a dynamic function does not parse` — a sentence about the program's own text, for an
+intrinsic that was not there.
+
+**A missing intrinsic that answers as its parent is worse than one that answers `undefined`**, and
+that is the shape worth carrying: the wrong object is *callable*, so nothing refuses, and the error
+names the wrong thing. `%AsyncFunction%` is reached the same way and had been built for the same
+reason; nothing connected the two until the bucket was read.
+
+Two details cost more than the two constructors did:
+
+- **The two links between a constructor and its prototype have different shapes.** §27.3.2.1 gives
+  `%GeneratorFunction%.prototype` all three attributes `false`; §27.3.3.1 gives the `constructor`
+  pointing back `configurable: true`. One helper for both gets exactly one of them wrong, and
+  `propertyHelper.js` checks both.
+- **Step 27 is the one step the four kinds do not share.** Only the ordinary kind is a constructor.
+  A plain `async function` gets no `prototype` at all; the two generator kinds get §15.5.4's, which
+  inherits from %GeneratorPrototype% and has **no `constructor` back-pointer** — a generator
+  function has no `[[Construct]]`, so the property would be a lie a script can read.
+
+**Still missing beside it, and separate:** `Function.prototype.toString` of *any* dynamically built
+function answers `function anonymous() { [native code] }` rather than §20.2.3.5's assembled source.
+That is one bucket for all four kinds and was not part of this slice.
 
 ### `api.rs` exists — and what an embedder could not do before it
 
