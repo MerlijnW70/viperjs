@@ -399,3 +399,73 @@ fn the_builtin_tag_is_read_from_an_internal_slot_and_not_from_the_prototype_chai
         "[object Error]"
     );
 }
+
+#[test]
+fn a_property_key_argument_is_converted_by_running_the_objects_own_methods() {
+    // §7.1.19 `ToPropertyKey` is `ToPrimitive` with the **string** hint and then `ToString`, and
+    // `ToPrimitive` of an object *calls a method*. Every function taking a key by argument runs
+    // that operation, so `Object.defineProperty(o, [1, 2], …)` defines `"1,2"` — `Array.prototype
+    // .join` is what produces it, and it is ordinary JavaScript running inside the conversion.
+    assert_eq!(
+        run("var o = {}; Object.defineProperty(o, [1, 2], {value: 7}); o['1,2']"),
+        "7"
+    );
+    assert_eq!(
+        run("var o = {}; o[[1, 2]] = 7; Object.getOwnPropertyDescriptor(o, [1, 2]).value"),
+        "7"
+    );
+    assert_eq!(
+        run("var o = {}; o[[1, 2]] = 7; Reflect.has(o, [1, 2])"),
+        "true"
+    );
+    assert_eq!(
+        run("var o = {}; o[[1, 2]] = 7; Reflect.get(o, [1, 2])"),
+        "7"
+    );
+    assert_eq!(run("({'3,4': 1}).hasOwnProperty([3, 4])"), "true");
+    assert_eq!(run("({'3,4': 1}).propertyIsEnumerable([3, 4])"), "true");
+    assert_eq!(run("Object.hasOwn({'3,4': 1}, [3, 4])"), "true");
+    // §B.2.2.1's key is converted the same way — it is the same abstract operation, and the only
+    // reason to mention Annex B separately is that its functions were written before the operation
+    // was factored out and are easy to leave behind.
+    assert_eq!(
+        run("var o = {}; o.__defineGetter__([5, 6], function () { return 9 }); o['5,6']"),
+        "9"
+    );
+    assert_eq!(
+        run("var o = {a: 1}; typeof o.__lookupGetter__({toString: function () { return 'a' }})"),
+        "undefined"
+    );
+    // What the conversion *throws* reaches the caller unchanged. A key whose `toString` fails is
+    // the program's error and not a TypeError about a key that could not be spelled — which is
+    // exactly what a conversion that cannot run code has to say instead.
+    assert_eq!(
+        run(
+            "try { Object.defineProperty({}, {toString: function () { throw new Error('boom') }}, {}) } \
+             catch (e) { e.message }"
+        ),
+        "boom"
+    );
+}
+
+#[test]
+fn a_key_argument_reaches_symbol_to_primitive_and_may_answer_a_symbol() {
+    // §7.1.19 step 3 — the Symbol check is **after** `ToPrimitive`, so an object with an
+    // `@@toPrimitive` answering a Symbol is used as that Symbol rather than spelled. Doing the
+    // check first would take the wrapper for a non-Symbol and reach `ToString`, which throws for
+    // the Symbol it hands back.
+    assert_eq!(
+        run("var s = Symbol(), o = {}; o[s] = 4; \
+             var w = {}; w[Symbol.toPrimitive] = function () { return s }; \
+             Object.getOwnPropertyDescriptor(o, w).value"),
+        "4"
+    );
+    // …and exactly once, which is the observable difference between running the operation and
+    // running it again for a second look at the key.
+    assert_eq!(
+        run("var s = Symbol(), o = {}, n = 0; o[s] = 0; \
+             var w = {}; w[Symbol.toPrimitive] = function () { n += 1; return s }; \
+             Object.hasOwn(o, w) + '|' + n"),
+        "true|1"
+    );
+}

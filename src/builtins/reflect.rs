@@ -120,7 +120,7 @@ fn define_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
         call.argument(0),
         "Reflect.defineProperty needs an object",
     )?;
-    let name = super::object::property_key(heap, call.argument(1))?;
+    let name = vm.to_property_key(call.argument(1), heap)?;
     let descriptor = super::object::to_property_descriptor(vm, heap, call.argument(2))?;
     // §28.1.3 answers the refusal rather than throwing it, which is the whole difference from
     // `Object.defineProperty` — but a define that *throws* still throws: §10.4.2.1's RangeError
@@ -137,14 +137,14 @@ fn delete_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
         call.argument(0),
         "Reflect.deleteProperty needs an object",
     )?;
-    let name = super::object::property_key(heap, call.argument(1))?;
+    let name = vm.to_property_key(call.argument(1), heap)?;
     vm.delete_property_key(Value::Object(object), name, heap)
 }
 
 /// §28.1.5 — `Reflect.get(target, key, receiver)`.
 fn get(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(heap, call.argument(0), "Reflect.get needs an object")?;
-    let name = super::object::property_key(heap, call.argument(1))?;
+    let name = vm.to_property_key(call.argument(1), heap)?;
     // Step 3 — an absent receiver is the target, which is what an ordinary read does. Present, it
     // is what a getter sees as `this`, and it may be anything at all.
     let receiver = match call.arguments.len() {
@@ -157,7 +157,7 @@ fn get(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
 /// §28.1.9 — `Reflect.set(target, key, value, receiver)`.
 fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(heap, call.argument(0), "Reflect.set needs an object")?;
-    let name = super::object::property_key(heap, call.argument(1))?;
+    let name = vm.to_property_key(call.argument(1), heap)?;
     let receiver = match call.arguments.len() {
         0..=3 => Value::Object(object),
         _ => call.argument(3),
@@ -184,7 +184,7 @@ fn get_own_property_descriptor(
         call.argument(0),
         "Reflect.getOwnPropertyDescriptor needs an object",
     )?;
-    let name = super::object::property_key(heap, call.argument(1))?;
+    let name = vm.to_property_key(call.argument(1), heap)?;
     // §6.2.6.4 — a property that is not there is `undefined` and not an empty descriptor, which is
     // how a caller tells "absent" from "present and holding undefined".
     let Some(property) = vm.own_property_through(object, name, heap)? else {
@@ -229,7 +229,7 @@ fn set_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
 /// §28.1.8 — `Reflect.has`, which is `in` without requiring the operator's operand order.
 fn has(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = target_of(heap, call.argument(0), "Reflect.has needs an object")?;
-    let name = super::object::property_key(heap, call.argument(1))?;
+    let name = vm.to_property_key(call.argument(1), heap)?;
     let found = vm.has_property_key(Value::Object(object), name, heap)?;
     Ok(Value::Boolean(found))
 }

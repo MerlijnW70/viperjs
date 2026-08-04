@@ -146,9 +146,9 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **81.26% of test262** — 75,702 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.16% of test262** — 76,542 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 344 runs are now *stopped* before anything executes, and none of them is worth building:
+Only 422 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
 `$262.agent` 18 is a one-thread engine's limit, and the rest is `import.meta` 6, `super` in an
 arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are proposals.
@@ -160,7 +160,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
 | ~939 | `what was called is not a function` | **mostly proposals**: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16` |
-| 894 | the heap budget | 878 are `RegExp/property-escapes`, and the lab has **parked** them — see below |
+| 846 | the heap budget | almost all are `RegExp/property-escapes`, and the lab has **parked** them — see below. The count shuffles between this row and the ten-second budget from run to run; it is one bucket wearing two names |
 | 454 | `cannot read a property…` | **Atomics 316** (most needing `$262.agent`, so ~80 are winnable in a one-thread engine) and `Error.prototype.stack` 64, a proposal |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |
 | 238 | `Calling as constructor…` | all `Temporal` |
@@ -178,6 +178,51 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### 81.26% to 82.16% in seven slices, six of which a comment told on
+
+**Five of the seven were found by grepping an area's comments for what they *promise*, and that
+now out-yields the failure buckets.** The buckets name what is missing by its symptom; a comment
+that says a step "arrives when Symbols do" names it by its clause, and the condition it waited for
+usually passed several milestones ago. Two of the seven were a comment that was simply *wrong*
+about the specification, which is worse than stale and reads the same.
+
+1. **§19.2.6's four URI functions** (+340) — missing entirely, and the largest thing in the buckets
+   that was neither a proposal nor already costed. Decoding refuses more than reassembling the bits
+   would accept: step 4.c.vii.7 says a *valid* UTF-8 encoding, which is RFC 3629's definition, so an
+   overlong `%C0%80`, any encoding of a surrogate and anything above U+10FFFF are all URIErrors.
+2. **§7.1.1 step 1.a's `@@toPrimitive`** (+294) — never implemented, so
+   `String({[Symbol.toPrimitive]() { return "ok" }})` was `"[object Object]"`. The third hint is the
+   part that is not mechanical: `preferredType` may be *absent*, and only a method can see the
+   difference between absent and number — which is why `date + 1` concatenates.
+3. **§B.2.1's `escape`/`unescape`** (+62) — code units where §19.2.6 escapes UTF-8 octets, so
+   `escape("\u{1F600}")` is `"%uD83D%uDE00"`. The set is the ASCII **word** characters and `@*+-./`,
+   and the underscore is the trap: written as alphanumeric plus punctuation it falls between the two.
+4. **§20.2.3's `Function.prototype`** (+18) — a callable object missing §10.3.3's own `length` and
+   `name`. Invisible from the object itself: the two are configurable on every built-in, so only a
+   read arriving after `delete parseInt.length` can tell.
+5. **§20.1.2.7's `Object.fromEntries`** (+22) — read a `length` where step 4 is §7.1.5.1's walk of
+   the **iterator** protocol, so it answered `{}` for a `Map`. §7.4.2 `GetIterator` is `Walk::over`
+   now; `direct` walks what it was handed and `over` asks the object what to walk.
+6. **§13.15.2 step 5's `NamedEvaluation`** (+18) — `value &&= () => {}` names the arrow. §8.6.3's
+   list is drawn per-production and not per-category, so reading "compound" as one category puts
+   `||=` beside `+=` where the grammar does not. **A test row asserted the bug**, in the words of a
+   rule.
+7. **§7.1.19's `ToPropertyKey`, and §10.4.5.9 behind it** (+86) — see below.
+
+**The seventh is the shape this file keeps meeting, in both halves.** `ToPropertyKey` existed
+twice: `Vm::to_property_key` runs `ToPrimitive` and can call a method, and a second copy in
+`builtins/object.rs` called the *value layer's* `to_string` and so threw for every object. Twelve
+functions took keys through the copy, which is why `Object.defineProperty(o, [1, 2], {})` was a
+TypeError rather than a define of `"1,2"`. Deleting the copy was the fix; there was nothing to
+write.
+
+Behind it, exactly as this file predicts of a slice that removes a refusal, **two tests turned red
+that had been passing on the throw** — and what they needed was the same shape one layer down.
+§10.4.5.9's index test is asked of a TypedArray's window *now*, and every **read** path resolved
+the length first while `[[DefineOwnProperty]]` and `[[Delete]]` read the stored one. A resize makes
+that stale, and a define is where it becomes observable without a method to refuse first: the key
+conversion runs the program's own `toString`, which is free to shrink the buffer in between.
 
 ### 79.38% to 81.26% in sixteen slices, and what they have in common
 
@@ -286,12 +331,20 @@ doc says which line to change if data ever arrives.
 ### What is left, in the order the numbers put it
 
 - **A sloppy `var` or function declaration inside a direct `eval` in a function — 128 runs**, and
-  the largest thing praxis refuses by name. §19.2.1.1 adds the binding to the *caller's* variable
-  environment, whose slot count was fixed when that function was compiled, so DR-0018 leaves it
-  open. It is a real slice: an environment that can grow, or a compiled-in reservation. §B.3.3's own
-  bindings in such an eval sidestep it — they go in the eval's own scope, because every test reads
-  them from inside the eval — and `compile_direct_eval` says so, so the next attempt does not
-  mistake it for the general fix.
+  the largest thing praxis refuses by name. **Attempted 2026-08-04 and reverted: 0 fixed, 18
+  regressed, net −103 runs.** Do not re-derive the design — it was built, it works by hand, and it
+  is not the blocker. §19.2.1.1's `varEnv` was recorded on the frame and each var-declared name
+  sorted by comparing its resolved depth against it; `function f(){ var x = 1; eval("var x = 2");
+  return x }` gave 2 and `{ let y; eval("var y") }` was a SyntaxError, both correctly.
+  **What it lost on is that praxis puts a function's parameters, its `arguments`, its `var`s *and*
+  its body's `let`s in one environment, where §10.2.11 has up to three.** A depth comparison cannot
+  then tell "bound in the variable environment" (nothing to create) from "bound in a scope between
+  here and it" (§19.2.1.3 step 5.d.ii.1's SyntaxError) — both are the same number, and the
+  `declare-arguments` family is exactly that distinction. **So the prerequisite is §10.2.11's
+  environment split, and it is a bigger slice than the one it unblocks.** The growth case — a name
+  bound nowhere, needing a slot in a frame sized at compile time — was never in scope and is still
+  open. §B.3.3's own bindings in such an eval sidestep all of it: they go in the eval's own scope,
+  because every test reads them from inside the eval, and `compile_direct_eval` says so.
 - **A class that matches *strings* — 78 runs, and what is left of the `v` flag.** §22.2.1's
   `ClassSetExpression` is built: `[[a-z]--[aeiou]]`, `[\d&&[0-4]]` and nesting all work, and the
   three operations turned out to be three quantifiers over the operands rather than sets to build.

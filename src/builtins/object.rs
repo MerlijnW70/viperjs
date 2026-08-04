@@ -179,8 +179,8 @@ pub fn value_of(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Comple
 }
 
 /// §20.1.3.2 `Object.prototype.hasOwnProperty`.
-pub fn has_own_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let key = property_key(heap, call.argument(0))?;
+pub fn has_own_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let key = vm.to_property_key(call.argument(0), heap)?;
     let object = this_object(call, "Object.prototype.hasOwnProperty requires an object")?;
     Ok(Value::Boolean(own_property(heap, object, key)?.is_some()))
 }
@@ -188,17 +188,17 @@ pub fn has_own_property(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) ->
 /// §20.1.2.13 `Object.hasOwn(o, key)` — the same question without borrowing a method.
 pub fn has_own(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
-    let key = property_key(heap, call.argument(1))?;
+    let key = vm.to_property_key(call.argument(1), heap)?;
     Ok(Value::Boolean(own_property(heap, object, key)?.is_some()))
 }
 
 /// §20.1.3.4 `Object.prototype.propertyIsEnumerable`.
 pub fn property_is_enumerable(
-    _vm: &mut Vm,
+    vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
-    let key = property_key(heap, call.argument(0))?;
+    let key = vm.to_property_key(call.argument(0), heap)?;
     let object = this_object(
         call,
         "Object.prototype.propertyIsEnumerable requires an object",
@@ -243,7 +243,7 @@ pub fn get_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
 /// §20.1.2.4 `Object.defineProperty`.
 pub fn define_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = object_argument(call.argument(0), "Object.defineProperty requires an object")?;
-    let key = property_key(heap, call.argument(1))?;
+    let key = vm.to_property_key(call.argument(1), heap)?;
     let descriptor = to_property_descriptor(vm, heap, call.argument(2))?;
     // §20.1.2.4 step 4 is `DefinePropertyOrThrow`: the heap answers what §10.1.6.3's rules made
     // of it, and a refusal here throws rather than doing nothing quietly. That is the difference
@@ -291,7 +291,7 @@ pub fn get_own_property_descriptor(
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
     let object = coerced(vm, heap, call.argument(0))?;
-    let key = property_key(heap, call.argument(1))?;
+    let key = vm.to_property_key(call.argument(1), heap)?;
     // §6.2.6.4 — a property that is not there is `undefined`, not an empty descriptor, which is
     // how a caller tells "absent" from "present and undefined".
     let Some(property) = vm.own_property_through(object, key, heap)? else {
@@ -725,18 +725,6 @@ pub(super) fn own_property(
     // happens: a joined argument index reports the *parameter's* value, which is what makes
     // `Object.getOwnPropertyDescriptor(arguments, '0')` follow an assignment to `a`.
     Ok(heap.own_property(object, key))
-}
-
-/// §7.1.19 `ToPropertyKey`.
-pub(super) fn property_key(heap: &mut Heap, value: Value) -> Completion<PropertyKey> {
-    // §7.1.19 step 3 — a Symbol is a key already and must not be spelled: `ToString` of one
-    // throws, so without this `Object.getOwnPropertyDescriptor(o, sym)` would be an error rather
-    // than an answer about a property that is really there.
-    if let Value::Symbol(symbol) = value {
-        return Ok(PropertyKey::from_symbol(symbol));
-    }
-    let id = value.to_string(heap)?;
-    Ok(PropertyKey::from_string(heap, id))
 }
 
 /// The own keys of `object`, as a list that borrows nothing.

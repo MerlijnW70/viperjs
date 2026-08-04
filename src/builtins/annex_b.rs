@@ -24,7 +24,7 @@
 //! takes the interpreter.
 
 use super::define_method;
-use super::object::{defined, own_property, property_key, this_object};
+use super::object::{defined, own_property, this_object};
 use crate::heap::{Heap, NativeCall, PropertyDescriptor, PropertyKind};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
@@ -43,7 +43,7 @@ enum Half {
 }
 
 /// §B.2.2.1 and §B.2.2.2 — define an accessor with one half supplied.
-fn define(heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Value> {
+fn define(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Value> {
     let object = this_object(call, "this method requires an object")?;
     let function = call.argument(1);
     // Step 2, and it comes **before** the key is converted — so
@@ -55,7 +55,7 @@ fn define(heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Valu
             Half::Setter => "the setter is not a function",
         }));
     }
-    let key = property_key(heap, call.argument(0))?;
+    let key = vm.to_property_key(call.argument(0), heap)?;
     // Step 3 — **enumerable and configurable**, which is not what an absent field in a descriptor
     // means. This is the whole difference from `Object.defineProperty(o, k, {get: f})`.
     let (getter, setter) = match half {
@@ -76,9 +76,9 @@ fn define(heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Valu
 }
 
 /// §B.2.2.3 and §B.2.2.4 — find the accessor a program would reach, along the whole chain.
-fn look_up(heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Value> {
+fn look_up(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Value> {
     let object = this_object(call, "this method requires an object")?;
-    let key = property_key(heap, call.argument(0))?;
+    let key = vm.to_property_key(call.argument(0), heap)?;
     let mut walk = object;
     // Step 3's loop, iteratively: a chain is as long as a program makes it (DR-0002).
     loop {
@@ -101,23 +101,23 @@ fn look_up(heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Completion<Val
 }
 
 /// §B.2.2.1 `Object.prototype.__defineGetter__`.
-fn define_getter(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    define(heap, call, Half::Getter)
+fn define_getter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    define(vm, heap, call, Half::Getter)
 }
 
 /// §B.2.2.2 `Object.prototype.__defineSetter__`.
-fn define_setter(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    define(heap, call, Half::Setter)
+fn define_setter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    define(vm, heap, call, Half::Setter)
 }
 
 /// §B.2.2.3 `Object.prototype.__lookupGetter__`.
-fn lookup_getter(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    look_up(heap, call, Half::Getter)
+fn lookup_getter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    look_up(vm, heap, call, Half::Getter)
 }
 
 /// §B.2.2.4 `Object.prototype.__lookupSetter__`.
-fn lookup_setter(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    look_up(heap, call, Half::Setter)
+fn lookup_setter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    look_up(vm, heap, call, Half::Setter)
 }
 
 /// Build Annex B's four methods onto `Object.prototype`.

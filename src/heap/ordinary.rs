@@ -251,8 +251,12 @@ impl Heap {
         // gone. Both answers come from the same place and they are opposite: `delete ta[0]` is
         // false on a non-empty array and `delete ta[99]` is true, because deleting nothing
         // succeeded vacuously.
-        if let Some(view) = self.object(object).and_then(Object::view)
-            && view.element.is_some()
+        // Through [`Heap::typed_view`] and never the stored `View`: §10.4.5.9's index test is
+        // asked of the window the buffer has **now**, and a view over a resizable buffer that has
+        // been shrunk holds a length that is no longer true. Reading the stale one says an index
+        // past the end is still there, and answers `false` to a `delete` of a property §10.4.5.1
+        // no longer describes.
+        if let Some(view) = self.typed_view(object)
             && let Some(index) = typed::index_of(self, key, view.count())
         {
             return index.is_err();
@@ -469,8 +473,13 @@ impl Heap {
         // does not have is **refused** rather than stored, which is where this differs from every
         // ordinary object: `Object.defineProperty(ta, "99", …)` on a short array fails, because a
         // TypedArray's length cannot change and a property there would be a length that lied.
-        if let Some(view) = self.object(object).and_then(Object::view)
-            && view.element.is_some()
+        //
+        // Through [`Heap::typed_view`], so the length is the one the buffer has now. §10.4.5.9
+        // step 2 refuses an index of a view that is *out of bounds*, and a define is where that
+        // becomes observable without a method to throw first: `Object.defineProperty` converts its
+        // key by running the program's own `toString`, which is free to resize the buffer between
+        // the view being handed over and the index being tested.
+        if let Some(view) = self.typed_view(object)
             && let Some(index) = typed::index_of(self, key, view.count())
         {
             let Ok(at) = index else {

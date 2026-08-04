@@ -1599,3 +1599,57 @@ fn a_tracking_view_is_out_of_bounds_when_its_offset_is_past_the_buffer() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_define_and_a_delete_read_the_length_the_buffer_has_now() {
+    // §10.4.5.9 `IsValidIntegerIndex` step 2 — an index of a view that is **out of bounds** is not
+    // a valid one, whatever the view was created with. Every *read* path already resolved the
+    // length before asking; `[[DefineOwnProperty]]` and `[[Delete]]` asked the stored number, which
+    // a resize makes stale, and so answered about elements that are no longer there.
+    //
+    // A define is where this becomes observable without a method to refuse first: §7.1.19 converts
+    // the key by running the program's own `toString`, which is free to shrink the buffer between
+    // the view being handed over and the index being tested.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(4, {maxByteLength: 8}); \
+             var t = new Uint8Array(rab, 0, 4); \
+             var evil = {toString: function () { rab.resize(2); return '0' }}; \
+             try { Object.defineProperty(t, evil, {value: 8}); 'no error' } \
+             catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and a *tracking* view is refused for the ordinary reason instead: it follows the shorter
+    // buffer, so the index is simply past its end.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(4, {maxByteLength: 8}); \
+             var t = new Uint8Array(rab, 0); \
+             var evil = {toString: function () { rab.resize(2); return '3' }}; \
+             try { Object.defineProperty(t, evil, {value: 8}); 'no error' } \
+             catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // §10.4.5.4 — deleting an index the view does not have **succeeds**, vacuously. Read from the
+    // stale length this said `false`, which is the claim that a property is there and refuses to go.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(4, {maxByteLength: 8}); \
+             var t = new Uint8Array(rab, 0); rab.resize(2); delete t[3]"),
+        "true"
+    );
+    assert_eq!(run("var t = new Uint8Array(4); delete t[1]"), "false");
+    // A buffer that has *grown* gives a tracking view the indices it grew into, so this is not
+    // "refuse more" — it is the same question asked of today's window in both directions.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(4, {maxByteLength: 8}); \
+             var t = new Uint8Array(rab, 0); rab.resize(8); \
+             Reflect.defineProperty(t, '7', {value: 5}) + '|' + t[7]"),
+        "true|5"
+    );
+    assert_eq!(
+        run("var t = new Uint8Array(4); Object.defineProperty(t, '1', {value: 9}); t[1]"),
+        "9"
+    );
+    assert_eq!(
+        run("Reflect.defineProperty(new Uint8Array(4), '9', {value: 1})"),
+        "false"
+    );
+}
