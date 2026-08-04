@@ -54,6 +54,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         // §27.2.4.8 — `withResolvers` takes nothing, so its `length` is 0 where every other
         // static's is 1.
         ("withResolvers", 0, with_resolvers),
+        // §27.2.4.9 — `try` takes a callback and forwards the rest, so its `length` is 1.
+        ("try", 1, attempt),
     ] {
         define_method(heap, realm, constructor, name, length, native);
     }
@@ -725,4 +727,39 @@ fn with_resolvers(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
         super::create_data_property(heap, object, name, value);
     }
     Ok(Value::Object(object))
+}
+
+/// §27.2.4.9 `Promise.try ( callback, ...args )` — run it now, and answer for it either way.
+///
+/// What it is for is the *synchronous* throw. `Promise.resolve().then(callback)` also gives a
+/// promise, but it runs the callback a turn later; `Promise.try` runs it immediately and still
+/// turns a throw into a rejection, which is the one thing a bare call cannot do.
+///
+/// The extra arguments are forwarded, so `Promise.try(f, 1, 2)` calls `f(1, 2)`. The receiver is
+/// `undefined` and not the constructor — the callback is the caller's, and giving it `Promise` as
+/// `this` would be inventing a binding the clause does not make.
+fn attempt(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 2 — the receiver must be an Object *before* the capability is asked for, so
+    // `Promise.try.call(1, f)` throws without `f` having run. A callback with an effect can see
+    // the difference.
+    let Value::Object(constructor) = call.this_value else {
+        return Err(Abrupt::type_error(
+            "a promise capability needs a constructor",
+        ));
+    };
+    let capability = new_promise_capability(vm, heap, constructor)?;
+    let arguments: Vec<Value> = call.arguments.iter().skip(1).copied().collect();
+    // Step 4 — a `Completion`, so a throw from the callback is *caught here* and becomes step 5's
+    // `reject`. This is the whole function: without the completion the throw would reach the
+    // caller and `Promise.try` would be an obfuscated call.
+    let (settle, answer) = match vm.call_value(call.argument(0), Value::Undefined, &arguments, heap)
+    {
+        Ok(value) => (capability.resolve, value),
+        Err(crate::value::Abrupt::Thrown(thrown)) => (capability.reject, thrown),
+        // A fault or an interrupt is not a value a promise can hold — DR-0022's stop is not a
+        // throw, and swallowing it into a rejection is exactly what a budget must not allow.
+        Err(other) => return Err(other),
+    };
+    vm.call_value(settle, Value::Undefined, &[answer], heap)?;
+    Ok(capability.promise)
 }

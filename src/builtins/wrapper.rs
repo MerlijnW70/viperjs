@@ -103,6 +103,19 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     ] {
         define_method(heap, realm, number, name, length, native);
     }
+    // §21.1.2.12 and §21.1.2.13 — `Number.parseFloat` **is** `%parseFloat%` and `Number.parseInt`
+    // **is** `%parseInt%`. The same function object and not a second one with the same body, which
+    // a program can see: `Number.parseFloat === parseFloat` is `true`, and installing a copy would
+    // answer `false` while every other test passed.
+    //
+    // Read off the global rather than made here, because §19.2.4 made them and `global::install`
+    // has already run. Silently skipped if it has not — an `Option` here would be a placeholder
+    // that a script could reach.
+    for name in ["parseFloat", "parseInt"] {
+        if let Some(found) = super::own_value(heap, global, name) {
+            super::define_value(heap, number, name, found);
+        }
+    }
 }
 
 /// One constructor, with its `prototype` and that prototype's `constructor` back.

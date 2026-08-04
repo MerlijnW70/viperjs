@@ -146,7 +146,7 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.09% of test262** — 77,408 of 93,161 runs. Treat that number as
+Conformance as of this commit is **83.12% of test262** — 77,436 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 374 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -380,6 +380,25 @@ Four things in the clauses that a plausible implementation gets wrong:
   is why `Map.groupBy` sits beside it.
 - **`toWellFormed` replaces one lone code *unit* at a time**, so the answer is always the same
   length as the receiver: two leading surrogates in a row become two replacement characters.
+
+**A second, wider sweep found three more and cost nothing**: the same `typeof` idiom over every
+method of `Array.prototype`, `String.prototype`, `Object`, `Reflect`, `Promise`,
+`Iterator.prototype`, `Math`, `Set.prototype` and `Number` named exactly four absences —
+`Promise.try` (§27.2.4.9, 20 runs), `Number.parseFloat` and `parseInt` (§21.1.2.12 and .13, 8 runs),
+`String.prototype.normalize`, and `Math.sumPrecise` and `JSON.rawJSON`, which are proposals. Both of
+the cheap ones are built.
+
+- **`Number.parseFloat` *is* `%parseFloat%`** — the same function object, so
+  `Number.parseFloat === parseFloat`. A second native with the same body answers every other
+  question identically and that one wrongly.
+- **`Promise.try` exists for the *synchronous* throw.** `Promise.resolve().then(f)` also gives a
+  promise and runs `f` a turn later; `Promise.try` runs it now and still turns a throw into a
+  rejection, which is the one thing a bare call cannot do.
+
+**`String.prototype.normalize` is 20 runs and is not cheap**: it needs the UCD's canonical
+decompositions, combining classes, composition exclusions and compatibility mappings. Eleven of its
+fourteen files test only the error paths, which is exactly the trap — a `normalize` that returns its
+receiver would pass them and be a silently wrong answer for the other three. Left unbuilt on purpose.
 
 **And every one of the seven throws a TypeError for a bad argument, which makes the type worthless
 as an assertion.** Two `groupBy` guards survived mutation because the test asked only for

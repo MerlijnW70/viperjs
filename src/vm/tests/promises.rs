@@ -867,3 +867,74 @@ fn an_aggregate_error_takes_its_errors_first_and_its_message_second() {
         "TypeError"
     );
 }
+
+#[test]
+fn promise_try_runs_now_and_answers_for_the_throw() {
+    // §27.2.4.9 — the point of it is the *synchronous* throw. `Promise.resolve().then(f)` also
+    // gives a promise and runs `f` a turn later; this runs it immediately, which is the half a
+    // bare call already does, and still turns a throw into a rejection, which is the half it
+    // cannot.
+    assert_eq!(
+        run(
+            "var order = ['before']; Promise.try(function () { order.push('inside') }); \
+             order.push('after'); order.join(',')"
+        ),
+        "before,inside,after"
+    );
+    assert_eq!(
+        run_settled(
+            "var out = ''; Promise.try(function () { throw 'boom' }) \
+                 .then(function (v) { out = 'resolved:' + v }, function (e) { out = 'rejected:' + e });",
+            "out"
+        ),
+        "rejected:boom"
+    );
+    // The extra arguments are forwarded, and the receiver is `undefined` rather than the
+    // constructor: the callback belongs to the caller, and giving it `Promise` as `this` would
+    // invent a binding the clause does not make. The callback is strict so that §10.2.1.2's
+    // substitution does not turn that `undefined` into the global object before it can be seen —
+    // a sloppy one answers `false` here and says nothing about what was passed.
+    assert_eq!(
+        run_settled(
+            "var out = ''; \
+             Promise.try(function (a, b) { 'use strict'; return a + b + '/' + (this === undefined) }, 'x', 'y') \
+                 .then(function (v) { out = v });",
+            "out"
+        ),
+        "xy/true"
+    );
+    // Step 2 refuses a receiver that is not an Object **before** the capability is asked for, so
+    // the callback has not run when it throws. A check placed after the call would leave the
+    // effect behind and only then complain.
+    assert_eq!(
+        run("var ran = 0; var caught = 'none'; \
+             try { Promise.try.call(1, function () { ran = 1 }) } catch (e) { caught = e.constructor.name } \
+             caught + ',' + ran"),
+        "TypeError,0"
+    );
+    assert_eq!(
+        run("[Promise.try.length, Promise.try.name].join(',')"),
+        "1,try"
+    );
+}
+
+#[test]
+fn number_holds_the_same_two_parsers_the_global_does() {
+    // §21.1.2.12 and §21.1.2.13 — the **same function object**, not a second one with the same
+    // body. Installing a copy answers every other question identically and this one wrongly.
+    assert_eq!(
+        run(
+            "[Number.parseFloat === parseFloat, Number.parseInt === parseInt, \
+             Number.parseFloat('1.5'), Number.parseInt('ff', 16)].join(',')"
+        ),
+        "true,true,1.5,255"
+    );
+    // §17's ordinary shape for a built-in's property, which `define_fixed` would have got wrong.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Number, 'parseFloat'); \
+             [d.writable, d.enumerable, d.configurable].join(',')"
+        ),
+        "true,false,true"
+    );
+}

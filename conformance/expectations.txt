@@ -2414,14 +2414,6 @@ built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with 
 built-ins/NativeErrors/URIError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/cause_property_native_error.js :: it threw an object with no name: cause should be an own property
 built-ins/NativeErrors/cause_property_native_error.js (strict) :: it threw an object with no name: cause should be an own property
-built-ins/Number/parseFloat.js :: it threw an object with no name: Expected SameValue(«undefined», «function parseFloat() { [native code] }») to be true
-built-ins/Number/parseFloat.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «function parseFloat() { [native code] }») to be true
-built-ins/Number/parseFloat/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/parseFloat/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/parseInt.js :: it threw an object with no name: Expected SameValue(«undefined», «function parseInt() { [native code] }») to be true
-built-ins/Number/parseInt.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «function parseInt() { [native code] }») to be true
-built-ins/Number/parseInt/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Number/parseInt/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Number/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Number/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -2712,26 +2704,6 @@ built-ins/Promise/race/invoke-then-error-close.js :: it threw an object with no 
 built-ins/Promise/race/invoke-then-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/race/invoke-then-get-error-close.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Promise/race/invoke-then-get-error-close.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Promise/try/args.js :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/try/args.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/try/ctx-ctor-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/try/ctx-ctor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Promise/try/ctx-ctor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/try/ctx-ctor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Promise/try/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/try/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/try/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/try/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Promise/try/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/try/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Promise/try/promise.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/try/promise.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Promise/try/prop-desc.js :: it threw an object with no name: try should be an own property
-built-ins/Promise/try/prop-desc.js (strict) :: it threw an object with no name: try should be an own property
-built-ins/Promise/try/return-value.js :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/try/return-value.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Promise/try/throws.js :: the test called $DONE with Test262Error: error thrown from callback must become a rejection Expected a Test262Error to be thrown asynchronously but the function threw synchronously
-built-ins/Promise/try/throws.js (strict) :: the test called $DONE with Test262Error: error thrown from callback must become a rejection Expected a Test262Error to be thrown asynchronously but the function threw synchronously
 built-ins/Proxy/apply/arguments-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/apply/null-handler-realm.js :: it threw TypeError: what was called is not a function
