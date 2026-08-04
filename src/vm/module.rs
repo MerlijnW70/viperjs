@@ -500,6 +500,57 @@ impl Vm {
         Ok(Ok(Value::Object(self.namespace_of(&chunk, heap))))
     }
 
+    /// §13.3.12 `ImportMeta : import . meta` — the running module's metadata object.
+    ///
+    /// Step 1 is `GetActiveScriptOrModule`, and the running module is found by walking out of the
+    /// environment the code is closed over rather than by recording anything on a frame. That is
+    /// not a shortcut: §10.2.1.1 gives a call its **callee's** `[[ScriptOrModule]]`, so a function
+    /// declared in one module and called from another answers with the module it was *written* in —
+    /// and a closure's chain ends exactly where it was written. The two facts are the same fact.
+    ///
+    /// Steps 4.a to 4.f the first time and step 5 every time after: the object is made once, filled
+    /// once by the host, and cached on the record. §16.2.1.9 is asked only when the object is made,
+    /// so a module nobody reads `import.meta` in never costs an object or a question.
+    ///
+    /// The prototype is **null**, which is step 4.a's `OrdinaryObjectCreate(null)` and is
+    /// deliberate: a host property called `toString` must not read as `Object.prototype`'s.
+    pub(super) fn import_meta(&mut self, heap: &mut Heap) -> Option<crate::heap::ObjectId> {
+        let outermost = heap.environment_root(self.environment);
+        let identity = *self
+            .modules
+            .iter()
+            .find(|(_, record)| record.environment == outermost)
+            .map(|(identity, _)| identity)?;
+        if let Some(made) = self.modules.get(&identity).and_then(|r| r.import_meta) {
+            return Some(made);
+        }
+        let object = heap.new_object(None);
+        // §16.2.1.9, and the key is the module's resolved identity because that is the only thing
+        // a host can answer a URL from. Taken before the properties are defined so that the borrow
+        // of the loader is finished by the time the heap is written to.
+        let supplied = match (self.loader.as_mut(), self.keys.get(&identity)) {
+            (Some(loader), Some(key)) => loader.import_meta_properties(key),
+            _ => Vec::new(),
+        };
+        for (name, value) in supplied {
+            let key = crate::heap::PropertyKey::from_units(
+                heap,
+                &name.encode_utf16().collect::<Vec<_>>(),
+            );
+            // `CreateDataPropertyOrThrow` on an object nothing else has seen, so the define cannot
+            // be refused and there is nothing for a throw to mean.
+            let _ = heap.define_own_property(
+                object,
+                key,
+                &crate::heap::PropertyDescriptor::data(value),
+            );
+        }
+        if let Some(record) = self.modules.get_mut(&identity) {
+            record.import_meta = Some(object);
+        }
+        Some(object)
+    }
+
     /// §16.2.1.7 `HostLoadImportedModule`, over everything the module reaches.
     ///
     /// Depth-first and iterative, because a module's own dependencies are only known once it has
@@ -636,6 +687,7 @@ impl Vm {
             slot.insert(super::loader::ModuleRecord {
                 environment,
                 namespace: None,
+                import_meta: None,
                 evaluated: false,
                 failure: None,
             });

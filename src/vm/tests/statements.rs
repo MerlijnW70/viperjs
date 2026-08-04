@@ -152,8 +152,11 @@ fn a_script_that_cannot_be_compiled_yet_says_which_construct_and_where() {
     // it describes, and then asserts the opposite of what the engine does. Every other row it has
     // held has landed, and nothing a **script** can say is refused any more — so these are modules.
     let cases = [
-        ("import.meta;", "import.meta"),
-        ("async function* g() { yield import.meta; }", "import.meta"),
+        ("var r = /(?i:a)/;", "the RegExp modifiers proposal"),
+        (
+            "async function* g() { yield /(?i:a)/; }",
+            "the RegExp modifiers proposal",
+        ),
     ];
     for (source, what) in cases {
         let mut heap = Heap::new();
@@ -371,7 +374,7 @@ fn a_finally_that_cannot_be_compiled_is_reported_from_the_innermost_one() {
     // since landed, and §16.2.1.9's `import.meta` is the only one left in the engine. What survives
     // is the half that matters: a compiler that carried on past the inner failure would report
     // **no** failure at all, and emit a `break` past a block it never built.
-    let source = "while (1) { try { try { break; } finally { import.meta; } } \
+    let source = "while (1) { try { try { break; } finally { /(?i:a)/; } } \
                   finally { globalThis.x = 1; } }";
     let mut heap = Heap::new();
     let module = crate::parser::parse_module(source).expect("the source parses"); // the test is about compiling
@@ -379,7 +382,7 @@ fn a_finally_that_cannot_be_compiled_is_reported_from_the_innermost_one() {
         .expect_err("the inner finally is refused"); // same
     assert_eq!(
         error.kind,
-        crate::compile::ErrorKind::Unsupported("import.meta")
+        crate::compile::ErrorKind::Unsupported("the RegExp modifiers proposal")
     );
 }
 

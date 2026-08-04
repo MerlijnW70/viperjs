@@ -47,20 +47,20 @@ fn an_operator_is_emitted_after_both_of_its_operands() {
 fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // The parser accepted every one of these. Refusing with a span is the difference between
     // "praxis cannot do this yet" and a wrong answer nobody notices.
-    // A destructuring rest parameter, because this row needs something the compiler still refuses
-    // and the example has to be replaced each time one of them lands — `import('x')` was here until
-    // §13.3.10 arrived, and before that a `class`, a generator, and an `await`.
-    // Compiled as a **module**, because nothing a *script* can say is refused any more: every row
-    // this test has held — a class, a generator, an `await`, a dynamic import, a destructuring rest
-    // parameter — has landed, and §16.2.1.9's `import.meta` is what is left. The row has to be
-    // replaced again when it lands, and if there is nothing to replace it with then this test has
-    // outlived the thing it was watching.
+    // The example has to be replaced each time one of them lands — a `class` was here, then a
+    // generator, then an `await`, then `import('x')` until §13.3.10 arrived, then a destructuring
+    // rest parameter until §15.1 did, then `import.meta` until §13.3.12 did.
+    //
+    // A `(?i:…)` pattern now, and it should be the last replacement: the RegExp **modifiers**
+    // proposal is Stage 3 and building it is on nobody's list. It also puts the row back in a
+    // *script*, which the last two could not be — and if it ever does land and there is nothing to
+    // replace it with, this test has outlived the thing it was watching.
     let cases = [
-        ("import.meta", "import.meta"),
-        ("1 ? import.meta : 3", "import.meta"),
+        ("var r = /(?i:a)/;", "the RegExp modifiers proposal"),
+        ("var r = 1 ? /(?i:a)/ : 3;", "the RegExp modifiers proposal"),
     ];
     for (source, what) in cases {
-        let error = compile_as_module(source).expect_err("not implemented yet"); // the test is about the error
+        let error = compile_source(source).expect_err("not implemented yet"); // the test is about the error
         assert_eq!(
             error.kind,
             ErrorKind::Unsupported(what),
@@ -308,18 +308,21 @@ fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
 fn a_refusal_deep_inside_an_expression_carries_the_inner_span() {
     // The refusal comes from where the trouble is, not from the top: an engine that reported
     // the whole line would be useless on a long one.
-    let error = compile_as_module("1 + 2 * (3 - import.meta)").expect_err("not implemented yet"); // same
-    assert_eq!(error.kind, ErrorKind::Unsupported("import.meta"));
-    // The meta property, not the whole line: 0..24 is what an engine that reported the statement
-    // would say.
-    assert_eq!(error.span, Span::new(13, 24));
+    let error = compile_source("1 + 2 * (3 - /(?i:a)/)").expect_err("not implemented yet"); // same
+    assert_eq!(
+        error.kind,
+        ErrorKind::Unsupported("the RegExp modifiers proposal")
+    );
+    // The literal, not the whole line: 0..22 is what an engine that reported the statement would
+    // say.
+    assert_eq!(error.span, Span::new(13, 21));
 }
 
-/// Compile `source` as a **Module**, for the refusals a script can no longer reach.
-fn compile_as_module(source: &str) -> Result<Chunk, crate::compile::CompileError> {
+/// Compile `source` as a Script, for the rows that are about what the compiler refuses.
+fn compile_source(source: &str) -> Result<Chunk, crate::compile::CompileError> {
     let mut heap = Heap::new();
-    let module = crate::parser::parse_module(source).expect("the source parses"); // a row that does not is the bug
-    crate::compile::compile_module(&module, &mut heap)
+    let script = parse_script(source).expect("the source parses"); // a row that does not is the bug
+    compile_script(&script, &mut heap)
 }
 
 /// The body of the first function written in `source`.

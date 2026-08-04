@@ -833,6 +833,14 @@ pub enum Instruction {
     /// object answers differently on two successive calls, so there is nowhere else to read it
     /// from.
     LoadNewTarget,
+    /// §13.3.12 `import.meta` — the module's own metadata object, made once and cached.
+    ///
+    /// Takes no operand: *which* module is a question about the environment the running code is
+    /// closed over, not about the code, and only the machine can answer it. §10.2.1.1 gives a call
+    /// its callee's `[[ScriptOrModule]]` rather than its caller's, so a function declared in one
+    /// module and called from another still answers with the module it was written in — which is
+    /// what walking out to the root of the environment chain gives for free.
+    ImportMeta,
     /// Push a copy of the top value.
     ///
     /// A method call needs the base twice — once to find the method on and once to call it with —
@@ -1357,6 +1365,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CallMethod(_)
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
+        | Instruction::ImportMeta
         | Instruction::TemplateObject(_)
         | Instruction::SuperCall(_)
         | Instruction::MakeMethod(_)

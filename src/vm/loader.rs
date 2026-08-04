@@ -18,6 +18,7 @@
 
 use crate::compile::Chunk;
 use crate::heap::Heap;
+use crate::value::Value;
 use std::rc::Rc;
 
 /// How the host answers for a `ModuleSpecifier` — §16.2.1.7.
@@ -61,6 +62,22 @@ pub trait ModuleLoader {
         specifier: &str,
         heap: &mut Heap,
     ) -> Result<(String, Rc<Chunk>), String>;
+
+    /// §16.2.1.9 `HostGetImportMetaProperties` — what this host puts on a module's `import.meta`.
+    ///
+    /// Called **once per module**, the first time its code reads `import.meta`, and never again:
+    /// §13.3.12 caches the object on the module record, so a host that answers differently the
+    /// second time would never be asked. `key` is the module's resolved identity, which is what a
+    /// host needs to answer the property everyone actually supplies — its own URL or path.
+    ///
+    /// The default is **no properties**, which is a legitimate host and not a stub: §13.3.12 says
+    /// the object starts empty and the host adds to it, so a host with nothing to add leaves
+    /// `import.meta` an ordinary empty object with a null prototype. That is what a script sees
+    /// here unless a loader says otherwise.
+    fn import_meta_properties(&mut self, key: &str) -> Vec<(String, Value)> {
+        let _ = key;
+        Vec::new()
+    }
 }
 
 /// What the engine remembers about one module — as much of §16.2.1's Cyclic Module Record as it has.
@@ -75,6 +92,12 @@ pub(super) struct ModuleRecord {
     pub(super) environment: crate::heap::EnvironmentId,
     /// §16.2.1.10's memo — the one namespace object this module will ever have.
     pub(super) namespace: Option<crate::heap::ObjectId>,
+    /// §13.3.12's `[[ImportMeta]]` — the one `import.meta` object this module will ever have.
+    ///
+    /// Made on first read rather than at link time, which is what step 4's "if importMeta is empty"
+    /// says: a module that never writes `import.meta` never costs an object, and a host is never
+    /// asked what to put on one nobody looked at.
+    pub(super) import_meta: Option<crate::heap::ObjectId>,
     /// Whether the body has run — §16.2.1.6's "each body once".
     ///
     /// Set **before** the body runs rather than after, so that a module reached again while it is

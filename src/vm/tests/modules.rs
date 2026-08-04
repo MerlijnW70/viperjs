@@ -1413,3 +1413,126 @@ fn a_host_that_supplies_everything_is_never_asked_for_a_loader() {
         "42"
     );
 }
+
+#[test]
+fn import_meta_is_one_ordinary_object_per_module() {
+    // §13.3.12 — an object with a **null** prototype, made once and answered with every time. The
+    // null prototype is step 4.a's `OrdinaryObjectCreate(null)` and is not decoration: a host
+    // property called `toString` must not read as `Object.prototype`'s.
+    assert_eq!(run_module_source("typeof import.meta"), "object");
+    assert_eq!(
+        run_module_source("Object.getPrototypeOf(import.meta) === null"),
+        "true"
+    );
+    // Not callable and not a constructor, which is what makes "ordinary object" the whole of what
+    // it is.
+    assert_eq!(
+        run_module_source(
+            "var said = 'none'; try { import.meta() } catch (e) { said = e.constructor.name } said"
+        ),
+        "TypeError"
+    );
+    // Step 5 — the same object on every read, including from inside a function, because step 4
+    // caches it on the module record rather than building one per evaluation.
+    assert_eq!(
+        run_module_source(
+            "var a = import.meta; var b = function () { return import.meta }(); \
+             (import.meta === a) + '|' + (import.meta === b)"
+        ),
+        "true|true"
+    );
+    // It is extensible, which is what lets a host or a script put something on it.
+    assert_eq!(
+        run_module_source("import.meta.mine = 7; import.meta.mine"),
+        "7"
+    );
+}
+
+#[test]
+fn import_meta_belongs_to_the_module_the_code_was_written_in() {
+    // The half that cannot be answered by asking what is running. §10.2.1.1 gives a call its
+    // **callee's** `[[ScriptOrModule]]`, so a function declared in one module and called from
+    // another answers with the module it was *written* in. praxis walks out of the environment the
+    // code is closed over, and a closure's chain ends where it was written — the same fact.
+    assert_eq!(
+        run_graph(
+            &[
+                (
+                    "dep",
+                    "export var mine = import.meta; export function ours() { return import.meta }"
+                ),
+                (
+                    "main",
+                    "import { mine, ours } from 'dep'; \
+                     (import.meta === mine) + '|' + (mine === ours())"
+                ),
+            ],
+            "main",
+        ),
+        "false|true"
+    );
+}
+
+#[test]
+fn a_modules_import_meta_survives_a_collection() {
+    // A root-set omission is the shape that no ordinary test can reach: leaving `import_meta` out
+    // of `Vm::roots` changes nothing at all until a collection happens between two reads, and then
+    // §13.3.12's one promise — the same object every time — is broken silently.
+    //
+    // The second module is not decoration. §14.2.2's completion register is itself a root, so an
+    // object a module has just answered with is reachable through it; running something else first
+    // is what makes this measure the record rather than the register.
+    let mut heap = Heap::new();
+    let first = crate::parser::parse_module("import.meta").expect("it parses"); // a VM test needs a chunk
+    let first = crate::compile::compile_module(&first, &mut heap).expect("it compiles"); // same
+    let second = crate::parser::parse_module("0").expect("it parses"); // same
+    let second = crate::compile::compile_module(&second, &mut heap).expect("it compiles"); // same
+
+    let mut vm = Vm::new(&mut heap);
+    let outcome = vm.run_module(&first, &mut heap).expect("it runs"); // same
+    let Outcome::Value(Value::Object(meta)) = outcome else {
+        panic!("import.meta answered with {outcome:?}"); // a VM test needs the object
+    };
+    vm.run_module(&second, &mut heap).expect("it runs"); // a VM test needs a chunk
+    vm.collect(&second, &mut heap);
+    assert!(
+        heap.object(meta).is_some(),
+        "the module record no longer keeps its import.meta alive"
+    );
+}
+
+#[test]
+fn a_module_the_host_ran_directly_is_not_run_again_when_a_graph_reaches_it() {
+    // §16.2.1.6's "each body once" is a fact about the *machine*, not about the link — so a module
+    // the host ran with `Vm::run_module` has run, and a graph that later imports the same chunk
+    // finds it evaluated. That is what the record `run_module` registers is for, and it is the only
+    // thing that makes the two entry points agree about a module they have both seen.
+    //
+    // The counter is the whole test: a second evaluation would leave 2 behind, and the import would
+    // still answer — with the wrong number, silently.
+    let mut heap = Heap::new();
+    // The counter has to live somewhere the body does not reset. `var runs = 0` looks like one and
+    // is not: a second evaluation runs that initialiser too, so it answers 1 whether the body ran
+    // once or twice — which is how the first version of this row passed against the bug it was
+    // written to catch.
+    let source = "export var runs = globalThis.seen = (globalThis.seen || 0) + 1;";
+    let parsed = crate::parser::parse_module(source).expect("it parses"); // a VM test needs a chunk
+    let dependency = std::rc::Rc::new(
+        crate::compile::compile_module(&parsed, &mut heap).expect("it compiles"), // same
+    );
+    let importer =
+        crate::parser::parse_module("import { runs } from 'dep'; runs").expect("it parses"); // same
+    let importer = crate::compile::compile_module(&importer, &mut heap).expect("it compiles"); // same
+
+    let mut vm = Vm::new(&mut heap);
+    vm.run_module(&dependency, &mut heap).expect("it runs"); // same
+
+    let mut graph = crate::vm::Graph::new();
+    graph.insert("dep", std::rc::Rc::clone(&dependency));
+    graph.insert("main", std::rc::Rc::new(importer));
+    let outcome = vm
+        .run_module_graph("main", &graph, &mut heap)
+        .expect("the chunks are well formed") // same
+        .expect("the graph links"); // same
+    assert_eq!(describe(outcome, &mut heap), "1");
+}

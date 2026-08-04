@@ -365,6 +365,30 @@ impl Heap {
         self.record(environment)?.slots.get(index as usize).copied()
     }
 
+    /// The outermost environment `from` is closed over — the end of its scope chain.
+    ///
+    /// For code inside a module that is the module's own environment, and for code inside a script
+    /// it is the script's. Which is what makes it an identity: §13.3.12 has to know *which* module
+    /// the running code belongs to, and §10.2.1.1 gives a call its callee's module rather than its
+    /// caller's — so a function declared in one module and called from another has to answer with
+    /// the one it was written in. Walking out gives that without recording anything: a closure's
+    /// chain ends where it was defined, which is the same fact said twice.
+    ///
+    /// Bounded rather than trusted. Nothing can build a cycle here — a parent is always an
+    /// environment that already existed — and the bound costs one comparison per hop against a
+    /// chain that is never deep.
+    #[must_use]
+    pub fn environment_root(&self, from: EnvironmentId) -> EnvironmentId {
+        let mut walk = from;
+        for _ in 0..self.environment_count() {
+            let Some(parent) = self.record(walk).and_then(Environment::parent) else {
+                break;
+            };
+            walk = parent;
+        }
+        walk
+    }
+
     /// Put a slot back into §9.1.1.1's uninitialised state, answering whether there was one.
     ///
     /// What `let` does to its binding when its block is entered. Needed as an operation of its own

@@ -764,6 +764,15 @@ impl Vm {
                 }
                 Instruction::LoadThis => self.stack.push(self.this_value),
                 Instruction::LoadNewTarget => self.stack.push(self.new_target),
+                Instruction::ImportMeta => {
+                    // §13.3.12 step 2 asserts the running code belongs to a Module, and the parser
+                    // has already refused `import.meta` under any other goal — so `None` here is a
+                    // chunk that did not come from this compiler.
+                    let meta = self
+                        .import_meta(heap)
+                        .ok_or(Fault::ImportMetaOutsideModule)?;
+                    self.stack.push(Value::Object(meta));
+                }
                 Instruction::RegExpLiteral => {
                     // §13.2.7.3 `InstantiateRegExpLiteral` — a new object each time, so a pattern
                     // written inside a loop does not carry `lastIndex` between turns.

@@ -118,6 +118,12 @@ pub enum Fault {
     /// and inside an ordinary function there is a frame that belongs to no generator. The compiler
     /// emits one only inside a generator body, which is exactly where the grammar puts `yield`.
     YieldOutsideGenerator,
+    /// An `ImportMeta` where the running code belongs to no module.
+    ///
+    /// §13.3.12's early error makes `import.meta` a Syntax Error under any goal but Module, and the
+    /// parser applies it — so no source reaches this. A hand-written chunk can, which is how it is
+    /// tested.
+    ImportMetaOutsideModule,
     /// A `DefineField` on something that is not an object.
     ///
     /// Only an object literal emits one, and it emits `NewObject` first, so no chunk the compiler
@@ -388,7 +394,31 @@ impl Vm {
     /// other difference between the two goal symbols is decided when the body is compiled — see
     /// [`crate::compile::compile_module`] — and none of it reaches here.
     pub fn run_module(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
-        self.run_with_this(chunk, Value::Undefined, heap)
+        // §16.2.1 — a module that runs **is** a module record, even when nothing imported it and
+        // there is no graph to link. Registering one here is what gives `import.meta` a module to
+        // belong to: without it a lone module reading `import.meta` would find no record and report
+        // a Fault, which is an engine-bug channel and not an answer to an ordinary program.
+        //
+        // Keyed by the chunk's address, which is what the linker uses too, and with no entry in
+        // `keys` — this module has no resolved identity because no host resolved it, so §16.2.1.9
+        // is not asked and the object is the empty one it describes.
+        let environment =
+            heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
+        self.modules
+            .entry(std::ptr::from_ref(chunk) as usize)
+            .or_insert_with(|| loader::ModuleRecord {
+                environment,
+                namespace: None,
+                import_meta: None,
+                // `true`, and it is read: §16.2.1.6's "each body once" is a fact about the
+                // machine and not about the link, so a graph that later imports this same chunk
+                // finds it evaluated and does not run the body again. The linker's own insert is
+                // guarded on the entry being *vacant*, which is what makes this record the one it
+                // then reads.
+                evaluated: true,
+                failure: None,
+            });
+        self.run_prepared(chunk, environment, Value::Undefined, heap)
     }
 
     /// Run one module's body in an environment the link step already made — §16.2.1.6.
@@ -861,6 +891,10 @@ impl Vm {
             environments.push(record.environment);
             values.extend(record.namespace.map(Value::Object));
             values.extend(record.failure);
+            // §13.3.12 caches this on the record and answers with it for ever, so it is reachable
+            // for as long as the module is — a collection that freed it would hand the next read a
+            // different object, which is the one thing the clause promises cannot happen.
+            values.extend(record.import_meta.map(Value::Object));
         }
         crate::heap::Roots {
             values,

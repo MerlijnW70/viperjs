@@ -146,9 +146,9 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **82.38% of test262** — 76,745 of 93,161 runs. Treat that number as
+Conformance as of this commit is **82.38% of test262** — 76,751 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 422 runs are now *stopped* before anything executes, and none of them is worth building:
+Only 416 runs are now *stopped* before anything executes, and none of them is worth building:
 `(?i:…)` 170 and a property of strings 110 are the RegExp **modifiers** and **strings** proposals,
 `$262.agent` 18 is a one-thread engine's limit, and the rest is `import.meta` 6, `super` in an
 arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are proposals.
@@ -519,7 +519,6 @@ doc says which line to change if data ever arrives.
   can ask for `d` and then read `undefined`. The match record already holds every span the array
   needs — `found.span` and `found.captures` are pairs — so this is the array and its `groups`
   object and nothing else. Six of the 34 arrived with the duplicate-named-groups slice.
-- **`import.meta` — 6 runs**, §16.2.1.9's host hook, and the registry it would hang off is built.
 - **`new.target` and `super(…)` inside a direct `eval` in an arrow — 16 runs.** Whether an arrow was
   written inside a function is a *lexical* fact a running arrow's chunk does not record, and the
   parser knows it. Carrying that answer onto the chunk is the whole slice.

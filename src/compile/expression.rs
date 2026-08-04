@@ -507,7 +507,12 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::LoadNewTarget);
                 Ok(())
             }
-            ExprKind::ImportMeta => Err(unsupported("import.meta", span)),
+            // §13.3.12. The parser has already refused one outside a Module (§13.3.12's early
+            // error), so reaching here means the goal symbol allows it.
+            ExprKind::ImportMeta => {
+                self.chunk.emit(Instruction::ImportMeta);
+                Ok(())
+            }
             // §13.3.10 — the specifier is an expression, which is the whole point of the form. The
             // second argument is §13.3.10's `options`, and praxis has no import attribute it acts
             // on: it is evaluated for its effects and dropped, because a getter written there must

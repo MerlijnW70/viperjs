@@ -971,13 +971,19 @@ Promise.resolve().then(function () { $DONE(); });"
         // Nothing ran, so nothing can be said about what it would have done. Counting these as
         // failures would write the same sentence into the expectations file thousands of times
         // and bury the ones that mean something.
-        // §16.2.1.9's `import.meta`, because this row needs something the compiler still refuses
-        // and the example has to be replaced each time one of them lands — `class C {}` was here
-        // until classes compiled, `function* g() {}` until generators did, `async function f() {}`
-        // until `await` did, and a destructuring rest parameter until §15.1 did. A **module**,
-        // because nothing a script can say is refused any more.
+        // The example has to be replaced each time a refusal lands — `class C {}` was here until
+        // classes compiled, `function* g() {}` until generators did, `async function f() {}` until
+        // `await` did, a destructuring rest parameter until §15.1 did, and `import.meta` until
+        // §13.3.12 did.
+        //
+        // `(?i:…)` now, and it should not need replacing: the RegExp **modifiers** proposal is
+        // Stage 3 and building it is on nobody's list, so this is a refusal with no owner. The
+        // distinction it is really about is `Unsupported` against `BadPattern` — a gap the compiler
+        // admits to, against a pattern the grammar rejects — and only the first is a skip. Getting
+        // that backwards is not symmetric: a gap recorded as an early error passes every test
+        // asserting the construct must be rejected.
         assert!(matches!(
-            verdict("/*---\ndescription: x\nflags: [module]\n---*/\nimport.meta;"),
+            verdict("/*---\ndescription: x\n---*/\nvar r = /(?i:a)/;"),
             Verdict::Skipped(_)
         ));
         // A *parse* failure is not skipped: the parser is finished, so a file it refuses is a
