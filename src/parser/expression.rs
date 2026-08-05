@@ -391,7 +391,7 @@ impl Parser<'_> {
             let argument = self.parse_unary(None);
             self.leave();
             let argument = argument?;
-            return Self::update(operator, true, token.span, argument);
+            return self.update(operator, true, token.span, argument);
         }
 
         // `UpdateExpression : LeftHandSideExpression [no LineTerminator here] ++`
@@ -407,13 +407,14 @@ impl Parser<'_> {
             return Ok(operand);
         }
         let token = self.advance(Goal::Div)?;
-        Self::update(operator, false, token.span, operand)
+        self.update(operator, false, token.span, operand)
     }
 
     /// Build an update node, enforcing §13.4.1.
     ///
     /// `span` is the operator's; the node covers both it and the operand, whichever came first.
     fn update(
+        &self,
         operator: UpdateOperator,
         prefix: bool,
         operator_span: Span,
@@ -426,6 +427,17 @@ impl Parser<'_> {
                 kind: ParseErrorKind::InvalidAssignmentTarget,
                 span: argument.span,
             });
+        }
+        // §8.6.4 gives `eval` and `arguments` an AssignmentTargetType of *invalid* in strict code,
+        // and §13.4's four productions each say "if AssignmentTargetType is not simple" — the same
+        // sentence §13.15.1 says of an assignment. So `"use strict"; arguments--` is refused
+        // exactly as `"use strict"; arguments = 1` already was.
+        //
+        // This takes `&self` for that check alone. Written as an associated function it could not
+        // ask whether the code is strict, which is why the rule was applied to one of the two
+        // productions that share it and not the other.
+        if let ExprKind::Identifier(name) = &argument.kind {
+            self.check_strict_name(name, argument.span, true)?;
         }
         let span = operator_span.to(argument.span);
         Ok(Expr::new(

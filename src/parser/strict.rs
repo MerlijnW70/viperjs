@@ -241,6 +241,43 @@ mod tests {
     }
 
     #[test]
+    fn an_update_target_obeys_the_same_strict_rule_as_an_assignment_target() {
+        // §8.6.4 makes the AssignmentTargetType of `eval` and `arguments` *invalid* in strict code,
+        // and §13.4's four productions ask exactly what §13.15.1 asks. The rule had been applied to
+        // the assignment and not to the update, so `arguments = 1` was refused and `arguments--`
+        // was not — the same sentence implemented in one of the two places that share it.
+        for source in [
+            r#""use strict"; arguments--;"#,
+            r#""use strict"; arguments++;"#,
+            r#""use strict"; --arguments;"#,
+            r#""use strict"; ++arguments;"#,
+            r#""use strict"; eval--;"#,
+            r#""use strict"; eval++;"#,
+            r#""use strict"; --eval;"#,
+            r#""use strict"; ++eval;"#,
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::StrictEvalOrArguments,
+                "{source}"
+            );
+        }
+        // …and **sloppy code is untouched**, which is the half a rule that refuses everything
+        // would also pass. `arguments--` outside strict mode is an ordinary update expression.
+        assert!(parse_script("arguments--;").is_ok());
+        assert!(parse_script("++eval;").is_ok());
+        // A name that merely contains one is not one, and an ordinary target is still a target.
+        assert!(parse_script(r#""use strict"; evaluate++;"#).is_ok());
+        assert!(parse_script(r#""use strict"; var x; x++;"#).is_ok());
+        // The non-simple rule is a different clause and still answers for itself, so the two are
+        // not one check wearing two messages.
+        assert_eq!(
+            kind(r#""use strict"; f()++;"#),
+            ParseErrorKind::InvalidAssignmentTarget
+        );
+    }
+
+    #[test]
     fn a_reserved_word_spelled_with_an_escape_is_still_a_reserved_word() {
         // §13.1.1: `Identifier : IdentifierName but not ReservedWord`, asked of the *StringValue*.
         // §12.7.2 Note 1 already keeps `br\u0065ak` from lexing as the token `break` — a keyword
