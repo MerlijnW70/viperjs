@@ -228,7 +228,8 @@ fn a_pattern_that_does_not_parse_is_a_syntax_error_when_it_is_made() {
         "new RegExp('(')",
         "new RegExp('a{2,1}')",
         "new RegExp('[z-a]')",
-        "new RegExp('\\\\1')",
+        // `\1` naming no group is not one of these: §B.1.2 reads it as a legacy octal escape.
+        "new RegExp('(?<n>a)\\\\k<m>')",
         "new RegExp('(?<n>a)(?<n>b)')",
     ] {
         assert_eq!(

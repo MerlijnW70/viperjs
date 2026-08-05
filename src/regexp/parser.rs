@@ -786,6 +786,16 @@ impl Reader<'_> {
             self.at += 1;
             return Ok(ClassItem::Escape(escape));
         }
+        // §B.1.2 gives a class its own `ClassEscape :: c ClassControlLetter`, which accepts a
+        // decimal digit or `_` where `ControlLetter` wants an ASCII letter — and its own
+        // `ClassAtomNoDash :: \ [lookahead = c]` for one that still does not match. Answered here
+        // rather than passed down as a flag: this is the only caller for which the answer is
+        // anything but "outside a class", and a parameter saying so at the other two would be a
+        // value no pattern could tell the setting of.
+        if letter == 'c' {
+            self.at += 1;
+            return Ok(ClassItem::Single(self.control_escape(true)?));
+        }
         // `\b` inside a class is a backspace rather than a word boundary — §22.2.1's `ClassEscape`
         // says so outright, and it is the one escape that means something different in here.
         if letter == 'b' {
@@ -886,6 +896,18 @@ impl Reader<'_> {
                 self.at += 1;
                 Ok(Node::Assert(Assertion::NotWordBoundary))
             }
+            // §22.2.1's `AtomEscape :: [+N] k GroupName`. `N` is set when the pattern contains a
+            // `GroupSpecifier` anywhere, which is a question the survey has already answered — and
+            // with no named group at all the production is not in the grammar, so §B.1.2's
+            // `SourceCharacterIdentityEscape` takes the `k` instead and `/\k<a>/` matches the four
+            // characters `k<a>`.
+            //
+            // The two readings can never compete over one pattern, because that production's `[+N]`
+            // form excludes `k` for exactly as long as this one is available.
+            'k' if !self.flags.unicode_mode() && self.names.is_empty() => {
+                self.at += 1;
+                Ok(Node::Character(u32::from(b'k')))
+            }
             'k' => {
                 self.at += 1;
                 if !self.eat('<') {
@@ -901,61 +923,178 @@ impl Reader<'_> {
                 Ok(Node::NamedBackreference(name))
             }
             '1'..='9' => {
+                let start = self.at;
                 let number = self.digits().unwrap_or(0);
+                if number <= self.groups {
+                    return Ok(Node::Backreference(number));
+                }
                 // §22.2.1.1 — a backreference past the last group is an error in Unicode mode.
-                // Annex B rereads it as a legacy octal escape; DR-0008 leaves that out, so this
-                // refuses in both modes rather than reading it two ways.
-                if number > self.groups {
+                // §B.1.2 does not make it one: it conditions `AtomEscape :: DecimalEscape` on the
+                // number being within range, so out of range the production simply does not match
+                // and `CharacterEscape` reads the same text as a legacy octal or an identity
+                // escape. Hence `/\1/` is a `\x01` and `/\8/` is an `8`, while `/(.)\1/` is still a
+                // backreference — the group count decides, and it is why this is checked before the
+                // digits are given back.
+                if self.flags.unicode_mode() {
                     return Err(Error::at("a backreference names no group"));
                 }
-                Ok(Node::Backreference(number))
+                self.at = start;
+                // The two digit productions of `CharacterEscape` rather than the whole of it: what
+                // stands here is a digit, and a digit reaches none of the others.
+                match letter {
+                    // `8` and `9` appear in none of `LegacyOctalEscapeSequence`'s four productions,
+                    // so they fall to the identity escape and stand for themselves.
+                    '8' | '9' => {
+                        self.at += 1;
+                        Ok(Node::Character(letter as u32))
+                    }
+                    _ => Ok(Node::Character(self.legacy_octal())),
+                }
             }
             _ => Ok(Node::Character(self.character_escape()?)),
         }
     }
 
     /// §22.2.1 `CharacterEscape` — the forms that stand for one code point.
+    ///
+    /// The one escape a class reads differently never arrives here. `class_atom` takes `\c` first,
+    /// and the other caller inside a class — the alternatives of a `\q{…}` — needs `v`, under which
+    /// §B.1.2's wider reading does not exist to choose.
     fn character_escape(&mut self) -> Result<u32, Error> {
         let Some(letter) = self.peek() else {
             return Err(Error::at("a regular expression ends after a backslash"));
         };
         self.at += 1;
+        let after = self.at;
         match letter {
             't' => Ok(0x09),
             'n' => Ok(0x0A),
             'v' => Ok(0x0B),
             'f' => Ok(0x0C),
             'r' => Ok(0x0D),
-            // `\cX` — the control letter's code modulo 32, and *only* for an ASCII letter. `\c1`
-            // is Annex B's reading and is refused here.
-            'c' => {
-                let Some(control) = self.peek().filter(char::is_ascii_alphabetic) else {
-                    return Err(Error::at("a control escape needs a letter"));
-                };
-                self.at += 1;
-                Ok(control as u32 % 32)
+            'c' => self.control_escape(false),
+            // §22.2.1's `HexEscapeSequence` and `RegExpUnicodeEscapeSequence`. Neither *failing* is
+            // an error under Annex B — see `short_escape`, which is where a `\x` with too few
+            // digits stops being one.
+            'x' => match self.fixed_hex(2) {
+                Ok(value) => Ok(value),
+                Err(error) => self.short_escape(letter, after, error),
+            },
+            'u' => match self.unicode_escape() {
+                Ok(value) => Ok(value),
+                Err(error) => self.short_escape(letter, after, error),
+            },
+            // §B.1.2's `LegacyOctalEscapeSequence`, `[~UnicodeMode]`, which is what a digit means
+            // here once `DecimalEscape` has had its turn: `\101` is an `A`. The arm stops at seven
+            // because `8` and `9` are not octal digits in any of its four productions — they reach
+            // the identity escape below and stand for themselves.
+            '0'..='7' if !self.flags.unicode_mode() => {
+                // The digit is given back rather than passed along: reading all of them in one
+                // place is what keeps the three-versus-two bound a single rule.
+                self.at = after - 1;
+                Ok(self.legacy_octal())
             }
-            'x' => self.fixed_hex(2),
-            'u' => self.unicode_escape(),
-            // `\0` is NUL, and only when no digit follows: `\01` is a legacy octal escape, which
-            // Annex B has and this does not.
+            // `\0` is NUL, and §22.2.1 gives it a `[lookahead ∉ DecimalDigit]` — so a digit after it
+            // takes the production away, and in Unicode mode nothing replaces it.
             '0' => match self.peek().is_some_and(|next| next.is_ascii_digit()) {
                 true => Err(Error::at("a legacy octal escape is not a character escape")),
                 false => Ok(0),
             },
-            '1'..='9' => Err(Error::at("a legacy octal escape is not a character escape")),
+            '1'..='7' => Err(Error::at("a legacy octal escape is not a character escape")),
             // §22.2.1's `IdentityEscape`. In Unicode mode only a `SyntaxCharacter` or `/` may be
             // escaped this way, so `\a` is an error there and an `a` outside — one of the few
             // places the two modes disagree about whether a pattern is *valid* at all.
+            //
+            // Outside it the production is §B.1.2's `SourceCharacterIdentityEscape`, which is every
+            // character but `c` — and but `k` as well once the pattern has a group name, that being
+            // the one spelling a named backreference has already claimed.
             _ => {
                 if self.flags.unicode_mode() && !is_syntax_character(letter) && letter != '/' {
                     return Err(Error::at(
                         "this character may not be escaped in a Unicode pattern",
                     ));
                 }
+                if letter == 'k' && !self.names.is_empty() {
+                    return Err(Error::at(
+                        "a k may not be escaped in a pattern that has a group name",
+                    ));
+                }
                 Ok(letter as u32)
             }
         }
+    }
+
+    /// §22.2.1's `CharacterEscape :: c ControlLetter`, and the two things Annex B does with it.
+    ///
+    /// The letter's code modulo 32, which is the control character it names. §B.1.2 widens the set
+    /// inside a class — `ClassControlLetter` adds the decimal digits and `_`, so `[\c0]` is a
+    /// `\x10` where `\c0` outside one is not a control escape at all.
+    ///
+    /// And when no letter of the accepted set follows, `ExtendedAtom :: \ [lookahead = c]` and
+    /// `ClassAtomNoDash :: \ [lookahead = c]` say the **backslash alone** is the atom. So `/\c/`
+    /// matches the two characters `\c`, `[\c]` holds both of them, and the `c` is left for the
+    /// caller's next turn round its own loop rather than being consumed here.
+    fn control_escape(&mut self, in_class: bool) -> Result<u32, Error> {
+        let wider = in_class && !self.flags.unicode_mode();
+        let control = self.peek().filter(|next| match wider {
+            true => next.is_ascii_alphanumeric() || *next == '_',
+            false => next.is_ascii_alphabetic(),
+        });
+        if let Some(control) = control {
+            self.at += 1;
+            return Ok(control as u32 % 32);
+        }
+        if self.flags.unicode_mode() {
+            return Err(Error::at("a control escape needs a letter"));
+        }
+        // Giving the `c` back is the whole of the fallback — the backslash has already been
+        // consumed by the caller, and it is the entire atom.
+        self.at -= 1;
+        Ok(u32::from(b'\\'))
+    }
+
+    /// §B.1.2's `LegacyOctalEscapeSequence`, from the first of its digits.
+    ///
+    /// Its four productions differ in one thing only: how many digits may follow the first. A
+    /// leading `0`–`3` takes two more and a leading `4`–`7` one, which is what holds the value
+    /// inside a byte — so `\400` is a space followed by a `0` rather than a code point above 255,
+    /// and `\0111` is a tab followed by a `1`. Read as "up to three octal digits" it would answer
+    /// 0o400 for the first, which is not a character any of the four can name.
+    ///
+    /// Only ever entered on an octal digit, so the loop always takes at least one.
+    fn legacy_octal(&mut self) -> u32 {
+        let most = match self.peek() {
+            Some('0'..='3') => 3,
+            _ => 2,
+        };
+        let mut value = 0;
+        for _ in 0..most {
+            let Some(digit) = self.peek().and_then(|next| next.to_digit(8)) else {
+                break;
+            };
+            value = value * 8 + digit;
+            self.at += 1;
+        }
+        value
+    }
+
+    /// A `\x` or `\u` whose digits did not arrive, re-read as the identity escape of its letter.
+    ///
+    /// §22.2.1 has no such reading: `IdentityEscape[~UnicodeMode]` there is "SourceCharacter but not
+    /// `UnicodeIDContinue`", and both letters are one — so a short escape is a pattern with no
+    /// derivation. §B.1.2 replaces that production with `SourceCharacterIdentityEscape`, which
+    /// excludes only `c`, and a production that fails to match then simply hands the text on: the
+    /// digits are given back and the letter stands for itself, so `/\xa/` matches `xa` and `/\u/`
+    /// matches `u`.
+    ///
+    /// Under `u` or `v` the original error is what the program sees, because there the shorter
+    /// production is the only one there is.
+    fn short_escape(&mut self, letter: char, from: usize, error: Error) -> Result<u32, Error> {
+        if self.flags.unicode_mode() {
+            return Err(error);
+        }
+        self.at = from;
+        Ok(letter as u32)
     }
 
     /// Exactly `count` hexadecimal digits, as one number.
@@ -1431,13 +1570,90 @@ mod tests {
         // Which is the whole reason the group count is taken in a pass of its own.
         assert!(parse("\\1(a)", Flags::default()).is_ok());
         assert!(parse("\\k<n>(?<n>a)", Flags::default()).is_ok());
-        assert_eq!(refused("\\1"), "a backreference names no group");
-        assert_eq!(refused("(a)\\2"), "a backreference names no group");
-        assert_eq!(refused("\\k<n>"), "a named backreference names no group");
+        // Out of range is an error under `u` and a different production without it — §B.1.2
+        // conditions `AtomEscape :: DecimalEscape` on the number being one a group wears, so a
+        // bigger one leaves the text to `CharacterEscape` rather than refusing it.
+        assert_eq!(unicode("\\1"), Err("a backreference names no group"));
+        assert_eq!(unicode("(a)\\2"), Err("a backreference names no group"));
+        assert_eq!(plain("\\1"), Node::Character(0x01));
+        assert_eq!(
+            plain("(a)\\2"),
+            Node::Sequence(vec![
+                Node::Group {
+                    kind: GroupKind::Capturing(1),
+                    body: Box::new(Node::Character(97)),
+                },
+                Node::Character(0x02),
+            ])
+        );
+        // …and the group count is what decides, so the same text one group later is a reference.
+        assert_eq!(
+            plain("(a)(b)\\2"),
+            Node::Sequence(vec![
+                Node::Group {
+                    kind: GroupKind::Capturing(1),
+                    body: Box::new(Node::Character(97)),
+                },
+                Node::Group {
+                    kind: GroupKind::Capturing(2),
+                    body: Box::new(Node::Character(98)),
+                },
+                Node::Backreference(2),
+            ])
+        );
+        // A named one is not conditioned that way: with a group name in the pattern the production
+        // is in the grammar, and naming no group is an error in both modes.
         assert_eq!(
             refused("(?<n>a)\\k<m>"),
             "a named backreference names no group"
         );
+        assert_eq!(
+            unicode("\\k<n>"),
+            Err("a named backreference names no group")
+        );
+    }
+
+    #[test]
+    fn a_k_is_a_named_backreference_only_in_a_pattern_that_has_a_group_name() {
+        // §22.2.1's `AtomEscape :: [+N] k GroupName`, and `N` is set by a `GroupSpecifier` anywhere
+        // in the pattern. With none, §B.1.2's `SourceCharacterIdentityEscape` takes the `k` and the
+        // rest is ordinary characters — so this is a pattern rather than the error it looks like.
+        assert_eq!(
+            plain("\\k<a>"),
+            Node::Sequence(vec![
+                Node::Character(107),
+                Node::Character(60),
+                Node::Character(97),
+                Node::Character(62),
+            ])
+        );
+        assert_eq!(plain("\\k"), Node::Character(107));
+        // A lookbehind is not a `GroupSpecifier`, which is the one shape that reads as though it
+        // might be: `(?<=` and `(?<!` name nothing.
+        assert!(parse("\\k<a>(?<=>)a", Flags::default()).is_ok());
+        assert!(parse("(?<!a>)\\k<a>", Flags::default()).is_ok());
+        // One named group anywhere puts the production back, and the `k` with it.
+        assert_eq!(
+            refused("\\k<a>(?<b>x)"),
+            "a named backreference names no group"
+        );
+        // …and the same fact takes `k` out of the identity escape, which is the only way the two
+        // readings could otherwise have met over one pattern. Inside a class is where that is
+        // visible, `ClassEscape` having no named-backreference production of its own.
+        assert_eq!(
+            plain("[\\k]"),
+            Node::Class {
+                negated: false,
+                items: vec![ClassItem::Single(107)],
+                strings: Vec::new(),
+            }
+        );
+        assert_eq!(
+            refused("(?<a>x)[\\k]"),
+            "a k may not be escaped in a pattern that has a group name"
+        );
+        // Under `u` there is no identity escape to fall back to at all.
+        assert_eq!(unicode("\\k"), Err("a named backreference has no name"));
     }
 
     #[test]
@@ -1594,14 +1810,140 @@ mod tests {
         // `\cA` is the control character, which is the letter's code modulo 32.
         assert_eq!(one("\\cA"), 1);
         assert_eq!(one("\\cj"), 10);
-        assert_eq!(refused("\\c1"), "a control escape needs a letter");
-        assert_eq!(refused("\\x4"), "a hexadecimal escape is too short");
-        // A legacy octal escape is Annex B's, and refusing it is DR-0008's rule rather than an
-        // oversight — reading it as a character would be the *other* error.
+        assert_eq!(one("\\01"), 1);
+    }
+
+    #[test]
+    fn a_c_that_names_no_control_letter_is_a_backslash_and_the_c_is_read_again() {
+        // Annex B `ExtendedAtom :: \ [lookahead = c]` — the backslash is the whole atom, so `/\c1/`
+        // matches the three characters `\c1` rather than being the error §22.2.1 makes it.
         assert_eq!(
-            refused("\\01"),
-            "a legacy octal escape is not a character escape"
+            plain("\\c1"),
+            Node::Sequence(vec![
+                Node::Character(92),
+                Node::Character(99),
+                Node::Character(49),
+            ])
         );
+        assert_eq!(
+            plain("\\c"),
+            Node::Sequence(vec![Node::Character(92), Node::Character(99)])
+        );
+        // Inside a class the accepted set is wider — `ClassControlLetter` is the decimal digits and
+        // `_` on top of the letters — so the same text is a control character in here and a pair of
+        // ordinary ones out there. `\c0` is `0x30 % 32`.
+        assert_eq!(
+            plain("[\\c0]"),
+            Node::Class {
+                negated: false,
+                items: vec![ClassItem::Single(0x10)],
+                strings: Vec::new(),
+            }
+        );
+        assert_eq!(
+            plain("[\\c_]"),
+            Node::Class {
+                negated: false,
+                items: vec![ClassItem::Single(0x1F)],
+                strings: Vec::new(),
+            }
+        );
+        // …and a class gets the fallback too, by `ClassAtomNoDash :: \ [lookahead = c]`, so `[\c!]`
+        // holds a backslash, a `c` and a `!`.
+        assert_eq!(
+            plain("[\\c!]"),
+            Node::Class {
+                negated: false,
+                items: vec![
+                    ClassItem::Single(92),
+                    ClassItem::Single(99),
+                    ClassItem::Single(33),
+                ],
+                strings: Vec::new(),
+            }
+        );
+        // Under `u` neither the wider set nor the fallback exists.
+        assert_eq!(unicode("\\c1"), Err("a control escape needs a letter"));
+        assert_eq!(unicode("[\\c0]"), Err("a control escape needs a letter"));
+    }
+
+    #[test]
+    fn a_legacy_octal_escape_takes_three_digits_after_a_low_one_and_two_after_a_high_one() {
+        let one = |source: &str| match plain(source) {
+            Node::Character(code) => code,
+            Node::Sequence(terms) => match terms.first() {
+                Some(Node::Character(code)) => *code,
+                other => panic!("{source}: {other:?}"),
+            },
+            other => panic!("{source}: {other:?}"),
+        };
+        assert_eq!(one("\\1"), 0x01);
+        assert_eq!(one("\\7"), 0x07);
+        assert_eq!(one("\\00"), 0x00);
+        assert_eq!(one("\\07"), 0x07);
+        assert_eq!(one("\\377"), 0xFF);
+        // The bound is what keeps the value inside a byte, and it is read off the *first* digit:
+        // `\400` is `\40` and a `0`, where three digits would have made it 0o400.
+        assert_eq!(
+            plain("\\400"),
+            Node::Sequence(vec![Node::Character(0x20), Node::Character(48)])
+        );
+        assert_eq!(
+            plain("\\770"),
+            Node::Sequence(vec![Node::Character(0x3F), Node::Character(48)])
+        );
+        // …while a leading `0`–`3` takes all three, so a fourth digit is the one left over.
+        assert_eq!(
+            plain("\\0111"),
+            Node::Sequence(vec![Node::Character(0x09), Node::Character(49)])
+        );
+        assert_eq!(one("\\070"), 0x38);
+        // `8` and `9` are in none of the four productions, so they are identity escapes — which is
+        // what makes `/\8/` a pattern matching an `8`.
+        assert_eq!(one("\\8"), 56);
+        assert_eq!(one("\\9"), 57);
+        // A digit after `\0` takes §22.2.1's own production away and Unicode mode replaces it with
+        // nothing.
+        assert_eq!(
+            unicode("\\01"),
+            Err("a legacy octal escape is not a character escape")
+        );
+        assert_eq!(unicode("\\0"), Ok(Node::Character(0)));
+    }
+
+    #[test]
+    fn a_hex_or_unicode_escape_whose_digits_are_missing_is_the_letter_itself() {
+        // §B.1.2's `SourceCharacterIdentityEscape` excludes only `c`, so a `HexEscapeSequence` that
+        // does not match is a production that did not match rather than an error: the digits go
+        // back and the letter stands for itself.
+        assert_eq!(plain("\\x"), Node::Character(120));
+        assert_eq!(
+            plain("\\xa"),
+            Node::Sequence(vec![Node::Character(120), Node::Character(97)])
+        );
+        assert_eq!(plain("\\u"), Node::Character(117));
+        assert_eq!(
+            plain("\\ua"),
+            Node::Sequence(vec![Node::Character(117), Node::Character(97)])
+        );
+        // `\u{2}` is the same fallback and then a *quantifier*, the braces having no other reading
+        // without `u` — so it matches two `u`s rather than one U+0002.
+        assert_eq!(
+            plain("\\u{2}"),
+            Node::Repeat {
+                node: Box::new(Node::Character(117)),
+                min: 2,
+                max: Some(2),
+                greedy: true,
+            }
+        );
+        // …and the digits that *do* arrive are still read, which is what stops the fallback from
+        // swallowing every escape.
+        assert_eq!(plain("\\x41"), Node::Character(0x41));
+        assert_eq!(plain("\\u0041"), Node::Character(0x41));
+        // Under `u` the shorter production is the only one there is, and its error is what shows.
+        assert_eq!(unicode("\\x4"), Err("a hexadecimal escape is too short"));
+        assert_eq!(unicode("\\u00"), Err("a hexadecimal escape is too short"));
     }
 
     #[test]
@@ -1615,10 +1957,17 @@ mod tests {
         );
         assert_eq!(unicode("\\$"), Ok(Node::Character(36)));
         assert_eq!(unicode("\\/"), Ok(Node::Character(47)));
-        // `\u{…}` needs the flag, and a surrogate pair is one code point only with it.
+        // `\u{…}` needs the flag, and a surrogate pair is one code point only with it. Without the
+        // flag the braces are not part of the escape at all — `\u` is an identity escape and
+        // `{41}` a quantifier on it, so this matches forty-one `u`s.
         assert_eq!(
-            refused("\\u{41}"),
-            "a braced Unicode escape needs the u or v flag"
+            plain("\\u{41}"),
+            Node::Repeat {
+                node: Box::new(Node::Character(117)),
+                min: 41,
+                max: Some(41),
+                greedy: true,
+            }
         );
         assert_eq!(unicode("\\u{1F600}"), Ok(Node::Character(0x1_F600)));
         assert_eq!(

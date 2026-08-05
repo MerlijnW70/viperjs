@@ -21,24 +21,10 @@ annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body
 annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
 annexB/built-ins/Object/is/emulates-undefined.js :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
 annexB/built-ins/Object/is/emulates-undefined.js (strict) :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
-annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js :: it threw SyntaxError: a control escape needs a letter
-annexB/built-ins/RegExp/RegExp-control-escape-russian-letter.js (strict) :: it threw SyntaxError: a control escape needs a letter
-annexB/built-ins/RegExp/RegExp-decimal-escape-class-range.js :: it did not parse: a legacy octal escape is not a character escape
-annexB/built-ins/RegExp/RegExp-decimal-escape-class-range.js (strict) :: it did not parse: a legacy octal escape is not a character escape
-annexB/built-ins/RegExp/RegExp-decimal-escape-not-capturing.js :: it did not parse: a backreference names no group
-annexB/built-ins/RegExp/RegExp-decimal-escape-not-capturing.js (strict) :: it did not parse: a backreference names no group
-annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js :: it threw SyntaxError: a control escape needs a letter
-annexB/built-ins/RegExp/RegExp-invalid-control-escape-character-class.js (strict) :: it threw SyntaxError: a control escape needs a letter
-annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js :: it threw SyntaxError: a backreference names no group
-annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js (strict) :: it threw SyntaxError: a backreference names no group
-annexB/built-ins/RegExp/RegExp-leading-escape.js :: it did not parse: a backreference names no group
-annexB/built-ins/RegExp/RegExp-leading-escape.js (strict) :: it did not parse: a backreference names no group
-annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js :: it threw SyntaxError: a backreference names no group
-annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js (strict) :: it threw SyntaxError: a backreference names no group
-annexB/built-ins/RegExp/RegExp-trailing-escape.js :: it did not parse: a backreference names no group
-annexB/built-ins/RegExp/RegExp-trailing-escape.js (strict) :: it did not parse: a backreference names no group
-annexB/built-ins/RegExp/incomplete_hex_unicode_escape.js :: it did not parse: a hexadecimal escape is too short
-annexB/built-ins/RegExp/incomplete_hex_unicode_escape.js (strict) :: it did not parse: a hexadecimal escape is too short
+annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"\\�"», «"\\\ud800"») to be true
+annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"\\�"», «"\\\ud800"») to be true
+annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
+annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
@@ -87,10 +73,6 @@ annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructo
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
-annexB/built-ins/RegExp/named-groups/non-unicode-malformed-lookbehind.js :: it did not parse: a named backreference names no group
-annexB/built-ins/RegExp/named-groups/non-unicode-malformed-lookbehind.js (strict) :: it did not parse: a named backreference names no group
-annexB/built-ins/RegExp/named-groups/non-unicode-malformed.js :: it did not parse: a named backreference names no group
-annexB/built-ins/RegExp/named-groups/non-unicode-malformed.js (strict) :: it did not parse: a named backreference names no group
 annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
 annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
 annexB/built-ins/RegExp/prototype/Symbol.split/toint32-limit-recompiles-source.js :: it threw an object with no name: Expected SameValue(«"a"», «""») to be true
@@ -210,12 +192,6 @@ annexB/language/global-code/switch-case-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/literals/regexp/class-escape.js :: it did not parse: a control escape needs a letter
-annexB/language/literals/regexp/class-escape.js (strict) :: it did not parse: a control escape needs a letter
-annexB/language/literals/regexp/identity-escape.js :: it did not parse: a backreference names no group
-annexB/language/literals/regexp/identity-escape.js (strict) :: it did not parse: a backreference names no group
-annexB/language/literals/regexp/legacy-octal-escape.js :: it did not parse: a backreference names no group
-annexB/language/literals/regexp/legacy-octal-escape.js (strict) :: it did not parse: a backreference names no group
 annexB/language/literals/regexp/non-empty-class-ranges-no-dash.js :: it did not parse: a character class range has a class escape as an end
 annexB/language/literals/regexp/non-empty-class-ranges-no-dash.js (strict) :: it did not parse: a character class range has a class escape as an end
 annexB/language/literals/regexp/non-empty-class-ranges.js :: it did not parse: a character class range has a class escape as an end
@@ -4042,8 +4018,6 @@ built-ins/String/prototype/search/this-value-not-obj-coercible.js :: it threw an
 built-ins/String/prototype/search/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/instance-is-math.js :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/instance-is-math.js (strict) :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
-built-ins/String/prototype/split/separator-regexp.js :: it did not parse: a named backreference names no group
-built-ins/String/prototype/split/separator-regexp.js (strict) :: it did not parse: a named backreference names no group
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-tostring-error.js (strict) :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
