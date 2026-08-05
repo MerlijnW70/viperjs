@@ -399,12 +399,33 @@ impl Reader<'_> {
             // pattern matching a star.
             '*' | '+' | '?' => Err(Error::at("this has nothing to repeat")),
             ')' | '|' => Err(Error::at("a regular expression has an unmatched )")),
-            // A lone `]` or `}` is a `PatternCharacter` only under Annex B, which DR-0008 leaves
-            // out — so both are refused, in Unicode mode and out of it alike.
+            // Annex B §B.1.2's `ExtendedPatternCharacter` is `SourceCharacter` but not one of
+            // `^ $ \ . * + ? ( ) [ |` — which is `PatternCharacter`'s list with `]`, `{` and `}`
+            // taken *off* it. So a lone bracket or brace is an ordinary character in a pattern read
+            // without `u` or `v`, and stays a Syntax Error under either flag, the production being
+            // `[~UnicodeMode]`.
+            ']' | '}' if !self.flags.unicode_mode() => {
+                self.at += 1;
+                Ok(Node::Character(next as u32))
+            }
             ']' => Err(Error::at("a regular expression has an unmatched ]")),
             '}' => Err(Error::at("a regular expression has an unmatched }")),
-            // A `{` that did not spell a quantifier. Annex B rereads it as a literal brace, so
-            // `/a{/` matches `a{` in a browser and is a SyntaxError here — DR-0008 again.
+            // A `{` where an atom belongs is the one place two `ExtendedAtom` productions compete,
+            // and their order in the grammar is the whole rule: `InvalidBracedQuantifier` is listed
+            // first and §B.1.2.1 makes it a Syntax Error outright, so `/{1}/` and `/a{1}{2}/` are
+            // refused while `/a{/` and `/x{o}x/` are literal braces. Reading the brace as a
+            // character without asking would accept `/{1}/`, which is a quantifier with nothing in
+            // front of it wearing a bracket.
+            //
+            // `braced` is exactly `InvalidBracedQuantifier`'s three forms and puts the cursor back
+            // when it is none of them, so there is nothing to undo on the character path.
+            '{' if !self.flags.unicode_mode() => match self.braced()?.is_some() {
+                true => Err(Error::at("this has nothing to repeat")),
+                false => {
+                    self.at += 1;
+                    Ok(Node::Character(next as u32))
+                }
+            },
             '{' => Err(Error::at("a regular expression has an unmatched {")),
             _ => {
                 self.at += 1;
@@ -1224,14 +1245,68 @@ mod tests {
     }
 
     #[test]
-    fn braces_that_do_not_spell_a_quantifier_are_refused_rather_than_read_as_characters() {
-        // Annex B reads `a{` and `a{,2}` as literal braces; DR-0008 leaves Annex B's syntactic
-        // extensions out, so a `{` that begins nothing is the unmatched brace it looks like.
-        assert_eq!(refused("a{"), "a regular expression has an unmatched {");
-        assert_eq!(refused("a{,2}"), "a regular expression has an unmatched {");
-        assert_eq!(refused("a{2"), "a regular expression has an unmatched {");
+    fn braces_that_do_not_spell_a_quantifier_are_read_as_characters() {
+        // Annex B §B.1.2's `ExtendedPatternCharacter`. A `{` that begins no quantifier is a brace,
+        // so `/a{/` matches the two characters it looks like.
+        assert_eq!(
+            plain("a{"),
+            Node::Sequence(vec![Node::Character(97), Node::Character(123)])
+        );
+        assert_eq!(
+            plain("a{,2}"),
+            Node::Sequence(vec![
+                Node::Character(97),
+                Node::Character(123),
+                Node::Character(44),
+                Node::Character(50),
+                Node::Character(125),
+            ])
+        );
         // …and one that does spell a quantifier is consumed whole, braces and all.
-        assert!(parse("a{2}", Flags::default()).is_ok());
+        assert_eq!(
+            plain("a{2}"),
+            Node::Repeat {
+                node: Box::new(Node::Character(97)),
+                min: 2,
+                max: Some(2),
+                greedy: true,
+            }
+        );
+        // The two productions compete only where an atom belongs, and `InvalidBracedQuantifier` is
+        // listed first: a brace that *does* spell a quantifier with nothing in front of it is a
+        // Syntax Error, which is the half a plain "read it as a character" rule would lose.
+        for source in ["{1}", "{1,}", "{1,2}", "a{1}{2}", "(?:a){2,3}{4}"] {
+            assert_eq!(refused(source), "this has nothing to repeat", "{source}");
+        }
+        // …and the whole production is `[~UnicodeMode]`, so `u` refuses every one of them.
+        for source in ["a{", "a{,2}", "{1}"] {
+            assert_eq!(
+                unicode(source),
+                Err("a regular expression has an unmatched {"),
+                "{source}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_lone_bracket_or_brace_is_a_character_without_u_and_an_error_with_it() {
+        // §B.1.2 takes `]` and `}` off `PatternCharacter`'s exclusion list. `[` and `)` stay on it:
+        // both open something, so reading them as characters would lose the unbalanced-bracket
+        // error rather than gain a pattern.
+        assert_eq!(plain("]"), Node::Character(93));
+        assert_eq!(plain("}"), Node::Character(125));
+        assert_eq!(
+            plain("]{}"),
+            Node::Sequence(vec![
+                Node::Character(93),
+                Node::Character(123),
+                Node::Character(125),
+            ])
+        );
+        assert_eq!(unicode("]"), Err("a regular expression has an unmatched ]"));
+        assert_eq!(unicode("}"), Err("a regular expression has an unmatched }"));
+        assert_eq!(refused("a)"), "a regular expression has an unmatched )");
+        assert_eq!(refused("[a"), "a character class is not closed");
     }
 
     #[test]
@@ -1596,7 +1671,6 @@ mod tests {
     fn unbalanced_brackets_are_refused_from_both_sides() {
         assert_eq!(refused("(a"), "a regular expression has an unclosed (");
         assert_eq!(refused("a)"), "a regular expression has an unmatched )");
-        assert_eq!(refused("a]"), "a regular expression has an unmatched ]");
         assert_eq!(refused("(?%a)"), "this is not a kind of group");
         assert_eq!(refused("\\"), "a regular expression ends after a backslash");
     }

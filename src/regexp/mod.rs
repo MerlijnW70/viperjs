@@ -16,12 +16,23 @@
 //! the four `Symbol` methods are in [`crate::builtins`], because those are about the *object* and
 //! this is about the *pattern*. The split is what lets the parser be tested with strings alone.
 //!
-//! # Two things deliberately not here yet
+//! # Annex B's grammar, and the one thing still refused
 //!
-//! `\p{…}` needs the Unicode property tables, which are generated data under DR-0003 and a slice of
-//! their own. Annex B's extensions to the grammar — a lone `]`, a quantifier on an assertion,
-//! `\8` as an identity escape — are refused for the same reason DR-0008 gives: Annex B's lexical
-//! extensions are in and its syntactic ones are not.
+//! §B.1.2 replaces several of §22.2.1's productions when the pattern carries neither `u` nor `v`,
+//! and those replacements are what the web is written against: `/}/` is a brace, `/\1/` with no
+//! group is a legacy octal escape, `/\8/` is an `8`. DR-0008's reversal covers them — an Annex B
+//! rule is in when a *static* fact decides it, and the Unicode flag is read off the literal.
+//!
+//! **Which of them are built is not listed here on purpose.** Every one is a single production, and
+//! a summary in this doc would be a claim about a dozen sites that nothing checks — which is how
+//! the paragraph this replaced came to say `\p{…}` and a quantified lookahead were missing long
+//! after both landed. `parser.rs` carries the rule at the site that implements it, and the failing
+//! entries under `annexB/language/literals/regexp/` in the expectations file are what say the rest.
+//!
+//! What is left out is `\p{RGI_Emoji}` and its siblings — a property of *strings*, which needs the
+//! UCD's emoji sequence tables and nothing else here wants them. It is refused by name rather than
+//! as bad syntax, deliberately: it is a legal operand, so calling it a Syntax Error would pass
+//! every test asserting that a malformed one must be rejected.
 
 mod matcher;
 mod parser;

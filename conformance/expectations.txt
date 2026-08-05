@@ -212,8 +212,6 @@ annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/literals/regexp/class-escape.js :: it did not parse: a control escape needs a letter
 annexB/language/literals/regexp/class-escape.js (strict) :: it did not parse: a control escape needs a letter
-annexB/language/literals/regexp/extended-pattern-char.js :: it did not parse: a regular expression has an unmatched ]
-annexB/language/literals/regexp/extended-pattern-char.js (strict) :: it did not parse: a regular expression has an unmatched ]
 annexB/language/literals/regexp/identity-escape.js :: it did not parse: a backreference names no group
 annexB/language/literals/regexp/identity-escape.js (strict) :: it did not parse: a backreference names no group
 annexB/language/literals/regexp/legacy-octal-escape.js :: it did not parse: a backreference names no group
