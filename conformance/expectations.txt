@@ -938,48 +938,16 @@ built-ins/Atomics/compareExchange/immutable-buffer.js :: it threw an object with
 built-ins/Atomics/compareExchange/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/exchange/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/exchange/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/notify/bad-range.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/notify/bad-range.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/notify/bigint/bad-range.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/notify/bigint/bad-range.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/notify/bigint/non-shared-bufferdata-count-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/bigint/non-shared-bufferdata-count-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/bigint/non-shared-bufferdata-index-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/bigint/non-shared-bufferdata-index-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/bigint/non-shared-bufferdata-returns-0.js :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/bigint/non-shared-bufferdata-returns-0.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Atomics/notify/bigint/notify-all-on-loc.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/bigint/notify-all-on-loc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/count-boundary-cases.js :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/count-boundary-cases.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Atomics/notify/count-defaults-to-infinity-missing.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/count-defaults-to-infinity-missing.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/count-from-nans.js :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/count-from-nans.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/count-tointeger-throws-then-wake-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/descriptor.js :: it threw an object with no name: notify should be an own property
-built-ins/Atomics/notify/descriptor.js (strict) :: it threw an object with no name: notify should be an own property
 built-ins/Atomics/notify/immutable-buffer-returns-0.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/notify/immutable-buffer-returns-0.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/notify/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Atomics/notify/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Atomics/notify/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Atomics/notify/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/notify/negative-count.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/negative-count.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/non-shared-bufferdata-count-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/non-shared-bufferdata-index-evaluation-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/non-shared-bufferdata-index-evaluation-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/non-shared-bufferdata-returns-0.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/Atomics/notify/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Atomics/notify/notify-all-on-loc.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/notify-all-on-loc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/notify-all.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1002,18 +970,6 @@ built-ins/Atomics/notify/notify-with-no-matching-agents-waiting.js :: it threw T
 built-ins/Atomics/notify/notify-with-no-matching-agents-waiting.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/notify-zero.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/notify-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-detached.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-resize-to-zero.js :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared-resize-to-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/retrieve-length-before-index-coercion-non-shared.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/notify/symbol-for-index-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/notify/symbol-for-index-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/notify/undefined-index-defaults-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/undefined-index-defaults-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/or/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
@@ -1034,16 +990,10 @@ built-ins/Atomics/store/immutable-buffer.js :: it threw an object with no name: 
 built-ins/Atomics/store/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/sub/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/sub/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/wait/bad-range.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/wait/bad-range.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/wait/bigint/bad-range.js :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
-built-ins/Atomics/wait/bigint/bad-range.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError (Testing with index gen function () { [native code] }.)
 built-ins/Atomics/wait/bigint/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/nan-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/nan-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/wait/bigint/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/bigint/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1064,8 +1014,6 @@ built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-sub.js :: it threw TypeError
 built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/wait/bigint/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/bigint/value-not-equal.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/value-not-equal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1074,20 +1022,12 @@ built-ins/Atomics/wait/bigint/waiterlist-order-of-operations-is-fifo.js :: it th
 built-ins/Atomics/wait/bigint/waiterlist-order-of-operations-is-fifo.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/bigint/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/descriptor.js :: it threw an object with no name: wait should be an own property
-built-ins/Atomics/wait/descriptor.js (strict) :: it threw an object with no name: wait should be an own property
 built-ins/Atomics/wait/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Atomics/wait/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Atomics/wait/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Atomics/wait/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Atomics/wait/nan-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/nan-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/negative-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/wait/negative-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1112,26 +1052,14 @@ built-ins/Atomics/wait/null-for-timeout-agent.js :: it threw TypeError: cannot r
 built-ins/Atomics/wait/null-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/object-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/object-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/out-of-range-index-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/wait/out-of-range-index-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/wait/poisoned-object-for-timeout-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/wait/retrieve-length-before-index-coercion.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/Atomics/wait/retrieve-length-before-index-coercion.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/Atomics/wait/symbol-for-index-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/symbol-for-index-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-index-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/wait/symbol-for-index-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-timeout-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/wait/symbol-for-timeout-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/symbol-for-value-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/symbol-for-value-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-value-throws.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Atomics/wait/symbol-for-value-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Atomics/wait/true-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/true-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/wait/undefined-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object

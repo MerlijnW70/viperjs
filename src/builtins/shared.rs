@@ -16,8 +16,20 @@
 //! # Why `Atomics` accepts an ordinary `ArrayBuffer`
 //!
 //! Since ES2020 every operation here works on an unshared buffer too — only `wait` requires a
-//! shared one, and `wait` needs agents ViperJS has not got. §25.4.3's `ValidateIntegerTypedArray`
-//! asks about the *element kind* rather than about sharing, which is the check these actually make.
+//! shared one. §25.4.3's `ValidateIntegerTypedArray` asks about the *element kind* rather than
+//! about sharing, which is the check these actually make.
+//!
+//! # `wait` and `notify` with one agent, which is not the same as without them
+//!
+//! Both are implemented, and neither is a stub. [`notify`] answers `+0` because that is what
+//! waking a list with nothing on it returns, and [`wait`] throws a TypeError because DoWait step
+//! 12 asks `AgentCanSuspend()` and this agent cannot — nothing could ever wake it. A browser's
+//! main thread answers identically, which is what test262's `CanBlockIsFalse` flag is for.
+//!
+//! What that leaves is everything before those steps, and it is most of what a test can see: the
+//! *waitable* kind check ([`Kinds`]), which admits `Int32Array` and `BigInt64Array` alone, the
+//! index, and the conversions of the value, the count and the timeout — each of which may run the
+//! program's own `valueOf` and must run in the clause's order.
 
 use super::{define_method, define_value, key};
 use crate::heap::{Element, Heap, Native, NativeCall, Numeric, ObjectId, PropertyDescriptor, View};
@@ -253,6 +265,31 @@ impl Operation {
     }
 }
 
+/// §25.4.3.4's `waitable` argument, which decides *which* integer kinds an operation admits.
+///
+/// The two answers are not a subset relation worth collapsing: a waiter list is keyed on a
+/// position in a buffer and the two kinds that may key one are exactly `Int32Array` and
+/// `BigInt64Array`, where the arithmetic operations take every unclamped integer kind there is.
+/// Passing the wrong one is not a missing error — it is `Atomics.wait` accepting a `Uint8Array`,
+/// which no waiter could ever be woken from.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Kinds {
+    /// `ValidateIntegerTypedArray(ta, false)` — every unclamped integer kind, floats and
+    /// `Uint8ClampedArray` aside.
+    Integer,
+    /// `ValidateIntegerTypedArray(ta, true)` — `Int32Array` and `BigInt64Array`, and nothing else.
+    Waitable,
+    /// `ValidateSharedIntegerTypedArray(ta, true)` — the above, and the buffer must be **shared**.
+    ///
+    /// A third variant rather than a second argument because these are three named operations in
+    /// the specification and every caller wants exactly one of them. It matters *where* the shared
+    /// check sits: it is inside step 1, so it runs **before** the index is converted, and
+    /// `Atomics.wait(unshared, poisoned, …)` must refuse the buffer without ever calling
+    /// `poisoned.valueOf`. Checking it after the index reads identically and runs the program's
+    /// code when the clause says nothing may run.
+    SharedWaitable,
+}
+
 /// §25.4.3.4 `ValidateIntegerTypedArray`, and the index — the opening every operation here shares.
 ///
 /// Answers the view and the position, because getting one without the other is never useful. The
@@ -262,6 +299,7 @@ fn target(
     vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
+    kinds: Kinds,
 ) -> Completion<(View, Element, usize)> {
     let Value::Object(object) = call.argument(0) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
@@ -283,6 +321,26 @@ fn target(
         .is_some_and(crate::heap::Object::is_clamped);
     if clamped || matches!(element, Element::Float32 | Element::Float64) {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
+    }
+    // §25.4.3.4 step 3.a — the waitable check *replaces* the one above rather than adding to it,
+    // and it is asked here, before the index, for the same reason: `Atomics.wait(new Uint8Array(8),
+    // {valueOf(){ throw }})` refuses the array and never runs the getter.
+    if kinds != Kinds::Integer && !matches!(element, Element::Int32 | Element::BigInt64) {
+        return Err(Abrupt::type_error(
+            "this is not an Int32Array or a BigInt64Array",
+        ));
+    }
+    // `ValidateSharedIntegerTypedArray` step 9 — still inside step 1, and therefore still ahead of
+    // the index. An unshared buffer cannot be reached by another agent, so a wait on one could
+    // never be ended by anything and the clause refuses rather than hanging. §25.4.3.7's `notify`
+    // takes either and answers `0`, which is why this is not asked for every waitable operation.
+    if kinds == Kinds::SharedWaitable
+        && !heap
+            .object(view.buffer)
+            .and_then(crate::heap::Object::buffer)
+            .is_some_and(crate::heap::Buffer::shared)
+    {
+        return Err(Abrupt::type_error("this is not a SharedArrayBuffer"));
     }
     if heap
         .object(view.buffer)
@@ -307,7 +365,7 @@ fn modify(
     call: &NativeCall<'_>,
     what: Operation,
 ) -> Completion<Value> {
-    let (view, element, at) = target(vm, heap, call)?;
+    let (view, element, at) = target(vm, heap, call, Kinds::Integer)?;
     // The value is converted *after* the index is validated, and its conversion may run user code
     // that detaches the buffer — so the write is checked again below rather than assumed. Which
     // conversion is §25.4.3.1 step 3's: `ToBigInt` for the two 64-bit kinds and `ToNumber` for the
@@ -327,7 +385,7 @@ fn modify(
 
 /// §25.4.3.9 `Atomics.load`.
 fn load(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (view, _, at) = target(vm, heap, call)?;
+    let (view, _, at) = target(vm, heap, call, Kinds::Integer)?;
     Ok(heap.element_at(view, at).unwrap_or(Value::Undefined))
 }
 
@@ -336,7 +394,7 @@ fn load(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 /// The one that answers what it was *given* rather than what it wrote or what was there. The two
 /// differ: storing 300 into a `Uint8Array` writes 44 and answers 300.
 fn store(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (_, element, at) = target(vm, heap, call)?;
+    let (_, element, at) = target(vm, heap, call, Kinds::Integer)?;
     let given = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
     let Value::Object(object) = call.argument(0) else {
         return Err(Abrupt::type_error("this is not an integer TypedArray"));
@@ -355,7 +413,7 @@ fn store(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 
 /// §25.4.3.3 `Atomics.compareExchange`.
 fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (view, element, at) = target(vm, heap, call)?;
+    let (view, element, at) = target(vm, heap, call, Kinds::Integer)?;
     let big = element.holds_big();
     let expected = vm.to_numeric(big, call.argument(1 + 1), heap)?;
     let replacement = vm.to_numeric(big, call.argument(3), heap)?;
@@ -381,6 +439,59 @@ fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
         heap.write_element(object, at, &replacement);
     }
     Ok(heap.numeric_value(held))
+}
+
+/// §25.4.3.7 `Atomics.notify(typedArray, index, count)`.
+///
+/// Always answers `+0` here, and that is the specification's own answer rather than a stub: step 8
+/// wakes the waiters on a list, ViperJS has one agent, and an agent cannot be waiting while it is
+/// running this. What the clause still asks for is every step *before* that — the waitable kind
+/// check, the index, and the count's coercion — each of which can throw and each of which runs
+/// user code the program can observe.
+///
+/// **The non-shared case is a `0` and not an error**, which is where this parts company with
+/// [`wait`]: step 7 returns `+0` for an ordinary `ArrayBuffer`, because notifying nobody is what
+/// notifying a buffer no one can share amounts to. Refusing it would be a stricter engine, not a
+/// more correct one.
+fn notify(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let _ = target(vm, heap, call, Kinds::Waitable)?;
+    // Step 3 — the count is computed and then thrown away, because with nothing waiting there is
+    // no number of woken agents for a program to see. It is still computed, and that is the point:
+    // computing it is what runs the program's own `valueOf` and what lets that `valueOf`'s throw
+    // out, both of which are observable where the number is not.
+    //
+    // **The clause's `undefined` → +∞ case is deliberately not branched on.** +∞ and
+    // `ToIntegerOrInfinity(undefined)`'s 0 are both discarded, and `ToNumber(undefined)` is `NaN`
+    // and cannot throw — so a branch there is one no program could ever distinguish. Written as a
+    // case it survived mutation, which is the ratchet saying the branch is not a missing test but
+    // a distinction this engine cannot have.
+    let count = vm.to_number(call.argument(2), heap)?;
+    let _ = super::string::to_integer_or_infinity(count).max(0.0);
+    Ok(Value::Number(0.0))
+}
+
+/// §25.4.3.14 `Atomics.wait(typedArray, index, value, timeout)`.
+///
+/// Throws a TypeError, always — and this is a conformant answer rather than a gap. DoWait step 12
+/// asks `AgentCanSuspend()`, and ViperJS's agent cannot: there is no second agent to notify it, so
+/// an agent that suspended here would never be woken by anything. A browser's main thread answers
+/// the same way for the same reason, which is what test262's `CanBlockIsFalse` flag exists to say.
+///
+/// **The four arguments are still converted first**, and that is the whole of what a test can see.
+/// Steps 1 to 11 validate the array, the index, the value and the timeout in that order, so
+/// `Atomics.wait(new Float64Array(4), 0, 0, 0)` is refused for its *kind* and never reaches the
+/// suspend check, while `Atomics.wait(i32a, 0, 0, {valueOf(){ throw new Error() }})` throws the
+/// program's own error rather than this one.
+fn wait(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (_, element, _) = target(vm, heap, call, Kinds::SharedWaitable)?;
+    // Step 10 — the same `ToBigInt`/`ToNumber` split the arithmetic operations make, for the same
+    // reason: the comparison is against a stored bit pattern, so the value has to become one.
+    let _ = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
+    // Step 11 — `ToNumber` and not `ToIndex`: a timeout is a duration and `-1` is not an error, it
+    // is `max(q, 0)`. NaN is +∞ rather than 0, which is the reverse of what `ToIndex` would give
+    // and is why `Atomics.wait(i32a, 0, 0, undefined)` waits for ever rather than not at all.
+    let _ = vm.to_number(call.argument(3), heap)?;
+    Err(Abrupt::type_error("this agent cannot be suspended"))
 }
 
 /// §25.4.3.8 `Atomics.isLockFree`.
@@ -440,9 +551,11 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("exchange", 3, exchange),
         ("isLockFree", 1, is_lock_free),
         ("load", 2, load),
+        ("notify", 3, notify),
         ("or", 3, or),
         ("store", 3, store),
         ("sub", 3, sub),
+        ("wait", 4, wait),
         ("xor", 3, xor),
     ] {
         define_method(heap, realm, atomics, name, length, native);

@@ -234,8 +234,14 @@ impl Runner {
         beside: &Path,
         beside_name: Option<String>,
     ) -> Verdict {
-        if block.has("CanBlockIsFalse") || block.has("CanBlockIsTrue") {
-            return Verdict::Skipped("agents are not implemented".to_string());
+        // §25.4.3.14's `AgentCanSuspend()` is **false** for ViperJS: there is no second agent to
+        // notify a suspended one, so `Atomics.wait` throws where a host with workers would block.
+        // A test flagged `CanBlockIsFalse` is written for exactly that host and needs no agents at
+        // all, so skipping it was the harness answering a question about itself — the shape this
+        // repository keeps meeting, where a reason string describes the runner and not the engine.
+        // `CanBlockIsTrue` is the other host and stays skipped, because that one is about agents.
+        if block.has("CanBlockIsTrue") {
+            return Verdict::Skipped("this agent cannot block".to_string());
         }
         // An `async` test signals that it finished by calling `$DONE`. INTERPRETING.md leaves the
         // function to the host, and this host defines it below — the prologue, because a *later*
@@ -1285,17 +1291,27 @@ description: plain
         );
         assert!(matches!(&plain[0].verdict, Verdict::Passed), "{plain:?}");
 
-        // Both spellings of the agent flag, because each is a separate claim about the host.
-        for flag in ["CanBlockIsFalse", "CanBlockIsTrue"] {
-            let outcomes = run(
-                &root,
-                &format!("/*---\nflags: [{flag}]\n---*/\nassert(true);"),
-            );
-            assert!(
-                matches!(&outcomes[0].verdict, Verdict::Skipped(why) if why.contains("agents")),
-                "{flag}: {outcomes:?}"
-            );
-        }
+        // The two spellings are opposite claims about the host and must not share an answer.
+        // ViperJS cannot block, so a `CanBlockIsFalse` test is written for *this* host and is run;
+        // only `CanBlockIsTrue` describes a host with agents. Asserting both sides is what stops
+        // the pair collapsing back into one skip, which is what they were until Atomics.wait
+        // existed to be tested.
+        let blockable = run(
+            &root,
+            "/*---\nflags: [CanBlockIsTrue]\n---*/\nassert(true);",
+        );
+        assert!(
+            matches!(&blockable[0].verdict, Verdict::Skipped(why) if why.contains("cannot block")),
+            "{blockable:?}"
+        );
+        let unblockable = run(
+            &root,
+            "/*---\nflags: [CanBlockIsFalse]\n---*/\nassert(true);",
+        );
+        assert!(
+            matches!(&unblockable[0].verdict, Verdict::Passed),
+            "{unblockable:?}"
+        );
         let _ = std::fs::remove_dir_all(&root);
     }
 

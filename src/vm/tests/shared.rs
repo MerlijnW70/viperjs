@@ -263,8 +263,12 @@ fn an_atomic_refuses_the_kinds_and_indices_an_ordinary_element_read_would_allow(
             "Object.prototype.toString.call(Atomics) + ',' + (typeof Atomics) \
              + ',' + (typeof Atomics.wait)"
         ),
-        "[object Atomics],object,undefined"
+        "[object Atomics],object,function"
     );
+    // `waitAsync` is the one of the four that is *not* here, and it is absent on purpose rather
+    // than forgotten: it answers a promise that settles when a timeout elapses, and this engine
+    // has no timer to elapse one. Pinned so that building it is a deliberate change to this row.
+    assert_eq!(run("typeof Atomics.waitAsync"), "undefined");
 }
 
 #[test]
@@ -353,5 +357,144 @@ fn compare_exchange_compares_what_the_slot_would_hold_and_never_a_clamped_form_o
         run("var a = new BigUint64Array(1); a[0] = 7n; \
              String(Atomics.compareExchange(a, 0, 2n ** 64n + 7n, 1n)) + ',' + String(a[0])"),
         "7,1"
+    );
+}
+
+#[test]
+fn notify_answers_zero_and_still_runs_every_step_before_the_waking() {
+    // §25.4.3.7 step 8 wakes a waiter list. With one agent nothing can be on one — an agent that
+    // is running this is not waiting — so the answer is `+0` by the clause rather than by omission.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); Atomics.notify(a, 0, 1)"),
+        "0"
+    );
+    // Step 7 — an ordinary ArrayBuffer is a `0` and *not* an error, which is where this parts
+    // company with `wait`. An engine that refused here would look stricter and be wrong.
+    assert_eq!(run("Atomics.notify(new Int32Array(4), 0, 1)"), "0");
+    // §25.4.3.4's waitable check: `Int32Array` and `BigInt64Array` alone. A `Uint8Array` is a
+    // perfectly good target for `Atomics.add` and cannot key a waiter list, so the two checks are
+    // different questions and this one has to be asked separately.
+    assert_eq!(
+        run(
+            "try { Atomics.notify(new Uint8Array(new SharedArrayBuffer(8)), 0, 1) } \
+             catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run("var a = new BigInt64Array(new SharedArrayBuffer(16)); Atomics.notify(a, 0, 1)"),
+        "0"
+    );
+    // The index is still validated, and out of range is a RangeError rather than a silent zero.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); \
+             try { Atomics.notify(a, 99, 1) } catch (e) { e.constructor.name }"),
+        "RangeError"
+    );
+    // Step 3 — the count's conversion runs the program's own code, and its throw is what the
+    // program sees. This is the row that fails if the count is discarded without being computed:
+    // the answer is `0` either way, and only the `valueOf` running tells the two apart.
+    assert_eq!(
+        run(
+            "var a = new Int32Array(new SharedArrayBuffer(16)); var ran = 0; \
+             Atomics.notify(a, 0, { valueOf: function () { ran++; return 1; } }); ran"
+        ),
+        "1"
+    );
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); \
+             try { Atomics.notify(a, 0, { valueOf: function () { throw new RangeError('mine') } }) } \
+             catch (e) { e.message }"),
+        "mine"
+    );
+    // …and a missing count is accepted rather than being a TypeError for a missing argument. The
+    // clause makes it +∞ where an explicit number is itself; both are discarded here, so what this
+    // row pins is only that neither spelling refuses. It is deliberately *not* a claim that the
+    // two take different paths — they do not, because no program could tell.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); \
+             Atomics.notify(a, 0) + ',' + Atomics.notify(a, 0, undefined)"),
+        "0,0"
+    );
+}
+
+#[test]
+fn wait_refuses_because_this_agent_cannot_suspend_and_converts_first() {
+    // DoWait step 12 — `AgentCanSuspend()` is false here, so the TypeError *is* the conformant
+    // answer. A browser's main thread says the same; test262 spells the condition `CanBlockIsFalse`.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); \
+             try { Atomics.wait(a, 0, 0, 0) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // Step 1 wants a **shared** buffer, where §25.4.3.7's `notify` takes either. Both are a
+    // TypeError, so the messages are what tell them apart — and the buffer is refused before the
+    // suspend check, which is what the next row proves.
+    assert_eq!(
+        run("try { Atomics.wait(new Int32Array(4), 0, 0, 0) } catch (e) { e.message }"),
+        "this is not a SharedArrayBuffer"
+    );
+    // …and that refusal is inside step 1, so it lands **before** the index is converted. This is
+    // the row that distinguishes the two orders: both answer TypeError, and only a poisoned index
+    // says which one ran first. test262 spells the same check `non-shared-bufferdata-throws.js`,
+    // where the getter throws a Test262Error precisely so that running it is not a TypeError.
+    assert_eq!(
+        run(
+            "var poisoned = { valueOf: function () { throw new RangeError('ran') } }; \
+             try { Atomics.wait(new Int32Array(4), poisoned, poisoned, poisoned) } \
+             catch (e) { e.constructor.name + ':' + e.message }"
+        ),
+        "TypeError:this is not a SharedArrayBuffer"
+    );
+    // The same ordering the other way round: `notify` accepts an unshared buffer, so for it the
+    // index *is* reached and the poisoned getter does run.
+    assert_eq!(
+        run(
+            "var poisoned = { valueOf: function () { throw new RangeError('ran') } }; \
+             try { Atomics.notify(new Int32Array(4), poisoned, 1) } catch (e) { e.message }"
+        ),
+        "ran"
+    );
+    // Every conversion runs before the refusal, in the clause's order, and the program's own error
+    // wins. Written with a throw rather than a counter because a counter would also pass if the
+    // conversion ran *after* the TypeError — which it cannot, since nothing runs after it.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); \
+             try { Atomics.wait(a, 0, 0, { valueOf: function () { throw new RangeError('t') } }) } \
+             catch (e) { e.constructor.name + ':' + e.message }"),
+        "RangeError:t"
+    );
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(16)); \
+             try { Atomics.wait(a, 0, { valueOf: function () { throw new RangeError('v') } }, 0) } \
+             catch (e) { e.message }"),
+        "v"
+    );
+    // The kind is checked before the index, so a Float64Array never reaches an index that would
+    // itself have thrown — the error names the array and not the index.
+    assert_eq!(
+        run(
+            "try { Atomics.wait(new Float64Array(new SharedArrayBuffer(32)), 99, 0, 0) } \
+             catch (e) { e.message }"
+        ),
+        "this is not an integer TypedArray"
+    );
+    // A BigInt64Array is waitable and takes a BigInt value; a Number there is §7.1.13's TypeError
+    // and not a silent conversion.
+    assert_eq!(
+        run("var a = new BigInt64Array(new SharedArrayBuffer(16)); \
+             try { Atomics.wait(a, 0, 0n, 0) } catch (e) { e.message }"),
+        "this agent cannot be suspended"
+    );
+    assert_eq!(
+        run("var a = new BigInt64Array(new SharedArrayBuffer(16)); \
+             try { Atomics.wait(a, 0, 0, 0) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // Both carry §10.3's own metadata, which `descriptor.js` and `length.js` check.
+    assert_eq!(
+        run("Atomics.wait.length + ',' + Atomics.wait.name + ',' \
+             + Atomics.notify.length + ',' + Atomics.notify.name"),
+        "4,wait,3,notify"
     );
 }
