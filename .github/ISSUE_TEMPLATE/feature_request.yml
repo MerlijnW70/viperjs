@@ -32,7 +32,7 @@ body:
     attributes:
       label: Constraints you have read
       options:
-        - label: I understand praxis will not take a runtime dependency to do this.
+        - label: I understand ViperJS will not take a runtime dependency to do this.
           required: true
         - label: I understand `unsafe` is not available, crate-wide.
           required: true

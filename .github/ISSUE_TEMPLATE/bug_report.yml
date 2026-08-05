@@ -36,7 +36,7 @@ body:
       label: What should happen, and what the spec says
       description: >
         A section of ECMA-262 is worth more here than anything else. If another engine disagrees
-        with praxis, say which and what it does — that is usually enough to find the fault.
+        with ViperJS, say which and what it does — that is usually enough to find the fault.
     validations:
       required: true
 

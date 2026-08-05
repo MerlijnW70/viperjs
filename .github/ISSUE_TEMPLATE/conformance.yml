@@ -30,7 +30,7 @@ body:
   - type: textarea
     id: detail
     attributes:
-      label: What the test asks for, and what praxis does
+      label: What the test asks for, and what ViperJS does
       description: >
         Quote the assertion and the spec section it comes from. An expectations entry that says
         only "flaky" or "weird" is not a reason and is worth reporting on its own.

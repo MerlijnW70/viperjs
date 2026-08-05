@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/MerlijnW70/praxis/security/advisories/new
+    url: https://github.com/MerlijnW70/viperjs/security/advisories/new
     about: >
       Report privately, never as an issue. An engine that runs untrusted script has a real
       attack surface — see SECURITY.md.
   - name: Question or idea
-    url: https://github.com/MerlijnW70/praxis/discussions
+    url: https://github.com/MerlijnW70/viperjs/discussions
     about: Anything that is not yet a bug or a concrete request.

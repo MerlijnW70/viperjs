@@ -113,7 +113,7 @@ program threw before this and runs now, and so does the same loop at five millio
 - `Heap::live_footprint` exists beside `Heap::footprint` and answers what is still held rather than
   what has been paid for. DR-0013's budget deliberately goes on using `footprint`: what it bounds is
   a program that *allocates* without end, which is a claim about what has been taken.
-- The conformance harness reads `PRAXIS_COLLECT_GROWTH`, so the suite can be run either way and the
+- The conformance harness reads `VIPERJS_COLLECT_GROWTH`, so the suite can be run either way and the
   difference read off. The number it reports by default is the engine's default, deliberately — a
   conformance figure that depended on how the run was invoked is what DR-0006 refuses.
 - `Vm::collect` is unchanged and stays the host's to call. A schedule is a convenience over it, not

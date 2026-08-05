@@ -517,8 +517,8 @@ fn evaluate(
     // the number this harness reports must not depend on how the run was invoked, so the default
     // is whatever the engine's default is and setting this is a deliberate experiment.
     //
-    // `PRAXIS_COLLECT_GROWTH=1048576 cargo run --release -p conformance`
-    if let Some(growth) = std::env::var("PRAXIS_COLLECT_GROWTH")
+    // `VIPERJS_COLLECT_GROWTH=1048576 cargo run --release -p conformance`
+    if let Some(growth) = std::env::var("VIPERJS_COLLECT_GROWTH")
         .ok()
         .and_then(|text| text.parse::<usize>().ok())
     {

@@ -1,4 +1,4 @@
-# Every line here is a test262 failure praxis has not fixed yet, and a claim that the failure is
+# Every line here is a test262 failure ViperJS has not fixed yet, and a claim that the failure is
 # understood. The file may only shrink: a listed test that starts passing fails the run until its
 # line is deleted, and an unlisted test that starts failing fails the run.
 #
