@@ -1155,3 +1155,57 @@ fn a_plain_call_never_reads_the_callee_s_prototype() {
         "prototype"
     );
 }
+
+#[test]
+fn a_proxy_used_as_a_write_receiver_has_its_traps_called_and_not_walked_past() {
+    // §10.1.9.2 steps 3.a and 3.d. The receiver of a write is an *arbitrary* object — `Reflect.set`
+    // names it, and nothing says it is the one the property was looked up on — so it may be a
+    // Proxy, and the two steps are its own internal methods rather than a heap write.
+    //
+    // The value lands either way, which is why this needs a trap *count* rather than an assertion
+    // about the answer: reaching past the traps put `q` on the receiver correctly and called
+    // nothing, and a plain receiver cannot tell the difference.
+    assert_eq!(
+        run("var seen = []; \
+             var r = new Proxy({}, { \
+                 getOwnPropertyDescriptor: function (t, k) { \
+                     seen.push('gopd:' + String(k)); return Reflect.getOwnPropertyDescriptor(t, k) }, \
+                 defineProperty: function (t, k, d) { \
+                     seen.push('dp:' + String(k)); return Reflect.defineProperty(t, k, d) } }); \
+             Reflect.set({}, 'q', 1, r); seen.join(',') + '|' + r.q"),
+        "gopd:q,dp:q|1"
+    );
+    // A `defineProperty` trap that refuses is the write refusing — the receiver decides, and its
+    // answer is what `Reflect.set` reports.
+    assert_eq!(
+        run(
+            "var r = new Proxy({}, { defineProperty: function () { return false } }); \
+             Reflect.set({}, 'q', 1, r) + ',' + (r.q === undefined)"
+        ),
+        "false,true"
+    );
+    // …and one that throws is the write throwing, rather than the value landing anyway.
+    assert_eq!(
+        run("var r = new Proxy({}, { \
+                 defineProperty: function () { throw new TypeError('no') } }); \
+             try { Reflect.set({}, 'q', 1, r); 'stored' } catch (e) { e.message }"),
+        "no"
+    );
+    // The same write through a `with`, which is where the clause is reached without `Reflect`:
+    // §9.1.1.2.5 step 4's `Set` names the object as its own receiver, so the traps run in the
+    // clause's order and the two `[[Set]]` steps follow the `has` that step 2 asks for.
+    assert_eq!(
+        run("var seen = []; \
+             var p = new Proxy({ p: 0 }, { \
+                 has: function (t, k) { seen.push('has:' + String(k)); return k in t }, \
+                 get: function (t, k) { seen.push('get:' + String(k)); return t[k] }, \
+                 set: function (t, k, v, rc) { seen.push('set:' + String(k)); \
+                     return Reflect.set(t, k, v, rc) }, \
+                 getOwnPropertyDescriptor: function (t, k) { \
+                     seen.push('gopd:' + String(k)); return Reflect.getOwnPropertyDescriptor(t, k) }, \
+                 defineProperty: function (t, k, d) { \
+                     seen.push('dp:' + String(k)); return Reflect.defineProperty(t, k, d) } }); \
+             with (p) { p = 1; } seen.join(',')"),
+        "has:p,get:Symbol(Symbol.unscopables),has:p,set:p,gopd:p,dp:p"
+    );
+}

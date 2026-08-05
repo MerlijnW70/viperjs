@@ -594,13 +594,18 @@ impl Vm {
             heap.write_element(landing, at, &numeric);
             return Ok(Value::Boolean(true));
         }
-        // §10.1.9.2 step 2.c — what the *receiver* already has decides how it is written. An
+        // §10.1.9.2 step 3.a — what the *receiver* already has decides how it is written. An
         // accessor or a non-writable property there refuses the write outright: the value came
         // looking for a home and that one is taken. Anything else keeps its attributes, so a write
         // through a receiver never makes a property enumerable that was not.
-        let existing = heap
-            .object(landing)
-            .and_then(|found| found.get_own_property(key));
+        //
+        // Asked with `[[GetOwnProperty]]` and not off the heap, which is DR-0020's whole point and
+        // the mistake this line used to make. A receiver is an *arbitrary* object — `Reflect.set`
+        // names it and nothing says it is the one the property was looked up on — so it may be a
+        // Proxy, and reading `Heap::object` walks straight past its traps. The write still landed,
+        // which is why nothing caught this: a plain receiver gives the same answer, and the only
+        // programs that can tell are the ones counting trap calls.
+        let existing = self.own_property_through(landing, key, heap)?;
         let descriptor = match existing.map(|property| property.kind) {
             Some(
                 PropertyKind::Accessor { .. }
@@ -618,7 +623,9 @@ impl Vm {
             // with the three attributes assignment always gives.
             None => PropertyDescriptor::data(value),
         };
-        stored(heap.define_property_outcome(landing, key, &descriptor))
+        // Step 3.d's `[[DefineOwnProperty]]` and step 3.e's `CreateDataProperty`, both of which are
+        // the receiver's own internal method for the same reason the read above is.
+        stored(self.define_through(landing, key, &descriptor, heap)?)
     }
     /// §13.10.2's `InstanceofOperator` — the operator, which is mostly a lookup.
     ///
